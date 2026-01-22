@@ -493,7 +493,6 @@ export default function ResultScreen() {
   const [showAdModal, setShowAdModal] = useState(false);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { status: _status } = useSubscription();
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -511,7 +510,6 @@ export default function ResultScreen() {
   const [showSignatureMode, setShowSignatureMode] = useState(false);
   const [showEffectsPanel, setShowEffectsPanel] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [_limitType, setLimitType] = useState<'signature' | null>(null);
 
   // Welcome message state
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
@@ -561,10 +559,7 @@ export default function ResultScreen() {
 
   // Signature state
   const [signaturePaths, setSignaturePaths] = useState<string[]>([]);
-  const signatureColor = _signatureColor;
-  const [_signatureColor, setSignatureColor] = useState('#f97316');
   const [currentPath, setCurrentPath] = useState('');
-  const [_isDrawing, setIsDrawing] = useState(false);
   const signatureCanvasRef = useRef<View>(null);
   const currentPathRef = useRef('');
   const signaturePathsRef = useRef<string[]>([]);
@@ -606,7 +601,6 @@ export default function ResultScreen() {
       }
       setLoading(false);
     } catch (_error) {
-      console.error('Error loading memory:', _error);
       setLoading(false);
     }
   }, [memoryId, user?.id]);
@@ -934,13 +928,6 @@ export default function ResultScreen() {
       setShowTooltip(true);
       setTimeout(() => setShowTooltip(false), 4000);
     }
-  };
-
-  const toggleColorPicker = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setShowColorPicker(!showColorPicker);
   };
 
   const changeSelectedColor = (color: string) => {
