@@ -157,33 +157,34 @@ function StaticSignature({ overlay }: StaticSignatureProps) {
       const signatureColor = overlay.color || '#ffffff';
 
       return (
-        <View style={[styles.draggableTextContainer, {
+        <View style={[styles.signatureWrapper, {
           left: overlay.x,
           top: overlay.y,
+          width: svgData.width,
+          height: svgData.height,
           transform: [
             { rotate: `${overlay.rotation}deg` },
             { scale: overlay.scale }
           ]
         }]}>
-          <View style={styles.signatureTouchable}>
-            <Svg
-              key={`${overlay.id}-${signatureColor}`}
-              width={svgData.width}
-              height={svgData.height}
-            >
-              {svgData.paths.map((pathData: string, index: number) => (
-                <Path
-                  key={`${index}-${signatureColor}`}
-                  d={pathData}
-                  stroke={signatureColor}
-                  strokeWidth={8}
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              ))}
-            </Svg>
-          </View>
+          <Svg
+            key={`${overlay.id}-${signatureColor}`}
+            width={svgData.width}
+            height={svgData.height}
+            style={styles.signature}
+          >
+            {svgData.paths.map((pathData: string, index: number) => (
+              <Path
+                key={`${index}-${signatureColor}`}
+                d={pathData}
+                stroke={signatureColor}
+                strokeWidth={8}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
+          </Svg>
         </View>
       );
     } catch (error) {
@@ -217,33 +218,35 @@ function StaticSignature({ overlay }: StaticSignatureProps) {
       const height = heightMatch ? parseFloat(heightMatch[1]) : 150;
 
       return (
-        <View style={[styles.draggableTextContainer, {
+        <View style={[styles.signatureWrapper, {
           left: overlay.x,
           top: overlay.y,
+          width: 150,
+          height: 80,
           transform: [
             { rotate: `${overlay.rotation}deg` },
             { scale: overlay.scale }
           ]
         }]}>
-          <View style={styles.signatureTouchable}>
-            <Svg
-              key={`${overlay.id}-${signatureColor}`}
-              width={width}
-              height={height}
-            >
-              {paths.map((pathData, index) => (
-                <Path
-                  key={`${index}-${signatureColor}`}
-                  d={pathData}
-                  stroke={signatureColor}
-                  strokeWidth={3}
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              ))}
-            </Svg>
-          </View>
+          <Svg
+            key={`${overlay.id}-${signatureColor}`}
+            width={width}
+            height={height}
+            viewBox={`0 0 ${width} ${height}`}
+            style={styles.signature}
+          >
+            {paths.map((pathData, index) => (
+              <Path
+                key={`${index}-${signatureColor}`}
+                d={pathData}
+                stroke={signatureColor}
+                strokeWidth={3}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
+          </Svg>
         </View>
       );
     } catch (error) {
@@ -446,7 +449,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
                   width={svgInfo.svgData.width}
                   height={svgInfo.svgData.height}
                   viewBox={`0 0 ${svgInfo.svgData.width} ${svgInfo.svgData.height}`}
-                  style={{ width: svgInfo.displayWidth, height: svgInfo.displayHeight }}
+                  style={styles.signature}
                 >
                   {svgInfo.svgData.paths.map((pathData: string, index: number) => (
                     <Path
@@ -468,7 +471,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
                   width={svgInfo.svgWidth}
                   height={svgInfo.svgHeight}
                   viewBox={`0 0 ${svgInfo.svgWidth} ${svgInfo.svgHeight}`}
-                  style={{ width: svgInfo.displayWidth, height: svgInfo.displayHeight }}
+                  style={styles.signature}
                 >
                   {svgInfo.svgPaths.map((pathData, index) => (
                     <Path
@@ -2432,6 +2435,15 @@ const styles = StyleSheet.create({
   textContentWrapper: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  signatureWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  signature: {
+    width: '100%',
+    height: '100%',
   },
   signatureTouchable: {
     padding: 0,
