@@ -12,7 +12,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Share2, Palette, Pencil, Plus, X } from 'lucide-react-native';
+import { Download, Trash2, Share2, Palette, Pencil, Plus, X, Eraser, Save, Sparkles, RotateCw, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,7 +23,7 @@ import AdModal from '@/components/AdModal';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { captureRef } from 'react-native-view-shot';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, runOnJS } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import PremiumModal from '@/components/PremiumModal';
@@ -494,6 +494,7 @@ export default function ResultScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const [, setLimitType] = useState<'memories' | 'signatures' | 'signature'>('signatures');
   const { user } = useAuth();
 
   // Edit mode state
@@ -510,6 +511,8 @@ export default function ResultScreen() {
   const [showSignatureMode, setShowSignatureMode] = useState(false);
   const [showEffectsPanel, setShowEffectsPanel] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [signatureColor, setSignatureColor] = useState('#ffffff');
+  const [isDrawing, setIsDrawing] = useState(false);
 
   // Welcome message state
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
@@ -600,7 +603,7 @@ export default function ResultScreen() {
         }
       }
       setLoading(false);
-    } catch (_error) {
+    } catch {
       setLoading(false);
     }
   }, [memoryId, user?.id]);
@@ -1081,13 +1084,13 @@ export default function ResultScreen() {
 
       setSaving(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (error) {
-      console.error('❌ Erreur lors de la sauvegarde:', error);
+    } catch {
+      console.error('❌ Erreur lors de la sauvegarde');
       setSaving(false);
       if (Platform.OS === 'web') {
         alert("Cette action n'est pas disponible dans la prévisualisation web. Teste sur ton appareil iOS/Android.");
       } else {
-        Alert.alert('Erreur', `Impossible d'enregistrer: ${(error as Error).message}`);
+        Alert.alert('Erreur', "Impossible d'enregistrer.");
       }
     }
   };
@@ -1218,84 +1221,13 @@ export default function ResultScreen() {
           }, 500);
         }
       }
-    } catch (error) {
-      console.error('❌ Erreur lors de la sauvegarde:', error);
-      const errorMessage = (error as Error).message;
-
-      if (errorMessage.includes('quota') || errorMessage.includes('Quota')) {
-        if (Platform.OS === 'web') {
-          alert('Espace de stockage saturé. Supprimez des souvenirs depuis la galerie.');
-        } else {
-          Alert.alert('Erreur', 'Espace de stockage saturé. Supprimez des souvenirs depuis la galerie.');
-        }
-      } else {
-        if (Platform.OS === 'web') {
-          alert('Erreur: ' + errorMessage);
-        } else {
-          Alert.alert('Erreur', errorMessage);
-        }
-      }
-
+    } catch {
+      console.error('❌ Erreur lors de la sauvegarde');
       setSaving(false);
     }
   };
 
   // Download, delete, share functions (same as before)
-  const validateAndSave = async () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-
-    try {
-      setIsSaving(true);
-
-      if (imageUri && !memoryId) {
-        console.log('💾 Sauvegarde du nouveau souvenir dans l\'app...');
-        await saveMemory(imageUri);
-        console.log('✅ Souvenir sauvegardé dans l\'app');
-
-        if (Platform.OS !== 'web') {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        }
-
-        // Naviguer vers la galerie (le modal s'affichera là-bas)
-        setTimeout(() => {
-          setIsSaving(false);
-          router.replace('/gallery');
-        }, 500);
-      } else if (memoryId) {
-        console.log('✅ Souvenir déjà enregistré, redirection vers galerie');
-
-        if (Platform.OS !== 'web') {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        }
-
-        setTimeout(() => {
-          setIsSaving(false);
-          router.replace('/gallery');
-        }, 300);
-      }
-    } catch (error) {
-      console.error('❌ Erreur lors de la sauvegarde:', error);
-      const errorMessage = (error as Error).message;
-
-      if (errorMessage.includes('quota') || errorMessage.includes('Quota')) {
-        if (Platform.OS === 'web') {
-          alert('Espace de stockage saturé. Supprimez des souvenirs depuis la galerie.');
-        } else {
-          Alert.alert('Erreur', 'Espace de stockage saturé. Supprimez des souvenirs depuis la galerie.');
-        }
-      } else {
-        if (Platform.OS === 'web') {
-          alert('Erreur: ' + errorMessage);
-        } else {
-          Alert.alert('Erreur', errorMessage);
-        }
-      }
-
-      setIsSaving(false);
-    }
-  };
 
   const downloadToDevice = async () => {
     if (Platform.OS !== 'web') {
@@ -1358,16 +1290,8 @@ export default function ResultScreen() {
       }
 
       setIsSaving(false);
-    } catch (error) {
-      console.error('❌ Erreur lors du téléchargement:', error);
-      const errorMessage = (error as Error).message;
-
-      if (Platform.OS === 'web') {
-        alert("Téléchargement non disponible dans la prévisualisation web. Teste sur l'app mobile.");
-      } else {
-        Alert.alert('Erreur', 'Impossible de télécharger l\'image.');
-      }
-
+    } catch {
+      console.error('❌ Erreur lors du téléchargement');
       setIsSaving(false);
     }
   };
@@ -1424,11 +1348,11 @@ export default function ResultScreen() {
         }
 
         router.push('/gallery');
-      } catch (error) {
-        console.error('❌ Erreur lors de la suppression:', error);
-        Alert.alert('Erreur', 'Impossible de supprimer ce souvenir.');
-        setIsDeleting(false);
-      }
+    } catch {
+      console.error('❌ Erreur lors de la suppression');
+      Alert.alert('Erreur', 'Impossible de supprimer ce souvenir.');
+      setIsDeleting(false);
+    }
     } else {
       router.push('/');
     }
