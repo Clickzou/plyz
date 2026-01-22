@@ -97,17 +97,17 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
   useEffect(() => {
     translateX.value = overlay.x;
     translateY.value = overlay.y;
-  }, [overlay.x, overlay.y]);
+  }, [overlay.x, overlay.y, translateX, translateY]);
 
   useEffect(() => {
     rotation.value = overlay.rotation;
     savedRotation.value = overlay.rotation;
-  }, [overlay.rotation]);
+  }, [overlay.rotation, rotation, savedRotation]);
 
   useEffect(() => {
     scale.value = overlay.scale;
     savedScale.value = overlay.scale;
-  }, [overlay.scale]);
+  }, [overlay.scale, scale, savedScale]);
 
   const panGesture = Gesture.Pan()
     .shouldCancelWhenOutside(true)
@@ -242,40 +242,7 @@ export default function EditScreen() {
     return overlays;
   }, [overlays]);
 
-  useEffect(() => {
-    loadMemory();
-  }, [memoryId]);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadMemory();
-    }, [memoryId])
-  );
-
-  useEffect(() => {
-    if (autoSave === 'true' && memory && !saving) {
-      console.log('🔄 AutoSave activé, sauvegarde automatique de l\'image composite');
-      setTimeout(() => {
-        handleSave();
-      }, 500);
-    }
-  }, [autoSave, memory]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowTooltip(false);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (selectedOverlayId !== null) {
-      setShowTooltip(false);
-    }
-  }, [selectedOverlayId]);
-
-  const loadMemory = async () => {
+  const loadMemory = useCallback(async () => {
     try {
       setLoading(true);
       const memories = await StorageService.getAllMemories(user?.id || null);
@@ -290,7 +257,93 @@ export default function EditScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [memoryId, user?.id, loadOverlaysFromMemory]);
+
+  const handleSave = useCallback(async () => {
+    if (saving || !memory) return;
+    setSaving(true);
+    try {
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+
+      console.log('💾 Sauvegarde en cours...');
+      const signatureOverlays: StoredSignatureOverlay[] = overlays.map(o => ({
+        id: o.id,
+        uri: o.uri,
+        x: o.x,
+        y: o.y,
+        rotation: o.rotation,
+        scale: o.scale,
+        color: o.color,
+      }));
+
+      let compositeUri = memory.uri;
+      try {
+        if (Platform.OS === 'web') {
+          console.log('🌐 Génération image composite sur Web...');
+          compositeUri = await generateCompositeImageWeb();
+        } else {
+          console.log('📱 Génération image composite sur Mobile...');
+          if (viewShotRef.current) {
+            const uri = await captureRef(viewShotRef.current, {
+              format: 'jpg',
+              quality: 0.8,
+            });
+            compositeUri = uri;
+          }
+        }
+      } catch (err) {
+        console.error('❌ Erreur génération composite:', err);
+      }
+
+      const updatedMemory = await StorageService.updateMemory(
+        memory,
+        user?.id || null,
+        {
+          signatureOverlays,
+          uri: compositeUri,
+          isEdited: true
+        }
+      );
+
+      if (updatedMemory) {
+        setMemory(updatedMemory);
+        console.log('✅ Sauvegarde réussie');
+        if (autoSave === 'true') {
+          router.replace({
+            pathname: '/result',
+            params: { memoryId: updatedMemory.id }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde:', error);
+      Alert.alert('Erreur', 'Impossible de sauvegarder les modifications');
+    } finally {
+      setSaving(false);
+    }
+  }, [saving, memory, overlays, user?.id, autoSave, router, generateCompositeImageWeb]);
+
+  useEffect(() => {
+    loadMemory();
+  }, [loadMemory]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadMemory();
+    }, [loadMemory])
+  );
+
+  useEffect(() => {
+    if (autoSave === 'true' && memory && !saving) {
+      console.log('🔄 AutoSave activé, sauvegarde automatique de l\'image composite');
+      const timer = setTimeout(() => {
+        handleSave();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [autoSave, memory, saving, handleSave]);
 
   const goToSignature = () => {
     if (Platform.OS !== 'web') {
