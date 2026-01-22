@@ -1,0 +1,6 @@
+PLACEHOLDER - Police Pumpkind Custard manquante
+
+Pour que la police s'affiche correctement, téléchargez le fichier PumpkindCustard.ttf
+et placez-le dans ce dossier.
+
+Voir FONT_INSTALLATION_GUIDE.md à la racine du projet pour les instructions complètes.
