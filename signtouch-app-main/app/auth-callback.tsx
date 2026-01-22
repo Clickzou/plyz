@@ -92,7 +92,7 @@ export default function AuthCallbackScreen() {
     };
 
     handleDeepLink();
-  }, [user, currentUrl]);
+  }, [user, currentUrl, getPostAuthRedirect, clearPostAuthRedirect]);
 
   if (error) {
     return (
