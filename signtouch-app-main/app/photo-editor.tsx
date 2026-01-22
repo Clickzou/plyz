@@ -30,7 +30,7 @@ export default function PhotoEditorScreen() {
     return (
       <View style={styles.container}>
         <Text style={styles.text}>
-          L'éditeur photo avancé n'est disponible que sur Web.
+          L&apos;éditeur photo avancé n&apos;est disponible que sur Web.
         </Text>
         <Text style={styles.subtext}>
           Fabric.js nécessite un environnement DOM pour fonctionner.

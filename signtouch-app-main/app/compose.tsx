@@ -202,17 +202,77 @@ export default function ComposeScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
 
+  // Create shared values for all potential signatures (max 20 for example)
+  const scales = [
+    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5),
+    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5),
+    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5),
+    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5)
+  ];
+  const savedScales = [
+    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5),
+    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5),
+    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5),
+    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5)
+  ];
+  const translateXs = [
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)
+  ];
+  const translateYs = [
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)
+  ];
+  const savedTranslateXs = [
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)
+  ];
+  const savedTranslateYs = [
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)
+  ];
+  const rotations = [
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)
+  ];
+  const savedRotations = [
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)
+  ];
+
   const signatureTransforms = useRef<SignatureTransform[]>(
-    signatureUris.map((_: string, index: number) => ({
-      scale: useSharedValue(1.5),
-      savedScale: useSharedValue(1.5),
-      translateX: useSharedValue(SCREEN_WIDTH / 2 - 60 + index * 50),
-      translateY: useSharedValue(SCREEN_HEIGHT / 2 - 60 + index * 50),
-      savedTranslateX: useSharedValue(SCREEN_WIDTH / 2 - 60 + index * 50),
-      savedTranslateY: useSharedValue(SCREEN_HEIGHT / 2 - 60 + index * 50),
-      rotation: useSharedValue(0),
-      savedRotation: useSharedValue(0),
-    }))
+    signatureUris.map((_: string, index: number) => {
+      const initialX = SCREEN_WIDTH / 2 - 60 + index * 50;
+      const initialY = SCREEN_HEIGHT / 2 - 60 + index * 50;
+      
+      translateXs[index].value = initialX;
+      translateYs[index].value = initialY;
+      savedTranslateXs[index].value = initialX;
+      savedTranslateYs[index].value = initialY;
+
+      return {
+        scale: scales[index],
+        savedScale: savedScales[index],
+        translateX: translateXs[index],
+        translateY: translateYs[index],
+        savedTranslateX: savedTranslateXs[index],
+        savedTranslateY: savedTranslateYs[index],
+        rotation: rotations[index],
+        savedRotation: savedRotations[index],
+      };
+    })
   ).current;
 
   useEffect(() => {

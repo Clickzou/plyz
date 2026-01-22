@@ -123,11 +123,11 @@ export default function AccountScreen() {
               activeOpacity={0.7}
             >
               <Text style={styles.debugButtonText}>
-                Obtenir l'URL de redirection Supabase
+                Obtenir l&apos;URL de redirection Supabase
               </Text>
             </TouchableOpacity>
             <Text style={styles.debugHint}>
-              Si le lien de confirmation d'email ne fonctionne pas, clique ici pour obtenir l'URL à ajouter dans Supabase Dashboard
+              Si le lien de confirmation d&apos;email ne fonctionne pas, clique ici pour obtenir l&apos;URL à ajouter dans Supabase Dashboard
             </Text>
           </View>
         )}
