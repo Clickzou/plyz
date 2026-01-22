@@ -173,7 +173,7 @@ export const saveMemory = async (imageUri: string, existingId?: string): Promise
           try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
             console.log(`✅ Nettoyage forcé: ${memories.length} souvenirs restants`);
-          } catch (e) {
+          } catch {
             localStorage.clear();
             memories = [memory];
             localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
