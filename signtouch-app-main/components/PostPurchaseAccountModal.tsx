@@ -62,7 +62,7 @@ export default function PostPurchaseAccountModal({ visible, onClose }: PostPurch
         setSuccess(true);
         setEmail('');
       }
-    } catch (_err) {
+    } catch {
       setError(t('emailLinkError'));
     } finally {
       setLoading(false);
