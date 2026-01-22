@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { X, FileSliders as Sliders, Check, Save, Move, Pencil, RotateCw, ChevronLeft, ChevronRight, Palette, Trash2, Sparkles, Eraser, Plus } from 'lucide-react-native';
+import { X, FileSliders as Sliders, Check, Pencil, ChevronLeft, ChevronRight, Palette, Trash2, Eraser, Plus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Memory, SignatureOverlay as StoredSignatureOverlay } from '@/utils/memoriesStorage';
@@ -358,11 +358,10 @@ export default function EditScreen() {
         } else {
           console.log('📱 Génération image composite sur Mobile...');
           if (viewShotRef.current) {
-            const uri = await captureRef(viewShotRef.current, {
+            compositeUri = await captureRef(viewShotRef.current, {
               format: 'jpg',
               quality: 0.8,
             });
-            compositeUri = uri;
           }
         }
       } catch (err) {

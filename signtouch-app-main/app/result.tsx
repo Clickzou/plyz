@@ -12,7 +12,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Share2, Palette, Pencil, Plus, Sparkles, X, RotateCw, Check, Save, Eraser } from 'lucide-react-native';
+import { Download, Trash2, Share2, Palette, Pencil, Plus, X, Eraser } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,9 +23,9 @@ import AdModal from '@/components/AdModal';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { captureRef } from 'react-native-view-shot';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, runOnJS } from 'react-native-reanimated';
-import Svg, { Path, Defs, Filter, FeColorMatrix, Image as SvgImage } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import PremiumModal from '@/components/PremiumModal';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { maybeShowSubscriptionOffer } from '@/utils/subscriptionOffer';

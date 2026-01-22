@@ -1,0 +1,37 @@
+s defined but never used                     @typescript-eslint/no-unused-vars
+  201:11  warning  'status' is assigned a value but never used              @typescript-eslint/no-unused-vars
+  367:13  warning  'newColors' is assigned a value but never used           @typescript-eslint/no-unused-vars
+  368:13  warning  'newStrokeScales' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  612:22  warning  'e' is defined but never used                            @typescript-eslint/no-unused-vars
+  622:15  warning  'savedMemory' is assigned a value but never used         @typescript-eslint/no-unused-vars
+  676:9   warning  'toggleStrokePicker' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  708:9   warning  'rotateSelected' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   15:28   warning  'Sliders' is defined but never used                         @typescript-eslint/no-unused-vars
+   15:44   warning  'Save' is defined but never used                            @typescript-eslint/no-unused-vars
+   15:50   warning  'Move' is defined but never used                            @typescript-eslint/no-unused-vars
+   15:64   warning  'RotateCw' is defined but never used                        @typescript-eslint/no-unused-vars
+   15:118  warning  'Sparkles' is defined but never used                        @typescript-eslint/no-unused-vars
+   26:36   warning  'GestureHandlerRootView' is defined but never used          @typescript-eslint/no-unused-vars
+  210:10   warning  'showEditPanel' is assigned a value but never used          @typescript-eslint/no-unused-vars
+  222:11   warning  'status' is assigned a value but never used                 @typescript-eslint/no-unused-vars
+  226:9    warning  'COLORS' is assigned a value but never used                 @typescript-eslint/no-unused-vars
+  241:9    warning  'getSignatureOverlays' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  767:9    warning  'rotateSelectedOverlay' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  829:9    warning  'compressImageDataUrl' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  864:9    warning  'captureImageWeb' is assigned a value but never used        @typescript-eslint/no-unused-vars
+  921:9    warning  'handleClose' is assigned a value but never used            @typescript-eslint/no-unused-vars
+  83:11  warning  'status' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    28:21  warning  'Defs' is defined but never used                                  @typescript-eslint/no-unused-vars
+    28:27  warning  'Filter' is defined but never used                                @typescript-eslint/no-unused-vars
+    28:35  warning  'FeColorMatrix' is defined but never used                         @typescript-eslint/no-unused-vars
+    28:59  warning  'SvgImage' is defined but never used                              @typescript-eslint/no-unused-vars
+    31:10  warning  'maybeShowSubscriptionOffer' is defined but never used            @typescript-eslint/no-unused-vars
+   497:11  warning  'status' is assigned a value but never used                       @typescript-eslint/no-unused-vars
+   515:21  warning  'setLimitType' is assigned a value but never used                 @typescript-eslint/no-unused-vars
+   565:26  warning  'setSignatureColor' is assigned a value but never used            @typescript-eslint/no-unused-vars
+   567:10  warning  'isDrawing' is assigned a value but never used                    @typescript-eslint/no-unused-vars
+   939:9   warning  'toggleColorPicker' is assigned a value but never used            @typescript-eslint/no-unused-vars
+  1257:9   warning  'validateAndSave' is assigned a value but never used              @typescript-eslint/no-unused-vars
+  1376:13  warning  'errorMessage' is assigned a value but never used                 @typescript-eslint/no-unused-vars
+  14:10  warning  'useSubscription' is defined but never used  @typescript-eslint/no-unused-vars
+  65:14  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
