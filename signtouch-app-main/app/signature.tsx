@@ -529,14 +529,12 @@ export default function SignatureScreen() {
                 onPress={saveAndAddNew}
                 activeOpacity={0.8}
               >
-                <View style={styles.compositeIconContainer}>
-                  <Pencil size={24} color="#1a1a1a" strokeWidth={2.5} />
-                  {hasContent && (
-                    <Animated.View style={[styles.plusBadgeYellow, animatedBadgeStyle]}>
-                      <Plus size={12} color="#1a1a1a" strokeWidth={3} />
-                    </Animated.View>
-                  )}
-                </View>
+                <Pencil size={24} color="#1a1a1a" strokeWidth={2.5} />
+                {hasContent && (
+                  <Animated.View style={[styles.plusBadgeYellow, animatedBadgeStyle]}>
+                    <Plus size={14} color="#1a1a1a" strokeWidth={3} />
+                  </Animated.View>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -544,14 +542,12 @@ export default function SignatureScreen() {
                 onPress={() => setShowTextModal(true)}
                 activeOpacity={0.8}
               >
-                <View style={styles.compositeIconContainer}>
-                  <Type size={24} color="#ffffff" strokeWidth={2} />
-                  {hasContent && (
-                    <Animated.View style={[styles.plusBadgeBlue, animatedBadgeStyle]}>
-                      <Plus size={12} color="#ffffff" strokeWidth={3} />
-                    </Animated.View>
-                  )}
-                </View>
+                <Type size={24} color="#ffffff" strokeWidth={2} />
+                {hasContent && (
+                  <Animated.View style={[styles.plusBadgeBlue, animatedBadgeStyle]}>
+                    <Plus size={14} color="#ffffff" strokeWidth={3} />
+                  </Animated.View>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -883,25 +879,29 @@ const styles = StyleSheet.create({
   },
   plusBadgeYellow: {
     position: 'absolute',
-    top: -2,
-    right: -2,
+    bottom: -10,
+    right: -10,
     backgroundColor: '#eab308',
-    borderRadius: 8,
-    width: 16,
-    height: 16,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#1a1a1a',
   },
   plusBadgeBlue: {
     position: 'absolute',
-    top: -2,
-    right: -2,
+    bottom: -10,
+    right: -10,
     backgroundColor: '#3B82F6',
-    borderRadius: 8,
-    width: 16,
-    height: 16,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#1a1a1a',
   },
   savedTextOverlay: {
     position: 'absolute',
