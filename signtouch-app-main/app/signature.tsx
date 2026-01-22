@@ -61,7 +61,7 @@ export default function SignatureScreen() {
     }
 
     hadPathsRef.current = hasPathsNow;
-  }, [paths.length]);
+  }, [paths.length, scale]);
 
   const animatedTextStyle = useAnimatedStyle(() => {
     return {
