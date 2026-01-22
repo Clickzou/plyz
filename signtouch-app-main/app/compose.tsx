@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,6 +8,7 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -181,7 +182,7 @@ export default function ComposeScreen() {
   const [signatureColors, setSignatureColors] = useState<string[]>(
     signatureUris.map(() => '#ffffff')
   );
-  const [signatureStrokeScales] = useState<number[]>(
+  const [signatureStrokeScales, setSignatureStrokeScales] = useState<number[]>(
     signatureUris.map(() => 1.0)
   );
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -192,7 +193,6 @@ export default function ComposeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const viewShotRef = useRef<View>(null);
-  const { status } = useSubscription();
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -269,12 +269,6 @@ export default function ComposeScreen() {
     })
   ).current;
 
-  useEffect(() => {
-    if (memoryId) {
-      loadMemoryPhoto();
-    }
-  }, [memoryId, loadMemoryPhoto]);
-
   const loadMemoryPhoto = useCallback(async () => {
     try {
       console.log('📂 Chargement de la memory pour composition:', memoryId);
@@ -295,6 +289,12 @@ export default function ComposeScreen() {
       setIsLoadingMemory(false);
     }
   }, [memoryId, photoUri, user?.id]);
+
+  useEffect(() => {
+    if (memoryId) {
+      loadMemoryPhoto();
+    }
+  }, [memoryId, loadMemoryPhoto]);
 
   const createGesture = (transform: SignatureTransform, index: number) => {
     const tap = Gesture.Tap()
@@ -489,8 +489,8 @@ export default function ComposeScreen() {
                       drawAllSignatures();
                     }
                   };
-                  signatureImg.onerror = (e) => {
-                    console.error(`❌ Erreur chargement signature SVG ${index + 1}:`, e);
+                  signatureImg.onerror = () => {
+                    console.error(`❌ Erreur chargement signature SVG ${index + 1}`);
                     URL.revokeObjectURL(svgUrl);
                     reject(new Error(`Failed to load signature ${index + 1}`));
                   };
@@ -513,8 +513,8 @@ export default function ComposeScreen() {
                   }
                 };
 
-                signatureImg.onerror = (e) => {
-                  console.error(`❌ Erreur chargement signature ${index + 1}:`, e);
+                signatureImg.onerror = () => {
+                  console.error(`❌ Erreur chargement signature ${index + 1}`);
                   reject(new Error(`Failed to load signature ${index + 1}`));
                 };
                 signatureImg.src = uri;
@@ -522,8 +522,8 @@ export default function ComposeScreen() {
             });
           };
 
-          photoImg.onerror = (e) => {
-            console.error('❌ Erreur chargement photo:', e);
+          photoImg.onerror = () => {
+            console.error('❌ Erreur chargement photo');
             reject(new Error('Failed to load photo'));
           };
           photoImg.src = finalPhotoUri as string;
@@ -667,13 +667,6 @@ export default function ComposeScreen() {
     setShowStrokePicker(false);
   };
 
-  const toggleStrokePicker = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setShowStrokePicker(!showStrokePicker);
-    setShowColorPicker(false);
-  };
 
   const selectColor = (color: string) => {
     if (Platform.OS !== 'web') {
@@ -699,16 +692,6 @@ export default function ComposeScreen() {
     setShowStrokePicker(false);
   };
 
-  const rotateSelected = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    if (selectedSignatureIndex !== null) {
-      const transform = signatureTransforms[selectedSignatureIndex];
-      transform.rotation.value = transform.rotation.value + Math.PI / 2;
-      transform.savedRotation.value = transform.rotation.value;
-    }
-  };
 
   const buttonBottom = insets.bottom + 20;
 
