@@ -1348,11 +1348,11 @@ export default function ResultScreen() {
         }
 
         router.push('/gallery');
-    } catch {
-      console.error('❌ Erreur lors de la suppression');
-      Alert.alert('Erreur', 'Impossible de supprimer ce souvenir.');
-      setIsDeleting(false);
-    }
+      } catch {
+        console.error('❌ Erreur lors de la suppression');
+        Alert.alert('Erreur', 'Impossible de supprimer ce souvenir.');
+        setIsDeleting(false);
+      }
     } else {
       router.push('/');
     }

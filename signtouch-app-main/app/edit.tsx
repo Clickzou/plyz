@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Dimensions,
   ScrollView,
+  Text,
+  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { X, Check, Pencil, ChevronLeft, ChevronRight, Palette, Trash2, Eraser, Plus } from 'lucide-react-native';
@@ -205,6 +207,12 @@ export default function EditScreen() {
   const [overlays, setOverlays] = useState<OverlayElement[]>([]);
   const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null);
   const [showTooltip, setShowTooltip] = useState(true);
+  const [isSignatureMode, setIsSignatureMode] = useState(false);
+  const [showEditPanel, setShowEditPanel] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [signaturePaths, setSignaturePaths] = useState<{ path: string }[]>([]);
+  const [currentPath, setCurrentPath] = useState('');
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const startPointRef = useRef<{ x: number; y: number } | null>(null);
   const viewShotRef = useRef<View>(null);
   const signatureViewRef = useRef<View>(null);
