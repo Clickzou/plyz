@@ -384,14 +384,22 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
     const isSvgData = overlay.uri.startsWith('data:image/svg+xml');
     let svgData: any = null;
     let svgPaths: string[] = [];
-    let svgWidth = 300;
-    let svgHeight = 150;
+    let svgWidth = 150;
+    let svgHeight = 80;
+    let displayWidth = 150;
+    let displayHeight = 80;
 
     if (isJsonData) {
       try {
         const base64Data = overlay.uri.split(',')[1];
         const jsonString = decodeURIComponent(escape(atob(base64Data)));
         svgData = JSON.parse(jsonString);
+        // Normalize dimensions like compose.tsx
+        const originalWidth = svgData.width || 150;
+        const originalHeight = svgData.height || 80;
+        const aspectRatio = originalWidth / originalHeight;
+        displayWidth = Math.min(originalWidth, 150);
+        displayHeight = displayWidth / aspectRatio;
       } catch (error) {
         console.error('Error parsing SVG data:', error);
       }
@@ -409,12 +417,16 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
         const heightMatch = svgString.match(/height="([^"]+)"/);
         if (widthMatch) svgWidth = parseFloat(widthMatch[1]);
         if (heightMatch) svgHeight = parseFloat(heightMatch[1]);
+        // Normalize dimensions like compose.tsx
+        const aspectRatio = svgWidth / svgHeight;
+        displayWidth = Math.min(svgWidth, 150);
+        displayHeight = displayWidth / aspectRatio;
       } catch (error) {
         console.error('Error parsing SVG data:', error);
       }
     }
 
-    return { isJsonData, isSvgData, svgData, svgPaths, svgWidth, svgHeight };
+    return { isJsonData, isSvgData, svgData, svgPaths, svgWidth, svgHeight, displayWidth, displayHeight };
   }, [overlay.uri, overlay.color]);
 
   const signatureColor = overlay.color || '#ffffff';
@@ -431,41 +443,49 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
             delayLongPress={500}
           >
             {svgInfo.svgData ? (
-              <Svg
-                key={`${overlay.id}-${overlay.uri.slice(-20)}`}
-                width={svgInfo.svgData.width}
-                height={svgInfo.svgData.height}
-              >
-                {svgInfo.svgData.paths.map((pathData: string, index: number) => (
-                  <Path
-                    key={`path-${index}-${overlay.uri.slice(-10)}`}
-                    d={pathData}
-                    stroke={signatureColor}
-                    strokeWidth={8}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                ))}
-              </Svg>
+              <View style={{ width: svgInfo.displayWidth, height: svgInfo.displayHeight }}>
+                <Svg
+                  key={`${overlay.id}-${overlay.uri.slice(-20)}`}
+                  width={svgInfo.svgData.width}
+                  height={svgInfo.svgData.height}
+                  viewBox={`0 0 ${svgInfo.svgData.width} ${svgInfo.svgData.height}`}
+                  style={{ width: svgInfo.displayWidth, height: svgInfo.displayHeight }}
+                >
+                  {svgInfo.svgData.paths.map((pathData: string, index: number) => (
+                    <Path
+                      key={`path-${index}-${overlay.uri.slice(-10)}`}
+                      d={pathData}
+                      stroke={signatureColor}
+                      strokeWidth={8}
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  ))}
+                </Svg>
+              </View>
             ) : svgInfo.isSvgData && svgInfo.svgPaths.length > 0 ? (
-              <Svg
-                key={`${overlay.id}-${overlay.uri.slice(-20)}`}
-                width={svgInfo.svgWidth}
-                height={svgInfo.svgHeight}
-              >
-                {svgInfo.svgPaths.map((pathData, index) => (
-                  <Path
-                    key={`path-${index}-${overlay.uri.slice(-10)}`}
-                    d={pathData}
-                    stroke={signatureColor}
-                    strokeWidth={3}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                ))}
-              </Svg>
+              <View style={{ width: svgInfo.displayWidth, height: svgInfo.displayHeight }}>
+                <Svg
+                  key={`${overlay.id}-${overlay.uri.slice(-20)}`}
+                  width={svgInfo.svgWidth}
+                  height={svgInfo.svgHeight}
+                  viewBox={`0 0 ${svgInfo.svgWidth} ${svgInfo.svgHeight}`}
+                  style={{ width: svgInfo.displayWidth, height: svgInfo.displayHeight }}
+                >
+                  {svgInfo.svgPaths.map((pathData, index) => (
+                    <Path
+                      key={`path-${index}-${overlay.uri.slice(-10)}`}
+                      d={pathData}
+                      stroke={signatureColor}
+                      strokeWidth={3}
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  ))}
+                </Svg>
+              </View>
             ) : (
               <Image
                 key={`${overlay.id}-${overlay.uri.slice(-20)}`}

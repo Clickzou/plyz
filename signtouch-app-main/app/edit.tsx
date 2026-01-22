@@ -225,7 +225,12 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
           >
             <View style={[styles.signatureContentWrapper, { width: imageDimensions.width, height: imageDimensions.height }]}>
               {svgData ? (
-                <Svg width={svgData.width} height={svgData.height} style={{ width: imageDimensions.width, height: imageDimensions.height }}>
+                <Svg 
+                  width={svgData.width} 
+                  height={svgData.height} 
+                  viewBox={`0 0 ${svgData.width} ${svgData.height}`}
+                  style={{ width: imageDimensions.width, height: imageDimensions.height }}
+                >
                   {svgData.paths.map((pathData: string, idx: number) => (
                     <Path
                       key={idx}
