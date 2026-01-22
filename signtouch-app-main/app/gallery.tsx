@@ -84,7 +84,7 @@ export default function GalleryScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  const loadMemories = async () => {
+  const loadMemories = useCallback(async () => {
     try {
       setLoading(true);
       const loadedMemories = await StorageService.getAllMemories(user?.id || null);
@@ -94,7 +94,7 @@ export default function GalleryScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   useFocusEffect(
     useCallback(() => {
