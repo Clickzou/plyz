@@ -394,12 +394,9 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
         const base64Data = overlay.uri.split(',')[1];
         const jsonString = decodeURIComponent(escape(atob(base64Data)));
         svgData = JSON.parse(jsonString);
-        // Normalize dimensions like compose.tsx
-        const originalWidth = svgData.width || 150;
-        const originalHeight = svgData.height || 80;
-        const aspectRatio = originalWidth / originalHeight;
-        displayWidth = Math.min(originalWidth, 150);
-        displayHeight = displayWidth / aspectRatio;
+        // Use parsed dimensions like compose.tsx for JSON data
+        displayWidth = svgData.width || 150;
+        displayHeight = svgData.height || 80;
       } catch (error) {
         console.error('Error parsing SVG data:', error);
       }
@@ -412,15 +409,15 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
         while ((match = pathRegex.exec(svgString)) !== null) {
           svgPaths.push(match[1]);
         }
-        // Extract dimensions
+        // Extract dimensions for viewBox
         const widthMatch = svgString.match(/width="([^"]+)"/);
         const heightMatch = svgString.match(/height="([^"]+)"/);
         if (widthMatch) svgWidth = parseFloat(widthMatch[1]);
         if (heightMatch) svgHeight = parseFloat(heightMatch[1]);
-        // Normalize dimensions like compose.tsx
-        const aspectRatio = svgWidth / svgHeight;
-        displayWidth = Math.min(svgWidth, 150);
-        displayHeight = displayWidth / aspectRatio;
+        // Use fixed dimensions like compose.tsx for web (150x80 default)
+        // This matches compose.tsx behavior where dimensions stay at default on web
+        displayWidth = 150;
+        displayHeight = 80;
       } catch (error) {
         console.error('Error parsing SVG data:', error);
       }
