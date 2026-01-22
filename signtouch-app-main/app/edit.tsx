@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Image,
   TouchableOpacity,
@@ -17,7 +16,6 @@ import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Memory, SignatureOverlay as StoredSignatureOverlay } from '@/utils/memoriesStorage';
 import * as StorageService from '@/utils/storageService';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import PremiumModal from '@/components/PremiumModal';
 import { useTranslation } from '@/contexts/LanguageContext';
@@ -207,19 +205,12 @@ export default function EditScreen() {
   const [saving, setSaving] = useState(false);
   const [overlays, setOverlays] = useState<OverlayElement[]>([]);
   const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null);
-  const [showEditPanel, setShowEditPanel] = useState(false);
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const [isSignatureMode, setIsSignatureMode] = useState(false);
-  const [signaturePaths, setSignaturePaths] = useState<{ path: string }[]>([]);
-  const [currentPath, setCurrentPath] = useState('');
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showTooltip, setShowTooltip] = useState(true);
   const startPointRef = useRef<{ x: number; y: number } | null>(null);
   const viewShotRef = useRef<View>(null);
   const signatureViewRef = useRef<View>(null);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { status } = useSubscription();
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -325,8 +316,8 @@ export default function EditScreen() {
       }
 
       return canvas.toDataURL('image/jpeg', 0.85);
-    } catch (err) {
-      console.error('Error generating composite image web:', err);
+    } catch (error) {
+      console.error('Error generating composite image web:', error);
       return memory?.uri || '';
     }
   }, [memory, overlays]);

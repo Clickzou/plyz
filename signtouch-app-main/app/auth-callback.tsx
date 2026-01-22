@@ -8,7 +8,6 @@ import { supabase } from '@/utils/supabase';
 export default function AuthCallbackScreen() {
   const { user, getPostAuthRedirect, clearPostAuthRedirect } = useAuth();
   const [error, setError] = useState<string | null>(null);
-  const [verifying, setVerifying] = useState(true);
   const currentUrl = Linking.useURL();
 
   useEffect(() => {
@@ -38,7 +37,6 @@ export default function AuthCallbackScreen() {
 
             if (error) {
               setError(error.message);
-              setVerifying(false);
               return;
             }
 
@@ -66,7 +64,6 @@ export default function AuthCallbackScreen() {
               }
             } else {
               setError('Lien invalide ou expiré');
-              setVerifying(false);
             }
           }
         } else {
@@ -82,12 +79,10 @@ export default function AuthCallbackScreen() {
             }
           } else {
             setError('Aucun lien de connexion détecté');
-            setVerifying(false);
           }
         }
-      } catch (err) {
+      } catch (error) {
         setError('Erreur lors de la connexion');
-        setVerifying(false);
       }
     };
 
