@@ -28,7 +28,6 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, wit
 import Svg, { Path } from 'react-native-svg';
 import PremiumModal from '@/components/PremiumModal';
 import { useTranslation } from '@/contexts/LanguageContext';
-import { maybeShowSubscriptionOffer } from '@/utils/subscriptionOffer';
 import Slider from '@react-native-community/slider';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -494,7 +493,7 @@ export default function ResultScreen() {
   const [showAdModal, setShowAdModal] = useState(false);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { status } = useSubscription();
+  const { status: _status } = useSubscription();
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -512,7 +511,7 @@ export default function ResultScreen() {
   const [showSignatureMode, setShowSignatureMode] = useState(false);
   const [showEffectsPanel, setShowEffectsPanel] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [limitType, setLimitType] = useState<'signature' | null>(null);
+  const [_limitType, setLimitType] = useState<'signature' | null>(null);
 
   // Welcome message state
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
@@ -562,9 +561,10 @@ export default function ResultScreen() {
 
   // Signature state
   const [signaturePaths, setSignaturePaths] = useState<string[]>([]);
-  const [signatureColor, setSignatureColor] = useState('#f97316');
+  const signatureColor = _signatureColor;
+  const [_signatureColor, setSignatureColor] = useState('#f97316');
   const [currentPath, setCurrentPath] = useState('');
-  const [isDrawing, setIsDrawing] = useState(false);
+  const [_isDrawing, setIsDrawing] = useState(false);
   const signatureCanvasRef = useRef<View>(null);
   const currentPathRef = useRef('');
   const signaturePathsRef = useRef<string[]>([]);
@@ -605,8 +605,8 @@ export default function ResultScreen() {
         }
       }
       setLoading(false);
-    } catch (error) {
-      console.error('Error loading memory:', error);
+    } catch (_error) {
+      console.error('Error loading memory:', _error);
       setLoading(false);
     }
   }, [memoryId, user?.id]);

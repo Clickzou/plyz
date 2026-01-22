@@ -181,7 +181,7 @@ export default function ComposeScreen() {
   const [signatureColors, setSignatureColors] = useState<string[]>(
     signatureUris.map(() => '#ffffff')
   );
-  const [signatureStrokeScales, setSignatureStrokeScales] = useState<number[]>(
+  const [signatureStrokeScales] = useState<number[]>(
     signatureUris.map(() => 1.0)
   );
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -358,8 +358,8 @@ export default function ComposeScreen() {
     if (selectedSignatureIndex !== null) {
       // Supprimer la signature sélectionnée
       const newSignatureUris = signatureUris.filter((_: string, index: number) => index !== selectedSignatureIndex);
-      const newColors = signatureColors.filter((_: string, index: number) => index !== selectedSignatureIndex);
-      const newStrokeScales = signatureStrokeScales.filter((_: number, index: number) => index !== selectedSignatureIndex);
+      // Removed newColors and newStrokeScales as they were unused
+
 
       router.replace({
         pathname: '/compose',

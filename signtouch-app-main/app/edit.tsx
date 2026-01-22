@@ -242,8 +242,8 @@ export default function EditScreen() {
         console.log('🔍 Signatures chargées:', found.signatureOverlays?.length || 0);
         loadOverlaysFromMemory(found.signatureOverlays || []);
       }
-    } catch (error) {
-      console.error('Error loading memory:', error);
+    } catch (_error) {
+      console.error('Error loading memory:', _error);
     } finally {
       setLoading(false);
     }
@@ -315,8 +315,8 @@ export default function EditScreen() {
       }
 
       return canvas.toDataURL('image/jpeg', 0.85);
-    } catch (error) {
-      console.error('Error generating composite image web:', error);
+    } catch (_error) {
+      console.error('Error generating composite image web:', _error);
       return memory?.uri || '';
     }
   }, [memory, overlays]);
@@ -354,8 +354,8 @@ export default function EditScreen() {
             });
           }
         }
-      } catch (err) {
-        console.error('❌ Erreur génération composite:', err);
+      } catch (_err) {
+        console.error('❌ Erreur génération composite:', _err);
       }
 
       await StorageService.updateMemory(
@@ -375,8 +375,8 @@ export default function EditScreen() {
           params: { memoryId: memory.id }
         });
       }
-    } catch (error) {
-      console.error('❌ Erreur lors de la sauvegarde:', error);
+    } catch (_error) {
+      console.error('❌ Erreur lors de la sauvegarde:', _error);
       Alert.alert('Erreur', 'Impossible de sauvegarder les modifications');
     } finally {
       setSaving(false);
@@ -643,8 +643,8 @@ export default function EditScreen() {
       setIsSignatureMode(false);
       setSignaturePaths([]);
       setCurrentPath('');
-    } catch (error) {
-      console.error('Erreur lors de la création de la signature:', error);
+    } catch (_error) {
+      console.error('Erreur lors de la création de la signature:', _error);
       Alert.alert('Erreur', 'Impossible de créer la signature');
     }
   };
