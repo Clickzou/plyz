@@ -484,6 +484,21 @@ export default function SignatureScreen() {
               >
                 <Eraser size={24} color="#ffffff" strokeWidth={2} />
               </TouchableOpacity>
+            </View>
+
+            <View style={styles.floatingButtons}>
+              <TouchableOpacity
+                style={[styles.floatingButton, styles.signatureYellowButton]}
+                onPress={saveAndAddNew}
+                activeOpacity={0.8}
+              >
+                <View style={styles.compositeIconContainer}>
+                  <Pencil size={24} color="#1a1a1a" strokeWidth={2.5} />
+                  <View style={styles.plusBadgeYellow}>
+                    <Plus size={12} color="#1a1a1a" strokeWidth={3} />
+                  </View>
+                </View>
+              </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.floatingButton, styles.textAddButton]}
@@ -491,21 +506,6 @@ export default function SignatureScreen() {
                 activeOpacity={0.8}
               >
                 <Type size={24} color="#ffffff" strokeWidth={2} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.floatingButtons}>
-              <TouchableOpacity
-                style={[styles.floatingButton, styles.plusButton]}
-                onPress={saveAndAddNew}
-                activeOpacity={0.8}
-              >
-                <View style={styles.compositeIconContainer}>
-                  <Pencil size={24} color="#10b981" strokeWidth={2.5} />
-                  <View style={styles.plusBadge}>
-                    <Plus size={12} color="#10b981" strokeWidth={3} />
-                  </View>
-                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -831,6 +831,20 @@ const styles = StyleSheet.create({
   },
   textAddButton: {
     backgroundColor: '#3B82F6',
+  },
+  signatureYellowButton: {
+    backgroundColor: '#eab308',
+  },
+  plusBadgeYellow: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#eab308',
+    borderRadius: 8,
+    width: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   textModalContainer: {
     backgroundColor: '#2a2a2a',
