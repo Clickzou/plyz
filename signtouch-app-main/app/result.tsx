@@ -590,6 +590,27 @@ export default function ResultScreen() {
   }, [signaturePaths, showSignatureMode]);
 
   // Load fonts
+  const loadMemory = useCallback(async () => {
+    try {
+      setLoading(true);
+      const memories = await StorageService.getAllMemories(user?.id || null);
+      const found = memories.find(m => m.id === memoryId);
+      if (found) {
+        setMemory(found);
+        setSignatureOverlays(found.signatureOverlays || []);
+        if (found.adjustments) {
+          setBrightness(found.adjustments.brightness || 0);
+          setContrast(found.adjustments.contrast || 0);
+          setSaturation(found.adjustments.saturation || 0);
+        }
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading memory:', error);
+      setLoading(false);
+    }
+  }, [memoryId, user?.id]);
+
   useEffect(() => {
     if (memoryId) {
       loadMemory();
@@ -642,27 +663,6 @@ export default function ResultScreen() {
       }
     }, [memoryId, isEditMode, signatureOverlays, loadMemory])
   );
-
-  const loadMemory = useCallback(async () => {
-    try {
-      setLoading(true);
-      const memories = await StorageService.getAllMemories(user?.id || null);
-      const found = memories.find(m => m.id === memoryId);
-      if (found) {
-        setMemory(found);
-        setSignatureOverlays(found.signatureOverlays || []);
-        if (found.adjustments) {
-          setBrightness(found.adjustments.brightness || 0);
-          setContrast(found.adjustments.contrast || 0);
-          setSaturation(found.adjustments.saturation || 0);
-        }
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error('Error loading memory:', error);
-      setLoading(false);
-    }
-  }, [memoryId, user?.id]);
 
   const displayUri = memory ? (memory.baseUri || memory.uri) : imageUri;
 
