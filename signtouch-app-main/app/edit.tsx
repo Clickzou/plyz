@@ -83,6 +83,7 @@ interface DraggableSignatureProps {
 }
 
 function DraggableSignature({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, isSelected }: DraggableSignatureProps) {
+  const [imageDimensions, setImageDimensions] = useState({ width: 150, height: 80 });
   const translateX = useSharedValue(overlay.x);
   const translateY = useSharedValue(overlay.y);
   const startX = useSharedValue(0);
@@ -92,6 +93,24 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
   const scale = useSharedValue(overlay.scale);
   const savedScale = useSharedValue(overlay.scale);
   const isDragging = useSharedValue(0);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      return;
+    }
+    Image.getSize(
+      overlay.uri,
+      (width, height) => {
+        if (width && height && width > 0 && height > 0) {
+          const aspectRatio = width / height;
+          const maxWidth = Math.min(width, 250);
+          const calculatedHeight = maxWidth / aspectRatio;
+          setImageDimensions({ width: maxWidth, height: calculatedHeight });
+        }
+      },
+      () => {}
+    );
+  }, [overlay.uri]);
 
   useEffect(() => {
     translateX.value = overlay.x;
@@ -182,10 +201,10 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
             style={styles.signatureTouchable}
             delayLongPress={500}
           >
-            <View style={styles.signatureContentWrapper}>
+            <View style={[styles.signatureContentWrapper, { width: imageDimensions.width, height: imageDimensions.height }]}>
               <Image
                 source={{ uri: overlay.uri }}
-                style={[styles.signatureImage, { tintColor: overlay.color }]}
+                style={[styles.signatureImage, { width: imageDimensions.width, height: imageDimensions.height, tintColor: overlay.color }]}
                 resizeMode="contain"
               />
               {isSelected && <View style={styles.signatureSelectionBorder} />}
