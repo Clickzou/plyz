@@ -530,7 +530,7 @@ export default function SignatureScreen() {
                 activeOpacity={0.8}
               >
                 <Pencil size={24} color="#1a1a1a" strokeWidth={2.5} />
-                {hasContent && (
+                {(savedSignatures.length > 0 || paths.length > 0) && (
                   <Animated.View style={[styles.plusBadgeYellow, animatedBadgeStyle]}>
                     <Plus size={14} color="#1a1a1a" strokeWidth={3} />
                   </Animated.View>
@@ -543,7 +543,7 @@ export default function SignatureScreen() {
                 activeOpacity={0.8}
               >
                 <Type size={24} color="#ffffff" strokeWidth={2} />
-                {hasContent && (
+                {savedTexts.length > 0 && (
                   <Animated.View style={[styles.plusBadgeBlue, animatedBadgeStyle]}>
                     <Plus size={14} color="#ffffff" strokeWidth={3} />
                   </Animated.View>
