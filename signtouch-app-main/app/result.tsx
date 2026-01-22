@@ -1934,12 +1934,12 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   viewShot: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
+    flex: 1,
+    position: 'relative',
   },
   image: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
+    width: '100%',
+    height: '100%',
   },
   topLeft: {
     position: 'absolute',
