@@ -551,7 +551,7 @@ export default function ResultScreen() {
       -1,
       false
     );
-  }, []);
+  }, [editButtonScale, editButtonOpacity]);
 
   const editButtonAnimatedStyle = useAnimatedStyle(() => {
     return {
@@ -594,7 +594,7 @@ export default function ResultScreen() {
     if (memoryId) {
       loadMemory();
     }
-  }, [memoryId]);
+  }, [memoryId, loadMemory]);
 
   // Welcome message animation
   useEffect(() => {
@@ -611,7 +611,7 @@ export default function ResultScreen() {
 
       return () => clearTimeout(timer);
     }
-  }, [showWelcomeMessage]);
+  }, [showWelcomeMessage, welcomeOpacity]);
 
   // Wrapper functions for storage
   const saveMemory = async (imageUri: string, metadata?: any) => {
@@ -640,10 +640,10 @@ export default function ResultScreen() {
         console.log('🔄 Rechargement de la memory au retour sur result.tsx');
         loadMemory();
       }
-    }, [memoryId, isEditMode, signatureOverlays.length])
+    }, [memoryId, isEditMode, signatureOverlays, loadMemory])
   );
 
-  const loadMemory = async () => {
+  const loadMemory = useCallback(async () => {
     try {
       setLoading(true);
       const memories = await StorageService.getAllMemories(user?.id || null);
@@ -662,7 +662,7 @@ export default function ResultScreen() {
       console.error('Error loading memory:', error);
       setLoading(false);
     }
-  };
+  }, [memoryId, user?.id]);
 
   const displayUri = memory ? (memory.baseUri || memory.uri) : imageUri;
 
