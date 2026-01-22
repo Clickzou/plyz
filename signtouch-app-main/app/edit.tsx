@@ -259,6 +259,78 @@ export default function EditScreen() {
     }
   }, [memoryId, user?.id, loadOverlaysFromMemory]);
 
+  const generateCompositeImageWeb = useCallback(async (): Promise<string> => {
+    if (!viewShotRef.current || !memory) return memory?.uri || '';
+
+    try {
+      const baseImg = new window.Image();
+      baseImg.crossOrigin = 'anonymous';
+      await new Promise((resolve, reject) => {
+        baseImg.onload = resolve;
+        baseImg.onerror = reject;
+        baseImg.src = memory.baseUri || memory.uri;
+      });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = baseImg.naturalWidth;
+      canvas.height = baseImg.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('No canvas context');
+
+      ctx.drawImage(baseImg, 0, 0);
+
+      const viewShotElem = viewShotRef.current as any;
+      const displayWidth = viewShotElem.offsetWidth || SCREEN_WIDTH;
+      const displayHeight = viewShotElem.offsetHeight || (SCREEN_WIDTH * (baseImg.naturalHeight / baseImg.naturalWidth));
+
+      const ratioX = baseImg.naturalWidth / displayWidth;
+      const ratioY = baseImg.naturalHeight / displayHeight;
+
+      for (const overlay of overlays) {
+        const overlayImg = new window.Image();
+        overlayImg.crossOrigin = 'anonymous';
+        await new Promise((resolve, reject) => {
+          overlayImg.onload = resolve;
+          overlayImg.onerror = reject;
+          overlayImg.src = overlay.uri;
+        });
+
+        ctx.save();
+
+        const targetX = overlay.x * ratioX;
+        const targetY = overlay.y * ratioY;
+
+        const baseOverlayWidth = 150;
+        const baseOverlayHeight = (overlayImg.naturalHeight / overlayImg.naturalWidth) * baseOverlayWidth;
+
+        const drawWidth = baseOverlayWidth * overlay.scale * ratioX;
+        const drawHeight = baseOverlayHeight * overlay.scale * ratioY;
+
+        ctx.translate(targetX + drawWidth / 2, targetY + drawHeight / 2);
+        ctx.rotate((overlay.rotation * Math.PI) / 180);
+
+        const tintCanvas = document.createElement('canvas');
+        tintCanvas.width = overlayImg.naturalWidth;
+        tintCanvas.height = overlayImg.naturalHeight;
+        const tCtx = tintCanvas.getContext('2d')!;
+
+        tCtx.drawImage(overlayImg, 0, 0);
+        tCtx.globalCompositeOperation = 'source-in';
+        tCtx.fillStyle = overlay.color;
+        tCtx.fillRect(0, 0, tintCanvas.width, tintCanvas.height);
+
+        ctx.drawImage(tintCanvas, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+
+        ctx.restore();
+      }
+
+      return canvas.toDataURL('image/jpeg', 0.85);
+    } catch (err) {
+      console.error('Error generating composite image web:', err);
+      return memory?.uri || '';
+    }
+  }, [memory, overlays]);
+
   const handleSave = useCallback(async () => {
     if (saving || !memory) return;
     setSaving(true);
@@ -297,25 +369,22 @@ export default function EditScreen() {
         console.error('❌ Erreur génération composite:', err);
       }
 
-      const updatedMemory = await StorageService.updateMemory(
+      await StorageService.updateMemory(
         memory,
         user?.id || null,
         {
           signatureOverlays,
-          uri: compositeUri,
+          imageUri: compositeUri,
           isEdited: true
         }
       );
 
-      if (updatedMemory) {
-        setMemory(updatedMemory);
-        console.log('✅ Sauvegarde réussie');
-        if (autoSave === 'true') {
-          router.replace({
-            pathname: '/result',
-            params: { memoryId: updatedMemory.id }
-          });
-        }
+      console.log('✅ Sauvegarde réussie');
+      if (autoSave === 'true') {
+        router.replace({
+          pathname: '/result',
+          params: { memoryId: memory.id }
+        });
       }
     } catch (error) {
       console.error('❌ Erreur lors de la sauvegarde:', error);
@@ -344,6 +413,20 @@ export default function EditScreen() {
       return () => clearTimeout(timer);
     }
   }, [autoSave, memory, saving, handleSave]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTooltip(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (selectedOverlayId !== null) {
+      setShowTooltip(false);
+    }
+  }, [selectedOverlayId]);
 
   const goToSignature = () => {
     if (Platform.OS !== 'web') {
@@ -834,84 +917,6 @@ export default function EditScreen() {
     });
   };
 
-  const handleSave = async () => {
-    if (!memory) {
-      console.error('❌ Memory is null');
-      return;
-    }
-
-    try {
-      console.log('🔄 Début de la sauvegarde...');
-      setSaving(true);
-      if (Platform.OS !== 'web') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      console.log('📸 Capture de l\'image...');
-      let capturedUri: string;
-
-      if (Platform.OS === 'web') {
-        capturedUri = await captureImageWeb();
-      } else {
-        if (!viewShotRef.current) {
-          throw new Error('ViewShot ref is null');
-        }
-        capturedUri = await captureRef(viewShotRef.current, {
-          format: 'png',
-          quality: 1.0,
-        });
-      }
-      console.log('✅ Image capturée');
-
-      let finalUri = capturedUri;
-
-      if (Platform.OS === 'web') {
-        console.log('🗜️ Compression de l\'image...');
-        try {
-          finalUri = await compressImageDataUrl(capturedUri);
-          console.log('✅ Image compressée');
-        } catch (compressError) {
-          console.error('⚠️ Erreur de compression, utilisation de l\'original:', compressError);
-        }
-      }
-
-      const baseUri = memory.baseUri || memory.uri;
-      const savedSignatureOverlays = getSignatureOverlays();
-
-      console.log('💾 Mise à jour de l\'image...');
-      await StorageService.updateMemory(
-        memory,
-        user?.id || null,
-        {
-          imageUri: finalUri,
-          signatureOverlays: savedSignatureOverlays.length > 0 ? savedSignatureOverlays : undefined,
-        }
-      );
-      console.log('✅ Image mise à jour');
-
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-
-      setSaving(false);
-
-      console.log('✅ Sauvegarde terminée, redirection vers result');
-      router.push({
-        pathname: '/result',
-        params: { memoryId: memoryId },
-      });
-    } catch (error) {
-      console.error('❌ Erreur lors de la sauvegarde:', error);
-      setSaving(false);
-      if (Platform.OS === 'web') {
-        alert(`Erreur: ${(error as Error).message}`);
-      } else {
-        Alert.alert('Erreur', `Impossible d\'enregistrer: ${(error as Error).message}`);
-      }
-    }
-  };
 
   const handleClose = () => {
     if (Platform.OS !== 'web') {
