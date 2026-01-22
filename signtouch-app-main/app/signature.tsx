@@ -11,7 +11,6 @@ import Svg, { Path } from 'react-native-svg';
 import { Eraser, Check, ArrowLeft, Plus, Pencil } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import PremiumModal from '@/components/PremiumModal';
 import * as SplashScreen from 'expo-splash-screen';
 import { useTranslation } from '@/contexts/LanguageContext';

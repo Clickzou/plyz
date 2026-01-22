@@ -12,7 +12,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Share2, Palette, Pencil, Plus, X, Eraser } from 'lucide-react-native';
+import { Download, Trash2, Share2, Palette, Pencil, Plus, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

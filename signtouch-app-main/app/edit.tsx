@@ -8,10 +8,9 @@ import {
   ActivityIndicator,
   Dimensions,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { X, FileSliders as Sliders, Check, Pencil, ChevronLeft, ChevronRight, Palette, Trash2, Eraser, Plus } from 'lucide-react-native';
+import { X, Check, Pencil, ChevronLeft, ChevronRight, Palette, Trash2, Eraser, Plus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Memory, SignatureOverlay as StoredSignatureOverlay } from '@/utils/memoriesStorage';
