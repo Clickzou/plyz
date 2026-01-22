@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -165,7 +165,7 @@ export default function GalleryScreen() {
     try {
       if (Platform.OS === 'web') {
         const response = await fetch(selectedMemory.uri);
-        const blob = await response.blob();
+        await response.blob();
         const link = document.createElement('a');
         link.href = selectedMemory.uri;
         link.download = `souvenir_${Date.now()}.png`;
@@ -283,7 +283,7 @@ export default function GalleryScreen() {
           const memory = memories.find(m => m.id === memoryId);
           if (memory) {
             const response = await fetch(memory.uri);
-            const blob = await response.blob();
+            await response.blob();
             const link = document.createElement('a');
             link.href = memory.uri;
             link.download = `souvenir_${memoryId}.png`;
