@@ -102,7 +102,7 @@ function FilteredImage({ uri, brightness, contrast, saturation, style }: Filtere
 }
 
 // Types
-interface SignatureOverlay extends StoredSignatureOverlay {}
+type SignatureOverlay = StoredSignatureOverlay;
 
 // Constants
 const SIGNATURE_COLORS = [

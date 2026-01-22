@@ -14,7 +14,9 @@ import { PHOTO_EDITOR_HTML } from '@/utils/photoEditorHtml';
 let fabric: any = null;
 if (Platform.OS === 'web') {
   // @ts-ignore
-  fabric = require('fabric').fabric;
+  import('fabric').then(module => {
+    fabric = module.fabric;
+  });
 }
 
 export default function PhotoEditorCanvas() {
