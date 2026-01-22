@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Platform, Alert, View, ActivityIndicator, StyleSheet } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -18,11 +18,12 @@ if (Platform.OS === 'web') {
 }
 
 export default function PhotoEditorCanvas() {
-  const { imageUri, memoryId, returnTo } = useLocalSearchParams<{
+  const { imageUri: imageUriParam, memoryId, returnTo } = useLocalSearchParams<{
     imageUri?: string;
     memoryId?: string;
     returnTo?: string;
   }>();
+  const imageUri = String(imageUriParam ?? "");
   const router = useRouter();
   const { user } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -52,15 +53,7 @@ export default function PhotoEditorCanvas() {
     return await StorageService.updateMemory(memory, user?.id || null, updates);
   };
 
-  // Charger la memory si on édite une photo existante
-  useEffect(() => {
-    console.log('🔍 useEffect memoryId:', memoryId, 'imageUri:', imageUri);
-    if (memoryId) {
-      loadMemory();
-    }
-  }, [memoryId]);
-
-  const loadMemory = async () => {
+  const loadMemory = useCallback(async () => {
     if (memoryId) {
       try {
         console.log('📂 Chargement de la memory:', memoryId);
@@ -76,7 +69,15 @@ export default function PhotoEditorCanvas() {
         console.error('❌ Erreur chargement memory:', error);
       }
     }
-  };
+  }, [memoryId, user?.id]);
+
+  // Charger la memory si on édite une photo existante
+  useEffect(() => {
+    console.log('🔍 useEffect memoryId:', memoryId, 'imageUri:', imageUri);
+    if (memoryId) {
+      loadMemory();
+    }
+  }, [memoryId, imageUri, loadMemory]);
 
   // Envoyer l'image à la WebView quand elle est prête ET que la memory est chargée
   useEffect(() => {
@@ -126,52 +127,7 @@ export default function PhotoEditorCanvas() {
   }, [webViewReady, memory, imageUri]);
 
 
-  useEffect(() => {
-    // Vérifier qu'on est sur web
-    if (Platform.OS !== 'web') {
-      alert('Cet éditeur ne fonctionne que sur Web');
-      router.back();
-      return;
-    }
-
-    // Attendre que fabric soit chargé
-    const checkFabric = setInterval(() => {
-      if (fabric && canvasRef.current) {
-        clearInterval(checkFabric);
-        initCanvas();
-      }
-    }, 100);
-
-    return () => {
-      clearInterval(checkFabric);
-      if (fabricCanvasRef.current) {
-        fabricCanvasRef.current.dispose();
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (fabricCanvasRef.current && (memory || imageUri)) {
-      loadImage();
-    }
-  }, [memory, imageUri]);
-
-  useEffect(() => {
-    if (!loading && memory && memory.adjustments) {
-      console.log('🎨 Application des réglages sauvegardés:', memory.adjustments);
-      setBrightness(memory.adjustments.brightness || 0);
-      setContrast(memory.adjustments.contrast || 0);
-      setSaturation(memory.adjustments.saturation || 0);
-    }
-  }, [loading, memory]);
-
-  useEffect(() => {
-    if (!loading && originalImageRef.current) {
-      applyAdjustments();
-    }
-  }, [brightness, contrast, saturation, loading]);
-
-  const initCanvas = () => {
+  const initCanvas = useCallback(() => {
     if (!canvasRef.current || !fabric) return;
 
     // Créer le canvas Fabric.js
@@ -203,7 +159,31 @@ export default function PhotoEditorCanvas() {
     });
 
     window.addEventListener('resize', resizeCanvas);
-  };
+  }, [loadImage]);
+
+  useEffect(() => {
+    // Vérifier qu'on est sur web
+    if (Platform.OS !== 'web') {
+      alert('Cet éditeur ne fonctionne que sur Web');
+      router.back();
+      return;
+    }
+
+    // Attendre que fabric soit chargé
+    const checkFabric = setInterval(() => {
+      if (fabric && canvasRef.current) {
+        clearInterval(checkFabric);
+        initCanvas();
+      }
+    }, 100);
+
+    return () => {
+      clearInterval(checkFabric);
+      if (fabricCanvasRef.current) {
+        fabricCanvasRef.current.dispose();
+      }
+    };
+  }, [initCanvas, router]);
 
   const loadImage = () => {
     if (!fabric || !fabricCanvasRef.current) return;
