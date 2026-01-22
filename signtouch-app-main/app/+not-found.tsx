@@ -12,7 +12,7 @@ export default function NotFoundScreen() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [router]);
 
   return (
     <>

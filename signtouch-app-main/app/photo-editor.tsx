@@ -23,7 +23,7 @@ export default function PhotoEditorScreen() {
         },
       });
     }
-  }, []);
+  }, [params.imageUri, params.memoryId, router]);
 
   // Sur mobile, afficher un message
   if (Platform.OS !== 'web') {

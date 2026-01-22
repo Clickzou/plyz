@@ -279,9 +279,9 @@ export default function ComposeScreen() {
     if (memoryId) {
       loadMemoryPhoto();
     }
-  }, [memoryId]);
+  }, [memoryId, loadMemoryPhoto]);
 
-  const loadMemoryPhoto = async () => {
+  const loadMemoryPhoto = useCallback(async () => {
     try {
       console.log('📂 Chargement de la memory pour composition:', memoryId);
       const memories = await StorageService.getAllMemories(user?.id || null);
@@ -300,7 +300,7 @@ export default function ComposeScreen() {
     } finally {
       setIsLoadingMemory(false);
     }
-  };
+  }, [memoryId, photoUri, user?.id]);
 
   const createGesture = (transform: SignatureTransform, index: number) => {
     const tap = Gesture.Tap()

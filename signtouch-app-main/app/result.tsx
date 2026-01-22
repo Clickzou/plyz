@@ -303,17 +303,17 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
   useEffect(() => {
     translateX.value = overlay.x;
     translateY.value = overlay.y;
-  }, [overlay.x, overlay.y]);
+  }, [overlay.x, overlay.y, translateX, translateY]);
 
   useEffect(() => {
     rotation.value = overlay.rotation;
     savedRotation.value = overlay.rotation;
-  }, [overlay.rotation]);
+  }, [overlay.rotation, rotation, savedRotation]);
 
   useEffect(() => {
     scale.value = overlay.scale;
     savedScale.value = overlay.scale;
-  }, [overlay.scale]);
+  }, [overlay.scale, scale, savedScale]);
 
   const panGesture = Gesture.Pan()
     .shouldCancelWhenOutside(false)
@@ -415,7 +415,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
     }
 
     return { isJsonData, isSvgData, svgData, svgPaths, svgWidth, svgHeight };
-  }, [overlay.uri, overlay.color]);
+  }, [overlay.uri]);
 
   const signatureColor = overlay.color || '#ffffff';
 
