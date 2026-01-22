@@ -126,66 +126,7 @@ export default function PhotoEditorCanvas() {
     }
   }, [webViewReady, memory, imageUri]);
 
-
-  const initCanvas = useCallback(() => {
-    if (!canvasRef.current || !fabric) return;
-
-    // Créer le canvas Fabric.js
-    const canvas = new fabric.Canvas(canvasRef.current, {
-      selection: false,
-      backgroundColor: '#000',
-    });
-
-    fabricCanvasRef.current = canvas;
-
-    // Adapter la taille du canvas à l'écran
-    const resizeCanvas = () => {
-      // Utiliser la taille de la fenêtre entière
-      const canvasWidth = window.innerWidth;
-      const canvasHeight = window.innerHeight;
-      console.log('📏 [React Web] Resize canvas to:', canvasWidth, 'x', canvasHeight);
-      canvas.setWidth(canvasWidth);
-      canvas.setHeight(canvasHeight);
-      canvas.renderAll();
-    };
-
-    // Attendre que le DOM soit complètement rendu avant de redimensionner
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        resizeCanvas();
-        // Charger l'image après le redimensionnement
-        loadImage();
-      });
-    });
-
-    window.addEventListener('resize', resizeCanvas);
-  }, [loadImage]);
-
-  useEffect(() => {
-    // Vérifier qu'on est sur web
-    if (Platform.OS !== 'web') {
-      alert('Cet éditeur ne fonctionne que sur Web');
-      router.back();
-      return;
-    }
-
-    // Attendre que fabric soit chargé
-    const checkFabric = setInterval(() => {
-      if (fabric && canvasRef.current) {
-        clearInterval(checkFabric);
-        initCanvas();
-      }
-    }, 100);
-
-    return () => {
-      clearInterval(checkFabric);
-      if (fabricCanvasRef.current) {
-        fabricCanvasRef.current.dispose();
-      }
-    };
-  }, [initCanvas, router]);
-
-  const loadImage = () => {
+  const loadImage = useCallback(() => {
     if (!fabric || !fabricCanvasRef.current) return;
 
     // Utiliser soit l'URI de la memory, soit l'URI directe
@@ -300,9 +241,82 @@ export default function PhotoEditorCanvas() {
         alert('Impossible de charger l\'image. Vérifiez le format: ' + error);
       }
     );
-  };
+  }, [imageUri, memory]);
 
-  const applyAdjustments = () => {
+  const initCanvas = useCallback(() => {
+    if (!canvasRef.current || !fabric) return;
+
+    // Créer le canvas Fabric.js
+    const canvas = new fabric.Canvas(canvasRef.current, {
+      selection: false,
+      backgroundColor: '#000',
+    });
+
+    fabricCanvasRef.current = canvas;
+
+    // Adapter la taille du canvas à l'écran
+    const resizeCanvas = () => {
+      // Utiliser la taille de la fenêtre entière
+      const canvasWidth = window.innerWidth;
+      const canvasHeight = window.innerHeight;
+      console.log('📏 [React Web] Resize canvas to:', canvasWidth, 'x', canvasHeight);
+      canvas.setWidth(canvasWidth);
+      canvas.setHeight(canvasHeight);
+      canvas.renderAll();
+    };
+
+    // Attendre que le DOM soit complètement rendu avant de redimensionner
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        resizeCanvas();
+        // Charger l'image après le redimensionnement
+        loadImage();
+      });
+    });
+
+    window.addEventListener('resize', resizeCanvas);
+  }, [loadImage]);
+
+  useEffect(() => {
+    // Vérifier qu'on est sur web
+    if (Platform.OS !== 'web') {
+      alert('Cet éditeur ne fonctionne que sur Web');
+      router.back();
+      return;
+    }
+
+    // Attendre que fabric soit chargé
+    const checkFabric = setInterval(() => {
+      if (fabric && canvasRef.current) {
+        clearInterval(checkFabric);
+        initCanvas();
+      }
+    }, 100);
+
+    return () => {
+      clearInterval(checkFabric);
+      if (fabricCanvasRef.current) {
+        fabricCanvasRef.current.dispose();
+      }
+    };
+  }, [initCanvas, router]);
+
+  useEffect(() => {
+    if (fabricCanvasRef.current && (memory || imageUri)) {
+      loadImage();
+    }
+  }, [memory, imageUri, loadImage]);
+
+  useEffect(() => {
+    if (!loading && memory && memory.adjustments) {
+      console.log('🎨 Application des réglages sauvegardés:', memory.adjustments);
+      setBrightness(memory.adjustments.brightness || 0);
+      setContrast(memory.adjustments.contrast || 0);
+      setSaturation(memory.adjustments.saturation || 0);
+    }
+  }, [loading, memory]);
+
+  const applyAdjustments = useCallback(() => {
     if (!fabricCanvasRef.current || !originalImageRef.current) {
       console.warn('⚠️ Canvas ou image non disponible');
       return;
@@ -345,7 +359,13 @@ export default function PhotoEditorCanvas() {
       img.applyFilters();
       fabricCanvasRef.current.renderAll();
     }
-  };
+  }, [brightness, contrast, saturation]);
+
+  useEffect(() => {
+    if (!loading && originalImageRef.current) {
+      applyAdjustments();
+    }
+  }, [loading, applyAdjustments]);
 
   const handleReset = () => {
     if (Platform.OS !== 'web') {
@@ -673,147 +693,29 @@ export default function PhotoEditorCanvas() {
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    width: '100vw',
-    height: '100vh',
-    background: '#000',
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    overflow: 'hidden',
-  },
-  loading: {
-    position: 'fixed',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    zIndex: 2000,
-  },
-  spinner: {
-    width: '50px',
-    height: '50px',
-    border: '4px solid rgba(16, 185, 129, 0.2)',
-    borderTopColor: '#10b981',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-  },
-  loadingText: {
-    marginTop: '20px',
-    color: '#10b981',
-    fontSize: '16px',
-    fontWeight: '600',
-  },
-  topActions: {
-    position: 'fixed',
-    top: '20px',
-    left: '0',
-    right: '0',
-    display: 'flex',
-    justifyContent: 'space-between',
-    padding: '0 20px',
-    zIndex: 2000,
-  },
-  btn: {
-    width: '56px',
-    height: '56px',
-    borderRadius: '28px',
-    border: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    fontSize: '24px',
-    color: 'white',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-  },
-  btnCancel: {
-    background: '#ef4444',
-  },
-  btnReset: {
-    background: '#f59e0b',
-  },
-  btnValidate: {
-    background: '#10b981',
-  },
-  canvasContainer: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  adjustmentsBar: {
-    position: 'fixed',
-    bottom: '20px',
-    left: '20px',
-    right: '20px',
-    zIndex: 2000,
-    background: 'rgba(0, 0, 0, 0.9)',
-    borderRadius: '20px',
-    padding: '20px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px',
-  },
-  adjustmentRow: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-  },
-  adjustmentLabel: {
-    color: '#fff',
-    fontSize: '14px',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-  },
-  adjustmentControls: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-  },
-  adjustmentBtn: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '20px',
-    background: 'rgba(255, 255, 255, 0.1)',
-    border: '2px solid rgba(255, 255, 255, 0.2)',
-    color: '#fff',
-    fontSize: '20px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'all 0.2s',
-  },
-  slider: {
-    flex: 1,
-    height: '6px',
-    borderRadius: '3px',
-    background: 'rgba(255, 255, 255, 0.2)',
-    outline: 'none',
-    cursor: 'pointer',
-    WebkitAppearance: 'none',
-  },
-  adjustmentValue: {
-    color: '#10b981',
-    fontSize: '16px',
-    fontWeight: '600',
-    minWidth: '45px',
-    textAlign: 'right',
-  },
-};
-
-// Styles pour la version mobile (React Native)
 const mobileStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  loading: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+});
+
+const styles: any = {
+  container: {
+    width: '100vw',
+    height: '100vh',
+    backgroundColor: '#000',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    position: 'relative',
   },
   loading: {
     position: 'absolute',
@@ -821,9 +723,112 @@ const mobileStyles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    display: 'flex',
+    flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     zIndex: 1000,
   },
-});
+  loadingText: {
+    color: '#fff',
+    marginTop: 20,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  spinner: {
+    width: 50,
+    height: 50,
+    border: '5px solid #10b981',
+    borderTopColor: 'transparent',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+  },
+  topActions: {
+    position: 'absolute',
+    top: 20,
+    left: 0,
+    right: 0,
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '0 20px',
+    zIndex: 100,
+  },
+  btn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    border: 'none',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    fontSize: 20,
+    cursor: 'pointer',
+    color: '#fff',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    transition: 'background-color 0.2s',
+  },
+  btnCancel: {
+    color: '#ef4444',
+  },
+  btnReset: {
+    color: '#3b82f6',
+  },
+  btnValidate: {
+    color: '#10b981',
+    backgroundColor: 'rgba(16,185,129,0.2)',
+  },
+  canvasContainer: {
+    flex: 1,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  adjustmentsBar: {
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '15px',
+    zIndex: 100,
+  },
+  adjustmentRow: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '5px',
+  },
+  adjustmentLabel: {
+    color: '#9ca3af',
+    fontSize: 12,
+    textTransform: 'uppercase',
+  },
+  adjustmentControls: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  },
+  adjustmentBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    border: '1px solid #374151',
+    backgroundColor: '#1f2937',
+    color: '#fff',
+    cursor: 'pointer',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  slider: {
+    flex: 1,
+    accentColor: '#10b981',
+  },
+  adjustmentValue: {
+    color: '#fff',
+    minWidth: '35px',
+    textAlign: 'right',
+    fontSize: 14,
+    fontFamily: 'monospace',
+  },
+};
