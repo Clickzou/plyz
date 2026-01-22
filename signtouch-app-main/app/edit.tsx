@@ -22,7 +22,7 @@ import PremiumModal from '@/components/PremiumModal';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { captureRef } from 'react-native-view-shot';
 import * as ImageManipulator from 'expo-image-manipulator';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
@@ -208,7 +208,7 @@ export default function EditScreen() {
   const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null);
   const [showTooltip, setShowTooltip] = useState(true);
   const [isSignatureMode, setIsSignatureMode] = useState(false);
-  const [showEditPanel, setShowEditPanel] = useState(false);
+  const [, setShowEditPanel] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [signaturePaths, setSignaturePaths] = useState<{ path: string }[]>([]);
   const [currentPath, setCurrentPath] = useState('');
@@ -220,8 +220,6 @@ export default function EditScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { user } = useAuth();
-
-  const COLORS = SIGNATURE_COLORS;
 
   const loadOverlaysFromMemory = useCallback((signatures: SignatureOverlay[]) => {
     const newOverlays: OverlayElement[] = signatures.map(s => ({
@@ -235,10 +233,6 @@ export default function EditScreen() {
     }));
     setOverlays(newOverlays);
   }, []);
-
-  const getSignatureOverlays = useCallback((): SignatureOverlay[] => {
-    return overlays;
-  }, [overlays]);
 
   const loadMemory = useCallback(async () => {
     try {
@@ -761,26 +755,6 @@ export default function EditScreen() {
     return overlays.find(o => o.id === selectedOverlayId);
   }, [selectedOverlayId, overlays]);
 
-  const rotateSelectedOverlay = (delta: number = 90) => {
-    const overlay = getSelectedOverlay();
-    if (!overlay) {
-      console.warn('rotateSelectedOverlay: no overlay selected');
-      return;
-    }
-
-    setOverlays(prevOverlays =>
-      prevOverlays.map(o =>
-        o.id === selectedOverlayId
-          ? { ...o, rotation: (o.rotation + delta) % 360 }
-          : o
-      )
-    );
-
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
-
   const toggleColorPicker = () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -820,118 +794,6 @@ export default function EditScreen() {
     }
 
     removeOverlay(selectedOverlayId!);
-  };
-
-
-  const compressImageDataUrl = async (dataUrl: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const img = new window.Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const maxWidth = 800;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Cannot get canvas context'));
-          return;
-        }
-
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, width, height);
-
-        ctx.drawImage(img, 0, 0, width, height);
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-        resolve(compressedDataUrl);
-      };
-      img.onerror = () => reject(new Error('Failed to load image'));
-      img.src = dataUrl;
-    });
-  };
-
-  const captureImageWeb = async (): Promise<string> => {
-    if (!memory) {
-      throw new Error('Memory is null');
-    }
-
-    return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = SCREEN_WIDTH;
-      canvas.height = SCREEN_HEIGHT;
-      const ctx = canvas.getContext('2d');
-
-      if (!ctx) {
-        reject(new Error('Cannot get canvas context'));
-        return;
-      }
-
-      const img = new window.Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = async () => {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-        ctx.drawImage(img, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-        if (overlays.length > 0) {
-          let loadedCount = 0;
-          overlays.forEach((overlay) => {
-            const sigImg = new window.Image();
-            sigImg.crossOrigin = 'anonymous';
-            sigImg.onload = () => {
-              ctx.save();
-              ctx.translate(overlay.x, overlay.y);
-              ctx.rotate((overlay.rotation * Math.PI) / 180);
-              ctx.scale(overlay.scale, overlay.scale);
-              ctx.drawImage(sigImg, 0, 0, 100, 60);
-              ctx.restore();
-
-              loadedCount++;
-              if (loadedCount === overlays.length) {
-                const dataUrl = canvas.toDataURL('image/png', 1.0);
-                resolve(dataUrl);
-              }
-            };
-            sigImg.onerror = () => reject(new Error('Failed to load signature'));
-            sigImg.src = overlay.uri;
-          });
-        } else {
-          const dataUrl = canvas.toDataURL('image/png', 1.0);
-          resolve(dataUrl);
-        }
-      };
-      img.onerror = () => reject(new Error('Failed to load image'));
-      img.src = memory.baseUri || memory.uri;
-    });
-  };
-
-
-  const handleClose = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-
-    if (overlays.length > 0) {
-      Alert.alert(
-        'Modifications non enregistrées',
-        'Voulez-vous quitter sans enregistrer ?',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Quitter', style: 'destructive', onPress: () => router.back() },
-        ]
-      );
-    } else {
-      router.back();
-    }
   };
 
   if (loading || !memory) {

@@ -23,7 +23,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { Memory, SignatureOverlay } from '@/utils/memoriesStorage';
 import * as StorageService from '@/utils/storageService';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import PremiumModal from '@/components/PremiumModal';
 import { useTranslation } from '@/contexts/LanguageContext';
@@ -603,7 +602,7 @@ export default function ComposeScreen() {
             const reducedMemories = memories.slice(0, 3);
             try {
               localStorage.setItem('memories', JSON.stringify(reducedMemories));
-            } catch (e) {
+            } catch {
               localStorage.clear();
               localStorage.setItem('memories', JSON.stringify([newMemory]));
             }
@@ -613,7 +612,7 @@ export default function ComposeScreen() {
         }
       } else {
         // Mobile: utiliser StorageService avec AsyncStorage ou cloud
-        const savedMemory = await StorageService.saveMemory(
+        await StorageService.saveMemory(
           uri,
           user?.id || null,
           {

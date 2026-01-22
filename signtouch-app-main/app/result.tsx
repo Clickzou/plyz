@@ -20,7 +20,6 @@ import { Memory, SignatureOverlay as StoredSignatureOverlay } from '@/utils/memo
 import * as StorageService from '@/utils/storageService';
 import SocialShareModal from '@/components/SocialShareModal';
 import AdModal from '@/components/AdModal';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { captureRef } from 'react-native-view-shot';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -494,7 +493,7 @@ export default function ResultScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const [, setLimitType] = useState<'memories' | 'signatures' | 'signature'>('signatures');
+  const [limitType] = useState<'memories' | 'signatures' | 'signature'>('signatures');
   const { user } = useAuth();
 
   // Edit mode state
@@ -511,8 +510,8 @@ export default function ResultScreen() {
   const [showSignatureMode, setShowSignatureMode] = useState(false);
   const [showEffectsPanel, setShowEffectsPanel] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [signatureColor, setSignatureColor] = useState('#ffffff');
-  const [isDrawing, setIsDrawing] = useState(false);
+  const [signatureColor] = useState('#ffffff');
+  const [, setIsDrawing] = useState(false);
 
   // Welcome message state
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);

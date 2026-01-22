@@ -81,7 +81,7 @@ export default function AuthCallbackScreen() {
             setError('Aucun lien de connexion détecté');
           }
         }
-      } catch (_error) {
+      } catch {
         setError('Erreur lors de la connexion');
       }
     };
