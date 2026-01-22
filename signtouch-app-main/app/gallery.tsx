@@ -106,7 +106,7 @@ export default function GalleryScreen() {
       }, 1000);
 
       return () => clearTimeout(timer);
-    }, [])
+    }, [loadMemories])
   );
 
   const openMemory = (memory: Memory) => {
