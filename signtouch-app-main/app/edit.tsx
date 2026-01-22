@@ -84,6 +84,9 @@ interface DraggableSignatureProps {
 }
 
 function DraggableSignature({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, isSelected }: DraggableSignatureProps) {
+  const [imageDimensions, setImageDimensions] = useState({ width: 150, height: 80 });
+  const [svgData, setSvgData] = useState<any>(null);
+  
   const translateX = useSharedValue(overlay.x);
   const translateY = useSharedValue(overlay.y);
   const startX = useSharedValue(0);
@@ -93,6 +96,43 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
   const scale = useSharedValue(overlay.scale);
   const savedScale = useSharedValue(overlay.scale);
   const isDragging = useSharedValue(0);
+
+  // Vérifier si c'est une data URI JSON (mobile SVG paths)
+  const isJsonData = overlay.uri.startsWith('data:application/json;base64,');
+
+  useEffect(() => {
+    if (isJsonData) {
+      try {
+        const base64Data = overlay.uri.split(',')[1];
+        const jsonString = decodeURIComponent(escape(atob(base64Data)));
+        const parsed = JSON.parse(jsonString);
+        setSvgData(parsed);
+        setImageDimensions({ width: parsed.width, height: parsed.height });
+      } catch (error) {
+        console.error('Error parsing SVG data:', error);
+      }
+      return;
+    }
+
+    if (Platform.OS === 'web') {
+      return;
+    }
+
+    Image.getSize(
+      overlay.uri,
+      (width, height) => {
+        if (width && height && width > 0 && height > 0) {
+          const aspectRatio = width / height;
+          const maxWidth = Math.min(width, 250);
+          const calculatedHeight = maxWidth / aspectRatio;
+          setImageDimensions({ width: maxWidth, height: calculatedHeight });
+        }
+      },
+      (error) => {
+        console.error('Error getting image size:', error);
+      }
+    );
+  }, [overlay.uri, isJsonData]);
 
   useEffect(() => {
     translateX.value = overlay.x;
@@ -183,12 +223,28 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
             style={styles.signatureTouchable}
             delayLongPress={500}
           >
-            <View style={styles.signatureContentWrapper}>
-              <Image
-                source={{ uri: overlay.uri }}
-                style={[styles.signatureImage, { tintColor: overlay.color }]}
-                resizeMode="contain"
-              />
+            <View style={[styles.signatureContentWrapper, { width: imageDimensions.width, height: imageDimensions.height }]}>
+              {svgData ? (
+                <Svg width={svgData.width} height={svgData.height} style={{ width: imageDimensions.width, height: imageDimensions.height }}>
+                  {svgData.paths.map((pathData: string, idx: number) => (
+                    <Path
+                      key={idx}
+                      d={pathData}
+                      stroke={overlay.color}
+                      strokeWidth={8}
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  ))}
+                </Svg>
+              ) : (
+                <Image
+                  source={{ uri: overlay.uri }}
+                  style={[{ width: imageDimensions.width, height: imageDimensions.height }, { tintColor: overlay.color }]}
+                  resizeMode="contain"
+                />
+              )}
               {isSelected && <View style={styles.signatureSelectionBorder} />}
             </View>
           </TouchableOpacity>
