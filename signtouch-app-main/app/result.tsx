@@ -12,7 +12,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Share2, Palette, Pencil, Plus, X, Eraser, Save, Sparkles, RotateCw, Check } from 'lucide-react-native';
+import { Download, Trash2, Share2, Palette, Pencil, Plus, Sparkles, X, RotateCw, Check, Save, Eraser } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,13 +20,15 @@ import { Memory, SignatureOverlay as StoredSignatureOverlay } from '@/utils/memo
 import * as StorageService from '@/utils/storageService';
 import SocialShareModal from '@/components/SocialShareModal';
 import AdModal from '@/components/AdModal';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { captureRef } from 'react-native-view-shot';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, runOnJS } from 'react-native-reanimated';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Defs, Filter, FeColorMatrix, Image as SvgImage } from 'react-native-svg';
 import PremiumModal from '@/components/PremiumModal';
 import { useTranslation } from '@/contexts/LanguageContext';
+import { maybeShowSubscriptionOffer } from '@/utils/subscriptionOffer';
 import Slider from '@react-native-community/slider';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -102,7 +104,7 @@ function FilteredImage({ uri, brightness, contrast, saturation, style }: Filtere
 }
 
 // Types
-type SignatureOverlay = StoredSignatureOverlay;
+interface SignatureOverlay extends StoredSignatureOverlay {}
 
 // Constants
 const SIGNATURE_COLORS = [
@@ -301,17 +303,17 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
   useEffect(() => {
     translateX.value = overlay.x;
     translateY.value = overlay.y;
-  }, [overlay.x, overlay.y, translateX, translateY]);
+  }, [overlay.x, overlay.y]);
 
   useEffect(() => {
     rotation.value = overlay.rotation;
     savedRotation.value = overlay.rotation;
-  }, [overlay.rotation, rotation, savedRotation]);
+  }, [overlay.rotation]);
 
   useEffect(() => {
     scale.value = overlay.scale;
     savedScale.value = overlay.scale;
-  }, [overlay.scale, scale, savedScale]);
+  }, [overlay.scale]);
 
   const panGesture = Gesture.Pan()
     .shouldCancelWhenOutside(false)
@@ -413,7 +415,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
     }
 
     return { isJsonData, isSvgData, svgData, svgPaths, svgWidth, svgHeight };
-  }, [overlay.uri]);
+  }, [overlay.uri, overlay.color]);
 
   const signatureColor = overlay.color || '#ffffff';
 
@@ -492,8 +494,8 @@ export default function ResultScreen() {
   const [showAdModal, setShowAdModal] = useState(false);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { status } = useSubscription();
   const { t } = useTranslation();
-  const [limitType] = useState<'memories' | 'signatures' | 'signature'>('signatures');
   const { user } = useAuth();
 
   // Edit mode state
@@ -510,8 +512,7 @@ export default function ResultScreen() {
   const [showSignatureMode, setShowSignatureMode] = useState(false);
   const [showEffectsPanel, setShowEffectsPanel] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [signatureColor] = useState('#ffffff');
-  const [, setIsDrawing] = useState(false);
+  const [limitType, setLimitType] = useState<'signature' | null>(null);
 
   // Welcome message state
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
@@ -550,7 +551,7 @@ export default function ResultScreen() {
       -1,
       false
     );
-  }, [editButtonScale, editButtonOpacity]);
+  }, []);
 
   const editButtonAnimatedStyle = useAnimatedStyle(() => {
     return {
@@ -561,7 +562,9 @@ export default function ResultScreen() {
 
   // Signature state
   const [signaturePaths, setSignaturePaths] = useState<string[]>([]);
+  const [signatureColor, setSignatureColor] = useState('#f97316');
   const [currentPath, setCurrentPath] = useState('');
+  const [isDrawing, setIsDrawing] = useState(false);
   const signatureCanvasRef = useRef<View>(null);
   const currentPathRef = useRef('');
   const signaturePathsRef = useRef<string[]>([]);
@@ -587,31 +590,11 @@ export default function ResultScreen() {
   }, [signaturePaths, showSignatureMode]);
 
   // Load fonts
-  const loadMemory = useCallback(async () => {
-    try {
-      setLoading(true);
-      const memories = await StorageService.getAllMemories(user?.id || null);
-      const found = memories.find(m => m.id === memoryId);
-      if (found) {
-        setMemory(found);
-        setSignatureOverlays(found.signatureOverlays || []);
-        if (found.adjustments) {
-          setBrightness(found.adjustments.brightness || 0);
-          setContrast(found.adjustments.contrast || 0);
-          setSaturation(found.adjustments.saturation || 0);
-        }
-      }
-      setLoading(false);
-    } catch {
-      setLoading(false);
-    }
-  }, [memoryId, user?.id]);
-
   useEffect(() => {
     if (memoryId) {
       loadMemory();
     }
-  }, [memoryId, loadMemory]);
+  }, [memoryId]);
 
   // Welcome message animation
   useEffect(() => {
@@ -628,7 +611,7 @@ export default function ResultScreen() {
 
       return () => clearTimeout(timer);
     }
-  }, [showWelcomeMessage, welcomeOpacity]);
+  }, [showWelcomeMessage]);
 
   // Wrapper functions for storage
   const saveMemory = async (imageUri: string, metadata?: any) => {
@@ -657,8 +640,29 @@ export default function ResultScreen() {
         console.log('🔄 Rechargement de la memory au retour sur result.tsx');
         loadMemory();
       }
-    }, [memoryId, isEditMode, signatureOverlays, loadMemory])
+    }, [memoryId, isEditMode, signatureOverlays.length])
   );
+
+  const loadMemory = async () => {
+    try {
+      setLoading(true);
+      const memories = await StorageService.getAllMemories(user?.id || null);
+      const found = memories.find(m => m.id === memoryId);
+      if (found) {
+        setMemory(found);
+        setSignatureOverlays(found.signatureOverlays || []);
+        if (found.adjustments) {
+          setBrightness(found.adjustments.brightness || 0);
+          setContrast(found.adjustments.contrast || 0);
+          setSaturation(found.adjustments.saturation || 0);
+        }
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading memory:', error);
+      setLoading(false);
+    }
+  };
 
   const displayUri = memory ? (memory.baseUri || memory.uri) : imageUri;
 
@@ -703,7 +707,7 @@ export default function ResultScreen() {
     signaturePathsRef.current = [];
     setCurrentPath('');
     currentPathRef.current = '';
-  }, []);
+  }, [signatureOverlays.length]);
 
   // Get current active color from selected element or default to white
   const getActiveSignatureColor = useCallback(() => {
@@ -932,6 +936,13 @@ export default function ResultScreen() {
     }
   };
 
+  const toggleColorPicker = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setShowColorPicker(!showColorPicker);
+  };
+
   const changeSelectedColor = (color: string) => {
     console.log('🎨 [changeSelectedColor] Changing color to:', color, 'for element:', selectedElementId);
     if (selectedElementId && selectedElementType === 'signature') {
@@ -1083,13 +1094,13 @@ export default function ResultScreen() {
 
       setSaving(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch {
-      console.error('❌ Erreur lors de la sauvegarde');
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde:', error);
       setSaving(false);
       if (Platform.OS === 'web') {
         alert("Cette action n'est pas disponible dans la prévisualisation web. Teste sur ton appareil iOS/Android.");
       } else {
-        Alert.alert('Erreur', "Impossible d'enregistrer.");
+        Alert.alert('Erreur', `Impossible d'enregistrer: ${(error as Error).message}`);
       }
     }
   };
@@ -1220,13 +1231,84 @@ export default function ResultScreen() {
           }, 500);
         }
       }
-    } catch {
-      console.error('❌ Erreur lors de la sauvegarde');
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde:', error);
+      const errorMessage = (error as Error).message;
+
+      if (errorMessage.includes('quota') || errorMessage.includes('Quota')) {
+        if (Platform.OS === 'web') {
+          alert('Espace de stockage saturé. Supprimez des souvenirs depuis la galerie.');
+        } else {
+          Alert.alert('Erreur', 'Espace de stockage saturé. Supprimez des souvenirs depuis la galerie.');
+        }
+      } else {
+        if (Platform.OS === 'web') {
+          alert('Erreur: ' + errorMessage);
+        } else {
+          Alert.alert('Erreur', errorMessage);
+        }
+      }
+
       setSaving(false);
     }
   };
 
   // Download, delete, share functions (same as before)
+  const validateAndSave = async () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+
+    try {
+      setIsSaving(true);
+
+      if (imageUri && !memoryId) {
+        console.log('💾 Sauvegarde du nouveau souvenir dans l\'app...');
+        await saveMemory(imageUri);
+        console.log('✅ Souvenir sauvegardé dans l\'app');
+
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+
+        // Naviguer vers la galerie (le modal s'affichera là-bas)
+        setTimeout(() => {
+          setIsSaving(false);
+          router.replace('/gallery');
+        }, 500);
+      } else if (memoryId) {
+        console.log('✅ Souvenir déjà enregistré, redirection vers galerie');
+
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+
+        setTimeout(() => {
+          setIsSaving(false);
+          router.replace('/gallery');
+        }, 300);
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde:', error);
+      const errorMessage = (error as Error).message;
+
+      if (errorMessage.includes('quota') || errorMessage.includes('Quota')) {
+        if (Platform.OS === 'web') {
+          alert('Espace de stockage saturé. Supprimez des souvenirs depuis la galerie.');
+        } else {
+          Alert.alert('Erreur', 'Espace de stockage saturé. Supprimez des souvenirs depuis la galerie.');
+        }
+      } else {
+        if (Platform.OS === 'web') {
+          alert('Erreur: ' + errorMessage);
+        } else {
+          Alert.alert('Erreur', errorMessage);
+        }
+      }
+
+      setIsSaving(false);
+    }
+  };
 
   const downloadToDevice = async () => {
     if (Platform.OS !== 'web') {
@@ -1289,8 +1371,16 @@ export default function ResultScreen() {
       }
 
       setIsSaving(false);
-    } catch {
-      console.error('❌ Erreur lors du téléchargement');
+    } catch (error) {
+      console.error('❌ Erreur lors du téléchargement:', error);
+      const errorMessage = (error as Error).message;
+
+      if (Platform.OS === 'web') {
+        alert("Téléchargement non disponible dans la prévisualisation web. Teste sur l'app mobile.");
+      } else {
+        Alert.alert('Erreur', 'Impossible de télécharger l\'image.');
+      }
+
       setIsSaving(false);
     }
   };
@@ -1347,8 +1437,8 @@ export default function ResultScreen() {
         }
 
         router.push('/gallery');
-      } catch {
-        console.error('❌ Erreur lors de la suppression');
+      } catch (error) {
+        console.error('❌ Erreur lors de la suppression:', error);
         Alert.alert('Erreur', 'Impossible de supprimer ce souvenir.');
         setIsDeleting(false);
       }

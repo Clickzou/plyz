@@ -1,9 +1,0 @@
-
-/home/runner/workspace/signtouch-app-main/app/photo-editor-canvas.tsx
-  17:12  warning  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
-
-/home/runner/workspace/signtouch-app-main/app/result.tsx
-  105:11  warning  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
-
-✖ 2 problems (0 errors, 2 warnings)
-

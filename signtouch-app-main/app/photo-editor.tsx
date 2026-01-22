@@ -23,14 +23,14 @@ export default function PhotoEditorScreen() {
         },
       });
     }
-  }, [params.imageUri, params.memoryId, router]);
+  }, []);
 
   // Sur mobile, afficher un message
   if (Platform.OS !== 'web') {
     return (
       <View style={styles.container}>
         <Text style={styles.text}>
-          L&apos;éditeur photo avancé n&apos;est disponible que sur Web.
+          L'éditeur photo avancé n'est disponible que sur Web.
         </Text>
         <Text style={styles.subtext}>
           Fabric.js nécessite un environnement DOM pour fonctionner.

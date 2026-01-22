@@ -1,5 +1,5 @@
 import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { useRouter, usePathname, Href } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 import { Home, Images, User } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,7 +15,7 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
 
-  const handleNavigation = (path: Href) => {
+  const handleNavigation = (path: string) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }

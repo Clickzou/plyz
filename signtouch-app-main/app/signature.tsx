@@ -11,6 +11,7 @@ import Svg, { Path } from 'react-native-svg';
 import { Eraser, Check, ArrowLeft, Plus, Pencil } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import PremiumModal from '@/components/PremiumModal';
 import * as SplashScreen from 'expo-splash-screen';
 import { useTranslation } from '@/contexts/LanguageContext';
@@ -60,7 +61,7 @@ export default function SignatureScreen() {
     }
 
     hadPathsRef.current = hasPathsNow;
-  }, [paths.length, scale]);
+  }, [paths.length]);
 
   const animatedTextStyle = useAnimatedStyle(() => {
     return {
@@ -77,6 +78,12 @@ export default function SignatureScreen() {
   useEffect(() => {
     setTimeout(() => setIsReady(true), 100);
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Plus de limitation sur le nombre de signatures
+    }, [savedSignatures.length])
+  );
 
   const onDrawStart = useCallback((x: number, y: number) => {
     startPointRef.current = { x, y };
@@ -297,7 +304,7 @@ export default function SignatureScreen() {
       console.error('❌ Erreur lors de la sauvegarde:', error);
       alert('Erreur lors de la sauvegarde: ' + (error as Error).message);
     }
-  }, [paths, convertSvgToImage]);
+  }, [paths, convertSvgToImage, hasSignatureForCurrentPhoto]);
 
   const validateSignature = useCallback(async () => {
     if (Platform.OS !== 'web') {

@@ -14,6 +14,7 @@ import * as Haptics from 'expo-haptics';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
 export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>('back');

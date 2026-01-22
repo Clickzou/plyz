@@ -1,28 +1,34 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   TouchableOpacity,
   Image,
   Dimensions,
   Platform,
+  Alert,
   ActivityIndicator,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
+import {
+  GestureDetector,
+  Gesture,
+  GestureHandlerRootView,
+} from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { Check, ChevronLeft, ChevronRight, Palette, Pencil, Plus, Trash2 } from 'lucide-react-native';
+import { Type, Minus, CreditCard as Edit3, Check, RotateCw, ChevronLeft, ChevronRight, Palette, Pencil, Plus, Trash2 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { captureRef } from 'react-native-view-shot';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { Memory, SignatureOverlay } from '@/utils/memoriesStorage';
 import * as StorageService from '@/utils/storageService';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import PremiumModal from '@/components/PremiumModal';
 import { useTranslation } from '@/contexts/LanguageContext';
@@ -192,88 +198,30 @@ export default function ComposeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const viewShotRef = useRef<View>(null);
+  const { status } = useSubscription();
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  // Create shared values for all potential signatures (max 20 for example)
-  const scales = [
-    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5),
-    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5),
-    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5),
-    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5)
-  ];
-  const savedScales = [
-    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5),
-    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5),
-    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5),
-    useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5), useSharedValue(1.5)
-  ];
-  const translateXs = [
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)
-  ];
-  const translateYs = [
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)
-  ];
-  const savedTranslateXs = [
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)
-  ];
-  const savedTranslateYs = [
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)
-  ];
-  const rotations = [
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)
-  ];
-  const savedRotations = [
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
-    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)
-  ];
-
-  const isInitialized = useRef(false);
-  
   const signatureTransforms = useRef<SignatureTransform[]>(
     signatureUris.map((_: string, index: number) => ({
-      scale: scales[index],
-      savedScale: savedScales[index],
-      translateX: translateXs[index],
-      translateY: translateYs[index],
-      savedTranslateX: savedTranslateXs[index],
-      savedTranslateY: savedTranslateYs[index],
-      rotation: rotations[index],
-      savedRotation: savedRotations[index],
+      scale: useSharedValue(1.5),
+      savedScale: useSharedValue(1.5),
+      translateX: useSharedValue(SCREEN_WIDTH / 2 - 60 + index * 50),
+      translateY: useSharedValue(SCREEN_HEIGHT / 2 - 60 + index * 50),
+      savedTranslateX: useSharedValue(SCREEN_WIDTH / 2 - 60 + index * 50),
+      savedTranslateY: useSharedValue(SCREEN_HEIGHT / 2 - 60 + index * 50),
+      rotation: useSharedValue(0),
+      savedRotation: useSharedValue(0),
     }))
   ).current;
 
-  if (!isInitialized.current) {
-    signatureUris.forEach((_: string, index: number) => {
-      const initialX = SCREEN_WIDTH / 2 - 60 + index * 50;
-      const initialY = SCREEN_HEIGHT / 2 - 60 + index * 50;
-      
-      translateXs[index].value = initialX;
-      translateYs[index].value = initialY;
-      savedTranslateXs[index].value = initialX;
-      savedTranslateYs[index].value = initialY;
-    });
-    isInitialized.current = true;
-  }
+  useEffect(() => {
+    if (memoryId) {
+      loadMemoryPhoto();
+    }
+  }, [memoryId]);
 
-  const loadMemoryPhoto = useCallback(async () => {
+  const loadMemoryPhoto = async () => {
     try {
       console.log('📂 Chargement de la memory pour composition:', memoryId);
       const memories = await StorageService.getAllMemories(user?.id || null);
@@ -292,13 +240,7 @@ export default function ComposeScreen() {
     } finally {
       setIsLoadingMemory(false);
     }
-  }, [memoryId, photoUri, user?.id]);
-
-  useEffect(() => {
-    if (memoryId) {
-      loadMemoryPhoto();
-    }
-  }, [memoryId, loadMemoryPhoto]);
+  };
 
   const createGesture = (transform: SignatureTransform, index: number) => {
     const tap = Gesture.Tap()
@@ -362,8 +304,8 @@ export default function ComposeScreen() {
     if (selectedSignatureIndex !== null) {
       // Supprimer la signature sélectionnée
       const newSignatureUris = signatureUris.filter((_: string, index: number) => index !== selectedSignatureIndex);
-      // Removed newColors and newStrokeScales as they were unused
-
+      const newColors = signatureColors.filter((_: string, index: number) => index !== selectedSignatureIndex);
+      const newStrokeScales = signatureStrokeScales.filter((_: number, index: number) => index !== selectedSignatureIndex);
 
       router.replace({
         pathname: '/compose',
@@ -493,8 +435,8 @@ export default function ComposeScreen() {
                       drawAllSignatures();
                     }
                   };
-                  signatureImg.onerror = () => {
-                    console.error(`❌ Erreur chargement signature SVG ${index + 1}`);
+                  signatureImg.onerror = (e) => {
+                    console.error(`❌ Erreur chargement signature SVG ${index + 1}:`, e);
                     URL.revokeObjectURL(svgUrl);
                     reject(new Error(`Failed to load signature ${index + 1}`));
                   };
@@ -517,8 +459,8 @@ export default function ComposeScreen() {
                   }
                 };
 
-                signatureImg.onerror = () => {
-                  console.error(`❌ Erreur chargement signature ${index + 1}`);
+                signatureImg.onerror = (e) => {
+                  console.error(`❌ Erreur chargement signature ${index + 1}:`, e);
                   reject(new Error(`Failed to load signature ${index + 1}`));
                 };
                 signatureImg.src = uri;
@@ -526,8 +468,8 @@ export default function ComposeScreen() {
             });
           };
 
-          photoImg.onerror = () => {
-            console.error('❌ Erreur chargement photo');
+          photoImg.onerror = (e) => {
+            console.error('❌ Erreur chargement photo:', e);
             reject(new Error('Failed to load photo'));
           };
           photoImg.src = finalPhotoUri as string;
@@ -607,7 +549,7 @@ export default function ComposeScreen() {
             const reducedMemories = memories.slice(0, 3);
             try {
               localStorage.setItem('memories', JSON.stringify(reducedMemories));
-            } catch {
+            } catch (e) {
               localStorage.clear();
               localStorage.setItem('memories', JSON.stringify([newMemory]));
             }
@@ -617,7 +559,7 @@ export default function ComposeScreen() {
         }
       } else {
         // Mobile: utiliser StorageService avec AsyncStorage ou cloud
-        await StorageService.saveMemory(
+        const savedMemory = await StorageService.saveMemory(
           uri,
           user?.id || null,
           {
@@ -671,6 +613,13 @@ export default function ComposeScreen() {
     setShowStrokePicker(false);
   };
 
+  const toggleStrokePicker = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setShowStrokePicker(!showStrokePicker);
+    setShowColorPicker(false);
+  };
 
   const selectColor = (color: string) => {
     if (Platform.OS !== 'web') {
@@ -696,6 +645,16 @@ export default function ComposeScreen() {
     setShowStrokePicker(false);
   };
 
+  const rotateSelected = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    if (selectedSignatureIndex !== null) {
+      const transform = signatureTransforms[selectedSignatureIndex];
+      transform.rotation.value = transform.rotation.value + Math.PI / 2;
+      transform.savedRotation.value = transform.rotation.value;
+    }
+  };
 
   const buttonBottom = insets.bottom + 20;
 

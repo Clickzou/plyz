@@ -5,31 +5,3 @@ packages = ["unzip"]
 
 [agent]
 expertMode = true
-
-[workflows]
-runButton = "Project"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Expo Web"
-
-[[workflows.workflow]]
-name = "Expo Web"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "webview"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd signtouch-app-main && npx -y expo start --web --port 5000"
-waitForPort = 5000
-
-[[ports]]
-localPort = 5000
-externalPort = 80

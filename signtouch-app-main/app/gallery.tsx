@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import { Memory } from '@/utils/memoriesStorage';
 import * as StorageService from '@/utils/storageService';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import AdModal from '@/components/AdModal';
@@ -79,10 +80,11 @@ export default function GalleryScreen() {
   const [pendingSave, setPendingSave] = useState<'single' | 'multiple' | null>(null);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { status } = useSubscription();
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  const loadMemories = useCallback(async () => {
+  const loadMemories = async () => {
     try {
       setLoading(true);
       const loadedMemories = await StorageService.getAllMemories(user?.id || null);
@@ -92,7 +94,7 @@ export default function GalleryScreen() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -104,7 +106,7 @@ export default function GalleryScreen() {
       }, 1000);
 
       return () => clearTimeout(timer);
-    }, [loadMemories])
+    }, [])
   );
 
   const openMemory = (memory: Memory) => {
@@ -163,7 +165,7 @@ export default function GalleryScreen() {
     try {
       if (Platform.OS === 'web') {
         const response = await fetch(selectedMemory.uri);
-        await response.blob();
+        const blob = await response.blob();
         const link = document.createElement('a');
         link.href = selectedMemory.uri;
         link.download = `souvenir_${Date.now()}.png`;
@@ -281,7 +283,7 @@ export default function GalleryScreen() {
           const memory = memories.find(m => m.id === memoryId);
           if (memory) {
             const response = await fetch(memory.uri);
-            await response.blob();
+            const blob = await response.blob();
             const link = document.createElement('a');
             link.href = memory.uri;
             link.download = `souvenir_${memoryId}.png`;

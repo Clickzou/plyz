@@ -7,9 +7,8 @@ let Purchases: any = null;
 
 if (Platform.OS !== 'web') {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     Purchases = require('react-native-purchases').default;
-  } catch {
+  } catch (error) {
     console.warn('RevenueCat not installed. Install with: npm install react-native-purchases');
   }
 }

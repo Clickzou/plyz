@@ -1,6 +1,7 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   Image,
   TouchableOpacity,
@@ -8,21 +9,21 @@ import {
   ActivityIndicator,
   Dimensions,
   ScrollView,
-  Text,
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { X, Check, Pencil, ChevronLeft, ChevronRight, Palette, Trash2, Eraser, Plus } from 'lucide-react-native';
+import { X, FileSliders as Sliders, Check, Save, Move, Pencil, RotateCw, ChevronLeft, ChevronRight, Palette, Trash2, Sparkles, Eraser, Plus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Memory, SignatureOverlay as StoredSignatureOverlay } from '@/utils/memoriesStorage';
 import * as StorageService from '@/utils/storageService';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import PremiumModal from '@/components/PremiumModal';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { captureRef } from 'react-native-view-shot';
 import * as ImageManipulator from 'expo-image-manipulator';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
@@ -83,7 +84,6 @@ interface DraggableSignatureProps {
 }
 
 function DraggableSignature({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, isSelected }: DraggableSignatureProps) {
-  const [imageDimensions, setImageDimensions] = useState({ width: 150, height: 80 });
   const translateX = useSharedValue(overlay.x);
   const translateY = useSharedValue(overlay.y);
   const startX = useSharedValue(0);
@@ -95,37 +95,19 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
   const isDragging = useSharedValue(0);
 
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      return;
-    }
-    Image.getSize(
-      overlay.uri,
-      (width, height) => {
-        if (width && height && width > 0 && height > 0) {
-          const aspectRatio = width / height;
-          const maxWidth = Math.min(width, 250);
-          const calculatedHeight = maxWidth / aspectRatio;
-          setImageDimensions({ width: maxWidth, height: calculatedHeight });
-        }
-      },
-      () => {}
-    );
-  }, [overlay.uri]);
-
-  useEffect(() => {
     translateX.value = overlay.x;
     translateY.value = overlay.y;
-  }, [overlay.x, overlay.y, translateX, translateY]);
+  }, [overlay.x, overlay.y]);
 
   useEffect(() => {
     rotation.value = overlay.rotation;
     savedRotation.value = overlay.rotation;
-  }, [overlay.rotation, rotation, savedRotation]);
+  }, [overlay.rotation]);
 
   useEffect(() => {
     scale.value = overlay.scale;
     savedScale.value = overlay.scale;
-  }, [overlay.scale, scale, savedScale]);
+  }, [overlay.scale]);
 
   const panGesture = Gesture.Pan()
     .shouldCancelWhenOutside(true)
@@ -201,10 +183,10 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
             style={styles.signatureTouchable}
             delayLongPress={500}
           >
-            <View style={[styles.signatureContentWrapper, { width: imageDimensions.width, height: imageDimensions.height }]}>
+            <View style={styles.signatureContentWrapper}>
               <Image
                 source={{ uri: overlay.uri }}
-                style={[styles.signatureImage, { width: imageDimensions.width, height: imageDimensions.height, tintColor: overlay.color }]}
+                style={[styles.signatureImage, { tintColor: overlay.color }]}
                 resizeMode="contain"
               />
               {isSelected && <View style={styles.signatureSelectionBorder} />}
@@ -225,20 +207,23 @@ export default function EditScreen() {
   const [saving, setSaving] = useState(false);
   const [overlays, setOverlays] = useState<OverlayElement[]>([]);
   const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null);
-  const [showTooltip, setShowTooltip] = useState(true);
-  const [isSignatureMode, setIsSignatureMode] = useState(false);
-  const [, setShowEditPanel] = useState(false);
+  const [showEditPanel, setShowEditPanel] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [isSignatureMode, setIsSignatureMode] = useState(false);
   const [signaturePaths, setSignaturePaths] = useState<{ path: string }[]>([]);
   const [currentPath, setCurrentPath] = useState('');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(true);
   const startPointRef = useRef<{ x: number; y: number } | null>(null);
   const viewShotRef = useRef<View>(null);
   const signatureViewRef = useRef<View>(null);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { status } = useSubscription();
   const { t } = useTranslation();
   const { user } = useAuth();
+
+  const COLORS = SIGNATURE_COLORS;
 
   const loadOverlaysFromMemory = useCallback((signatures: SignatureOverlay[]) => {
     const newOverlays: OverlayElement[] = signatures.map(s => ({
@@ -253,176 +238,28 @@ export default function EditScreen() {
     setOverlays(newOverlays);
   }, []);
 
-  const loadMemory = useCallback(async () => {
-    try {
-      setLoading(true);
-      const memories = await StorageService.getAllMemories(user?.id || null);
-      const found = memories.find(m => m.id === memoryId);
-      if (found) {
-        setMemory(found);
-        console.log('🔍 Signatures chargées:', found.signatureOverlays?.length || 0);
-        loadOverlaysFromMemory(found.signatureOverlays || []);
-      }
-    } catch (_error) {
-      console.error('Error loading memory:', _error);
-    } finally {
-      setLoading(false);
-    }
-  }, [memoryId, user?.id, loadOverlaysFromMemory]);
-
-  const generateCompositeImageWeb = useCallback(async (): Promise<string> => {
-    if (!viewShotRef.current || !memory) return memory?.uri || '';
-
-    try {
-      const baseImg = new window.Image();
-      baseImg.crossOrigin = 'anonymous';
-      await new Promise((resolve, reject) => {
-        baseImg.onload = resolve;
-        baseImg.onerror = reject;
-        baseImg.src = memory.baseUri || memory.uri;
-      });
-
-      const canvas = document.createElement('canvas');
-      canvas.width = baseImg.naturalWidth;
-      canvas.height = baseImg.naturalHeight;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('No canvas context');
-
-      ctx.drawImage(baseImg, 0, 0);
-
-      const viewShotElem = viewShotRef.current as any;
-      const displayWidth = viewShotElem.offsetWidth || SCREEN_WIDTH;
-      const displayHeight = viewShotElem.offsetHeight || (SCREEN_WIDTH * (baseImg.naturalHeight / baseImg.naturalWidth));
-
-      const ratioX = baseImg.naturalWidth / displayWidth;
-      const ratioY = baseImg.naturalHeight / displayHeight;
-
-      for (const overlay of overlays) {
-        const overlayImg = new window.Image();
-        overlayImg.crossOrigin = 'anonymous';
-        await new Promise((resolve, reject) => {
-          overlayImg.onload = resolve;
-          overlayImg.onerror = reject;
-          overlayImg.src = overlay.uri;
-        });
-
-        ctx.save();
-
-        const targetX = overlay.x * ratioX;
-        const targetY = overlay.y * ratioY;
-
-        const baseOverlayWidth = 150;
-        const baseOverlayHeight = (overlayImg.naturalHeight / overlayImg.naturalWidth) * baseOverlayWidth;
-
-        const drawWidth = baseOverlayWidth * overlay.scale * ratioX;
-        const drawHeight = baseOverlayHeight * overlay.scale * ratioY;
-
-        ctx.translate(targetX + drawWidth / 2, targetY + drawHeight / 2);
-        ctx.rotate((overlay.rotation * Math.PI) / 180);
-
-        const tintCanvas = document.createElement('canvas');
-        tintCanvas.width = overlayImg.naturalWidth;
-        tintCanvas.height = overlayImg.naturalHeight;
-        const tCtx = tintCanvas.getContext('2d')!;
-
-        tCtx.drawImage(overlayImg, 0, 0);
-        tCtx.globalCompositeOperation = 'source-in';
-        tCtx.fillStyle = overlay.color;
-        tCtx.fillRect(0, 0, tintCanvas.width, tintCanvas.height);
-
-        ctx.drawImage(tintCanvas, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
-
-        ctx.restore();
-      }
-
-      return canvas.toDataURL('image/jpeg', 0.85);
-    } catch (_error) {
-      console.error('Error generating composite image web:', _error);
-      return memory?.uri || '';
-    }
-  }, [memory, overlays]);
-
-  const handleSave = useCallback(async () => {
-    if (saving || !memory) return;
-    setSaving(true);
-    try {
-      if (Platform.OS !== 'web') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      }
-
-      console.log('💾 Sauvegarde en cours...');
-      const signatureOverlays: StoredSignatureOverlay[] = overlays.map(o => ({
-        id: o.id,
-        uri: o.uri,
-        x: o.x,
-        y: o.y,
-        rotation: o.rotation,
-        scale: o.scale,
-        color: o.color,
-      }));
-
-      let compositeUri = memory.uri;
-      try {
-        if (Platform.OS === 'web') {
-          console.log('🌐 Génération image composite sur Web...');
-          compositeUri = await generateCompositeImageWeb();
-        } else {
-          console.log('📱 Génération image composite sur Mobile...');
-          if (viewShotRef.current) {
-            compositeUri = await captureRef(viewShotRef.current, {
-              format: 'jpg',
-              quality: 0.8,
-            });
-          }
-        }
-      } catch (_err) {
-        console.error('❌ Erreur génération composite:', _err);
-      }
-
-      await StorageService.updateMemory(
-        memory,
-        user?.id || null,
-        {
-          signatureOverlays,
-          imageUri: compositeUri,
-          isEdited: true
-        }
-      );
-
-      console.log('✅ Sauvegarde réussie');
-      if (autoSave === 'true') {
-        router.replace({
-          pathname: '/result',
-          params: { memoryId: memory.id }
-        });
-      }
-    } catch (_error) {
-      console.error('❌ Erreur lors de la sauvegarde:', _error);
-      Alert.alert('Erreur', 'Impossible de sauvegarder les modifications');
-    } finally {
-      setSaving(false);
-    }
-  }, [saving, memory, overlays, user?.id, autoSave, router, generateCompositeImageWeb]);
+  const getSignatureOverlays = useCallback((): SignatureOverlay[] => {
+    return overlays;
+  }, [overlays]);
 
   useEffect(() => {
     loadMemory();
-  }, [loadMemory]);
+  }, [memoryId]);
 
   useFocusEffect(
     useCallback(() => {
       loadMemory();
-    }, [loadMemory])
+    }, [memoryId])
   );
 
   useEffect(() => {
     if (autoSave === 'true' && memory && !saving) {
       console.log('🔄 AutoSave activé, sauvegarde automatique de l\'image composite');
-      const timer = setTimeout(() => {
+      setTimeout(() => {
         handleSave();
       }, 500);
-      return () => clearTimeout(timer);
     }
-  }, [autoSave, memory, saving, handleSave]);
+  }, [autoSave, memory]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -437,6 +274,23 @@ export default function EditScreen() {
       setShowTooltip(false);
     }
   }, [selectedOverlayId]);
+
+  const loadMemory = async () => {
+    try {
+      setLoading(true);
+      const memories = await StorageService.getAllMemories(user?.id || null);
+      const found = memories.find(m => m.id === memoryId);
+      if (found) {
+        setMemory(found);
+        console.log('🔍 Signatures chargées:', found.signatureOverlays?.length || 0);
+        loadOverlaysFromMemory(found.signatureOverlays || []);
+      }
+    } catch (error) {
+      console.error('Error loading memory:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const goToSignature = () => {
     if (Platform.OS !== 'web') {
@@ -664,8 +518,8 @@ export default function EditScreen() {
       setIsSignatureMode(false);
       setSignaturePaths([]);
       setCurrentPath('');
-    } catch (_error) {
-      console.error('Erreur lors de la création de la signature:', _error);
+    } catch (error) {
+      console.error('Erreur lors de la création de la signature:', error);
       Alert.alert('Erreur', 'Impossible de créer la signature');
     }
   };
@@ -774,6 +628,26 @@ export default function EditScreen() {
     return overlays.find(o => o.id === selectedOverlayId);
   }, [selectedOverlayId, overlays]);
 
+  const rotateSelectedOverlay = (delta: number = 90) => {
+    const overlay = getSelectedOverlay();
+    if (!overlay) {
+      console.warn('rotateSelectedOverlay: no overlay selected');
+      return;
+    }
+
+    setOverlays(prevOverlays =>
+      prevOverlays.map(o =>
+        o.id === selectedOverlayId
+          ? { ...o, rotation: (o.rotation + delta) % 360 }
+          : o
+      )
+    );
+
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
   const toggleColorPicker = () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -813,6 +687,196 @@ export default function EditScreen() {
     }
 
     removeOverlay(selectedOverlayId!);
+  };
+
+
+  const compressImageDataUrl = async (dataUrl: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxWidth = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Cannot get canvas context'));
+          return;
+        }
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        resolve(compressedDataUrl);
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = dataUrl;
+    });
+  };
+
+  const captureImageWeb = async (): Promise<string> => {
+    if (!memory) {
+      throw new Error('Memory is null');
+    }
+
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = SCREEN_WIDTH;
+      canvas.height = SCREEN_HEIGHT;
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) {
+        reject(new Error('Cannot get canvas context'));
+        return;
+      }
+
+      const img = new window.Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = async () => {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+        ctx.drawImage(img, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+        if (overlays.length > 0) {
+          let loadedCount = 0;
+          overlays.forEach((overlay) => {
+            const sigImg = new window.Image();
+            sigImg.crossOrigin = 'anonymous';
+            sigImg.onload = () => {
+              ctx.save();
+              ctx.translate(overlay.x, overlay.y);
+              ctx.rotate((overlay.rotation * Math.PI) / 180);
+              ctx.scale(overlay.scale, overlay.scale);
+              ctx.drawImage(sigImg, 0, 0, 100, 60);
+              ctx.restore();
+
+              loadedCount++;
+              if (loadedCount === overlays.length) {
+                const dataUrl = canvas.toDataURL('image/png', 1.0);
+                resolve(dataUrl);
+              }
+            };
+            sigImg.onerror = () => reject(new Error('Failed to load signature'));
+            sigImg.src = overlay.uri;
+          });
+        } else {
+          const dataUrl = canvas.toDataURL('image/png', 1.0);
+          resolve(dataUrl);
+        }
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = memory.baseUri || memory.uri;
+    });
+  };
+
+  const handleSave = async () => {
+    if (!memory) {
+      console.error('❌ Memory is null');
+      return;
+    }
+
+    try {
+      console.log('🔄 Début de la sauvegarde...');
+      setSaving(true);
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      console.log('📸 Capture de l\'image...');
+      let capturedUri: string;
+
+      if (Platform.OS === 'web') {
+        capturedUri = await captureImageWeb();
+      } else {
+        if (!viewShotRef.current) {
+          throw new Error('ViewShot ref is null');
+        }
+        capturedUri = await captureRef(viewShotRef.current, {
+          format: 'png',
+          quality: 1.0,
+        });
+      }
+      console.log('✅ Image capturée');
+
+      let finalUri = capturedUri;
+
+      if (Platform.OS === 'web') {
+        console.log('🗜️ Compression de l\'image...');
+        try {
+          finalUri = await compressImageDataUrl(capturedUri);
+          console.log('✅ Image compressée');
+        } catch (compressError) {
+          console.error('⚠️ Erreur de compression, utilisation de l\'original:', compressError);
+        }
+      }
+
+      const baseUri = memory.baseUri || memory.uri;
+      const savedSignatureOverlays = getSignatureOverlays();
+
+      console.log('💾 Mise à jour de l\'image...');
+      await StorageService.updateMemory(
+        memory,
+        user?.id || null,
+        {
+          imageUri: finalUri,
+          signatureOverlays: savedSignatureOverlays.length > 0 ? savedSignatureOverlays : undefined,
+        }
+      );
+      console.log('✅ Image mise à jour');
+
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+
+      setSaving(false);
+
+      console.log('✅ Sauvegarde terminée, redirection vers result');
+      router.push({
+        pathname: '/result',
+        params: { memoryId: memoryId },
+      });
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde:', error);
+      setSaving(false);
+      if (Platform.OS === 'web') {
+        alert(`Erreur: ${(error as Error).message}`);
+      } else {
+        Alert.alert('Erreur', `Impossible d\'enregistrer: ${(error as Error).message}`);
+      }
+    }
+  };
+
+  const handleClose = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+
+    if (overlays.length > 0) {
+      Alert.alert(
+        'Modifications non enregistrées',
+        'Voulez-vous quitter sans enregistrer ?',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Quitter', style: 'destructive', onPress: () => router.back() },
+        ]
+      );
+    } else {
+      router.back();
+    }
   };
 
   if (loading || !memory) {
