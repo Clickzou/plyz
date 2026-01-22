@@ -707,7 +707,7 @@ export default function ResultScreen() {
     signaturePathsRef.current = [];
     setCurrentPath('');
     currentPathRef.current = '';
-  }, [signatureOverlays.length]);
+  }, []);
 
   // Get current active color from selected element or default to white
   const getActiveSignatureColor = useCallback(() => {
