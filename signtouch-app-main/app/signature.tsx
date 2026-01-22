@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform, Dimensions, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform, Dimensions, ActivityIndicator, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
   GestureDetector,
@@ -486,12 +486,27 @@ export default function SignatureScreen() {
                       />
                     )}
                   </Svg>
+                  {savedSignatures.map((uri, index) => (
+                    <View
+                      key={`sig_${index}`}
+                      style={[
+                        styles.savedSignatureOverlay,
+                        { top: 80 + index * 100 }
+                      ]}
+                    >
+                      <Image 
+                        source={{ uri }} 
+                        style={styles.savedSignatureImage}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  ))}
                   {savedTexts.map((item, index) => (
                     <View
                       key={`text_${index}`}
                       style={[
                         styles.savedTextOverlay,
-                        { top: 150 + index * 60 }
+                        { top: 150 + savedSignatures.length * 100 + index * 60 }
                       ]}
                     >
                       <Text style={[styles.savedTextStyle, { fontFamily: item.fontFamily }]}>
@@ -916,6 +931,18 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 5,
+  },
+  savedSignatureOverlay: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    height: 80,
+    alignItems: 'center',
+  },
+  savedSignatureImage: {
+    width: 150,
+    height: 80,
+    tintColor: '#ffffff',
   },
   textModalContainer: {
     backgroundColor: '#2a2a2a',
