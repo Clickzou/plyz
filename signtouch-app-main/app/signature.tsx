@@ -6,7 +6,7 @@ import {
   Gesture,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withSequence, withTiming, runOnJS } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { Eraser, Check, ArrowLeft, Plus, Pencil, Type } from 'lucide-react-native';
 import { Modal, TextInput, ScrollView, Text } from 'react-native';
@@ -51,7 +51,10 @@ export default function SignatureScreen() {
   const currentPathRef = useRef<string>('');
 
   const scale = useSharedValue(1);
+  const badgePulse = useSharedValue(1);
   const hadPathsRef = useRef(paths.length > 0);
+  
+  const hasContent = savedSignatures.length > 0 || savedTexts.length > 0 || paths.length > 0;
 
   useEffect(() => {
     const hasPathsNow = paths.length > 0;
@@ -73,6 +76,27 @@ export default function SignatureScreen() {
       transform: [{ scale: scale.value }],
     };
   });
+
+  const animatedBadgeStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: badgePulse.value }],
+    };
+  });
+
+  useEffect(() => {
+    if (hasContent) {
+      badgePulse.value = withRepeat(
+        withSequence(
+          withTiming(1.3, { duration: 500 }),
+          withTiming(1, { duration: 500 })
+        ),
+        -1,
+        true
+      );
+    } else {
+      badgePulse.value = 1;
+    }
+  }, [hasContent]);
 
   useEffect(() => {
     SplashScreen.hideAsync();
@@ -507,10 +531,10 @@ export default function SignatureScreen() {
               >
                 <View style={styles.compositeIconContainer}>
                   <Pencil size={24} color="#1a1a1a" strokeWidth={2.5} />
-                  {savedSignatures.length > 0 && (
-                    <View style={styles.plusBadgeYellow}>
+                  {hasContent && (
+                    <Animated.View style={[styles.plusBadgeYellow, animatedBadgeStyle]}>
                       <Plus size={12} color="#1a1a1a" strokeWidth={3} />
-                    </View>
+                    </Animated.View>
                   )}
                 </View>
               </TouchableOpacity>
@@ -522,10 +546,10 @@ export default function SignatureScreen() {
               >
                 <View style={styles.compositeIconContainer}>
                   <Type size={24} color="#ffffff" strokeWidth={2} />
-                  {savedTexts.length > 0 && (
-                    <View style={styles.plusBadgeBlue}>
+                  {hasContent && (
+                    <Animated.View style={[styles.plusBadgeBlue, animatedBadgeStyle]}>
                       <Plus size={12} color="#ffffff" strokeWidth={3} />
-                    </View>
+                    </Animated.View>
                   )}
                 </View>
               </TouchableOpacity>
