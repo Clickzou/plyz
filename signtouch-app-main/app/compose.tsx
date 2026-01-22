@@ -498,7 +498,7 @@ export default function ComposeScreen() {
       scale: 1,
       color: '#ffffff',
       fontFamily: selectedFont,
-      fontSize: 32,
+      fontSize: 40,
     };
 
     setTextOverlays([...textOverlays, newText]);
@@ -1273,12 +1273,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
+    minWidth: 100,
+    minHeight: 60,
+    padding: 20,
   },
   textContainer: {
     alignSelf: 'flex-start',
   },
   textElement: {
-    fontSize: 32,
+    fontSize: 40,
     fontWeight: 'bold',
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: 2, height: 2 },
