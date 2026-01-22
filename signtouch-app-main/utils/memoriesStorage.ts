@@ -14,6 +14,18 @@ export interface SignatureOverlay {
   height?: number;
 }
 
+export interface TextOverlay {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  rotation: number;
+  scale: number;
+  color: string;
+  fontFamily: string;
+  fontSize: number;
+}
+
 export interface PhotoAdjustments {
   brightness: number;
   contrast: number;
@@ -27,6 +39,7 @@ export interface Memory {
   timestamp: number;
   updatedAt?: number;
   signatureOverlays?: SignatureOverlay[];
+  textOverlays?: TextOverlay[];
   filter?: string;
   adjustments?: PhotoAdjustments;
   isEdited?: boolean;
@@ -247,6 +260,7 @@ export const getAllMemories = async (): Promise<Memory[]> => {
           timestamp: m.timestamp,
           updatedAt: m.updatedAt,
           signatureOverlays: m.signatureOverlays,
+          textOverlays: m.textOverlays,
           filter: m.filter,
           adjustments: m.adjustments,
           isEdited: m.isEdited
@@ -256,6 +270,13 @@ export const getAllMemories = async (): Promise<Memory[]> => {
           console.log('📦 Loaded memory', cleaned.id, 'with', cleaned.signatureOverlays.length, 'signatures');
           cleaned.signatureOverlays.forEach((overlay, idx) => {
             console.log(`  Signature ${idx}: color=${overlay.color}`);
+          });
+        }
+
+        if (cleaned.textOverlays && cleaned.textOverlays.length > 0) {
+          console.log('📦 Loaded memory', cleaned.id, 'with', cleaned.textOverlays.length, 'text overlays');
+          cleaned.textOverlays.forEach((overlay, idx) => {
+            console.log(`  Text ${idx}: text=${overlay.text}, font=${overlay.fontFamily}`);
           });
         }
 

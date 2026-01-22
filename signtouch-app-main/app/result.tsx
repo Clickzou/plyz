@@ -10,13 +10,15 @@ import {
   Text,
   ScrollView,
   Dimensions,
+  TextInput,
+  Modal,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Share2, Palette, Pencil, Plus, Sparkles, X, RotateCw, Check, Save, Eraser } from 'lucide-react-native';
+import { Download, Trash2, Share2, Palette, Pencil, Plus, Sparkles, X, RotateCw, Check, Save, Eraser, Type } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Memory, SignatureOverlay as StoredSignatureOverlay } from '@/utils/memoriesStorage';
+import { Memory, SignatureOverlay as StoredSignatureOverlay, TextOverlay as StoredTextOverlay } from '@/utils/memoriesStorage';
 import * as StorageService from '@/utils/storageService';
 import SocialShareModal from '@/components/SocialShareModal';
 import AdModal from '@/components/AdModal';
@@ -105,6 +107,41 @@ function FilteredImage({ uri, brightness, contrast, saturation, style }: Filtere
 
 // Types
 interface SignatureOverlay extends StoredSignatureOverlay {}
+interface TextOverlay extends StoredTextOverlay {}
+
+// Font families - 30 fonts (modern + handwriting)
+const FONT_FAMILIES = [
+  { name: 'System', value: 'System' },
+  { name: 'Arial', value: 'Arial' },
+  { name: 'Helvetica', value: 'Helvetica' },
+  { name: 'Georgia', value: 'Georgia' },
+  { name: 'Times', value: 'Times New Roman' },
+  { name: 'Verdana', value: 'Verdana' },
+  { name: 'Trebuchet', value: 'Trebuchet MS' },
+  { name: 'Palatino', value: 'Palatino' },
+  { name: 'Garamond', value: 'Garamond' },
+  { name: 'Bookman', value: 'Bookman' },
+  { name: 'Avant Garde', value: 'Avant Garde' },
+  { name: 'Courier', value: 'Courier New' },
+  { name: 'Monaco', value: 'Monaco' },
+  { name: 'Optima', value: 'Optima' },
+  { name: 'Futura', value: 'Futura' },
+  { name: 'Didot', value: 'Didot' },
+  { name: 'American Typewriter', value: 'American Typewriter' },
+  { name: 'Baskerville', value: 'Baskerville' },
+  { name: 'Copperplate', value: 'Copperplate' },
+  { name: 'Papyrus', value: 'Papyrus' },
+  { name: 'Brush Script', value: 'Brush Script MT' },
+  { name: 'Lucida Handwriting', value: 'Lucida Handwriting' },
+  { name: 'Comic Sans', value: 'Comic Sans MS' },
+  { name: 'Bradley Hand', value: 'Bradley Hand' },
+  { name: 'Marker Felt', value: 'Marker Felt' },
+  { name: 'Snell Roundhand', value: 'Snell Roundhand' },
+  { name: 'Zapfino', value: 'Zapfino' },
+  { name: 'Chalkboard', value: 'Chalkboard' },
+  { name: 'Noteworthy', value: 'Noteworthy' },
+  { name: 'Handwriting', value: 'cursive' },
+];
 
 // Constants
 const SIGNATURE_COLORS = [
@@ -504,6 +541,143 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
   );
 }
 
+// StaticText Component (non-editable)
+interface StaticTextProps {
+  overlay: TextOverlay;
+}
+
+function StaticText({ overlay }: StaticTextProps) {
+  return (
+    <View style={[styles.textWrapper, {
+      left: overlay.x,
+      top: overlay.y,
+      transform: [
+        { rotate: `${overlay.rotation}deg` },
+        { scale: overlay.scale }
+      ]
+    }]}>
+      <Text style={{
+        fontFamily: overlay.fontFamily,
+        fontSize: overlay.fontSize,
+        color: overlay.color,
+      }}>
+        {overlay.text}
+      </Text>
+    </View>
+  );
+}
+
+// DraggableText Component
+interface DraggableTextProps {
+  overlay: TextOverlay;
+  onPositionChange: (id: string, x: number, y: number) => void;
+  onRotationChange: (id: string, rotation: number) => void;
+  onScaleChange: (id: string, scale: number) => void;
+  onLongPress: () => void;
+  onPress: () => void;
+  isSelected: boolean;
+}
+
+function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, isSelected }: DraggableTextProps) {
+  const translateX = useSharedValue(overlay.x);
+  const translateY = useSharedValue(overlay.y);
+  const rotation = useSharedValue(overlay.rotation);
+  const scale = useSharedValue(overlay.scale);
+  const savedTranslateX = useSharedValue(overlay.x);
+  const savedTranslateY = useSharedValue(overlay.y);
+  const savedRotation = useSharedValue(overlay.rotation);
+  const savedScale = useSharedValue(overlay.scale);
+  const isDragging = useSharedValue(false);
+
+  useEffect(() => {
+    translateX.value = overlay.x;
+    translateY.value = overlay.y;
+    savedTranslateX.value = overlay.x;
+    savedTranslateY.value = overlay.y;
+    rotation.value = overlay.rotation;
+    savedRotation.value = overlay.rotation;
+    scale.value = overlay.scale;
+    savedScale.value = overlay.scale;
+  }, [overlay.x, overlay.y, overlay.rotation, overlay.scale]);
+
+  const panGesture = Gesture.Pan()
+    .shouldCancelWhenOutside(false)
+    .onStart(() => {
+      savedTranslateX.value = translateX.value;
+      savedTranslateY.value = translateY.value;
+      isDragging.value = true;
+    })
+    .onUpdate((event) => {
+      translateX.value = savedTranslateX.value + event.translationX;
+      translateY.value = savedTranslateY.value + event.translationY;
+    })
+    .onEnd(() => {
+      isDragging.value = false;
+      runOnJS(onPositionChange)(overlay.id, translateX.value, translateY.value);
+    });
+
+  const rotationGesture = Gesture.Rotation()
+    .onStart(() => {
+      savedRotation.value = rotation.value;
+    })
+    .onUpdate((event) => {
+      rotation.value = savedRotation.value + (event.rotation * 180 / Math.PI);
+    })
+    .onEnd(() => {
+      runOnJS(onRotationChange)(overlay.id, rotation.value);
+    });
+
+  const pinchGesture = Gesture.Pinch()
+    .onStart(() => {
+      savedScale.value = scale.value;
+    })
+    .onUpdate((event) => {
+      scale.value = Math.max(0.3, Math.min(savedScale.value * event.scale, 5));
+    })
+    .onEnd(() => {
+      runOnJS(onScaleChange)(overlay.id, scale.value);
+    });
+
+  const composedGesture = Gesture.Simultaneous(panGesture, rotationGesture, pinchGesture);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { rotate: `${rotation.value}deg` },
+        { scale: withSpring(isDragging.value ? scale.value * 1.05 : scale.value) },
+      ],
+    };
+  });
+
+  return (
+    <Animated.View style={[styles.textWrapper, { left: 0, top: 0 }, animatedStyle]} pointerEvents="box-none">
+      <GestureDetector gesture={composedGesture}>
+        <Animated.View collapsable={false}>
+          <TouchableOpacity
+            onLongPress={onLongPress}
+            onPress={onPress}
+            activeOpacity={0.9}
+            delayLongPress={500}
+          >
+            <Text style={{
+              fontFamily: overlay.fontFamily,
+              fontSize: overlay.fontSize,
+              color: overlay.color,
+            }}>
+              {overlay.text}
+            </Text>
+            {isSelected && (
+              <View style={styles.selectionBorder} pointerEvents="none" />
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+      </GestureDetector>
+    </Animated.View>
+  );
+}
+
 export default function ResultScreen() {
   const params = useLocalSearchParams<{ imageUri?: string; memoryId?: string }>();
   const { imageUri, memoryId } = params;
@@ -521,18 +695,22 @@ export default function ResultScreen() {
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
   const [signatureOverlays, setSignatureOverlays] = useState<SignatureOverlay[]>([]);
+  const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
-  const [selectedElementType, setSelectedElementType] = useState<'signature' | null>(null);
+  const [selectedElementType, setSelectedElementType] = useState<'signature' | 'text' | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // UI States
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showFontPicker, setShowFontPicker] = useState(false);
+  const [showTextInput, setShowTextInput] = useState(false);
+  const [newTextValue, setNewTextValue] = useState('');
   const [showTooltip, setShowTooltip] = useState(false);
   const [showSignatureMode, setShowSignatureMode] = useState(false);
   const [showEffectsPanel, setShowEffectsPanel] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [limitType, setLimitType] = useState<'signature' | null>(null);
+  const [limitType, setLimitType] = useState<'signature' | 'text' | null>(null);
 
   // Welcome message state
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
@@ -643,6 +821,7 @@ export default function ResultScreen() {
     const updates: any = {};
     if (updatedMemory.uri !== memory.uri) updates.imageUri = updatedMemory.uri;
     if (updatedMemory.signatureOverlays) updates.signatureOverlays = updatedMemory.signatureOverlays;
+    if (updatedMemory.textOverlays) updates.textOverlays = updatedMemory.textOverlays;
     if (updatedMemory.filter) updates.filter = updatedMemory.filter;
     if (updatedMemory.adjustments) updates.adjustments = updatedMemory.adjustments;
     if (updatedMemory.isEdited !== undefined) updates.isEdited = updatedMemory.isEdited;
@@ -671,6 +850,7 @@ export default function ResultScreen() {
       if (found) {
         setMemory(found);
         setSignatureOverlays(found.signatureOverlays || []);
+        setTextOverlays(found.textOverlays || []);
         if (found.adjustments) {
           setBrightness(found.adjustments.brightness || 0);
           setContrast(found.adjustments.contrast || 0);
@@ -930,8 +1110,83 @@ export default function ResultScreen() {
     }
   };
 
+  // Text overlay functions
+  const addTextOverlay = useCallback(() => {
+    if (textOverlays.length >= 2) {
+      setLimitType('text');
+      setShowPremiumModal(true);
+      return;
+    }
+    setShowTextInput(true);
+    setNewTextValue('');
+  }, [textOverlays.length]);
+
+  const confirmAddText = useCallback(() => {
+    if (!newTextValue.trim()) {
+      setShowTextInput(false);
+      return;
+    }
+    
+    const newOverlay: TextOverlay = {
+      id: `text_${Date.now()}`,
+      text: newTextValue.trim(),
+      x: SCREEN_WIDTH / 2 - 50,
+      y: SCREEN_HEIGHT / 2 - 20,
+      rotation: 0,
+      scale: 1,
+      color: '#ffffff',
+      fontFamily: 'System',
+      fontSize: 24,
+    };
+
+    setTextOverlays([...textOverlays, newOverlay]);
+    setShowTextInput(false);
+    setNewTextValue('');
+    setIsEditMode(true);
+    setSelectedElementId(newOverlay.id);
+    setSelectedElementType('text');
+  }, [newTextValue, textOverlays]);
+
+  const updateTextPosition = useCallback((id: string, x: number, y: number) => {
+    setTextOverlays(overlays =>
+      overlays.map(o => o.id === id ? { ...o, x, y } : o)
+    );
+  }, []);
+
+  const updateTextRotation = useCallback((id: string, rotation: number) => {
+    setTextOverlays(overlays =>
+      overlays.map(o => o.id === id ? { ...o, rotation } : o)
+    );
+  }, []);
+
+  const updateTextScale = useCallback((id: string, scale: number) => {
+    setTextOverlays(overlays =>
+      overlays.map(o => o.id === id ? { ...o, scale } : o)
+    );
+  }, []);
+
+  const updateTextColor = useCallback((id: string, color: string) => {
+    setTextOverlays(overlays =>
+      overlays.map(o => o.id === id ? { ...o, color } : o)
+    );
+  }, []);
+
+  const updateTextFont = useCallback((id: string, fontFamily: string) => {
+    setTextOverlays(overlays =>
+      overlays.map(o => o.id === id ? { ...o, fontFamily } : o)
+    );
+  }, []);
+
+  const removeTextOverlay = (id: string) => {
+    setTextOverlays(overlays => overlays.filter(o => o.id !== id));
+    if (selectedElementId === id) {
+      setSelectedElementId(null);
+      setSelectedElementType(null);
+    }
+  };
+
   // Selection functions
-  const selectElement = (id: string, type: 'signature') => {
+  const selectElement = (id: string, type: 'signature' | 'text') => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -967,6 +1222,14 @@ export default function ResultScreen() {
     console.log('🎨 [changeSelectedColor] Changing color to:', color, 'for element:', selectedElementId);
     if (selectedElementId && selectedElementType === 'signature') {
       updateSignatureColor(selectedElementId, color);
+    } else if (selectedElementId && selectedElementType === 'text') {
+      updateTextColor(selectedElementId, color);
+    }
+  };
+
+  const changeSelectedFont = (fontFamily: string) => {
+    if (selectedElementId && selectedElementType === 'text') {
+      updateTextFont(selectedElementId, fontFamily);
     }
   };
 
@@ -976,6 +1239,8 @@ export default function ResultScreen() {
     }
     if (selectedElementId && selectedElementType === 'signature') {
       removeSignatureOverlay(selectedElementId);
+    } else if (selectedElementId && selectedElementType === 'text') {
+      removeTextOverlay(selectedElementId);
     }
   };
 
@@ -1074,6 +1339,7 @@ export default function ResultScreen() {
         const updatedMemory: Memory = {
           ...memory,
           signatureOverlays,
+          textOverlays,
           adjustments:
             brightness !== 0 || contrast !== 0 || saturation !== 0
               ? { brightness, contrast, saturation }
@@ -1104,6 +1370,7 @@ export default function ResultScreen() {
           ...memory,
           uri: capturedUri,
           signatureOverlays,
+          textOverlays,
           adjustments: (brightness !== 0 || contrast !== 0 || saturation !== 0) ? { brightness, contrast, saturation } : undefined,
           updatedAt: Date.now(),
           isEdited: true,
@@ -1152,6 +1419,7 @@ export default function ResultScreen() {
             const updatedMemory: Memory = {
               ...memory,
               signatureOverlays,
+              textOverlays,
               adjustments:
                 brightness !== 0 || contrast !== 0 || saturation !== 0
                   ? { brightness, contrast, saturation }
@@ -1524,6 +1792,26 @@ export default function ResultScreen() {
                 isSelected={selectedElementId === overlay.id}
               />
             ))}
+            {/* Static text overlays (non-editable) */}
+            {!isEditMode && textOverlays.map(overlay => (
+              <StaticText
+                key={overlay.id}
+                overlay={overlay}
+              />
+            ))}
+            {/* Draggable text overlays (editable) */}
+            {isEditMode && !saving && textOverlays.map(overlay => (
+              <DraggableText
+                key={overlay.id}
+                overlay={overlay}
+                onPositionChange={updateTextPosition}
+                onRotationChange={updateTextRotation}
+                onScaleChange={updateTextScale}
+                onLongPress={() => removeTextOverlay(overlay.id)}
+                onPress={() => selectElement(overlay.id, 'text')}
+                isSelected={selectedElementId === overlay.id}
+              />
+            ))}
           </View>
         </View>
 
@@ -1592,6 +1880,29 @@ export default function ResultScreen() {
                 </View>
               </View>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.editActionButton, styles.textPlusButton]}
+              onPress={addTextOverlay}
+              activeOpacity={0.8}
+            >
+              <View style={styles.iconWithBadge}>
+                <Type size={20} color="#ffffff" strokeWidth={2} />
+                <View style={styles.plusBadgeSmall}>
+                  <Plus size={10} color="#ffffff" strokeWidth={3} />
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            {selectedElementType === 'text' && (
+              <TouchableOpacity
+                style={[styles.editActionButton, styles.fontButton, showFontPicker && styles.fontButtonActive]}
+                onPress={() => setShowFontPicker(!showFontPicker)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.fontButtonText}>Aa</Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={[styles.editActionButton, styles.effectsButton, showEffectsPanel && styles.effectsButtonActive]}
@@ -1897,6 +2208,70 @@ export default function ResultScreen() {
           }
         />
 
+        {/* Text Input Modal */}
+        <Modal
+          visible={showTextInput}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowTextInput(false)}
+        >
+          <View style={styles.textInputModal}>
+            <View style={styles.textInputContainer}>
+              <Text style={styles.textInputTitle}>{t('addText') || 'Add Text'}</Text>
+              <TextInput
+                style={styles.textInputField}
+                value={newTextValue}
+                onChangeText={setNewTextValue}
+                placeholder={t('enterText') || 'Enter your text...'}
+                placeholderTextColor="#888"
+                autoFocus
+                multiline={false}
+              />
+              <View style={styles.textInputButtons}>
+                <TouchableOpacity
+                  style={[styles.textInputButton, styles.textInputCancelButton]}
+                  onPress={() => setShowTextInput(false)}
+                >
+                  <Text style={styles.textInputButtonText}>{t('cancel') || 'Cancel'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.textInputButton, styles.textInputConfirmButton]}
+                  onPress={confirmAddText}
+                >
+                  <Text style={styles.textInputButtonText}>Add</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Font Picker */}
+        {showFontPicker && selectedElementType === 'text' && (
+          <View style={styles.fontPickerContainer}>
+            <Text style={styles.fontPickerTitle}>Select Font</Text>
+            <ScrollView style={styles.fontPickerScroll} showsVerticalScrollIndicator={false}>
+              {FONT_FAMILIES.map((font) => {
+                const selectedText = textOverlays.find(t => t.id === selectedElementId);
+                const isSelected = selectedText?.fontFamily === font.value;
+                return (
+                  <TouchableOpacity
+                    key={font.value}
+                    style={[styles.fontPickerItem, isSelected && styles.fontPickerItemSelected]}
+                    onPress={() => {
+                      changeSelectedFont(font.value);
+                      setShowFontPicker(false);
+                    }}
+                  >
+                    <Text style={[styles.fontPickerItemText, { fontFamily: font.value }]}>
+                      {font.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
         {/* Welcome message - Tooltip from edit button */}
         {showWelcomeMessage && (
           <TouchableOpacity
@@ -2025,6 +2400,107 @@ const styles = StyleSheet.create({
   },
   effectsButtonActive: {
     backgroundColor: '#FBB824',
+  },
+  fontButton: {
+    backgroundColor: '#8B5CF6',
+  },
+  fontButtonActive: {
+    backgroundColor: '#A78BFA',
+  },
+  fontButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  textWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  textInputModal: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  textInputContainer: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 16,
+    padding: 24,
+    width: '85%',
+    maxWidth: 400,
+  },
+  textInputTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  textInputField: {
+    backgroundColor: '#333',
+    color: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    marginBottom: 20,
+    minHeight: 50,
+  },
+  textInputButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  textInputButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  textInputCancelButton: {
+    backgroundColor: '#444',
+  },
+  textInputConfirmButton: {
+    backgroundColor: '#10b981',
+  },
+  textInputButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  fontPickerContainer: {
+    position: 'absolute',
+    bottom: 100,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    borderRadius: 16,
+    padding: 16,
+    maxHeight: 300,
+    zIndex: 50,
+  },
+  fontPickerTitle: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  fontPickerScroll: {
+    maxHeight: 220,
+  },
+  fontPickerItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  fontPickerItemSelected: {
+    backgroundColor: '#8B5CF6',
+  },
+  fontPickerItemText: {
+    color: '#ffffff',
+    fontSize: 16,
   },
   iconWithBadge: {
     position: 'relative',
@@ -2232,9 +2708,6 @@ const styles = StyleSheet.create({
   colorOptionSelected: {
     borderColor: '#ffffff',
     borderWidth: 3,
-  },
-  fontPickerScroll: {
-    marginBottom: 20,
   },
   fontOptionLarge: {
     paddingHorizontal: 20,

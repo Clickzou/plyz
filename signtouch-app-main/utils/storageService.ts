@@ -1,4 +1,4 @@
-import { Memory, SignatureOverlay, PhotoAdjustments } from './memoriesStorage';
+import { Memory, SignatureOverlay, TextOverlay, PhotoAdjustments } from './memoriesStorage';
 import * as LocalStorage from './memoriesStorage';
 import * as CloudStorage from './cloudStorage';
 
@@ -7,6 +7,7 @@ export const saveMemory = async (
   userId: string | null,
   metadata?: {
     signatureOverlays?: SignatureOverlay[];
+    textOverlays?: TextOverlay[];
     filter?: string;
     adjustments?: PhotoAdjustments;
     isEdited?: boolean;
@@ -21,6 +22,7 @@ export const saveMemory = async (
       await LocalStorage.updateMemory({
         ...memory,
         signatureOverlays: metadata.signatureOverlays,
+        textOverlays: metadata.textOverlays,
         filter: metadata.filter,
         adjustments: metadata.adjustments,
         isEdited: metadata.isEdited,
@@ -29,6 +31,7 @@ export const saveMemory = async (
       return {
         ...memory,
         signatureOverlays: metadata.signatureOverlays,
+        textOverlays: metadata.textOverlays,
         filter: metadata.filter,
         adjustments: metadata.adjustments,
         isEdited: metadata.isEdited,
@@ -53,6 +56,7 @@ export const updateMemory = async (
   updates?: {
     imageUri?: string;
     signatureOverlays?: SignatureOverlay[];
+    textOverlays?: TextOverlay[];
     filter?: string;
     adjustments?: PhotoAdjustments;
     isEdited?: boolean;
@@ -65,6 +69,7 @@ export const updateMemory = async (
       ...memory,
       ...(updates?.imageUri && { uri: updates.imageUri }),
       ...(updates?.signatureOverlays !== undefined && { signatureOverlays: updates.signatureOverlays }),
+      ...(updates?.textOverlays !== undefined && { textOverlays: updates.textOverlays }),
       ...(updates?.filter !== undefined && { filter: updates.filter }),
       ...(updates?.adjustments !== undefined && { adjustments: updates.adjustments }),
       ...(updates?.isEdited !== undefined && { isEdited: updates.isEdited }),

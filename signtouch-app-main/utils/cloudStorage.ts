@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Memory, SignatureOverlay, PhotoAdjustments } from './memoriesStorage';
+import { Memory, SignatureOverlay, TextOverlay, PhotoAdjustments } from './memoriesStorage';
 import * as FileSystem from 'expo-file-system';
 import { Platform } from 'react-native';
 
@@ -11,6 +11,7 @@ interface CloudMemory {
   timestamp: number;
   updated_at: number | null;
   signature_overlays: SignatureOverlay[];
+  text_overlays: TextOverlay[];
   filter: string | null;
   adjustments: PhotoAdjustments | null;
   is_edited: boolean;
@@ -68,6 +69,7 @@ export const saveMemoryToCloud = async (
   userId: string,
   metadata: {
     signatureOverlays?: SignatureOverlay[];
+    textOverlays?: TextOverlay[];
     filter?: string;
     adjustments?: PhotoAdjustments;
     isEdited?: boolean;
@@ -84,6 +86,7 @@ export const saveMemoryToCloud = async (
         image_path: imagePath,
         timestamp,
         signature_overlays: metadata.signatureOverlays || [],
+        text_overlays: metadata.textOverlays || [],
         filter: metadata.filter || null,
         adjustments: metadata.adjustments || null,
         is_edited: metadata.isEdited || false,
@@ -105,6 +108,7 @@ export const saveMemoryToCloud = async (
       timestamp: cloudMemory.timestamp,
       updatedAt: cloudMemory.updated_at || undefined,
       signatureOverlays: cloudMemory.signature_overlays,
+      textOverlays: cloudMemory.text_overlays,
       filter: cloudMemory.filter || undefined,
       adjustments: cloudMemory.adjustments || undefined,
       isEdited: cloudMemory.is_edited,
@@ -139,6 +143,7 @@ export const getAllMemoriesFromCloud = async (userId: string): Promise<Memory[]>
         timestamp: cloudMemory.timestamp,
         updatedAt: cloudMemory.updated_at || undefined,
         signatureOverlays: cloudMemory.signature_overlays,
+        textOverlays: cloudMemory.text_overlays,
         filter: cloudMemory.filter || undefined,
         adjustments: cloudMemory.adjustments || undefined,
         isEdited: cloudMemory.is_edited,
@@ -156,6 +161,7 @@ export const updateMemoryInCloud = async (
   updates: {
     imageUri?: string;
     signatureOverlays?: SignatureOverlay[];
+    textOverlays?: TextOverlay[];
     filter?: string;
     adjustments?: PhotoAdjustments;
     isEdited?: boolean;
@@ -172,6 +178,10 @@ export const updateMemoryInCloud = async (
 
     if (updates.signatureOverlays !== undefined) {
       updateData.signature_overlays = updates.signatureOverlays;
+    }
+
+    if (updates.textOverlays !== undefined) {
+      updateData.text_overlays = updates.textOverlays;
     }
 
     if (updates.filter !== undefined) {
