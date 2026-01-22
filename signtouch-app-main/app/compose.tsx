@@ -245,8 +245,23 @@ export default function ComposeScreen() {
     useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)
   ];
 
+  const isInitialized = useRef(false);
+  
   const signatureTransforms = useRef<SignatureTransform[]>(
-    signatureUris.map((_: string, index: number) => {
+    signatureUris.map((_: string, index: number) => ({
+      scale: scales[index],
+      savedScale: savedScales[index],
+      translateX: translateXs[index],
+      translateY: translateYs[index],
+      savedTranslateX: savedTranslateXs[index],
+      savedTranslateY: savedTranslateYs[index],
+      rotation: rotations[index],
+      savedRotation: savedRotations[index],
+    }))
+  ).current;
+
+  if (!isInitialized.current) {
+    signatureUris.forEach((_: string, index: number) => {
       const initialX = SCREEN_WIDTH / 2 - 60 + index * 50;
       const initialY = SCREEN_HEIGHT / 2 - 60 + index * 50;
       
@@ -254,19 +269,9 @@ export default function ComposeScreen() {
       translateYs[index].value = initialY;
       savedTranslateXs[index].value = initialX;
       savedTranslateYs[index].value = initialY;
-
-      return {
-        scale: scales[index],
-        savedScale: savedScales[index],
-        translateX: translateXs[index],
-        translateY: translateYs[index],
-        savedTranslateX: savedTranslateXs[index],
-        savedTranslateY: savedTranslateYs[index],
-        rotation: rotations[index],
-        savedRotation: savedRotations[index],
-      };
-    })
-  ).current;
+    });
+    isInitialized.current = true;
+  }
 
   const loadMemoryPhoto = useCallback(async () => {
     try {
