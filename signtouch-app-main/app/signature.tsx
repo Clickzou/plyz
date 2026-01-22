@@ -462,6 +462,19 @@ export default function SignatureScreen() {
                       />
                     )}
                   </Svg>
+                  {savedTexts.map((item, index) => (
+                    <View
+                      key={`text_${index}`}
+                      style={[
+                        styles.savedTextOverlay,
+                        { top: 150 + index * 60 }
+                      ]}
+                    >
+                      <Text style={[styles.savedTextStyle, { fontFamily: item.fontFamily }]}>
+                        {item.text}
+                      </Text>
+                    </View>
+                  ))}
                 </View>
               </GestureDetector>
             </View>
@@ -494,9 +507,11 @@ export default function SignatureScreen() {
               >
                 <View style={styles.compositeIconContainer}>
                   <Pencil size={24} color="#1a1a1a" strokeWidth={2.5} />
-                  <View style={styles.plusBadgeYellow}>
-                    <Plus size={12} color="#1a1a1a" strokeWidth={3} />
-                  </View>
+                  {savedSignatures.length > 0 && (
+                    <View style={styles.plusBadgeYellow}>
+                      <Plus size={12} color="#1a1a1a" strokeWidth={3} />
+                    </View>
+                  )}
                 </View>
               </TouchableOpacity>
 
@@ -505,7 +520,14 @@ export default function SignatureScreen() {
                 onPress={() => setShowTextModal(true)}
                 activeOpacity={0.8}
               >
-                <Type size={24} color="#ffffff" strokeWidth={2} />
+                <View style={styles.compositeIconContainer}>
+                  <Type size={24} color="#ffffff" strokeWidth={2} />
+                  {savedTexts.length > 0 && (
+                    <View style={styles.plusBadgeBlue}>
+                      <Plus size={12} color="#ffffff" strokeWidth={3} />
+                    </View>
+                  )}
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -845,6 +867,31 @@ const styles = StyleSheet.create({
     height: 16,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  plusBadgeBlue: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#3B82F6',
+    borderRadius: 8,
+    width: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  savedTextOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  savedTextStyle: {
+    color: '#ffffff',
+    fontSize: 32,
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 5,
   },
   textModalContainer: {
     backgroundColor: '#2a2a2a',
