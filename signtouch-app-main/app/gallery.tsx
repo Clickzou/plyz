@@ -19,7 +19,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import { Memory } from '@/utils/memoriesStorage';
 import * as StorageService from '@/utils/storageService';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import AdModal from '@/components/AdModal';
