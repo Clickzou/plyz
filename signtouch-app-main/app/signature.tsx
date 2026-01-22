@@ -79,12 +79,6 @@ export default function SignatureScreen() {
     setTimeout(() => setIsReady(true), 100);
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      // Plus de limitation sur le nombre de signatures
-    }, [savedSignatures.length])
-  );
-
   const onDrawStart = useCallback((x: number, y: number) => {
     startPointRef.current = { x, y };
     const newPath = `M ${x} ${y}`;
@@ -304,7 +298,7 @@ export default function SignatureScreen() {
       console.error('❌ Erreur lors de la sauvegarde:', error);
       alert('Erreur lors de la sauvegarde: ' + (error as Error).message);
     }
-  }, [paths, convertSvgToImage, hasSignatureForCurrentPhoto]);
+  }, [paths, convertSvgToImage]);
 
   const validateSignature = useCallback(async () => {
     if (Platform.OS !== 'web') {
