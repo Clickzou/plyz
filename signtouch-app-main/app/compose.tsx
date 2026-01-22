@@ -260,14 +260,16 @@ interface SignatureTransform {
 }
 
 export default function ComposeScreen() {
-  const { photoUri, signatures, memoryId } = useLocalSearchParams<{
+  const { photoUri, signatures, memoryId, texts } = useLocalSearchParams<{
     photoUri: string;
     signatures: string;
     memoryId?: string;
+    texts?: string;
   }>();
 
 
   const signatureUris = signatures ? JSON.parse(signatures as string) : [];
+  const initialTexts = texts ? JSON.parse(texts as string) : [];
 
   const [loadedPhotoUri, setLoadedPhotoUri] = useState<string | null>(null);
   const [isLoadingMemory, setIsLoadingMemory] = useState(!!memoryId);
@@ -333,6 +335,24 @@ export default function ComposeScreen() {
       loadMemoryPhoto();
     }
   }, [memoryId]);
+
+  useEffect(() => {
+    if (initialTexts.length > 0 && textOverlays.length === 0) {
+      const newTextOverlays: TextOverlay[] = initialTexts.map((item: { text: string; fontFamily: string }, index: number) => ({
+        id: `text_${Date.now()}_${index}`,
+        text: item.text,
+        x: SCREEN_WIDTH / 2,
+        y: SCREEN_HEIGHT / 2 + index * 60,
+        rotation: 0,
+        scale: 1,
+        color: '#ffffff',
+        fontFamily: item.fontFamily,
+        fontSize: 40,
+      }));
+      setTextOverlays(newTextOverlays);
+      setTextColors(newTextOverlays.map(() => '#ffffff'));
+    }
+  }, [initialTexts]);
 
   const loadMemoryPhoto = async () => {
     try {

@@ -8,7 +8,8 @@ import {
 } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
-import { Eraser, Check, ArrowLeft, Plus, Pencil } from 'lucide-react-native';
+import { Eraser, Check, ArrowLeft, Plus, Pencil, Type } from 'lucide-react-native';
+import { Modal, TextInput, ScrollView, Text } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -38,6 +39,10 @@ export default function SignatureScreen() {
     existingSignatures ? JSON.parse(existingSignatures as string) : []
   );
   const [showPremiumModal, setShowPremiumModal] = useState<boolean>(false);
+  const [showTextModal, setShowTextModal] = useState<boolean>(false);
+  const [textInput, setTextInput] = useState<string>('');
+  const [selectedFont, setSelectedFont] = useState<string>('SpaceMono');
+  const [savedTexts, setSavedTexts] = useState<Array<{ text: string; fontFamily: string }>>([]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
@@ -78,6 +83,47 @@ export default function SignatureScreen() {
   useEffect(() => {
     setTimeout(() => setIsReady(true), 100);
   }, []);
+
+  const FONTS = [
+    'SpaceMono',
+    'Roboto',
+    'OpenSans',
+    'Lato',
+    'Montserrat',
+    'Oswald',
+    'Raleway',
+    'Merriweather',
+    'PlayfairDisplay',
+    'SourceSansPro',
+    'NotoSans',
+    'PTSans',
+    'Ubuntu',
+    'Nunito',
+    'Quicksand',
+    'DancingScript',
+    'Pacifico',
+    'GreatVibes',
+    'Satisfy',
+    'Caveat',
+    'Kalam',
+    'Handlee',
+    'Architects Daughter',
+    'IndieFlower',
+    'ShadowsIntoLight',
+    'Amatic SC',
+    'Gloria Hallelujah',
+    'Patrick Hand',
+    'Courgette',
+    'Sacramento',
+  ];
+
+  const handleAddText = useCallback(() => {
+    if (textInput.trim()) {
+      setSavedTexts((prev) => [...prev, { text: textInput.trim(), fontFamily: selectedFont }]);
+      setTextInput('');
+      setShowTextModal(false);
+    }
+  }, [textInput, selectedFont]);
 
   const onDrawStart = useCallback((x: number, y: number) => {
     startPointRef.current = { x, y };
@@ -354,6 +400,7 @@ export default function SignatureScreen() {
           params: {
             photoUri: photoUri as string,
             signatures: JSON.stringify(allSignatures),
+            texts: JSON.stringify(savedTexts),
           },
         });
       }
@@ -361,11 +408,14 @@ export default function SignatureScreen() {
       console.error('Error capturing signature:', error);
       alert('Erreur lors de la capture: ' + (error as Error).message);
     }
-  }, [paths, savedSignatures, photoUri, router, convertSvgToImage, returnTo, memoryId]);
+  }, [paths, savedSignatures, photoUri, router, convertSvgToImage, returnTo, memoryId, savedTexts]);
 
   const getPromptText = () => {
     if (paths.length > 0) {
       return t('signatureSaved');
+    }
+    if (savedTexts.length > 0) {
+      return t('textAdded') || 'Texte ajouté !';
     }
     return t('signNow');
   };
@@ -434,6 +484,14 @@ export default function SignatureScreen() {
               >
                 <Eraser size={24} color="#ffffff" strokeWidth={2} />
               </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.floatingButton, styles.textAddButton]}
+                onPress={() => setShowTextModal(true)}
+                activeOpacity={0.8}
+              >
+                <Type size={24} color="#ffffff" strokeWidth={2} />
+              </TouchableOpacity>
             </View>
 
             <View style={styles.floatingButtons}>
@@ -485,6 +543,72 @@ export default function SignatureScreen() {
         title={t('limitReached')}
         message={t('signatureLimitMessage')}
       />
+
+      <Modal
+        visible={showTextModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowTextModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.textModalContainer}>
+            <Text style={styles.textModalTitle}>{t('addText') || 'Ajouter du texte'}</Text>
+            
+            <TextInput
+              style={[styles.textModalInput, { fontFamily: selectedFont }]}
+              placeholder={t('enterText') || 'Entrez votre texte...'}
+              placeholderTextColor="#666"
+              value={textInput}
+              onChangeText={setTextInput}
+              multiline
+              autoFocus
+            />
+
+            <Text style={styles.fontSectionTitle}>{t('selectFont') || 'Police'}</Text>
+            <ScrollView style={styles.fontListModal} showsVerticalScrollIndicator={false}>
+              {FONTS.map((font) => (
+                <TouchableOpacity
+                  key={font}
+                  style={[
+                    styles.fontOptionModal,
+                    selectedFont === font && styles.fontOptionSelectedModal,
+                  ]}
+                  onPress={() => setSelectedFont(font)}
+                >
+                  <Text
+                    style={[
+                      styles.fontOptionTextModal,
+                      { fontFamily: font },
+                      selectedFont === font && styles.fontOptionTextSelectedModal,
+                    ]}
+                  >
+                    {font}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <View style={styles.textModalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => {
+                  setShowTextModal(false);
+                  setTextInput('');
+                }}
+              >
+                <Text style={styles.cancelButtonText}>{t('cancel') || 'Annuler'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.addTextButton, !textInput.trim() && styles.addTextButtonDisabled]}
+                onPress={handleAddText}
+                disabled={!textInput.trim()}
+              >
+                <Text style={styles.addTextButtonText}>{t('add') || 'Ajouter'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </GestureHandlerRootView>
   );
 }
@@ -701,6 +825,94 @@ const styles = StyleSheet.create({
     backgroundColor: '#8b5cf6',
   },
   premiumFontButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  textAddButton: {
+    backgroundColor: '#3B82F6',
+  },
+  textModalContainer: {
+    backgroundColor: '#2a2a2a',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '80%',
+  },
+  textModalTitle: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  textModalInput: {
+    backgroundColor: '#1a1a1a',
+    color: '#ffffff',
+    fontSize: 20,
+    padding: 16,
+    borderRadius: 12,
+    minHeight: 80,
+    textAlignVertical: 'top',
+    marginBottom: 16,
+  },
+  fontSectionTitle: {
+    color: '#999',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  fontListModal: {
+    maxHeight: 200,
+    marginBottom: 16,
+  },
+  fontOptionModal: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 4,
+    backgroundColor: '#1a1a1a',
+  },
+  fontOptionSelectedModal: {
+    backgroundColor: '#10b98120',
+    borderWidth: 2,
+    borderColor: '#10b981',
+  },
+  fontOptionTextModal: {
+    color: '#ffffff',
+    fontSize: 16,
+  },
+  fontOptionTextSelectedModal: {
+    color: '#10b981',
+    fontWeight: '600',
+  },
+  textModalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: '#4a4a4a',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  addTextButton: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+  },
+  addTextButtonDisabled: {
+    backgroundColor: '#4a4a4a',
+    opacity: 0.5,
+  },
+  addTextButtonText: {
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
