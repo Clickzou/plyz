@@ -1201,8 +1201,8 @@ const styles = StyleSheet.create({
     margin: 0,
   },
   signatureImage: {
-    width: 100,
-    height: 60,
+    width: 150,
+    height: 80,
   },
   selectionBorder: {
     position: 'absolute',
