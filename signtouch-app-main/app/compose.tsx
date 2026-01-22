@@ -20,6 +20,7 @@ import {
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
+  makeMutable,
 } from 'react-native-reanimated';
 import { Type, Minus, CreditCard as Edit3, Check, RotateCw, ChevronLeft, ChevronRight, Palette, Pencil, Plus, Trash2 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -314,14 +315,14 @@ export default function ComposeScreen() {
     if (!textTransformsRef.current.has(overlay.id)) {
       const rotationRad = (overlay.rotation * Math.PI) / 180;
       textTransformsRef.current.set(overlay.id, {
-        scale: useSharedValue(overlay.scale),
-        savedScale: useSharedValue(overlay.scale),
-        translateX: useSharedValue(overlay.x),
-        translateY: useSharedValue(overlay.y),
-        savedTranslateX: useSharedValue(overlay.x),
-        savedTranslateY: useSharedValue(overlay.y),
-        rotation: useSharedValue(rotationRad),
-        savedRotation: useSharedValue(rotationRad),
+        scale: makeMutable(overlay.scale),
+        savedScale: makeMutable(overlay.scale),
+        translateX: makeMutable(overlay.x),
+        translateY: makeMutable(overlay.y),
+        savedTranslateX: makeMutable(overlay.x),
+        savedTranslateY: makeMutable(overlay.y),
+        rotation: makeMutable(rotationRad),
+        savedRotation: makeMutable(rotationRad),
       });
     }
     return textTransformsRef.current.get(overlay.id)!;
