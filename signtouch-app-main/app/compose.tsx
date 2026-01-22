@@ -26,7 +26,8 @@ import * as Haptics from 'expo-haptics';
 import { captureRef } from 'react-native-view-shot';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import { Memory, SignatureOverlay } from '@/utils/memoriesStorage';
+import { Memory, SignatureOverlay, TextOverlay } from '@/utils/memoriesStorage';
+import { Modal, TextInput } from 'react-native';
 import * as StorageService from '@/utils/storageService';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -127,6 +128,48 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
   );
 }
 
+interface AnimatedTextProps {
+  overlay: TextOverlay;
+  transform: TextTransform;
+  isSelected: boolean;
+  gesture: any;
+}
+
+function AnimatedText({ overlay, transform, isSelected, gesture }: AnimatedTextProps) {
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: transform.translateX.value },
+        { translateY: transform.translateY.value },
+        { rotate: `${transform.rotation.value}rad` },
+        { scale: transform.scale.value },
+      ],
+    };
+  });
+
+  return (
+    <GestureDetector gesture={gesture}>
+      <Animated.View style={[styles.textWrapper, animatedStyle]}>
+        <View style={styles.textContainer}>
+          <Text
+            style={[
+              styles.textElement,
+              {
+                color: overlay.color,
+                fontFamily: overlay.fontFamily,
+                fontSize: overlay.fontSize,
+              },
+            ]}
+          >
+            {overlay.text}
+          </Text>
+        </View>
+        {isSelected && <View style={styles.selectionBorder} />}
+      </Animated.View>
+    </GestureDetector>
+  );
+}
+
 const COLORS = [
   '#ffffff', // Blanc
   '#3b82f6', // Bleu
@@ -159,6 +202,50 @@ const COLORS = [
   '#ff00ff', // Fuchsia
 ];
 const STROKE_SCALES = [0.7, 1.0, 1.4];
+
+const FONT_FAMILIES = [
+  { name: 'System', value: 'System' },
+  { name: 'Arial', value: 'Arial' },
+  { name: 'Helvetica', value: 'Helvetica' },
+  { name: 'Georgia', value: 'Georgia' },
+  { name: 'Times', value: 'Times New Roman' },
+  { name: 'Verdana', value: 'Verdana' },
+  { name: 'Trebuchet', value: 'Trebuchet MS' },
+  { name: 'Palatino', value: 'Palatino' },
+  { name: 'Garamond', value: 'Garamond' },
+  { name: 'Bookman', value: 'Bookman' },
+  { name: 'Avant Garde', value: 'Avant Garde' },
+  { name: 'Courier', value: 'Courier New' },
+  { name: 'Monaco', value: 'Monaco' },
+  { name: 'Optima', value: 'Optima' },
+  { name: 'Futura', value: 'Futura' },
+  { name: 'Didot', value: 'Didot' },
+  { name: 'American Typewriter', value: 'American Typewriter' },
+  { name: 'Baskerville', value: 'Baskerville' },
+  { name: 'Copperplate', value: 'Copperplate' },
+  { name: 'Papyrus', value: 'Papyrus' },
+  { name: 'Brush Script', value: 'Brush Script MT' },
+  { name: 'Lucida Handwriting', value: 'Lucida Handwriting' },
+  { name: 'Comic Sans', value: 'Comic Sans MS' },
+  { name: 'Bradley Hand', value: 'Bradley Hand' },
+  { name: 'Marker Felt', value: 'Marker Felt' },
+  { name: 'Snell Roundhand', value: 'Snell Roundhand' },
+  { name: 'Zapfino', value: 'Zapfino' },
+  { name: 'Chalkboard', value: 'Chalkboard' },
+  { name: 'Noteworthy', value: 'Noteworthy' },
+  { name: 'Handwriting', value: 'cursive' },
+];
+
+interface TextTransform {
+  scale: any;
+  savedScale: any;
+  translateX: any;
+  translateY: any;
+  savedTranslateX: any;
+  savedTranslateY: any;
+  rotation: any;
+  savedRotation: any;
+}
 
 interface SignatureTransform {
   scale: any;
@@ -195,6 +282,13 @@ export default function ComposeScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
+  const [showTextModal, setShowTextModal] = useState(false);
+  const [textInput, setTextInput] = useState('');
+  const [selectedFont, setSelectedFont] = useState(FONT_FAMILIES[0].value);
+  const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(null);
+  const [showFontPicker, setShowFontPicker] = useState(false);
+  const [textColors, setTextColors] = useState<string[]>([]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const viewShotRef = useRef<View>(null);
@@ -214,6 +308,24 @@ export default function ComposeScreen() {
       savedRotation: useSharedValue(0),
     }))
   ).current;
+
+  const textTransformsRef = useRef<Map<string, TextTransform>>(new Map());
+  const getOrCreateTextTransform = (overlay: TextOverlay): TextTransform => {
+    if (!textTransformsRef.current.has(overlay.id)) {
+      const rotationRad = (overlay.rotation * Math.PI) / 180;
+      textTransformsRef.current.set(overlay.id, {
+        scale: useSharedValue(overlay.scale),
+        savedScale: useSharedValue(overlay.scale),
+        translateX: useSharedValue(overlay.x),
+        translateY: useSharedValue(overlay.y),
+        savedTranslateX: useSharedValue(overlay.x),
+        savedTranslateY: useSharedValue(overlay.y),
+        rotation: useSharedValue(rotationRad),
+        savedRotation: useSharedValue(rotationRad),
+      });
+    }
+    return textTransformsRef.current.get(overlay.id)!;
+  };
 
   useEffect(() => {
     if (memoryId) {
@@ -280,13 +392,72 @@ export default function ComposeScreen() {
     return Gesture.Race(tap, Gesture.Simultaneous(pinch, rotate, pan));
   };
 
+  const updateTextOverlayTransform = (overlayId: string, transform: TextTransform) => {
+    setTextOverlays(prev => {
+      const updated = prev.map(overlay => {
+        if (overlay.id === overlayId) {
+          return {
+            ...overlay,
+            x: transform.translateX.value,
+            y: transform.translateY.value,
+            rotation: (transform.rotation.value * 180) / Math.PI,
+            scale: transform.scale.value,
+          };
+        }
+        return overlay;
+      });
+      return updated;
+    });
+  };
+
+  const createTextGesture = (transform: TextTransform, overlay: TextOverlay, index: number) => {
+    const tap = Gesture.Tap()
+      .onEnd(() => {
+        if (Platform.OS !== 'web') {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+        setSelectedTextIndex(index);
+        setSelectedSignatureIndex(null);
+      });
+
+    const pinch = Gesture.Pinch()
+      .onUpdate((event) => {
+        transform.scale.value = Math.max(0.3, Math.min(4, transform.savedScale.value * event.scale));
+      })
+      .onEnd(() => {
+        transform.savedScale.value = transform.scale.value;
+        updateTextOverlayTransform(overlay.id, transform);
+      });
+
+    const rotate = Gesture.Rotation()
+      .onUpdate((event) => {
+        transform.rotation.value = transform.savedRotation.value + event.rotation;
+      })
+      .onEnd(() => {
+        transform.savedRotation.value = transform.rotation.value;
+        updateTextOverlayTransform(overlay.id, transform);
+      });
+
+    const pan = Gesture.Pan()
+      .onUpdate((event) => {
+        transform.translateX.value = transform.savedTranslateX.value + event.translationX;
+        transform.translateY.value = transform.savedTranslateY.value + event.translationY;
+      })
+      .onEnd(() => {
+        transform.savedTranslateX.value = transform.translateX.value;
+        transform.savedTranslateY.value = transform.translateY.value;
+        updateTextOverlayTransform(overlay.id, transform);
+      });
+
+    return Gesture.Race(tap, Gesture.Simultaneous(pinch, rotate, pan));
+  };
+
 
   const addNewSignature = () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
-    // Naviguer vers l'écran de signature avec les signatures existantes
     router.replace({
       pathname: '/signature',
       params: {
@@ -294,6 +465,75 @@ export default function ComposeScreen() {
         existingSignatures: JSON.stringify(signatureUris),
       },
     });
+  };
+
+  const openTextModal = () => {
+    if (textOverlays.length >= 2) {
+      if (status !== 'paid') {
+        setShowPremiumModal(true);
+        return;
+      }
+    }
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setTextInput('');
+    setSelectedFont(FONT_FAMILIES[0].value);
+    setShowTextModal(true);
+  };
+
+  const addTextOverlay = () => {
+    if (!textInput.trim()) {
+      setShowTextModal(false);
+      return;
+    }
+
+    const newText: TextOverlay = {
+      id: `text_${Date.now()}`,
+      text: textInput.trim(),
+      x: SCREEN_WIDTH / 2,
+      y: SCREEN_HEIGHT / 2 + textOverlays.length * 60,
+      rotation: 0,
+      scale: 1,
+      color: '#ffffff',
+      fontFamily: selectedFont,
+      fontSize: 32,
+    };
+
+    setTextOverlays([...textOverlays, newText]);
+    setTextColors([...textColors, '#ffffff']);
+    setSelectedTextIndex(textOverlays.length);
+    setSelectedSignatureIndex(null);
+    setShowTextModal(false);
+  };
+
+  const deleteSelectedText = () => {
+    if (selectedTextIndex !== null) {
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+      const overlayToDelete = textOverlays[selectedTextIndex];
+      if (overlayToDelete) {
+        textTransformsRef.current.delete(overlayToDelete.id);
+      }
+      const newOverlays = textOverlays.filter((_, i) => i !== selectedTextIndex);
+      const newColors = textColors.filter((_, i) => i !== selectedTextIndex);
+      setTextOverlays(newOverlays);
+      setTextColors(newColors);
+      setSelectedTextIndex(null);
+    }
+  };
+
+  const selectTextColor = (color: string) => {
+    if (selectedTextIndex !== null) {
+      const newOverlays = [...textOverlays];
+      newOverlays[selectedTextIndex] = { ...newOverlays[selectedTextIndex], color };
+      setTextOverlays(newOverlays);
+      const newColors = [...textColors];
+      newColors[selectedTextIndex] = color;
+      setTextColors(newColors);
+    }
+    setShowColorPicker(false);
   };
 
   const deleteSelectedElement = () => {
@@ -398,6 +638,32 @@ export default function ComposeScreen() {
               });
 
               console.log('✅ Toutes les signatures dessinées sur le canvas');
+
+              textOverlays.forEach((overlay) => {
+                const tx = overlay.x * canvasScale;
+                const ty = overlay.y * canvasScale;
+                const rotation = (overlay.rotation * Math.PI) / 180;
+                const sc = overlay.scale * canvasScale;
+                const fontSize = (overlay.fontSize || 32) * sc;
+
+                console.log(`📝 Text - Position:`, tx, ty, 'Scale:', sc, 'Rotation:', rotation, 'Text:', overlay.text);
+
+                ctx.save();
+                ctx.translate(tx, ty);
+                ctx.rotate(rotation);
+                ctx.font = `bold ${fontSize}px ${overlay.fontFamily || 'System'}`;
+                ctx.fillStyle = overlay.color || '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+                ctx.shadowBlur = 5;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+                ctx.fillText(overlay.text, 0, 0);
+                ctx.restore();
+              });
+
+              console.log('✅ Tous les textes dessinés sur le canvas');
 
               const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
               console.log('✅ Data URL créé, longueur:', dataUrl.length);
@@ -531,6 +797,7 @@ export default function ComposeScreen() {
           baseUri: finalPhotoUri as string,
           timestamp: timestamp,
           signatureOverlays: signatureOverlays.length > 0 ? signatureOverlays : undefined,
+          textOverlays: textOverlays.length > 0 ? textOverlays : undefined,
         };
 
         const memories = JSON.parse(localStorage.getItem('memories') || '[]');
@@ -564,6 +831,7 @@ export default function ComposeScreen() {
           user?.id || null,
           {
             signatureOverlays: signatureOverlays.length > 0 ? signatureOverlays : undefined,
+            textOverlays: textOverlays.length > 0 ? textOverlays : undefined,
           }
         );
       }
@@ -629,6 +897,9 @@ export default function ComposeScreen() {
       const newColors = [...signatureColors];
       newColors[selectedSignatureIndex] = color;
       setSignatureColors(newColors);
+    } else if (selectedTextIndex !== null) {
+      selectTextColor(color);
+      return;
     }
     setShowColorPicker(false);
   };
@@ -703,6 +974,21 @@ export default function ComposeScreen() {
               />
             );
           })}
+          {textOverlays.map((overlay, index) => {
+            const transform = getOrCreateTextTransform(overlay);
+            const gesture = createTextGesture(transform, overlay, index);
+            const isSelected = selectedTextIndex === index;
+
+            return (
+              <AnimatedText
+                key={overlay.id}
+                overlay={overlay}
+                transform={transform}
+                isSelected={isSelected}
+                gesture={gesture}
+              />
+            );
+          })}
         </View>
 
         {!isSaved && (
@@ -722,17 +1008,31 @@ export default function ComposeScreen() {
                   </View>
                 </TouchableOpacity>
               )}
+              {selectedTextIndex !== null && (
+                <TouchableOpacity
+                  style={[styles.bottomButton, styles.deleteBottomButton]}
+                  onPress={deleteSelectedText}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.deleteIconContainer}>
+                    <Trash2 size={20} color="#ffffff" strokeWidth={2.5} />
+                    <View style={styles.deleteSubIcon}>
+                      <Type size={12} color="#ffffff" strokeWidth={3} />
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={[styles.paletteButton, showColorPicker && styles.paletteButtonActive]}
                 onPress={toggleColorPicker}
                 activeOpacity={0.8}
-                disabled={selectedSignatureIndex === null}
+                disabled={selectedSignatureIndex === null && selectedTextIndex === null}
               >
                 <Palette size={24} color="#ffffff" strokeWidth={2} />
               </TouchableOpacity>
             </View>
 
-            {showColorPicker && selectedSignatureIndex !== null && (
+            {showColorPicker && (selectedSignatureIndex !== null || selectedTextIndex !== null) && (
               <View style={[styles.pickerOverlay, { bottom: buttonBottom + 80 }]}>
                 <View style={styles.pickerContainer}>
                   <View style={styles.pickerArrow}>
@@ -803,18 +1103,33 @@ export default function ComposeScreen() {
             )}
 
             <View style={[styles.topActions, { top: insets.top + 20 }]}>
-              <TouchableOpacity
-                style={[styles.topButton, styles.editTopButton]}
-                onPress={addNewSignature}
-                activeOpacity={0.8}
-              >
-                <View style={styles.iconContainer}>
-                  <Pencil size={20} color="#ffffff" strokeWidth={2.5} />
-                  <View style={styles.plusIcon}>
-                    <Plus size={14} color="#ffffff" strokeWidth={3} />
+              <View style={styles.leftButtons}>
+                <TouchableOpacity
+                  style={[styles.topButton, styles.editTopButton]}
+                  onPress={addNewSignature}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.iconContainer}>
+                    <Pencil size={20} color="#ffffff" strokeWidth={2.5} />
+                    <View style={styles.plusIcon}>
+                      <Plus size={14} color="#ffffff" strokeWidth={3} />
+                    </View>
                   </View>
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.topButton, styles.textTopButton]}
+                  onPress={openTextModal}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.iconContainer}>
+                    <Type size={20} color="#ffffff" strokeWidth={2.5} />
+                    <View style={styles.plusIcon}>
+                      <Plus size={14} color="#ffffff" strokeWidth={3} />
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </View>
 
               <TouchableOpacity
                 style={[styles.topButton, styles.saveTopButton, isSaving && styles.disabledButton]}
@@ -851,6 +1166,77 @@ export default function ComposeScreen() {
         title={t('limitReached')}
         message={t('limitReachedSignatureMessage')}
       />
+
+      <Modal
+        visible={showTextModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowTextModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{t('addText') || 'Ajouter du texte'}</Text>
+            
+            <TextInput
+              style={styles.textInputField}
+              value={textInput}
+              onChangeText={setTextInput}
+              placeholder={t('enterText') || 'Entrez votre texte...'}
+              placeholderTextColor="#999"
+              autoFocus
+              maxLength={50}
+            />
+
+            <TouchableOpacity
+              style={styles.fontPickerButton}
+              onPress={() => setShowFontPicker(!showFontPicker)}
+            >
+              <Text style={[styles.fontPickerButtonText, { fontFamily: selectedFont }]}>
+                {FONT_FAMILIES.find(f => f.value === selectedFont)?.name || 'System'}
+              </Text>
+              <Type size={20} color="#10b981" />
+            </TouchableOpacity>
+
+            {showFontPicker && (
+              <ScrollView style={styles.fontList} nestedScrollEnabled>
+                {FONT_FAMILIES.map((font) => (
+                  <TouchableOpacity
+                    key={font.value}
+                    style={[
+                      styles.fontOption,
+                      selectedFont === font.value && styles.fontOptionSelected,
+                    ]}
+                    onPress={() => {
+                      setSelectedFont(font.value);
+                      setShowFontPicker(false);
+                    }}
+                  >
+                    <Text style={[styles.fontOptionText, { fontFamily: font.value }]}>
+                      {font.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowTextModal(false)}
+              >
+                <Text style={styles.modalCancelText}>{t('cancel') || 'Annuler'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalConfirmButton, !textInput.trim() && styles.modalButtonDisabled]}
+                onPress={addTextOverlay}
+                disabled={!textInput.trim()}
+              >
+                <Text style={styles.modalConfirmText}>Ajouter</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </GestureHandlerRootView>
   );
 }
@@ -1017,7 +1403,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#10b981',
   },
   textTopButton: {
-    backgroundColor: '#10b981',
+    backgroundColor: '#3b82f6',
   },
   saveTopButton: {
     backgroundColor: '#10b981',
@@ -1104,5 +1490,100 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 20,
     elevation: 10,
+  },
+  leftButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  textInputField: {
+    backgroundColor: '#2a2a2a',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 18,
+    color: '#ffffff',
+    marginBottom: 16,
+  },
+  fontPickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#2a2a2a',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  fontPickerButtonText: {
+    fontSize: 16,
+    color: '#ffffff',
+  },
+  fontList: {
+    maxHeight: 200,
+    backgroundColor: '#2a2a2a',
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  fontOption: {
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3a3a3a',
+  },
+  fontOptionSelected: {
+    backgroundColor: '#10b981',
+  },
+  fontOptionText: {
+    fontSize: 16,
+    color: '#ffffff',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalCancelButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#3a3a3a',
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  modalConfirmButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+  },
+  modalButtonDisabled: {
+    opacity: 0.5,
+  },
+  modalConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
   },
 });
