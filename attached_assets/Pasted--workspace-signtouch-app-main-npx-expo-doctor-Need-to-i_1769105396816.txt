@@ -1,0 +1,46 @@
+~/workspace/signtouch-app-main$ npx expo-doctor
+Need to install the following packages:
+expo-doctor@1.17.14
+Ok to proceed? (y) y
+
+14/17 checks passed. 3 checks failed. Possible issues detected:
+Use the --verbose flag to see more details about passed checks.
+
+✖ Check for common project setup issues
+The .expo directory is not ignored by Git. It contains machine-specific device history and development server settings and should not be committed.
+Advice:
+Add ".expo/" to your .gitignore to avoid committing local Expo state.
+
+✖ Check that required peer dependencies are installed
+Missing peer dependency: react-native-worklets
+Required by: react-native-reanimated
+Advice:
+Install missing required peer dependency with "npx expo install react-native-worklets"
+Your app may crash outside of Expo Go without this dependency. Native module peer dependencies must be installed directly.
+
+✖ Check that packages match versions required by installed Expo SDK
+
+⚠️ Minor version mismatches
+package                         expected  found    
+@react-native-community/slider  5.0.1     5.1.2    
+
+🔧 Patch version mismatches
+package                         expected  found    
+expo                            ~54.0.32  54.0.30  
+expo-constants                  ~18.0.13  18.0.12  
+expo-font                       ~14.0.11  14.0.10  
+expo-router                     ~6.0.22   6.0.21   
+react-native                    0.81.5    0.81.4   
+
+Changelogs:
+- expo-constants → https://github.com/expo/expo/blob/sdk-54/packages/expo-constants/CHANGELOG.md
+- expo-font → https://github.com/expo/expo/blob/sdk-54/packages/expo-font/CHANGELOG.md
+- expo-router → https://github.com/expo/expo/blob/sdk-54/packages/expo-router/CHANGELOG.md
+
+6 packages out of date.
+Advice:
+Use 'npx expo install --check' to review and upgrade your dependencies.
+To ignore specific packages, add them to "expo.install.exclude" in package.json. Learn more: https://expo.fyi/dependency-validation
+
+3 checks failed, indicating possible issues with the project.
+~/workspace/signtouch-app-main$ 
