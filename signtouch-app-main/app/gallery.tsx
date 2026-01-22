@@ -80,7 +80,6 @@ export default function GalleryScreen() {
   const [pendingSave, setPendingSave] = useState<'single' | 'multiple' | null>(null);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { status } = useSubscription();
   const { t } = useTranslation();
   const { user } = useAuth();
 
