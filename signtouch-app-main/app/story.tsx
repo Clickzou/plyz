@@ -18,7 +18,6 @@ import Animated, {
 import {
   GestureDetector,
   Gesture,
-  GestureHandlerRootView,
 } from 'react-native-gesture-handler';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ViewShot from 'react-native-view-shot';
@@ -645,36 +644,34 @@ export default function StoryScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View ref={Platform.OS === 'web' ? webContainerRef as any : undefined}>
           <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
-            <GestureHandlerRootView>
-              <StoryPreview
-                imageUri={imageUri}
-                animation={selectedAnimation}
-                customText={customText}
-                isAnimating={isAnimating}
-                onAnimationComplete={handleAnimationComplete}
-                defaultText={t('storyDefaultText')}
-                signatureOverlays={signatureOverlays}
-                signatureScale={signatureScale}
-                signatureRotation={signatureRotation}
-                signatureX={signatureX}
-                signatureY={signatureY}
-                signatureColor={signatureColor}
-                textScale={textScale}
-                textColor={textColor}
-                textY={textY}
-                interactive={!isAnimating}
-                onSignatureChange={(s, r, x, y) => {
-                  setSignatureScale(s);
-                  setSignatureRotation(r);
-                  setSignatureX(x);
-                  setSignatureY(y);
-                }}
-                onTextChange={(s, y) => {
-                  setTextScale(s);
-                  setTextY(y);
-                }}
-              />
-            </GestureHandlerRootView>
+            <StoryPreview
+              imageUri={imageUri}
+              animation={selectedAnimation}
+              customText={customText}
+              isAnimating={isAnimating}
+              onAnimationComplete={handleAnimationComplete}
+              defaultText={t('storyDefaultText')}
+              signatureOverlays={signatureOverlays}
+              signatureScale={signatureScale}
+              signatureRotation={signatureRotation}
+              signatureX={signatureX}
+              signatureY={signatureY}
+              signatureColor={signatureColor}
+              textScale={textScale}
+              textColor={textColor}
+              textY={textY}
+              interactive={!isAnimating}
+              onSignatureChange={(s, r, x, y) => {
+                setSignatureScale(s);
+                setSignatureRotation(r);
+                setSignatureX(x);
+                setSignatureY(y);
+              }}
+              onTextChange={(s, y) => {
+                setTextScale(s);
+                setTextY(y);
+              }}
+            />
           </ViewShot>
         </View>
 
