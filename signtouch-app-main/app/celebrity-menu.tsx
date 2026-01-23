@@ -19,7 +19,7 @@ export default function CelebrityMenuScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <LinearGradient
-        colors={['#f59e0b', '#d97706']}
+        colors={['#22c55e', '#16a34a']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -48,7 +48,7 @@ export default function CelebrityMenuScreen() {
             onPress={() => router.push('/create-event')}
           >
             <View style={styles.optionIcon}>
-              <QrCode size={40} color="#f59e0b" />
+              <QrCode size={40} color="#22c55e" />
             </View>
             <Text style={styles.optionTitle}>{t('celebrityEventSimple')}</Text>
             <Text style={styles.optionDescription}>{t('celebrityEventSimpleDesc')}</Text>
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
