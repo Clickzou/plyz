@@ -407,4 +407,27 @@ export default {
 
   termsSection7Title: '7. Hubungi',
   termsSection7Text: 'Untuk sebarang soalan mengenai terma ini, sila hubungi kami di: contact@clickzou.fr',
+
+  // Notebook
+  notebookTitle: 'Buku Nota Saya',
+  notebookAll: 'Semua',
+  notebookEmpty: 'Tiada pertemuan',
+  notebookEmptyDescription: 'Autograf anda dengan butiran akan muncul di sini',
+  eventConcert: 'Konsert',
+  eventMatch: 'Perlawanan',
+  eventExpo: 'Pameran',
+  eventSalon: 'Salon',
+  eventDedicace: 'Tandatangan',
+  eventRencontre: 'Pertemuan',
+  eventAutre: 'Lain-lain',
+  addToNotebook: 'Tambah ke buku nota',
+  skipNotebook: 'Langkau',
+  saveToNotebook: 'Simpan',
+  personMet: 'Orang yang ditemui',
+  personMetPlaceholder: 'Cth: Safee Sali',
+  eventLocation: 'Lokasi',
+  eventLocationPlaceholder: 'Cth: Stadium Bukit Jalil',
+  eventDate: 'Tarikh',
+  eventType: 'Jenis acara',
+  notebookSaveSuccess: 'Ditambah ke buku nota anda!',
 };

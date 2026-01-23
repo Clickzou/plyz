@@ -382,4 +382,27 @@ export default {
 
   termsSection7Title: '7. Contato',
   termsSection7Text: 'Para quaisquer perguntas sobre estes termos, entre em contato conosco em: contact@clickzou.fr',
+
+  // Notebook
+  notebookTitle: 'Meu Caderno',
+  notebookAll: 'Todos',
+  notebookEmpty: 'Nenhum encontro',
+  notebookEmptyDescription: 'Seus autógrafos com detalhes aparecerão aqui',
+  eventConcert: 'Concerto',
+  eventMatch: 'Jogo',
+  eventExpo: 'Exposição',
+  eventSalon: 'Feira',
+  eventDedicace: 'Assinatura',
+  eventRencontre: 'Encontro',
+  eventAutre: 'Outro',
+  addToNotebook: 'Adicionar ao caderno',
+  skipNotebook: 'Pular',
+  saveToNotebook: 'Salvar',
+  personMet: 'Pessoa conhecida',
+  personMetPlaceholder: 'Ex: Neymar Jr',
+  eventLocation: 'Local',
+  eventLocationPlaceholder: 'Ex: Maracanã',
+  eventDate: 'Data',
+  eventType: 'Tipo de evento',
+  notebookSaveSuccess: 'Adicionado ao seu caderno!',
 };

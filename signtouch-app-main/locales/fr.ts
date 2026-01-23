@@ -407,4 +407,27 @@ export default {
 
   termsSection7Title: '7. Contact',
   termsSection7Text: 'Pour toute question concernant ces conditions, veuillez nous contacter à : contact@clickzou.fr',
+
+  // Notebook / Carnet de rencontres
+  notebookTitle: 'Mon Carnet',
+  notebookAll: 'Tous',
+  notebookEmpty: 'Aucune rencontre',
+  notebookEmptyDescription: 'Vos dédicaces avec informations apparaîtront ici',
+  eventConcert: 'Concert',
+  eventMatch: 'Match',
+  eventExpo: 'Expo',
+  eventSalon: 'Salon',
+  eventDedicace: 'Dédicace',
+  eventRencontre: 'Rencontre',
+  eventAutre: 'Autre',
+  addToNotebook: 'Ajouter au carnet',
+  skipNotebook: 'Passer',
+  saveToNotebook: 'Enregistrer',
+  personMet: 'Personne rencontrée',
+  personMetPlaceholder: 'Ex: Zinedine Zidane',
+  eventLocation: 'Lieu',
+  eventLocationPlaceholder: 'Ex: Stade de France',
+  eventDate: 'Date',
+  eventType: 'Type d\'événement',
+  notebookSaveSuccess: 'Ajouté à votre carnet !',
 };

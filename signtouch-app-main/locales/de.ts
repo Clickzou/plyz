@@ -382,4 +382,27 @@ export default {
 
   termsSection7Title: '7. Kontakt',
   termsSection7Text: 'Bei Fragen zu diesen Bedingungen kontaktieren Sie uns bitte unter: contact@clickzou.fr',
+
+  // Notebook
+  notebookTitle: 'Mein Notizbuch',
+  notebookAll: 'Alle',
+  notebookEmpty: 'Keine Begegnungen',
+  notebookEmptyDescription: 'Ihre Autogramme mit Details erscheinen hier',
+  eventConcert: 'Konzert',
+  eventMatch: 'Spiel',
+  eventExpo: 'Ausstellung',
+  eventSalon: 'Messe',
+  eventDedicace: 'Signierung',
+  eventRencontre: 'Treffen',
+  eventAutre: 'Andere',
+  addToNotebook: 'Zum Notizbuch hinzufügen',
+  skipNotebook: 'Überspringen',
+  saveToNotebook: 'Speichern',
+  personMet: 'Getroffene Person',
+  personMetPlaceholder: 'Z.B: Thomas Müller',
+  eventLocation: 'Ort',
+  eventLocationPlaceholder: 'Z.B: Allianz Arena',
+  eventDate: 'Datum',
+  eventType: 'Veranstaltungstyp',
+  notebookSaveSuccess: 'Zu Ihrem Notizbuch hinzugefügt!',
 };

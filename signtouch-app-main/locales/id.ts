@@ -407,4 +407,27 @@ export default {
 
   termsSection7Title: '7. Kontak',
   termsSection7Text: 'Untuk pertanyaan apa pun mengenai ketentuan ini, silakan hubungi kami di: contact@clickzou.fr',
+
+  // Notebook
+  notebookTitle: 'Buku Catatan Saya',
+  notebookAll: 'Semua',
+  notebookEmpty: 'Belum ada pertemuan',
+  notebookEmptyDescription: 'Tanda tangan Anda dengan detail akan muncul di sini',
+  eventConcert: 'Konser',
+  eventMatch: 'Pertandingan',
+  eventExpo: 'Pameran',
+  eventSalon: 'Salon',
+  eventDedicace: 'Tanda Tangan',
+  eventRencontre: 'Pertemuan',
+  eventAutre: 'Lainnya',
+  addToNotebook: 'Tambah ke buku catatan',
+  skipNotebook: 'Lewati',
+  saveToNotebook: 'Simpan',
+  personMet: 'Orang yang ditemui',
+  personMetPlaceholder: 'Cth: Bambang Pamungkas',
+  eventLocation: 'Lokasi',
+  eventLocationPlaceholder: 'Cth: Gelora Bung Karno',
+  eventDate: 'Tanggal',
+  eventType: 'Jenis acara',
+  notebookSaveSuccess: 'Ditambahkan ke buku catatan Anda!',
 };

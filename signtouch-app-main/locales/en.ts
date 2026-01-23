@@ -407,4 +407,27 @@ export default {
 
   termsSection7Title: '7. Contact',
   termsSection7Text: 'For any questions regarding these terms, please contact us at: contact@clickzou.fr',
+
+  // Notebook / Meeting diary
+  notebookTitle: 'My Notebook',
+  notebookAll: 'All',
+  notebookEmpty: 'No meetings yet',
+  notebookEmptyDescription: 'Your autographs with details will appear here',
+  eventConcert: 'Concert',
+  eventMatch: 'Match',
+  eventExpo: 'Expo',
+  eventSalon: 'Convention',
+  eventDedicace: 'Signing',
+  eventRencontre: 'Meeting',
+  eventAutre: 'Other',
+  addToNotebook: 'Add to notebook',
+  skipNotebook: 'Skip',
+  saveToNotebook: 'Save',
+  personMet: 'Person met',
+  personMetPlaceholder: 'E.g: David Beckham',
+  eventLocation: 'Location',
+  eventLocationPlaceholder: 'E.g: Wembley Stadium',
+  eventDate: 'Date',
+  eventType: 'Event type',
+  notebookSaveSuccess: 'Added to your notebook!',
 };

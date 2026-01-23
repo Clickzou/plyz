@@ -407,4 +407,27 @@ export default {
 
   termsSection7Title: '7. Контакты',
   termsSection7Text: 'По любым вопросам относительно этих условий свяжитесь с нами: contact@clickzou.fr',
+
+  // Notebook
+  notebookTitle: 'Мой блокнот',
+  notebookAll: 'Все',
+  notebookEmpty: 'Нет встреч',
+  notebookEmptyDescription: 'Ваши автографы с деталями появятся здесь',
+  eventConcert: 'Концерт',
+  eventMatch: 'Матч',
+  eventExpo: 'Выставка',
+  eventSalon: 'Салон',
+  eventDedicace: 'Автограф',
+  eventRencontre: 'Встреча',
+  eventAutre: 'Другое',
+  addToNotebook: 'Добавить в блокнот',
+  skipNotebook: 'Пропустить',
+  saveToNotebook: 'Сохранить',
+  personMet: 'Кого встретили',
+  personMetPlaceholder: 'Напр.: Александр Овечкин',
+  eventLocation: 'Место',
+  eventLocationPlaceholder: 'Напр.: Лужники',
+  eventDate: 'Дата',
+  eventType: 'Тип события',
+  notebookSaveSuccess: 'Добавлено в ваш блокнот!',
 };

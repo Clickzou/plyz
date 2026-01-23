@@ -382,4 +382,27 @@ export default {
 
   termsSection7Title: '7. Contatto',
   termsSection7Text: 'Per qualsiasi domanda riguardante questi termini, contattaci a: contact@clickzou.fr',
+
+  // Notebook
+  notebookTitle: 'Il Mio Taccuino',
+  notebookAll: 'Tutti',
+  notebookEmpty: 'Nessun incontro',
+  notebookEmptyDescription: 'I tuoi autografi con dettagli appariranno qui',
+  eventConcert: 'Concerto',
+  eventMatch: 'Partita',
+  eventExpo: 'Mostra',
+  eventSalon: 'Fiera',
+  eventDedicace: 'Firma',
+  eventRencontre: 'Incontro',
+  eventAutre: 'Altro',
+  addToNotebook: 'Aggiungi al taccuino',
+  skipNotebook: 'Salta',
+  saveToNotebook: 'Salva',
+  personMet: 'Persona incontrata',
+  personMetPlaceholder: 'Es: Francesco Totti',
+  eventLocation: 'Luogo',
+  eventLocationPlaceholder: 'Es: Stadio Olimpico',
+  eventDate: 'Data',
+  eventType: 'Tipo di evento',
+  notebookSaveSuccess: 'Aggiunto al tuo taccuino!',
 };

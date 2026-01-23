@@ -14,11 +14,12 @@ import {
   Modal,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Share2, Palette, Pencil, Plus, Sparkles, X, RotateCw, Check, Save, Eraser, Type } from 'lucide-react-native';
+import { Download, Trash2, Share2, Palette, Pencil, Plus, Sparkles, X, RotateCw, Check, Save, Eraser, Type, BookOpen } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Memory, SignatureOverlay as StoredSignatureOverlay, TextOverlay as StoredTextOverlay } from '@/utils/memoriesStorage';
+import { Memory, SignatureOverlay as StoredSignatureOverlay, TextOverlay as StoredTextOverlay, MemoryMetadata } from '@/utils/memoriesStorage';
+import MetadataModal from '@/components/MetadataModal';
 import * as StorageService from '@/utils/storageService';
 import SocialShareModal from '@/components/SocialShareModal';
 import AdModal from '@/components/AdModal';
@@ -711,6 +712,7 @@ export default function ResultScreen() {
   const [showEffectsPanel, setShowEffectsPanel] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [limitType, setLimitType] = useState<'signature' | 'text' | null>(null);
+  const [showMetadataModal, setShowMetadataModal] = useState(false);
 
   // Welcome message state
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
@@ -830,6 +832,23 @@ export default function ResultScreen() {
 
   const deleteMemory = async (memoryId: string) => {
     return await StorageService.deleteMemory(memoryId, user?.id || null);
+  };
+
+  const handleMetadataSave = async (metadata: MemoryMetadata) => {
+    if (!memory) return;
+    try {
+      await StorageService.updateMemory(memory, user?.id || null, { metadata });
+      setShowMetadataModal(false);
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('Error saving metadata:', error);
+    }
+  };
+
+  const handleMetadataSkip = () => {
+    setShowMetadataModal(false);
   };
 
   useFocusEffect(
@@ -2152,6 +2171,16 @@ export default function ResultScreen() {
                 </TouchableOpacity>
               )}
 
+              {memoryId && (
+                <TouchableOpacity
+                  style={styles.notebookButton}
+                  onPress={() => setShowMetadataModal(true)}
+                  activeOpacity={0.7}
+                >
+                  <BookOpen size={24} color="#ffffff" strokeWidth={2} />
+                </TouchableOpacity>
+              )}
+
               <TouchableOpacity
                 style={styles.downloadButton}
                 onPress={downloadToDevice}
@@ -2191,6 +2220,13 @@ export default function ResultScreen() {
           visible={showAdModal}
           onClose={() => setShowAdModal(false)}
           onAdWatched={handleAdWatched}
+        />
+
+        <MetadataModal
+          visible={showMetadataModal}
+          onClose={() => setShowMetadataModal(false)}
+          onSave={handleMetadataSave}
+          onSkip={handleMetadataSkip}
         />
 
         <PremiumModal
@@ -2864,6 +2900,14 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     backgroundColor: '#6366f1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notebookButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#8b5cf6',
     justifyContent: 'center',
     alignItems: 'center',
   },

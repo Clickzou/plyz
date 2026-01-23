@@ -407,4 +407,27 @@ export default {
 
   termsSection7Title: '7. যোগাযোগ',
   termsSection7Text: 'এই শর্তাবলী সম্পর্কে কোনো প্রশ্নের জন্য, আমাদের সাথে যোগাযোগ করুন: contact@clickzou.fr',
+
+  // Notebook
+  notebookTitle: 'আমার নোটবুক',
+  notebookAll: 'সব',
+  notebookEmpty: 'কোনো সাক্ষাৎ নেই',
+  notebookEmptyDescription: 'বিস্তারিত সহ আপনার অটোগ্রাফ এখানে দেখা যাবে',
+  eventConcert: 'কনসার্ট',
+  eventMatch: 'ম্যাচ',
+  eventExpo: 'প্রদর্শনী',
+  eventSalon: 'সেলুন',
+  eventDedicace: 'অটোগ্রাফ',
+  eventRencontre: 'সাক্ষাৎ',
+  eventAutre: 'অন্যান্য',
+  addToNotebook: 'নোটবুকে যোগ করুন',
+  skipNotebook: 'বাদ দিন',
+  saveToNotebook: 'সংরক্ষণ করুন',
+  personMet: 'যার সাথে দেখা হয়েছে',
+  personMetPlaceholder: 'যেমন: সাকিব আল হাসান',
+  eventLocation: 'স্থান',
+  eventLocationPlaceholder: 'যেমন: শের-ই-বাংলা স্টেডিয়াম',
+  eventDate: 'তারিখ',
+  eventType: 'ইভেন্টের ধরন',
+  notebookSaveSuccess: 'আপনার নোটবুকে যোগ করা হয়েছে!',
 };

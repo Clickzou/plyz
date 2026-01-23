@@ -407,4 +407,27 @@ export default {
 
   termsSection7Title: '7. الاتصال',
   termsSection7Text: 'لأي أسئلة بخصوص هذه الشروط، يرجى الاتصال بنا على: contact@clickzou.fr',
+
+  // Notebook
+  notebookTitle: 'دفتري',
+  notebookAll: 'الكل',
+  notebookEmpty: 'لا توجد لقاءات',
+  notebookEmptyDescription: 'ستظهر توقيعاتك مع التفاصيل هنا',
+  eventConcert: 'حفل',
+  eventMatch: 'مباراة',
+  eventExpo: 'معرض',
+  eventSalon: 'صالون',
+  eventDedicace: 'توقيع',
+  eventRencontre: 'لقاء',
+  eventAutre: 'آخر',
+  addToNotebook: 'أضف إلى الدفتر',
+  skipNotebook: 'تخطي',
+  saveToNotebook: 'حفظ',
+  personMet: 'الشخص الذي قابلته',
+  personMetPlaceholder: 'مثال: محمد صلاح',
+  eventLocation: 'المكان',
+  eventLocationPlaceholder: 'مثال: ملعب الأنفيلد',
+  eventDate: 'التاريخ',
+  eventType: 'نوع الحدث',
+  notebookSaveSuccess: 'تمت الإضافة إلى دفترك!',
 };

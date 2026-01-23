@@ -407,4 +407,27 @@ export default {
 
   termsSection7Title: '7. رابطہ',
   termsSection7Text: 'ان شرائط کے بارے میں کسی بھی سوال کے لیے، براہ کرم ہم سے رابطہ کریں: contact@clickzou.fr',
+
+  // Notebook
+  notebookTitle: 'میری نوٹ بک',
+  notebookAll: 'سب',
+  notebookEmpty: 'کوئی ملاقات نہیں',
+  notebookEmptyDescription: 'تفصیلات کے ساتھ آپ کے آٹوگراف یہاں ظاہر ہوں گے',
+  eventConcert: 'کنسرٹ',
+  eventMatch: 'میچ',
+  eventExpo: 'نمائش',
+  eventSalon: 'سیلون',
+  eventDedicace: 'آٹوگراف',
+  eventRencontre: 'ملاقات',
+  eventAutre: 'دیگر',
+  addToNotebook: 'نوٹ بک میں شامل کریں',
+  skipNotebook: 'چھوڑیں',
+  saveToNotebook: 'محفوظ کریں',
+  personMet: 'جس سے ملے',
+  personMetPlaceholder: 'مثال: شاہد آفریدی',
+  eventLocation: 'مقام',
+  eventLocationPlaceholder: 'مثال: قذافی اسٹیڈیم',
+  eventDate: 'تاریخ',
+  eventType: 'تقریب کی قسم',
+  notebookSaveSuccess: 'آپ کی نوٹ بک میں شامل کر دیا گیا!',
 };

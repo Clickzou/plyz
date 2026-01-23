@@ -407,4 +407,27 @@ export default {
 
   termsSection7Title: '7. 联系',
   termsSection7Text: '有关这些条款的任何问题，请联系我们：contact@clickzou.fr',
+
+  // Notebook
+  notebookTitle: '我的笔记本',
+  notebookAll: '全部',
+  notebookEmpty: '暂无会面',
+  notebookEmptyDescription: '您的签名详情将在此显示',
+  eventConcert: '演唱会',
+  eventMatch: '比赛',
+  eventExpo: '展览',
+  eventSalon: '展会',
+  eventDedicace: '签名会',
+  eventRencontre: '会面',
+  eventAutre: '其他',
+  addToNotebook: '添加到笔记本',
+  skipNotebook: '跳过',
+  saveToNotebook: '保存',
+  personMet: '遇见的人',
+  personMetPlaceholder: '例如：姚明',
+  eventLocation: '地点',
+  eventLocationPlaceholder: '例如：鸟巢体育场',
+  eventDate: '日期',
+  eventType: '活动类型',
+  notebookSaveSuccess: '已添加到您的笔记本！',
 };

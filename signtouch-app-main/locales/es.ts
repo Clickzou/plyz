@@ -407,4 +407,27 @@ export default {
 
   termsSection7Title: '7. Contacto',
   termsSection7Text: 'Para cualquier pregunta sobre estos términos, contáctanos en: contact@clickzou.fr',
+
+  // Notebook
+  notebookTitle: 'Mi Cuaderno',
+  notebookAll: 'Todos',
+  notebookEmpty: 'Sin encuentros',
+  notebookEmptyDescription: 'Tus autógrafos con detalles aparecerán aquí',
+  eventConcert: 'Concierto',
+  eventMatch: 'Partido',
+  eventExpo: 'Expo',
+  eventSalon: 'Salón',
+  eventDedicace: 'Firma',
+  eventRencontre: 'Encuentro',
+  eventAutre: 'Otro',
+  addToNotebook: 'Añadir al cuaderno',
+  skipNotebook: 'Omitir',
+  saveToNotebook: 'Guardar',
+  personMet: 'Persona conocida',
+  personMetPlaceholder: 'Ej: Lionel Messi',
+  eventLocation: 'Lugar',
+  eventLocationPlaceholder: 'Ej: Camp Nou',
+  eventDate: 'Fecha',
+  eventType: 'Tipo de evento',
+  notebookSaveSuccess: '¡Añadido a tu cuaderno!',
 };

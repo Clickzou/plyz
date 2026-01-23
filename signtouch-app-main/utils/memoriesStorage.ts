@@ -32,6 +32,15 @@ export interface PhotoAdjustments {
   saturation: number;
 }
 
+export type EventType = 'concert' | 'match' | 'expo' | 'salon' | 'dedicace' | 'rencontre' | 'autre';
+
+export interface MemoryMetadata {
+  eventDate?: string;
+  eventLocation?: string;
+  personMet?: string;
+  eventType?: EventType;
+}
+
 export interface Memory {
   id: string;
   uri: string;
@@ -43,6 +52,7 @@ export interface Memory {
   filter?: string;
   adjustments?: PhotoAdjustments;
   isEdited?: boolean;
+  metadata?: MemoryMetadata;
 }
 
 const STORAGE_KEY = 'memories';

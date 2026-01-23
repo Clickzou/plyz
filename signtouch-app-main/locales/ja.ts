@@ -407,4 +407,27 @@ export default {
 
   termsSection7Title: '7. お問い合わせ',
   termsSection7Text: 'これらの規約に関するご質問は、contact@clickzou.frまでお問い合わせください',
+
+  // Notebook
+  notebookTitle: 'マイノート',
+  notebookAll: 'すべて',
+  notebookEmpty: '出会いがありません',
+  notebookEmptyDescription: '詳細付きのサインがここに表示されます',
+  eventConcert: 'コンサート',
+  eventMatch: '試合',
+  eventExpo: '展示会',
+  eventSalon: 'サロン',
+  eventDedicace: 'サイン会',
+  eventRencontre: '出会い',
+  eventAutre: 'その他',
+  addToNotebook: 'ノートに追加',
+  skipNotebook: 'スキップ',
+  saveToNotebook: '保存',
+  personMet: '会った人',
+  personMetPlaceholder: '例：大谷翔平',
+  eventLocation: '場所',
+  eventLocationPlaceholder: '例：東京ドーム',
+  eventDate: '日付',
+  eventType: 'イベントタイプ',
+  notebookSaveSuccess: 'ノートに追加しました！',
 };

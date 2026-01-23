@@ -407,4 +407,27 @@ export default {
 
   termsSection7Title: '7. संपर्क',
   termsSection7Text: 'इन शर्तों के बारे में किसी भी प्रश्न के लिए, कृपया हमसे संपर्क करें: contact@clickzou.fr',
+
+  // Notebook
+  notebookTitle: 'मेरी नोटबुक',
+  notebookAll: 'सभी',
+  notebookEmpty: 'कोई मुलाकात नहीं',
+  notebookEmptyDescription: 'विवरण के साथ आपके ऑटोग्राफ यहां दिखाई देंगे',
+  eventConcert: 'कॉन्सर्ट',
+  eventMatch: 'मैच',
+  eventExpo: 'प्रदर्शनी',
+  eventSalon: 'सैलून',
+  eventDedicace: 'ऑटोग्राफ',
+  eventRencontre: 'मुलाकात',
+  eventAutre: 'अन्य',
+  addToNotebook: 'नोटबुक में जोड़ें',
+  skipNotebook: 'छोड़ें',
+  saveToNotebook: 'सहेजें',
+  personMet: 'मिले व्यक्ति',
+  personMetPlaceholder: 'उदा: विराट कोहली',
+  eventLocation: 'स्थान',
+  eventLocationPlaceholder: 'उदा: वानखेड़े स्टेडियम',
+  eventDate: 'तारीख',
+  eventType: 'इवेंट प्रकार',
+  notebookSaveSuccess: 'आपकी नोटबुक में जोड़ा गया!',
 };

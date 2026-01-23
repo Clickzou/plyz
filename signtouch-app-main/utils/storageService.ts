@@ -1,4 +1,4 @@
-import { Memory, SignatureOverlay, TextOverlay, PhotoAdjustments } from './memoriesStorage';
+import { Memory, SignatureOverlay, TextOverlay, PhotoAdjustments, MemoryMetadata } from './memoriesStorage';
 import * as LocalStorage from './memoriesStorage';
 import * as CloudStorage from './cloudStorage';
 
@@ -60,6 +60,7 @@ export const updateMemory = async (
     filter?: string;
     adjustments?: PhotoAdjustments;
     isEdited?: boolean;
+    metadata?: MemoryMetadata;
   }
 ): Promise<void> => {
   if (userId) {
@@ -73,6 +74,7 @@ export const updateMemory = async (
       ...(updates?.filter !== undefined && { filter: updates.filter }),
       ...(updates?.adjustments !== undefined && { adjustments: updates.adjustments }),
       ...(updates?.isEdited !== undefined && { isEdited: updates.isEdited }),
+      ...(updates?.metadata !== undefined && { metadata: updates.metadata }),
     };
 
     await LocalStorage.updateMemory(updatedMemory);

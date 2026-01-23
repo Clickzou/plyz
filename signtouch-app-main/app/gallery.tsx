@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Camera, CheckCircle2, Circle, X, Pencil, Share2 } from 'lucide-react-native';
+import { Download, Trash2, Camera, CheckCircle2, Circle, X, Pencil, Share2, BookOpen } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -403,17 +403,27 @@ export default function GalleryScreen() {
             {t('galleryInstruction')}
           </Text>
         )}
-        {memories.length > 0 && (
+        <View style={styles.headerButtons}>
           <TouchableOpacity
-            style={styles.selectButton}
-            onPress={toggleSelectionMode}
+            style={styles.notebookButton}
+            onPress={() => router.push('/notebook')}
             activeOpacity={0.8}
           >
-            <Text style={styles.selectButtonText}>
-              {selectionMode ? t('cancel') : t('select')}
-            </Text>
+            <BookOpen size={18} color="#ffffff" />
+            <Text style={styles.notebookButtonText}>{t('notebookTitle') || 'Mon Carnet'}</Text>
           </TouchableOpacity>
-        )}
+          {memories.length > 0 && (
+            <TouchableOpacity
+              style={styles.selectButton}
+              onPress={toggleSelectionMode}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.selectButtonText}>
+                {selectionMode ? t('cancel') : t('select')}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
         {memories.length > 0 && (
           <Text style={styles.subtitle}>
             {selectionMode && selectedMemories.size > 0
@@ -590,12 +600,32 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     alignItems: 'center',
   },
+  headerButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 15,
+  },
+  notebookButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: '#8b5cf6',
+    gap: 6,
+  },
+  notebookButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   selectButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
     backgroundColor: '#10b981',
-    marginTop: 15,
   },
   selectButtonText: {
     color: '#ffffff',
