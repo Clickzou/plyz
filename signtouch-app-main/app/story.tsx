@@ -76,6 +76,7 @@ function StoryPreview({
   onAnimationComplete,
   defaultText,
   signatureOverlays = [],
+  textOverlays = [],
   signatureScale = 1,
   signatureRotation = 0,
   signatureX = 0.5,
@@ -95,6 +96,7 @@ function StoryPreview({
   onAnimationComplete?: () => void;
   defaultText: string;
   signatureOverlays?: SignatureOverlay[];
+  textOverlays?: TextOverlay[];
   signatureScale?: number;
   signatureRotation?: number;
   signatureX?: number;
@@ -152,11 +154,11 @@ function StoryPreview({
     savedTxtScale.value = textScale;
   }, [textY, textScale]);
 
-  const updateSignature = (s: number, r: number, x: number, y: number) => {
+  const updateSignatureCallback = (s: number, r: number, x: number, y: number) => {
     if (onSignatureChange) onSignatureChange(s, r, x, y);
   };
 
-  const updateText = (s: number, y: number) => {
+  const updateTextCallback = (s: number, y: number) => {
     if (onTextChange) onTextChange(s, y);
   };
 
@@ -171,7 +173,7 @@ function StoryPreview({
         savedSigScale.value = sigScale.value;
         const newX = 0.5 + sigTranslateX.value / STORY_WIDTH;
         const newY = 0.5 + sigTranslateY.value / STORY_HEIGHT;
-        runOnJS(updateSignature)(sigScale.value, sigRotation.value, newX, newY);
+        runOnJS(updateSignatureCallback)(sigScale.value, sigRotation.value, newX, newY);
       });
 
     const rotate = Gesture.Rotation()
@@ -182,7 +184,7 @@ function StoryPreview({
         savedSigRotation.value = sigRotation.value;
         const newX = 0.5 + sigTranslateX.value / STORY_WIDTH;
         const newY = 0.5 + sigTranslateY.value / STORY_HEIGHT;
-        runOnJS(updateSignature)(sigScale.value, sigRotation.value, newX, newY);
+        runOnJS(updateSignatureCallback)(sigScale.value, sigRotation.value, newX, newY);
       });
 
     const pan = Gesture.Pan()
@@ -195,7 +197,7 @@ function StoryPreview({
         savedSigTranslateY.value = sigTranslateY.value;
         const newX = 0.5 + sigTranslateX.value / STORY_WIDTH;
         const newY = 0.5 + sigTranslateY.value / STORY_HEIGHT;
-        runOnJS(updateSignature)(sigScale.value, sigRotation.value, newX, newY);
+        runOnJS(updateSignatureCallback)(sigScale.value, sigRotation.value, newX, newY);
       });
 
     return Gesture.Simultaneous(pinch, rotate, pan);
@@ -211,7 +213,7 @@ function StoryPreview({
       .onEnd(() => {
         savedTxtScale.value = txtScale.value;
         const newY = 0.5 + txtTranslateY.value / STORY_HEIGHT;
-        runOnJS(updateText)(txtScale.value, newY);
+        runOnJS(updateTextCallback)(txtScale.value, newY);
       });
 
     const rotate = Gesture.Rotation()
@@ -231,7 +233,7 @@ function StoryPreview({
         savedTxtTranslateX.value = txtTranslateX.value;
         savedTxtTranslateY.value = txtTranslateY.value;
         const newY = 0.5 + txtTranslateY.value / STORY_HEIGHT;
-        runOnJS(updateText)(txtScale.value, newY);
+        runOnJS(updateTextCallback)(txtScale.value, newY);
       });
 
     return Gesture.Simultaneous(pinch, rotate, pan);
@@ -378,25 +380,47 @@ function StoryPreview({
           ) : (
             <View style={[styles.storyImage, { backgroundColor: '#333' }]} />
           )}
-          {!interactive && signatureOverlays.length > 0 && signatureOverlays.map((overlay) => (
+          {!interactive && signatureOverlays.length > 0 && signatureOverlays.map((overlay, index) => (
             <Image
               key={overlay.id}
               source={{ uri: overlay.uri }}
               style={{
                 position: 'absolute',
-                left: `${signatureX * 100}%`,
-                top: `${signatureY * 100}%`,
-                width: (overlay.width || 100) * signatureScale,
-                height: (overlay.height || 50) * signatureScale,
-                marginLeft: -((overlay.width || 100) * signatureScale) / 2,
-                marginTop: -((overlay.height || 50) * signatureScale) / 2,
+                left: `${(index === 0 ? signatureX : overlay.x) * 100}%`,
+                top: `${(index === 0 ? signatureY : overlay.y) * 100}%`,
+                width: (overlay.width || 100) * (index === 0 ? signatureScale : overlay.scale),
+                height: (overlay.height || 50) * (index === 0 ? signatureScale : overlay.scale),
+                marginLeft: -((overlay.width || 100) * (index === 0 ? signatureScale : overlay.scale)) / 2,
+                marginTop: -((overlay.height || 50) * (index === 0 ? signatureScale : overlay.scale)) / 2,
                 transform: [
-                  { rotate: `${signatureRotation}rad` },
+                  { rotate: `${index === 0 ? signatureRotation : overlay.rotation}rad` },
                 ],
-                tintColor: signatureColor,
+                tintColor: index === 0 ? signatureColor : overlay.color,
               }}
               resizeMode="contain"
             />
+          ))}
+          {!interactive && textOverlays.length > 0 && textOverlays.map((overlay, index) => (
+            <View
+              key={overlay.id}
+              style={{
+                position: 'absolute',
+                left: `${overlay.x * 100}%`,
+                top: `${(index === 0 ? textY : overlay.y) * 100}%`,
+                transform: [
+                  { translateX: -50 },
+                  { scale: index === 0 ? textScale : overlay.scale },
+                ],
+              }}
+            >
+              <Text style={[styles.customText, { 
+                color: index === 0 ? textColor : overlay.color, 
+                fontSize: overlay.fontSize || 18,
+                fontFamily: overlay.fontFamily,
+              }]}>
+                {overlay.text}
+              </Text>
+            </View>
           ))}
         </View>
 
@@ -502,8 +526,25 @@ export default function StoryScreen() {
           const memory = memories.find(m => m.id === sourceMemoryId);
           if (memory) {
             setImageUri(memory.uri);
-            setSignatureOverlays(memory.signatureOverlays || []);
-            setTextOverlays(memory.textOverlays || []);
+            const sigs = memory.signatureOverlays || [];
+            const txts = memory.textOverlays || [];
+            setSignatureOverlays(sigs);
+            setTextOverlays(txts);
+            if (sigs.length > 0) {
+              const firstSig = sigs[0];
+              setSignatureX(firstSig.x);
+              setSignatureY(firstSig.y);
+              setSignatureScale(firstSig.scale);
+              setSignatureRotation(firstSig.rotation);
+              setSignatureColor(firstSig.color || '#ffffff');
+            }
+            if (txts.length > 0) {
+              const firstTxt = txts[0];
+              setTextY(firstTxt.y);
+              setTextScale(firstTxt.scale);
+              setTextColor(firstTxt.color || '#ffffff');
+              setCustomText(firstTxt.text || t('storyDefaultText'));
+            }
           }
           
           const stories = await getStories();
@@ -524,6 +565,21 @@ export default function StoryScreen() {
           const txts = params.textOverlays ? JSON.parse(params.textOverlays as string) : [];
           setSignatureOverlays(sigs);
           setTextOverlays(txts);
+          if (sigs.length > 0) {
+            const firstSig = sigs[0];
+            setSignatureX(firstSig.x);
+            setSignatureY(firstSig.y);
+            setSignatureScale(firstSig.scale);
+            setSignatureRotation(firstSig.rotation);
+            setSignatureColor(firstSig.color || '#ffffff');
+          }
+          if (txts.length > 0) {
+            const firstTxt = txts[0];
+            setTextY(firstTxt.y);
+            setTextScale(firstTxt.scale);
+            setTextColor(firstTxt.color || '#ffffff');
+            setCustomText(firstTxt.text || t('storyDefaultText'));
+          }
         } catch { }
       }
     };
@@ -656,6 +712,7 @@ export default function StoryScreen() {
               onAnimationComplete={handleAnimationComplete}
               defaultText={t('storyDefaultText')}
               signatureOverlays={signatureOverlays}
+              textOverlays={textOverlays}
               signatureScale={signatureScale}
               signatureRotation={signatureRotation}
               signatureX={signatureX}
