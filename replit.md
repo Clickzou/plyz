@@ -43,15 +43,16 @@ Preferred communication style: Simple, everyday language.
 - **Trial System**: 7-day free trial with automatic billing
 
 ### Story Mode (January 2026)
-- **Template System**: 9 templates (3 categories × 3 styles)
-  - Categories: Concert, Sport, Meetup
-  - Styles: Minimal, Flashy (with confetti), Vintage (with grain effect)
-- **Animation Preview**: Zoom effect on signature, transitions to full photo, text overlay appears
+- **Animation System**: 3 animation types replacing previous category/style system
+  - **Ken Burns**: 15s zoom progression with subtle breathing effect
+  - **Sequential Zoom (Reveal)**: 8s signature zoom then full photo reveal
+  - **Parallax**: 7s 3D depth effect with glow overlay
+- **Animation Preview**: Play button to preview selected animation before export
 - **Export**: Static image export in 9:16 format with SignTouch watermark
 - **Social Sharing**: Share to Instagram, TikTok via native sharing API
 - **Access**: Available from result.tsx via Film icon button
-- **i18n**: Fully internationalized with translation keys (storyTitle, storyCustomText, etc.)
-- **Gallery Integration**: Stories are saved to a separate storage system (`storiesStorage.ts`) and displayed in the gallery under a dedicated "Stories" tab
+- **i18n**: Fully internationalized (storyAnimation, animKenBurns, animSequentialZoom, animParallax)
+- **Gallery Integration**: Stories saved to `storiesStorage.ts` and displayed in gallery "Stories" tab
 
 ### Gallery Tabs System (January 2026)
 - **Photos Tab**: Displays all memories (photos with overlays) organized by timeline

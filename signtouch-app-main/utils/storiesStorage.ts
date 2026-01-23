@@ -5,7 +5,6 @@ export interface Story {
   uri: string;
   timestamp: number;
   template: string;
-  category: string;
   customText: string;
   sourceMemoryId?: string;
 }

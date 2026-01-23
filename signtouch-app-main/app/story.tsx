@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput, Dimensions, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Sparkles, Film, Clock, Share2, Download } from 'lucide-react-native';
+import { ArrowLeft, Sparkles, Film, Layers, Share2, Download } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { 
   useSharedValue, 
@@ -24,90 +24,46 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const STORY_WIDTH = SCREEN_WIDTH * 0.7;
 const STORY_HEIGHT = STORY_WIDTH * (16 / 9);
 
-type TemplateCategory = 'concert' | 'sport' | 'meetup';
-type TemplateStyle = 'minimal' | 'flashy' | 'vintage';
+type AnimationType = 'ken-burns' | 'sequential-zoom' | 'parallax';
 
-interface Template {
-  id: string;
-  name: string;
-  style: TemplateStyle;
-  category: TemplateCategory;
+interface Animation {
+  id: AnimationType;
+  nameKey: string;
   colors: [string, string];
   textColor: string;
   overlayOpacity: number;
-  confetti?: boolean;
-  grain?: boolean;
+  hasGlow?: boolean;
 }
 
-const TEMPLATES: Template[] = [
-  { id: 'concert-minimal', name: 'Concert Minimal', style: 'minimal', category: 'concert', colors: ['#1a1a2e', '#16213e'], textColor: '#ffffff', overlayOpacity: 0.3 },
-  { id: 'concert-flashy', name: 'Concert Flashy', style: 'flashy', category: 'concert', colors: ['#ff006e', '#8338ec'], textColor: '#ffffff', overlayOpacity: 0.4, confetti: true },
-  { id: 'concert-vintage', name: 'Concert Vintage', style: 'vintage', category: 'concert', colors: ['#2d1b0e', '#5c3a21'], textColor: '#f5e6d3', overlayOpacity: 0.5, grain: true },
-  { id: 'sport-minimal', name: 'Sport Minimal', style: 'minimal', category: 'sport', colors: ['#0f0f0f', '#1a1a1a'], textColor: '#ffffff', overlayOpacity: 0.3 },
-  { id: 'sport-flashy', name: 'Sport Flashy', style: 'flashy', category: 'sport', colors: ['#00f5d4', '#00bbf9'], textColor: '#000000', overlayOpacity: 0.4, confetti: true },
-  { id: 'sport-vintage', name: 'Sport Vintage', style: 'vintage', category: 'sport', colors: ['#3d2914', '#6b4423'], textColor: '#f0e4d7', overlayOpacity: 0.5, grain: true },
-  { id: 'meetup-minimal', name: 'Meetup Minimal', style: 'minimal', category: 'meetup', colors: ['#2d3436', '#636e72'], textColor: '#ffffff', overlayOpacity: 0.3 },
-  { id: 'meetup-flashy', name: 'Meetup Flashy', style: 'flashy', category: 'meetup', colors: ['#f72585', '#7209b7'], textColor: '#ffffff', overlayOpacity: 0.4, confetti: true },
-  { id: 'meetup-vintage', name: 'Meetup Vintage', style: 'vintage', category: 'meetup', colors: ['#4a3728', '#6d5344'], textColor: '#ede0d4', overlayOpacity: 0.5, grain: true },
+const ANIMATIONS: Animation[] = [
+  { 
+    id: 'ken-burns', 
+    nameKey: 'animKenBurns',
+    colors: ['#1a1a2e', '#16213e'], 
+    textColor: '#ffffff', 
+    overlayOpacity: 0.3 
+  },
+  { 
+    id: 'sequential-zoom', 
+    nameKey: 'animSequentialZoom',
+    colors: ['#2d3436', '#636e72'], 
+    textColor: '#ffffff', 
+    overlayOpacity: 0.35 
+  },
+  { 
+    id: 'parallax', 
+    nameKey: 'animParallax',
+    colors: ['#0f0f0f', '#1a1a1a'], 
+    textColor: '#ffffff', 
+    overlayOpacity: 0.3,
+    hasGlow: true
+  },
 ];
 
 
-function ConfettiParticle({ delay, x }: { delay: number; x: number }) {
-  const translateY = useSharedValue(-20);
-  const opacity = useSharedValue(0);
-  const rotate = useSharedValue(0);
-
-  useEffect(() => {
-    opacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
-    translateY.value = withDelay(
-      delay,
-      withRepeat(
-        withTiming(STORY_HEIGHT + 50, { duration: 3000, easing: Easing.linear }),
-        -1,
-        false
-      )
-    );
-    rotate.value = withDelay(
-      delay,
-      withRepeat(
-        withTiming(360, { duration: 2000, easing: Easing.linear }),
-        -1,
-        false
-      )
-    );
-  }, []);
-
-  const style = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: translateY.value },
-      { rotate: `${rotate.value}deg` },
-    ],
-    opacity: opacity.value,
-  }));
-
-  const colors = ['#ff006e', '#8338ec', '#00f5d4', '#ffbe0b', '#fb5607'];
-  const color = colors[Math.floor(Math.random() * colors.length)];
-
-  return (
-    <Animated.View
-      style={[
-        {
-          position: 'absolute',
-          left: x,
-          width: 8,
-          height: 8,
-          backgroundColor: color,
-          borderRadius: 2,
-        },
-        style,
-      ]}
-    />
-  );
-}
-
 function StoryPreview({ 
   imageUri, 
-  template, 
+  animation, 
   customText,
   isAnimating,
   onAnimationComplete,
@@ -116,7 +72,7 @@ function StoryPreview({
   textOverlays = [],
 }: { 
   imageUri: string; 
-  template: Template; 
+  animation: Animation; 
   customText: string;
   isAnimating: boolean;
   onAnimationComplete?: () => void;
@@ -128,6 +84,9 @@ function StoryPreview({
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const textOpacity = useSharedValue(0);
+  const glowOpacity = useSharedValue(0);
+  const bgScale = useSharedValue(1);
+  const bgTranslateX = useSharedValue(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -136,32 +95,75 @@ function StoryPreview({
       translateX.value = 0;
       translateY.value = 0;
       textOpacity.value = 0;
+      glowOpacity.value = 0;
+      bgScale.value = 1;
+      bgTranslateX.value = 0;
 
-      scale.value = withSequence(
-        withTiming(2.5, { duration: 3000, easing: Easing.out(Easing.ease) }),
-        withDelay(500, withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) }))
-      );
-
-      translateY.value = withSequence(
-        withTiming(-50, { duration: 3000, easing: Easing.out(Easing.ease) }),
-        withDelay(500, withTiming(0, { duration: 2000, easing: Easing.inOut(Easing.ease) }))
-      );
-
-      textOpacity.value = withDelay(
-        5000,
-        withTiming(1, { duration: 500 })
-      );
-
-      if (onAnimationComplete) {
-        timerRef.current = setTimeout(() => {
-          onAnimationComplete();
-        }, 6000);
+      if (animation.id === 'ken-burns') {
+        scale.value = withSequence(
+          withTiming(1.2, { duration: 5000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 5000, easing: Easing.inOut(Easing.ease) }),
+          withRepeat(
+            withSequence(
+              withTiming(1.05, { duration: 2500, easing: Easing.inOut(Easing.ease) }),
+              withTiming(1, { duration: 2500, easing: Easing.inOut(Easing.ease) })
+            ),
+            1,
+            true
+          )
+        );
+        translateY.value = withSequence(
+          withTiming(0, { duration: 5000 }),
+          withRepeat(
+            withSequence(
+              withTiming(-5, { duration: 2500, easing: Easing.inOut(Easing.ease) }),
+              withTiming(5, { duration: 2500, easing: Easing.inOut(Easing.ease) })
+            ),
+            1,
+            true
+          )
+        );
+        textOpacity.value = withDelay(10000, withTiming(1, { duration: 500 }));
+        
+        if (onAnimationComplete) {
+          timerRef.current = setTimeout(() => onAnimationComplete(), 15000);
+        }
+      } else if (animation.id === 'sequential-zoom') {
+        scale.value = withSequence(
+          withTiming(2, { duration: 4000, easing: Easing.out(Easing.ease) }),
+          withDelay(500, withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.ease) }))
+        );
+        translateY.value = withSequence(
+          withTiming(-40, { duration: 4000, easing: Easing.out(Easing.ease) }),
+          withDelay(500, withTiming(0, { duration: 3000, easing: Easing.inOut(Easing.ease) }))
+        );
+        textOpacity.value = withDelay(7000, withTiming(1, { duration: 500 }));
+        
+        if (onAnimationComplete) {
+          timerRef.current = setTimeout(() => onAnimationComplete(), 8000);
+        }
+      } else if (animation.id === 'parallax') {
+        bgScale.value = withTiming(1.1, { duration: 6000, easing: Easing.out(Easing.ease) });
+        bgTranslateX.value = withTiming(-20, { duration: 6000, easing: Easing.out(Easing.ease) });
+        scale.value = withSequence(
+          withTiming(1.15, { duration: 3000, easing: Easing.out(Easing.ease) }),
+          withTiming(1.1, { duration: 3000, easing: Easing.inOut(Easing.ease) })
+        );
+        glowOpacity.value = withDelay(1000, withTiming(0.6, { duration: 2000 }));
+        textOpacity.value = withDelay(5000, withTiming(1, { duration: 500 }));
+        
+        if (onAnimationComplete) {
+          timerRef.current = setTimeout(() => onAnimationComplete(), 7000);
+        }
       }
     } else {
       scale.value = 1;
       translateX.value = 0;
       translateY.value = 0;
       textOpacity.value = 1;
+      glowOpacity.value = animation.hasGlow ? 0.4 : 0;
+      bgScale.value = 1;
+      bgTranslateX.value = 0;
     }
 
     return () => {
@@ -169,7 +171,7 @@ function StoryPreview({
         clearTimeout(timerRef.current);
       }
     };
-  }, [isAnimating]);
+  }, [isAnimating, animation.id]);
 
   const imageStyle = useAnimatedStyle(() => ({
     transform: [
@@ -179,14 +181,25 @@ function StoryPreview({
     ],
   }));
 
+  const bgImageStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: bgScale.value },
+      { translateX: bgTranslateX.value },
+    ],
+  }));
+
   const textStyle = useAnimatedStyle(() => ({
     opacity: textOpacity.value,
+  }));
+
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
   }));
 
   return (
     <View style={styles.storyPreviewContainer}>
       <LinearGradient
-        colors={template.colors}
+        colors={animation.colors}
         style={styles.storyPreview}
       >
         <View style={styles.imageContainer}>
@@ -236,26 +249,14 @@ function StoryPreview({
           ))}
         </View>
 
-        {template.confetti && (
-          <View style={styles.confettiContainer}>
-            {Array.from({ length: 15 }).map((_, i) => (
-              <ConfettiParticle
-                key={i}
-                delay={i * 200}
-                x={Math.random() * STORY_WIDTH}
-              />
-            ))}
-          </View>
+        {animation.hasGlow && (
+          <Animated.View style={[styles.glowOverlay, glowStyle]} />
         )}
 
-        {template.grain && (
-          <View style={[styles.grainOverlay, { opacity: 0.1 }]} />
-        )}
-
-        <View style={[styles.overlay, { opacity: template.overlayOpacity }]} />
+        <View style={[styles.overlay, { opacity: animation.overlayOpacity }]} />
 
         <Animated.View style={[styles.textContainer, textStyle]}>
-          <Text style={[styles.customText, { color: template.textColor }]}>
+          <Text style={[styles.customText, { color: animation.textColor }]}>
             {customText || defaultText}
           </Text>
         </Animated.View>
@@ -275,7 +276,6 @@ export default function StoryScreen() {
   const viewShotRef = useRef<ViewShot>(null);
 
   const imageUri = params.imageUri as string || '';
-  const eventType = (params.eventType as TemplateCategory) || 'meetup';
   
   const signatureOverlays: SignatureOverlay[] = useMemo(() => {
     try {
@@ -289,27 +289,10 @@ export default function StoryScreen() {
     } catch { return []; }
   }, [params.textOverlays]);
 
-  const categoryLabels: Record<TemplateCategory, string> = useMemo(() => ({
-    concert: t('storyConcert'),
-    sport: t('storySport'),
-    meetup: t('storyMeetup'),
-  }), [t]);
-
-  const styleLabels: Record<TemplateStyle, string> = useMemo(() => ({
-    minimal: t('storyMinimal'),
-    flashy: t('storyFlashy'),
-    vintage: t('storyVintage'),
-  }), [t]);
-
-  const [selectedCategory, setSelectedCategory] = useState<TemplateCategory>(eventType);
-  const [selectedTemplate, setSelectedTemplate] = useState<Template>(
-    TEMPLATES.find(tmpl => tmpl.category === eventType && tmpl.style === 'minimal') || TEMPLATES[0]
-  );
+  const [selectedAnimation, setSelectedAnimation] = useState<Animation>(ANIMATIONS[0]);
   const [customText, setCustomText] = useState(t('storyDefaultText'));
   const [isAnimating, setIsAnimating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-
-  const filteredTemplates = TEMPLATES.filter(t => t.category === selectedCategory);
 
   const handleBack = () => {
     if (Platform.OS !== 'web') {
@@ -342,8 +325,7 @@ export default function StoryScreen() {
         
         await saveStory({
           uri,
-          template: selectedTemplate.id,
-          category: selectedCategory,
+          template: selectedAnimation.id,
           customText,
           sourceMemoryId: params.memoryId as string,
         });
@@ -412,7 +394,7 @@ export default function StoryScreen() {
         <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
           <StoryPreview
             imageUri={imageUri}
-            template={selectedTemplate}
+            animation={selectedAnimation}
             customText={customText}
             isAnimating={isAnimating}
             onAnimationComplete={handleAnimationComplete}
@@ -445,63 +427,32 @@ export default function StoryScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('storyCategory')}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.categoryRow}>
-              {(Object.keys(categoryLabels) as TemplateCategory[]).map((cat) => (
-                <TouchableOpacity
-                  key={cat}
-                  style={[
-                    styles.categoryButton,
-                    selectedCategory === cat && styles.categoryButtonActive,
-                  ]}
-                  onPress={() => {
-                    setSelectedCategory(cat);
-                    const newTemplate = TEMPLATES.find(tmpl => tmpl.category === cat && tmpl.style === selectedTemplate.style);
-                    if (newTemplate) setSelectedTemplate(newTemplate);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.categoryButtonText,
-                      selectedCategory === cat && styles.categoryButtonTextActive,
-                    ]}
-                  >
-                    {categoryLabels[cat]}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('storyStyle')}</Text>
+          <Text style={styles.sectionTitle}>{t('storyAnimation')}</Text>
           <View style={styles.templateGrid}>
-            {filteredTemplates.map((tmpl) => (
+            {ANIMATIONS.map((anim) => (
               <TouchableOpacity
-                key={tmpl.id}
+                key={anim.id}
                 style={[
                   styles.templateCard,
-                  selectedTemplate.id === tmpl.id && styles.templateCardActive,
+                  selectedAnimation.id === anim.id && styles.templateCardActive,
                 ]}
-                onPress={() => setSelectedTemplate(tmpl)}
+                onPress={() => setSelectedAnimation(anim)}
               >
                 <LinearGradient
-                  colors={tmpl.colors}
+                  colors={anim.colors}
                   style={styles.templatePreview}
                 >
-                  {tmpl.confetti && (
-                    <Sparkles size={16} color={tmpl.textColor} />
+                  {anim.id === 'ken-burns' && (
+                    <Film size={16} color={anim.textColor} />
                   )}
-                  {tmpl.grain && (
-                    <Clock size={16} color={tmpl.textColor} />
+                  {anim.id === 'sequential-zoom' && (
+                    <Layers size={16} color={anim.textColor} />
                   )}
-                  {!tmpl.confetti && !tmpl.grain && (
-                    <View style={styles.minimalIcon} />
+                  {anim.id === 'parallax' && (
+                    <Sparkles size={16} color={anim.textColor} />
                   )}
                 </LinearGradient>
-                <Text style={styles.templateLabel}>{styleLabels[tmpl.style]}</Text>
+                <Text style={styles.templateLabel}>{t(anim.nameKey)}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -584,13 +535,9 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  confettiContainer: {
+  glowOverlay: {
     ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
-  },
-  grainOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#000',
+    backgroundColor: 'rgba(100, 200, 255, 0.3)',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
