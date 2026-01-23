@@ -23,7 +23,7 @@ function SignatureImage({ delay }: { delay: number }) {
     opacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
     clipWidth.value = withDelay(
       delay + 300,
-      withTiming(400, { duration: 2500, easing: Easing.out(Easing.ease) })
+      withTiming(400, { duration: 3500, easing: Easing.out(Easing.ease) })
     );
   }, []);
 
@@ -34,17 +34,20 @@ function SignatureImage({ delay }: { delay: number }) {
   const maskStyle = useAnimatedStyle(() => ({
     width: clipWidth.value,
     overflow: 'hidden' as const,
+    alignItems: 'center' as const,
   }));
 
   return (
     <Animated.View style={[styles.signatureContainer, containerStyle]}>
-      <Animated.View style={maskStyle}>
-        <Image 
-          source={require('@/assets/images/signature.png')} 
-          style={styles.signatureImage}
-          resizeMode="contain"
-        />
-      </Animated.View>
+      <View style={styles.signatureCenterWrapper}>
+        <Animated.View style={maskStyle}>
+          <Image 
+            source={require('@/assets/images/signature.png')} 
+            style={styles.signatureImage}
+            resizeMode="contain"
+          />
+        </Animated.View>
+      </View>
     </Animated.View>
   );
 }
@@ -305,6 +308,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flex: 1,
     marginVertical: 40,
+  },
+  signatureCenterWrapper: {
+    width: 400,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   signatureImage: {
     width: 400,
