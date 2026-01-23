@@ -26,50 +26,235 @@ import html2canvas from 'html2canvas';
 import * as Sharing from 'expo-sharing';
 import { SignatureOverlay, TextOverlay, getAllMemories } from '@/utils/memoriesStorage';
 import { saveStory, getStories } from '@/utils/storiesStorage';
-import { SvgXml } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
-function SignatureImage({ uri, width, height, color }: { uri: string; width: number; height: number; color: string }) {
-  const [coloredUri, setColoredUri] = useState<string | null>(null);
+interface StorySignatureProps {
+  overlay: SignatureOverlay;
+  overrideX?: number;
+  overrideY?: number;
+  overrideScale?: number;
+  overrideRotation?: number;
+  overrideColor?: string;
+}
+
+function StorySignature({ overlay, overrideX, overrideY, overrideScale, overrideRotation, overrideColor }: StorySignatureProps) {
+  const x = overrideX !== undefined ? overrideX : overlay.x;
+  const y = overrideY !== undefined ? overrideY : overlay.y;
+  const scale = overrideScale !== undefined ? overrideScale : overlay.scale;
+  const rotation = overrideRotation !== undefined ? overrideRotation : overlay.rotation;
+  const color = overrideColor !== undefined ? overrideColor : overlay.color;
   
-  useEffect(() => {
-    if (uri && uri.startsWith('data:image/svg+xml;base64,')) {
-      try {
-        const base64 = uri.replace('data:image/svg+xml;base64,', '');
-        const decoded = atob(base64);
-        const coloredSvg = decoded.replace(/stroke="[^"]*"/g, `stroke="${color}"`);
-        const newBase64 = btoa(coloredSvg);
-        setColoredUri(`data:image/svg+xml;base64,${newBase64}`);
-      } catch (e) {
-        console.log('❌ Error processing SVG:', e);
-        setColoredUri(uri);
-      }
-    } else {
-      setColoredUri(uri);
+  const isJsonData = overlay.uri.startsWith('data:application/json;base64,');
+  const isSvgData = overlay.uri.startsWith('data:image/svg+xml');
+
+  if (isJsonData) {
+    try {
+      const base64Data = overlay.uri.split(',')[1];
+      const jsonString = decodeURIComponent(escape(atob(base64Data)));
+      const svgData = JSON.parse(jsonString);
+      const signatureColor = color || '#ffffff';
+
+      return (
+        <View style={{
+          position: 'absolute',
+          left: `${x * 100}%`,
+          top: `${y * 100}%`,
+          width: 150,
+          height: 80,
+          marginLeft: -75,
+          marginTop: -40,
+          transform: [
+            { rotate: `${rotation}rad` },
+            { scale: scale }
+          ],
+          zIndex: 10,
+        }}>
+          <Svg
+            width={svgData.width}
+            height={svgData.height}
+            viewBox={`0 0 ${svgData.width} ${svgData.height}`}
+            style={{ width: '100%', height: '100%' }}
+          >
+            {svgData.paths.map((pathData: string, index: number) => (
+              <Path
+                key={index}
+                d={pathData}
+                stroke={signatureColor}
+                strokeWidth={8}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
+          </Svg>
+        </View>
+      );
+    } catch (error) {
+      console.error('Error parsing JSON SVG data:', error);
     }
-  }, [uri, color]);
-  
-  if (!coloredUri) {
-    return null;
   }
-  
-  if (Platform.OS === 'web') {
-    return (
-      <img
-        src={coloredUri}
-        style={{ 
-          width, 
-          height,
-          objectFit: 'contain',
-        }}
-        alt="signature"
+
+  if (isSvgData) {
+    try {
+      const base64Data = overlay.uri.split(',')[1];
+      const svgString = atob(base64Data);
+      const paths: string[] = [];
+      const pathRegex = /d="([^"]+)"/g;
+      let match;
+      while ((match = pathRegex.exec(svgString)) !== null) {
+        paths.push(match[1]);
+      }
+      const signatureColor = color || '#ffffff';
+      const widthMatch = svgString.match(/width="([^"]+)"/);
+      const heightMatch = svgString.match(/height="([^"]+)"/);
+      const width = widthMatch ? parseFloat(widthMatch[1]) : 300;
+      const height = heightMatch ? parseFloat(heightMatch[1]) : 150;
+
+      return (
+        <View style={{
+          position: 'absolute',
+          left: `${x * 100}%`,
+          top: `${y * 100}%`,
+          width: 150,
+          height: 80,
+          marginLeft: -75,
+          marginTop: -40,
+          transform: [
+            { rotate: `${rotation}rad` },
+            { scale: scale }
+          ],
+          zIndex: 10,
+        }}>
+          <Svg
+            width={width}
+            height={height}
+            viewBox={`0 0 ${width} ${height}`}
+            style={{ width: '100%', height: '100%' }}
+          >
+            {paths.map((pathData, index) => (
+              <Path
+                key={index}
+                d={pathData}
+                stroke={signatureColor}
+                strokeWidth={3}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
+          </Svg>
+        </View>
+      );
+    } catch (error) {
+      console.error('Error parsing SVG data:', error);
+    }
+  }
+
+  return (
+    <View style={{
+      position: 'absolute',
+      left: `${x * 100}%`,
+      top: `${y * 100}%`,
+      width: 150,
+      height: 80,
+      marginLeft: -75,
+      marginTop: -40,
+      transform: [
+        { rotate: `${rotation}rad` },
+        { scale: scale }
+      ],
+      zIndex: 10,
+    }}>
+      <Image
+        source={{ uri: overlay.uri }}
+        tintColor={color}
+        style={{ width: 150, height: 80 }}
+        resizeMode="contain"
       />
-    );
+    </View>
+  );
+}
+
+function SignatureSvgContent({ overlay, color }: { overlay: SignatureOverlay; color: string }) {
+  const isJsonData = overlay.uri.startsWith('data:application/json;base64,');
+  const isSvgData = overlay.uri.startsWith('data:image/svg+xml');
+  const signatureColor = color || '#ffffff';
+
+  if (isJsonData) {
+    try {
+      const base64Data = overlay.uri.split(',')[1];
+      const jsonString = decodeURIComponent(escape(atob(base64Data)));
+      const svgData = JSON.parse(jsonString);
+      return (
+        <Svg
+          width={svgData.width}
+          height={svgData.height}
+          viewBox={`0 0 ${svgData.width} ${svgData.height}`}
+          style={{ width: 150, height: 80 }}
+        >
+          {svgData.paths.map((pathData: string, index: number) => (
+            <Path
+              key={index}
+              d={pathData}
+              stroke={signatureColor}
+              strokeWidth={8}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          ))}
+        </Svg>
+      );
+    } catch (error) {
+      console.error('Error parsing JSON SVG:', error);
+    }
   }
-  
+
+  if (isSvgData) {
+    try {
+      const base64Data = overlay.uri.split(',')[1];
+      const svgString = atob(base64Data);
+      const paths: string[] = [];
+      const pathRegex = /d="([^"]+)"/g;
+      let match;
+      while ((match = pathRegex.exec(svgString)) !== null) {
+        paths.push(match[1]);
+      }
+      const widthMatch = svgString.match(/width="([^"]+)"/);
+      const heightMatch = svgString.match(/height="([^"]+)"/);
+      const width = widthMatch ? parseFloat(widthMatch[1]) : 300;
+      const height = heightMatch ? parseFloat(heightMatch[1]) : 150;
+
+      return (
+        <Svg
+          width={width}
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          style={{ width: 150, height: 80 }}
+        >
+          {paths.map((pathData, index) => (
+            <Path
+              key={index}
+              d={pathData}
+              stroke={signatureColor}
+              strokeWidth={3}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          ))}
+        </Svg>
+      );
+    } catch (error) {
+      console.error('Error parsing SVG:', error);
+    }
+  }
+
   return (
     <Image
-      source={{ uri: coloredUri }}
-      style={{ width, height }}
+      source={{ uri: overlay.uri }}
+      tintColor={signatureColor}
+      style={{ width: 150, height: 80 }}
       resizeMode="contain"
     />
   );
@@ -431,36 +616,16 @@ function StoryPreview({
           {signatureOverlays.length > 0 && signatureOverlays.map((overlay, index) => {
             if (interactive && index === 0) return null;
             const isFirstNonInteractive = !interactive && index === 0;
-            const sigX = isFirstNonInteractive ? signatureX : overlay.x;
-            const sigY = isFirstNonInteractive ? signatureY : overlay.y;
-            const sigScale = isFirstNonInteractive ? signatureScale : overlay.scale;
-            const sigColor = isFirstNonInteractive ? signatureColor : overlay.color;
-            const sigWidth = (overlay.width || 150) * sigScale;
-            const sigHeight = (overlay.height || 80) * sigScale;
             return (
-              <View
+              <StorySignature
                 key={overlay.id}
-                style={{
-                  position: 'absolute',
-                  left: `${sigX * 100}%`,
-                  top: `${sigY * 100}%`,
-                  width: sigWidth,
-                  height: sigHeight,
-                  marginLeft: -sigWidth / 2,
-                  marginTop: -sigHeight / 2,
-                  transform: [
-                    { rotate: `${isFirstNonInteractive ? signatureRotation : overlay.rotation}rad` },
-                  ],
-                  zIndex: 5,
-                }}
-              >
-                <SignatureImage
-                  uri={overlay.uri}
-                  width={sigWidth}
-                  height={sigHeight}
-                  color={sigColor}
-                />
-              </View>
+                overlay={overlay}
+                overrideX={isFirstNonInteractive ? signatureX : undefined}
+                overrideY={isFirstNonInteractive ? signatureY : undefined}
+                overrideScale={isFirstNonInteractive ? signatureScale : undefined}
+                overrideRotation={isFirstNonInteractive ? signatureRotation : undefined}
+                overrideColor={isFirstNonInteractive ? signatureColor : undefined}
+              />
             );
           })}
           {!interactive && textOverlays.length > 0 && textOverlays.map((overlay, index) => (
@@ -510,10 +675,8 @@ function StoryPreview({
               }, sigAnimatedStyle]}
             >
               <View style={styles.selectionBorder} />
-              <SignatureImage
-                uri={signatureOverlays[0].uri}
-                width={signatureOverlays[0].width || 150}
-                height={signatureOverlays[0].height || 80}
+              <SignatureSvgContent
+                overlay={signatureOverlays[0]}
                 color={signatureColor}
               />
             </Animated.View>
