@@ -32,20 +32,33 @@ function SignatureImage({ uri, width, height, color }: { uri: string; width: num
   const [svgContent, setSvgContent] = useState<string | null>(null);
   
   useEffect(() => {
-    if (uri.startsWith('data:image/svg+xml;base64,')) {
+    if (uri && uri.startsWith('data:image/svg+xml;base64,')) {
       try {
         const base64 = uri.replace('data:image/svg+xml;base64,', '');
         const decoded = atob(base64);
         const coloredSvg = decoded.replace(/stroke="[^"]*"/g, `stroke="${color}"`);
         setSvgContent(coloredSvg);
       } catch (e) {
-        console.log('Error decoding SVG:', e);
+        console.log('❌ Error decoding SVG:', e);
       }
     }
   }, [uri, color]);
   
+  if (Platform.OS === 'web' && svgContent) {
+    return (
+      <div
+        style={{ width, height }}
+        dangerouslySetInnerHTML={{ __html: svgContent }}
+      />
+    );
+  }
+  
   if (svgContent) {
     return <SvgXml xml={svgContent} width={width} height={height} />;
+  }
+  
+  if (!uri) {
+    return null;
   }
   
   return (
@@ -571,6 +584,10 @@ export default function StoryScreen() {
             setImageUri(memory.uri);
             const sigs = memory.signatureOverlays || [];
             const txts = memory.textOverlays || [];
+            console.log('📥 Story loaded from memory:', { sigCount: sigs.length, txtCount: txts.length });
+            if (sigs.length > 0) {
+              console.log('📥 First signature from memory:', { id: sigs[0].id, uri: sigs[0].uri?.substring(0, 50), color: sigs[0].color });
+            }
             setSignatureOverlays(sigs);
             setTextOverlays(txts);
             if (sigs.length > 0) {
@@ -606,6 +623,10 @@ export default function StoryScreen() {
         try {
           const sigs = params.signatureOverlays ? JSON.parse(params.signatureOverlays as string) : [];
           const txts = params.textOverlays ? JSON.parse(params.textOverlays as string) : [];
+          console.log('📥 Story loaded from params:', { sigCount: sigs.length, txtCount: txts.length });
+          if (sigs.length > 0) {
+            console.log('📥 First signature:', { id: sigs[0].id, uri: sigs[0].uri?.substring(0, 50), color: sigs[0].color });
+          }
           setSignatureOverlays(sigs);
           setTextOverlays(txts);
           if (sigs.length > 0) {
