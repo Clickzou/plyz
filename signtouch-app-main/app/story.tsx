@@ -46,6 +46,8 @@ function StorySignature({ overlay, overrideX, overrideY, overrideScale, override
   
   const isJsonData = overlay.uri.startsWith('data:application/json;base64,');
   const isSvgData = overlay.uri.startsWith('data:image/svg+xml');
+  
+  console.log('🎨 StorySignature rendering:', { id: overlay.id, isJsonData, isSvgData, x, y, scale, color });
 
   if (isJsonData) {
     try {
@@ -179,6 +181,8 @@ function SignatureSvgContent({ overlay, color }: { overlay: SignatureOverlay; co
   const isJsonData = overlay.uri.startsWith('data:application/json;base64,');
   const isSvgData = overlay.uri.startsWith('data:image/svg+xml');
   const signatureColor = color || '#ffffff';
+  
+  console.log('🖊️ SignatureSvgContent rendering:', { id: overlay.id, isJsonData, isSvgData, color: signatureColor });
 
   if (isJsonData) {
     try {
