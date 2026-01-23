@@ -553,19 +553,6 @@ export default function SignatureScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.floatingButton, styles.textAddButton]}
-                onPress={() => setShowTextModal(true)}
-                activeOpacity={0.8}
-              >
-                <Type size={24} color="#ffffff" strokeWidth={2} />
-                {savedTexts.length > 0 && (
-                  <Animated.View style={[styles.plusBadgeBlue, animatedBadgeStyle]}>
-                    <Plus size={14} color="#ffffff" strokeWidth={3} />
-                  </Animated.View>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
                 style={[styles.floatingButton, styles.validateButton]}
                 onPress={validateSignature}
                 activeOpacity={0.8}
