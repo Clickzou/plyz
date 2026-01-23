@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput, Dimensions, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Sparkles, Film, Layers, Share2, Download } from 'lucide-react-native';
+import { ArrowLeft, Sparkles, Film, Layers, Share2, Download, Play } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { 
   useSharedValue, 
@@ -459,14 +459,14 @@ export default function StoryScreen() {
         </View>
 
         <TouchableOpacity 
-          style={styles.previewButton}
+          style={styles.playButton}
           onPress={handlePlayPreview}
           disabled={isAnimating}
+          activeOpacity={0.8}
         >
-          <Film size={20} color="#fff" />
-          <Text style={styles.previewButtonText}>
-            {isAnimating ? t('storyPreviewPlaying') : t('storyPreview')}
-          </Text>
+          <View style={styles.playButtonInner}>
+            <Play size={32} color="#fff" fill="#fff" />
+          </View>
         </TouchableOpacity>
 
         <View style={styles.section}>
@@ -490,7 +490,10 @@ export default function StoryScreen() {
                   styles.templateCard,
                   selectedAnimation.id === anim.id && styles.templateCardActive,
                 ]}
-                onPress={() => setSelectedAnimation(anim)}
+                onPress={() => {
+                  setSelectedAnimation(anim);
+                  setIsAnimating(true);
+                }}
               >
                 <LinearGradient
                   colors={anim.colors}
@@ -623,21 +626,22 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
     fontWeight: '600',
   },
-  previewButton: {
-    flexDirection: 'row',
+  playButton: {
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  playButtonInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#10B981',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#10B981',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    marginBottom: 20,
-    gap: 8,
-  },
-  previewButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
   section: {
     marginBottom: 20,
