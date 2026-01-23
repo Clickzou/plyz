@@ -1149,17 +1149,6 @@ export default function StoryScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('storyCustomText')}</Text>
-          <TextInput
-            style={styles.textInput}
-            value={customText}
-            onChangeText={setCustomText}
-            placeholder={t('storyDefaultText')}
-            placeholderTextColor="#999"
-          />
-        </View>
-
-        <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('storyAnimation')}</Text>
           <View style={styles.templateGrid}>
             {ANIMATIONS.map((anim) => (
@@ -1350,12 +1339,14 @@ const styles = StyleSheet.create({
     width: 50,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 8,
   },
   rightControls: {
     width: 50,
     alignItems: 'center',
     justifyContent: 'flex-start',
     paddingTop: 20,
+    marginLeft: 8,
   },
   smallPlayButton: {
     width: 40,
