@@ -17,6 +17,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import ViewShot from 'react-native-view-shot';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
+import { SignatureOverlay, TextOverlay } from '@/utils/memoriesStorage';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const STORY_WIDTH = SCREEN_WIDTH * 0.7;
@@ -110,6 +111,8 @@ function StoryPreview({
   isAnimating,
   onAnimationComplete,
   defaultText,
+  signatureOverlays = [],
+  textOverlays = [],
 }: { 
   imageUri: string; 
   template: Template; 
@@ -117,6 +120,8 @@ function StoryPreview({
   isAnimating: boolean;
   onAnimationComplete?: () => void;
   defaultText: string;
+  signatureOverlays?: SignatureOverlay[];
+  textOverlays?: TextOverlay[];
 }) {
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -193,6 +198,41 @@ function StoryPreview({
           ) : (
             <View style={[styles.storyImage, { backgroundColor: '#333' }]} />
           )}
+          {signatureOverlays.map((overlay) => (
+            <Image
+              key={overlay.id}
+              source={{ uri: overlay.uri }}
+              style={{
+                position: 'absolute',
+                left: `${overlay.x * 100}%`,
+                top: `${overlay.y * 100}%`,
+                width: overlay.width || 100,
+                height: overlay.height || 50,
+                transform: [
+                  { scale: overlay.scale || 1 },
+                  { rotate: `${overlay.rotation || 0}rad` },
+                ],
+                tintColor: overlay.color,
+              }}
+              resizeMode="contain"
+            />
+          ))}
+          {textOverlays.map((overlay) => (
+            <Text
+              key={overlay.id}
+              style={{
+                position: 'absolute',
+                left: `${overlay.x * 100}%`,
+                top: `${overlay.y * 100}%`,
+                color: overlay.color,
+                fontFamily: overlay.fontFamily,
+                fontSize: (overlay.fontSize || 16) * (overlay.scale || 1),
+                transform: [{ rotate: `${overlay.rotation || 0}rad` }],
+              }}
+            >
+              {overlay.text}
+            </Text>
+          ))}
         </View>
 
         {template.confetti && (
@@ -235,6 +275,18 @@ export default function StoryScreen() {
 
   const imageUri = params.imageUri as string || '';
   const eventType = (params.eventType as TemplateCategory) || 'meetup';
+  
+  const signatureOverlays: SignatureOverlay[] = useMemo(() => {
+    try {
+      return params.signatureOverlays ? JSON.parse(params.signatureOverlays as string) : [];
+    } catch { return []; }
+  }, [params.signatureOverlays]);
+  
+  const textOverlays: TextOverlay[] = useMemo(() => {
+    try {
+      return params.textOverlays ? JSON.parse(params.textOverlays as string) : [];
+    } catch { return []; }
+  }, [params.textOverlays]);
 
   const categoryLabels: Record<TemplateCategory, string> = useMemo(() => ({
     concert: t('storyConcert'),
@@ -370,6 +422,8 @@ export default function StoryScreen() {
             isAnimating={isAnimating}
             onAnimationComplete={handleAnimationComplete}
             defaultText={t('storyDefaultText')}
+            signatureOverlays={signatureOverlays}
+            textOverlays={textOverlays}
           />
         </ViewShot>
 

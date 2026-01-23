@@ -2176,7 +2176,12 @@ export default function ResultScreen() {
                   style={styles.storyButton}
                   onPress={() => router.push({
                     pathname: '/story',
-                    params: { imageUri: displayUri, eventType: memory?.metadata?.eventType || 'meetup' }
+                    params: { 
+                      imageUri: displayUri, 
+                      eventType: memory?.metadata?.eventType || 'meetup',
+                      signatureOverlays: JSON.stringify(signatureOverlays),
+                      textOverlays: JSON.stringify(textOverlays),
+                    }
                   })}
                   activeOpacity={0.7}
                 >
