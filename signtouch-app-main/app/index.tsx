@@ -212,7 +212,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#F2FF7A', '#6EE7B7', '#10B981']}
+        colors={['#3AC697', '#10B981']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0.3, y: 1 }}
         style={styles.gradient}>
