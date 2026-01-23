@@ -17,7 +17,7 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
 
-  const handleNavigation = (path: '/' | '/gallery' | '/account' | '/create-event' | '/join-event') => {
+  const handleNavigation = (path: '/' | '/gallery' | '/account' | '/celebrity-menu' | '/join-live-session') => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -49,16 +49,16 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
 
       <TouchableOpacity
         style={styles.navButton}
-        onPress={() => handleNavigation('/create-event')}
+        onPress={() => handleNavigation('/celebrity-menu')}
         activeOpacity={0.7}
       >
         <Star
           size={24}
-          color={isActive('/create-event') ? '#f59e0b' : '#ffffff'}
-          fill={isActive('/create-event') ? '#f59e0b' : 'transparent'}
+          color={isActive('/celebrity-menu') || isActive('/create-event') || isActive('/create-live-session') ? '#f59e0b' : '#ffffff'}
+          fill={isActive('/celebrity-menu') || isActive('/create-event') || isActive('/create-live-session') ? '#f59e0b' : 'transparent'}
           strokeWidth={2}
         />
-        <Text style={[styles.navLabel, isActive('/create-event') && styles.navLabelStar]}>
+        <Text style={[styles.navLabel, (isActive('/celebrity-menu') || isActive('/create-event') || isActive('/create-live-session')) && styles.navLabelStar]}>
           {t('celebrity')}
         </Text>
       </TouchableOpacity>
@@ -80,15 +80,15 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
 
       <TouchableOpacity
         style={styles.navButton}
-        onPress={() => handleNavigation('/join-event')}
+        onPress={() => handleNavigation('/join-live-session')}
         activeOpacity={0.7}
       >
         <Users
           size={24}
-          color={isActive('/join-event') ? '#6366f1' : '#ffffff'}
+          color={isActive('/join-live-session') || isActive('/join-event') ? '#6366f1' : '#ffffff'}
           strokeWidth={2}
         />
-        <Text style={[styles.navLabel, isActive('/join-event') && styles.navLabelFan]}>
+        <Text style={[styles.navLabel, (isActive('/join-live-session') || isActive('/join-event')) && styles.navLabelFan]}>
           {t('fan')}
         </Text>
       </TouchableOpacity>

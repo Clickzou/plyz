@@ -148,9 +148,9 @@ export default function JoinLiveSessionScreen() {
       const entry = await joinSessionQueue(
         session.id,
         fanId,
-        fanName.trim() || null,
+        fanName.trim() || '',
         photoUrl,
-        message.trim() || null
+        message.trim() || ''
       );
 
       if (!entry) {
