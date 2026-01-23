@@ -598,7 +598,7 @@ export default function GalleryScreen() {
               activeOpacity={0.8}
             >
               <BookOpen size={24} color="#ffffff" strokeWidth={2} />
-              <Text style={styles.bulkActionText}>{t('notebookTitle') || 'Carnet'}</Text>
+              <Text style={styles.bulkActionText}>{t('addToNotebook') || 'Ajouter au carnet'}</Text>
             </TouchableOpacity>
           )}
 
