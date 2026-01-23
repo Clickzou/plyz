@@ -90,27 +90,19 @@ export default function CreateLiveSessionScreen() {
       const celebrityId = `celebrity_${Date.now()}`;
       let session;
       
-      try {
-        session = await createLiveSession(
-          celebrityId,
-          celebrityName.trim(),
-          totalDuration,
-          calculatedMaxFans,
-          price
-        );
-      } catch (supabaseError) {
-        console.log('Supabase error, creating local session:', supabaseError);
-        const generateCode = () => {
-          const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-          let code = '';
-          for (let i = 0; i < 6; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
-          }
-          return code;
-        };
+      const generateCode = () => {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let code = '';
+        for (let i = 0; i < 6; i++) {
+          code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return code;
+      };
+
+      const createLocalSession = () => {
         const now = new Date();
         const expiresAt = new Date(now.getTime() + totalDuration * 60 * 1000);
-        session = {
+        return {
           id: `local_session_${Date.now()}`,
           code: generateCode(),
           celebrity_id: celebrityId,
@@ -124,17 +116,30 @@ export default function CreateLiveSessionScreen() {
           created_at: now.toISOString(),
           expires_at: expiresAt.toISOString(),
         };
+      };
+      
+      try {
+        session = await createLiveSession(
+          celebrityId,
+          celebrityName.trim(),
+          totalDuration,
+          calculatedMaxFans,
+          price
+        );
+        if (!session) {
+          console.log('Supabase returned null, creating local session');
+          session = createLocalSession();
+        }
+      } catch (supabaseError) {
+        console.log('Supabase error, creating local session:', supabaseError);
+        session = createLocalSession();
       }
 
       console.log('Session created:', session);
-      if (session) {
-        router.replace({
-          pathname: '/live-session-dashboard',
-          params: { sessionId: session.id },
-        });
-      } else {
-        Alert.alert(t('error'), t('liveSessionCreateError'));
-      }
+      router.replace({
+        pathname: '/live-session-dashboard',
+        params: { sessionId: session.id },
+      });
     } catch (error) {
       console.error('Error creating session:', error);
       Alert.alert(t('error'), t('liveSessionCreateError'));
