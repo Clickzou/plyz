@@ -32,7 +32,7 @@ export interface PhotoAdjustments {
   saturation: number;
 }
 
-export type EventType = 'concert' | 'match' | 'expo' | 'salon' | 'dedicace' | 'rencontre' | 'autre';
+export type EventType = 'concert' | 'match' | 'expo' | 'salon' | 'dedicace' | 'rencontre' | 'amis' | 'autre';
 
 export interface MemoryMetadata {
   eventDate?: string;

@@ -32,6 +32,7 @@ const EVENT_TYPES: { type: EventType; icon: any; color: string }[] = [
   { type: 'salon', icon: Users, color: '#3b82f6' },
   { type: 'dedicace', icon: Star, color: '#ec4899' },
   { type: 'rencontre', icon: User, color: '#14b8a6' },
+  { type: 'amis', icon: Users, color: '#f472b6' },
   { type: 'autre', icon: Calendar, color: '#6b7280' },
 ];
 
@@ -92,6 +93,7 @@ export default function MetadataModal({ visible, onClose, onSave, onSkip, initia
       salon: t('eventSalon') || 'Salon',
       dedicace: t('eventDedicace') || 'Dédicace',
       rencontre: t('eventRencontre') || 'Rencontre',
+      amis: t('eventAmis') || 'Amis',
       autre: t('eventAutre') || 'Autre',
     };
     return labels[type];
