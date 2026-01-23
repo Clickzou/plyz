@@ -202,7 +202,10 @@ function SignatureSvgContent({ overlay, color }: { overlay: SignatureOverlay; co
       const displayWidth = aspectRatio >= 1 ? targetSize : targetSize * aspectRatio;
       const displayHeight = aspectRatio >= 1 ? targetSize / aspectRatio : targetSize;
       
-      console.log('🖊️ SignatureSvgContent SVG parsed:', { id: overlay.id, pathsCount: paths.length, width, height, displayWidth, displayHeight, color: signatureColor });
+      const strokeScale = width / displayWidth;
+      const scaledStrokeWidth = 3 * strokeScale;
+      
+      console.log('🖊️ SignatureSvgContent SVG parsed:', { id: overlay.id, pathsCount: paths.length, width, height, displayWidth, displayHeight, strokeScale, scaledStrokeWidth, color: signatureColor });
       
       return (
         <Svg
@@ -215,7 +218,7 @@ function SignatureSvgContent({ overlay, color }: { overlay: SignatureOverlay; co
               key={index}
               d={pathData}
               stroke={signatureColor}
-              strokeWidth={5}
+              strokeWidth={scaledStrokeWidth}
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -715,26 +718,27 @@ function StoryPreview({
           const scaledY = (signatureOverlays[0].y / RESULT_IMAGE_HEIGHT) * STORY_HEIGHT;
           console.log('🔶 Interactive signature 0 position:', { x: signatureOverlays[0].x, y: signatureOverlays[0].y, scaledX, scaledY, color: signatureOverlays[0].color });
           return (
-            <GestureDetector key={signatureOverlays[0].id} gesture={signatureGesture}>
-              <Animated.View
-                style={[{
-                  position: 'absolute',
-                  left: scaledX,
-                  top: scaledY,
-                  zIndex: 20,
-                  padding: 8,
-                  borderWidth: 2,
-                  borderColor: '#10B981',
-                  borderRadius: 8,
-                  borderStyle: 'dashed',
-                }, sigAnimatedStyle]}
-              >
-                <SignatureSvgContent
-                  overlay={signatureOverlays[0]}
-                  color={signatureColor}
-                />
-              </Animated.View>
-            </GestureDetector>
+            <View
+              key={signatureOverlays[0].id}
+              style={{
+                position: 'absolute',
+                left: scaledX,
+                top: scaledY,
+                zIndex: 100,
+                padding: 8,
+                borderWidth: 2,
+                borderColor: '#10B981',
+                borderRadius: 8,
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                minWidth: 80,
+                minHeight: 80,
+              }}
+            >
+              <SignatureSvgContent
+                overlay={signatureOverlays[0]}
+                color={signatureColor}
+              />
+            </View>
           );
         })()}
 
