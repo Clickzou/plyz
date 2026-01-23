@@ -1075,52 +1075,78 @@ export default function StoryScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View ref={Platform.OS === 'web' ? webContainerRef as any : undefined}>
-          <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
-            <StoryPreview
-              imageUri={imageUri}
-              animation={selectedAnimation}
-              customText={customText}
-              isAnimating={isAnimating}
-              onAnimationComplete={handleAnimationComplete}
-              defaultText={t('storyDefaultText')}
-              signatureOverlays={signatureOverlays}
-              textOverlays={textOverlays}
-              signatureScale={signatureScale}
-              signatureRotation={signatureRotation}
-              signatureX={signatureX}
-              signatureY={signatureY}
-              signatureColor={signatureColor}
-              textScale={textScale}
-              textColor={textColor}
-              textY={textY}
-              interactive={!isAnimating}
-              onSignatureChange={(s, r, x, y) => {
-                setSignatureScale(s);
-                setSignatureRotation(r);
-                setSignatureX(x);
-                setSignatureY(y);
-              }}
-              onTextChange={(s, y) => {
-                setTextScale(s);
-                setTextY(y);
-              }}
-              selectedSignatureIndex={selectedSignatureIndex}
-              setSelectedSignatureIndex={setSelectedSignatureIndex}
-            />
-          </ViewShot>
-        </View>
-
-        <TouchableOpacity 
-          style={styles.playButton}
-          onPress={handlePlayPreview}
-          disabled={isAnimating}
-          activeOpacity={0.8}
-        >
-          <View style={styles.playButtonInner}>
-            <Play size={32} color="#fff" fill="#fff" />
+        <View style={styles.previewRow}>
+          <View style={styles.leftControls}>
+            <TouchableOpacity 
+              style={styles.smallPlayButton}
+              onPress={handlePlayPreview}
+              disabled={isAnimating}
+              activeOpacity={0.8}
+            >
+              <Play size={20} color="#fff" fill="#fff" />
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+
+          <View ref={Platform.OS === 'web' ? webContainerRef as any : undefined}>
+            <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
+              <StoryPreview
+                imageUri={imageUri}
+                animation={selectedAnimation}
+                customText={customText}
+                isAnimating={isAnimating}
+                onAnimationComplete={handleAnimationComplete}
+                defaultText={t('storyDefaultText')}
+                signatureOverlays={signatureOverlays}
+                textOverlays={textOverlays}
+                signatureScale={signatureScale}
+                signatureRotation={signatureRotation}
+                signatureX={signatureX}
+                signatureY={signatureY}
+                signatureColor={signatureColor}
+                textScale={textScale}
+                textColor={textColor}
+                textY={textY}
+                interactive={!isAnimating}
+                onSignatureChange={(s, r, x, y) => {
+                  setSignatureScale(s);
+                  setSignatureRotation(r);
+                  setSignatureX(x);
+                  setSignatureY(y);
+                }}
+                onTextChange={(s, y) => {
+                  setTextScale(s);
+                  setTextY(y);
+                }}
+                selectedSignatureIndex={selectedSignatureIndex}
+                setSelectedSignatureIndex={setSelectedSignatureIndex}
+              />
+            </ViewShot>
+          </View>
+
+          <View style={styles.rightControls}>
+            {(selectedSignatureIndex !== null || true) && (
+              <View style={styles.verticalColorPicker}>
+                {COLORS.slice(0, 6).map((color) => (
+                  <TouchableOpacity
+                    key={color}
+                    style={[
+                      styles.smallColorOption,
+                      { backgroundColor: color },
+                      (selectedSignatureIndex !== null ? signatureColor === color : textColor === color) && styles.smallColorOptionActive,
+                    ]}
+                    onPress={() => {
+                      if (selectedSignatureIndex !== null) {
+                        setSignatureColor(color);
+                      } else {
+                        setTextColor(color);
+                      }
+                    }}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('storyCustomText')}</Text>
@@ -1131,80 +1157,7 @@ export default function StoryScreen() {
             placeholder={t('storyDefaultText')}
             placeholderTextColor="#999"
           />
-          
-          <Text style={styles.hintText}>Glissez le texte pour le déplacer, ou utilisez les curseurs ci-dessous.</Text>
-          
-          <Text style={styles.sliderLabel}>Taille du texte</Text>
-          <Slider
-            style={styles.slider}
-            minimumValue={0.5}
-            maximumValue={2}
-            value={textScale}
-            onValueChange={setTextScale}
-            minimumTrackTintColor="#10B981"
-            maximumTrackTintColor="#ccc"
-          />
-          
-          <Text style={styles.sliderLabel}>Couleur du texte</Text>
-          <View style={styles.colorPicker}>
-            {COLORS.map((color) => (
-              <TouchableOpacity
-                key={color}
-                style={[
-                  styles.colorOption,
-                  { backgroundColor: color },
-                  textColor === color && styles.colorOptionActive,
-                ]}
-                onPress={() => setTextColor(color)}
-              />
-            ))}
-          </View>
         </View>
-
-        {signatureOverlays.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Signature</Text>
-            
-            <Text style={styles.hintText}>Glissez la signature pour la déplacer, ou utilisez les curseurs ci-dessous.</Text>
-            
-            <Text style={styles.sliderLabel}>Taille</Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={0.3}
-              maximumValue={3}
-              value={signatureScale}
-              onValueChange={setSignatureScale}
-              minimumTrackTintColor="#10B981"
-              maximumTrackTintColor="#ccc"
-            />
-            
-            <Text style={styles.sliderLabel}>Rotation</Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={-Math.PI}
-              maximumValue={Math.PI}
-              value={signatureRotation}
-              onValueChange={setSignatureRotation}
-              minimumTrackTintColor="#10B981"
-              maximumTrackTintColor="#ccc"
-            />
-            
-            <Text style={styles.sliderLabel}>Couleur</Text>
-            <View style={styles.colorPicker}>
-              {COLORS.map((color) => (
-                <TouchableOpacity
-                  key={color}
-                  style={[
-                    styles.colorOption,
-                    { backgroundColor: color },
-                    signatureColor === color && styles.colorOptionActive,
-                  ]}
-                  onPress={() => setSignatureColor(color)}
-                />
-              ))}
-            </View>
-          </View>
-        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('storyAnimation')}</Text>
@@ -1386,6 +1339,51 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+  },
+  previewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+  },
+  leftControls: {
+    width: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rightControls: {
+    width: 50,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 20,
+  },
+  smallPlayButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  verticalColorPicker: {
+    flexDirection: 'column',
+    gap: 6,
+  },
+  smallColorOption: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  smallColorOptionActive: {
+    borderColor: '#333',
+    borderWidth: 3,
   },
   section: {
     marginBottom: 20,
