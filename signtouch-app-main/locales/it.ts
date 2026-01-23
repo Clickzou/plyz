@@ -35,7 +35,7 @@ export default {
   composeTitle: 'Componi',
   chooseFromLibrary: 'Scegli dalla libreria',
   editTitle: 'Modifica',
-  editModeTooltip: 'Modalità modifica attivata, puoi modificare elementi, cambiare colori, spostarli o eliminarli',
+  editModeTooltip: 'Tocca questo pulsante per attivare la modalità modifica',
   addText: 'Aggiungi testo',
   addSignature: 'Aggiungi firma',
   drawing: 'Disegno',

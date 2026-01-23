@@ -46,7 +46,7 @@ export default {
 
   // Edit Screen
   editTitle: 'ترمیم کریں',
-  editModeTooltip: 'ترمیم موڈ فعال ہے، آپ عناصر میں ترمیم کر سکتے ہیں، رنگ تبدیل کر سکتے ہیں، منتقل یا حذف کر سکتے ہیں',
+  editModeTooltip: 'ترمیم موڈ فعال کرنے کے لیے اس بٹن کو ٹیپ کریں',
   addText: 'متن شامل کریں',
   addSignature: 'دستخط شامل کریں',
   drawing: 'ڈرائنگ',

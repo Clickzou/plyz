@@ -46,7 +46,7 @@ export default {
 
   // Edit Screen
   editTitle: 'Edit',
-  editModeTooltip: 'Mode edit diaktifkan, Anda dapat memodifikasi elemen, mengubah warna, memindahkan atau menghapusnya',
+  editModeTooltip: 'Ketuk tombol ini untuk mengaktifkan mode edit',
   addText: 'Tambah teks',
   addSignature: 'Tambah tanda tangan',
   drawing: 'Gambar',

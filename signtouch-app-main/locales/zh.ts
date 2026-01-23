@@ -46,7 +46,7 @@ export default {
 
   // Edit Screen
   editTitle: '编辑',
-  editModeTooltip: '编辑模式已激活，您可以修改元素、更改颜色、移动或删除它们',
+  editModeTooltip: '点击此按钮激活编辑模式',
   addText: '添加文字',
   addSignature: '添加签名',
   drawing: '绘图',

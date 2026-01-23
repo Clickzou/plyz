@@ -46,7 +46,7 @@ export default {
 
   // Edit Screen
   editTitle: 'تحرير',
-  editModeTooltip: 'تم تفعيل وضع التحرير، يمكنك تعديل العناصر وتغيير الألوان ونقلها أو حذفها',
+  editModeTooltip: 'اضغط على هذا الزر لتفعيل وضع التحرير',
   addText: 'إضافة نص',
   addSignature: 'إضافة توقيع',
   drawing: 'رسم',

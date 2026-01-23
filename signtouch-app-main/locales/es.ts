@@ -46,7 +46,7 @@ export default {
 
   // Edit Screen
   editTitle: 'Editar',
-  editModeTooltip: 'Modo de edición activado, puedes modificar elementos, cambiar colores, moverlos o eliminarlos',
+  editModeTooltip: 'Toca este botón para activar el modo de edición',
   addText: 'Agregar texto',
   addSignature: 'Agregar firma',
   drawing: 'Dibujo',
