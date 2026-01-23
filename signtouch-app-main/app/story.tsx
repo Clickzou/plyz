@@ -1454,8 +1454,7 @@ export default function StoryScreen() {
                   >
                     {getIcon()}
                   </LinearGradient>
-                  <Text style={styles.templateLabel} numberOfLines={1}>{t(anim.nameKey)}</Text>
-                </TouchableOpacity>
+                                  </TouchableOpacity>
               );
             })}
           </View>
