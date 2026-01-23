@@ -1,16 +1,32 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Camera } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming, 
+  withRepeat, 
+  withSequence,
+  withDelay,
+  Easing,
+} from 'react-native-reanimated';
 import BottomNav from '@/components/BottomNav';
-
-const { width } = Dimensions.get('window');
-const isTablet = width >= 768;
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
+
+  const titleOpacity = useSharedValue(0);
+  const titleTranslateY = useSharedValue(30);
+  const subtitleOpacity = useSharedValue(0);
+  const buttonScale = useSharedValue(0);
+  const buttonPulse = useSharedValue(1);
+  const glow1Opacity = useSharedValue(0.1);
+  const glow2Opacity = useSharedValue(0.1);
 
   useEffect(() => {
     if (Platform.OS === 'web') {
@@ -28,7 +44,66 @@ export default function HomeScreen() {
         localStorage.removeItem('memories');
       }
     }
+
+    titleOpacity.value = withDelay(300, withTiming(1, { duration: 1000 }));
+    titleTranslateY.value = withDelay(300, withTiming(0, { duration: 800, easing: Easing.out(Easing.back(1.5)) }));
+    subtitleOpacity.value = withDelay(800, withTiming(1, { duration: 800 }));
+    buttonScale.value = withDelay(1200, withTiming(1, { duration: 600, easing: Easing.out(Easing.back(2)) }));
+    
+    buttonPulse.value = withDelay(
+      2000,
+      withRepeat(
+        withSequence(
+          withTiming(1.1, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      )
+    );
+
+    glow1Opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.2, { duration: 3000 }),
+        withTiming(0.08, { duration: 3000 })
+      ),
+      -1,
+      true
+    );
+
+    glow2Opacity.value = withDelay(
+      1500,
+      withRepeat(
+        withSequence(
+          withTiming(0.18, { duration: 2500 }),
+          withTiming(0.06, { duration: 2500 })
+        ),
+        -1,
+        true
+      )
+    );
   }, []);
+
+  const titleStyle = useAnimatedStyle(() => ({
+    opacity: titleOpacity.value,
+    transform: [{ translateY: titleTranslateY.value }],
+  }));
+
+  const subtitleStyle = useAnimatedStyle(() => ({
+    opacity: subtitleOpacity.value,
+  }));
+
+  const buttonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value * buttonPulse.value }],
+  }));
+
+  const glow1Style = useAnimatedStyle(() => ({
+    opacity: glow1Opacity.value,
+  }));
+
+  const glow2Style = useAnimatedStyle(() => ({
+    opacity: glow2Opacity.value,
+  }));
 
   const handleCameraPress = () => {
     if (Platform.OS !== 'web') {
@@ -40,31 +115,44 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#F2FF7A', '#69C587']}
+        colors={['#1a1a2e', '#16213e', '#0f3460']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+        end={{ x: 1, y: 1 }}
         style={styles.gradient}>
 
-        {/* Grandes bulles rondes fixes - Layer 2 */}
-        <View style={[styles.bubble, styles.bubble1]} />
-        <View style={[styles.bubble, styles.bubble2]} />
-        <View style={[styles.bubble, styles.bubble3]} />
-        <View style={[styles.bubble, styles.bubble4]} />
-        <View style={[styles.bubble, styles.bubble5]} />
-        <View style={[styles.bubble, styles.bubble6]} />
+        <Animated.View style={[styles.glowCircle, glow1Style]} />
+        <Animated.View style={[styles.glowCircle2, glow2Style]} />
+        <Animated.View style={[styles.glowCircle3, glow1Style]} />
 
-        {/* Contenu principal - Layer 3+ */}
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>Signtouch</Text>
-        </View>
+        <View style={styles.content}>
+          <View style={styles.logoContainer}>
+            <Animated.Text style={[styles.logoText, { fontSize: isTablet ? 72 : 56 }, titleStyle]}>
+              Signtouch
+            </Animated.Text>
+            <Animated.Text style={[styles.subtitleText, subtitleStyle]}>
+              Capturez vos rencontres
+            </Animated.Text>
+          </View>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.cameraButton}
-            onPress={handleCameraPress}
-            activeOpacity={0.8}>
-            <Camera size={36} color="#2e7d32" strokeWidth={2.5} />
-          </TouchableOpacity>
+          <View style={styles.buttonContainer}>
+            <Animated.View style={buttonStyle}>
+              <TouchableOpacity
+                style={styles.cameraButton}
+                onPress={handleCameraPress}
+                activeOpacity={0.8}>
+                <LinearGradient
+                  colors={['#667eea', '#764ba2']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.buttonGradient}>
+                  <Camera size={36} color="#ffffff" strokeWidth={2.5} />
+                </LinearGradient>
+              </TouchableOpacity>
+            </Animated.View>
+            <Animated.Text style={[styles.buttonLabel, subtitleStyle]}>
+              Prendre une photo
+            </Animated.Text>
+          </View>
         </View>
       </LinearGradient>
       <BottomNav />
@@ -78,96 +166,82 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
-    justifyContent: 'space-between',
-    alignItems: 'center',
     position: 'relative',
+    overflow: 'hidden',
   },
-  // Style de base pour toutes les bulles
-  bubble: {
+  glowCircle: {
     position: 'absolute',
-    borderRadius: 9999,
-  },
-  // Bulle 1 - Grande bulle en haut à gauche
-  bubble1: {
-    width: 400,
-    height: 400,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    top: -150,
-    left: -100,
-  },
-  // Bulle 2 - Grande bulle au centre-haut
-  bubble2: {
     width: 350,
     height: 350,
-    backgroundColor: 'rgba(242, 255, 122, 0.25)',
-    top: 100,
-    right: -80,
+    borderRadius: 175,
+    backgroundColor: '#667eea',
+    top: '10%',
+    left: -120,
   },
-  // Bulle 3 - Bulle moyenne au centre
-  bubble3: {
+  glowCircle2: {
+    position: 'absolute',
     width: 280,
     height: 280,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    top: '40%',
-    left: -50,
+    borderRadius: 140,
+    backgroundColor: '#764ba2',
+    bottom: '15%',
+    right: -100,
   },
-  // Bulle 4 - Grande bulle au centre-droit
-  bubble4: {
-    width: 450,
-    height: 450,
-    backgroundColor: 'rgba(105, 197, 135, 0.2)',
-    top: '35%',
-    right: -120,
+  glowCircle3: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: '#667eea',
+    top: '45%',
+    right: '20%',
   },
-  // Bulle 5 - Bulle moyenne en bas à gauche
-  bubble5: {
-    width: 320,
-    height: 320,
-    backgroundColor: 'rgba(255, 255, 255, 0.18)',
-    bottom: 50,
-    left: -80,
-  },
-  // Bulle 6 - Grande bulle en bas à droite
-  bubble6: {
-    width: 380,
-    height: 380,
-    backgroundColor: 'rgba(242, 255, 122, 0.15)',
-    bottom: -100,
-    right: -60,
+  content: {
+    flex: 1,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    zIndex: 10,
+    paddingTop: 100,
+    paddingBottom: 80,
   },
   logoContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 10,
   },
   logoText: {
-    fontSize: isTablet ? 100 : 80,
     fontFamily: 'Pacifico_400Regular',
     color: '#FFFFFF',
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.35)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 6,
+    letterSpacing: 2,
+  },
+  subtitleText: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.6)',
+    marginTop: 16,
+    fontWeight: '300',
+    letterSpacing: 3,
+    textTransform: 'uppercase',
   },
   buttonContainer: {
-    flex: 0.3,
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 60,
-    zIndex: 10,
   },
   cameraButton: {
-    backgroundColor: '#ffffff',
+    borderRadius: 40,
+    overflow: 'hidden',
+  },
+  buttonGradient: {
     width: 80,
     height: 80,
     borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 10,
+  },
+  buttonLabel: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 14,
+    marginTop: 16,
+    fontWeight: '500',
+    letterSpacing: 1,
   },
 });
