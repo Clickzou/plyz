@@ -259,14 +259,12 @@ function InteractiveSignature({ overlay, color, isSelected, onSelect }: Interact
           position: 'absolute',
           left: scaledX,
           top: scaledY,
-          zIndex: isSelected ? 100 : 50,
-          padding: 8,
+          zIndex: isSelected ? 100 : 10,
+          padding: 4,
           borderWidth: isSelected ? 2 : 0,
           borderColor: '#10B981',
           borderRadius: 8,
           borderStyle: 'dashed',
-          minWidth: 80,
-          minHeight: 80,
         }, animatedStyle]}
       >
         <SignatureSvgContent overlay={overlay} color={color} />
