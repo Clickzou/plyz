@@ -574,6 +574,6 @@ export default {
   celebrityMenuSubtitle: 'Partagez votre signature et vos photos en direct avec vos fans lors d\'un événement en présentiel ou en vidéo',
   celebrityEventSimple: 'Événement QR Live',
   celebrityEventSimpleDesc: 'Générez un QR code lors d\'un événement live pour offrir votre photo dédicacée à vos fans',
-  celebrityLiveSession: 'Session Live Vidéo VIP',
-  celebrityLiveSessionDesc: 'Signez des photos en temps réel avec une file d\'attente de fans',
+  celebrityLiveSession: 'Session Live Vidéo Rémunérée',
+  celebrityLiveSessionDesc: 'Offrez à vos fans un moment unique en vidéo live et laissez-leur une dédicace personnalisée',
 };
