@@ -47,7 +47,12 @@ function StorySignature({ overlay, overrideX, overrideY, overrideScale, override
   const isJsonData = overlay.uri.startsWith('data:application/json;base64,');
   const isSvgData = overlay.uri.startsWith('data:image/svg+xml');
   
-  console.log('🎨 StorySignature rendering:', { id: overlay.id, isJsonData, isSvgData, x, y, scale, color });
+  const RESULT_IMAGE_WIDTH = 402;
+  const RESULT_IMAGE_HEIGHT = 874;
+  const scaledX = (x / RESULT_IMAGE_WIDTH) * STORY_WIDTH;
+  const scaledY = (y / RESULT_IMAGE_HEIGHT) * STORY_HEIGHT;
+  
+  console.log('🎨 StorySignature rendering:', { id: overlay.id, x, y, scaledX, scaledY, scale, color });
 
   if (isJsonData) {
     try {
@@ -59,13 +64,13 @@ function StorySignature({ overlay, overrideX, overrideY, overrideScale, override
       return (
         <View style={{
           position: 'absolute',
-          left: x,
-          top: y,
+          left: scaledX,
+          top: scaledY,
           width: 150,
           height: 80,
           transform: [
             { rotate: `${rotation}rad` },
-            { scale: scale }
+            { scale: scale * 0.5 }
           ],
           zIndex: 10,
         }}>
@@ -113,13 +118,13 @@ function StorySignature({ overlay, overrideX, overrideY, overrideScale, override
       return (
         <View style={{
           position: 'absolute',
-          left: x,
-          top: y,
+          left: scaledX,
+          top: scaledY,
           width: 150,
           height: 80,
           transform: [
             { rotate: `${rotation}rad` },
-            { scale: scale }
+            { scale: scale * 0.5 }
           ],
           zIndex: 10,
         }}>
@@ -151,13 +156,13 @@ function StorySignature({ overlay, overrideX, overrideY, overrideScale, override
   return (
     <View style={{
       position: 'absolute',
-      left: x,
-      top: y,
+      left: scaledX,
+      top: scaledY,
       width: 150,
       height: 80,
       transform: [
         { rotate: `${rotation}rad` },
-        { scale: scale }
+        { scale: scale * 0.5 }
       ],
       zIndex: 10,
     }}>
@@ -656,28 +661,35 @@ function StoryPreview({
 
         <View style={[styles.overlay, { opacity: animation.overlayOpacity }]} pointerEvents="none" />
 
-        {interactive && signatureOverlays.length > 0 && signatureOverlays[0] && (
-          <GestureDetector key={signatureOverlays[0].id} gesture={signatureGesture}>
-            <Animated.View
-              style={[{
-                position: 'absolute',
-                left: signatureOverlays[0].x,
-                top: signatureOverlays[0].y,
-                width: 150 + 16,
-                height: 80 + 16,
-                zIndex: 20,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }, sigAnimatedStyle]}
-            >
-              <View style={styles.selectionBorder} />
-              <SignatureSvgContent
-                overlay={signatureOverlays[0]}
-                color={signatureColor}
-              />
-            </Animated.View>
-          </GestureDetector>
-        )}
+        {interactive && signatureOverlays.length > 0 && signatureOverlays[0] && (() => {
+          const RESULT_IMAGE_WIDTH = 402;
+          const RESULT_IMAGE_HEIGHT = 874;
+          const scaledX = (signatureOverlays[0].x / RESULT_IMAGE_WIDTH) * STORY_WIDTH;
+          const scaledY = (signatureOverlays[0].y / RESULT_IMAGE_HEIGHT) * STORY_HEIGHT;
+          console.log('🔶 Interactive signature 0 position:', { x: signatureOverlays[0].x, y: signatureOverlays[0].y, scaledX, scaledY, color: signatureOverlays[0].color });
+          return (
+            <GestureDetector key={signatureOverlays[0].id} gesture={signatureGesture}>
+              <Animated.View
+                style={[{
+                  position: 'absolute',
+                  left: scaledX,
+                  top: scaledY,
+                  width: 100,
+                  height: 50,
+                  zIndex: 20,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }, sigAnimatedStyle]}
+              >
+                <View style={styles.selectionBorder} />
+                <SignatureSvgContent
+                  overlay={signatureOverlays[0]}
+                  color={signatureColor}
+                />
+              </Animated.View>
+            </GestureDetector>
+          );
+        })()}
 
         {interactive ? (
           <GestureDetector gesture={textGesture}>
