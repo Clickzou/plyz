@@ -59,6 +59,7 @@ export default function CreateLiveSessionScreen() {
   const [isCustomPrice, setIsCustomPrice] = useState(false);
   const [customPriceText, setCustomPriceText] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [nameError, setNameError] = useState(false);
 
   const calculatedMaxFans = Math.floor(totalDuration / durationPerFan);
   
@@ -80,9 +81,11 @@ export default function CreateLiveSessionScreen() {
 
   const handleCreateSession = async () => {
     if (!celebrityName.trim()) {
-      Alert.alert(t('error'), t('liveSessionNameRequired'));
+      setNameError(true);
+      Alert.alert(t('error') || 'Erreur', t('liveSessionNameRequired') || 'Veuillez entrer votre nom');
       return;
     }
+    setNameError(false);
 
     setIsCreating(true);
     console.log('Starting session creation...');
@@ -177,13 +180,19 @@ export default function CreateLiveSessionScreen() {
 
         <Text style={styles.sectionTitle}>{t('liveSessionYourName')}</Text>
         <TextInput
-          style={styles.nameInput}
+          style={[styles.nameInput, nameError && styles.nameInputError]}
           placeholder={t('liveSessionNamePlaceholder')}
           placeholderTextColor="rgba(255,255,255,0.6)"
           value={celebrityName}
-          onChangeText={setCelebrityName}
+          onChangeText={(text) => {
+            setCelebrityName(text);
+            if (text.trim()) setNameError(false);
+          }}
           maxLength={50}
         />
+        {nameError && (
+          <Text style={styles.errorText}>{t('liveSessionNameRequired') || 'Veuillez entrer votre nom'}</Text>
+        )}
 
         <Text style={styles.sectionTitle}>{t('liveSessionDurationPerFan') || 'Durée par Fan'}</Text>
         <View style={styles.optionsRow}>
@@ -399,8 +408,18 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
     color: '#fff',
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.3)',
+  },
+  nameInputError: {
+    borderColor: '#ef4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 14,
+    marginTop: 8,
+    fontWeight: '500',
   },
   optionsRow: {
     flexDirection: 'row',
