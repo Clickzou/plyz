@@ -294,14 +294,14 @@ export default function CreateLiveSessionScreen() {
           <View style={styles.customPriceContainer}>
             <TextInput
               style={styles.customPriceInput}
-              placeholder={t('liveSessionEnterPrice') || 'Entrez le montant en €'}
+              placeholder="Ex: 15"
               placeholderTextColor="rgba(255,255,255,0.6)"
               value={customPriceText}
               onChangeText={handleCustomPriceChange}
               keyboardType="numeric"
-              maxLength={5}
+              maxLength={4}
             />
-            <Text style={styles.customPriceLabel}>€</Text>
+            <Text style={styles.customPriceLabel}>€ par signature</Text>
           </View>
         )}
 
