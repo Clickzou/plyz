@@ -1182,18 +1182,7 @@ export default function StoryScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.previewRow}>
-          <View style={styles.leftControls}>
-            <TouchableOpacity 
-              style={styles.smallPlayButton}
-              onPress={handlePlayPreview}
-              disabled={isAnimating}
-              activeOpacity={0.8}
-            >
-              <Play size={20} color="#fff" fill="#fff" />
-            </TouchableOpacity>
-          </View>
-
+        <View style={styles.previewColumn}>
           <View ref={Platform.OS === 'web' ? webContainerRef as any : undefined}>
             <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
               <StoryPreview
@@ -1231,6 +1220,15 @@ export default function StoryScreen() {
               />
             </ViewShot>
           </View>
+
+          <TouchableOpacity 
+            style={styles.centeredPlayButton}
+            onPress={handlePlayPreview}
+            disabled={isAnimating}
+            activeOpacity={0.8}
+          >
+            <Play size={24} color="#fff" fill="#fff" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
@@ -1414,32 +1412,19 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  previewRow: {
-    flexDirection: 'row',
+  previewColumn: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
   },
-  leftControls: {
-    width: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  rightControls: {
-    width: 50,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 20,
-    marginLeft: 8,
-  },
-  smallPlayButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  centeredPlayButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#10B981',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
