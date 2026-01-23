@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@expo-google-fonts/montserrat": "^0.4.2"
+    "@expo-google-fonts/montserrat": "^0.4.2",
+    "html2canvas": "^1.4.1"
   }
 }

@@ -16,6 +16,7 @@ import Animated, {
 import { useLanguage } from '@/contexts/LanguageContext';
 import ViewShot from 'react-native-view-shot';
 import * as MediaLibrary from 'expo-media-library';
+import html2canvas from 'html2canvas';
 import * as Sharing from 'expo-sharing';
 import { SignatureOverlay, TextOverlay } from '@/utils/memoriesStorage';
 import { saveStory } from '@/utils/storiesStorage';
@@ -28,7 +29,7 @@ type AnimationType = 'ken-burns' | 'sequential-zoom' | 'parallax';
 
 interface Animation {
   id: AnimationType;
-  nameKey: string;
+  nameKey: 'animKenBurns' | 'animSequentialZoom' | 'animParallax';
   colors: [string, string];
   textColor: string;
   overlayOpacity: number;
@@ -274,6 +275,7 @@ export default function StoryScreen() {
   const params = useLocalSearchParams();
   const { t } = useLanguage();
   const viewShotRef = useRef<ViewShot>(null);
+  const webContainerRef = useRef<HTMLDivElement>(null);
 
   const imageUri = params.imageUri as string || '';
   
@@ -320,20 +322,39 @@ export default function StoryScreen() {
     setIsExporting(true);
     
     try {
-      if (viewShotRef.current?.capture) {
-        const uri = await viewShotRef.current.capture();
-        
-        await saveStory({
-          uri,
-          template: selectedAnimation.id,
-          customText,
-          sourceMemoryId: params.memoryId as string,
+      let uri: string;
+      
+      if (Platform.OS === 'web') {
+        if (!webContainerRef.current) {
+          throw new Error('Web container ref not available');
+        }
+        const canvas = await html2canvas(webContainerRef.current, {
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#000000',
         });
-        
-        alert(t('storySaved'));
+        uri = canvas.toDataURL('image/png');
+      } else {
+        if (!viewShotRef.current || typeof viewShotRef.current.capture !== 'function') {
+          throw new Error('ViewShot ref not available');
+        }
+        uri = await viewShotRef.current.capture();
       }
+      
+      if (!uri) {
+        throw new Error('Capture returned empty URI');
+      }
+      
+      await saveStory({
+        uri,
+        template: selectedAnimation.id,
+        customText,
+        sourceMemoryId: params.memoryId as string,
+      });
+      
+      alert(t('storySaved'));
     } catch (error) {
-      console.error('Export error:', error);
+      console.error('Export error:', error instanceof Error ? error.message : error);
       alert(t('storyExportError'));
     } finally {
       setIsExporting(false);
@@ -391,18 +412,20 @@ export default function StoryScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
-          <StoryPreview
-            imageUri={imageUri}
-            animation={selectedAnimation}
-            customText={customText}
-            isAnimating={isAnimating}
-            onAnimationComplete={handleAnimationComplete}
-            defaultText={t('storyDefaultText')}
-            signatureOverlays={signatureOverlays}
-            textOverlays={textOverlays}
-          />
-        </ViewShot>
+        <View ref={Platform.OS === 'web' ? webContainerRef as any : undefined}>
+          <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
+            <StoryPreview
+              imageUri={imageUri}
+              animation={selectedAnimation}
+              customText={customText}
+              isAnimating={isAnimating}
+              onAnimationComplete={handleAnimationComplete}
+              defaultText={t('storyDefaultText')}
+              signatureOverlays={signatureOverlays}
+              textOverlays={textOverlays}
+            />
+          </ViewShot>
+        </View>
 
         <TouchableOpacity 
           style={styles.previewButton}
