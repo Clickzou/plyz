@@ -282,6 +282,7 @@ export default function ComposeScreen() {
   const [selectedFont, setSelectedFont] = useState(FONT_FAMILIES[0].value);
   const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(null);
   const [showFontPicker, setShowFontPicker] = useState(false);
+  const [showEditFontPicker, setShowEditFontPicker] = useState(false);
   const [textColors, setTextColors] = useState<string[]>([]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -546,6 +547,15 @@ export default function ComposeScreen() {
       setTextColors(newColors);
     }
     setShowColorPicker(false);
+  };
+
+  const changeSelectedTextFont = (fontFamily: string) => {
+    if (selectedTextIndex !== null) {
+      const newOverlays = [...textOverlays];
+      newOverlays[selectedTextIndex] = { ...newOverlays[selectedTextIndex], fontFamily };
+      setTextOverlays(newOverlays);
+    }
+    setShowEditFontPicker(false);
   };
 
   const deleteSelectedElement = () => {
@@ -1021,18 +1031,27 @@ export default function ComposeScreen() {
                 </TouchableOpacity>
               )}
               {selectedTextIndex !== null && (
-                <TouchableOpacity
-                  style={[styles.bottomButton, styles.deleteBottomButton]}
-                  onPress={deleteSelectedText}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.deleteIconContainer}>
-                    <Trash2 size={20} color="#ffffff" strokeWidth={2.5} />
-                    <View style={styles.deleteSubIcon}>
-                      <Type size={12} color="#ffffff" strokeWidth={3} />
+                <>
+                  <TouchableOpacity
+                    style={[styles.bottomButton, styles.deleteBottomButton]}
+                    onPress={deleteSelectedText}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.deleteIconContainer}>
+                      <Trash2 size={20} color="#ffffff" strokeWidth={2.5} />
+                      <View style={styles.deleteSubIcon}>
+                        <Type size={12} color="#ffffff" strokeWidth={3} />
+                      </View>
                     </View>
-                  </View>
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.fontEditButton, showEditFontPicker && styles.fontEditButtonActive]}
+                    onPress={() => setShowEditFontPicker(!showEditFontPicker)}
+                    activeOpacity={0.8}
+                  >
+                    <Type size={24} color="#ffffff" strokeWidth={2} />
+                  </TouchableOpacity>
+                </>
               )}
               <TouchableOpacity
                 style={[styles.paletteButton, showColorPicker && styles.paletteButtonActive]}
@@ -1079,6 +1098,36 @@ export default function ComposeScreen() {
                     <ChevronRight size={20} color="rgba(255, 255, 255, 0.6)" strokeWidth={2} />
                   </View>
                 </View>
+              </View>
+            )}
+
+            {showEditFontPicker && selectedTextIndex !== null && (
+              <View style={[styles.fontPickerOverlay, { bottom: buttonBottom + 80 }]}>
+                <ScrollView 
+                  style={styles.fontPickerScroll}
+                  showsVerticalScrollIndicator={false}
+                  nestedScrollEnabled
+                >
+                  {FONT_FAMILIES.map((font) => {
+                    const currentFont = textOverlays[selectedTextIndex]?.fontFamily;
+                    const isSelected = currentFont === font.value;
+                    return (
+                      <TouchableOpacity
+                        key={font.value}
+                        style={[
+                          styles.fontPickerOption,
+                          isSelected && styles.fontPickerOptionSelected,
+                        ]}
+                        onPress={() => changeSelectedTextFont(font.value)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={[styles.fontPickerText, { fontFamily: font.value }]}>
+                          {font.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
               </View>
             )}
 
@@ -1467,6 +1516,48 @@ const styles = StyleSheet.create({
   },
   paletteButtonActive: {
     backgroundColor: '#a855f7',
+  },
+  fontEditButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#6366f1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  fontEditButtonActive: {
+    backgroundColor: '#4f46e5',
+  },
+  fontPickerOverlay: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    maxHeight: 300,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    borderRadius: 16,
+    padding: 12,
+    zIndex: 100,
+  },
+  fontPickerScroll: {
+    maxHeight: 280,
+  },
+  fontPickerOption: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  fontPickerOptionSelected: {
+    backgroundColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  fontPickerText: {
+    color: '#ffffff',
+    fontSize: 18,
+    textAlign: 'center',
   },
   bottomButton: {
     width: 56,
