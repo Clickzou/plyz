@@ -727,18 +727,17 @@ function StoryPreview({
           ) : (
             <View style={[styles.storyImage, { backgroundColor: '#333' }]} />
           )}
-          {signatureOverlays.length > 0 && signatureOverlays.map((overlay, index) => {
-            if (interactive && index === 0) return null;
-            const isFirstNonInteractive = !interactive && index === 0;
+          {!interactive && signatureOverlays.length > 0 && signatureOverlays.map((overlay, index) => {
+            const isFirst = index === 0;
             return (
               <StorySignature
                 key={overlay.id}
                 overlay={overlay}
-                overrideX={isFirstNonInteractive ? signatureX : undefined}
-                overrideY={isFirstNonInteractive ? signatureY : undefined}
-                overrideScale={isFirstNonInteractive ? signatureScale : undefined}
-                overrideRotation={isFirstNonInteractive ? signatureRotation : undefined}
-                overrideColor={isFirstNonInteractive ? signatureColor : undefined}
+                overrideX={isFirst ? signatureX : undefined}
+                overrideY={isFirst ? signatureY : undefined}
+                overrideScale={isFirst ? signatureScale : undefined}
+                overrideRotation={isFirst ? signatureRotation : undefined}
+                overrideColor={isFirst ? signatureColor : undefined}
               />
             );
           })}
