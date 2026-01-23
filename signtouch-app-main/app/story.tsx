@@ -378,52 +378,25 @@ function StoryPreview({
           ) : (
             <View style={[styles.storyImage, { backgroundColor: '#333' }]} />
           )}
-          {signatureOverlays.length > 0 && signatureOverlays.map((overlay) => (
-            interactive ? (
-              <GestureDetector key={overlay.id} gesture={signatureGesture}>
-                <Animated.View
-                  style={[{
-                    position: 'absolute',
-                    left: '50%',
-                    top: '50%',
-                    width: overlay.width || 100,
-                    height: overlay.height || 50,
-                    marginLeft: -((overlay.width || 100)) / 2,
-                    marginTop: -((overlay.height || 50)) / 2,
-                    zIndex: 10,
-                  }, sigAnimatedStyle]}
-                >
-                  <Image
-                    source={{ uri: overlay.uri }}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      tintColor: signatureColor,
-                    }}
-                    resizeMode="contain"
-                  />
-                </Animated.View>
-              </GestureDetector>
-            ) : (
-              <Image
-                key={overlay.id}
-                source={{ uri: overlay.uri }}
-                style={{
-                  position: 'absolute',
-                  left: `${signatureX * 100}%`,
-                  top: `${signatureY * 100}%`,
-                  width: (overlay.width || 100) * signatureScale,
-                  height: (overlay.height || 50) * signatureScale,
-                  marginLeft: -((overlay.width || 100) * signatureScale) / 2,
-                  marginTop: -((overlay.height || 50) * signatureScale) / 2,
-                  transform: [
-                    { rotate: `${signatureRotation}rad` },
-                  ],
-                  tintColor: signatureColor,
-                }}
-                resizeMode="contain"
-              />
-            )
+          {!interactive && signatureOverlays.length > 0 && signatureOverlays.map((overlay) => (
+            <Image
+              key={overlay.id}
+              source={{ uri: overlay.uri }}
+              style={{
+                position: 'absolute',
+                left: `${signatureX * 100}%`,
+                top: `${signatureY * 100}%`,
+                width: (overlay.width || 100) * signatureScale,
+                height: (overlay.height || 50) * signatureScale,
+                marginLeft: -((overlay.width || 100) * signatureScale) / 2,
+                marginTop: -((overlay.height || 50) * signatureScale) / 2,
+                transform: [
+                  { rotate: `${signatureRotation}rad` },
+                ],
+                tintColor: signatureColor,
+              }}
+              resizeMode="contain"
+            />
           ))}
         </View>
 
@@ -431,11 +404,42 @@ function StoryPreview({
           <Animated.View style={[styles.glowOverlay, glowStyle]} />
         )}
 
-        <View style={[styles.overlay, { opacity: animation.overlayOpacity }]} />
+        <View style={[styles.overlay, { opacity: animation.overlayOpacity }]} pointerEvents="none" />
+
+        {interactive && signatureOverlays.length > 0 && signatureOverlays.map((overlay) => (
+          <GestureDetector key={overlay.id} gesture={signatureGesture}>
+            <Animated.View
+              style={[{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                width: (overlay.width || 100) + 16,
+                height: (overlay.height || 50) + 16,
+                marginLeft: -(((overlay.width || 100) + 16)) / 2,
+                marginTop: -(((overlay.height || 50) + 16)) / 2,
+                zIndex: 20,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }, sigAnimatedStyle]}
+            >
+              <View style={styles.selectionBorder} />
+              <Image
+                source={{ uri: overlay.uri }}
+                style={{
+                  width: overlay.width || 100,
+                  height: overlay.height || 50,
+                  tintColor: signatureColor,
+                }}
+                resizeMode="contain"
+              />
+            </Animated.View>
+          </GestureDetector>
+        ))}
 
         {interactive ? (
           <GestureDetector gesture={textGesture}>
-            <Animated.View style={[styles.textContainer, textStyle, { top: '50%' }, txtAnimatedStyle]}>
+            <Animated.View style={[styles.textContainerInteractive, { zIndex: 15 }, txtAnimatedStyle]}>
+              <View style={styles.selectionBorder} />
               <Text style={[styles.customText, { color: textColor, fontSize: 18 }]}>
                 {customText || defaultText}
               </Text>
@@ -897,6 +901,27 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     paddingHorizontal: 20,
+  },
+  textContainerInteractive: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginLeft: -100,
+    marginTop: 80,
+  },
+  selectionBorder: {
+    position: 'absolute',
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    borderWidth: 2,
+    borderColor: '#10B981',
+    borderRadius: 8,
+    borderStyle: 'dashed',
   },
   customText: {
     fontSize: 24,
