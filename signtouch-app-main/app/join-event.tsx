@@ -15,9 +15,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, QrCode, Search, Check, Download, Camera } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-const { BarCodeScanner } = require('expo-barcode-scanner');
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getEventByCode, LiveEvent } from '@/utils/liveEventStorage';
+import BarCodeScannerWrapper, { requestCameraPermissionAsync, isBarCodeScannerAvailable } from '@/components/BarCodeScannerWrapper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SAVED_SIGNATURES_KEY = '@signtouch_event_signatures';
@@ -80,7 +80,7 @@ export default function JoinEventScreen() {
   };
 
   const requestCameraPermission = async () => {
-    if (Platform.OS === 'web') {
+    if (!isBarCodeScannerAvailable()) {
       Alert.alert(
         t('notAvailable') || 'Not Available',
         t('scannerNotOnWeb') || 'QR scanner is not available on web. Please enter the code manually.'
@@ -88,9 +88,9 @@ export default function JoinEventScreen() {
       return;
     }
     
-    const { status } = await BarCodeScanner.requestPermissionsAsync();
-    setHasPermission(status === 'granted');
-    if (status === 'granted') {
+    const granted = await requestCameraPermissionAsync();
+    setHasPermission(granted);
+    if (granted) {
       setShowScanner(true);
     } else {
       Alert.alert(
@@ -166,7 +166,7 @@ export default function JoinEventScreen() {
   if (showScanner) {
     return (
       <View style={styles.scannerContainer}>
-        <BarCodeScanner
+        <BarCodeScannerWrapper
           onBarCodeScanned={handleBarCodeScanned}
           style={StyleSheet.absoluteFillObject}
         />
