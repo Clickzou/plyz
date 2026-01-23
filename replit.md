@@ -65,6 +65,22 @@ Preferred communication style: Simple, everyday language.
 - **Story Actions**: View fullscreen, share via social modal, delete
 - **i18n**: Translation keys: galleryPhotos, galleryStories, noStories, noStoriesHint
 
+### Live Events System (January 2026)
+- **Star Mode**: Celebrities/stars can create events with their signature
+  - Draw signature directly on screen
+  - Generates 6-character unique event code (e.g., ABC123)
+  - QR code generation for easy sharing
+  - Events expire after 24 hours
+- **Fan Mode**: Fans can join events to get celebrity signatures
+  - Scan QR code (mobile only) or enter manual code
+  - Preview signature before saving
+  - Save to local collection or use immediately
+- **Storage**: Uses `live_events` table in Supabase and `events` bucket for signature SVG files
+- **Screens**: `create-event.tsx` (star), `join-event.tsx` (fan)
+- **Utility**: `liveEventStorage.ts` for event CRUD operations and signature upload
+- **i18n**: Fully internationalized with 35+ new translation keys across all 15 languages
+- **Dependencies**: `react-native-qrcode-svg` for QR generation, `expo-barcode-scanner` for scanning
+
 ## External Dependencies
 
 ### Backend Services
