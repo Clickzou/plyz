@@ -582,15 +582,6 @@ export default function GalleryScreen() {
 
       {selectionMode && selectedMemories.size > 0 && (
         <View style={[styles.bulkActions, { bottom: BOTTOM_NAV_HEIGHT + Math.max(insets.bottom, 15) }]}>
-          <TouchableOpacity
-            style={styles.bulkActionButton}
-            onPress={saveSelectedMemories}
-            activeOpacity={0.8}
-          >
-            <Download size={24} color="#ffffff" strokeWidth={2} />
-            <Text style={styles.bulkActionText}>{t('save')}</Text>
-          </TouchableOpacity>
-
           {selectedMemories.size === 1 && (
             <TouchableOpacity
               style={[styles.bulkActionButton, styles.bulkNotebookButton]}
