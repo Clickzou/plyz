@@ -497,7 +497,7 @@ export default function GalleryScreen() {
             }}
           >
             <Text style={[styles.tabText, activeTab === 'stories' && styles.tabTextActive]}>
-              {t('galleryStories') || 'Stories'} {stories.length > 0 && `(${stories.length})`}
+              {t('galleryStories') || 'Stories'}
             </Text>
           </TouchableOpacity>
         </View>
