@@ -8,6 +8,7 @@ import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { useFonts } from 'expo-font';
 import { ShadowsIntoLight_400Regular } from '@expo-google-fonts/shadows-into-light';
+import { AlexBrush_400Regular } from '@expo-google-fonts/alex-brush';
 import { CoveredByYourGrace_400Regular } from '@expo-google-fonts/covered-by-your-grace';
 import { Caveat_400Regular } from '@expo-google-fonts/caveat';
 import { IndieFlower_400Regular } from '@expo-google-fonts/indie-flower';
@@ -86,6 +87,7 @@ export default function RootLayout() {
 
   const [fontsLoaded, fontError] = useFonts({
     'Shadows Into Light': ShadowsIntoLight_400Regular,
+    'Alex Brush': AlexBrush_400Regular,
     'Covered By Your Grace': CoveredByYourGrace_400Regular,
     'Caveat': Caveat_400Regular,
     'Indie Flower': IndieFlower_400Regular,
