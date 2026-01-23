@@ -189,6 +189,10 @@ function InteractiveSignature({ overlay, color, isSelected, onSelect }: Interact
   const translateY = useSharedValue(0);
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
+  const scale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
+  const rotation = useSharedValue(0);
+  const savedRotation = useSharedValue(0);
   
   const RESULT_IMAGE_WIDTH = 402;
   const RESULT_IMAGE_HEIGHT = 874;
@@ -208,15 +212,41 @@ function InteractiveSignature({ overlay, color, isSelected, onSelect }: Interact
       savedTranslateY.value = translateY.value;
     });
   
+  const pinchGesture = Gesture.Pinch()
+    .onStart(() => {
+      runOnJS(onSelect)();
+    })
+    .onUpdate((e) => {
+      scale.value = savedScale.value * e.scale;
+    })
+    .onEnd(() => {
+      savedScale.value = scale.value;
+    });
+  
+  const rotateGesture = Gesture.Rotation()
+    .onStart(() => {
+      runOnJS(onSelect)();
+    })
+    .onUpdate((e) => {
+      rotation.value = savedRotation.value + e.rotation;
+    })
+    .onEnd(() => {
+      savedRotation.value = rotation.value;
+    });
+  
+  const composedGesture = Gesture.Simultaneous(panGesture, pinchGesture, rotateGesture);
+  
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: translateX.value },
       { translateY: translateY.value },
+      { scale: scale.value },
+      { rotate: `${rotation.value}rad` },
     ],
   }));
   
   return (
-    <GestureDetector gesture={panGesture}>
+    <GestureDetector gesture={composedGesture}>
       <Animated.View
         style={[{
           position: 'absolute',
