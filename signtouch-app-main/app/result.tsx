@@ -838,7 +838,10 @@ export default function ResultScreen() {
     if (!memory) return;
     try {
       await StorageService.updateMemory(memory, user?.id || null, { metadata });
+      // Mettre à jour l'état local pour refléter les changements
+      setMemory(prev => prev ? { ...prev, metadata } : null);
       setShowMetadataModal(false);
+      console.log('✅ Metadata saved:', metadata);
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
