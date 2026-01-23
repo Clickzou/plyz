@@ -234,7 +234,12 @@ function InteractiveSignature({ overlay, color, isSelected, onSelect }: Interact
       savedRotation.value = rotation.value;
     });
   
-  const composedGesture = Gesture.Simultaneous(panGesture, pinchGesture, rotateGesture);
+  const tapGesture = Gesture.Tap()
+    .onEnd(() => {
+      runOnJS(onSelect)();
+    });
+  
+  const composedGesture = Gesture.Simultaneous(tapGesture, panGesture, pinchGesture, rotateGesture);
   
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
