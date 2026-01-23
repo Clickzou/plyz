@@ -12,7 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Camera, X, Pencil, Share2, BookOpen, Filter, Star, User, MapPin, Calendar, Music, Trophy, Palette, Users } from 'lucide-react-native';
+import { Download, Trash2, Camera, X, Pencil, Share2, BookOpen, Filter, Star, User, MapPin, Calendar, Music, Trophy, Palette, Users, CheckCircle2, Circle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -57,6 +57,8 @@ export default function GalleryScreen() {
   const [showMetadataModal, setShowMetadataModal] = useState(false);
   const [pendingSave, setPendingSave] = useState<'single' | 'multiple' | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<EventType | 'all'>('all');
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedMemories, setSelectedMemories] = useState<Set<string>>(new Set());
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { status } = useSubscription();
@@ -146,10 +148,32 @@ export default function GalleryScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
-    router.push({
-      pathname: '/result',
-      params: { memoryId: memory.id },
-    });
+    if (selectionMode) {
+      toggleMemorySelection(memory.id);
+    } else {
+      router.push({
+        pathname: '/result',
+        params: { memoryId: memory.id },
+      });
+    }
+  };
+
+  const toggleSelectionMode = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setSelectionMode(!selectionMode);
+    setSelectedMemories(new Set());
+  };
+
+  const toggleMemorySelection = (memoryId: string) => {
+    const newSelected = new Set(selectedMemories);
+    if (newSelected.has(memoryId)) {
+      newSelected.delete(memoryId);
+    } else {
+      newSelected.add(memoryId);
+    }
+    setSelectedMemories(newSelected);
   };
 
   const closeMemory = () => {
@@ -292,10 +316,25 @@ export default function GalleryScreen() {
   };
 
   const handleMetadataSave = async (metadata: MemoryMetadata) => {
-    if (!selectedMemory) return;
-
     try {
-      await StorageService.updateMemory(selectedMemory, user?.id || null, { metadata });
+      if (selectionMode && selectedMemories.size > 0) {
+        for (const memoryId of selectedMemories) {
+          const memory = memories.find(m => m.id === memoryId);
+          if (memory) {
+            const mergedMetadata: MemoryMetadata = {
+              personMet: metadata.personMet || memory.metadata?.personMet || '',
+              eventLocation: metadata.eventLocation || memory.metadata?.eventLocation || '',
+              eventDate: metadata.eventDate || memory.metadata?.eventDate || new Date().toISOString().split('T')[0],
+              eventType: metadata.eventType || memory.metadata?.eventType || 'autre',
+            };
+            await StorageService.updateMemory(memory, user?.id || null, { metadata: mergedMetadata });
+          }
+        }
+        setSelectionMode(false);
+        setSelectedMemories(new Set());
+      } else if (selectedMemory) {
+        await StorageService.updateMemory(selectedMemory, user?.id || null, { metadata });
+      }
       setShowMetadataModal(false);
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -310,19 +349,98 @@ export default function GalleryScreen() {
     setShowMetadataModal(false);
   };
 
+  const openBulkMetadataModal = () => {
+    if (selectedMemories.size === 0) return;
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setShowMetadataModal(true);
+  };
+
+  const confirmDeleteSelected = () => {
+    if (selectedMemories.size === 0) return;
+
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+
+    const message = t('confirmDeleteMultiple', { count: selectedMemories.size }) || 
+      `Voulez-vous vraiment supprimer ${selectedMemories.size} souvenir(s) ?`;
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(message)) {
+        handleDeleteSelected();
+      }
+    } else {
+      Alert.alert(
+        t('confirmDelete'),
+        message,
+        [
+          {
+            text: t('cancel'),
+            style: 'cancel',
+          },
+          {
+            text: t('delete'),
+            style: 'destructive',
+            onPress: handleDeleteSelected,
+          },
+        ]
+      );
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    try {
+      setIsDeleting(true);
+
+      for (const memoryId of selectedMemories) {
+        await StorageService.deleteMemory(memoryId, user?.id || null);
+      }
+
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+
+      setSelectionMode(false);
+      setSelectedMemories(new Set());
+      await loadMemories();
+      console.log(`✅ ${selectedMemories.size} souvenirs supprimés`);
+    } catch (error) {
+      console.error('❌ Erreur lors de la suppression:', error);
+      Alert.alert(t('error'), t('saveError'));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
         <Text style={styles.title}>{t('myMemories')}</Text>
-        {memories.length > 0 && (
+        {memories.length > 0 && !selectionMode && (
           <Text style={styles.instructionText}>
             {t('galleryInstruction')}
           </Text>
         )}
         {memories.length > 0 && (
-          <Text style={styles.subtitle}>
-            {`${memories.length} ${memories.length > 1 ? t('memories') : t('memory')}`}
-          </Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.subtitle}>
+              {selectionMode && selectedMemories.size > 0
+                ? `${selectedMemories.size} ${selectedMemories.size > 1 ? t('selectedPlural') || 'sélectionnés' : t('selected') || 'sélectionné'}`
+                : `${memories.length} ${memories.length > 1 ? t('memories') : t('memory')}`
+              }
+            </Text>
+            <TouchableOpacity
+              style={styles.selectButton}
+              onPress={toggleSelectionMode}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.selectButtonText}>
+                {selectionMode ? t('cancel') : t('select')}
+              </Text>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
 
@@ -394,18 +512,30 @@ export default function GalleryScreen() {
                 const IconComponent = EVENT_TYPE_ICONS[eventType];
                 const color = EVENT_TYPE_COLORS[eventType];
                 const hasMetadata = memory.metadata?.personMet || memory.metadata?.eventLocation;
+                const isSelected = selectedMemories.has(memory.id);
                 return (
                   <TouchableOpacity
                     key={memory.id}
-                    style={styles.memoryCard}
+                    style={[styles.memoryCard, isSelected && styles.memoryCardSelected]}
                     onPress={() => openMemory(memory)}
                     activeOpacity={0.8}
                   >
-                    <Image
-                      source={{ uri: memory.baseUri || memory.uri }}
-                      style={styles.cardImage}
-                      resizeMode="cover"
-                    />
+                    <View style={styles.cardImageContainer}>
+                      <Image
+                        source={{ uri: memory.baseUri || memory.uri }}
+                        style={styles.cardImage}
+                        resizeMode="cover"
+                      />
+                      {selectionMode && (
+                        <View style={styles.selectionIndicator}>
+                          {isSelected ? (
+                            <CheckCircle2 size={24} color="#10b981" fill="#10b981" strokeWidth={2} />
+                          ) : (
+                            <Circle size={24} color="#ffffff" strokeWidth={2} />
+                          )}
+                        </View>
+                      )}
+                    </View>
                     <View style={styles.cardContent}>
                       {memory.metadata?.personMet ? (
                         <View style={styles.cardRow}>
@@ -539,8 +669,37 @@ export default function GalleryScreen() {
         onClose={() => setShowMetadataModal(false)}
         onSave={handleMetadataSave}
         onSkip={handleMetadataSkip}
-        initialMetadata={selectedMemory?.metadata}
+        initialMetadata={selectionMode ? undefined : selectedMemory?.metadata}
       />
+
+      {selectionMode && selectedMemories.size > 0 && (
+        <View style={[styles.bulkActions, { bottom: BOTTOM_NAV_HEIGHT + Math.max(insets.bottom, 15) }]}>
+          <TouchableOpacity
+            style={[styles.bulkActionButton, styles.bulkInfoButton]}
+            onPress={openBulkMetadataModal}
+            activeOpacity={0.8}
+          >
+            <BookOpen size={24} color="#ffffff" strokeWidth={2} />
+            <Text style={styles.bulkActionText}>{t('addInfo') || 'Ajouter infos'}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.bulkActionButton, styles.bulkDeleteButton]}
+            onPress={confirmDeleteSelected}
+            disabled={isDeleting}
+            activeOpacity={0.8}
+          >
+            {isDeleting ? (
+              <ActivityIndicator color="#ffffff" size="small" />
+            ) : (
+              <>
+                <Trash2 size={24} color="#ffffff" strokeWidth={2} />
+                <Text style={styles.bulkActionText}>{t('delete')}</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
 
       <BottomNav />
     </View>
@@ -745,6 +904,70 @@ const styles = StyleSheet.create({
   eventBadgeText: {
     color: '#ffffff',
     fontSize: 12,
+    fontWeight: '600',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 15,
+    marginTop: 15,
+  },
+  selectButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: '#10b981',
+  },
+  selectButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  memoryCardSelected: {
+    borderWidth: 2,
+    borderColor: '#10b981',
+  },
+  cardImageContainer: {
+    position: 'relative',
+    width: 100,
+  },
+  selectionIndicator: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 12,
+    padding: 2,
+  },
+  bulkActions: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    gap: 15,
+    paddingVertical: 10,
+  },
+  bulkActionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#10b981',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    gap: 8,
+  },
+  bulkDeleteButton: {
+    backgroundColor: '#ef4444',
+  },
+  bulkInfoButton: {
+    backgroundColor: '#8b5cf6',
+  },
+  bulkActionText: {
+    color: '#ffffff',
+    fontSize: 16,
     fontWeight: '600',
   },
 });
