@@ -823,24 +823,20 @@ function StoryPreview({
             />
           ))}
 
-        {customText ? (
-          interactive ? (
-            <GestureDetector gesture={textGesture}>
-              <Animated.View style={[styles.textContainerInteractive, { zIndex: 15 }, txtAnimatedStyle]}>
-                <View style={styles.selectionBorder} />
-                <Text style={[styles.customText, { color: textColor, fontSize: 18 }]}>
-                  {customText}
-                </Text>
-              </Animated.View>
-            </GestureDetector>
-          ) : (
-            <Animated.View style={[styles.textContainer, textStyle, { top: `${textY * 100}%` }]}>
-              <Text style={[styles.customText, { color: textColor, fontSize: 18 * textScale }]}>
-                {customText}
+        {interactive && textOverlays.length > 0 && textOverlays.map((overlay, index) => (
+          <GestureDetector key={overlay.id} gesture={textGesture}>
+            <Animated.View style={[styles.textContainerInteractive, { zIndex: 15 }, txtAnimatedStyle]}>
+              <View style={styles.selectionBorder} />
+              <Text style={[styles.customText, { 
+                color: overlay.color || textColor, 
+                fontSize: overlay.fontSize || 18,
+                fontFamily: overlay.fontFamily,
+              }]}>
+                {overlay.text}
               </Text>
             </Animated.View>
-          )
-        ) : null}
+          </GestureDetector>
+        ))}
 
         <View style={styles.watermark}>
           <Text style={styles.watermarkText}>SignTouch</Text>
