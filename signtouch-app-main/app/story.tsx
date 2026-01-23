@@ -661,12 +661,10 @@ function StoryPreview({
             <Animated.View
               style={[{
                 position: 'absolute',
-                left: '50%',
-                top: '50%',
-                width: (signatureOverlays[0].width || 150) + 16,
-                height: (signatureOverlays[0].height || 80) + 16,
-                marginLeft: -(((signatureOverlays[0].width || 150) + 16)) / 2,
-                marginTop: -(((signatureOverlays[0].height || 80) + 16)) / 2,
+                left: signatureOverlays[0].x,
+                top: signatureOverlays[0].y,
+                width: 150 + 16,
+                height: 80 + 16,
                 zIndex: 20,
                 justifyContent: 'center',
                 alignItems: 'center',
