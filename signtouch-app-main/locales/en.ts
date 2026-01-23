@@ -571,7 +571,7 @@ export default {
 
   // Celebrity Menu
   celebrityMenuTitle: 'Sign Live',
-  celebrityMenuSubtitle: 'Share your signature with fans at in-person events or via video',
+  celebrityMenuSubtitle: 'Share your signature and photos live with fans at in-person events or via video',
   celebrityEventSimple: 'QR Event',
   celebrityEventSimpleDesc: 'Create a QR code that fans can scan anytime to get your signature',
   celebrityLiveSession: 'Live Session',
