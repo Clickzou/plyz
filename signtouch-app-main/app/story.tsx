@@ -235,11 +235,13 @@ function InteractiveSignature({ overlay, color, isSelected, onSelect }: Interact
     });
   
   const tapGesture = Gesture.Tap()
+    .maxDuration(250)
     .onEnd(() => {
       runOnJS(onSelect)();
     });
   
-  const composedGesture = Gesture.Simultaneous(tapGesture, panGesture, pinchGesture, rotateGesture);
+  const transformGestures = Gesture.Simultaneous(panGesture, pinchGesture, rotateGesture);
+  const composedGesture = Gesture.Exclusive(transformGestures, tapGesture);
   
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
