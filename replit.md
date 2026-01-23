@@ -42,6 +42,16 @@ Preferred communication style: Simple, everyday language.
 - **Freemium Tiers**: Free tier with ads, premium tier with full features
 - **Trial System**: 7-day free trial with automatic billing
 
+### Story Mode (January 2026)
+- **Template System**: 9 templates (3 categories × 3 styles)
+  - Categories: Concert, Sport, Meetup
+  - Styles: Minimal, Flashy (with confetti), Vintage (with grain effect)
+- **Animation Preview**: Zoom effect on signature, transitions to full photo, text overlay appears
+- **Export**: Static image export in 9:16 format with SignTouch watermark
+- **Social Sharing**: Share to Instagram, TikTok via native sharing API
+- **Access**: Available from result.tsx via Film icon button
+- **i18n**: Fully internationalized with translation keys (storyTitle, storyCustomText, etc.)
+
 ## External Dependencies
 
 ### Backend Services
