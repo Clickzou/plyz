@@ -26,6 +26,37 @@ import html2canvas from 'html2canvas';
 import * as Sharing from 'expo-sharing';
 import { SignatureOverlay, TextOverlay, getAllMemories } from '@/utils/memoriesStorage';
 import { saveStory, getStories } from '@/utils/storiesStorage';
+import { SvgXml } from 'react-native-svg';
+
+function SignatureImage({ uri, width, height, color }: { uri: string; width: number; height: number; color: string }) {
+  const [svgContent, setSvgContent] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (uri.startsWith('data:image/svg+xml;base64,')) {
+      try {
+        const base64 = uri.replace('data:image/svg+xml;base64,', '');
+        const decoded = atob(base64);
+        const coloredSvg = decoded.replace(/stroke="[^"]*"/g, `stroke="${color}"`);
+        setSvgContent(coloredSvg);
+      } catch (e) {
+        console.log('Error decoding SVG:', e);
+      }
+    }
+  }, [uri, color]);
+  
+  if (svgContent) {
+    return <SvgXml xml={svgContent} width={width} height={height} />;
+  }
+  
+  return (
+    <Image
+      source={{ uri }}
+      tintColor={color}
+      style={{ width, height }}
+      resizeMode="contain"
+    />
+  );
+}
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const STORY_WIDTH = SCREEN_WIDTH * 0.7;
@@ -387,27 +418,32 @@ function StoryPreview({
             const sigY = isFirstNonInteractive ? signatureY : overlay.y;
             const sigScale = isFirstNonInteractive ? signatureScale : overlay.scale;
             const sigColor = isFirstNonInteractive ? signatureColor : overlay.color;
-            console.log(`🎨 Story Signature ${index}: x=${sigX}, y=${sigY}, scale=${sigScale}, color=${sigColor}, width=${overlay.width}, height=${overlay.height}`);
+            const sigWidth = (overlay.width || 150) * sigScale;
+            const sigHeight = (overlay.height || 80) * sigScale;
             return (
-              <Image
+              <View
                 key={overlay.id}
-                source={{ uri: overlay.uri }}
-                tintColor={sigColor}
                 style={{
                   position: 'absolute',
                   left: `${sigX * 100}%`,
                   top: `${sigY * 100}%`,
-                  width: (overlay.width || 150) * sigScale,
-                  height: (overlay.height || 80) * sigScale,
-                  marginLeft: -((overlay.width || 150) * sigScale) / 2,
-                  marginTop: -((overlay.height || 80) * sigScale) / 2,
+                  width: sigWidth,
+                  height: sigHeight,
+                  marginLeft: -sigWidth / 2,
+                  marginTop: -sigHeight / 2,
                   transform: [
                     { rotate: `${isFirstNonInteractive ? signatureRotation : overlay.rotation}rad` },
                   ],
                   zIndex: 5,
                 }}
-                resizeMode="contain"
-              />
+              >
+                <SignatureImage
+                  uri={overlay.uri}
+                  width={sigWidth}
+                  height={sigHeight}
+                  color={sigColor}
+                />
+              </View>
             );
           })}
           {!interactive && textOverlays.length > 0 && textOverlays.map((overlay, index) => (
@@ -457,14 +493,11 @@ function StoryPreview({
               }, sigAnimatedStyle]}
             >
               <View style={styles.selectionBorder} />
-              <Image
-                source={{ uri: signatureOverlays[0].uri }}
-                tintColor={signatureColor}
-                style={{
-                  width: signatureOverlays[0].width || 150,
-                  height: signatureOverlays[0].height || 80,
-                }}
-                resizeMode="contain"
+              <SignatureImage
+                uri={signatureOverlays[0].uri}
+                width={signatureOverlays[0].width || 150}
+                height={signatureOverlays[0].height || 80}
+                color={signatureColor}
               />
             </Animated.View>
           </GestureDetector>
