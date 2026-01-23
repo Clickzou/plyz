@@ -921,6 +921,8 @@ export default function ResultScreen() {
     }
 
     console.log('✨ Opening signature modal');
+    setSelectedElementId(null);
+    setSelectedElementType(null);
     setShowSignatureMode(true);
     setSignaturePaths([]);
     signaturePathsRef.current = [];
