@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, useWindowDimensions, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Camera, Star, Users } from 'lucide-react-native';
+import { Camera } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { 
   useSharedValue, 
@@ -256,25 +256,6 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </Animated.View>
 
-            <View style={styles.liveEventsContainer}>
-              <TouchableOpacity
-                style={styles.starButton}
-                onPress={() => router.push('/create-event')}
-                activeOpacity={0.8}
-              >
-                <Star size={20} color="#ffffff" fill="#ffffff" />
-                <Text style={styles.eventButtonText}>{t('starMode')}</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.fanButton}
-                onPress={() => router.push('/join-event')}
-                activeOpacity={0.8}
-              >
-                <Users size={20} color="#ffffff" />
-                <Text style={styles.eventButtonText}>{t('fanMode')}</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         </View>
       </LinearGradient>
@@ -355,43 +336,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 12,
     elevation: 10,
-  },
-  liveEventsContainer: {
-    flexDirection: 'row',
-    gap: 16,
-    marginTop: 24,
-  },
-  starButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#f59e0b',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 25,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  fanButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#6366f1',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 25,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  eventButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '600',
   },
 });

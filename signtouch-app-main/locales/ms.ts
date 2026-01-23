@@ -5,6 +5,8 @@ export default {
   camera: 'Kamera',
   account: 'Akaun',
   about: 'Tentang',
+  celebrity: 'Selebriti',
+  fan: 'Peminat',
 
   // Home Screen
   homeTitle: 'Cipta Kenangan Anda',

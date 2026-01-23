@@ -5,6 +5,8 @@ export default {
   camera: 'کیمرا',
   account: 'اکاؤنٹ',
   about: 'کے بارے میں',
+  celebrity: 'مشہور شخصیت',
+  fan: 'مداح',
 
   // Home Screen
   homeTitle: 'اپنی یادیں بنائیں',

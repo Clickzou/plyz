@@ -5,6 +5,8 @@ export default {
   camera: 'カメラ',
   account: 'アカウント',
   about: '情報',
+  celebrity: 'セレブ',
+  fan: 'ファン',
 
   // Home Screen
   homeTitle: '思い出を作成',

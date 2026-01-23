@@ -4,6 +4,8 @@ export default {
   camera: 'Kamera',
   account: 'Konto',
   about: 'Über',
+  celebrity: 'Promi',
+  fan: 'Fan',
   homeTitle: 'Erstelle deine Erinnerungen',
   homeSubtitle: 'Erfasse, personalisiere und teile deine wertvollen Momente',
   takePicture: 'Foto aufnehmen',

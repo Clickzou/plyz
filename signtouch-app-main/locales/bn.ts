@@ -5,6 +5,8 @@ export default {
   camera: 'ক্যামেরা',
   account: 'অ্যাকাউন্ট',
   about: 'সম্পর্কে',
+  celebrity: 'সেলিব্রিটি',
+  fan: 'ভক্ত',
 
   // Home Screen
   homeTitle: 'আপনার স্মৃতি তৈরি করুন',

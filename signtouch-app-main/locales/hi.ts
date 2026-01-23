@@ -5,6 +5,8 @@ export default {
   camera: 'कैमरा',
   account: 'खाता',
   about: 'के बारे में',
+  celebrity: 'सेलेब्रिटी',
+  fan: 'प्रशंसक',
 
   // Home Screen
   homeTitle: 'अपनी यादें बनाएं',

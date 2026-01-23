@@ -1,8 +1,9 @@
-import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Platform, Text } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
-import { Home, Images, User } from 'lucide-react-native';
+import { Home, Images, User, Star, Users } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const BOTTOM_NAV_HEIGHT = 70;
 
@@ -14,8 +15,9 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
 
-  const handleNavigation = (path: string) => {
+  const handleNavigation = (path: '/' | '/gallery' | '/account' | '/create-event' | '/join-event') => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -36,10 +38,29 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
         activeOpacity={0.7}
       >
         <Home
-          size={28}
+          size={24}
           color={isActive('/') ? '#10b981' : '#ffffff'}
           strokeWidth={2}
         />
+        <Text style={[styles.navLabel, isActive('/') && styles.navLabelActive]}>
+          {t('home')}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.navButton}
+        onPress={() => handleNavigation('/create-event')}
+        activeOpacity={0.7}
+      >
+        <Star
+          size={24}
+          color={isActive('/create-event') ? '#f59e0b' : '#ffffff'}
+          fill={isActive('/create-event') ? '#f59e0b' : 'transparent'}
+          strokeWidth={2}
+        />
+        <Text style={[styles.navLabel, isActive('/create-event') && styles.navLabelStar]}>
+          {t('celebrity')}
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -48,10 +69,28 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
         activeOpacity={0.7}
       >
         <Images
-          size={28}
+          size={24}
           color={isActive('/gallery') ? '#10b981' : '#ffffff'}
           strokeWidth={2}
         />
+        <Text style={[styles.navLabel, isActive('/gallery') && styles.navLabelActive]}>
+          {t('gallery')}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.navButton}
+        onPress={() => handleNavigation('/join-event')}
+        activeOpacity={0.7}
+      >
+        <Users
+          size={24}
+          color={isActive('/join-event') ? '#6366f1' : '#ffffff'}
+          strokeWidth={2}
+        />
+        <Text style={[styles.navLabel, isActive('/join-event') && styles.navLabelFan]}>
+          {t('fan')}
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -60,10 +99,13 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
         activeOpacity={0.7}
       >
         <User
-          size={28}
+          size={24}
           color={isActive('/account') ? '#10b981' : '#ffffff'}
           strokeWidth={2}
         />
+        <Text style={[styles.navLabel, isActive('/account') && styles.navLabelActive]}>
+          {t('account')}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -75,7 +117,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.95)',
-    paddingTop: 15,
+    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
@@ -84,6 +126,24 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255, 255, 255, 0.05)',
   },
   navButton: {
-    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  navLabel: {
+    color: '#ffffff',
+    fontSize: 10,
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  navLabelActive: {
+    color: '#10b981',
+  },
+  navLabelStar: {
+    color: '#f59e0b',
+  },
+  navLabelFan: {
+    color: '#6366f1',
   },
 });

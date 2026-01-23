@@ -5,6 +5,8 @@ export default {
   camera: '相机',
   account: '账户',
   about: '关于',
+  celebrity: '明星',
+  fan: '粉丝',
 
   // Home Screen
   homeTitle: '创建您的回忆',

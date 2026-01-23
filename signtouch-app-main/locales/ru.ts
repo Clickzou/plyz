@@ -5,6 +5,8 @@ export default {
   camera: 'Камера',
   account: 'Аккаунт',
   about: 'О приложении',
+  celebrity: 'Звезда',
+  fan: 'Фанат',
 
   // Home Screen
   homeTitle: 'Создавайте свои воспоминания',

@@ -5,6 +5,8 @@ export default {
   camera: 'الكاميرا',
   account: 'الحساب',
   about: 'حول',
+  celebrity: 'مشهور',
+  fan: 'معجب',
 
   // Home Screen
   homeTitle: 'إنشاء ذكرياتك',

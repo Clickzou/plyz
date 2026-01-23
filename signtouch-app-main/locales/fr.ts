@@ -5,6 +5,8 @@ export default {
   camera: 'Appareil photo',
   account: 'Compte',
   about: 'À propos',
+  celebrity: 'Célébrité',
+  fan: 'Fan',
 
   // Home Screen
   homeTitle: 'Créez vos souvenirs',
