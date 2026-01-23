@@ -273,6 +273,93 @@ function InteractiveSignature({ overlay, color, isSelected, onSelect }: Interact
   );
 }
 
+interface InteractiveTextProps {
+  overlay: TextOverlay;
+  isSelected: boolean;
+  onSelect: () => void;
+}
+
+function InteractiveText({ overlay, isSelected, onSelect }: InteractiveTextProps) {
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const savedTranslateX = useSharedValue(0);
+  const savedTranslateY = useSharedValue(0);
+  const scale = useSharedValue(overlay.scale || 1);
+  const savedScale = useSharedValue(overlay.scale || 1);
+  
+  const RESULT_IMAGE_WIDTH = 402;
+  const RESULT_IMAGE_HEIGHT = 874;
+  const scaledX = (overlay.x / RESULT_IMAGE_WIDTH) * STORY_WIDTH;
+  const scaledY = (overlay.y / RESULT_IMAGE_HEIGHT) * STORY_HEIGHT;
+  
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      runOnJS(onSelect)();
+    })
+    .onUpdate((e) => {
+      translateX.value = savedTranslateX.value + e.translationX;
+      translateY.value = savedTranslateY.value + e.translationY;
+    })
+    .onEnd(() => {
+      savedTranslateX.value = translateX.value;
+      savedTranslateY.value = translateY.value;
+    });
+  
+  const pinchGesture = Gesture.Pinch()
+    .onStart(() => {
+      runOnJS(onSelect)();
+    })
+    .onUpdate((e) => {
+      scale.value = savedScale.value * e.scale;
+    })
+    .onEnd(() => {
+      savedScale.value = scale.value;
+    });
+  
+  const tapGesture = Gesture.Tap()
+    .maxDuration(250)
+    .onEnd(() => {
+      runOnJS(onSelect)();
+    });
+  
+  const transformGestures = Gesture.Simultaneous(panGesture, pinchGesture);
+  const composedGesture = Gesture.Exclusive(transformGestures, tapGesture);
+  
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
+  }));
+  
+  return (
+    <GestureDetector gesture={composedGesture}>
+      <Animated.View
+        style={[{
+          position: 'absolute',
+          left: scaledX,
+          top: scaledY,
+          zIndex: isSelected ? 100 : 15,
+          padding: 4,
+          borderWidth: isSelected ? 2 : 0,
+          borderColor: '#10B981',
+          borderRadius: 8,
+          borderStyle: 'dashed',
+        }, animatedStyle]}
+      >
+        <Text style={{
+          color: overlay.color || '#ffffff',
+          fontSize: overlay.fontSize || 18,
+          fontFamily: overlay.fontFamily,
+        }}>
+          {overlay.text}
+        </Text>
+      </Animated.View>
+    </GestureDetector>
+  );
+}
+
 function SignatureSvgContent({ overlay, color }: { overlay: SignatureOverlay; color: string }) {
   const isJsonData = overlay.uri.startsWith('data:application/json;base64,');
   const isSvgData = overlay.uri.startsWith('data:image/svg+xml');
@@ -824,18 +911,12 @@ function StoryPreview({
           ))}
 
         {interactive && textOverlays.length > 0 && textOverlays.map((overlay, index) => (
-          <GestureDetector key={overlay.id} gesture={textGesture}>
-            <Animated.View style={[styles.textContainerInteractive, { zIndex: 15 }, txtAnimatedStyle]}>
-              <View style={styles.selectionBorder} />
-              <Text style={[styles.customText, { 
-                color: overlay.color || textColor, 
-                fontSize: overlay.fontSize || 18,
-                fontFamily: overlay.fontFamily,
-              }]}>
-                {overlay.text}
-              </Text>
-            </Animated.View>
-          </GestureDetector>
+          <InteractiveText
+            key={overlay.id}
+            overlay={overlay}
+            isSelected={false}
+            onSelect={() => {}}
+          />
         ))}
 
         <View style={styles.watermark}>
