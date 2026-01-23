@@ -7,13 +7,72 @@ import * as Haptics from 'expo-haptics';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
+  useAnimatedProps,
   withTiming, 
   withRepeat, 
   withSequence,
   withDelay,
   Easing,
 } from 'react-native-reanimated';
+import Svg, { Path } from 'react-native-svg';
 import BottomNav from '@/components/BottomNav';
+
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+
+function DrawingSignature({ delay }: { delay: number }) {
+  const progress = useSharedValue(0);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    opacity.value = withDelay(delay, withTiming(1, { duration: 500 }));
+    progress.value = withDelay(
+      delay,
+      withTiming(1, { duration: 3000, easing: Easing.out(Easing.ease) })
+    );
+  }, []);
+
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: 800 * (1 - progress.value),
+  }));
+
+  const containerStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View style={[styles.signatureContainer, containerStyle]}>
+      <Svg width={280} height={100} viewBox="0 0 280 100">
+        <AnimatedPath
+          d="M 20 60 
+             Q 35 30, 50 50 
+             T 80 45 
+             Q 95 40, 110 55 
+             T 140 50 
+             Q 160 45, 180 60 
+             T 210 55 
+             Q 230 50, 250 65
+             M 250 65 Q 260 50, 265 60"
+          stroke="rgba(255, 255, 255, 0.6)"
+          strokeWidth={3}
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray={800}
+          animatedProps={animatedProps}
+        />
+        <AnimatedPath
+          d="M 60 75 Q 80 85, 100 75"
+          stroke="rgba(255, 255, 255, 0.5)"
+          strokeWidth={2}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={800}
+          animatedProps={animatedProps}
+        />
+      </Svg>
+    </Animated.View>
+  );
+}
 
 function AnimatedBubble({ size, top, left, delay, duration }: { 
   size: number; 
@@ -205,6 +264,8 @@ export default function HomeScreen() {
             </Animated.Text>
           </View>
 
+          <DrawingSignature delay={1800} />
+
           <View style={styles.buttonContainer}>
             <Animated.View style={buttonStyle}>
               <TouchableOpacity
@@ -263,6 +324,11 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.35)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 6,
+  },
+  signatureContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 20,
   },
   buttonContainer: {
     alignItems: 'center',
