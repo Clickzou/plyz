@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform, Dimensions, ActivityIndicator, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform, useWindowDimensions, ActivityIndicator, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
   GestureDetector,
@@ -19,7 +19,6 @@ import { useTranslation } from '@/contexts/LanguageContext';
 
 SplashScreen.preventAutoHideAsync();
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface DrawingPath {
   path: string;
@@ -32,6 +31,8 @@ export default function SignatureScreen() {
     returnTo?: string;
     memoryId?: string;
   }>();
+
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
   const [paths, setPaths] = useState<DrawingPath[]>([]);
   const [currentPath, setCurrentPath] = useState<string>('');
@@ -463,7 +464,7 @@ export default function SignatureScreen() {
           >
               <GestureDetector gesture={panDraw}>
                 <View style={styles.drawingArea}>
-                  <Svg width={SCREEN_WIDTH} height={SCREEN_HEIGHT}>
+                  <Svg width={screenWidth} height={screenHeight}>
                     {paths.map((item, index) => (
                       <Path
                         key={index}
