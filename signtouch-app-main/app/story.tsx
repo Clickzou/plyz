@@ -177,6 +177,67 @@ function StorySignature({ overlay, overrideX, overrideY, overrideScale, override
   );
 }
 
+interface InteractiveSignatureProps {
+  overlay: SignatureOverlay;
+  color: string;
+  isSelected: boolean;
+  onSelect: () => void;
+}
+
+function InteractiveSignature({ overlay, color, isSelected, onSelect }: InteractiveSignatureProps) {
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const savedTranslateX = useSharedValue(0);
+  const savedTranslateY = useSharedValue(0);
+  
+  const RESULT_IMAGE_WIDTH = 402;
+  const RESULT_IMAGE_HEIGHT = 874;
+  const scaledX = (overlay.x / RESULT_IMAGE_WIDTH) * STORY_WIDTH;
+  const scaledY = (overlay.y / RESULT_IMAGE_HEIGHT) * STORY_HEIGHT;
+  
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      runOnJS(onSelect)();
+    })
+    .onUpdate((e) => {
+      translateX.value = savedTranslateX.value + e.translationX;
+      translateY.value = savedTranslateY.value + e.translationY;
+    })
+    .onEnd(() => {
+      savedTranslateX.value = translateX.value;
+      savedTranslateY.value = translateY.value;
+    });
+  
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+    ],
+  }));
+  
+  return (
+    <GestureDetector gesture={panGesture}>
+      <Animated.View
+        style={[{
+          position: 'absolute',
+          left: scaledX,
+          top: scaledY,
+          zIndex: isSelected ? 100 : 50,
+          padding: 8,
+          borderWidth: isSelected ? 2 : 0,
+          borderColor: '#10B981',
+          borderRadius: 8,
+          borderStyle: 'dashed',
+          minWidth: 80,
+          minHeight: 80,
+        }, animatedStyle]}
+      >
+        <SignatureSvgContent overlay={overlay} color={color} />
+      </Animated.View>
+    </GestureDetector>
+  );
+}
+
 function SignatureSvgContent({ overlay, color }: { overlay: SignatureOverlay; color: string }) {
   const isJsonData = overlay.uri.startsWith('data:application/json;base64,');
   const isSvgData = overlay.uri.startsWith('data:image/svg+xml');
@@ -374,6 +435,8 @@ function StoryPreview({
   onSignatureChange,
   onTextChange,
   interactive = false,
+  selectedSignatureIndex = 0,
+  setSelectedSignatureIndex,
 }: { 
   imageUri: string; 
   animation: Animation; 
@@ -394,6 +457,8 @@ function StoryPreview({
   onSignatureChange?: (scale: number, rotation: number, x: number, y: number) => void;
   onTextChange?: (scale: number, y: number) => void;
   interactive?: boolean;
+  selectedSignatureIndex?: number;
+  setSelectedSignatureIndex?: (index: number) => void;
 }) {
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -707,37 +772,15 @@ function StoryPreview({
 
         <View style={[styles.overlay, { opacity: animation.overlayOpacity }]} pointerEvents="none" />
 
-        {interactive && signatureOverlays.length > 0 && signatureOverlays[0] && (() => {
-          const RESULT_IMAGE_WIDTH = 402;
-          const RESULT_IMAGE_HEIGHT = 874;
-          const scaledX = (signatureOverlays[0].x / RESULT_IMAGE_WIDTH) * STORY_WIDTH;
-          const scaledY = (signatureOverlays[0].y / RESULT_IMAGE_HEIGHT) * STORY_HEIGHT;
-          console.log('🔶 Interactive signature 0 position:', { x: signatureOverlays[0].x, y: signatureOverlays[0].y, scaledX, scaledY, color: signatureOverlays[0].color });
-          return (
-            <GestureDetector key={signatureOverlays[0].id} gesture={signatureGesture}>
-              <Animated.View
-                style={[{
-                  position: 'absolute',
-                  left: scaledX,
-                  top: scaledY,
-                  zIndex: 100,
-                  padding: 8,
-                  borderWidth: 2,
-                  borderColor: '#10B981',
-                  borderRadius: 8,
-                  borderStyle: 'dashed',
-                  minWidth: 80,
-                  minHeight: 80,
-                }, sigAnimatedStyle]}
-              >
-                <SignatureSvgContent
-                  overlay={signatureOverlays[0]}
-                  color={signatureColor}
-                />
-              </Animated.View>
-            </GestureDetector>
-          );
-        })()}
+        {interactive && signatureOverlays.map((overlay, index) => (
+          <InteractiveSignature
+            key={overlay.id}
+            overlay={overlay}
+            color={index === selectedSignatureIndex ? signatureColor : overlay.color}
+            isSelected={index === selectedSignatureIndex}
+            onSelect={() => setSelectedSignatureIndex && setSelectedSignatureIndex(index)}
+          />
+        ))}
 
         {interactive ? (
           <GestureDetector gesture={textGesture}>
@@ -793,6 +836,8 @@ export default function StoryScreen() {
   const [textScale, setTextScale] = useState(1);
   const [textColor, setTextColor] = useState('#ffffff');
   const [textY, setTextY] = useState(0.75);
+  
+  const [selectedSignatureIndex, setSelectedSignatureIndex] = useState(0);
   
   const COLORS = ['#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#10B981'];
 
@@ -1019,6 +1064,8 @@ export default function StoryScreen() {
                 setTextScale(s);
                 setTextY(y);
               }}
+              selectedSignatureIndex={selectedSignatureIndex}
+              setSelectedSignatureIndex={setSelectedSignatureIndex}
             />
           </ViewShot>
         </View>
