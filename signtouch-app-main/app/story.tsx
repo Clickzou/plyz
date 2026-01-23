@@ -29,7 +29,7 @@ import { saveStory, getStories } from '@/utils/storiesStorage';
 import { SvgXml } from 'react-native-svg';
 
 function SignatureImage({ uri, width, height, color }: { uri: string; width: number; height: number; color: string }) {
-  const [svgContent, setSvgContent] = useState<string | null>(null);
+  const [coloredUri, setColoredUri] = useState<string | null>(null);
   
   useEffect(() => {
     if (uri && uri.startsWith('data:image/svg+xml;base64,')) {
@@ -37,34 +37,38 @@ function SignatureImage({ uri, width, height, color }: { uri: string; width: num
         const base64 = uri.replace('data:image/svg+xml;base64,', '');
         const decoded = atob(base64);
         const coloredSvg = decoded.replace(/stroke="[^"]*"/g, `stroke="${color}"`);
-        setSvgContent(coloredSvg);
+        const newBase64 = btoa(coloredSvg);
+        setColoredUri(`data:image/svg+xml;base64,${newBase64}`);
       } catch (e) {
-        console.log('❌ Error decoding SVG:', e);
+        console.log('❌ Error processing SVG:', e);
+        setColoredUri(uri);
       }
+    } else {
+      setColoredUri(uri);
     }
   }, [uri, color]);
   
-  if (Platform.OS === 'web' && svgContent) {
+  if (!coloredUri) {
+    return null;
+  }
+  
+  if (Platform.OS === 'web') {
     return (
-      <div
-        style={{ width, height }}
-        dangerouslySetInnerHTML={{ __html: svgContent }}
+      <img
+        src={coloredUri}
+        style={{ 
+          width, 
+          height,
+          objectFit: 'contain',
+        }}
+        alt="signature"
       />
     );
   }
   
-  if (svgContent) {
-    return <SvgXml xml={svgContent} width={width} height={height} />;
-  }
-  
-  if (!uri) {
-    return null;
-  }
-  
   return (
     <Image
-      source={{ uri }}
-      tintColor={color}
+      source={{ uri: coloredUri }}
       style={{ width, height }}
       resizeMode="contain"
     />
