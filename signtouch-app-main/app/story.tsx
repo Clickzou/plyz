@@ -13,7 +13,13 @@ import Animated, {
   withDelay,
   withRepeat,
   Easing,
+  runOnJS,
 } from 'react-native-reanimated';
+import {
+  GestureDetector,
+  Gesture,
+  GestureHandlerRootView,
+} from 'react-native-gesture-handler';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ViewShot from 'react-native-view-shot';
 import * as MediaLibrary from 'expo-media-library';
@@ -79,6 +85,9 @@ function StoryPreview({
   textScale = 1,
   textColor = '#ffffff',
   textY = 0.75,
+  onSignatureChange,
+  onTextChange,
+  interactive = false,
 }: { 
   imageUri: string; 
   animation: Animation; 
@@ -95,6 +104,9 @@ function StoryPreview({
   textScale?: number;
   textColor?: string;
   textY?: number;
+  onSignatureChange?: (scale: number, rotation: number, x: number, y: number) => void;
+  onTextChange?: (scale: number, y: number) => void;
+  interactive?: boolean;
 }) {
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -104,6 +116,129 @@ function StoryPreview({
   const bgScale = useSharedValue(1);
   const bgTranslateX = useSharedValue(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const sigTranslateX = useSharedValue((signatureX - 0.5) * STORY_WIDTH);
+  const sigTranslateY = useSharedValue((signatureY - 0.5) * STORY_HEIGHT);
+  const sigScale = useSharedValue(signatureScale);
+  const sigRotation = useSharedValue(signatureRotation);
+  const savedSigTranslateX = useSharedValue((signatureX - 0.5) * STORY_WIDTH);
+  const savedSigTranslateY = useSharedValue((signatureY - 0.5) * STORY_HEIGHT);
+  const savedSigScale = useSharedValue(signatureScale);
+  const savedSigRotation = useSharedValue(signatureRotation);
+
+  const txtTranslateY = useSharedValue((textY - 0.5) * STORY_HEIGHT);
+  const txtScale = useSharedValue(textScale);
+  const savedTxtTranslateY = useSharedValue((textY - 0.5) * STORY_HEIGHT);
+  const savedTxtScale = useSharedValue(textScale);
+
+  useEffect(() => {
+    sigTranslateX.value = (signatureX - 0.5) * STORY_WIDTH;
+    sigTranslateY.value = (signatureY - 0.5) * STORY_HEIGHT;
+    sigScale.value = signatureScale;
+    sigRotation.value = signatureRotation;
+    savedSigTranslateX.value = (signatureX - 0.5) * STORY_WIDTH;
+    savedSigTranslateY.value = (signatureY - 0.5) * STORY_HEIGHT;
+    savedSigScale.value = signatureScale;
+    savedSigRotation.value = signatureRotation;
+  }, [signatureX, signatureY, signatureScale, signatureRotation]);
+
+  useEffect(() => {
+    txtTranslateY.value = (textY - 0.5) * STORY_HEIGHT;
+    txtScale.value = textScale;
+    savedTxtTranslateY.value = (textY - 0.5) * STORY_HEIGHT;
+    savedTxtScale.value = textScale;
+  }, [textY, textScale]);
+
+  const updateSignature = (s: number, r: number, x: number, y: number) => {
+    if (onSignatureChange) onSignatureChange(s, r, x, y);
+  };
+
+  const updateText = (s: number, y: number) => {
+    if (onTextChange) onTextChange(s, y);
+  };
+
+  const signatureGesture = useMemo(() => {
+    if (!interactive) return Gesture.Tap();
+    
+    const pinch = Gesture.Pinch()
+      .onUpdate((e) => {
+        sigScale.value = Math.max(0.3, Math.min(4, savedSigScale.value * e.scale));
+      })
+      .onEnd(() => {
+        savedSigScale.value = sigScale.value;
+        const newX = 0.5 + sigTranslateX.value / STORY_WIDTH;
+        const newY = 0.5 + sigTranslateY.value / STORY_HEIGHT;
+        runOnJS(updateSignature)(sigScale.value, sigRotation.value, newX, newY);
+      });
+
+    const rotate = Gesture.Rotation()
+      .onUpdate((e) => {
+        sigRotation.value = savedSigRotation.value + e.rotation;
+      })
+      .onEnd(() => {
+        savedSigRotation.value = sigRotation.value;
+        const newX = 0.5 + sigTranslateX.value / STORY_WIDTH;
+        const newY = 0.5 + sigTranslateY.value / STORY_HEIGHT;
+        runOnJS(updateSignature)(sigScale.value, sigRotation.value, newX, newY);
+      });
+
+    const pan = Gesture.Pan()
+      .onUpdate((e) => {
+        sigTranslateX.value = savedSigTranslateX.value + e.translationX;
+        sigTranslateY.value = savedSigTranslateY.value + e.translationY;
+      })
+      .onEnd(() => {
+        savedSigTranslateX.value = sigTranslateX.value;
+        savedSigTranslateY.value = sigTranslateY.value;
+        const newX = 0.5 + sigTranslateX.value / STORY_WIDTH;
+        const newY = 0.5 + sigTranslateY.value / STORY_HEIGHT;
+        runOnJS(updateSignature)(sigScale.value, sigRotation.value, newX, newY);
+      });
+
+    return Gesture.Simultaneous(pinch, rotate, pan);
+  }, [interactive]);
+
+  const textGesture = useMemo(() => {
+    if (!interactive) return Gesture.Tap();
+    
+    const pinch = Gesture.Pinch()
+      .onUpdate((e) => {
+        txtScale.value = Math.max(0.5, Math.min(3, savedTxtScale.value * e.scale));
+      })
+      .onEnd(() => {
+        savedTxtScale.value = txtScale.value;
+        const newY = 0.5 + txtTranslateY.value / STORY_HEIGHT;
+        runOnJS(updateText)(txtScale.value, newY);
+      });
+
+    const pan = Gesture.Pan()
+      .onUpdate((e) => {
+        txtTranslateY.value = savedTxtTranslateY.value + e.translationY;
+      })
+      .onEnd(() => {
+        savedTxtTranslateY.value = txtTranslateY.value;
+        const newY = 0.5 + txtTranslateY.value / STORY_HEIGHT;
+        runOnJS(updateText)(txtScale.value, newY);
+      });
+
+    return Gesture.Simultaneous(pinch, pan);
+  }, [interactive]);
+
+  const sigAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: sigTranslateX.value },
+      { translateY: sigTranslateY.value },
+      { scale: sigScale.value },
+      { rotate: `${sigRotation.value}rad` },
+    ],
+  }));
+
+  const txtAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: txtTranslateY.value },
+      { scale: txtScale.value },
+    ],
+  }));
 
   useEffect(() => {
     if (isAnimating) {
@@ -229,24 +364,43 @@ function StoryPreview({
             <View style={[styles.storyImage, { backgroundColor: '#333' }]} />
           )}
           {signatureOverlays.length > 0 && signatureOverlays.map((overlay) => (
-            <Image
-              key={overlay.id}
-              source={{ uri: overlay.uri }}
-              style={{
-                position: 'absolute',
-                left: `${signatureX * 100}%`,
-                top: `${signatureY * 100}%`,
-                width: (overlay.width || 100) * signatureScale,
-                height: (overlay.height || 50) * signatureScale,
-                marginLeft: -((overlay.width || 100) * signatureScale) / 2,
-                marginTop: -((overlay.height || 50) * signatureScale) / 2,
-                transform: [
-                  { rotate: `${signatureRotation}rad` },
-                ],
-                tintColor: signatureColor,
-              }}
-              resizeMode="contain"
-            />
+            interactive ? (
+              <GestureDetector key={overlay.id} gesture={signatureGesture}>
+                <Animated.Image
+                  source={{ uri: overlay.uri }}
+                  style={[{
+                    position: 'absolute',
+                    left: '50%',
+                    top: '50%',
+                    width: overlay.width || 100,
+                    height: overlay.height || 50,
+                    marginLeft: -((overlay.width || 100)) / 2,
+                    marginTop: -((overlay.height || 50)) / 2,
+                    tintColor: signatureColor,
+                  }, sigAnimatedStyle]}
+                  resizeMode="contain"
+                />
+              </GestureDetector>
+            ) : (
+              <Image
+                key={overlay.id}
+                source={{ uri: overlay.uri }}
+                style={{
+                  position: 'absolute',
+                  left: `${signatureX * 100}%`,
+                  top: `${signatureY * 100}%`,
+                  width: (overlay.width || 100) * signatureScale,
+                  height: (overlay.height || 50) * signatureScale,
+                  marginLeft: -((overlay.width || 100) * signatureScale) / 2,
+                  marginTop: -((overlay.height || 50) * signatureScale) / 2,
+                  transform: [
+                    { rotate: `${signatureRotation}rad` },
+                  ],
+                  tintColor: signatureColor,
+                }}
+                resizeMode="contain"
+              />
+            )
           ))}
         </View>
 
@@ -256,11 +410,21 @@ function StoryPreview({
 
         <View style={[styles.overlay, { opacity: animation.overlayOpacity }]} />
 
-        <Animated.View style={[styles.textContainer, textStyle, { top: `${textY * 100}%` }]}>
-          <Text style={[styles.customText, { color: textColor, fontSize: 18 * textScale }]}>
-            {customText || defaultText}
-          </Text>
-        </Animated.View>
+        {interactive ? (
+          <GestureDetector gesture={textGesture}>
+            <Animated.View style={[styles.textContainer, textStyle, { top: '50%' }, txtAnimatedStyle]}>
+              <Text style={[styles.customText, { color: textColor, fontSize: 18 }]}>
+                {customText || defaultText}
+              </Text>
+            </Animated.View>
+          </GestureDetector>
+        ) : (
+          <Animated.View style={[styles.textContainer, textStyle, { top: `${textY * 100}%` }]}>
+            <Text style={[styles.customText, { color: textColor, fontSize: 18 * textScale }]}>
+              {customText || defaultText}
+            </Text>
+          </Animated.View>
+        )}
 
         <View style={styles.watermark}>
           <Text style={styles.watermarkText}>SignTouch</Text>
@@ -457,23 +621,36 @@ export default function StoryScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View ref={Platform.OS === 'web' ? webContainerRef as any : undefined}>
           <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
-            <StoryPreview
-              imageUri={imageUri}
-              animation={selectedAnimation}
-              customText={customText}
-              isAnimating={isAnimating}
-              onAnimationComplete={handleAnimationComplete}
-              defaultText={t('storyDefaultText')}
-              signatureOverlays={signatureOverlays}
-              signatureScale={signatureScale}
-              signatureRotation={signatureRotation}
-              signatureX={signatureX}
-              signatureY={signatureY}
-              signatureColor={signatureColor}
-              textScale={textScale}
-              textColor={textColor}
-              textY={textY}
-            />
+            <GestureHandlerRootView>
+              <StoryPreview
+                imageUri={imageUri}
+                animation={selectedAnimation}
+                customText={customText}
+                isAnimating={isAnimating}
+                onAnimationComplete={handleAnimationComplete}
+                defaultText={t('storyDefaultText')}
+                signatureOverlays={signatureOverlays}
+                signatureScale={signatureScale}
+                signatureRotation={signatureRotation}
+                signatureX={signatureX}
+                signatureY={signatureY}
+                signatureColor={signatureColor}
+                textScale={textScale}
+                textColor={textColor}
+                textY={textY}
+                interactive={!isAnimating}
+                onSignatureChange={(s, r, x, y) => {
+                  setSignatureScale(s);
+                  setSignatureRotation(r);
+                  setSignatureX(x);
+                  setSignatureY(y);
+                }}
+                onTextChange={(s, y) => {
+                  setTextScale(s);
+                  setTextY(y);
+                }}
+              />
+            </GestureHandlerRootView>
           </ViewShot>
         </View>
 
@@ -498,27 +675,7 @@ export default function StoryScreen() {
             placeholderTextColor="#999"
           />
           
-          <Text style={styles.sliderLabel}>Taille du texte</Text>
-          <Slider
-            style={styles.slider}
-            minimumValue={0.5}
-            maximumValue={2}
-            value={textScale}
-            onValueChange={setTextScale}
-            minimumTrackTintColor="#10B981"
-            maximumTrackTintColor="#ccc"
-          />
-          
-          <Text style={styles.sliderLabel}>Position du texte</Text>
-          <Slider
-            style={styles.slider}
-            minimumValue={0.1}
-            maximumValue={0.9}
-            value={textY}
-            onValueChange={setTextY}
-            minimumTrackTintColor="#10B981"
-            maximumTrackTintColor="#ccc"
-          />
+          <Text style={styles.hintText}>Glissez le texte pour le déplacer. Pincez pour redimensionner.</Text>
           
           <Text style={styles.sliderLabel}>Couleur du texte</Text>
           <View style={styles.colorPicker}>
@@ -540,49 +697,7 @@ export default function StoryScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Signature</Text>
             
-            <Text style={styles.sliderLabel}>Taille</Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={0.3}
-              maximumValue={3}
-              value={signatureScale}
-              onValueChange={setSignatureScale}
-              minimumTrackTintColor="#10B981"
-              maximumTrackTintColor="#ccc"
-            />
-            
-            <Text style={styles.sliderLabel}>Rotation</Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={-Math.PI}
-              maximumValue={Math.PI}
-              value={signatureRotation}
-              onValueChange={setSignatureRotation}
-              minimumTrackTintColor="#10B981"
-              maximumTrackTintColor="#ccc"
-            />
-            
-            <Text style={styles.sliderLabel}>Position horizontale</Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={0.1}
-              maximumValue={0.9}
-              value={signatureX}
-              onValueChange={setSignatureX}
-              minimumTrackTintColor="#10B981"
-              maximumTrackTintColor="#ccc"
-            />
-            
-            <Text style={styles.sliderLabel}>Position verticale</Text>
-            <Slider
-              style={styles.slider}
-              minimumValue={0.1}
-              maximumValue={0.9}
-              value={signatureY}
-              onValueChange={setSignatureY}
-              minimumTrackTintColor="#10B981"
-              maximumTrackTintColor="#ccc"
-            />
+            <Text style={styles.hintText}>Glissez la signature pour la déplacer. Pincez pour redimensionner. Tournez avec deux doigts pour pivoter.</Text>
             
             <Text style={styles.sliderLabel}>Couleur</Text>
             <View style={styles.colorPicker}>
@@ -790,6 +905,14 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 8,
     marginBottom: 4,
+  },
+  hintText: {
+    fontSize: 12,
+    color: '#999',
+    fontStyle: 'italic',
+    marginTop: 8,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   colorPicker: {
     flexDirection: 'row',
