@@ -60,12 +60,7 @@ export default function NotebookScreen() {
     try {
       setLoading(true);
       const loadedMemories = await StorageService.getAllMemories(user?.id || null);
-      console.log('📓 Notebook: loaded', loadedMemories.length, 'memories');
-      loadedMemories.forEach((m: Memory) => {
-        console.log('  - Memory:', m.id, 'metadata:', m.metadata);
-      });
       const memoriesWithMetadata = loadedMemories.filter((m: Memory) => m.metadata && (m.metadata.personMet || m.metadata.eventLocation));
-      console.log('📓 Notebook: filtered to', memoriesWithMetadata.length, 'memories with metadata');
       memoriesWithMetadata.sort((a: Memory, b: Memory) => {
         const dateA = a.metadata?.eventDate ? new Date(a.metadata.eventDate).getTime() : a.timestamp;
         const dateB = b.metadata?.eventDate ? new Date(b.metadata.eventDate).getTime() : b.timestamp;

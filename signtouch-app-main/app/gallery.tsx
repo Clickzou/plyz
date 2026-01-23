@@ -17,7 +17,8 @@ import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
-import { Memory } from '@/utils/memoriesStorage';
+import { Memory, MemoryMetadata } from '@/utils/memoriesStorage';
+import MetadataModal from '@/components/MetadataModal';
 import * as StorageService from '@/utils/storageService';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useTranslation } from '@/contexts/LanguageContext';
@@ -77,6 +78,7 @@ export default function GalleryScreen() {
   const [selectedMemories, setSelectedMemories] = useState<Set<string>>(new Set());
   const [showAdModal, setShowAdModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showMetadataModal, setShowMetadataModal] = useState(false);
   const [pendingSave, setPendingSave] = useState<'single' | 'multiple' | null>(null);
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -393,6 +395,37 @@ export default function GalleryScreen() {
     setShowShareModal(true);
   };
 
+  const openMetadataModal = () => {
+    if (selectedMemories.size !== 1) return;
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setShowMetadataModal(true);
+  };
+
+  const handleMetadataSave = async (metadata: MemoryMetadata) => {
+    if (selectedMemories.size !== 1) return;
+    const memoryId = Array.from(selectedMemories)[0];
+    const memory = memories.find(m => m.id === memoryId);
+    if (!memory) return;
+
+    try {
+      await StorageService.updateMemory(memory, user?.id || null, { metadata });
+      setShowMetadataModal(false);
+      setSelectionMode(false);
+      setSelectedMemories(new Set());
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      await loadMemories();
+    } catch (error) {
+      console.error('Error saving metadata:', error);
+    }
+  };
+
+  const handleMetadataSkip = () => {
+    setShowMetadataModal(false);
+  };
 
   return (
     <View style={styles.container}>
@@ -558,6 +591,17 @@ export default function GalleryScreen() {
             <Text style={styles.bulkActionText}>{t('save')}</Text>
           </TouchableOpacity>
 
+          {selectedMemories.size === 1 && (
+            <TouchableOpacity
+              style={[styles.bulkActionButton, styles.bulkNotebookButton]}
+              onPress={openMetadataModal}
+              activeOpacity={0.8}
+            >
+              <BookOpen size={24} color="#ffffff" strokeWidth={2} />
+              <Text style={styles.bulkActionText}>{t('notebookTitle') || 'Carnet'}</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={[styles.bulkActionButton, styles.bulkDeleteButton]}
             onPress={confirmDeleteSelected}
@@ -583,6 +627,13 @@ export default function GalleryScreen() {
           setPendingSave(null);
         }}
         onAdWatched={handleAdWatched}
+      />
+
+      <MetadataModal
+        visible={showMetadataModal}
+        onClose={() => setShowMetadataModal(false)}
+        onSave={handleMetadataSave}
+        onSkip={handleMetadataSkip}
       />
 
       <BottomNav />
@@ -783,6 +834,9 @@ const styles = StyleSheet.create({
   },
   bulkDeleteButton: {
     backgroundColor: '#ef4444',
+  },
+  bulkNotebookButton: {
+    backgroundColor: '#8b5cf6',
   },
   bulkActionText: {
     color: '#ffffff',
