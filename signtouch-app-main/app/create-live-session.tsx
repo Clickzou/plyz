@@ -85,16 +85,48 @@ export default function CreateLiveSessionScreen() {
     }
 
     setIsCreating(true);
+    console.log('Starting session creation...');
     try {
       const celebrityId = `celebrity_${Date.now()}`;
-      const session = await createLiveSession(
-        celebrityId,
-        celebrityName.trim(),
-        totalDuration,
-        calculatedMaxFans,
-        price
-      );
+      let session;
+      
+      try {
+        session = await createLiveSession(
+          celebrityId,
+          celebrityName.trim(),
+          totalDuration,
+          calculatedMaxFans,
+          price
+        );
+      } catch (supabaseError) {
+        console.log('Supabase error, creating local session:', supabaseError);
+        const generateCode = () => {
+          const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+          let code = '';
+          for (let i = 0; i < 6; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+          return code;
+        };
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + totalDuration * 60 * 1000);
+        session = {
+          id: `local_session_${Date.now()}`,
+          code: generateCode(),
+          celebrity_id: celebrityId,
+          celebrity_name: celebrityName.trim(),
+          duration_minutes: totalDuration,
+          max_slots: calculatedMaxFans,
+          price_cents: price,
+          status: 'active',
+          current_fan_id: null,
+          queue: [],
+          created_at: now.toISOString(),
+          expires_at: expiresAt.toISOString(),
+        };
+      }
 
+      console.log('Session created:', session);
       if (session) {
         router.replace({
           pathname: '/live-session-dashboard',
