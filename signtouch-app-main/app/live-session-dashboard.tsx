@@ -70,6 +70,25 @@ export default function LiveSessionDashboardScreen() {
     if (!sessionId) return;
 
     const loadSession = async () => {
+      if (sessionId.startsWith('local_session_')) {
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 30 * 60 * 1000);
+        const localSession: LiveSession = {
+          id: sessionId,
+          code: 'LOCAL',
+          celebrity_id: 'local_celebrity',
+          celebrity_name: 'Session Locale',
+          duration_minutes: 30,
+          max_slots: 10,
+          price_cents: 0,
+          status: 'active',
+          current_fan_id: null,
+          created_at: now.toISOString(),
+          expires_at: expiresAt.toISOString(),
+        };
+        setSession(localSession);
+        return;
+      }
       const s = await getSessionById(sessionId);
       setSession(s);
     };
