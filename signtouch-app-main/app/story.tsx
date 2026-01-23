@@ -775,7 +775,7 @@ function StoryPreview({
           <InteractiveSignature
             key={overlay.id}
             overlay={overlay}
-            color={index === selectedSignatureIndex ? signatureColor : overlay.color}
+            color={overlay.color}
             isSelected={index === selectedSignatureIndex}
             onSelect={() => setSelectedSignatureIndex && setSelectedSignatureIndex(index)}
           />
