@@ -12,7 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Camera, X, Pencil, Share2, BookOpen, Filter, Star, User, MapPin, Calendar, Music, Trophy, Palette, Users, CheckCircle2, Circle, Film } from 'lucide-react-native';
+import { Download, Trash2, Camera, X, Pencil, Share2, BookOpen, Filter, Star, User, MapPin, Calendar, Music, Trophy, Palette, Users, CheckCircle2, Circle, Film, Play } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -37,6 +37,7 @@ const EVENT_TYPE_ICONS: Record<EventType, any> = {
   salon: Users,
   dedicace: Star,
   rencontre: User,
+  amis: Users,
   autre: Calendar,
 };
 
@@ -47,6 +48,7 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
   salon: '#3b82f6',
   dedicace: '#ec4899',
   rencontre: '#14b8a6',
+  amis: '#0ea5e9',
   autre: '#6b7280',
 };
 
@@ -117,6 +119,7 @@ export default function GalleryScreen() {
       salon: t('eventSalon') || 'Salon',
       dedicace: t('eventDedicace') || 'Dédicace',
       rencontre: t('eventRencontre') || 'Rencontre',
+      amis: t('eventAmis') || 'Amis',
       autre: t('eventAutre') || 'Autre',
     };
     return labels[type];
@@ -798,6 +801,48 @@ export default function GalleryScreen() {
           </TouchableOpacity>
 
           <View style={[styles.modalFloatingControls, { paddingBottom: insets.bottom + 20 }]}>
+            <TouchableOpacity
+              style={[styles.modalFloatingButton, styles.modalGreenButton]}
+              onPress={() => {
+                if (selectedStory) {
+                  setSelectedStory(null);
+                  router.push({
+                    pathname: '/story',
+                    params: {
+                      imageUri: selectedStory.uri,
+                      memoryId: selectedStory.sourceMemoryId || '',
+                      storyId: selectedStory.id,
+                      mode: 'preview',
+                    }
+                  });
+                }
+              }}
+              activeOpacity={0.8}
+            >
+              <Play size={28} color="#ffffff" strokeWidth={2.5} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modalFloatingButton, styles.modalBlueButton]}
+              onPress={() => {
+                if (selectedStory) {
+                  setSelectedStory(null);
+                  router.push({
+                    pathname: '/story',
+                    params: {
+                      imageUri: selectedStory.uri,
+                      memoryId: selectedStory.sourceMemoryId || '',
+                      storyId: selectedStory.id,
+                      mode: 'edit',
+                    }
+                  });
+                }
+              }}
+              activeOpacity={0.8}
+            >
+              <Pencil size={28} color="#ffffff" strokeWidth={2.5} />
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={[styles.modalFloatingButton, styles.modalBlueButton]}
               onPress={() => {
