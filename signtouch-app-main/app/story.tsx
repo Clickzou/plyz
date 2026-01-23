@@ -514,11 +514,11 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const STORY_WIDTH = SCREEN_WIDTH * 0.7;
 const STORY_HEIGHT = STORY_WIDTH * (16 / 9);
 
-type AnimationType = 'ken-burns' | 'sequential-zoom' | 'parallax';
+type AnimationType = 'cinematic' | 'dramatic-zoom' | 'bounce' | 'pulse' | 'slide-reveal' | 'shake' | 'spin-zoom' | 'float' | 'heartbeat' | 'swing';
 
 interface Animation {
   id: AnimationType;
-  nameKey: 'animKenBurns' | 'animSequentialZoom' | 'animParallax';
+  nameKey: 'animCinematic' | 'animDramaticZoom' | 'animBounce' | 'animPulse' | 'animSlideReveal' | 'animShake' | 'animSpinZoom' | 'animFloat' | 'animHeartbeat' | 'animSwing';
   colors: [string, string];
   textColor: string;
   overlayOpacity: number;
@@ -527,26 +527,78 @@ interface Animation {
 
 const ANIMATIONS: Animation[] = [
   { 
-    id: 'ken-burns', 
-    nameKey: 'animKenBurns',
+    id: 'cinematic', 
+    nameKey: 'animCinematic',
     colors: ['#1a1a2e', '#16213e'], 
     textColor: '#ffffff', 
     overlayOpacity: 0.3 
   },
   { 
-    id: 'sequential-zoom', 
-    nameKey: 'animSequentialZoom',
-    colors: ['#2d3436', '#636e72'], 
+    id: 'dramatic-zoom', 
+    nameKey: 'animDramaticZoom',
+    colors: ['#0d0d0d', '#1a1a1a'], 
     textColor: '#ffffff', 
-    overlayOpacity: 0.35 
+    overlayOpacity: 0.4,
+    hasGlow: true
   },
   { 
-    id: 'parallax', 
-    nameKey: 'animParallax',
-    colors: ['#0f0f0f', '#1a1a1a'], 
+    id: 'bounce', 
+    nameKey: 'animBounce',
+    colors: ['#ff6b6b', '#ee5a5a'], 
+    textColor: '#ffffff', 
+    overlayOpacity: 0.25 
+  },
+  { 
+    id: 'pulse', 
+    nameKey: 'animPulse',
+    colors: ['#6c5ce7', '#a29bfe'], 
     textColor: '#ffffff', 
     overlayOpacity: 0.3,
     hasGlow: true
+  },
+  { 
+    id: 'slide-reveal', 
+    nameKey: 'animSlideReveal',
+    colors: ['#00b894', '#00cec9'], 
+    textColor: '#ffffff', 
+    overlayOpacity: 0.25 
+  },
+  { 
+    id: 'shake', 
+    nameKey: 'animShake',
+    colors: ['#fdcb6e', '#f39c12'], 
+    textColor: '#1a1a1a', 
+    overlayOpacity: 0.2 
+  },
+  { 
+    id: 'spin-zoom', 
+    nameKey: 'animSpinZoom',
+    colors: ['#e84393', '#fd79a8'], 
+    textColor: '#ffffff', 
+    overlayOpacity: 0.3,
+    hasGlow: true
+  },
+  { 
+    id: 'float', 
+    nameKey: 'animFloat',
+    colors: ['#74b9ff', '#0984e3'], 
+    textColor: '#ffffff', 
+    overlayOpacity: 0.25 
+  },
+  { 
+    id: 'heartbeat', 
+    nameKey: 'animHeartbeat',
+    colors: ['#ff7675', '#d63031'], 
+    textColor: '#ffffff', 
+    overlayOpacity: 0.35,
+    hasGlow: true
+  },
+  { 
+    id: 'swing', 
+    nameKey: 'animSwing',
+    colors: ['#2d3436', '#636e72'], 
+    textColor: '#ffffff', 
+    overlayOpacity: 0.3 
   },
 ];
 
@@ -754,62 +806,195 @@ function StoryPreview({
       bgScale.value = 1;
       bgTranslateX.value = 0;
 
-      if (animation.id === 'ken-burns') {
+      if (animation.id === 'cinematic') {
+        // Slow cinematic pan with subtle zoom
         scale.value = withSequence(
-          withTiming(1.2, { duration: 5000, easing: Easing.inOut(Easing.ease) }),
-          withTiming(1, { duration: 5000, easing: Easing.inOut(Easing.ease) }),
-          withRepeat(
-            withSequence(
-              withTiming(1.05, { duration: 2500, easing: Easing.inOut(Easing.ease) }),
-              withTiming(1, { duration: 2500, easing: Easing.inOut(Easing.ease) })
-            ),
-            1,
-            true
-          )
-        );
-        translateY.value = withSequence(
-          withTiming(0, { duration: 5000 }),
-          withRepeat(
-            withSequence(
-              withTiming(-5, { duration: 2500, easing: Easing.inOut(Easing.ease) }),
-              withTiming(5, { duration: 2500, easing: Easing.inOut(Easing.ease) })
-            ),
-            1,
-            true
-          )
-        );
-        textOpacity.value = withDelay(10000, withTiming(1, { duration: 500 }));
-        
-        if (onAnimationComplete) {
-          timerRef.current = setTimeout(() => onAnimationComplete(), 15000);
-        }
-      } else if (animation.id === 'sequential-zoom') {
-        scale.value = withSequence(
-          withTiming(2, { duration: 4000, easing: Easing.out(Easing.ease) }),
-          withDelay(500, withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.ease) }))
-        );
-        translateY.value = withSequence(
-          withTiming(-40, { duration: 4000, easing: Easing.out(Easing.ease) }),
-          withDelay(500, withTiming(0, { duration: 3000, easing: Easing.inOut(Easing.ease) }))
-        );
-        textOpacity.value = withDelay(7000, withTiming(1, { duration: 500 }));
-        
-        if (onAnimationComplete) {
-          timerRef.current = setTimeout(() => onAnimationComplete(), 8000);
-        }
-      } else if (animation.id === 'parallax') {
-        bgScale.value = withTiming(1.1, { duration: 6000, easing: Easing.out(Easing.ease) });
-        bgTranslateX.value = withTiming(-20, { duration: 6000, easing: Easing.out(Easing.ease) });
-        scale.value = withSequence(
-          withTiming(1.15, { duration: 3000, easing: Easing.out(Easing.ease) }),
+          withTiming(1.15, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
           withTiming(1.1, { duration: 3000, easing: Easing.inOut(Easing.ease) })
         );
-        glowOpacity.value = withDelay(1000, withTiming(0.6, { duration: 2000 }));
-        textOpacity.value = withDelay(5000, withTiming(1, { duration: 500 }));
+        translateX.value = withSequence(
+          withTiming(-15, { duration: 3500, easing: Easing.inOut(Easing.ease) }),
+          withTiming(15, { duration: 3500, easing: Easing.inOut(Easing.ease) })
+        );
+        textOpacity.value = withDelay(5000, withTiming(1, { duration: 800 }));
+        if (onAnimationComplete) timerRef.current = setTimeout(() => onAnimationComplete(), 7000);
         
-        if (onAnimationComplete) {
-          timerRef.current = setTimeout(() => onAnimationComplete(), 7000);
-        }
+      } else if (animation.id === 'dramatic-zoom') {
+        // Intense zoom-in with glow
+        scale.value = withSequence(
+          withTiming(1, { duration: 500 }),
+          withTiming(2.5, { duration: 3000, easing: Easing.out(Easing.cubic) }),
+          withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) })
+        );
+        glowOpacity.value = withSequence(
+          withDelay(500, withTiming(0.8, { duration: 2000 })),
+          withTiming(0.3, { duration: 2000 })
+        );
+        textOpacity.value = withDelay(4500, withTiming(1, { duration: 500 }));
+        if (onAnimationComplete) timerRef.current = setTimeout(() => onAnimationComplete(), 6000);
+        
+      } else if (animation.id === 'bounce') {
+        // Energetic bounce effect
+        scale.value = withSequence(
+          withTiming(1.3, { duration: 300, easing: Easing.out(Easing.back(2)) }),
+          withTiming(0.95, { duration: 200, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.15, { duration: 250, easing: Easing.out(Easing.back(1.5)) }),
+          withTiming(1, { duration: 200, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.08, { duration: 200, easing: Easing.out(Easing.ease) }),
+          withTiming(1.05, { duration: 2000, easing: Easing.inOut(Easing.ease) })
+        );
+        translateY.value = withSequence(
+          withTiming(-30, { duration: 300, easing: Easing.out(Easing.ease) }),
+          withTiming(10, { duration: 200, easing: Easing.inOut(Easing.ease) }),
+          withTiming(-15, { duration: 250, easing: Easing.out(Easing.ease) }),
+          withTiming(0, { duration: 200, easing: Easing.inOut(Easing.ease) })
+        );
+        textOpacity.value = withDelay(1500, withTiming(1, { duration: 300 }));
+        if (onAnimationComplete) timerRef.current = setTimeout(() => onAnimationComplete(), 4000);
+        
+      } else if (animation.id === 'pulse') {
+        // Heartbeat-like pulsing with glow
+        scale.value = withRepeat(
+          withSequence(
+            withTiming(1.12, { duration: 400, easing: Easing.out(Easing.ease) }),
+            withTiming(1, { duration: 400, easing: Easing.inOut(Easing.ease) }),
+            withTiming(1.08, { duration: 300, easing: Easing.out(Easing.ease) }),
+            withTiming(1, { duration: 600, easing: Easing.inOut(Easing.ease) })
+          ),
+          3,
+          false
+        );
+        glowOpacity.value = withRepeat(
+          withSequence(
+            withTiming(0.7, { duration: 400 }),
+            withTiming(0.2, { duration: 400 }),
+            withTiming(0.5, { duration: 300 }),
+            withTiming(0.2, { duration: 600 })
+          ),
+          3,
+          false
+        );
+        textOpacity.value = withDelay(3500, withTiming(1, { duration: 500 }));
+        if (onAnimationComplete) timerRef.current = setTimeout(() => onAnimationComplete(), 5500);
+        
+      } else if (animation.id === 'slide-reveal') {
+        // Slide from side with reveal
+        translateX.value = withSequence(
+          withTiming(-100, { duration: 0 }),
+          withTiming(0, { duration: 800, easing: Easing.out(Easing.cubic) }),
+          withTiming(10, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0, { duration: 2000, easing: Easing.inOut(Easing.ease) })
+        );
+        scale.value = withSequence(
+          withTiming(1.2, { duration: 800, easing: Easing.out(Easing.ease) }),
+          withTiming(1.05, { duration: 3000, easing: Easing.inOut(Easing.ease) })
+        );
+        textOpacity.value = withDelay(2500, withTiming(1, { duration: 500 }));
+        if (onAnimationComplete) timerRef.current = setTimeout(() => onAnimationComplete(), 5000);
+        
+      } else if (animation.id === 'shake') {
+        // Energetic shake effect
+        translateX.value = withSequence(
+          withRepeat(
+            withSequence(
+              withTiming(-8, { duration: 50 }),
+              withTiming(8, { duration: 50 }),
+              withTiming(-6, { duration: 50 }),
+              withTiming(6, { duration: 50 }),
+              withTiming(-4, { duration: 50 }),
+              withTiming(4, { duration: 50 }),
+              withTiming(0, { duration: 50 })
+            ),
+            3,
+            false
+          ),
+          withTiming(0, { duration: 2000 })
+        );
+        scale.value = withSequence(
+          withTiming(1.1, { duration: 350 }),
+          withTiming(1.05, { duration: 2500, easing: Easing.inOut(Easing.ease) })
+        );
+        textOpacity.value = withDelay(2000, withTiming(1, { duration: 300 }));
+        if (onAnimationComplete) timerRef.current = setTimeout(() => onAnimationComplete(), 4000);
+        
+      } else if (animation.id === 'spin-zoom') {
+        // Rotation with zoom
+        bgScale.value = withSequence(
+          withTiming(1.3, { duration: 2000, easing: Easing.out(Easing.ease) }),
+          withTiming(1.1, { duration: 2000, easing: Easing.inOut(Easing.ease) })
+        );
+        scale.value = withSequence(
+          withTiming(0.8, { duration: 500 }),
+          withTiming(1.2, { duration: 1500, easing: Easing.out(Easing.back(1.2)) }),
+          withTiming(1.05, { duration: 2000, easing: Easing.inOut(Easing.ease) })
+        );
+        glowOpacity.value = withSequence(
+          withTiming(0.8, { duration: 2000 }),
+          withTiming(0.4, { duration: 2000 })
+        );
+        textOpacity.value = withDelay(3500, withTiming(1, { duration: 500 }));
+        if (onAnimationComplete) timerRef.current = setTimeout(() => onAnimationComplete(), 5000);
+        
+      } else if (animation.id === 'float') {
+        // Gentle floating motion
+        translateY.value = withRepeat(
+          withSequence(
+            withTiming(-20, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+            withTiming(20, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+            withTiming(-10, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+            withTiming(0, { duration: 1000, easing: Easing.inOut(Easing.ease) })
+          ),
+          1,
+          false
+        );
+        scale.value = withSequence(
+          withTiming(1.1, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.05, { duration: 3000, easing: Easing.inOut(Easing.ease) })
+        );
+        textOpacity.value = withDelay(4000, withTiming(1, { duration: 500 }));
+        if (onAnimationComplete) timerRef.current = setTimeout(() => onAnimationComplete(), 5500);
+        
+      } else if (animation.id === 'heartbeat') {
+        // Strong heartbeat rhythm
+        scale.value = withRepeat(
+          withSequence(
+            withTiming(1.18, { duration: 150, easing: Easing.out(Easing.ease) }),
+            withTiming(1, { duration: 150, easing: Easing.inOut(Easing.ease) }),
+            withTiming(1.22, { duration: 150, easing: Easing.out(Easing.ease) }),
+            withTiming(1, { duration: 550, easing: Easing.inOut(Easing.ease) })
+          ),
+          4,
+          false
+        );
+        glowOpacity.value = withRepeat(
+          withSequence(
+            withTiming(0.9, { duration: 150 }),
+            withTiming(0.3, { duration: 150 }),
+            withTiming(0.9, { duration: 150 }),
+            withTiming(0.2, { duration: 550 })
+          ),
+          4,
+          false
+        );
+        textOpacity.value = withDelay(3500, withTiming(1, { duration: 500 }));
+        if (onAnimationComplete) timerRef.current = setTimeout(() => onAnimationComplete(), 5000);
+        
+      } else if (animation.id === 'swing') {
+        // Pendulum swing effect
+        translateX.value = withSequence(
+          withTiming(40, { duration: 600, easing: Easing.out(Easing.ease) }),
+          withTiming(-35, { duration: 500, easing: Easing.inOut(Easing.ease) }),
+          withTiming(25, { duration: 450, easing: Easing.inOut(Easing.ease) }),
+          withTiming(-15, { duration: 400, easing: Easing.inOut(Easing.ease) }),
+          withTiming(8, { duration: 350, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0, { duration: 300, easing: Easing.inOut(Easing.ease) })
+        );
+        scale.value = withSequence(
+          withTiming(1.1, { duration: 600, easing: Easing.out(Easing.ease) }),
+          withTiming(1.05, { duration: 2000, easing: Easing.inOut(Easing.ease) })
+        );
+        textOpacity.value = withDelay(2500, withTiming(1, { duration: 500 }));
+        if (onAnimationComplete) timerRef.current = setTimeout(() => onAnimationComplete(), 4000);
       }
     } else {
       scale.value = 1;
