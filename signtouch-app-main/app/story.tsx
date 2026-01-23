@@ -408,8 +408,8 @@ function StoryPreview({
   const sigTranslateY = useSharedValue(0);
   const sigScale = useSharedValue(signatureScale);
   const sigRotation = useSharedValue(signatureRotation);
-  const savedSigTranslateX = useSharedValue((signatureX - 0.5) * STORY_WIDTH);
-  const savedSigTranslateY = useSharedValue((signatureY - 0.5) * STORY_HEIGHT);
+  const savedSigTranslateX = useSharedValue(0);
+  const savedSigTranslateY = useSharedValue(0);
   const savedSigScale = useSharedValue(signatureScale);
   const savedSigRotation = useSharedValue(signatureRotation);
 
@@ -427,8 +427,8 @@ function StoryPreview({
     sigTranslateY.value = 0;
     sigScale.value = signatureScale;
     sigRotation.value = signatureRotation;
-    savedSigTranslateX.value = (signatureX - 0.5) * STORY_WIDTH;
-    savedSigTranslateY.value = (signatureY - 0.5) * STORY_HEIGHT;
+    savedSigTranslateX.value = 0;
+    savedSigTranslateY.value = 0;
     savedSigScale.value = signatureScale;
     savedSigRotation.value = signatureRotation;
   }, [signatureX, signatureY, signatureScale, signatureRotation]);
