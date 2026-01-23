@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput, Dimensions, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Sparkles, Film, Clock, Share2, Download, Instagram, Video } from 'lucide-react-native';
+import { ArrowLeft, Sparkles, Film, Clock, Share2, Download } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { 
   useSharedValue, 
@@ -460,17 +460,6 @@ export default function StoryScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.socialButtons}>
-          <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#E4405F' }]} onPress={handleShare}>
-            <Instagram size={24} color="#fff" />
-            <Text style={styles.socialButtonText}>{t('storyInstagram')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#000' }]} onPress={handleShare}>
-            <Video size={24} color="#fff" />
-            <Text style={styles.socialButtonText}>{t('storyTikTok')}</Text>
-          </TouchableOpacity>
-        </View>
-
         <View style={{ height: 40 }} />
       </ScrollView>
     </View>
@@ -678,24 +667,6 @@ const styles = StyleSheet.create({
   exportButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
-  },
-  socialButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  socialButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-  },
-  socialButtonText: {
-    color: '#fff',
-    fontSize: 14,
     fontWeight: '600',
   },
 });
