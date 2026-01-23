@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   Image,
   TouchableOpacity,
   Platform,
@@ -13,7 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Camera, CheckCircle2, Circle, X, Pencil, Share2, BookOpen, Grid3X3, List, Filter, Star, User, MapPin, Calendar, Music, Trophy, Palette, Users } from 'lucide-react-native';
+import { Download, Trash2, Camera, X, Pencil, Share2, BookOpen, Filter, Star, User, MapPin, Calendar, Music, Trophy, Palette, Users } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -48,62 +47,15 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
   autre: '#6b7280',
 };
 
-// Component to render memory thumbnail
-interface MemoryThumbnailProps {
-  memory: Memory;
-  onPress: () => void;
-  isSelected: boolean;
-  selectionMode: boolean;
-}
-
-function MemoryThumbnail({ memory, onPress, isSelected, selectionMode }: MemoryThumbnailProps) {
-  // Use baseUri for thumbnail to show original photo without signatures
-  const thumbnailUri = memory.baseUri || memory.uri;
-  const imageUri = memory.updatedAt && !thumbnailUri.startsWith('data:')
-    ? `${thumbnailUri}?t=${memory.updatedAt}`
-    : thumbnailUri;
-
-  return (
-    <TouchableOpacity
-      style={styles.memoryContainer}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
-      <View style={styles.thumbnailWrapper}>
-        <Image
-          source={{ uri: imageUri }}
-          style={styles.memoryImage}
-          resizeMode="cover"
-          key={imageUri}
-        />
-      </View>
-      {selectionMode && (
-        <View style={styles.selectionOverlay}>
-          {isSelected ? (
-            <CheckCircle2 size={32} color="#10b981" fill="#10b981" strokeWidth={2} />
-          ) : (
-            <Circle size={32} color="#ffffff" strokeWidth={2} />
-          )}
-        </View>
-      )}
-    </TouchableOpacity>
-  );
-}
-
-type ViewMode = 'grid' | 'notebook';
-
 export default function GalleryScreen() {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedMemories, setSelectedMemories] = useState<Set<string>>(new Set());
   const [showAdModal, setShowAdModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showMetadataModal, setShowMetadataModal] = useState(false);
   const [pendingSave, setPendingSave] = useState<'single' | 'multiple' | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedFilter, setSelectedFilter] = useState<EventType | 'all'>('all');
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -111,11 +63,9 @@ export default function GalleryScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  const memoriesWithMetadata = memories.filter((m: Memory) => m.metadata && (m.metadata.personMet || m.metadata.eventLocation));
-  
-  const filteredNotebookMemories = selectedFilter === 'all' 
-    ? memoriesWithMetadata 
-    : memoriesWithMetadata.filter(m => m.metadata?.eventType === selectedFilter);
+  const filteredMemories = selectedFilter === 'all' 
+    ? memories 
+    : memories.filter(m => m.metadata?.eventType === selectedFilter);
 
   const formatDate = (dateString?: string, timestamp?: number) => {
     const date = dateString ? new Date(dateString) : timestamp ? new Date(timestamp) : null;
@@ -164,7 +114,7 @@ export default function GalleryScreen() {
     return labels[type];
   };
 
-  const groupedMemories = groupMemoriesByMonth(filteredNotebookMemories);
+  const groupedMemories = groupMemoriesByMonth(filteredMemories);
 
   const loadMemories = async () => {
     try {
@@ -196,32 +146,10 @@ export default function GalleryScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
-    if (selectionMode) {
-      toggleMemorySelection(memory.id);
-    } else {
-      router.push({
-        pathname: '/result',
-        params: { memoryId: memory.id },
-      });
-    }
-  };
-
-  const toggleSelectionMode = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setSelectionMode(!selectionMode);
-    setSelectedMemories(new Set());
-  };
-
-  const toggleMemorySelection = (memoryId: string) => {
-    const newSelected = new Set(selectedMemories);
-    if (newSelected.has(memoryId)) {
-      newSelected.delete(memoryId);
-    } else {
-      newSelected.add(memoryId);
-    }
-    setSelectedMemories(newSelected);
+    router.push({
+      pathname: '/result',
+      params: { memoryId: memory.id },
+    });
   };
 
   const closeMemory = () => {
@@ -348,124 +276,12 @@ export default function GalleryScreen() {
     });
   };
 
-  const saveSelectedMemories = async () => {
-    if (selectedMemories.size === 0) return;
-
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-
-    await performSaveSelectedMemories();
-  };
-
-  const performSaveSelectedMemories = async () => {
-    try {
-      if (Platform.OS === 'web') {
-        for (const memoryId of selectedMemories) {
-          const memory = memories.find(m => m.id === memoryId);
-          if (memory) {
-            const response = await fetch(memory.uri);
-            const blob = await response.blob();
-            const link = document.createElement('a');
-            link.href = memory.uri;
-            link.download = `souvenir_${memoryId}.png`;
-            link.click();
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-        }
-        console.log(`✅ ${selectedMemories.size} souvenirs téléchargés`);
-      } else {
-        const { status } = await MediaLibrary.requestPermissionsAsync(true);
-        if (status !== 'granted') {
-          Alert.alert(t('permissionRequired'), t('galleryPermissionMessage'));
-          return;
-        }
-
-        for (const memoryId of selectedMemories) {
-          const memory = memories.find(m => m.id === memoryId);
-          if (memory) {
-            await MediaLibrary.createAssetAsync(memory.uri);
-          }
-        }
-
-        Alert.alert(
-          t('saved'),
-          t('memoriesSaved', { count: selectedMemories.size })
-        );
-      }
-
-      setSelectionMode(false);
-      setSelectedMemories(new Set());
-    } catch (error) {
-      console.error('❌ Erreur:', error);
-      Alert.alert(t('error'), t('saveError') + ': ' + (error as Error).message);
-    }
-  };
-
   const handleAdWatched = () => {
     setShowAdModal(false);
     if (pendingSave === 'single') {
       performSaveMemory();
-    } else if (pendingSave === 'multiple') {
-      performSaveSelectedMemories();
     }
     setPendingSave(null);
-  };
-
-  const confirmDeleteSelected = () => {
-    if (selectedMemories.size === 0) return;
-
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-
-    const message = t('confirmDeleteMultiple', { count: selectedMemories.size });
-
-    if (Platform.OS === 'web') {
-      if (window.confirm(message)) {
-        handleDeleteSelected();
-      }
-    } else {
-      Alert.alert(
-        t('confirmDelete'),
-        message,
-        [
-          {
-            text: t('cancel'),
-            style: 'cancel',
-          },
-          {
-            text: t('delete'),
-            style: 'destructive',
-            onPress: handleDeleteSelected,
-          },
-        ]
-      );
-    }
-  };
-
-  const handleDeleteSelected = async () => {
-    try {
-      setIsDeleting(true);
-
-      for (const memoryId of selectedMemories) {
-        await StorageService.deleteMemory(memoryId, user?.id || null);
-      }
-
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-
-      setSelectionMode(false);
-      setSelectedMemories(new Set());
-      await loadMemories();
-      console.log(`✅ ${selectedMemories.size} souvenirs supprimés`);
-    } catch (error) {
-      console.error('❌ Erreur lors de la suppression:', error);
-      Alert.alert(t('error'), t('saveError'));
-    } finally {
-      setIsDeleting(false);
-    }
   };
 
   const openShareModal = () => {
@@ -475,25 +291,12 @@ export default function GalleryScreen() {
     setShowShareModal(true);
   };
 
-  const openMetadataModal = () => {
-    if (selectedMemories.size !== 1) return;
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setShowMetadataModal(true);
-  };
-
   const handleMetadataSave = async (metadata: MemoryMetadata) => {
-    if (selectedMemories.size !== 1) return;
-    const memoryId = Array.from(selectedMemories)[0];
-    const memory = memories.find(m => m.id === memoryId);
-    if (!memory) return;
+    if (!selectedMemory) return;
 
     try {
-      await StorageService.updateMemory(memory, user?.id || null, { metadata });
+      await StorageService.updateMemory(selectedMemory, user?.id || null, { metadata });
       setShowMetadataModal(false);
-      setSelectionMode(false);
-      setSelectedMemories(new Set());
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
@@ -511,67 +314,19 @@ export default function GalleryScreen() {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
         <Text style={styles.title}>{t('myMemories')}</Text>
-        {memories.length > 0 && viewMode === 'grid' && (
+        {memories.length > 0 && (
           <Text style={styles.instructionText}>
             {t('galleryInstruction')}
           </Text>
         )}
-        <View style={styles.headerButtons}>
-          <View style={styles.viewToggle}>
-            <TouchableOpacity
-              style={[styles.viewToggleButton, viewMode === 'grid' && styles.viewToggleButtonActive]}
-              onPress={() => {
-                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setViewMode('grid');
-                setSelectionMode(false);
-                setSelectedMemories(new Set());
-              }}
-              activeOpacity={0.8}
-            >
-              <Grid3X3 size={18} color={viewMode === 'grid' ? '#ffffff' : '#9ca3af'} />
-              <Text style={[styles.viewToggleText, viewMode === 'grid' && styles.viewToggleTextActive]}>
-                {t('viewGrid') || 'Grille'}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.viewToggleButton, viewMode === 'notebook' && styles.viewToggleButtonActive]}
-              onPress={() => {
-                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setViewMode('notebook');
-                setSelectionMode(false);
-                setSelectedMemories(new Set());
-              }}
-              activeOpacity={0.8}
-            >
-              <BookOpen size={18} color={viewMode === 'notebook' ? '#ffffff' : '#9ca3af'} />
-              <Text style={[styles.viewToggleText, viewMode === 'notebook' && styles.viewToggleTextActive]}>
-                {t('notebookTitle') || 'Carnet'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {memories.length > 0 && viewMode === 'grid' && (
-            <TouchableOpacity
-              style={styles.selectButton}
-              onPress={toggleSelectionMode}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.selectButtonText}>
-                {selectionMode ? t('cancel') : t('select')}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-        {memories.length > 0 && viewMode === 'grid' && (
+        {memories.length > 0 && (
           <Text style={styles.subtitle}>
-            {selectionMode && selectedMemories.size > 0
-              ? `${selectedMemories.size} ${selectedMemories.size > 1 ? t('selectedPlural') : t('selected')}`
-              : `${memories.length} ${memories.length > 1 ? t('memories') : t('memory')}`
-            }
+            {`${memories.length} ${memories.length > 1 ? t('memories') : t('memory')}`}
           </Text>
         )}
       </View>
 
-      {viewMode === 'notebook' && (
+      {memories.length > 0 && (
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false} 
@@ -624,89 +379,76 @@ export default function GalleryScreen() {
             <Text style={styles.createButtonText}>{t('takePicture')}</Text>
           </TouchableOpacity>
         </View>
-      ) : viewMode === 'notebook' ? (
+      ) : filteredMemories.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Star size={64} color="#4b5563" />
+          <Text style={styles.emptyText}>{t('noMemoriesForFilter') || 'Aucun souvenir pour ce filtre'}</Text>
+        </View>
+      ) : (
         <ScrollView style={styles.notebookContent} showsVerticalScrollIndicator={false}>
-          {filteredNotebookMemories.length === 0 ? (
-            <View style={styles.emptyNotebook}>
-              <Star size={64} color="#4b5563" />
-              <Text style={styles.emptyNotebookTitle}>{t('notebookEmpty') || 'Aucune rencontre'}</Text>
-              <Text style={styles.emptyNotebookText}>
-                {t('notebookEmptyDescription') || 'Vos dédicaces avec informations apparaîtront ici'}
-              </Text>
-            </View>
-          ) : (
-            groupedMemories.map((group) => (
-              <View key={group.key} style={styles.monthGroup}>
-                <Text style={styles.monthTitle}>{group.label}</Text>
-                {group.memories.map((memory) => {
-                  const eventType = memory.metadata?.eventType || 'autre';
-                  const IconComponent = EVENT_TYPE_ICONS[eventType];
-                  const color = EVENT_TYPE_COLORS[eventType];
-                  return (
-                    <TouchableOpacity
-                      key={memory.id}
-                      style={styles.memoryCard}
-                      onPress={() => openMemory(memory)}
-                      activeOpacity={0.8}
-                    >
-                      <Image
-                        source={{ uri: memory.baseUri || memory.uri }}
-                        style={styles.cardImage}
-                        resizeMode="cover"
-                      />
-                      <View style={styles.cardContent}>
-                        {memory.metadata?.personMet && (
-                          <View style={styles.cardRow}>
-                            <User size={16} color="#ffffff" />
-                            <Text style={styles.cardText} numberOfLines={1}>{memory.metadata.personMet}</Text>
-                          </View>
-                        )}
-                        {memory.metadata?.eventLocation && (
-                          <View style={styles.cardRow}>
-                            <MapPin size={16} color="#9ca3af" />
-                            <Text style={styles.cardTextSecondary} numberOfLines={1}>{memory.metadata.eventLocation}</Text>
-                          </View>
-                        )}
+          {groupedMemories.map((group) => (
+            <View key={group.key} style={styles.monthGroup}>
+              <Text style={styles.monthTitle}>{group.label}</Text>
+              {group.memories.map((memory) => {
+                const eventType = memory.metadata?.eventType || 'autre';
+                const IconComponent = EVENT_TYPE_ICONS[eventType];
+                const color = EVENT_TYPE_COLORS[eventType];
+                const hasMetadata = memory.metadata?.personMet || memory.metadata?.eventLocation;
+                return (
+                  <TouchableOpacity
+                    key={memory.id}
+                    style={styles.memoryCard}
+                    onPress={() => openMemory(memory)}
+                    activeOpacity={0.8}
+                  >
+                    <Image
+                      source={{ uri: memory.baseUri || memory.uri }}
+                      style={styles.cardImage}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.cardContent}>
+                      {memory.metadata?.personMet ? (
                         <View style={styles.cardRow}>
-                          <Calendar size={16} color="#9ca3af" />
-                          <Text style={styles.cardTextSecondary}>
-                            {formatDate(memory.metadata?.eventDate, memory.timestamp)}
-                          </Text>
+                          <User size={16} color="#ffffff" />
+                          <Text style={styles.cardText} numberOfLines={1}>{memory.metadata.personMet}</Text>
                         </View>
+                      ) : (
+                        <View style={styles.cardRow}>
+                          <User size={16} color="#6b7280" />
+                          <Text style={styles.cardTextMuted} numberOfLines={1}>{t('noPersonMet') || 'Non renseigné'}</Text>
+                        </View>
+                      )}
+                      {memory.metadata?.eventLocation ? (
+                        <View style={styles.cardRow}>
+                          <MapPin size={16} color="#9ca3af" />
+                          <Text style={styles.cardTextSecondary} numberOfLines={1}>{memory.metadata.eventLocation}</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.cardRow}>
+                          <MapPin size={16} color="#6b7280" />
+                          <Text style={styles.cardTextMuted} numberOfLines={1}>{t('noLocation') || 'Lieu non renseigné'}</Text>
+                        </View>
+                      )}
+                      <View style={styles.cardRow}>
+                        <Calendar size={16} color="#9ca3af" />
+                        <Text style={styles.cardTextSecondary}>
+                          {formatDate(memory.metadata?.eventDate, memory.timestamp)}
+                        </Text>
+                      </View>
+                      {hasMetadata && (
                         <View style={[styles.eventBadge, { backgroundColor: color }]}>
                           <IconComponent size={12} color="#ffffff" />
                           <Text style={styles.eventBadgeText}>{getEventTypeLabel(eventType)}</Text>
                         </View>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            ))
-          )}
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ))}
           <View style={{ height: BOTTOM_NAV_HEIGHT + 40 }} />
         </ScrollView>
-      ) : (
-        <FlatList
-          data={memories}
-          numColumns={3}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => {
-            const isSelected = selectedMemories.has(item.id);
-            return (
-              <MemoryThumbnail
-                memory={item}
-                onPress={() => openMemory(item)}
-                isSelected={isSelected}
-                selectionMode={selectionMode}
-              />
-            );
-          }}
-          contentContainerStyle={[
-            styles.gridContent,
-            selectionMode && selectedMemories.size > 0 && { paddingBottom: BOTTOM_NAV_HEIGHT + 150 }
-          ]}
-        />
       )}
 
       <Modal
@@ -783,37 +525,6 @@ export default function GalleryScreen() {
         imageUri={selectedMemory?.uri || ''}
       />
 
-      {selectionMode && selectedMemories.size > 0 && (
-        <View style={[styles.bulkActions, { bottom: BOTTOM_NAV_HEIGHT + Math.max(insets.bottom, 15) }]}>
-          {selectedMemories.size === 1 && (
-            <TouchableOpacity
-              style={[styles.bulkActionButton, styles.bulkNotebookButton]}
-              onPress={openMetadataModal}
-              activeOpacity={0.8}
-            >
-              <BookOpen size={24} color="#ffffff" strokeWidth={2} />
-              <Text style={styles.bulkActionText}>{t('addToNotebook') || 'Ajouter au carnet'}</Text>
-            </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            style={[styles.bulkActionButton, styles.bulkDeleteButton]}
-            onPress={confirmDeleteSelected}
-            disabled={isDeleting}
-            activeOpacity={0.8}
-          >
-            {isDeleting ? (
-              <ActivityIndicator color="#ffffff" size="small" />
-            ) : (
-              <>
-                <Trash2 size={24} color="#ffffff" strokeWidth={2} />
-                <Text style={styles.bulkActionText}>{t('delete')}</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
-
       <AdModal
         visible={showAdModal}
         onClose={() => {
@@ -828,7 +539,7 @@ export default function GalleryScreen() {
         onClose={() => setShowMetadataModal(false)}
         onSave={handleMetadataSave}
         onSkip={handleMetadataSkip}
-        initialMetadata={selectedMemories.size === 1 ? memories.find(m => m.id === Array.from(selectedMemories)[0])?.metadata : undefined}
+        initialMetadata={selectedMemory?.metadata}
       />
 
       <BottomNav />
@@ -845,38 +556,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
     alignItems: 'center',
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 15,
-  },
-  notebookButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: '#8b5cf6',
-    gap: 6,
-  },
-  notebookButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  selectButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: '#10b981',
-  },
-  selectButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '600',
   },
   title: {
     fontSize: 32,
@@ -929,37 +608,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  gridContent: {
-    paddingHorizontal: 2,
-    paddingBottom: BOTTOM_NAV_HEIGHT + 20,
-  },
-  memoryContainer: {
-    flex: 1 / 3,
-    aspectRatio: 1,
-    padding: 2,
-  },
-  thumbnailWrapper: {
-    width: '100%',
-    height: '100%',
-    position: 'relative',
-  },
-  memoryImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 4,
-  },
-  thumbnailOverlay: {
-    position: 'absolute',
-    pointerEvents: 'none',
-  },
-  selectionOverlay: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 20,
-    padding: 4,
-  },
   modalContainer: {
     flex: 1,
     backgroundColor: '#000',
@@ -1008,34 +656,95 @@ const styles = StyleSheet.create({
   modalRedButton: {
     backgroundColor: '#ef4444',
   },
-  bulkActions: {
-    position: 'absolute',
-    left: 20,
-    right: 20,
-    flexDirection: 'row',
-    gap: 15,
+  filterContainer: {
+    flexGrow: 0,
     paddingVertical: 10,
   },
-  bulkActionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#10b981',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 25,
+  filterContent: {
+    paddingHorizontal: 16,
     gap: 8,
   },
-  bulkDeleteButton: {
-    backgroundColor: '#ef4444',
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: '#1f2937',
+    gap: 6,
   },
-  bulkNotebookButton: {
-    backgroundColor: '#8b5cf6',
+  filterText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
-  bulkActionText: {
+  filterTextSelected: {
+    color: '#ffffff',
+  },
+  notebookContent: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  monthGroup: {
+    marginBottom: 24,
+  },
+  monthTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 12,
+  },
+  memoryCard: {
+    flexDirection: 'row',
+    backgroundColor: '#1f2937',
+    borderRadius: 12,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  cardImage: {
+    width: 100,
+    height: 120,
+  },
+  cardContent: {
+    flex: 1,
+    padding: 12,
+    justifyContent: 'center',
+    gap: 6,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  cardText: {
     color: '#ffffff',
     fontSize: 16,
+    fontWeight: '600',
+    flex: 1,
+  },
+  cardTextSecondary: {
+    color: '#9ca3af',
+    fontSize: 14,
+    flex: 1,
+  },
+  cardTextMuted: {
+    color: '#6b7280',
+    fontSize: 14,
+    fontStyle: 'italic',
+    flex: 1,
+  },
+  eventBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    gap: 4,
+    marginTop: 4,
+  },
+  eventBadgeText: {
+    color: '#ffffff',
+    fontSize: 12,
     fontWeight: '600',
   },
 });
