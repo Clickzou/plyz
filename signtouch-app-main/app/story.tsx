@@ -383,22 +383,27 @@ function StoryPreview({
           {signatureOverlays.length > 0 && signatureOverlays.map((overlay, index) => {
             if (interactive && index === 0) return null;
             const isFirstNonInteractive = !interactive && index === 0;
+            const sigX = isFirstNonInteractive ? signatureX : overlay.x;
+            const sigY = isFirstNonInteractive ? signatureY : overlay.y;
+            const sigScale = isFirstNonInteractive ? signatureScale : overlay.scale;
+            const sigColor = isFirstNonInteractive ? signatureColor : overlay.color;
+            console.log(`🎨 Story Signature ${index}: x=${sigX}, y=${sigY}, scale=${sigScale}, color=${sigColor}, width=${overlay.width}, height=${overlay.height}`);
             return (
               <Image
                 key={overlay.id}
                 source={{ uri: overlay.uri }}
+                tintColor={sigColor}
                 style={{
                   position: 'absolute',
-                  left: `${(isFirstNonInteractive ? signatureX : overlay.x) * 100}%`,
-                  top: `${(isFirstNonInteractive ? signatureY : overlay.y) * 100}%`,
-                  width: (overlay.width || 100) * (isFirstNonInteractive ? signatureScale : overlay.scale),
-                  height: (overlay.height || 50) * (isFirstNonInteractive ? signatureScale : overlay.scale),
-                  marginLeft: -((overlay.width || 100) * (isFirstNonInteractive ? signatureScale : overlay.scale)) / 2,
-                  marginTop: -((overlay.height || 50) * (isFirstNonInteractive ? signatureScale : overlay.scale)) / 2,
+                  left: `${sigX * 100}%`,
+                  top: `${sigY * 100}%`,
+                  width: (overlay.width || 150) * sigScale,
+                  height: (overlay.height || 80) * sigScale,
+                  marginLeft: -((overlay.width || 150) * sigScale) / 2,
+                  marginTop: -((overlay.height || 80) * sigScale) / 2,
                   transform: [
                     { rotate: `${isFirstNonInteractive ? signatureRotation : overlay.rotation}rad` },
                   ],
-                  tintColor: isFirstNonInteractive ? signatureColor : overlay.color,
                   zIndex: 5,
                 }}
                 resizeMode="contain"
@@ -442,10 +447,10 @@ function StoryPreview({
                 position: 'absolute',
                 left: '50%',
                 top: '50%',
-                width: (signatureOverlays[0].width || 100) + 16,
-                height: (signatureOverlays[0].height || 50) + 16,
-                marginLeft: -(((signatureOverlays[0].width || 100) + 16)) / 2,
-                marginTop: -(((signatureOverlays[0].height || 50) + 16)) / 2,
+                width: (signatureOverlays[0].width || 150) + 16,
+                height: (signatureOverlays[0].height || 80) + 16,
+                marginLeft: -(((signatureOverlays[0].width || 150) + 16)) / 2,
+                marginTop: -(((signatureOverlays[0].height || 80) + 16)) / 2,
                 zIndex: 20,
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -454,10 +459,10 @@ function StoryPreview({
               <View style={styles.selectionBorder} />
               <Image
                 source={{ uri: signatureOverlays[0].uri }}
+                tintColor={signatureColor}
                 style={{
-                  width: signatureOverlays[0].width || 100,
-                  height: signatureOverlays[0].height || 50,
-                  tintColor: signatureColor,
+                  width: signatureOverlays[0].width || 150,
+                  height: signatureOverlays[0].height || 80,
                 }}
                 resizeMode="contain"
               />
@@ -942,7 +947,6 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
   },
   storyImage: {
     width: '100%',
