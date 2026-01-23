@@ -423,15 +423,11 @@ function StoryPreview({
   const savedTxtRotation = useSharedValue(0);
 
   useEffect(() => {
-    sigTranslateX.value = 0;
-    sigTranslateY.value = 0;
     sigScale.value = signatureScale;
     sigRotation.value = signatureRotation;
-    savedSigTranslateX.value = 0;
-    savedSigTranslateY.value = 0;
     savedSigScale.value = signatureScale;
     savedSigRotation.value = signatureRotation;
-  }, [signatureX, signatureY, signatureScale, signatureRotation]);
+  }, [signatureScale, signatureRotation]);
 
   useEffect(() => {
     txtTranslateY.value = (textY - 0.5) * STORY_HEIGHT;
