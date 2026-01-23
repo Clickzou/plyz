@@ -1,16 +1,18 @@
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Platform, Alert } from 'react-native';
-import { X, Share2 } from 'lucide-react-native';
+import { X, Share2, Download } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
+import * as MediaLibrary from 'expo-media-library';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SocialShareModalProps {
   visible: boolean;
   onClose: () => void;
   imageUri: string;
+  onSave?: () => Promise<void>;
 }
 
-export default function SocialShareModal({ visible, onClose, imageUri }: SocialShareModalProps) {
+export default function SocialShareModal({ visible, onClose, imageUri, onSave }: SocialShareModalProps) {
   const { t } = useLanguage();
 
   const handleShare = async () => {
@@ -31,7 +33,13 @@ export default function SocialShareModal({ visible, onClose, imageUri }: SocialS
           Alert.alert(t('error'), t('socialShareError'));
         }
       } else {
-        alert(t('socialShareError'));
+        const link = document.createElement('a');
+        link.href = imageUri;
+        link.download = `signtouch-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        onClose();
       }
     } catch (error) {
       console.error('Erreur lors du partage:', error);
@@ -40,6 +48,36 @@ export default function SocialShareModal({ visible, onClose, imageUri }: SocialS
       } else {
         Alert.alert(t('error'), t('socialShareError'));
       }
+    }
+  };
+
+  const handleSave = async () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+
+    try {
+      if (onSave) {
+        await onSave();
+        onClose();
+      } else if (Platform.OS !== 'web') {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status === 'granted') {
+          await MediaLibrary.saveToLibraryAsync(imageUri);
+          Alert.alert(t('done'), t('storySaved'));
+          onClose();
+        }
+      } else {
+        const link = document.createElement('a');
+        link.href = imageUri;
+        link.download = `signtouch-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        onClose();
+      }
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
     }
   };
 
@@ -62,16 +100,25 @@ export default function SocialShareModal({ visible, onClose, imageUri }: SocialS
           <View style={styles.content}>
             <Text style={styles.description}>{t('socialShareDescription')}</Text>
 
-            <TouchableOpacity
-              style={styles.shareButton}
-              onPress={handleShare}
-              activeOpacity={0.8}
-            >
-              <View style={styles.shareIconContainer}>
-                <Share2 size={28} color="#ffffff" strokeWidth={2} />
-              </View>
-              <Text style={styles.shareButtonText}>{t('share')}</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonsRow}>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSave}
+                activeOpacity={0.8}
+              >
+                <Download size={24} color="#ffffff" strokeWidth={2} />
+                <Text style={styles.buttonText}>{t('save')}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.shareButton}
+                onPress={handleShare}
+                activeOpacity={0.8}
+              >
+                <Share2 size={24} color="#ffffff" strokeWidth={2} />
+                <Text style={styles.buttonText}>{t('share')}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
@@ -124,21 +171,33 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     lineHeight: 22,
   },
-  shareButton: {
-    backgroundColor: '#10B981',
-    borderRadius: 20,
-    paddingVertical: 20,
-    paddingHorizontal: 40,
+  buttonsRow: {
+    flexDirection: 'row',
+    gap: 16,
+    width: '100%',
+  },
+  saveButton: {
+    flex: 1,
+    backgroundColor: '#6366f1',
+    borderRadius: 16,
+    paddingVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
     justifyContent: 'center',
+    gap: 8,
   },
-  shareIconContainer: {
-    marginRight: 12,
+  shareButton: {
+    flex: 1,
+    backgroundColor: '#10B981',
+    borderRadius: 16,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
-  shareButtonText: {
-    fontSize: 18,
+  buttonText: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#ffffff',
   },

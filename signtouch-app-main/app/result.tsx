@@ -2204,18 +2204,6 @@ export default function ResultScreen() {
                 </TouchableOpacity>
               )}
 
-              <TouchableOpacity
-                style={styles.downloadButton}
-                onPress={downloadToDevice}
-                disabled={isSaving}
-                activeOpacity={0.7}
-              >
-                {isSaving ? (
-                  <ActivityIndicator color="#ffffff" size="small" />
-                ) : (
-                  <Download size={24} color="#ffffff" strokeWidth={2} />
-                )}
-              </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.deleteButton}
@@ -2237,6 +2225,7 @@ export default function ResultScreen() {
           visible={showShareModal}
           onClose={() => setShowShareModal(false)}
           imageUri={displayUri}
+          onSave={downloadToDevice}
         />
 
         <AdModal
