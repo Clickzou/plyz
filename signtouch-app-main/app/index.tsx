@@ -16,23 +16,35 @@ import Animated, {
 import BottomNav from '@/components/BottomNav';
 
 function SignatureImage({ delay }: { delay: number }) {
+  const clipWidth = useSharedValue(0);
   const opacity = useSharedValue(0);
 
   useEffect(() => {
-    opacity.value = withDelay(delay, withTiming(1, { duration: 1000 }));
+    opacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
+    clipWidth.value = withDelay(
+      delay + 300,
+      withTiming(400, { duration: 2500, easing: Easing.out(Easing.ease) })
+    );
   }, []);
 
   const containerStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
   }));
 
+  const maskStyle = useAnimatedStyle(() => ({
+    width: clipWidth.value,
+    overflow: 'hidden' as const,
+  }));
+
   return (
     <Animated.View style={[styles.signatureContainer, containerStyle]}>
-      <Image 
-        source={require('@/assets/images/signature.png')} 
-        style={styles.signatureImage}
-        resizeMode="contain"
-      />
+      <Animated.View style={maskStyle}>
+        <Image 
+          source={require('@/assets/images/signature.png')} 
+          style={styles.signatureImage}
+          resizeMode="contain"
+        />
+      </Animated.View>
     </Animated.View>
   );
 }
