@@ -559,6 +559,8 @@ function StoryPreview({
   interactive = false,
   selectedSignatureIndex = 0,
   setSelectedSignatureIndex,
+  selectedTextIndex = null,
+  setSelectedTextIndex,
 }: { 
   imageUri: string; 
   animation: Animation; 
@@ -581,6 +583,8 @@ function StoryPreview({
   interactive?: boolean;
   selectedSignatureIndex?: number;
   setSelectedSignatureIndex?: (index: number) => void;
+  selectedTextIndex?: number | null;
+  setSelectedTextIndex?: (index: number | null) => void;
 }) {
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -914,8 +918,8 @@ function StoryPreview({
           <InteractiveText
             key={overlay.id}
             overlay={overlay}
-            isSelected={false}
-            onSelect={() => {}}
+            isSelected={index === selectedTextIndex}
+            onSelect={() => setSelectedTextIndex && setSelectedTextIndex(index)}
           />
         ))}
 
@@ -958,6 +962,7 @@ export default function StoryScreen() {
   const [textY, setTextY] = useState(0.75);
   
   const [selectedSignatureIndex, setSelectedSignatureIndex] = useState(0);
+  const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(null);
   
   const COLORS = ['#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#10B981'];
 
@@ -1201,6 +1206,8 @@ export default function StoryScreen() {
                 }}
                 selectedSignatureIndex={selectedSignatureIndex}
                 setSelectedSignatureIndex={setSelectedSignatureIndex}
+                selectedTextIndex={selectedTextIndex}
+                setSelectedTextIndex={setSelectedTextIndex}
               />
             </ViewShot>
           </View>
