@@ -823,22 +823,24 @@ function StoryPreview({
             />
           ))}
 
-        {interactive ? (
-          <GestureDetector gesture={textGesture}>
-            <Animated.View style={[styles.textContainerInteractive, { zIndex: 15 }, txtAnimatedStyle]}>
-              <View style={styles.selectionBorder} />
-              <Text style={[styles.customText, { color: textColor, fontSize: 18 }]}>
-                {customText || defaultText}
+        {customText ? (
+          interactive ? (
+            <GestureDetector gesture={textGesture}>
+              <Animated.View style={[styles.textContainerInteractive, { zIndex: 15 }, txtAnimatedStyle]}>
+                <View style={styles.selectionBorder} />
+                <Text style={[styles.customText, { color: textColor, fontSize: 18 }]}>
+                  {customText}
+                </Text>
+              </Animated.View>
+            </GestureDetector>
+          ) : (
+            <Animated.View style={[styles.textContainer, textStyle, { top: `${textY * 100}%` }]}>
+              <Text style={[styles.customText, { color: textColor, fontSize: 18 * textScale }]}>
+                {customText}
               </Text>
             </Animated.View>
-          </GestureDetector>
-        ) : (
-          <Animated.View style={[styles.textContainer, textStyle, { top: `${textY * 100}%` }]}>
-            <Text style={[styles.customText, { color: textColor, fontSize: 18 * textScale }]}>
-              {customText || defaultText}
-            </Text>
-          </Animated.View>
-        )}
+          )
+        ) : null}
 
         <View style={styles.watermark}>
           <Text style={styles.watermarkText}>SignTouch</Text>
@@ -948,10 +950,13 @@ export default function StoryScreen() {
           }
           if (txts.length > 0) {
             const firstTxt = txts[0];
+            console.log('📝 First text overlay:', { text: firstTxt.text, y: firstTxt.y, color: firstTxt.color });
             setTextY(firstTxt.y);
             setTextScale(firstTxt.scale);
             setTextColor(firstTxt.color || '#ffffff');
             setCustomText(firstTxt.text || t('storyDefaultText'));
+          } else {
+            setCustomText('');
           }
         } catch { }
       }
