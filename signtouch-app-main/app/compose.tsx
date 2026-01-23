@@ -205,36 +205,27 @@ const COLORS = [
 const STROKE_SCALES = [0.7, 1.0, 1.4];
 
 const FONT_FAMILIES = [
+  // Polices manuscrites naturelles
+  { name: 'Shadows Into Light', value: 'Shadows Into Light' },
+  { name: 'Nanum Pen Script', value: 'Nanum Pen Script' },
+  { name: 'Covered By Your Grace', value: 'Covered By Your Grace' },
+  { name: 'Just Another Hand', value: 'Just Another Hand' },
+  { name: 'Caveat', value: 'Caveat' },
+  { name: 'Indie Flower', value: 'Indie Flower' },
+  // Polices script / cursive stylées
+  { name: 'Alex Brush', value: 'Alex Brush' },
+  { name: 'Dancing Script', value: 'Dancing Script' },
+  { name: 'Great Vibes', value: 'Great Vibes' },
+  { name: 'Pacifico', value: 'Pacifico' },
+  { name: 'Sacramento', value: 'Sacramento' },
+  // Polices créatives et originales
+  { name: 'Bangers', value: 'Bangers' },
+  { name: 'Playball', value: 'Playball' },
+  { name: 'Yesteryear', value: 'Yesteryear' },
+  // Polices système de base
   { name: 'System', value: 'System' },
   { name: 'Arial', value: 'Arial' },
-  { name: 'Helvetica', value: 'Helvetica' },
   { name: 'Georgia', value: 'Georgia' },
-  { name: 'Times', value: 'Times New Roman' },
-  { name: 'Verdana', value: 'Verdana' },
-  { name: 'Trebuchet', value: 'Trebuchet MS' },
-  { name: 'Palatino', value: 'Palatino' },
-  { name: 'Garamond', value: 'Garamond' },
-  { name: 'Bookman', value: 'Bookman' },
-  { name: 'Avant Garde', value: 'Avant Garde' },
-  { name: 'Courier', value: 'Courier New' },
-  { name: 'Monaco', value: 'Monaco' },
-  { name: 'Optima', value: 'Optima' },
-  { name: 'Futura', value: 'Futura' },
-  { name: 'Didot', value: 'Didot' },
-  { name: 'American Typewriter', value: 'American Typewriter' },
-  { name: 'Baskerville', value: 'Baskerville' },
-  { name: 'Copperplate', value: 'Copperplate' },
-  { name: 'Papyrus', value: 'Papyrus' },
-  { name: 'Brush Script', value: 'Brush Script MT' },
-  { name: 'Lucida Handwriting', value: 'Lucida Handwriting' },
-  { name: 'Comic Sans', value: 'Comic Sans MS' },
-  { name: 'Bradley Hand', value: 'Bradley Hand' },
-  { name: 'Marker Felt', value: 'Marker Felt' },
-  { name: 'Snell Roundhand', value: 'Snell Roundhand' },
-  { name: 'Zapfino', value: 'Zapfino' },
-  { name: 'Chalkboard', value: 'Chalkboard' },
-  { name: 'Noteworthy', value: 'Noteworthy' },
-  { name: 'Handwriting', value: 'cursive' },
 ];
 
 interface TextTransform {
