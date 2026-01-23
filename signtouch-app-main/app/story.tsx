@@ -430,34 +430,54 @@ function StoryPreview({
 
         <View style={[styles.overlay, { opacity: animation.overlayOpacity }]} pointerEvents="none" />
 
-        {interactive && signatureOverlays.length > 0 && signatureOverlays.map((overlay) => (
-          <GestureDetector key={overlay.id} gesture={signatureGesture}>
-            <Animated.View
-              style={[{
+        {interactive && signatureOverlays.length > 0 && signatureOverlays.map((overlay, index) => (
+          index === 0 ? (
+            <GestureDetector key={overlay.id} gesture={signatureGesture}>
+              <Animated.View
+                style={[{
+                  position: 'absolute',
+                  left: '50%',
+                  top: '50%',
+                  width: (overlay.width || 100) + 16,
+                  height: (overlay.height || 50) + 16,
+                  marginLeft: -(((overlay.width || 100) + 16)) / 2,
+                  marginTop: -(((overlay.height || 50) + 16)) / 2,
+                  zIndex: 20,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }, sigAnimatedStyle]}
+              >
+                <View style={styles.selectionBorder} />
+                <Image
+                  source={{ uri: overlay.uri }}
+                  style={{
+                    width: overlay.width || 100,
+                    height: overlay.height || 50,
+                    tintColor: signatureColor,
+                  }}
+                  resizeMode="contain"
+                />
+              </Animated.View>
+            </GestureDetector>
+          ) : (
+            <Image
+              key={overlay.id}
+              source={{ uri: overlay.uri }}
+              style={{
                 position: 'absolute',
-                left: '50%',
-                top: '50%',
-                width: (overlay.width || 100) + 16,
-                height: (overlay.height || 50) + 16,
-                marginLeft: -(((overlay.width || 100) + 16)) / 2,
-                marginTop: -(((overlay.height || 50) + 16)) / 2,
-                zIndex: 20,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }, sigAnimatedStyle]}
-            >
-              <View style={styles.selectionBorder} />
-              <Image
-                source={{ uri: overlay.uri }}
-                style={{
-                  width: overlay.width || 100,
-                  height: overlay.height || 50,
-                  tintColor: signatureColor,
-                }}
-                resizeMode="contain"
-              />
-            </Animated.View>
-          </GestureDetector>
+                left: `${overlay.x * 100}%`,
+                top: `${overlay.y * 100}%`,
+                width: (overlay.width || 100) * overlay.scale,
+                height: (overlay.height || 50) * overlay.scale,
+                marginLeft: -((overlay.width || 100) * overlay.scale) / 2,
+                marginTop: -((overlay.height || 50) * overlay.scale) / 2,
+                transform: [{ rotate: `${overlay.rotation}rad` }],
+                tintColor: overlay.color,
+                zIndex: 10,
+              }}
+              resizeMode="contain"
+            />
+          )
         ))}
 
         {interactive ? (
