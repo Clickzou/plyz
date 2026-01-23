@@ -1943,7 +1943,7 @@ export default function ResultScreen() {
           <View style={[styles.tooltipContainer, { top: insets.top + 90 }]}>
             <View style={styles.tooltip}>
               <Text style={styles.tooltipText}>
-                Touchez une signature pour la modifier
+                Touchez une signature ou un texte pour le modifier
               </Text>
             </View>
           </View>
