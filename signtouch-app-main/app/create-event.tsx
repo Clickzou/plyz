@@ -100,20 +100,15 @@ export default function CreateEventScreen() {
       return;
     }
 
-    if (!user) {
-      Alert.alert(t('error') || 'Error', t('loginRequired') || 'Please log in to create an event');
-      router.push('/account');
-      return;
-    }
-
     setIsCreating(true);
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
     try {
+      const creatorId = user?.id || `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const event = await createLiveEvent(
-        user.id,
+        creatorId,
         eventName.trim(),
         '',
         undefined,
