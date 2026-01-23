@@ -837,7 +837,9 @@ export default function ResultScreen() {
   const handleMetadataSave = async (metadata: MemoryMetadata) => {
     if (!memory) return;
     try {
+      console.log('📓 Saving metadata:', metadata);
       await StorageService.updateMemory(memory, user?.id || null, { metadata });
+      console.log('✅ Metadata saved successfully for memory:', memory.id);
       setShowMetadataModal(false);
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

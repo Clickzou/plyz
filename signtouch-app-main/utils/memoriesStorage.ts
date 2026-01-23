@@ -273,7 +273,8 @@ export const getAllMemories = async (): Promise<Memory[]> => {
           textOverlays: m.textOverlays,
           filter: m.filter,
           adjustments: m.adjustments,
-          isEdited: m.isEdited
+          isEdited: m.isEdited,
+          metadata: m.metadata
         };
 
         if (cleaned.signatureOverlays && cleaned.signatureOverlays.length > 0) {
