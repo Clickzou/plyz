@@ -1231,30 +1231,6 @@ export default function StoryScreen() {
               />
             </ViewShot>
           </View>
-
-          <View style={styles.rightControls}>
-            {(selectedSignatureIndex !== null || true) && (
-              <View style={styles.verticalColorPicker}>
-                {COLORS.slice(0, 6).map((color) => (
-                  <TouchableOpacity
-                    key={color}
-                    style={[
-                      styles.smallColorOption,
-                      { backgroundColor: color },
-                      (selectedSignatureIndex !== null ? signatureColor === color : textColor === color) && styles.smallColorOptionActive,
-                    ]}
-                    onPress={() => {
-                      if (selectedSignatureIndex !== null) {
-                        setSignatureColor(color);
-                      } else {
-                        setTextColor(color);
-                      }
-                    }}
-                  />
-                ))}
-              </View>
-            )}
-          </View>
         </View>
 
         <View style={styles.section}>
