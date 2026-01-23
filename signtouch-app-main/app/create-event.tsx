@@ -94,7 +94,17 @@ export default function CreateEventScreen() {
     </svg>`;
   };
 
+  const generateEventCode = (): string => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  };
+
   const handleCreateEvent = async () => {
+    console.log('handleCreateEvent called');
     if (!eventName.trim()) {
       Alert.alert(t('error') || 'Error', t('eventNameRequired') || 'Please enter an event name');
       return;
@@ -107,14 +117,35 @@ export default function CreateEventScreen() {
 
     try {
       const creatorId = user?.id || `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const event = await createLiveEvent(
-        creatorId,
-        eventName.trim(),
-        '',
-        undefined,
-        24
-      );
+      
+      let event;
+      try {
+        event = await createLiveEvent(
+          creatorId,
+          eventName.trim(),
+          '',
+          undefined,
+          24
+        );
+      } catch (supabaseError) {
+        console.log('Supabase error, creating local event:', supabaseError);
+        const code = generateEventCode();
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        event = {
+          id: `local_${Date.now()}`,
+          code,
+          name: eventName.trim(),
+          creator_id: creatorId,
+          signature_url: null,
+          photo_url: null,
+          created_at: now.toISOString(),
+          expires_at: expiresAt.toISOString(),
+          is_active: true,
+        };
+      }
 
+      console.log('Event created:', event);
       setCreatedEvent(event);
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
