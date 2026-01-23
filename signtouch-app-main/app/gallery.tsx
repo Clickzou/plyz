@@ -425,12 +425,11 @@ export default function GalleryScreen() {
         )}
         {memories.length > 0 && (
           <View style={styles.headerRow}>
-            <Text style={styles.subtitle}>
-              {selectionMode && selectedMemories.size > 0
-                ? `${selectedMemories.size} ${selectedMemories.size > 1 ? t('selectedPlural') || 'sélectionnés' : t('selected') || 'sélectionné'}`
-                : `${memories.length} ${memories.length > 1 ? t('memories') : t('memory')}`
-              }
-            </Text>
+            {selectionMode && selectedMemories.size > 0 && (
+              <Text style={styles.subtitle}>
+                {`${selectedMemories.size} ${selectedMemories.size > 1 ? t('selectedPlural') || 'sélectionnés' : t('selected') || 'sélectionné'}`}
+              </Text>
+            )}
             <TouchableOpacity
               style={styles.selectButton}
               onPress={toggleSelectionMode}
