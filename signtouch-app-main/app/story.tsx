@@ -320,7 +320,26 @@ export default function StoryScreen() {
       if (viewShotRef.current?.capture) {
         const uri = await viewShotRef.current.capture();
         
-        if (await Sharing.isAvailableAsync()) {
+        if (Platform.OS === 'web') {
+          const response = await fetch(uri);
+          const blob = await response.blob();
+          const file = new File([blob], `signtouch-story-${Date.now()}.png`, { type: 'image/png' });
+          
+          if (navigator.share && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: 'SignTouch Story',
+            });
+          } else {
+            const link = document.createElement('a');
+            link.href = uri;
+            link.download = `signtouch-story-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            alert(t('storySaved'));
+          }
+        } else if (await Sharing.isAvailableAsync()) {
           await Sharing.shareAsync(uri, {
             mimeType: 'image/png',
             dialogTitle: t('storyShareTitle'),
