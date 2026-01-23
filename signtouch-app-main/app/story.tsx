@@ -181,7 +181,53 @@ function SignatureSvgContent({ overlay, color }: { overlay: SignatureOverlay; co
   const isSvgData = overlay.uri.startsWith('data:image/svg+xml');
   const signatureColor = color || '#ffffff';
   
-  console.log('🖊️ SignatureSvgContent rendering:', { id: overlay.id, isJsonData, isSvgData, color: signatureColor });
+  if (isSvgData) {
+    try {
+      const base64Data = overlay.uri.split(',')[1];
+      const svgString = atob(base64Data);
+      const paths: string[] = [];
+      const pathRegex = /d="([^"]+)"/g;
+      let match;
+      while ((match = pathRegex.exec(svgString)) !== null) {
+        paths.push(match[1]);
+      }
+      const widthMatch = svgString.match(/width="([^"]+)"/);
+      const heightMatch = svgString.match(/height="([^"]+)"/);
+      const width = widthMatch ? parseFloat(widthMatch[1]) : 300;
+      const height = heightMatch ? parseFloat(heightMatch[1]) : 150;
+      
+      const targetSize = 80;
+      const aspectRatio = width / height;
+      const displayWidth = aspectRatio >= 1 ? targetSize : targetSize * aspectRatio;
+      const displayHeight = aspectRatio >= 1 ? targetSize / aspectRatio : targetSize;
+      
+      console.log('🖊️ SignatureSvgContent SVG parsed:', { id: overlay.id, pathsCount: paths.length, width, height, displayWidth, displayHeight, color: signatureColor });
+      
+      return (
+        <Svg
+          width={displayWidth}
+          height={displayHeight}
+          viewBox={`0 0 ${width} ${height}`}
+        >
+          {paths.map((pathData, index) => (
+            <Path
+              key={index}
+              d={pathData}
+              stroke={signatureColor}
+              strokeWidth={5}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          ))}
+        </Svg>
+      );
+    } catch (error) {
+      console.error('Error in SignatureSvgContent:', error);
+    }
+  }
+  
+  console.log('🖊️ SignatureSvgContent fallback:', { id: overlay.id, isJsonData, isSvgData });
 
   if (isJsonData) {
     try {
@@ -674,8 +720,6 @@ function StoryPreview({
                   position: 'absolute',
                   left: scaledX,
                   top: scaledY,
-                  width: 100,
-                  height: 50,
                   zIndex: 20,
                   justifyContent: 'center',
                   alignItems: 'center',
