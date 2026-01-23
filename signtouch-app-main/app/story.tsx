@@ -26,6 +26,7 @@ import html2canvas from 'html2canvas';
 import * as Sharing from 'expo-sharing';
 import { SignatureOverlay, TextOverlay, getAllMemories } from '@/utils/memoriesStorage';
 import { saveStory, getStories } from '@/utils/storiesStorage';
+import SocialShareModal from '@/components/SocialShareModal';
 import Svg, { Path } from 'react-native-svg';
 
 interface StorySignatureProps {
@@ -1155,6 +1156,8 @@ export default function StoryScreen() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareImageUri, setShareImageUri] = useState<string | null>(null);
   
   const [signatureScale, setSignatureScale] = useState(1);
   const [signatureRotation, setSignatureRotation] = useState(0);
@@ -1324,32 +1327,8 @@ export default function StoryScreen() {
     try {
       if (viewShotRef.current?.capture) {
         const uri = await viewShotRef.current.capture();
-        
-        if (Platform.OS === 'web') {
-          const response = await fetch(uri);
-          const blob = await response.blob();
-          const file = new File([blob], `signtouch-story-${Date.now()}.png`, { type: 'image/png' });
-          
-          if (navigator.share && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: 'SignTouch Story',
-            });
-          } else {
-            const link = document.createElement('a');
-            link.href = uri;
-            link.download = `signtouch-story-${Date.now()}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            alert(t('storySaved'));
-          }
-        } else if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(uri, {
-            mimeType: 'image/png',
-            dialogTitle: t('storyShareTitle'),
-          });
-        }
+        setShareImageUri(uri);
+        setShowShareModal(true);
       }
     } catch (error) {
       console.error('Share error:', error);
@@ -1483,6 +1462,12 @@ export default function StoryScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <SocialShareModal
+        visible={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        imageUri={shareImageUri || ''}
+      />
     </View>
   );
 }
