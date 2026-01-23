@@ -48,6 +48,10 @@ Preferred communication style: Simple, everyday language.
   - **Sequential Zoom (Reveal)**: 8s signature zoom then full photo reveal
   - **Parallax**: 7s 3D depth effect with glow overlay
 - **Animation Preview**: Play button to preview selected animation before export
+- **Interactive Overlay Customization**: Touch gestures for direct manipulation of elements on the preview
+  - **Signature**: Pan to move, pinch to resize, two-finger rotate
+  - **Text**: Pan to move vertically, pinch to resize
+  - **Color Pickers**: 10 preset colors for signature and text
 - **Export**: Static image export in 9:16 format with SignTouch watermark
 - **Social Sharing**: Share to Instagram, TikTok via native sharing API
 - **Access**: Available from result.tsx via Film icon button
