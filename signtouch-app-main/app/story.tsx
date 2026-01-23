@@ -865,7 +865,7 @@ export default function StoryScreen() {
   const [signatureOverlays, setSignatureOverlays] = useState<SignatureOverlay[]>([]);
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
   const [selectedAnimation, setSelectedAnimation] = useState<Animation>(ANIMATIONS[0]);
-  const [customText, setCustomText] = useState(t('storyDefaultText'));
+  const [customText, setCustomText] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
