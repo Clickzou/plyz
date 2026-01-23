@@ -404,8 +404,8 @@ function StoryPreview({
   const bgTranslateX = useSharedValue(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const sigTranslateX = useSharedValue((signatureX - 0.5) * STORY_WIDTH);
-  const sigTranslateY = useSharedValue((signatureY - 0.5) * STORY_HEIGHT);
+  const sigTranslateX = useSharedValue(0);
+  const sigTranslateY = useSharedValue(0);
   const sigScale = useSharedValue(signatureScale);
   const sigRotation = useSharedValue(signatureRotation);
   const savedSigTranslateX = useSharedValue((signatureX - 0.5) * STORY_WIDTH);
@@ -423,8 +423,8 @@ function StoryPreview({
   const savedTxtRotation = useSharedValue(0);
 
   useEffect(() => {
-    sigTranslateX.value = (signatureX - 0.5) * STORY_WIDTH;
-    sigTranslateY.value = (signatureY - 0.5) * STORY_HEIGHT;
+    sigTranslateX.value = 0;
+    sigTranslateY.value = 0;
     sigScale.value = signatureScale;
     sigRotation.value = signatureRotation;
     savedSigTranslateX.value = (signatureX - 0.5) * STORY_WIDTH;
