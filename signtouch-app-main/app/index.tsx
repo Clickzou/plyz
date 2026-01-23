@@ -29,7 +29,7 @@ function SignatureImage({ delay }: { delay: number }) {
   return (
     <Animated.View style={[styles.signatureContainer, containerStyle]}>
       <Image 
-        source={require('@/assets/images/signature.jpg')} 
+        source={require('@/assets/images/signature.png')} 
         style={styles.signatureImage}
         resizeMode="contain"
       />
