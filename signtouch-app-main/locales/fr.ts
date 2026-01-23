@@ -570,8 +570,8 @@ export default {
   liveSessionWatchHint: 'La signature apparaîtra en temps réel',
 
   // Celebrity Menu
-  celebrityMenuTitle: 'Choisissez Votre Mode',
-  celebrityMenuSubtitle: 'Sélectionnez comment vous voulez partager votre signature',
+  celebrityMenuTitle: 'Signez en Direct',
+  celebrityMenuSubtitle: 'Partagez votre signature avec vos fans lors d\'un événement en présentiel ou en vidéo',
   celebrityEventSimple: 'Événement QR',
   celebrityEventSimpleDesc: 'Créez un QR code que les fans peuvent scanner à tout moment pour obtenir votre signature',
   celebrityLiveSession: 'Session Live',
