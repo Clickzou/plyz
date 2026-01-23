@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput, Dimensions, Platform, ActivityIndicator } from 'react-native';
+import Slider from '@react-native-community/slider';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Sparkles, Film, Layers, Share2, Download, Play } from 'lucide-react-native';
@@ -70,7 +71,14 @@ function StoryPreview({
   onAnimationComplete,
   defaultText,
   signatureOverlays = [],
-  textOverlays = [],
+  signatureScale = 1,
+  signatureRotation = 0,
+  signatureX = 0.5,
+  signatureY = 0.3,
+  signatureColor = '#ffffff',
+  textScale = 1,
+  textColor = '#ffffff',
+  textY = 0.75,
 }: { 
   imageUri: string; 
   animation: Animation; 
@@ -79,7 +87,14 @@ function StoryPreview({
   onAnimationComplete?: () => void;
   defaultText: string;
   signatureOverlays?: SignatureOverlay[];
-  textOverlays?: TextOverlay[];
+  signatureScale?: number;
+  signatureRotation?: number;
+  signatureX?: number;
+  signatureY?: number;
+  signatureColor?: string;
+  textScale?: number;
+  textColor?: string;
+  textY?: number;
 }) {
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -213,40 +228,25 @@ function StoryPreview({
           ) : (
             <View style={[styles.storyImage, { backgroundColor: '#333' }]} />
           )}
-          {signatureOverlays.map((overlay) => (
+          {signatureOverlays.length > 0 && signatureOverlays.map((overlay) => (
             <Image
               key={overlay.id}
               source={{ uri: overlay.uri }}
               style={{
                 position: 'absolute',
-                left: `${overlay.x * 100}%`,
-                top: `${overlay.y * 100}%`,
-                width: overlay.width || 100,
-                height: overlay.height || 50,
+                left: `${signatureX * 100}%`,
+                top: `${signatureY * 100}%`,
+                width: (overlay.width || 100) * signatureScale,
+                height: (overlay.height || 50) * signatureScale,
+                marginLeft: -((overlay.width || 100) * signatureScale) / 2,
+                marginTop: -((overlay.height || 50) * signatureScale) / 2,
                 transform: [
-                  { scale: overlay.scale || 1 },
-                  { rotate: `${overlay.rotation || 0}rad` },
+                  { rotate: `${signatureRotation}rad` },
                 ],
-                tintColor: overlay.color,
+                tintColor: signatureColor,
               }}
               resizeMode="contain"
             />
-          ))}
-          {textOverlays.map((overlay) => (
-            <Text
-              key={overlay.id}
-              style={{
-                position: 'absolute',
-                left: `${overlay.x * 100}%`,
-                top: `${overlay.y * 100}%`,
-                color: overlay.color,
-                fontFamily: overlay.fontFamily,
-                fontSize: (overlay.fontSize || 16) * (overlay.scale || 1),
-                transform: [{ rotate: `${overlay.rotation || 0}rad` }],
-              }}
-            >
-              {overlay.text}
-            </Text>
           ))}
         </View>
 
@@ -256,8 +256,8 @@ function StoryPreview({
 
         <View style={[styles.overlay, { opacity: animation.overlayOpacity }]} />
 
-        <Animated.View style={[styles.textContainer, textStyle]}>
-          <Text style={[styles.customText, { color: animation.textColor }]}>
+        <Animated.View style={[styles.textContainer, textStyle, { top: `${textY * 100}%` }]}>
+          <Text style={[styles.customText, { color: textColor, fontSize: 18 * textScale }]}>
             {customText || defaultText}
           </Text>
         </Animated.View>
@@ -289,6 +289,18 @@ export default function StoryScreen() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  const [signatureScale, setSignatureScale] = useState(1);
+  const [signatureRotation, setSignatureRotation] = useState(0);
+  const [signatureX, setSignatureX] = useState(0.5);
+  const [signatureY, setSignatureY] = useState(0.3);
+  const [signatureColor, setSignatureColor] = useState('#ffffff');
+  
+  const [textScale, setTextScale] = useState(1);
+  const [textColor, setTextColor] = useState('#ffffff');
+  const [textY, setTextY] = useState(0.75);
+  
+  const COLORS = ['#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#10B981'];
 
   useEffect(() => {
     const loadData = async () => {
@@ -453,7 +465,14 @@ export default function StoryScreen() {
               onAnimationComplete={handleAnimationComplete}
               defaultText={t('storyDefaultText')}
               signatureOverlays={signatureOverlays}
-              textOverlays={textOverlays}
+              signatureScale={signatureScale}
+              signatureRotation={signatureRotation}
+              signatureX={signatureX}
+              signatureY={signatureY}
+              signatureColor={signatureColor}
+              textScale={textScale}
+              textColor={textColor}
+              textY={textY}
             />
           </ViewShot>
         </View>
@@ -478,7 +497,109 @@ export default function StoryScreen() {
             placeholder={t('storyDefaultText')}
             placeholderTextColor="#999"
           />
+          
+          <Text style={styles.sliderLabel}>Taille du texte</Text>
+          <Slider
+            style={styles.slider}
+            minimumValue={0.5}
+            maximumValue={2}
+            value={textScale}
+            onValueChange={setTextScale}
+            minimumTrackTintColor="#10B981"
+            maximumTrackTintColor="#ccc"
+          />
+          
+          <Text style={styles.sliderLabel}>Position du texte</Text>
+          <Slider
+            style={styles.slider}
+            minimumValue={0.1}
+            maximumValue={0.9}
+            value={textY}
+            onValueChange={setTextY}
+            minimumTrackTintColor="#10B981"
+            maximumTrackTintColor="#ccc"
+          />
+          
+          <Text style={styles.sliderLabel}>Couleur du texte</Text>
+          <View style={styles.colorPicker}>
+            {COLORS.map((color) => (
+              <TouchableOpacity
+                key={color}
+                style={[
+                  styles.colorOption,
+                  { backgroundColor: color },
+                  textColor === color && styles.colorOptionActive,
+                ]}
+                onPress={() => setTextColor(color)}
+              />
+            ))}
+          </View>
         </View>
+
+        {signatureOverlays.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Signature</Text>
+            
+            <Text style={styles.sliderLabel}>Taille</Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0.3}
+              maximumValue={3}
+              value={signatureScale}
+              onValueChange={setSignatureScale}
+              minimumTrackTintColor="#10B981"
+              maximumTrackTintColor="#ccc"
+            />
+            
+            <Text style={styles.sliderLabel}>Rotation</Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={-Math.PI}
+              maximumValue={Math.PI}
+              value={signatureRotation}
+              onValueChange={setSignatureRotation}
+              minimumTrackTintColor="#10B981"
+              maximumTrackTintColor="#ccc"
+            />
+            
+            <Text style={styles.sliderLabel}>Position horizontale</Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0.1}
+              maximumValue={0.9}
+              value={signatureX}
+              onValueChange={setSignatureX}
+              minimumTrackTintColor="#10B981"
+              maximumTrackTintColor="#ccc"
+            />
+            
+            <Text style={styles.sliderLabel}>Position verticale</Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0.1}
+              maximumValue={0.9}
+              value={signatureY}
+              onValueChange={setSignatureY}
+              minimumTrackTintColor="#10B981"
+              maximumTrackTintColor="#ccc"
+            />
+            
+            <Text style={styles.sliderLabel}>Couleur</Text>
+            <View style={styles.colorPicker}>
+              {COLORS.map((color) => (
+                <TouchableOpacity
+                  key={color}
+                  style={[
+                    styles.colorOption,
+                    { backgroundColor: color },
+                    signatureColor === color && styles.colorOptionActive,
+                  ]}
+                  onPress={() => setSignatureColor(color)}
+                />
+              ))}
+            </View>
+          </View>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('storyAnimation')}</Text>
@@ -659,6 +780,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#ddd',
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  sliderLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  colorPicker: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 8,
+  },
+  colorOption: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#ddd',
+  },
+  colorOptionActive: {
+    borderColor: '#10B981',
+    borderWidth: 3,
   },
   categoryRow: {
     flexDirection: 'row',
