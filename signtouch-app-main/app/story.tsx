@@ -721,11 +721,13 @@ function StoryPreview({
                   left: scaledX,
                   top: scaledY,
                   zIndex: 20,
-                  justifyContent: 'center',
-                  alignItems: 'center',
+                  padding: 8,
+                  borderWidth: 2,
+                  borderColor: '#10B981',
+                  borderRadius: 8,
+                  borderStyle: 'dashed',
                 }, sigAnimatedStyle]}
               >
-                <View style={styles.selectionBorder} />
                 <SignatureSvgContent
                   overlay={signatureOverlays[0]}
                   color={signatureColor}
