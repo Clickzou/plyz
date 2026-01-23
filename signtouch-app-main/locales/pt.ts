@@ -16,6 +16,7 @@ export default {
   galleryStories: 'Stories',
   noStories: 'Ainda não há stories',
   noStoriesHint: 'Crie uma story a partir do resultado da sua foto',
+  storiesInstruction: 'Para criar uma story, edite uma foto e clique no ícone "cinema".',
   selected: 'selecionado',
   selectedPlural: 'selecionados',
   memory: 'memória',

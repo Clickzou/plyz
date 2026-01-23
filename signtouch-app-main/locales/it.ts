@@ -16,6 +16,7 @@ export default {
   galleryStories: 'Storie',
   noStories: 'Nessuna storia ancora',
   noStoriesHint: 'Crea una storia dal risultato della tua foto',
+  storiesInstruction: 'Per creare una storia, modifica una foto e clicca sull\'icona "cinema".',
   selected: 'selezionato',
   selectedPlural: 'selezionati',
   memory: 'ricordo',

@@ -507,6 +507,11 @@ export default function GalleryScreen() {
             {t('galleryInstruction')}
           </Text>
         )}
+        {activeTab === 'stories' && (
+          <Text style={styles.instructionText}>
+            {t('storiesInstruction')}
+          </Text>
+        )}
         {activeTab === 'photos' && memories.length > 0 && (
           <View style={styles.headerRow}>
             {selectionMode && selectedMemories.size > 0 && (

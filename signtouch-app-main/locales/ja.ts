@@ -18,6 +18,7 @@ export default {
   galleryStories: 'ストーリー',
   noStories: 'まだストーリーがありません',
   noStoriesHint: '写真の結果からストーリーを作成してください',
+  storiesInstruction: 'ストーリーを作成するには、写真を編集して「シネマ」アイコンをクリックしてください。',
   galleryInstruction: '写真をクリックして編集（色、テキスト、署名、エフェクト）、シェア、またはデバイスに保存します。',
   select: '選択',
   cancel: 'キャンセル',

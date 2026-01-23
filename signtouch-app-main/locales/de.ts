@@ -16,6 +16,7 @@ export default {
   galleryStories: 'Stories',
   noStories: 'Noch keine Stories',
   noStoriesHint: 'Erstelle eine Story aus deinem Fotoergebnis',
+  storiesInstruction: 'Um eine Story zu erstellen, bearbeite ein Foto und klicke auf das "Kino"-Symbol.',
   selected: 'ausgewählt',
   selectedPlural: 'ausgewählt',
   memory: 'Erinnerung',
