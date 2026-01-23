@@ -39,8 +39,12 @@ const TOTAL_DURATION_OPTIONS = [
 const PRICE_OPTIONS = [
   { label: 'Free', value: 0 },
   { label: '2€', value: 200 },
-  { label: '3€', value: 300 },
   { label: '5€', value: 500 },
+  { label: '10€', value: 1000 },
+  { label: '50€', value: 5000 },
+  { label: '100€', value: 10000 },
+  { label: '200€', value: 20000 },
+  { label: '500€', value: 50000 },
 ];
 
 export default function CreateLiveSessionScreen() {
@@ -52,9 +56,27 @@ export default function CreateLiveSessionScreen() {
   const [durationPerFan, setDurationPerFan] = useState(5);
   const [totalDuration, setTotalDuration] = useState(30);
   const [price, setPrice] = useState(0);
+  const [isCustomPrice, setIsCustomPrice] = useState(false);
+  const [customPriceText, setCustomPriceText] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
   const calculatedMaxFans = Math.floor(totalDuration / durationPerFan);
+  
+  const handlePriceSelect = (value: number) => {
+    setPrice(value);
+    setIsCustomPrice(false);
+    setCustomPriceText('');
+  };
+
+  const handleCustomPriceChange = (text: string) => {
+    const numericText = text.replace(/[^0-9]/g, '');
+    setCustomPriceText(numericText);
+    if (numericText) {
+      setPrice(parseInt(numericText) * 100);
+    } else {
+      setPrice(0);
+    }
+  };
 
   const handleCreateSession = async () => {
     if (!celebrityName.trim()) {
@@ -189,22 +211,53 @@ export default function CreateLiveSessionScreen() {
               key={option.value}
               style={[
                 styles.optionButton,
-                price === option.value && styles.optionButtonActive,
+                !isCustomPrice && price === option.value && styles.optionButtonActive,
               ]}
-              onPress={() => setPrice(option.value)}
+              onPress={() => handlePriceSelect(option.value)}
             >
-              <DollarSign size={16} color={price === option.value ? '#f59e0b' : '#fff'} />
+              <DollarSign size={16} color={!isCustomPrice && price === option.value ? '#10B981' : '#fff'} />
               <Text
                 style={[
                   styles.optionText,
-                  price === option.value && styles.optionTextActive,
+                  !isCustomPrice && price === option.value && styles.optionTextActive,
                 ]}
               >
                 {option.label}
               </Text>
             </TouchableOpacity>
           ))}
+          <TouchableOpacity
+            style={[
+              styles.optionButton,
+              isCustomPrice && styles.optionButtonActive,
+            ]}
+            onPress={() => setIsCustomPrice(true)}
+          >
+            <DollarSign size={16} color={isCustomPrice ? '#10B981' : '#fff'} />
+            <Text
+              style={[
+                styles.optionText,
+                isCustomPrice && styles.optionTextActive,
+              ]}
+            >
+              {t('liveSessionCustomPrice') || 'Autre'}
+            </Text>
+          </TouchableOpacity>
         </View>
+        {isCustomPrice && (
+          <View style={styles.customPriceContainer}>
+            <TextInput
+              style={styles.customPriceInput}
+              placeholder={t('liveSessionEnterPrice') || 'Entrez le montant en €'}
+              placeholderTextColor="rgba(255,255,255,0.6)"
+              value={customPriceText}
+              onChangeText={handleCustomPriceChange}
+              keyboardType="numeric"
+              maxLength={5}
+            />
+            <Text style={styles.customPriceLabel}>€</Text>
+          </View>
+        )}
 
         <View style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>{t('liveSessionSummary')}</Text>
@@ -356,6 +409,28 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#10B981',
     fontSize: 18,
+  },
+  customPriceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 8,
+  },
+  customPriceInput: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  customPriceLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
   },
   optionTextActive: {
     color: '#10B981',

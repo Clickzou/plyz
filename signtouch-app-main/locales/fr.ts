@@ -524,6 +524,8 @@ export default {
   liveSessionPrice: 'Prix par Signature',
   liveSessionPriceHint: '90% vous revient (Stripe bientôt)',
   liveSessionFree: 'Gratuit',
+  liveSessionCustomPrice: 'Autre',
+  liveSessionEnterPrice: 'Entrez le montant en €',
   liveSessionSummary: 'Résumé de la Session',
   liveSessionYourRevenue: 'Vos Revenus',
   liveSessionStart: 'Démarrer la Session',
