@@ -729,7 +729,7 @@ function StoryPreview({
                   borderWidth: 2,
                   borderColor: '#10B981',
                   borderRadius: 8,
-                  backgroundColor: 'rgba(0,0,0,0.3)',
+                  borderStyle: 'dashed',
                   minWidth: 80,
                   minHeight: 80,
                 }, sigAnimatedStyle]}
