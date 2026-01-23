@@ -14,6 +14,10 @@ export default {
 
   // Gallery Screen
   myMemories: 'マイメモリー',
+  galleryPhotos: '写真',
+  galleryStories: 'ストーリー',
+  noStories: 'まだストーリーがありません',
+  noStoriesHint: '写真の結果からストーリーを作成してください',
   galleryInstruction: '写真をクリックして編集（色、テキスト、署名、エフェクト）、シェア、またはデバイスに保存します。',
   select: '選択',
   cancel: 'キャンセル',

@@ -14,6 +14,10 @@ export default {
 
   // Gallery Screen
   myMemories: 'میری یادیں',
+  galleryPhotos: 'تصاویر',
+  galleryStories: 'کہانیاں',
+  noStories: 'ابھی کوئی کہانی نہیں',
+  noStoriesHint: 'اپنی تصویر کے نتیجے سے ایک کہانی بنائیں',
   galleryInstruction: 'اسے ترمیم کرنے (رنگ، متن، دستخط، اثرات)، شیئر کرنے یا اپنے ڈیوائس میں محفوظ کرنے کے لیے تصویر پر کلک کریں۔',
   select: 'منتخب کریں',
   cancel: 'منسوخ کریں',

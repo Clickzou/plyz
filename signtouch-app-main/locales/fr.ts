@@ -14,6 +14,10 @@ export default {
 
   // Gallery Screen
   myMemories: 'Mes souvenirs',
+  galleryPhotos: 'Photos',
+  galleryStories: 'Stories',
+  noStories: 'Aucune story',
+  noStoriesHint: 'Créez une story depuis le résultat de votre photo',
   galleryInstruction: 'Cliquez sur une photo pour l\'éditer (couleurs, signature, effets), la partager ou l\'enregistrer sur votre appareil.',
   select: 'Sélectionner',
   cancel: 'Annuler',

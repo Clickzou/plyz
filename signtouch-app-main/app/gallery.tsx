@@ -12,16 +12,19 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Camera, X, Pencil, Share2, BookOpen, Filter, Star, User, MapPin, Calendar, Music, Trophy, Palette, Users, CheckCircle2, Circle } from 'lucide-react-native';
+import { Download, Trash2, Camera, X, Pencil, Share2, BookOpen, Filter, Star, User, MapPin, Calendar, Music, Trophy, Palette, Users, CheckCircle2, Circle, Film } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import { Memory, MemoryMetadata, EventType } from '@/utils/memoriesStorage';
+import { Story, getStories, deleteStory } from '@/utils/storiesStorage';
 import MetadataModal from '@/components/MetadataModal';
 import * as StorageService from '@/utils/storageService';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useTranslation } from '@/contexts/LanguageContext';
+
+type GalleryTab = 'photos' | 'stories';
 import { useAuth } from '@/contexts/AuthContext';
 import AdModal from '@/components/AdModal';
 import SocialShareModal from '@/components/SocialShareModal';
@@ -49,8 +52,11 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
 
 export default function GalleryScreen() {
   const [memories, setMemories] = useState<Memory[]>([]);
+  const [stories, setStories] = useState<Story[]>([]);
+  const [activeTab, setActiveTab] = useState<GalleryTab>('photos');
   const [loading, setLoading] = useState(true);
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
+  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -130,9 +136,19 @@ export default function GalleryScreen() {
     }
   };
 
+  const loadStoriesData = async () => {
+    try {
+      const loadedStories = await getStories();
+      setStories(loadedStories);
+    } catch (error) {
+      console.error('Error loading stories:', error);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       loadMemories();
+      loadStoriesData();
 
       // Afficher le modal d'abonnement 1 seconde après l'arrivée sur la galerie
       const timer = setTimeout(() => {
@@ -280,6 +296,48 @@ export default function GalleryScreen() {
     }
   };
 
+  const handleDeleteStory = async () => {
+    if (!selectedStory) return;
+
+    try {
+      setIsDeleting(true);
+      await deleteStory(selectedStory.id);
+      
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+
+      setSelectedStory(null);
+      await loadStoriesData();
+    } catch (error) {
+      console.error('Error deleting story:', error);
+      Alert.alert(t('error'), t('saveError'));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const confirmDeleteStory = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(t('confirmDeleteMessage'))) {
+        handleDeleteStory();
+      }
+    } else {
+      Alert.alert(
+        t('confirmDelete'),
+        t('confirmDeleteMessage'),
+        [
+          { text: t('cancel'), style: 'cancel' },
+          { text: t('delete'), style: 'destructive', onPress: handleDeleteStory },
+        ]
+      );
+    }
+  };
+
   const goToCamera = () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -418,12 +476,38 @@ export default function GalleryScreen() {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
         <Text style={styles.title}>{t('myMemories')}</Text>
-        {memories.length > 0 && !selectionMode && (
+        
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'photos' && styles.tabActive]}
+            onPress={() => {
+              if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setActiveTab('photos');
+            }}
+          >
+            <Text style={[styles.tabText, activeTab === 'photos' && styles.tabTextActive]}>
+              {t('galleryPhotos') || 'Photos'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'stories' && styles.tabActive]}
+            onPress={() => {
+              if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setActiveTab('stories');
+            }}
+          >
+            <Text style={[styles.tabText, activeTab === 'stories' && styles.tabTextActive]}>
+              {t('galleryStories') || 'Stories'} {stories.length > 0 && `(${stories.length})`}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {activeTab === 'photos' && memories.length > 0 && !selectionMode && (
           <Text style={styles.instructionText}>
             {t('galleryInstruction')}
           </Text>
         )}
-        {memories.length > 0 && (
+        {activeTab === 'photos' && memories.length > 0 && (
           <View style={styles.headerRow}>
             {selectionMode && selectedMemories.size > 0 && (
               <Text style={styles.subtitle}>
@@ -443,7 +527,7 @@ export default function GalleryScreen() {
         )}
       </View>
 
-      {memories.length > 0 && (
+      {activeTab === 'photos' && memories.length > 0 && (
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false} 
@@ -480,11 +564,48 @@ export default function GalleryScreen() {
         </ScrollView>
       )}
 
-      {loading ? (
+      {activeTab === 'stories' && (
+        stories.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Film size={64} color="#4b5563" />
+            <Text style={styles.emptyText}>{t('noStories') || 'No stories yet'}</Text>
+            <Text style={styles.emptySubtext}>{t('noStoriesHint') || 'Create a story from your photo result'}</Text>
+          </View>
+        ) : (
+          <ScrollView style={styles.storiesGrid} showsVerticalScrollIndicator={false}>
+            <View style={styles.storiesGridContent}>
+              {stories.map((story) => (
+                <TouchableOpacity
+                  key={story.id}
+                  style={styles.storyCard}
+                  onPress={() => {
+                    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setSelectedStory(story);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={{ uri: story.uri }}
+                    style={styles.storyImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.storyOverlay}>
+                    <Text style={styles.storyDate}>
+                      {new Date(story.timestamp).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        )
+      )}
+
+      {activeTab === 'photos' && loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#10b981" />
         </View>
-      ) : memories.length === 0 ? (
+      ) : activeTab === 'photos' && memories.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>{t('noMemories')}</Text>
           <TouchableOpacity
@@ -496,12 +617,12 @@ export default function GalleryScreen() {
             <Text style={styles.createButtonText}>{t('takePicture')}</Text>
           </TouchableOpacity>
         </View>
-      ) : filteredMemories.length === 0 ? (
+      ) : activeTab === 'photos' && filteredMemories.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Star size={64} color="#4b5563" />
           <Text style={styles.emptyText}>{t('noMemoriesForFilter') || 'Aucun souvenir pour ce filtre'}</Text>
         </View>
-      ) : (
+      ) : activeTab === 'photos' && (
         <ScrollView style={styles.notebookContent} showsVerticalScrollIndicator={false}>
           {groupedMemories.map((group) => (
             <View key={group.key} style={styles.monthGroup}>
@@ -648,10 +769,62 @@ export default function GalleryScreen() {
         </View>
       </Modal>
 
+      <Modal
+        visible={selectedStory !== null}
+        transparent={false}
+        animationType="fade"
+        onRequestClose={() => setSelectedStory(null)}
+      >
+        <View style={styles.modalContainer}>
+          {selectedStory && (
+            <Image
+              source={{ uri: selectedStory.uri }}
+              style={styles.fullscreenImage}
+              resizeMode="contain"
+            />
+          )}
+
+          <TouchableOpacity
+            style={[styles.closeModalButton, { top: insets.top + 20 }]}
+            onPress={() => setSelectedStory(null)}
+            activeOpacity={0.8}
+          >
+            <X size={24} color="#ffffff" strokeWidth={2} />
+          </TouchableOpacity>
+
+          <View style={[styles.modalFloatingControls, { paddingBottom: insets.bottom + 20 }]}>
+            <TouchableOpacity
+              style={[styles.modalFloatingButton, styles.modalBlueButton]}
+              onPress={() => {
+                if (selectedStory) {
+                  setShowShareModal(true);
+                }
+              }}
+              activeOpacity={0.8}
+            >
+              <Share2 size={28} color="#ffffff" strokeWidth={2.5} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modalFloatingButton, styles.modalRedButton]}
+              onPress={confirmDeleteStory}
+              disabled={isDeleting}
+              activeOpacity={0.8}
+            >
+              {isDeleting ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <Trash2 size={28} color="#ffffff" strokeWidth={2.5} />
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <SocialShareModal
         visible={showShareModal}
         onClose={() => setShowShareModal(false)}
-        imageUri={selectedMemory?.uri || ''}
+        imageUri={selectedStory?.uri || selectedMemory?.uri || ''}
       />
 
       <AdModal
@@ -968,5 +1141,72 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    padding: 4,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  tabActive: {
+    backgroundColor: '#10b981',
+  },
+  tabText: {
+    color: '#888',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  tabTextActive: {
+    color: '#ffffff',
+  },
+  storiesGrid: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  storiesGridContent: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingBottom: BOTTOM_NAV_HEIGHT + 20,
+  },
+  storyCard: {
+    width: '48%',
+    aspectRatio: 9/16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 16,
+    backgroundColor: '#1a1a1a',
+  },
+  storyImage: {
+    width: '100%',
+    height: '100%',
+  },
+  storyOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  storyDate: {
+    color: '#ffffff',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: -10,
   },
 });

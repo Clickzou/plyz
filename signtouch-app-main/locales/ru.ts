@@ -14,6 +14,10 @@ export default {
 
   // Gallery Screen
   myMemories: 'Мои воспоминания',
+  galleryPhotos: 'Фото',
+  galleryStories: 'Истории',
+  noStories: 'Пока нет историй',
+  noStoriesHint: 'Создайте историю из результата вашего фото',
   galleryInstruction: 'Нажмите на фото для редактирования (цвета, текст, подпись, эффекты), обмена или сохранения на устройство.',
   select: 'Выбрать',
   cancel: 'Отмена',

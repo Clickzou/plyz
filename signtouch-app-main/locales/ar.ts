@@ -14,6 +14,10 @@ export default {
 
   // Gallery Screen
   myMemories: 'ذكرياتي',
+  galleryPhotos: 'الصور',
+  galleryStories: 'القصص',
+  noStories: 'لا توجد قصص بعد',
+  noStoriesHint: 'أنشئ قصة من نتيجة صورتك',
   galleryInstruction: 'انقر على الصورة لتحريرها (الألوان والنصوص والتوقيع والتأثيرات) أو مشاركتها أو حفظها على جهازك.',
   select: 'اختيار',
   cancel: 'إلغاء',

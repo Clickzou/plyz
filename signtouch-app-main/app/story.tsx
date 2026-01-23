@@ -18,6 +18,7 @@ import ViewShot from 'react-native-view-shot';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import { SignatureOverlay, TextOverlay } from '@/utils/memoriesStorage';
+import { saveStory } from '@/utils/storiesStorage';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const STORY_WIDTH = SCREEN_WIDTH * 0.7;
@@ -339,21 +340,15 @@ export default function StoryScreen() {
       if (viewShotRef.current?.capture) {
         const uri = await viewShotRef.current.capture();
         
-        if (Platform.OS === 'web') {
-          const link = document.createElement('a');
-          link.href = uri;
-          link.download = `signtouch-story-${Date.now()}.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          alert(t('storySaved'));
-        } else {
-          const { status } = await MediaLibrary.requestPermissionsAsync();
-          if (status === 'granted') {
-            await MediaLibrary.saveToLibraryAsync(uri);
-            alert(t('storySaved'));
-          }
-        }
+        await saveStory({
+          uri,
+          template: selectedTemplate.id,
+          category: selectedCategory,
+          customText,
+          sourceMemoryId: params.memoryId as string,
+        });
+        
+        alert(t('storySaved'));
       }
     } catch (error) {
       console.error('Export error:', error);

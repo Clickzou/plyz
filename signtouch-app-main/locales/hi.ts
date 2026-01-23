@@ -14,6 +14,10 @@ export default {
 
   // Gallery Screen
   myMemories: 'मेरी यादें',
+  galleryPhotos: 'फ़ोटो',
+  galleryStories: 'स्टोरीज़',
+  noStories: 'अभी कोई स्टोरी नहीं',
+  noStoriesHint: 'अपनी फोटो के परिणाम से एक स्टोरी बनाएं',
   galleryInstruction: 'इसे संपादित करने (रंग, टेक्स्ट, हस्ताक्षर, प्रभाव), साझा करने या अपने डिवाइस पर सहेजने के लिए फोटो पर क्लिक करें।',
   select: 'चुनें',
   cancel: 'रद्द करें',

@@ -14,6 +14,10 @@ export default {
 
   // Gallery Screen
   myMemories: 'আমার স্মৃতি',
+  galleryPhotos: 'ফটো',
+  galleryStories: 'স্টোরিজ',
+  noStories: 'এখনো কোন স্টোরি নেই',
+  noStoriesHint: 'আপনার ফটোর ফলাফল থেকে একটি স্টোরি তৈরি করুন',
   galleryInstruction: 'সম্পাদনা (রঙ, পাঠ্য, স্বাক্ষর, প্রভাব), শেয়ার বা আপনার ডিভাইসে সংরক্ষণ করতে ছবিতে ক্লিক করুন।',
   select: 'নির্বাচন করুন',
   cancel: 'বাতিল করুন',

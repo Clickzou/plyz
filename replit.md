@@ -51,6 +51,14 @@ Preferred communication style: Simple, everyday language.
 - **Social Sharing**: Share to Instagram, TikTok via native sharing API
 - **Access**: Available from result.tsx via Film icon button
 - **i18n**: Fully internationalized with translation keys (storyTitle, storyCustomText, etc.)
+- **Gallery Integration**: Stories are saved to a separate storage system (`storiesStorage.ts`) and displayed in the gallery under a dedicated "Stories" tab
+
+### Gallery Tabs System (January 2026)
+- **Photos Tab**: Displays all memories (photos with overlays) organized by timeline
+- **Stories Tab**: Displays all exported stories in a grid layout (9:16 aspect ratio cards)
+- **Separate Storage**: Stories are stored separately from memories using `storiesStorage.ts` (max 20 stories)
+- **Story Actions**: View fullscreen, share via social modal, delete
+- **i18n**: Translation keys: galleryPhotos, galleryStories, noStories, noStoriesHint
 
 ## External Dependencies
 

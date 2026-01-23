@@ -14,6 +14,10 @@ export default {
 
   // Gallery Screen
   myMemories: 'Kenangan Saya',
+  galleryPhotos: 'Foto',
+  galleryStories: 'Cerita',
+  noStories: 'Belum ada cerita',
+  noStoriesHint: 'Buat cerita dari hasil foto Anda',
   galleryInstruction: 'Klik foto untuk mengeditnya (warna, teks, tanda tangan, efek), membagikannya, atau menyimpannya ke perangkat Anda.',
   select: 'Pilih',
   cancel: 'Batal',
