@@ -286,6 +286,8 @@ function InteractiveText({ overlay, isSelected, onSelect }: InteractiveTextProps
   const savedTranslateY = useSharedValue(0);
   const scale = useSharedValue(overlay.scale || 1);
   const savedScale = useSharedValue(overlay.scale || 1);
+  const rotation = useSharedValue(0);
+  const savedRotation = useSharedValue(0);
   
   const RESULT_IMAGE_WIDTH = 402;
   const RESULT_IMAGE_HEIGHT = 874;
@@ -316,13 +318,24 @@ function InteractiveText({ overlay, isSelected, onSelect }: InteractiveTextProps
       savedScale.value = scale.value;
     });
   
+  const rotateGesture = Gesture.Rotation()
+    .onStart(() => {
+      runOnJS(onSelect)();
+    })
+    .onUpdate((e) => {
+      rotation.value = savedRotation.value + e.rotation;
+    })
+    .onEnd(() => {
+      savedRotation.value = rotation.value;
+    });
+  
   const tapGesture = Gesture.Tap()
     .maxDuration(250)
     .onEnd(() => {
       runOnJS(onSelect)();
     });
   
-  const transformGestures = Gesture.Simultaneous(panGesture, pinchGesture);
+  const transformGestures = Gesture.Simultaneous(panGesture, pinchGesture, rotateGesture);
   const composedGesture = Gesture.Exclusive(transformGestures, tapGesture);
   
   const animatedStyle = useAnimatedStyle(() => ({
@@ -330,6 +343,7 @@ function InteractiveText({ overlay, isSelected, onSelect }: InteractiveTextProps
       { translateX: translateX.value },
       { translateY: translateY.value },
       { scale: scale.value },
+      { rotate: `${rotation.value}rad` },
     ],
   }));
   
@@ -557,7 +571,7 @@ function StoryPreview({
   onSignatureChange,
   onTextChange,
   interactive = false,
-  selectedSignatureIndex = 0,
+  selectedSignatureIndex = null,
   setSelectedSignatureIndex,
   selectedTextIndex = null,
   setSelectedTextIndex,
@@ -581,8 +595,8 @@ function StoryPreview({
   onSignatureChange?: (scale: number, rotation: number, x: number, y: number) => void;
   onTextChange?: (scale: number, y: number) => void;
   interactive?: boolean;
-  selectedSignatureIndex?: number;
-  setSelectedSignatureIndex?: (index: number) => void;
+  selectedSignatureIndex?: number | null;
+  setSelectedSignatureIndex?: (index: number | null) => void;
   selectedTextIndex?: number | null;
   setSelectedTextIndex?: (index: number | null) => void;
 }) {
@@ -909,8 +923,11 @@ function StoryPreview({
               key={overlay.id}
               overlay={overlay}
               color={overlay.color}
-              isSelected={index === selectedSignatureIndex}
-              onSelect={() => setSelectedSignatureIndex && setSelectedSignatureIndex(index)}
+              isSelected={index === selectedSignatureIndex && selectedTextIndex === null}
+              onSelect={() => {
+                setSelectedSignatureIndex && setSelectedSignatureIndex(index);
+                setSelectedTextIndex && setSelectedTextIndex(null);
+              }}
             />
           ))}
 
@@ -918,8 +935,11 @@ function StoryPreview({
           <InteractiveText
             key={overlay.id}
             overlay={overlay}
-            isSelected={index === selectedTextIndex}
-            onSelect={() => setSelectedTextIndex && setSelectedTextIndex(index)}
+            isSelected={index === selectedTextIndex && selectedSignatureIndex === null}
+            onSelect={() => {
+              setSelectedTextIndex && setSelectedTextIndex(index);
+              setSelectedSignatureIndex && setSelectedSignatureIndex(null);
+            }}
           />
         ))}
 
@@ -961,7 +981,7 @@ export default function StoryScreen() {
   const [textColor, setTextColor] = useState('#ffffff');
   const [textY, setTextY] = useState(0.75);
   
-  const [selectedSignatureIndex, setSelectedSignatureIndex] = useState(0);
+  const [selectedSignatureIndex, setSelectedSignatureIndex] = useState<number | null>(0);
   const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(null);
   
   const COLORS = ['#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#10B981'];
