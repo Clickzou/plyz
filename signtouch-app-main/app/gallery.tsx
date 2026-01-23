@@ -10,14 +10,15 @@ import {
   ActivityIndicator,
   Modal,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Camera, CheckCircle2, Circle, X, Pencil, Share2, BookOpen } from 'lucide-react-native';
+import { Download, Trash2, Camera, CheckCircle2, Circle, X, Pencil, Share2, BookOpen, Grid3X3, List, Filter, Star, User, MapPin, Calendar, Music, Trophy, Palette, Users } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
-import { Memory, MemoryMetadata } from '@/utils/memoriesStorage';
+import { Memory, MemoryMetadata, EventType } from '@/utils/memoriesStorage';
 import MetadataModal from '@/components/MetadataModal';
 import * as StorageService from '@/utils/storageService';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -26,6 +27,26 @@ import { useAuth } from '@/contexts/AuthContext';
 import AdModal from '@/components/AdModal';
 import SocialShareModal from '@/components/SocialShareModal';
 import { maybeShowSubscriptionOffer } from '@/utils/subscriptionOffer';
+
+const EVENT_TYPE_ICONS: Record<EventType, any> = {
+  concert: Music,
+  match: Trophy,
+  expo: Palette,
+  salon: Users,
+  dedicace: Star,
+  rencontre: User,
+  autre: Calendar,
+};
+
+const EVENT_TYPE_COLORS: Record<EventType, string> = {
+  concert: '#8b5cf6',
+  match: '#22c55e',
+  expo: '#f59e0b',
+  salon: '#3b82f6',
+  dedicace: '#ec4899',
+  rencontre: '#14b8a6',
+  autre: '#6b7280',
+};
 
 // Component to render memory thumbnail
 interface MemoryThumbnailProps {
@@ -69,6 +90,8 @@ function MemoryThumbnail({ memory, onPress, isSelected, selectionMode }: MemoryT
   );
 }
 
+type ViewMode = 'grid' | 'notebook';
+
 export default function GalleryScreen() {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,11 +103,68 @@ export default function GalleryScreen() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showMetadataModal, setShowMetadataModal] = useState(false);
   const [pendingSave, setPendingSave] = useState<'single' | 'multiple' | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [selectedFilter, setSelectedFilter] = useState<EventType | 'all'>('all');
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { status } = useSubscription();
   const { t } = useTranslation();
   const { user } = useAuth();
+
+  const memoriesWithMetadata = memories.filter((m: Memory) => m.metadata && (m.metadata.personMet || m.metadata.eventLocation));
+  
+  const filteredNotebookMemories = selectedFilter === 'all' 
+    ? memoriesWithMetadata 
+    : memoriesWithMetadata.filter(m => m.metadata?.eventType === selectedFilter);
+
+  const formatDate = (dateString?: string, timestamp?: number) => {
+    const date = dateString ? new Date(dateString) : timestamp ? new Date(timestamp) : null;
+    if (!date) return '';
+    return date.toLocaleDateString('fr-FR', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    });
+  };
+
+  const groupMemoriesByMonth = (mems: Memory[]) => {
+    const groups: Record<string, Memory[]> = {};
+    mems.forEach(memory => {
+      const date = memory.metadata?.eventDate ? new Date(memory.metadata.eventDate) : new Date(memory.timestamp);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      if (!groups[monthKey]) {
+        groups[monthKey] = [];
+      }
+      groups[monthKey].push(memory);
+    });
+    return Object.entries(groups)
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([key, mems]) => ({
+        key,
+        label: mems[0].metadata?.eventDate 
+          ? new Date(mems[0].metadata.eventDate).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+          : new Date(mems[0].timestamp).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }),
+        memories: mems
+      }));
+  };
+
+  const eventTypes: (EventType | 'all')[] = ['all', 'concert', 'match', 'expo', 'salon', 'dedicace', 'rencontre', 'autre'];
+
+  const getEventTypeLabel = (type: EventType | 'all') => {
+    const labels: Record<EventType | 'all', string> = {
+      all: t('notebookAll') || 'Tous',
+      concert: t('eventConcert') || 'Concert',
+      match: t('eventMatch') || 'Match',
+      expo: t('eventExpo') || 'Expo',
+      salon: t('eventSalon') || 'Salon',
+      dedicace: t('eventDedicace') || 'Dédicace',
+      rencontre: t('eventRencontre') || 'Rencontre',
+      autre: t('eventAutre') || 'Autre',
+    };
+    return labels[type];
+  };
+
+  const groupedMemories = groupMemoriesByMonth(filteredNotebookMemories);
 
   const loadMemories = async () => {
     try {
@@ -431,21 +511,45 @@ export default function GalleryScreen() {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
         <Text style={styles.title}>{t('myMemories')}</Text>
-        {memories.length > 0 && (
+        {memories.length > 0 && viewMode === 'grid' && (
           <Text style={styles.instructionText}>
             {t('galleryInstruction')}
           </Text>
         )}
         <View style={styles.headerButtons}>
-          <TouchableOpacity
-            style={styles.notebookButton}
-            onPress={() => router.push('/notebook')}
-            activeOpacity={0.8}
-          >
-            <BookOpen size={18} color="#ffffff" />
-            <Text style={styles.notebookButtonText}>{t('notebookTitle') || 'Mon Carnet'}</Text>
-          </TouchableOpacity>
-          {memories.length > 0 && (
+          <View style={styles.viewToggle}>
+            <TouchableOpacity
+              style={[styles.viewToggleButton, viewMode === 'grid' && styles.viewToggleButtonActive]}
+              onPress={() => {
+                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setViewMode('grid');
+                setSelectionMode(false);
+                setSelectedMemories(new Set());
+              }}
+              activeOpacity={0.8}
+            >
+              <Grid3X3 size={18} color={viewMode === 'grid' ? '#ffffff' : '#9ca3af'} />
+              <Text style={[styles.viewToggleText, viewMode === 'grid' && styles.viewToggleTextActive]}>
+                {t('viewGrid') || 'Grille'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.viewToggleButton, viewMode === 'notebook' && styles.viewToggleButtonActive]}
+              onPress={() => {
+                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setViewMode('notebook');
+                setSelectionMode(false);
+                setSelectedMemories(new Set());
+              }}
+              activeOpacity={0.8}
+            >
+              <BookOpen size={18} color={viewMode === 'notebook' ? '#ffffff' : '#9ca3af'} />
+              <Text style={[styles.viewToggleText, viewMode === 'notebook' && styles.viewToggleTextActive]}>
+                {t('notebookTitle') || 'Carnet'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {memories.length > 0 && viewMode === 'grid' && (
             <TouchableOpacity
               style={styles.selectButton}
               onPress={toggleSelectionMode}
@@ -457,7 +561,7 @@ export default function GalleryScreen() {
             </TouchableOpacity>
           )}
         </View>
-        {memories.length > 0 && (
+        {memories.length > 0 && viewMode === 'grid' && (
           <Text style={styles.subtitle}>
             {selectionMode && selectedMemories.size > 0
               ? `${selectedMemories.size} ${selectedMemories.size > 1 ? t('selectedPlural') : t('selected')}`
@@ -466,6 +570,43 @@ export default function GalleryScreen() {
           </Text>
         )}
       </View>
+
+      {viewMode === 'notebook' && (
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          style={styles.filterContainer}
+          contentContainerStyle={styles.filterContent}
+        >
+          {eventTypes.map((type) => {
+            const isSelected = selectedFilter === type;
+            const IconComponent = type === 'all' ? Filter : EVENT_TYPE_ICONS[type];
+            const color = type === 'all' ? '#6b7280' : EVENT_TYPE_COLORS[type];
+            return (
+              <TouchableOpacity
+                key={type}
+                style={[
+                  styles.filterButton,
+                  isSelected && { backgroundColor: color },
+                ]}
+                onPress={() => {
+                  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setSelectedFilter(type);
+                }}
+              >
+                <IconComponent size={16} color={isSelected ? '#ffffff' : color} />
+                <Text style={[
+                  styles.filterText,
+                  isSelected && styles.filterTextSelected,
+                  !isSelected && { color }
+                ]}>
+                  {getEventTypeLabel(type)}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
 
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -483,6 +624,68 @@ export default function GalleryScreen() {
             <Text style={styles.createButtonText}>{t('takePicture')}</Text>
           </TouchableOpacity>
         </View>
+      ) : viewMode === 'notebook' ? (
+        <ScrollView style={styles.notebookContent} showsVerticalScrollIndicator={false}>
+          {filteredNotebookMemories.length === 0 ? (
+            <View style={styles.emptyNotebook}>
+              <Star size={64} color="#4b5563" />
+              <Text style={styles.emptyNotebookTitle}>{t('notebookEmpty') || 'Aucune rencontre'}</Text>
+              <Text style={styles.emptyNotebookText}>
+                {t('notebookEmptyDescription') || 'Vos dédicaces avec informations apparaîtront ici'}
+              </Text>
+            </View>
+          ) : (
+            groupedMemories.map((group) => (
+              <View key={group.key} style={styles.monthGroup}>
+                <Text style={styles.monthTitle}>{group.label}</Text>
+                {group.memories.map((memory) => {
+                  const eventType = memory.metadata?.eventType || 'autre';
+                  const IconComponent = EVENT_TYPE_ICONS[eventType];
+                  const color = EVENT_TYPE_COLORS[eventType];
+                  return (
+                    <TouchableOpacity
+                      key={memory.id}
+                      style={styles.memoryCard}
+                      onPress={() => openMemory(memory)}
+                      activeOpacity={0.8}
+                    >
+                      <Image
+                        source={{ uri: memory.baseUri || memory.uri }}
+                        style={styles.cardImage}
+                        resizeMode="cover"
+                      />
+                      <View style={styles.cardContent}>
+                        {memory.metadata?.personMet && (
+                          <View style={styles.cardRow}>
+                            <User size={16} color="#ffffff" />
+                            <Text style={styles.cardText} numberOfLines={1}>{memory.metadata.personMet}</Text>
+                          </View>
+                        )}
+                        {memory.metadata?.eventLocation && (
+                          <View style={styles.cardRow}>
+                            <MapPin size={16} color="#9ca3af" />
+                            <Text style={styles.cardTextSecondary} numberOfLines={1}>{memory.metadata.eventLocation}</Text>
+                          </View>
+                        )}
+                        <View style={styles.cardRow}>
+                          <Calendar size={16} color="#9ca3af" />
+                          <Text style={styles.cardTextSecondary}>
+                            {formatDate(memory.metadata?.eventDate, memory.timestamp)}
+                          </Text>
+                        </View>
+                        <View style={[styles.eventBadge, { backgroundColor: color }]}>
+                          <IconComponent size={12} color="#ffffff" />
+                          <Text style={styles.eventBadgeText}>{getEventTypeLabel(eventType)}</Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ))
+          )}
+          <View style={{ height: BOTTOM_NAV_HEIGHT + 40 }} />
+        </ScrollView>
       ) : (
         <FlatList
           data={memories}
