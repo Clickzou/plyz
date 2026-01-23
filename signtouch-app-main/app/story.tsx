@@ -18,8 +18,8 @@ import ViewShot from 'react-native-view-shot';
 import * as MediaLibrary from 'expo-media-library';
 import html2canvas from 'html2canvas';
 import * as Sharing from 'expo-sharing';
-import { SignatureOverlay, TextOverlay } from '@/utils/memoriesStorage';
-import { saveStory } from '@/utils/storiesStorage';
+import { SignatureOverlay, TextOverlay, getAllMemories } from '@/utils/memoriesStorage';
+import { saveStory, getStories } from '@/utils/storiesStorage';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const STORY_WIDTH = SCREEN_WIDTH * 0.7;
@@ -277,24 +277,55 @@ export default function StoryScreen() {
   const viewShotRef = useRef<ViewShot>(null);
   const webContainerRef = useRef<HTMLDivElement>(null);
 
-  const imageUri = params.imageUri as string || '';
-  
-  const signatureOverlays: SignatureOverlay[] = useMemo(() => {
-    try {
-      return params.signatureOverlays ? JSON.parse(params.signatureOverlays as string) : [];
-    } catch { return []; }
-  }, [params.signatureOverlays]);
-  
-  const textOverlays: TextOverlay[] = useMemo(() => {
-    try {
-      return params.textOverlays ? JSON.parse(params.textOverlays as string) : [];
-    } catch { return []; }
-  }, [params.textOverlays]);
+  const storyId = params.storyId as string | undefined;
+  const mode = params.mode as string | undefined;
+  const sourceMemoryId = params.memoryId as string | undefined;
 
+  const [imageUri, setImageUri] = useState(params.imageUri as string || '');
+  const [signatureOverlays, setSignatureOverlays] = useState<SignatureOverlay[]>([]);
+  const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
   const [selectedAnimation, setSelectedAnimation] = useState<Animation>(ANIMATIONS[0]);
   const [customText, setCustomText] = useState(t('storyDefaultText'));
   const [isAnimating, setIsAnimating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (storyId && sourceMemoryId && (mode === 'edit' || mode === 'preview')) {
+        setIsLoading(true);
+        try {
+          const memories = await getAllMemories();
+          const memory = memories.find(m => m.id === sourceMemoryId);
+          if (memory) {
+            setImageUri(memory.uri);
+            setSignatureOverlays(memory.signatureOverlays || []);
+            setTextOverlays(memory.textOverlays || []);
+          }
+          
+          const stories = await getStories();
+          const story = stories.find(s => s.id === storyId);
+          if (story) {
+            setCustomText(story.customText || t('storyDefaultText'));
+            const anim = ANIMATIONS.find(a => a.id === story.template);
+            if (anim) setSelectedAnimation(anim);
+          }
+        } catch (error) {
+          console.error('Error loading story data:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        try {
+          const sigs = params.signatureOverlays ? JSON.parse(params.signatureOverlays as string) : [];
+          const txts = params.textOverlays ? JSON.parse(params.textOverlays as string) : [];
+          setSignatureOverlays(sigs);
+          setTextOverlays(txts);
+        } catch { }
+      }
+    };
+    loadData();
+  }, [storyId, sourceMemoryId, mode]);
 
   const handleBack = () => {
     if (Platform.OS !== 'web') {
