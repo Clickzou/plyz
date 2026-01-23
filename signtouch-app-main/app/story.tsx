@@ -59,12 +59,10 @@ function StorySignature({ overlay, overrideX, overrideY, overrideScale, override
       return (
         <View style={{
           position: 'absolute',
-          left: `${x * 100}%`,
-          top: `${y * 100}%`,
+          left: x,
+          top: y,
           width: 150,
           height: 80,
-          marginLeft: -75,
-          marginTop: -40,
           transform: [
             { rotate: `${rotation}rad` },
             { scale: scale }
@@ -115,12 +113,10 @@ function StorySignature({ overlay, overrideX, overrideY, overrideScale, override
       return (
         <View style={{
           position: 'absolute',
-          left: `${x * 100}%`,
-          top: `${y * 100}%`,
+          left: x,
+          top: y,
           width: 150,
           height: 80,
-          marginLeft: -75,
-          marginTop: -40,
           transform: [
             { rotate: `${rotation}rad` },
             { scale: scale }
@@ -155,12 +151,10 @@ function StorySignature({ overlay, overrideX, overrideY, overrideScale, override
   return (
     <View style={{
       position: 'absolute',
-      left: `${x * 100}%`,
-      top: `${y * 100}%`,
+      left: x,
+      top: y,
       width: 150,
       height: 80,
-      marginLeft: -75,
-      marginTop: -40,
       transform: [
         { rotate: `${rotation}rad` },
         { scale: scale }
