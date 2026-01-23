@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,7 @@ import {
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
+import { RealtimeChannel } from '@supabase/supabase-js';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   LiveSession,
@@ -52,7 +53,20 @@ export default function JoinLiveSessionScreen() {
   const [queueEntry, setQueueEntry] = useState<QueueEntry | null>(null);
   const [queuePosition, setQueuePosition] = useState(0);
 
-  const fanId = `fan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const fanId = useMemo(() => `fan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, []);
+  const sessionChannelRef = useRef<RealtimeChannel | null>(null);
+  const queueChannelRef = useRef<RealtimeChannel | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (sessionChannelRef.current) {
+        sessionChannelRef.current.unsubscribe();
+      }
+      if (queueChannelRef.current) {
+        queueChannelRef.current.unsubscribe();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (paramCode) {
@@ -90,7 +104,7 @@ export default function JoinLiveSessionScreen() {
       setSession(s);
       setStep('upload');
 
-      const channel = subscribeToSession(s.id, (updated) => {
+      sessionChannelRef.current = subscribeToSession(s.id, (updated) => {
         setSession(updated);
         if (updated.status === 'ended') {
           Alert.alert(t('info'), t('liveSessionHasEnded'));
@@ -163,7 +177,7 @@ export default function JoinLiveSessionScreen() {
       setQueuePosition(entry.position);
       setStep('queue');
 
-      const entryChannel = subscribeToQueueEntry(entry.id, (updated) => {
+      queueChannelRef.current = subscribeToQueueEntry(entry.id, (updated) => {
         setQueueEntry(updated);
         if (updated.status === 'current' || updated.status === 'signing') {
           setStep('signing');
