@@ -11,6 +11,8 @@
   "description": "",
   "dependencies": {
     "@expo-google-fonts/montserrat": "^0.4.2",
-    "html2canvas": "^1.4.1"
+    "expo-barcode-scanner": "^13.0.1",
+    "html2canvas": "^1.4.1",
+    "react-native-qrcode-svg": "^6.3.21"
   }
 }
