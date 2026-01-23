@@ -625,6 +625,7 @@ export default function GalleryScreen() {
         onClose={() => setShowMetadataModal(false)}
         onSave={handleMetadataSave}
         onSkip={handleMetadataSkip}
+        initialMetadata={selectedMemories.size === 1 ? memories.find(m => m.id === Array.from(selectedMemories)[0])?.metadata : undefined}
       />
 
       <BottomNav />

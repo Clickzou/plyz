@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,7 @@ interface MetadataModalProps {
   onClose: () => void;
   onSave: (metadata: MemoryMetadata) => void;
   onSkip: () => void;
+  initialMetadata?: MemoryMetadata;
 }
 
 const EVENT_TYPES: { type: EventType; icon: any; color: string }[] = [
@@ -34,12 +35,26 @@ const EVENT_TYPES: { type: EventType; icon: any; color: string }[] = [
   { type: 'autre', icon: Calendar, color: '#6b7280' },
 ];
 
-export default function MetadataModal({ visible, onClose, onSave, onSkip }: MetadataModalProps) {
+export default function MetadataModal({ visible, onClose, onSave, onSkip, initialMetadata }: MetadataModalProps) {
   const [personMet, setPersonMet] = useState('');
   const [eventLocation, setEventLocation] = useState('');
   const [eventDate, setEventDate] = useState(new Date().toISOString().split('T')[0]);
   const [eventType, setEventType] = useState<EventType>('rencontre');
   const { t } = useTranslation();
+
+  useEffect(() => {
+    if (visible && initialMetadata) {
+      setPersonMet(initialMetadata.personMet || '');
+      setEventLocation(initialMetadata.eventLocation || '');
+      setEventDate(initialMetadata.eventDate || new Date().toISOString().split('T')[0]);
+      setEventType(initialMetadata.eventType || 'rencontre');
+    } else if (visible && !initialMetadata) {
+      setPersonMet('');
+      setEventLocation('');
+      setEventDate(new Date().toISOString().split('T')[0]);
+      setEventType('rencontre');
+    }
+  }, [visible, initialMetadata]);
 
   const handleSave = () => {
     if (Platform.OS !== 'web') {

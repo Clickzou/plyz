@@ -2227,6 +2227,7 @@ export default function ResultScreen() {
           onClose={() => setShowMetadataModal(false)}
           onSave={handleMetadataSave}
           onSkip={handleMetadataSkip}
+          initialMetadata={memory?.metadata}
         />
 
         <PremiumModal
