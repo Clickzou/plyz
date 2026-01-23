@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput,
 import Slider from '@react-native-community/slider';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Sparkles, Film, Layers, Share2, Download, Play } from 'lucide-react-native';
+import { ArrowLeft, Sparkles, Film, Layers, Share2, Download, Play, Zap, Heart, Move, RotateCw, Wind, Activity } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { 
   useSharedValue, 
@@ -1419,35 +1419,45 @@ export default function StoryScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('storyAnimation')}</Text>
           <View style={styles.templateGrid}>
-            {ANIMATIONS.map((anim) => (
-              <TouchableOpacity
-                key={anim.id}
-                style={[
-                  styles.templateCard,
-                  selectedAnimation.id === anim.id && styles.templateCardActive,
-                ]}
-                onPress={() => {
-                  setSelectedAnimation(anim);
-                  setIsAnimating(true);
-                }}
-              >
-                <LinearGradient
-                  colors={anim.colors}
-                  style={styles.templatePreview}
+            {ANIMATIONS.map((anim) => {
+              const getIcon = () => {
+                const iconProps = { size: 18, color: anim.textColor };
+                switch(anim.id) {
+                  case 'cinematic': return <Film {...iconProps} />;
+                  case 'dramatic-zoom': return <Zap {...iconProps} />;
+                  case 'bounce': return <Activity {...iconProps} />;
+                  case 'pulse': return <Heart {...iconProps} />;
+                  case 'slide-reveal': return <Layers {...iconProps} />;
+                  case 'shake': return <Move {...iconProps} />;
+                  case 'spin-zoom': return <RotateCw {...iconProps} />;
+                  case 'float': return <Wind {...iconProps} />;
+                  case 'heartbeat': return <Heart {...iconProps} />;
+                  case 'swing': return <Sparkles {...iconProps} />;
+                  default: return <Film {...iconProps} />;
+                }
+              };
+              return (
+                <TouchableOpacity
+                  key={anim.id}
+                  style={[
+                    styles.templateCard,
+                    selectedAnimation.id === anim.id && styles.templateCardActive,
+                  ]}
+                  onPress={() => {
+                    setSelectedAnimation(anim);
+                    setIsAnimating(true);
+                  }}
                 >
-                  {anim.id === 'ken-burns' && (
-                    <Film size={16} color={anim.textColor} />
-                  )}
-                  {anim.id === 'sequential-zoom' && (
-                    <Layers size={16} color={anim.textColor} />
-                  )}
-                  {anim.id === 'parallax' && (
-                    <Sparkles size={16} color={anim.textColor} />
-                  )}
-                </LinearGradient>
-                <Text style={styles.templateLabel}>{t(anim.nameKey)}</Text>
-              </TouchableOpacity>
-            ))}
+                  <LinearGradient
+                    colors={anim.colors}
+                    style={styles.templatePreview}
+                  >
+                    {getIcon()}
+                  </LinearGradient>
+                  <Text style={styles.templateLabel} numberOfLines={1}>{t(anim.nameKey)}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
@@ -1709,24 +1719,27 @@ const styles = StyleSheet.create({
   },
   templateGrid: {
     flexDirection: 'row',
-    gap: 12,
+    flexWrap: 'wrap',
+    gap: 8,
+    justifyContent: 'space-between',
   },
   templateCard: {
-    flex: 1,
+    width: '18%',
     alignItems: 'center',
-    padding: 8,
-    borderRadius: 12,
+    padding: 6,
+    borderRadius: 10,
     backgroundColor: '#fff',
     borderWidth: 2,
     borderColor: 'transparent',
+    marginBottom: 4,
   },
   templateCardActive: {
     borderColor: '#10B981',
   },
   templatePreview: {
-    width: 60,
-    height: 80,
-    borderRadius: 8,
+    width: 44,
+    height: 58,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1737,10 +1750,11 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
   templateLabel: {
-    fontSize: 12,
+    fontSize: 9,
     color: '#666',
-    marginTop: 8,
+    marginTop: 4,
     fontWeight: '500',
+    textAlign: 'center',
   },
   exportSection: {
     flexDirection: 'row',
