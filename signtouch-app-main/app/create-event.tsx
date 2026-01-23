@@ -100,11 +100,6 @@ export default function CreateEventScreen() {
       return;
     }
 
-    if (paths.length === 0) {
-      Alert.alert(t('error') || 'Error', t('signatureRequired') || 'Please draw your signature');
-      return;
-    }
-
     if (!user) {
       Alert.alert(t('error') || 'Error', t('loginRequired') || 'Please log in to create an event');
       router.push('/account');
@@ -117,13 +112,10 @@ export default function CreateEventScreen() {
     }
 
     try {
-      const svgString = getSignatureSvgString();
-      const signatureDataUri = `data:image/svg+xml;base64,${btoa(svgString)}`;
-      
       const event = await createLiveEvent(
         user.id,
         eventName.trim(),
-        signatureDataUri,
+        '',
         undefined,
         24
       );
@@ -199,58 +191,11 @@ export default function CreateEventScreen() {
                 />
               </View>
 
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>{t('yourSignature') || 'Your Signature'}</Text>
-                  {paths.length > 0 && (
-                    <TouchableOpacity onPress={clearSignature} style={styles.clearButton}>
-                      <Text style={styles.clearButtonText}>{t('clear') || 'Clear'}</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-                
-                <View style={styles.signatureContainer}>
-                  <PanGestureHandler
-                    onGestureEvent={handlePanGesture}
-                    onEnded={handlePanEnd}
-                  >
-                    <View style={styles.signatureCanvas}>
-                      <Svg width="100%" height="100%" viewBox="0 0 300 150">
-                        <G>
-                          {paths.map((path) => (
-                            <Path
-                              key={path.id}
-                              d={path.d}
-                              stroke={path.color}
-                              strokeWidth={path.strokeWidth}
-                              fill="none"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          ))}
-                          {currentPath && (
-                            <Path
-                              d={currentPath}
-                              stroke={signatureColor}
-                              strokeWidth={strokeWidth}
-                              fill="none"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          )}
-                        </G>
-                      </Svg>
-                      {paths.length === 0 && !currentPath && (
-                        <View style={styles.signaturePlaceholder}>
-                          <Pencil size={24} color="rgba(255,255,255,0.3)" />
-                          <Text style={styles.signaturePlaceholderText}>
-                            {t('drawSignatureHere') || 'Draw your signature here'}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  </PanGestureHandler>
-                </View>
+              <View style={styles.qrHintContainer}>
+                <QrCode size={60} color="rgba(255,255,255,0.3)" />
+                <Text style={styles.qrHintText}>
+                  {t('qrCodeHint') || 'A unique QR code will be generated for your event'}
+                </Text>
               </View>
 
               <TouchableOpacity
@@ -264,7 +209,7 @@ export default function CreateEventScreen() {
                 ) : (
                   <>
                     <Sparkles size={20} color="#ffffff" />
-                    <Text style={styles.createButtonText}>{t('createEvent') || 'Create Event'}</Text>
+                    <Text style={styles.createButtonText}>{t('generateQRCode') || 'Generate QR Code'}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -410,11 +355,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
+  qrHintContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    marginBottom: 20,
+  },
+  qrHintText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.6)',
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6366f1',
+    backgroundColor: '#10B981',
     borderRadius: 16,
     padding: 18,
     gap: 10,

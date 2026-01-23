@@ -478,6 +478,8 @@ export default {
   eventName: 'Nom de l\'événement',
   eventNamePlaceholder: 'Concert, Match, Rencontre...',
   eventNameRequired: 'Veuillez entrer un nom d\'événement',
+  qrCodeHint: 'Un QR code unique sera généré pour votre événement',
+  generateQRCode: 'Générer le QR Code',
   yourSignature: 'Générez un QR code pour partager votre dédicace avec vos fans',
   signatureRequired: 'Veuillez dessiner votre signature',
   loginRequired: 'Veuillez vous connecter pour créer un événement',
