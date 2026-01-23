@@ -126,10 +126,14 @@ function StoryPreview({
   const savedSigScale = useSharedValue(signatureScale);
   const savedSigRotation = useSharedValue(signatureRotation);
 
+  const txtTranslateX = useSharedValue(0);
   const txtTranslateY = useSharedValue((textY - 0.5) * STORY_HEIGHT);
   const txtScale = useSharedValue(textScale);
+  const txtRotation = useSharedValue(0);
+  const savedTxtTranslateX = useSharedValue(0);
   const savedTxtTranslateY = useSharedValue((textY - 0.5) * STORY_HEIGHT);
   const savedTxtScale = useSharedValue(textScale);
+  const savedTxtRotation = useSharedValue(0);
 
   useEffect(() => {
     sigTranslateX.value = (signatureX - 0.5) * STORY_WIDTH;
@@ -211,17 +215,27 @@ function StoryPreview({
         runOnJS(updateText)(txtScale.value, newY);
       });
 
+    const rotate = Gesture.Rotation()
+      .onUpdate((e) => {
+        txtRotation.value = savedTxtRotation.value + e.rotation;
+      })
+      .onEnd(() => {
+        savedTxtRotation.value = txtRotation.value;
+      });
+
     const pan = Gesture.Pan()
       .onUpdate((e) => {
+        txtTranslateX.value = savedTxtTranslateX.value + e.translationX;
         txtTranslateY.value = savedTxtTranslateY.value + e.translationY;
       })
       .onEnd(() => {
+        savedTxtTranslateX.value = txtTranslateX.value;
         savedTxtTranslateY.value = txtTranslateY.value;
         const newY = 0.5 + txtTranslateY.value / STORY_HEIGHT;
         runOnJS(updateText)(txtScale.value, newY);
       });
 
-    return Gesture.Simultaneous(pinch, pan);
+    return Gesture.Simultaneous(pinch, rotate, pan);
   }, [interactive]);
 
   const sigAnimatedStyle = useAnimatedStyle(() => ({
@@ -235,8 +249,10 @@ function StoryPreview({
 
   const txtAnimatedStyle = useAnimatedStyle(() => ({
     transform: [
+      { translateX: txtTranslateX.value },
       { translateY: txtTranslateY.value },
       { scale: txtScale.value },
+      { rotate: `${txtRotation.value}rad` },
     ],
   }));
 
@@ -366,8 +382,7 @@ function StoryPreview({
           {signatureOverlays.length > 0 && signatureOverlays.map((overlay) => (
             interactive ? (
               <GestureDetector key={overlay.id} gesture={signatureGesture}>
-                <Animated.Image
-                  source={{ uri: overlay.uri }}
+                <Animated.View
                   style={[{
                     position: 'absolute',
                     left: '50%',
@@ -376,10 +391,19 @@ function StoryPreview({
                     height: overlay.height || 50,
                     marginLeft: -((overlay.width || 100)) / 2,
                     marginTop: -((overlay.height || 50)) / 2,
-                    tintColor: signatureColor,
+                    zIndex: 10,
                   }, sigAnimatedStyle]}
-                  resizeMode="contain"
-                />
+                >
+                  <Image
+                    source={{ uri: overlay.uri }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      tintColor: signatureColor,
+                    }}
+                    resizeMode="contain"
+                  />
+                </Animated.View>
               </GestureDetector>
             ) : (
               <Image
@@ -675,7 +699,18 @@ export default function StoryScreen() {
             placeholderTextColor="#999"
           />
           
-          <Text style={styles.hintText}>Glissez le texte pour le déplacer. Pincez pour redimensionner.</Text>
+          <Text style={styles.hintText}>Glissez le texte pour le déplacer, ou utilisez les curseurs ci-dessous.</Text>
+          
+          <Text style={styles.sliderLabel}>Taille du texte</Text>
+          <Slider
+            style={styles.slider}
+            minimumValue={0.5}
+            maximumValue={2}
+            value={textScale}
+            onValueChange={setTextScale}
+            minimumTrackTintColor="#10B981"
+            maximumTrackTintColor="#ccc"
+          />
           
           <Text style={styles.sliderLabel}>Couleur du texte</Text>
           <View style={styles.colorPicker}>
@@ -697,7 +732,29 @@ export default function StoryScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Signature</Text>
             
-            <Text style={styles.hintText}>Glissez la signature pour la déplacer. Pincez pour redimensionner. Tournez avec deux doigts pour pivoter.</Text>
+            <Text style={styles.hintText}>Glissez la signature pour la déplacer, ou utilisez les curseurs ci-dessous.</Text>
+            
+            <Text style={styles.sliderLabel}>Taille</Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0.3}
+              maximumValue={3}
+              value={signatureScale}
+              onValueChange={setSignatureScale}
+              minimumTrackTintColor="#10B981"
+              maximumTrackTintColor="#ccc"
+            />
+            
+            <Text style={styles.sliderLabel}>Rotation</Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={-Math.PI}
+              maximumValue={Math.PI}
+              value={signatureRotation}
+              onValueChange={setSignatureRotation}
+              minimumTrackTintColor="#10B981"
+              maximumTrackTintColor="#ccc"
+            />
             
             <Text style={styles.sliderLabel}>Couleur</Text>
             <View style={styles.colorPicker}>
