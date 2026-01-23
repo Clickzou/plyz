@@ -1771,7 +1771,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   shareButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#10B981',
   },
   exportButtonText: {
     color: '#fff',
