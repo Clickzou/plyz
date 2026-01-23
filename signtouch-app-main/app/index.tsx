@@ -291,11 +291,12 @@ const styles = StyleSheet.create({
   signatureContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 20,
+    flex: 1,
+    marginVertical: 40,
   },
   signatureImage: {
-    width: 200,
-    height: 80,
+    width: 400,
+    height: 160,
   },
   buttonContainer: {
     alignItems: 'center',
