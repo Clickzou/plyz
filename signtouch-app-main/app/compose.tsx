@@ -205,27 +205,24 @@ const COLORS = [
 const STROKE_SCALES = [0.7, 1.0, 1.4];
 
 const FONT_FAMILIES = [
-  // Polices manuscrites naturelles
+  // Police par défaut
   { name: 'Shadows Into Light', value: 'Shadows Into Light' },
-  { name: 'Nanum Pen Script', value: 'Nanum Pen Script' },
+  // Polices manuscrites naturelles
   { name: 'Covered By Your Grace', value: 'Covered By Your Grace' },
-  { name: 'Just Another Hand', value: 'Just Another Hand' },
   { name: 'Caveat', value: 'Caveat' },
   { name: 'Indie Flower', value: 'Indie Flower' },
   // Polices script / cursive stylées
-  { name: 'Alex Brush', value: 'Alex Brush' },
   { name: 'Dancing Script', value: 'Dancing Script' },
   { name: 'Great Vibes', value: 'Great Vibes' },
-  { name: 'Pacifico', value: 'Pacifico' },
-  { name: 'Sacramento', value: 'Sacramento' },
-  // Polices créatives et originales
+  // Style impact visuel fort (branding / titres)
   { name: 'Bangers', value: 'Bangers' },
-  { name: 'Playball', value: 'Playball' },
-  { name: 'Yesteryear', value: 'Yesteryear' },
-  // Polices système de base
-  { name: 'System', value: 'System' },
+  { name: 'Fraunces', value: 'Fraunces' },
+  // Caractère unique
+  { name: 'Shantell Sans', value: 'Shantell Sans' },
+  // Look moderne et fonctionnel
+  { name: 'Manrope', value: 'Manrope' },
+  // Police système
   { name: 'Arial', value: 'Arial' },
-  { name: 'Georgia', value: 'Georgia' },
 ];
 
 interface TextTransform {
