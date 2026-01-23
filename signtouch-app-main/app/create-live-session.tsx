@@ -16,18 +16,24 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { createLiveSession } from '@/utils/liveSessionStorage';
 
-const DURATION_OPTIONS = [
+const DURATION_PER_FAN_OPTIONS = [
+  { label: '2 min', value: 2 },
+  { label: '5 min', value: 5 },
+  { label: '10 min', value: 10 },
+  { label: '15 min', value: 15 },
+  { label: '20 min', value: 20 },
+  { label: '30 min', value: 30 },
+  { label: '45 min', value: 45 },
+  { label: '60 min', value: 60 },
+];
+
+const TOTAL_DURATION_OPTIONS = [
   { label: '15 min', value: 15 },
   { label: '30 min', value: 30 },
   { label: '45 min', value: 45 },
   { label: '1h', value: 60 },
-];
-
-const SLOTS_OPTIONS = [
-  { label: '25', value: 25 },
-  { label: '50', value: 50 },
-  { label: '75', value: 75 },
-  { label: '100', value: 100 },
+  { label: '1h30', value: 90 },
+  { label: '2h', value: 120 },
 ];
 
 const PRICE_OPTIONS = [
@@ -43,10 +49,12 @@ export default function CreateLiveSessionScreen() {
   const { t } = useLanguage();
 
   const [celebrityName, setCelebrityName] = useState('');
-  const [duration, setDuration] = useState(30);
-  const [maxSlots, setMaxSlots] = useState(50);
+  const [durationPerFan, setDurationPerFan] = useState(5);
+  const [totalDuration, setTotalDuration] = useState(30);
   const [price, setPrice] = useState(0);
   const [isCreating, setIsCreating] = useState(false);
+
+  const calculatedMaxFans = Math.floor(totalDuration / durationPerFan);
 
   const handleCreateSession = async () => {
     if (!celebrityName.trim()) {
@@ -60,8 +68,8 @@ export default function CreateLiveSessionScreen() {
       const session = await createLiveSession(
         celebrityId,
         celebrityName.trim(),
-        duration,
-        maxSlots,
+        totalDuration,
+        calculatedMaxFans,
         price
       );
 
@@ -118,22 +126,22 @@ export default function CreateLiveSessionScreen() {
           maxLength={50}
         />
 
-        <Text style={styles.sectionTitle}>{t('liveSessionDuration')}</Text>
+        <Text style={styles.sectionTitle}>{t('liveSessionDurationPerFan') || 'Durée par Fan'}</Text>
         <View style={styles.optionsRow}>
-          {DURATION_OPTIONS.map((option) => (
+          {DURATION_PER_FAN_OPTIONS.map((option) => (
             <TouchableOpacity
               key={option.value}
               style={[
                 styles.optionButton,
-                duration === option.value && styles.optionButtonActive,
+                durationPerFan === option.value && styles.optionButtonActive,
               ]}
-              onPress={() => setDuration(option.value)}
+              onPress={() => setDurationPerFan(option.value)}
             >
-              <Clock size={16} color={duration === option.value ? '#f59e0b' : '#fff'} />
+              <Clock size={16} color={durationPerFan === option.value ? '#10B981' : '#fff'} />
               <Text
                 style={[
                   styles.optionText,
-                  duration === option.value && styles.optionTextActive,
+                  durationPerFan === option.value && styles.optionTextActive,
                 ]}
               >
                 {option.label}
@@ -142,28 +150,35 @@ export default function CreateLiveSessionScreen() {
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>{t('liveSessionMaxSlots')}</Text>
+        <Text style={styles.sectionTitle}>{t('liveSessionTotalDuration') || 'Durée Totale'}</Text>
         <View style={styles.optionsRow}>
-          {SLOTS_OPTIONS.map((option) => (
+          {TOTAL_DURATION_OPTIONS.map((option) => (
             <TouchableOpacity
               key={option.value}
               style={[
                 styles.optionButton,
-                maxSlots === option.value && styles.optionButtonActive,
+                totalDuration === option.value && styles.optionButtonActive,
               ]}
-              onPress={() => setMaxSlots(option.value)}
+              onPress={() => setTotalDuration(option.value)}
             >
-              <Users size={16} color={maxSlots === option.value ? '#f59e0b' : '#fff'} />
+              <Clock size={16} color={totalDuration === option.value ? '#10B981' : '#fff'} />
               <Text
                 style={[
                   styles.optionText,
-                  maxSlots === option.value && styles.optionTextActive,
+                  totalDuration === option.value && styles.optionTextActive,
                 ]}
               >
                 {option.label}
               </Text>
             </TouchableOpacity>
           ))}
+        </View>
+
+        <View style={styles.calculatedFansCard}>
+          <Users size={20} color="#10B981" />
+          <Text style={styles.calculatedFansText}>
+            {t('liveSessionCalculatedFans') || 'Nombre de fans'}: <Text style={styles.calculatedFansNumber}>{calculatedMaxFans}</Text>
+          </Text>
         </View>
 
         <Text style={styles.sectionTitle}>{t('liveSessionPrice')}</Text>
@@ -194,12 +209,16 @@ export default function CreateLiveSessionScreen() {
         <View style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>{t('liveSessionSummary')}</Text>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>{t('liveSessionDuration')}:</Text>
-            <Text style={styles.summaryValue}>{duration} min</Text>
+            <Text style={styles.summaryLabel}>{t('liveSessionDurationPerFan') || 'Durée par Fan'}:</Text>
+            <Text style={styles.summaryValue}>{durationPerFan} min</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>{t('liveSessionTotalDuration') || 'Durée Totale'}:</Text>
+            <Text style={styles.summaryValue}>{totalDuration} min</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>{t('liveSessionMaxSlots')}:</Text>
-            <Text style={styles.summaryValue}>{maxSlots} fans</Text>
+            <Text style={styles.summaryValue}>{calculatedMaxFans} fans</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>{t('liveSessionPrice')}:</Text>
@@ -211,7 +230,7 @@ export default function CreateLiveSessionScreen() {
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>{t('liveSessionYourRevenue')}:</Text>
               <Text style={styles.summaryValueHighlight}>
-                {((price * maxSlots * 0.9) / 100).toFixed(0)}€ max
+                {((price * calculatedMaxFans * 0.9) / 100).toFixed(0)}€ max
               </Text>
             </View>
           )}
@@ -318,8 +337,28 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
+  calculatedFansCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.5)',
+  },
+  calculatedFansText: {
+    fontSize: 16,
+    color: '#fff',
+  },
+  calculatedFansNumber: {
+    fontWeight: '700',
+    color: '#10B981',
+    fontSize: 18,
+  },
   optionTextActive: {
-    color: '#f59e0b',
+    color: '#10B981',
   },
   summaryCard: {
     backgroundColor: 'rgba(0,0,0,0.3)',
