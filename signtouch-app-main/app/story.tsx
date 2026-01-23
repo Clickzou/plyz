@@ -806,15 +806,22 @@ function StoryPreview({
 
         <View style={[styles.overlay, { opacity: animation.overlayOpacity }]} pointerEvents="none" />
 
-        {interactive && signatureOverlays.map((overlay, index) => (
-          <InteractiveSignature
-            key={overlay.id}
-            overlay={overlay}
-            color={overlay.color}
-            isSelected={index === selectedSignatureIndex}
-            onSelect={() => setSelectedSignatureIndex && setSelectedSignatureIndex(index)}
-          />
-        ))}
+        {interactive && signatureOverlays
+          .map((overlay, index) => ({ overlay, index }))
+          .sort((a, b) => {
+            if (a.index === selectedSignatureIndex) return 1;
+            if (b.index === selectedSignatureIndex) return -1;
+            return a.index - b.index;
+          })
+          .map(({ overlay, index }) => (
+            <InteractiveSignature
+              key={overlay.id}
+              overlay={overlay}
+              color={overlay.color}
+              isSelected={index === selectedSignatureIndex}
+              onSelect={() => setSelectedSignatureIndex && setSelectedSignatureIndex(index)}
+            />
+          ))}
 
         {interactive ? (
           <GestureDetector gesture={textGesture}>
