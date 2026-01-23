@@ -114,32 +114,33 @@ function StorySignature({ overlay, overrideX, overrideY, overrideScale, override
       const heightMatch = svgString.match(/height="([^"]+)"/);
       const width = widthMatch ? parseFloat(widthMatch[1]) : 300;
       const height = heightMatch ? parseFloat(heightMatch[1]) : 150;
+      
+      const targetSize = 60 * scale;
+      const aspectRatio = width / height;
+      const displayWidth = aspectRatio >= 1 ? targetSize : targetSize * aspectRatio;
+      const displayHeight = aspectRatio >= 1 ? targetSize / aspectRatio : targetSize;
+      
+      console.log('🎨 StorySignature SVG parsed:', { id: overlay.id, pathsCount: paths.length, displayWidth, displayHeight, color: signatureColor });
 
       return (
         <View style={{
           position: 'absolute',
           left: scaledX,
           top: scaledY,
-          width: 150,
-          height: 80,
-          transform: [
-            { rotate: `${rotation}rad` },
-            { scale: scale * 0.5 }
-          ],
+          transform: [{ rotate: `${rotation}rad` }],
           zIndex: 10,
         }}>
           <Svg
-            width={width}
-            height={height}
+            width={displayWidth}
+            height={displayHeight}
             viewBox={`0 0 ${width} ${height}`}
-            style={{ width: '100%', height: '100%' }}
           >
             {paths.map((pathData, index) => (
               <Path
                 key={index}
                 d={pathData}
                 stroke={signatureColor}
-                strokeWidth={3}
+                strokeWidth={5}
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
