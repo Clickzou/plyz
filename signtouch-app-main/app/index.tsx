@@ -89,6 +89,7 @@ export default function HomeScreen() {
   const titleTranslateY = useSharedValue(50);
   const titleScale = useSharedValue(0.8);
   const glowPulse = useSharedValue(0);
+  const subtitleOpacity = useSharedValue(0);
   const buttonScale = useSharedValue(0);
   const buttonPulse = useSharedValue(1);
 
@@ -112,6 +113,7 @@ export default function HomeScreen() {
     titleOpacity.value = withDelay(400, withTiming(1, { duration: 1200, easing: Easing.out(Easing.ease) }));
     titleTranslateY.value = withDelay(400, withTiming(0, { duration: 1000, easing: Easing.out(Easing.back(1.2)) }));
     titleScale.value = withDelay(400, withTiming(1, { duration: 1000, easing: Easing.out(Easing.back(1.2)) }));
+    subtitleOpacity.value = withDelay(1200, withTiming(1, { duration: 1000, easing: Easing.out(Easing.ease) }));
     
     glowPulse.value = withDelay(
       1500,
@@ -155,6 +157,10 @@ export default function HomeScreen() {
     };
   });
 
+  const subtitleStyle = useAnimatedStyle(() => ({
+    opacity: subtitleOpacity.value,
+  }));
+
   const buttonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonScale.value * buttonPulse.value }],
   }));
@@ -193,6 +199,9 @@ export default function HomeScreen() {
               ]}
             >
               Signtouch
+            </Animated.Text>
+            <Animated.Text style={[styles.subtitleText, subtitleStyle]}>
+              CAPTUREZ VOS RENCONTRES
             </Animated.Text>
           </View>
 
@@ -243,6 +252,17 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 3, height: 3 },
     textShadowRadius: 15,
     letterSpacing: 2,
+  },
+  subtitleText: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.85)',
+    marginTop: 20,
+    fontWeight: '300',
+    letterSpacing: 6,
+    textTransform: 'uppercase',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
   },
   buttonContainer: {
     alignItems: 'center',
