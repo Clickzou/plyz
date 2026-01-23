@@ -473,12 +473,12 @@ export default {
   storyTikTok: 'TikTok',
 
   // Live Events
-  createEvent: 'Créer un événement',
+  createEvent: 'Événement QR Live',
   joinEvent: 'Rejoindre un événement',
   eventName: 'Nom de l\'événement',
   eventNamePlaceholder: 'Concert, Match, Rencontre...',
   eventNameRequired: 'Veuillez entrer un nom d\'événement',
-  yourSignature: 'Votre signature',
+  yourSignature: 'Générez un QR code pour partager votre dédicace avec vos fans',
   signatureRequired: 'Veuillez dessiner votre signature',
   loginRequired: 'Veuillez vous connecter pour créer un événement',
   drawSignatureHere: 'Dessinez votre signature ici',
