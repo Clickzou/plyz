@@ -122,7 +122,7 @@ function StoryPreview({
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const textOpacity = useSharedValue(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (isAnimating) {
@@ -287,10 +287,20 @@ export default function StoryScreen() {
       if (viewShotRef.current?.capture) {
         const uri = await viewShotRef.current.capture();
         
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        if (status === 'granted') {
-          await MediaLibrary.saveToLibraryAsync(uri);
+        if (Platform.OS === 'web') {
+          const link = document.createElement('a');
+          link.href = uri;
+          link.download = `signtouch-story-${Date.now()}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
           alert(t('storySaved'));
+        } else {
+          const { status } = await MediaLibrary.requestPermissionsAsync();
+          if (status === 'granted') {
+            await MediaLibrary.saveToLibraryAsync(uri);
+            alert(t('storySaved'));
+          }
         }
       }
     } catch (error) {
