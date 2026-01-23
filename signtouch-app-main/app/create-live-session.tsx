@@ -84,7 +84,7 @@ export default function CreateLiveSessionScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <LinearGradient
-        colors={['#f59e0b', '#d97706']}
+        colors={['#10B981', '#059669']}
         style={StyleSheet.absoluteFill}
       />
 
