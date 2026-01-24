@@ -121,38 +121,26 @@ function FilteredImage({ uri, brightness, contrast, saturation, style }: Filtere
 interface SignatureOverlay extends StoredSignatureOverlay {}
 interface TextOverlay extends StoredTextOverlay {}
 
-// Font families - 30 fonts (modern + handwriting)
+// Font families - mêmes polices que compose.tsx pour cohérence
 const FONT_FAMILIES = [
-  { name: 'System', value: 'System' },
-  { name: 'Arial', value: 'Arial' },
-  { name: 'Helvetica', value: 'Helvetica' },
-  { name: 'Georgia', value: 'Georgia' },
-  { name: 'Times', value: 'Times New Roman' },
-  { name: 'Verdana', value: 'Verdana' },
-  { name: 'Trebuchet', value: 'Trebuchet MS' },
-  { name: 'Palatino', value: 'Palatino' },
-  { name: 'Garamond', value: 'Garamond' },
-  { name: 'Bookman', value: 'Bookman' },
-  { name: 'Avant Garde', value: 'Avant Garde' },
-  { name: 'Courier', value: 'Courier New' },
-  { name: 'Monaco', value: 'Monaco' },
-  { name: 'Optima', value: 'Optima' },
-  { name: 'Futura', value: 'Futura' },
-  { name: 'Didot', value: 'Didot' },
-  { name: 'American Typewriter', value: 'American Typewriter' },
-  { name: 'Baskerville', value: 'Baskerville' },
-  { name: 'Copperplate', value: 'Copperplate' },
-  { name: 'Papyrus', value: 'Papyrus' },
-  { name: 'Brush Script', value: 'Brush Script MT' },
-  { name: 'Lucida Handwriting', value: 'Lucida Handwriting' },
-  { name: 'Comic Sans', value: 'Comic Sans MS' },
-  { name: 'Bradley Hand', value: 'Bradley Hand' },
-  { name: 'Marker Felt', value: 'Marker Felt' },
-  { name: 'Snell Roundhand', value: 'Snell Roundhand' },
-  { name: 'Zapfino', value: 'Zapfino' },
-  { name: 'Chalkboard', value: 'Chalkboard' },
-  { name: 'Noteworthy', value: 'Noteworthy' },
-  { name: 'Handwriting', value: 'cursive' },
+  // Police par défaut
+  { name: 'Shadows Into Light', value: 'Shadows Into Light' },
+  // Polices manuscrites naturelles
+  { name: 'Covered By Your Grace', value: 'Covered By Your Grace' },
+  { name: 'Caveat', value: 'Caveat' },
+  { name: 'Indie Flower', value: 'Indie Flower' },
+  // Polices script / cursive stylées
+  { name: 'Dancing Script', value: 'Dancing Script' },
+  { name: 'Great Vibes', value: 'Great Vibes' },
+  // Style impact visuel fort (branding / titres)
+  { name: 'Bangers', value: 'Bangers' },
+  { name: 'Fraunces', value: 'Fraunces' },
+  // Caractère unique
+  { name: 'Shantell Sans', value: 'Shantell Sans' },
+  // Look moderne et fonctionnel
+  { name: 'Manrope', value: 'Manrope' },
+  // Police système
+  { name: 'System', value: Platform.OS === 'ios' ? 'System' : 'Roboto' },
 ];
 
 // Constants
