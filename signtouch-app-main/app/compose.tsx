@@ -20,7 +20,6 @@ import {
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  useDerivedValue,
   makeMutable,
   runOnJS,
 } from 'react-native-reanimated';
@@ -204,13 +203,13 @@ const getMobileFontFamily = (fontFamily: string): string => {
 
 function AnimatedText({ overlay, transform, isSelected, gesture, onFontPress, screenWidth }: AnimatedTextProps) {
   const mobileFontFamily = getMobileFontFamily(overlay.fontFamily);
-  
-  // Calculer si le texte est plus à droite ou à gauche de l'écran
-  const isOnRightSide = useDerivedValue(() => {
-    return transform.translateX.value > screenWidth / 2 - 50;
-  });
+  const [buttonOnLeft, setButtonOnLeft] = useState(false);
   
   const animatedStyle = useAnimatedStyle(() => {
+    // Mettre à jour la position du bouton
+    const isOnRight = transform.translateX.value > screenWidth / 2 - 50;
+    runOnJS(setButtonOnLeft)(isOnRight);
+    
     return {
       transform: [
         { translateX: transform.translateX.value },
@@ -218,14 +217,6 @@ function AnimatedText({ overlay, transform, isSelected, gesture, onFontPress, sc
         { rotate: `${transform.rotation.value}rad` },
         { scale: transform.scale.value },
       ],
-    };
-  });
-
-  // Style animé pour le bouton Aa (position à gauche ou à droite)
-  const fontButtonAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      right: isOnRightSide.value ? undefined : -50,
-      left: isOnRightSide.value ? -50 : undefined,
     };
   });
 
@@ -248,7 +239,10 @@ function AnimatedText({ overlay, transform, isSelected, gesture, onFontPress, sc
         </View>
         {isSelected && <View style={styles.selectionBorder} />}
         {isSelected && onFontPress && (
-          <Animated.View style={[styles.inlineFontButton, fontButtonAnimatedStyle]}>
+          <View style={[
+            styles.inlineFontButton, 
+            buttonOnLeft ? styles.inlineFontButtonLeft : styles.inlineFontButtonRight
+          ]}>
             <TouchableOpacity
               style={styles.inlineFontButtonTouchable}
               onPress={onFontPress}
@@ -256,7 +250,7 @@ function AnimatedText({ overlay, transform, isSelected, gesture, onFontPress, sc
             >
               <Text style={styles.inlineFontButtonText}>Aa</Text>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
         )}
       </Animated.View>
     </GestureDetector>
@@ -1661,8 +1655,15 @@ const styles = StyleSheet.create({
   },
   inlineFontButton: {
     position: 'absolute',
-    top: '50%',
-    marginTop: -20,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+  },
+  inlineFontButtonLeft: {
+    left: -48,
+  },
+  inlineFontButtonRight: {
+    right: -48,
   },
   inlineFontButtonTouchable: {
     width: 40,
