@@ -24,7 +24,7 @@ import { useTranslation } from '@/contexts/LanguageContext';
 import { captureRef } from 'react-native-view-shot';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -172,41 +172,48 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
   const panGesture = Gesture.Pan()
     .shouldCancelWhenOutside(true)
     .onStart(() => {
+      'worklet';
       isDragging.value = 1;
       startX.value = translateX.value;
       startY.value = translateY.value;
       if (Platform.OS !== 'web') {
-        safeHaptics.impact(Haptics.ImpactFeedbackStyle.Light);
+        runOnJS(safeHaptics.impact)(Haptics.ImpactFeedbackStyle.Light);
       }
     })
     .onUpdate((event) => {
+      'worklet';
       translateX.value = startX.value + event.translationX;
       translateY.value = startY.value + event.translationY;
     })
     .onEnd(() => {
+      'worklet';
       isDragging.value = 0;
-      onPositionChange(overlay.id, translateX.value, translateY.value);
+      runOnJS(onPositionChange)(overlay.id, translateX.value, translateY.value);
       if (Platform.OS !== 'web') {
-        safeHaptics.impact(Haptics.ImpactFeedbackStyle.Medium);
+        runOnJS(safeHaptics.impact)(Haptics.ImpactFeedbackStyle.Medium);
       }
     });
 
   const rotationGesture = Gesture.Rotation()
     .onUpdate((event) => {
+      'worklet';
       rotation.value = savedRotation.value + (event.rotation * 180) / Math.PI;
     })
     .onEnd(() => {
+      'worklet';
       savedRotation.value = rotation.value;
-      onRotationChange(overlay.id, rotation.value);
+      runOnJS(onRotationChange)(overlay.id, rotation.value);
     });
 
   const pinchGesture = Gesture.Pinch()
     .onUpdate((event) => {
+      'worklet';
       const newScale = savedScale.value * event.scale;
       scale.value = Math.max(0.2, Math.min(5, newScale));
     })
     .onEnd(() => {
-      onScaleChange(overlay.id, scale.value);
+      'worklet';
+      runOnJS(onScaleChange)(overlay.id, scale.value);
       savedScale.value = scale.value;
     });
 
