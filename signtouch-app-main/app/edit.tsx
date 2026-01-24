@@ -100,10 +100,12 @@ interface DraggableSignatureProps {
   onScaleChange: (id: string, scale: number) => void;
   onLongPress: () => void;
   onPress: () => void;
+  onSelect: () => void;
   isSelected: boolean;
+  zIndex: number;
 }
 
-function DraggableSignature({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, isSelected }: DraggableSignatureProps) {
+function DraggableSignature({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, onSelect, isSelected, zIndex }: DraggableSignatureProps) {
   const [imageDimensions, setImageDimensions] = useState({ width: 150, height: 80 });
   const [svgData, setSvgData] = useState<any>(null);
   
@@ -176,6 +178,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
       isDragging.value = 1;
       startX.value = translateX.value;
       startY.value = translateY.value;
+      runOnJS(onSelect)();
       if (Platform.OS !== 'web') {
         runOnJS(safeHaptics.impact)(Haptics.ImpactFeedbackStyle.Light);
       }
@@ -232,7 +235,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
 
   return (
     <Animated.View
-      style={[styles.draggableTextContainer, animatedStyle]}
+      style={[styles.draggableTextContainer, animatedStyle, { zIndex: zIndex }]}
       pointerEvents="auto"
     >
       <GestureDetector gesture={composedGesture}>
@@ -1005,7 +1008,7 @@ export default function EditScreen() {
               resizeMode="cover"
             />
           </TouchableOpacity>
-          {!saving && overlays.map(overlay => (
+          {!saving && overlays.map((overlay, index) => (
             <DraggableSignature
               key={overlay.id}
               overlay={overlay}
@@ -1014,7 +1017,9 @@ export default function EditScreen() {
               onScaleChange={updateOverlayScale}
               onLongPress={() => removeOverlay(overlay.id)}
               onPress={() => selectOverlay(overlay.id)}
+              onSelect={() => selectOverlay(overlay.id)}
               isSelected={selectedOverlayId === overlay.id}
+              zIndex={selectedOverlayId === overlay.id ? 1000 : index}
             />
           ))}
           {saving && overlays.map(overlay => (
