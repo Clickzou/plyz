@@ -20,6 +20,7 @@ import {
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
+  useDerivedValue,
   makeMutable,
   runOnJS,
 } from 'react-native-reanimated';
@@ -175,6 +176,8 @@ interface AnimatedTextProps {
   transform: TextTransform;
   isSelected: boolean;
   gesture: any;
+  onFontPress?: () => void;
+  screenWidth: number;
 }
 
 // Mapping des noms de polices vers les noms techniques React Native
@@ -199,8 +202,13 @@ const getMobileFontFamily = (fontFamily: string): string => {
   return FONT_NAME_MAP[fontFamily] || fontFamily;
 };
 
-function AnimatedText({ overlay, transform, isSelected, gesture }: AnimatedTextProps) {
+function AnimatedText({ overlay, transform, isSelected, gesture, onFontPress, screenWidth }: AnimatedTextProps) {
   const mobileFontFamily = getMobileFontFamily(overlay.fontFamily);
+  
+  // Calculer si le texte est plus à droite ou à gauche de l'écran
+  const isOnRightSide = useDerivedValue(() => {
+    return transform.translateX.value > screenWidth / 2 - 50;
+  });
   
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -210,6 +218,14 @@ function AnimatedText({ overlay, transform, isSelected, gesture }: AnimatedTextP
         { rotate: `${transform.rotation.value}rad` },
         { scale: transform.scale.value },
       ],
+    };
+  });
+
+  // Style animé pour le bouton Aa (position à gauche ou à droite)
+  const fontButtonAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      right: isOnRightSide.value ? undefined : -50,
+      left: isOnRightSide.value ? -50 : undefined,
     };
   });
 
@@ -231,6 +247,17 @@ function AnimatedText({ overlay, transform, isSelected, gesture }: AnimatedTextP
           </Text>
         </View>
         {isSelected && <View style={styles.selectionBorder} />}
+        {isSelected && onFontPress && (
+          <Animated.View style={[styles.inlineFontButton, fontButtonAnimatedStyle]}>
+            <TouchableOpacity
+              style={styles.inlineFontButtonTouchable}
+              onPress={onFontPress}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.inlineFontButtonText}>Aa</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
       </Animated.View>
     </GestureDetector>
   );
@@ -1109,6 +1136,8 @@ export default function ComposeScreen() {
                 transform={transform}
                 isSelected={isSelected}
                 gesture={gesture}
+                onFontPress={() => setShowEditFontPicker(!showEditFontPicker)}
+                screenWidth={SCREEN_WIDTH}
               />
             );
           })}
@@ -1132,27 +1161,18 @@ export default function ComposeScreen() {
                 </TouchableOpacity>
               )}
               {selectedTextIndex !== null && (
-                <>
-                  <TouchableOpacity
-                    style={[styles.bottomButton, styles.deleteBottomButton]}
-                    onPress={deleteSelectedText}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.deleteIconContainer}>
-                      <Trash2 size={20} color="#ffffff" strokeWidth={2.5} />
-                      <View style={styles.deleteSubIcon}>
-                        <Type size={12} color="#ffffff" strokeWidth={3} />
-                      </View>
+                <TouchableOpacity
+                  style={[styles.bottomButton, styles.deleteBottomButton]}
+                  onPress={deleteSelectedText}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.deleteIconContainer}>
+                    <Trash2 size={20} color="#ffffff" strokeWidth={2.5} />
+                    <View style={styles.deleteSubIcon}>
+                      <Type size={12} color="#ffffff" strokeWidth={3} />
                     </View>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.fontEditButton, showEditFontPicker && styles.fontEditButtonActive]}
-                    onPress={() => setShowEditFontPicker(!showEditFontPicker)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.fontEditButtonText}>Aa</Text>
-                  </TouchableOpacity>
-                </>
+                  </View>
+                </TouchableOpacity>
               )}
               <TouchableOpacity
                 style={[styles.paletteButton, showColorPicker && styles.paletteButtonActive]}
@@ -1636,6 +1656,29 @@ const styles = StyleSheet.create({
   },
   fontEditButtonText: {
     fontSize: 22,
+    fontWeight: '700',
+    color: '#1a1a1a',
+  },
+  inlineFontButton: {
+    position: 'absolute',
+    top: '50%',
+    marginTop: -20,
+  },
+  inlineFontButtonTouchable: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#eab308',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  inlineFontButtonText: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#1a1a1a',
   },
