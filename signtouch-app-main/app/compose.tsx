@@ -35,6 +35,17 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import PremiumModal from '@/components/PremiumModal';
 import { useTranslation } from '@/contexts/LanguageContext';
+import { useFonts } from 'expo-font';
+import { ShadowsIntoLight_400Regular } from '@expo-google-fonts/shadows-into-light';
+import { CoveredByYourGrace_400Regular } from '@expo-google-fonts/covered-by-your-grace';
+import { Caveat_400Regular } from '@expo-google-fonts/caveat';
+import { IndieFlower_400Regular } from '@expo-google-fonts/indie-flower';
+import { DancingScript_400Regular } from '@expo-google-fonts/dancing-script';
+import { GreatVibes_400Regular } from '@expo-google-fonts/great-vibes';
+import { Bangers_400Regular } from '@expo-google-fonts/bangers';
+import { Fraunces_400Regular } from '@expo-google-fonts/fraunces';
+import { ShantellSans_400Regular } from '@expo-google-fonts/shantell-sans';
+import { Manrope_400Regular } from '@expo-google-fonts/manrope';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -234,25 +245,26 @@ const COLORS = [
 ];
 const STROKE_SCALES = [0.7, 1.0, 1.4];
 
+// Font families avec noms corrects pour React Native mobile
 const FONT_FAMILIES = [
   // Police par défaut
-  { name: 'Shadows Into Light', value: 'Shadows Into Light' },
+  { name: 'Shadows Into Light', value: 'ShadowsIntoLight_400Regular' },
   // Polices manuscrites naturelles
-  { name: 'Covered By Your Grace', value: 'Covered By Your Grace' },
-  { name: 'Caveat', value: 'Caveat' },
-  { name: 'Indie Flower', value: 'Indie Flower' },
+  { name: 'Covered By Your Grace', value: 'CoveredByYourGrace_400Regular' },
+  { name: 'Caveat', value: 'Caveat_400Regular' },
+  { name: 'Indie Flower', value: 'IndieFlower_400Regular' },
   // Polices script / cursive stylées
-  { name: 'Dancing Script', value: 'Dancing Script' },
-  { name: 'Great Vibes', value: 'Great Vibes' },
+  { name: 'Dancing Script', value: 'DancingScript_400Regular' },
+  { name: 'Great Vibes', value: 'GreatVibes_400Regular' },
   // Style impact visuel fort (branding / titres)
-  { name: 'Bangers', value: 'Bangers' },
-  { name: 'Fraunces', value: 'Fraunces' },
+  { name: 'Bangers', value: 'Bangers_400Regular' },
+  { name: 'Fraunces', value: 'Fraunces_400Regular' },
   // Caractère unique
-  { name: 'Shantell Sans', value: 'Shantell Sans' },
+  { name: 'Shantell Sans', value: 'ShantellSans_400Regular' },
   // Look moderne et fonctionnel
-  { name: 'Manrope', value: 'Manrope' },
+  { name: 'Manrope', value: 'Manrope_400Regular' },
   // Police système
-  { name: 'Arial', value: 'Arial' },
+  { name: 'System', value: Platform.OS === 'ios' ? 'System' : 'Roboto' },
 ];
 
 interface TextTransform {
@@ -278,6 +290,20 @@ interface SignatureTransform {
 }
 
 export default function ComposeScreen() {
+  // Charger les polices pour mobile
+  const [fontsLoaded] = useFonts({
+    ShadowsIntoLight_400Regular,
+    CoveredByYourGrace_400Regular,
+    Caveat_400Regular,
+    IndieFlower_400Regular,
+    DancingScript_400Regular,
+    GreatVibes_400Regular,
+    Bangers_400Regular,
+    Fraunces_400Regular,
+    ShantellSans_400Regular,
+    Manrope_400Regular,
+  });
+
   const { photoUri, signatures, memoryId, texts } = useLocalSearchParams<{
     photoUri: string;
     signatures: string;
