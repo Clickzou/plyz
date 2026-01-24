@@ -22,8 +22,13 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import ViewShot from 'react-native-view-shot';
 import * as MediaLibrary from 'expo-media-library';
-import html2canvas from 'html2canvas';
 import * as Sharing from 'expo-sharing';
+
+// html2canvas is web-only, import conditionally
+let html2canvas: any = null;
+if (Platform.OS === 'web') {
+  html2canvas = require('html2canvas');
+}
 import { SignatureOverlay, TextOverlay, getAllMemories } from '@/utils/memoriesStorage';
 import { saveStory, getStories } from '@/utils/storiesStorage';
 import SocialShareModal from '@/components/SocialShareModal';

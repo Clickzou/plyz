@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "9f8fa740-b0ae-4b09-9d4b-5cee12456c9b"
+      }
+    },
+    "android": {
+      "package": "com.clickzou.workspace"
+    }
+  }
+}

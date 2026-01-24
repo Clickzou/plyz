@@ -1,0 +1,63 @@
+Logs for your project will appear below. Press Ctrl+C to exit.
+Android Bundled 4611ms node_modules/expo-router/entry.js (3749 modules)
+ WARN  Route "./join-event.tsx" is missing the required default export. Ensure a React component is exported as default.
+ WARN  Route "./story.tsx" is missing the required default export. Ensure a React component is exported as default.
+ ERROR  [Error: Cannot find native module 'ExpoBarCodeScanner'] 
+
+Code: BarCodeScannerWrapper.native.tsx
+  1 | import React from 'react';
+  2 | import { View, Text, StyleSheet } from 'react-native';
+> 3 | import { BarCodeScanner } from 'expo-barcode-scanner';
+    | ^
+  4 |
+  5 | interface BarCodeScannerWrapperProps {
+  6 |   onBarCodeScanned: (result: { data: string }) => void;
+Call Stack
+  <global> (components/BarCodeScannerWrapper.native.tsx:3)
+  <global> (app/join-event.tsx:20)
+ ERROR  [TypeError: Cannot read property 'createElement' of undefined] 
+
+Code: story.tsx
+  23 | import ViewShot from 'react-native-view-shot';
+  24 | import * as MediaLibrary from 'expo-media-library';
+> 25 | import html2canvas from 'html2canvas';
+     | ^
+  26 | import * as Sharing from 'expo-sharing';
+  27 | import { SignatureOverlay, TextOverlay, getAllMemories } from '@/utils/memoriesStorage';
+  28 | import { saveStory, getStories } from '@/utils/storiesStorage';
+Call Stack
+  <global> (app/story.tsx:25)
+ LOG  [Subscription] Callback registered
+ LOG  [PostPurchaseAccount] Callback registered
+ LOG  [PostPurchaseAccount] Manual callback registered
+Android Bundled 182ms node_modules/expo-router/entry.js (1 module)
+ WARN  Route "./join-event.tsx" is missing the required default export. Ensure a React component is exported as default.
+ WARN  Route "./story.tsx" is missing the required default export. Ensure a React component is exported as default.
+ ERROR  [Error: Cannot find native module 'ExpoBarCodeScanner'] 
+
+Code: BarCodeScannerWrapper.native.tsx
+  1 | import React from 'react';
+  2 | import { View, Text, StyleSheet } from 'react-native';
+> 3 | import { BarCodeScanner } from 'expo-barcode-scanner';
+    | ^
+  4 |
+  5 | interface BarCodeScannerWrapperProps {
+  6 |   onBarCodeScanned: (result: { data: string }) => void;
+Call Stack
+  <global> (components/BarCodeScannerWrapper.native.tsx:3)
+  <global> (app/join-event.tsx:20)
+ ERROR  [TypeError: Cannot read property 'createElement' of undefined] 
+
+Code: story.tsx
+  23 | import ViewShot from 'react-native-view-shot';
+  24 | import * as MediaLibrary from 'expo-media-library';
+> 25 | import html2canvas from 'html2canvas';
+     | ^
+  26 | import * as Sharing from 'expo-sharing';
+  27 | import { SignatureOverlay, TextOverlay, getAllMemories } from '@/utils/memoriesStorage';
+  28 | import { saveStory, getStories } from '@/utils/storiesStorage';
+Call Stack
+  <global> (app/story.tsx:25)
+ LOG  [Subscription] Callback registered
+ LOG  [PostPurchaseAccount] Callback registered
+ LOG  [PostPurchaseAccount] Manual callback registered
