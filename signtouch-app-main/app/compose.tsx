@@ -123,7 +123,15 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
 
   return (
     <GestureDetector gesture={gesture}>
-      <Animated.View style={[styles.signatureWrapper, animatedStyle, { width: imageDimensions.width, height: imageDimensions.height }]}>
+      <Animated.View style={[
+        styles.signatureWrapper, 
+        animatedStyle, 
+        { 
+          width: imageDimensions.width, 
+          height: imageDimensions.height,
+          zIndex: isSelected ? 1000 : index,
+        }
+      ]}>
         {svgData ? (
           <Svg width={svgData.width} height={svgData.height} style={styles.signature}>
             {svgData.paths.map((pathData: string, idx: number) => (
