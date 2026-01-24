@@ -1136,14 +1136,9 @@ export default function ResultScreen() {
 
   // Text overlay functions
   const addTextOverlay = useCallback(() => {
-    if (textOverlays.length >= 2) {
-      setLimitType('text');
-      setShowPremiumModal(true);
-      return;
-    }
     setShowTextInput(true);
     setNewTextValue('');
-  }, [textOverlays.length]);
+  }, []);
 
   const confirmAddText = useCallback(() => {
     if (!newTextValue.trim()) {
