@@ -1807,7 +1807,8 @@ export default function ResultScreen() {
     setShowShareModal(true);
   };
 
-  if (!displayUri || loading) {
+  // Attendre que les polices soient chargées ET que l'image soit chargée
+  if (!displayUri || loading || !fontsLoaded) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#10b981" />

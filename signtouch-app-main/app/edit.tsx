@@ -1012,7 +1012,8 @@ export default function EditScreen() {
     }
   };
 
-  if (loading || !memory) {
+  // Attendre que les polices soient chargées ET que la mémoire soit chargée
+  if (loading || !memory || !fontsLoaded) {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>

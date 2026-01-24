@@ -1031,7 +1031,8 @@ export default function ComposeScreen() {
 
   const finalPhotoUri = loadedPhotoUri || photoUri;
 
-  if (isLoadingMemory) {
+  // Attendre que les polices soient chargées ET que la mémoire soit chargée
+  if (isLoadingMemory || !fontsLoaded) {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
