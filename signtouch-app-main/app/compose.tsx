@@ -1239,7 +1239,7 @@ export default function ComposeScreen() {
                         onPress={() => changeSelectedTextFont(font.value)}
                         activeOpacity={0.8}
                       >
-                        <Text style={[styles.fontPickerText, { fontFamily: font.value }]}>
+                        <Text style={[styles.fontPickerText, { fontFamily: getMobileFontFamily(font.value) }]}>
                           {font.name}
                         </Text>
                       </TouchableOpacity>
@@ -1370,7 +1370,7 @@ export default function ComposeScreen() {
               style={styles.fontPickerButton}
               onPress={() => setShowFontPicker(!showFontPicker)}
             >
-              <Text style={[styles.fontPickerButtonText, { fontFamily: selectedFont }]}>
+              <Text style={[styles.fontPickerButtonText, { fontFamily: getMobileFontFamily(selectedFont) }]}>
                 {FONT_FAMILIES.find(f => f.value === selectedFont)?.name || 'System'}
               </Text>
               <Type size={20} color="#10b981" />
@@ -1390,7 +1390,7 @@ export default function ComposeScreen() {
                       setShowFontPicker(false);
                     }}
                   >
-                    <Text style={[styles.fontOptionText, { fontFamily: font.value }]}>
+                    <Text style={[styles.fontOptionText, { fontFamily: getMobileFontFamily(font.value) }]}>
                       {font.name}
                     </Text>
                   </TouchableOpacity>
