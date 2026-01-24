@@ -1150,7 +1150,7 @@ export default function ComposeScreen() {
                     onPress={() => setShowEditFontPicker(!showEditFontPicker)}
                     activeOpacity={0.8}
                   >
-                    <Type size={24} color="#1a1a1a" strokeWidth={2} />
+                    <Text style={styles.fontEditButtonText}>Aa</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -1633,6 +1633,11 @@ const styles = StyleSheet.create({
   },
   fontEditButtonActive: {
     backgroundColor: '#ca8a04',
+  },
+  fontEditButtonText: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1a1a1a',
   },
   fontPickerOverlay: {
     position: 'absolute',
