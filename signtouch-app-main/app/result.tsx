@@ -551,12 +551,35 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
   );
 }
 
+// Mapping des noms de polices vers les noms techniques React Native
+const FONT_NAME_MAP: { [key: string]: string } = {
+  'Shadows Into Light': 'ShadowsIntoLight_400Regular',
+  'Covered By Your Grace': 'CoveredByYourGrace_400Regular',
+  'Caveat': 'Caveat_400Regular',
+  'Indie Flower': 'IndieFlower_400Regular',
+  'Dancing Script': 'DancingScript_400Regular',
+  'Great Vibes': 'GreatVibes_400Regular',
+  'Bangers': 'Bangers_400Regular',
+  'Fraunces': 'Fraunces_400Regular',
+  'Shantell Sans': 'ShantellSans_400Regular',
+  'Manrope': 'Manrope_400Regular',
+};
+
+const getMobileFontFamily = (fontFamily: string): string => {
+  if (Platform.OS === 'web') {
+    return fontFamily; // Sur web, utiliser le nom CSS
+  }
+  // Sur mobile, utiliser le nom technique ou retourner le nom original
+  return FONT_NAME_MAP[fontFamily] || fontFamily;
+};
+
 // StaticText Component (non-editable)
 interface StaticTextProps {
   overlay: TextOverlay;
 }
 
 function StaticText({ overlay }: StaticTextProps) {
+  const mobileFontFamily = getMobileFontFamily(overlay.fontFamily);
   return (
     <View style={[styles.textWrapper, {
       left: overlay.x,
@@ -567,7 +590,7 @@ function StaticText({ overlay }: StaticTextProps) {
       ]
     }]}>
       <Text style={{
-        fontFamily: overlay.fontFamily,
+        fontFamily: mobileFontFamily,
         fontSize: overlay.fontSize,
         color: overlay.color,
       }}>
@@ -589,6 +612,7 @@ interface DraggableTextProps {
 }
 
 function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, isSelected }: DraggableTextProps) {
+  const mobileFontFamily = getMobileFontFamily(overlay.fontFamily);
   const translateX = useSharedValue(overlay.x);
   const translateY = useSharedValue(overlay.y);
   const rotation = useSharedValue(overlay.rotation);
@@ -672,7 +696,7 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
             delayLongPress={500}
           >
             <Text style={{
-              fontFamily: overlay.fontFamily,
+              fontFamily: mobileFontFamily,
               fontSize: overlay.fontSize,
               color: overlay.color,
             }}>
@@ -689,9 +713,8 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
 }
 
 export default function ResultScreen() {
-  // Charger les polices pour mobile avec les nouveaux ET anciens noms comme alias
+  // Charger les polices pour mobile avec les noms techniques
   const [fontsLoaded] = useFonts({
-    // Nouveaux noms (pour les nouveaux textes)
     ShadowsIntoLight_400Regular,
     CoveredByYourGrace_400Regular,
     Caveat_400Regular,
@@ -702,17 +725,6 @@ export default function ResultScreen() {
     Fraunces_400Regular,
     ShantellSans_400Regular,
     Manrope_400Regular,
-    // Anciens noms comme alias (pour les textes existants)
-    'Shadows Into Light': ShadowsIntoLight_400Regular,
-    'Covered By Your Grace': CoveredByYourGrace_400Regular,
-    'Caveat': Caveat_400Regular,
-    'Indie Flower': IndieFlower_400Regular,
-    'Dancing Script': DancingScript_400Regular,
-    'Great Vibes': GreatVibes_400Regular,
-    'Bangers': Bangers_400Regular,
-    'Fraunces': Fraunces_400Regular,
-    'Shantell Sans': ShantellSans_400Regular,
-    'Manrope': Manrope_400Regular,
   });
 
   const params = useLocalSearchParams<{ imageUri?: string; memoryId?: string }>();
