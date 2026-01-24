@@ -29,6 +29,26 @@ import Svg, { Path } from 'react-native-svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+// Safe haptics wrapper to prevent crashes on unsupported devices
+const safeHaptics = {
+  impact: async (style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Light) => {
+    if (Platform.OS === 'web') return;
+    try {
+      await Haptics.impactAsync(style);
+    } catch (e) {
+      // Haptics not available
+    }
+  },
+  notification: async (type: Haptics.NotificationFeedbackType = Haptics.NotificationFeedbackType.Success) => {
+    if (Platform.OS === 'web') return;
+    try {
+      await Haptics.notificationAsync(type);
+    } catch (e) {
+      // Haptics not available
+    }
+  }
+};
+
 const SIGNATURE_COLORS = [
   '#ffffff', // Blanc
   '#3b82f6', // Bleu
@@ -156,7 +176,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
       startX.value = translateX.value;
       startY.value = translateY.value;
       if (Platform.OS !== 'web') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        safeHaptics.impact(Haptics.ImpactFeedbackStyle.Light);
       }
     })
     .onUpdate((event) => {
@@ -167,7 +187,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
       isDragging.value = 0;
       onPositionChange(overlay.id, translateX.value, translateY.value);
       if (Platform.OS !== 'web') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        safeHaptics.impact(Haptics.ImpactFeedbackStyle.Medium);
       }
     });
 
@@ -355,7 +375,7 @@ export default function EditScreen() {
 
   const goToSignature = () => {
     if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      safeHaptics.impact(Haptics.ImpactFeedbackStyle.Light);
     }
 
     setIsSignatureMode(true);
@@ -367,7 +387,7 @@ export default function EditScreen() {
 
   const cancelSignature = () => {
     if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      safeHaptics.impact(Haptics.ImpactFeedbackStyle.Light);
     }
     setIsSignatureMode(false);
     setSignaturePaths([]);
@@ -376,7 +396,7 @@ export default function EditScreen() {
 
   const clearSignaturePaths = () => {
     if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      safeHaptics.impact(Haptics.ImpactFeedbackStyle.Medium);
     }
     setSignaturePaths([]);
     setCurrentPath('');
@@ -560,7 +580,7 @@ export default function EditScreen() {
 
     try {
       if (Platform.OS !== 'web') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        safeHaptics.impact(Haptics.ImpactFeedbackStyle.Medium);
       }
 
       const signatureImageUri = await convertSignatureToImage();
@@ -588,7 +608,7 @@ export default function EditScreen() {
 
   const removeOverlay = async (id: string) => {
     if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      safeHaptics.impact(Haptics.ImpactFeedbackStyle.Light);
     }
 
     const overlay = overlays.find(o => o.id === id);
@@ -673,9 +693,7 @@ export default function EditScreen() {
     console.log('[DEBUG] Selecting overlay:', id);
     setSelectedOverlayId(id);
     setShowColorPicker(false);
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    safeHaptics.impact(Haptics.ImpactFeedbackStyle.Light);
   };
 
   const deselectOverlay = () => {
@@ -705,13 +723,13 @@ export default function EditScreen() {
     );
 
     if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      safeHaptics.impact(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
   const toggleColorPicker = () => {
     if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      safeHaptics.impact(Haptics.ImpactFeedbackStyle.Light);
     }
     setShowColorPicker(!showColorPicker);
   };
@@ -732,7 +750,7 @@ export default function EditScreen() {
     );
 
     if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      safeHaptics.impact(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
@@ -744,7 +762,7 @@ export default function EditScreen() {
     }
 
     if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      safeHaptics.impact(Haptics.ImpactFeedbackStyle.Medium);
     }
 
     removeOverlay(selectedOverlayId!);
@@ -852,7 +870,7 @@ export default function EditScreen() {
       console.log('🔄 Début de la sauvegarde...');
       setSaving(true);
       if (Platform.OS !== 'web') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        safeHaptics.impact(Haptics.ImpactFeedbackStyle.Medium);
       }
 
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -900,7 +918,7 @@ export default function EditScreen() {
       console.log('✅ Image mise à jour');
 
       if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        safeHaptics.notification(Haptics.NotificationFeedbackType.Success);
       }
 
       setSaving(false);
@@ -923,7 +941,7 @@ export default function EditScreen() {
 
   const handleClose = () => {
     if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      safeHaptics.impact(Haptics.ImpactFeedbackStyle.Light);
     }
 
     if (overlays.length > 0) {
