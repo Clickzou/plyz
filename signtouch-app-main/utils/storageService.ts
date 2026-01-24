@@ -55,6 +55,7 @@ export const updateMemory = async (
   userId: string | null,
   updates?: {
     imageUri?: string;
+    baseUri?: string;
     signatureOverlays?: SignatureOverlay[];
     textOverlays?: TextOverlay[];
     filter?: string;
@@ -69,6 +70,7 @@ export const updateMemory = async (
     const updatedMemory: Memory = {
       ...memory,
       ...(updates?.imageUri && { uri: updates.imageUri }),
+      ...(updates?.baseUri && { baseUri: updates.baseUri }),
       ...(updates?.signatureOverlays !== undefined && { signatureOverlays: updates.signatureOverlays }),
       ...(updates?.textOverlays !== undefined && { textOverlays: updates.textOverlays }),
       ...(updates?.filter !== undefined && { filter: updates.filter }),

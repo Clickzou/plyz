@@ -373,8 +373,14 @@ export default function EditScreen() {
       const found = memories.find(m => m.id === memoryId);
       if (found) {
         setMemory(found);
-        console.log('🔍 Signatures chargées:', found.signatureOverlays?.length || 0);
-        loadOverlaysFromMemory(found.signatureOverlays || []);
+        // Only load overlays if baseUri exists (meaning overlays are not baked into the image)
+        if (found.baseUri) {
+          console.log('🔍 Signatures chargées:', found.signatureOverlays?.length || 0);
+          loadOverlaysFromMemory(found.signatureOverlays || []);
+        } else {
+          console.log('🔍 Pas de baseUri, overlays déjà dans l\'image');
+          loadOverlaysFromMemory([]);
+        }
       }
     } catch (error) {
       console.error('Error loading memory:', error);
@@ -922,6 +928,7 @@ export default function EditScreen() {
         user?.id || null,
         {
           imageUri: finalUri,
+          baseUri: baseUri,
           signatureOverlays: savedSignatureOverlays.length > 0 ? savedSignatureOverlays : undefined,
         }
       );

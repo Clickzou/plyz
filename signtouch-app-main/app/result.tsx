@@ -871,8 +871,16 @@ export default function ResultScreen() {
       const found = memories.find(m => m.id === memoryId);
       if (found) {
         setMemory(found);
-        setSignatureOverlays(found.signatureOverlays || []);
-        setTextOverlays(found.textOverlays || []);
+        // Only load overlays if baseUri exists (meaning the overlays are not baked into the image)
+        // If baseUri doesn't exist, the overlays are already in the uri image
+        if (found.baseUri) {
+          setSignatureOverlays(found.signatureOverlays || []);
+          setTextOverlays(found.textOverlays || []);
+        } else {
+          // No baseUri means overlays are baked into the image, don't load them
+          setSignatureOverlays([]);
+          setTextOverlays([]);
+        }
         if (found.adjustments) {
           setBrightness(found.adjustments.brightness || 0);
           setContrast(found.adjustments.contrast || 0);
@@ -1388,6 +1396,7 @@ export default function ResultScreen() {
         const updatedMemory: Memory = {
           ...memory,
           uri: capturedUri,
+          baseUri: memory.baseUri || displayUri,
           signatureOverlays,
           textOverlays,
           adjustments: (brightness !== 0 || contrast !== 0 || saturation !== 0) ? { brightness, contrast, saturation } : undefined,
