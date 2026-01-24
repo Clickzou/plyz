@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import * as Linking from 'expo-linking';
 import { supabase } from '@/utils/supabase';
 
 export default function AuthCallbackScreen() {
   const { user, getPostAuthRedirect, clearPostAuthRedirect } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(true);
-  const currentUrl = Linking.useURL();
+  const params = useLocalSearchParams<{ token_hash?: string; type?: string }>();
 
   useEffect(() => {
     let processed = false;
@@ -19,59 +18,23 @@ export default function AuthCallbackScreen() {
       processed = true;
 
       try {
-        // Récupérer l'URL initiale (si l'app était fermée)
-        const initialUrl = await Linking.getInitialURL();
+        const { token_hash, type } = params;
 
-        // Utiliser l'URL actuelle ou l'URL initiale
-        const url = currentUrl || initialUrl;
+        if (token_hash && type === 'magiclink') {
+          // Vérifier le token avec Supabase
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash,
+            type: 'magiclink',
+          });
 
-        if (url) {
-          const parsed = Linking.parse(url);
-          const { token_hash, type } = parsed.queryParams as { token_hash?: string; type?: string };
-
-          if (token_hash && type === 'magiclink') {
-            // Vérifier le token avec Supabase
-            const { error } = await supabase.auth.verifyOtp({
-              token_hash,
-              type: 'magiclink',
-            });
-
-            if (error) {
-              setError(error.message);
-              setVerifying(false);
-              return;
-            }
-
-            // Attendre un court instant pour que la session soit établie
-            setTimeout(async () => {
-              const redirectPath = await getPostAuthRedirect();
-              await clearPostAuthRedirect();
-
-              if (redirectPath) {
-                router.replace(redirectPath as any);
-              } else {
-                router.replace('/account');
-              }
-            }, 1000);
-          } else {
-            // Pas de token dans l'URL, vérifier si l'utilisateur est déjà connecté
-            if (user) {
-              const redirectPath = await getPostAuthRedirect();
-              await clearPostAuthRedirect();
-
-              if (redirectPath) {
-                router.replace(redirectPath as any);
-              } else {
-                router.replace('/account');
-              }
-            } else {
-              setError('Lien invalide ou expiré');
-              setVerifying(false);
-            }
+          if (error) {
+            setError(error.message);
+            setVerifying(false);
+            return;
           }
-        } else {
-          // Pas d'URL, vérifier si l'utilisateur est déjà connecté
-          if (user) {
+
+          // Attendre un court instant pour que la session soit établie
+          setTimeout(async () => {
             const redirectPath = await getPostAuthRedirect();
             await clearPostAuthRedirect();
 
@@ -80,10 +43,20 @@ export default function AuthCallbackScreen() {
             } else {
               router.replace('/account');
             }
+          }, 1000);
+        } else if (user) {
+          // Pas de token mais utilisateur connecté
+          const redirectPath = await getPostAuthRedirect();
+          await clearPostAuthRedirect();
+
+          if (redirectPath) {
+            router.replace(redirectPath as any);
           } else {
-            setError('Aucun lien de connexion détecté');
-            setVerifying(false);
+            router.replace('/account');
           }
+        } else {
+          setError('Lien invalide ou expiré');
+          setVerifying(false);
         }
       } catch (err) {
         setError('Erreur lors de la connexion');
@@ -92,7 +65,7 @@ export default function AuthCallbackScreen() {
     };
 
     handleDeepLink();
-  }, [user, currentUrl]);
+  }, [user, params]);
 
   if (error) {
     return (
