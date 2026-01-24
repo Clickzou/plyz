@@ -245,24 +245,24 @@ const COLORS = [
 ];
 const STROKE_SCALES = [0.7, 1.0, 1.4];
 
-// Font families avec noms corrects pour React Native mobile
+// Font families - utiliser les anciens noms qui sont maintenant des alias
 const FONT_FAMILIES = [
   // Police par défaut
-  { name: 'Shadows Into Light', value: 'ShadowsIntoLight_400Regular' },
+  { name: 'Shadows Into Light', value: 'Shadows Into Light' },
   // Polices manuscrites naturelles
-  { name: 'Covered By Your Grace', value: 'CoveredByYourGrace_400Regular' },
-  { name: 'Caveat', value: 'Caveat_400Regular' },
-  { name: 'Indie Flower', value: 'IndieFlower_400Regular' },
+  { name: 'Covered By Your Grace', value: 'Covered By Your Grace' },
+  { name: 'Caveat', value: 'Caveat' },
+  { name: 'Indie Flower', value: 'Indie Flower' },
   // Polices script / cursive stylées
-  { name: 'Dancing Script', value: 'DancingScript_400Regular' },
-  { name: 'Great Vibes', value: 'GreatVibes_400Regular' },
+  { name: 'Dancing Script', value: 'Dancing Script' },
+  { name: 'Great Vibes', value: 'Great Vibes' },
   // Style impact visuel fort (branding / titres)
-  { name: 'Bangers', value: 'Bangers_400Regular' },
-  { name: 'Fraunces', value: 'Fraunces_400Regular' },
+  { name: 'Bangers', value: 'Bangers' },
+  { name: 'Fraunces', value: 'Fraunces' },
   // Caractère unique
-  { name: 'Shantell Sans', value: 'ShantellSans_400Regular' },
+  { name: 'Shantell Sans', value: 'Shantell Sans' },
   // Look moderne et fonctionnel
-  { name: 'Manrope', value: 'Manrope_400Regular' },
+  { name: 'Manrope', value: 'Manrope' },
   // Police système
   { name: 'System', value: Platform.OS === 'ios' ? 'System' : 'Roboto' },
 ];
@@ -290,8 +290,9 @@ interface SignatureTransform {
 }
 
 export default function ComposeScreen() {
-  // Charger les polices pour mobile
+  // Charger les polices pour mobile avec les nouveaux ET anciens noms comme alias
   const [fontsLoaded] = useFonts({
+    // Nouveaux noms (pour les nouveaux textes)
     ShadowsIntoLight_400Regular,
     CoveredByYourGrace_400Regular,
     Caveat_400Regular,
@@ -302,6 +303,17 @@ export default function ComposeScreen() {
     Fraunces_400Regular,
     ShantellSans_400Regular,
     Manrope_400Regular,
+    // Anciens noms comme alias (pour les textes existants)
+    'Shadows Into Light': ShadowsIntoLight_400Regular,
+    'Covered By Your Grace': CoveredByYourGrace_400Regular,
+    'Caveat': Caveat_400Regular,
+    'Indie Flower': IndieFlower_400Regular,
+    'Dancing Script': DancingScript_400Regular,
+    'Great Vibes': GreatVibes_400Regular,
+    'Bangers': Bangers_400Regular,
+    'Fraunces': Fraunces_400Regular,
+    'Shantell Sans': ShantellSans_400Regular,
+    'Manrope': Manrope_400Regular,
   });
 
   const { photoUri, signatures, memoryId, texts } = useLocalSearchParams<{
