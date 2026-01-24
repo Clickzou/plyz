@@ -205,6 +205,9 @@ function AnimatedText({ overlay, transform, isSelected, gesture, onFontPress, sc
   const mobileFontFamily = getMobileFontFamily(overlay.fontFamily);
   const [buttonOnLeft, setButtonOnLeft] = useState(false);
   
+  // Debug logging
+  console.log('[AnimatedText] overlay.fontFamily:', overlay.fontFamily, '-> mobileFontFamily:', mobileFontFamily);
+  
   const animatedStyle = useAnimatedStyle(() => {
     // Mettre à jour la position du bouton
     const isOnRight = transform.translateX.value > screenWidth / 2 - 50;
@@ -672,9 +675,11 @@ export default function ComposeScreen() {
   };
 
   const changeSelectedTextFont = (fontFamily: string) => {
+    console.log('[changeSelectedTextFont] Called with fontFamily:', fontFamily, 'selectedTextIndex:', selectedTextIndex);
     if (selectedTextIndex !== null) {
       const newOverlays = [...textOverlays];
       newOverlays[selectedTextIndex] = { ...newOverlays[selectedTextIndex], fontFamily };
+      console.log('[changeSelectedTextFont] Updated overlay:', newOverlays[selectedTextIndex]);
       setTextOverlays(newOverlays);
     }
     setShowEditFontPicker(false);
@@ -1128,7 +1133,7 @@ export default function ComposeScreen() {
 
             return (
               <AnimatedText
-                key={overlay.id}
+                key={`${overlay.id}-${overlay.fontFamily}`}
                 overlay={overlay}
                 transform={transform}
                 isSelected={isSelected}
