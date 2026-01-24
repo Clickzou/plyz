@@ -525,12 +525,6 @@ export default function ComposeScreen() {
   };
 
   const openTextModal = () => {
-    if (textOverlays.length >= 2) {
-      if (status !== 'paid') {
-        setShowPremiumModal(true);
-        return;
-      }
-    }
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
