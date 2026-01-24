@@ -33,6 +33,17 @@ import PremiumModal from '@/components/PremiumModal';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { maybeShowSubscriptionOffer } from '@/utils/subscriptionOffer';
 import Slider from '@react-native-community/slider';
+import { useFonts } from 'expo-font';
+import { ShadowsIntoLight_400Regular } from '@expo-google-fonts/shadows-into-light';
+import { CoveredByYourGrace_400Regular } from '@expo-google-fonts/covered-by-your-grace';
+import { Caveat_400Regular } from '@expo-google-fonts/caveat';
+import { IndieFlower_400Regular } from '@expo-google-fonts/indie-flower';
+import { DancingScript_400Regular } from '@expo-google-fonts/dancing-script';
+import { GreatVibes_400Regular } from '@expo-google-fonts/great-vibes';
+import { Bangers_400Regular } from '@expo-google-fonts/bangers';
+import { Fraunces_400Regular } from '@expo-google-fonts/fraunces';
+import { ShantellSans_400Regular } from '@expo-google-fonts/shantell-sans';
+import { Manrope_400Regular } from '@expo-google-fonts/manrope';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -680,6 +691,20 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
 }
 
 export default function ResultScreen() {
+  // Charger les polices pour mobile
+  const [fontsLoaded] = useFonts({
+    ShadowsIntoLight_400Regular,
+    CoveredByYourGrace_400Regular,
+    Caveat_400Regular,
+    IndieFlower_400Regular,
+    DancingScript_400Regular,
+    GreatVibes_400Regular,
+    Bangers_400Regular,
+    Fraunces_400Regular,
+    ShantellSans_400Regular,
+    Manrope_400Regular,
+  });
+
   const params = useLocalSearchParams<{ imageUri?: string; memoryId?: string }>();
   const { imageUri, memoryId } = params;
   const [memory, setMemory] = useState<Memory | null>(null);

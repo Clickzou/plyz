@@ -26,6 +26,17 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
+import { useFonts } from 'expo-font';
+import { ShadowsIntoLight_400Regular } from '@expo-google-fonts/shadows-into-light';
+import { CoveredByYourGrace_400Regular } from '@expo-google-fonts/covered-by-your-grace';
+import { Caveat_400Regular } from '@expo-google-fonts/caveat';
+import { IndieFlower_400Regular } from '@expo-google-fonts/indie-flower';
+import { DancingScript_400Regular } from '@expo-google-fonts/dancing-script';
+import { GreatVibes_400Regular } from '@expo-google-fonts/great-vibes';
+import { Bangers_400Regular } from '@expo-google-fonts/bangers';
+import { Fraunces_400Regular } from '@expo-google-fonts/fraunces';
+import { ShantellSans_400Regular } from '@expo-google-fonts/shantell-sans';
+import { Manrope_400Regular } from '@expo-google-fonts/manrope';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -290,6 +301,20 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
 }
 
 export default function EditScreen() {
+  // Charger les polices pour mobile
+  const [fontsLoaded] = useFonts({
+    ShadowsIntoLight_400Regular,
+    CoveredByYourGrace_400Regular,
+    Caveat_400Regular,
+    IndieFlower_400Regular,
+    DancingScript_400Regular,
+    GreatVibes_400Regular,
+    Bangers_400Regular,
+    Fraunces_400Regular,
+    ShantellSans_400Regular,
+    Manrope_400Regular,
+  });
+
   const params = useLocalSearchParams<{ memoryId: string; autoSave?: string }>();
   const { memoryId, autoSave } = params;
 
