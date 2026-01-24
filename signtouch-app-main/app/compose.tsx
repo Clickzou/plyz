@@ -245,7 +245,7 @@ const COLORS = [
 ];
 const STROKE_SCALES = [0.7, 1.0, 1.4];
 
-// Font families - utiliser les anciens noms qui sont maintenant des alias
+// Font families - liste complète cohérente avec result.tsx
 const FONT_FAMILIES = [
   // Police par défaut
   { name: 'Shadows Into Light', value: 'Shadows Into Light' },
@@ -265,6 +265,16 @@ const FONT_FAMILIES = [
   { name: 'Manrope', value: 'Manrope' },
   // Police système
   { name: 'System', value: Platform.OS === 'ios' ? 'System' : 'Roboto' },
+  // Polices système additionnelles
+  { name: 'Arial', value: 'Arial' },
+  { name: 'Helvetica', value: 'Helvetica' },
+  { name: 'Georgia', value: 'Georgia' },
+  { name: 'Times', value: 'Times New Roman' },
+  { name: 'Verdana', value: 'Verdana' },
+  { name: 'Courier', value: 'Courier New' },
+  { name: 'Comic Sans', value: 'Comic Sans MS' },
+  { name: 'Brush Script', value: 'Brush Script MT' },
+  { name: 'Lucida Handwriting', value: 'Lucida Handwriting' },
 ];
 
 interface TextTransform {
