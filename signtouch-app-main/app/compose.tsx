@@ -476,7 +476,10 @@ export default function ComposeScreen() {
   };
 
   const createGesture = (transform: SignatureTransform, index: number) => {
-    const selectSignature = () => setSelectedSignatureIndex(index);
+    const selectSignature = () => {
+      setSelectedSignatureIndex(index);
+      setSelectedTextIndex(null);
+    };
     
     const tap = Gesture.Tap()
       .onEnd(() => {
