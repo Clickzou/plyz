@@ -21,6 +21,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   makeMutable,
+  runOnJS,
 } from 'react-native-reanimated';
 import { Type, Minus, CreditCard as Edit3, Check, RotateCw, ChevronLeft, ChevronRight, Palette, Pencil, Plus, Trash2 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -36,6 +37,27 @@ import PremiumModal from '@/components/PremiumModal';
 import { useTranslation } from '@/contexts/LanguageContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Safe haptic functions for use with runOnJS in Reanimated worklets
+// These are called ONLY via runOnJS from gesture callbacks (onEnd, onFinalize)
+// NEVER call Haptics directly in worklets (onUpdate, onStart, onChange)
+const triggerHapticLight = () => {
+  if (Platform.OS !== 'web') {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+  }
+};
+
+const triggerHapticMedium = () => {
+  if (Platform.OS !== 'web') {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+  }
+};
+
+const triggerHapticSuccess = () => {
+  if (Platform.OS !== 'web') {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+  }
+};
 
 interface AnimatedSignatureProps {
   uri: string;
@@ -365,36 +387,43 @@ export default function ComposeScreen() {
   };
 
   const createGesture = (transform: SignatureTransform, index: number) => {
+    const selectSignature = () => setSelectedSignatureIndex(index);
+    
     const tap = Gesture.Tap()
       .onEnd(() => {
-        if (Platform.OS !== 'web') {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-        setSelectedSignatureIndex(index);
+        'worklet';
+        runOnJS(triggerHapticLight)();
+        runOnJS(selectSignature)();
       });
 
     const pinch = Gesture.Pinch()
       .onUpdate((event) => {
+        'worklet';
         transform.scale.value = Math.max(0.3, Math.min(4, transform.savedScale.value * event.scale));
       })
       .onEnd(() => {
+        'worklet';
         transform.savedScale.value = transform.scale.value;
       });
 
     const rotate = Gesture.Rotation()
       .onUpdate((event) => {
+        'worklet';
         transform.rotation.value = transform.savedRotation.value + event.rotation;
       })
       .onEnd(() => {
+        'worklet';
         transform.savedRotation.value = transform.rotation.value;
       });
 
     const pan = Gesture.Pan()
       .onUpdate((event) => {
+        'worklet';
         transform.translateX.value = transform.savedTranslateX.value + event.translationX;
         transform.translateY.value = transform.savedTranslateY.value + event.translationY;
       })
       .onEnd(() => {
+        'worklet';
         transform.savedTranslateX.value = transform.translateX.value;
         transform.savedTranslateY.value = transform.translateY.value;
       });
@@ -421,42 +450,52 @@ export default function ComposeScreen() {
   };
 
   const createTextGesture = (transform: TextTransform, overlay: TextOverlay, index: number) => {
+    const selectText = () => {
+      setSelectedTextIndex(index);
+      setSelectedSignatureIndex(null);
+    };
+    const updateTransform = () => updateTextOverlayTransform(overlay.id, transform);
+    
     const tap = Gesture.Tap()
       .onEnd(() => {
-        if (Platform.OS !== 'web') {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-        setSelectedTextIndex(index);
-        setSelectedSignatureIndex(null);
+        'worklet';
+        runOnJS(triggerHapticLight)();
+        runOnJS(selectText)();
       });
 
     const pinch = Gesture.Pinch()
       .onUpdate((event) => {
+        'worklet';
         transform.scale.value = Math.max(0.3, Math.min(4, transform.savedScale.value * event.scale));
       })
       .onEnd(() => {
+        'worklet';
         transform.savedScale.value = transform.scale.value;
-        updateTextOverlayTransform(overlay.id, transform);
+        runOnJS(updateTransform)();
       });
 
     const rotate = Gesture.Rotation()
       .onUpdate((event) => {
+        'worklet';
         transform.rotation.value = transform.savedRotation.value + event.rotation;
       })
       .onEnd(() => {
+        'worklet';
         transform.savedRotation.value = transform.rotation.value;
-        updateTextOverlayTransform(overlay.id, transform);
+        runOnJS(updateTransform)();
       });
 
     const pan = Gesture.Pan()
       .onUpdate((event) => {
+        'worklet';
         transform.translateX.value = transform.savedTranslateX.value + event.translationX;
         transform.translateY.value = transform.savedTranslateY.value + event.translationY;
       })
       .onEnd(() => {
+        'worklet';
         transform.savedTranslateX.value = transform.translateX.value;
         transform.savedTranslateY.value = transform.translateY.value;
-        updateTextOverlayTransform(overlay.id, transform);
+        runOnJS(updateTransform)();
       });
 
     return Gesture.Race(tap, Gesture.Simultaneous(pinch, rotate, pan));
