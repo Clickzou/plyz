@@ -886,10 +886,12 @@ export default function ComposeScreen() {
         }
       } else {
         // Mobile: utiliser StorageService avec AsyncStorage ou cloud
+        // baseUri = image originale sans overlays, uri = image avec overlays
         const savedMemory = await StorageService.saveMemory(
           uri,
           user?.id || null,
           {
+            baseUri: finalPhotoUri as string,
             signatureOverlays: signatureOverlays.length > 0 ? signatureOverlays : undefined,
             textOverlays: textOverlays.length > 0 ? textOverlays : undefined,
           }

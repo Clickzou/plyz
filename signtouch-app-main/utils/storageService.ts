@@ -6,6 +6,7 @@ export const saveMemory = async (
   imageUri: string,
   userId: string | null,
   metadata?: {
+    baseUri?: string;
     signatureOverlays?: SignatureOverlay[];
     textOverlays?: TextOverlay[];
     filter?: string;
@@ -21,6 +22,7 @@ export const saveMemory = async (
     if (metadata) {
       await LocalStorage.updateMemory({
         ...memory,
+        baseUri: metadata.baseUri,
         signatureOverlays: metadata.signatureOverlays,
         textOverlays: metadata.textOverlays,
         filter: metadata.filter,
@@ -30,6 +32,7 @@ export const saveMemory = async (
 
       return {
         ...memory,
+        baseUri: metadata.baseUri,
         signatureOverlays: metadata.signatureOverlays,
         textOverlays: metadata.textOverlays,
         filter: metadata.filter,
