@@ -2010,16 +2010,6 @@ export default function ResultScreen() {
               </View>
             </TouchableOpacity>
 
-            {selectedElementType === 'text' && (
-              <TouchableOpacity
-                style={[styles.editActionButton, styles.fontButton, showFontPicker && styles.fontButtonActive]}
-                onPress={() => setShowFontPicker(!showFontPicker)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.fontButtonText}>Aa</Text>
-              </TouchableOpacity>
-            )}
-
             <TouchableOpacity
               style={[styles.editActionButton, styles.effectsButton, showEffectsPanel && styles.effectsButtonActive]}
               onPress={toggleEffectsPanel}
