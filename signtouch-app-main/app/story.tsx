@@ -661,7 +661,7 @@ function StoryPreview({
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
-  const textOpacity = useSharedValue(0);
+  const textOpacity = useSharedValue(1);
   const glowOpacity = useSharedValue(0);
   const bgScale = useSharedValue(1);
   const bgTranslateX = useSharedValue(0);
@@ -807,7 +807,7 @@ function StoryPreview({
       scale.value = 1;
       translateX.value = 0;
       translateY.value = 0;
-      textOpacity.value = 0;
+      textOpacity.value = 1;
       glowOpacity.value = 0;
       bgScale.value = 1;
       bgTranslateX.value = 0;
