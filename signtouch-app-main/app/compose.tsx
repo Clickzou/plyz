@@ -206,7 +206,7 @@ function AnimatedText({ overlay, transform, isSelected, gesture, onFontPress, sc
   const [buttonOnLeft, setButtonOnLeft] = useState(false);
   
   // Debug logging
-  console.log('[AnimatedText] overlay.fontFamily:', overlay.fontFamily, '-> mobileFontFamily:', mobileFontFamily);
+  console.log('[AnimatedText] Platform:', Platform.OS, 'fontFamily:', overlay.fontFamily, '-> mobileFontFamily:', mobileFontFamily);
   
   const animatedStyle = useAnimatedStyle(() => {
     // Mettre à jour la position du bouton
@@ -1465,7 +1465,6 @@ const styles = StyleSheet.create({
   },
   textElement: {
     fontSize: 40,
-    fontWeight: 'bold',
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 5,
