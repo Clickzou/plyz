@@ -809,7 +809,7 @@ export default function ResultScreen() {
 
   // Signature state
   const [signaturePaths, setSignaturePaths] = useState<string[]>([]);
-  const [signatureColor, setSignatureColor] = useState('#f97316');
+  const [signatureColor, setSignatureColor] = useState('#ffffff');
   const [currentPath, setCurrentPath] = useState('');
   const [isDrawing, setIsDrawing] = useState(false);
   const signatureCanvasRef = useRef<View>(null);
