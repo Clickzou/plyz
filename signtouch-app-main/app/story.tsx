@@ -1072,34 +1072,6 @@ function StoryPreview({
               />
             );
           })}
-          {!interactive && textOverlays.length > 0 && textOverlays.map((overlay, index) => {
-            const RESULT_IMAGE_WIDTH = 402;
-            const RESULT_IMAGE_HEIGHT = 874;
-            const scaledX = (overlay.x / RESULT_IMAGE_WIDTH) * STORY_WIDTH;
-            const scaledY = (overlay.y / RESULT_IMAGE_HEIGHT) * STORY_HEIGHT;
-            return (
-              <Animated.View
-                key={overlay.id}
-                style={[textStyle, {
-                  position: 'absolute',
-                  left: scaledX,
-                  top: index === 0 ? textY * STORY_HEIGHT : scaledY,
-                  transform: [
-                    { scale: index === 0 ? textScale : overlay.scale },
-                    { rotate: `${overlay.rotation || 0}deg` },
-                  ],
-                }]}
-              >
-                <Text style={[styles.customText, { 
-                  color: index === 0 ? textColor : overlay.color, 
-                  fontSize: overlay.fontSize || 18,
-                  fontFamily: overlay.fontFamily,
-                }]}>
-                  {overlay.text}
-                </Text>
-              </Animated.View>
-            );
-          })}
         </View>
 
         {animation.hasGlow && (
@@ -1107,6 +1079,36 @@ function StoryPreview({
         )}
 
         <View style={[styles.overlay, { opacity: animation.overlayOpacity }]} pointerEvents="none" />
+
+        {!interactive && textOverlays.length > 0 && textOverlays.map((overlay, index) => {
+          const RESULT_IMAGE_WIDTH = 402;
+          const RESULT_IMAGE_HEIGHT = 874;
+          const scaledX = (overlay.x / RESULT_IMAGE_WIDTH) * STORY_WIDTH;
+          const scaledY = (overlay.y / RESULT_IMAGE_HEIGHT) * STORY_HEIGHT;
+          return (
+            <Animated.View
+              key={overlay.id}
+              style={[textStyle, {
+                position: 'absolute',
+                left: scaledX,
+                top: index === 0 ? textY * STORY_HEIGHT : scaledY,
+                transform: [
+                  { scale: index === 0 ? textScale : overlay.scale },
+                  { rotate: `${overlay.rotation || 0}deg` },
+                ],
+                zIndex: 50,
+              }]}
+            >
+              <Text style={[styles.customText, { 
+                color: index === 0 ? textColor : overlay.color, 
+                fontSize: overlay.fontSize || 18,
+                fontFamily: overlay.fontFamily,
+              }]}>
+                {overlay.text}
+              </Text>
+            </Animated.View>
+          );
+        })}
 
         {interactive && signatureOverlays
           .map((overlay, index) => ({ overlay, index }))
