@@ -1078,9 +1078,9 @@ function StoryPreview({
             const scaledX = (overlay.x / RESULT_IMAGE_WIDTH) * STORY_WIDTH;
             const scaledY = (overlay.y / RESULT_IMAGE_HEIGHT) * STORY_HEIGHT;
             return (
-              <View
+              <Animated.View
                 key={overlay.id}
-                style={{
+                style={[textStyle, {
                   position: 'absolute',
                   left: scaledX,
                   top: index === 0 ? textY * STORY_HEIGHT : scaledY,
@@ -1088,7 +1088,7 @@ function StoryPreview({
                     { scale: index === 0 ? textScale : overlay.scale },
                     { rotate: `${overlay.rotation || 0}deg` },
                   ],
-                }}
+                }]}
               >
                 <Text style={[styles.customText, { 
                   color: index === 0 ? textColor : overlay.color, 
@@ -1097,7 +1097,7 @@ function StoryPreview({
                 }]}>
                   {overlay.text}
                 </Text>
-              </View>
+              </Animated.View>
             );
           })}
         </View>
