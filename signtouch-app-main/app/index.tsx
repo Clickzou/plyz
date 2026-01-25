@@ -17,10 +17,13 @@ import BottomNav from '@/components/BottomNav';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 function SignatureImage({ delay }: { delay: number }) {
-  const clipWidth = useSharedValue(0);
-  const opacity = useSharedValue(0);
+  const clipWidth = useSharedValue(400);
+  const opacity = useSharedValue(1);
 
   useEffect(() => {
+    // Animation optionnelle - le contenu est visible par défaut
+    clipWidth.value = 0;
+    opacity.value = 0;
     opacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
     clipWidth.value = withDelay(
       delay + 300,
@@ -62,9 +65,10 @@ function AnimatedBubble({ size, top, left, delay, duration }: {
 }) {
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
-  const opacity = useSharedValue(0);
+  const opacity = useSharedValue(1);
 
   useEffect(() => {
+    opacity.value = 0;
     opacity.value = withDelay(delay, withTiming(1, { duration: 1000 }));
     
     translateY.value = withDelay(
@@ -124,12 +128,12 @@ export default function HomeScreen() {
   const { t } = useLanguage();
   const isTablet = width >= 768;
 
-  const titleOpacity = useSharedValue(0);
-  const titleTranslateY = useSharedValue(50);
-  const titleScale = useSharedValue(0.8);
+  const titleOpacity = useSharedValue(1);
+  const titleTranslateY = useSharedValue(0);
+  const titleScale = useSharedValue(1);
   const glowPulse = useSharedValue(0);
-  const subtitleOpacity = useSharedValue(0);
-  const buttonScale = useSharedValue(0);
+  const subtitleOpacity = useSharedValue(1);
+  const buttonScale = useSharedValue(1);
   const buttonPulse = useSharedValue(1);
 
   useEffect(() => {
