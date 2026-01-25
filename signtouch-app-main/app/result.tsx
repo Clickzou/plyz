@@ -1055,8 +1055,8 @@ export default function ResultScreen() {
     const activeColor = getActiveSignatureColor();
     console.log('🎨 Creating signature with color:', activeColor);
 
-    // Convert SVG to data URI
-    const svgString = `<svg width="300" height="150" xmlns="http://www.w3.org/2000/svg">${pathsToUse.map(path => `<path d="${path}" stroke="${activeColor}" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
+    // Convert SVG to data URI - use 150x80 to match display dimensions
+    const svgString = `<svg width="150" height="80" xmlns="http://www.w3.org/2000/svg">${pathsToUse.map(path => `<path d="${path}" stroke="${activeColor}" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
     const dataUri = `data:image/svg+xml;base64,${btoa(svgString)}`;
 
     console.log('🔍 DEBUG: dataUri type:', dataUri.substring(0, 50));
@@ -1066,7 +1066,7 @@ export default function ResultScreen() {
       id: Date.now().toString(),
       uri: dataUri,
       x: SCREEN_WIDTH / 2 - 75,
-      y: SCREEN_HEIGHT / 2 - 37.5,
+      y: SCREEN_HEIGHT / 2 - 40,
       scale: 1,
       color: activeColor,
       rotation: 0,
@@ -3039,6 +3039,7 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     backgroundColor: 'transparent',
+    position: 'relative',
   },
   signatureImage: {
     width: 150,
