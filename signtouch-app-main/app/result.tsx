@@ -436,6 +436,8 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
     let svgPaths: string[] = [];
     let svgWidth = 150;
     let svgHeight = 80;
+    let viewBoxWidth = 150;
+    let viewBoxHeight = 80;
     let displayWidth = 150;
     let displayHeight = 80;
 
@@ -447,6 +449,8 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
         // Use parsed dimensions like compose.tsx for JSON data
         displayWidth = svgData.width || 150;
         displayHeight = svgData.height || 80;
+        viewBoxWidth = svgData.width || 150;
+        viewBoxHeight = svgData.height || 80;
       } catch (error) {
         console.error('Error parsing SVG data:', error);
       }
@@ -459,13 +463,26 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
         while ((match = pathRegex.exec(svgString)) !== null) {
           svgPaths.push(match[1]);
         }
-        // Extract dimensions for viewBox
+        // Extract dimensions
         const widthMatch = svgString.match(/width="([^"]+)"/);
         const heightMatch = svgString.match(/height="([^"]+)"/);
         if (widthMatch) svgWidth = parseFloat(widthMatch[1]);
         if (heightMatch) svgHeight = parseFloat(heightMatch[1]);
-        // Use fixed dimensions like compose.tsx for web (150x80 default)
-        // This matches compose.tsx behavior where dimensions stay at default on web
+        
+        // Extract viewBox if present (contains original canvas dimensions)
+        const viewBoxMatch = svgString.match(/viewBox="([^"]+)"/);
+        if (viewBoxMatch) {
+          const parts = viewBoxMatch[1].split(/\s+/);
+          if (parts.length >= 4) {
+            viewBoxWidth = parseFloat(parts[2]);
+            viewBoxHeight = parseFloat(parts[3]);
+          }
+        } else {
+          viewBoxWidth = svgWidth;
+          viewBoxHeight = svgHeight;
+        }
+        
+        // Display at consistent size
         displayWidth = 150;
         displayHeight = 80;
       } catch (error) {
@@ -473,7 +490,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
       }
     }
 
-    return { isJsonData, isSvgData, svgData, svgPaths, svgWidth, svgHeight, displayWidth, displayHeight };
+    return { isJsonData, isSvgData, svgData, svgPaths, svgWidth, svgHeight, viewBoxWidth, viewBoxHeight, displayWidth, displayHeight };
   }, [overlay.uri, overlay.color]);
 
   const signatureColor = overlay.color || '#ffffff';
@@ -515,9 +532,9 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
               <View style={{ width: svgInfo.displayWidth, height: svgInfo.displayHeight }}>
                 <Svg
                   key={`${overlay.id}-${overlay.uri.slice(-20)}`}
-                  width={svgInfo.svgWidth}
-                  height={svgInfo.svgHeight}
-                  viewBox={`0 0 ${svgInfo.svgWidth} ${svgInfo.svgHeight}`}
+                  width={svgInfo.displayWidth}
+                  height={svgInfo.displayHeight}
+                  viewBox={`0 0 ${svgInfo.viewBoxWidth} ${svgInfo.viewBoxHeight}`}
                   style={styles.signature}
                 >
                   {svgInfo.svgPaths.map((pathData, index) => (
@@ -525,7 +542,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
                       key={`path-${index}-${overlay.uri.slice(-10)}`}
                       d={pathData}
                       stroke={signatureColor}
-                      strokeWidth={3}
+                      strokeWidth={4}
                       fill="none"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -694,6 +711,7 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
             onPress={onPress}
             activeOpacity={0.9}
             delayLongPress={500}
+            style={styles.textTouchable}
           >
             <Text style={{
               fontFamily: mobileFontFamily,
@@ -3031,7 +3049,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   textTouchable: {
-    padding: 10,
+    padding: 25,
+    margin: -25,
+    position: 'relative',
   },
   textContentWrapper: {
     justifyContent: 'center',
