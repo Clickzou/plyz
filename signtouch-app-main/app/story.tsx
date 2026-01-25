@@ -1072,28 +1072,34 @@ function StoryPreview({
               />
             );
           })}
-          {!interactive && textOverlays.length > 0 && textOverlays.map((overlay, index) => (
-            <View
-              key={overlay.id}
-              style={{
-                position: 'absolute',
-                left: `${overlay.x * 100}%`,
-                top: `${(index === 0 ? textY : overlay.y) * 100}%`,
-                transform: [
-                  { translateX: -50 },
-                  { scale: index === 0 ? textScale : overlay.scale },
-                ],
-              }}
-            >
-              <Text style={[styles.customText, { 
-                color: index === 0 ? textColor : overlay.color, 
-                fontSize: overlay.fontSize || 18,
-                fontFamily: overlay.fontFamily,
-              }]}>
-                {overlay.text}
-              </Text>
-            </View>
-          ))}
+          {!interactive && textOverlays.length > 0 && textOverlays.map((overlay, index) => {
+            const RESULT_IMAGE_WIDTH = 402;
+            const RESULT_IMAGE_HEIGHT = 874;
+            const scaledX = (overlay.x / RESULT_IMAGE_WIDTH) * STORY_WIDTH;
+            const scaledY = (overlay.y / RESULT_IMAGE_HEIGHT) * STORY_HEIGHT;
+            return (
+              <View
+                key={overlay.id}
+                style={{
+                  position: 'absolute',
+                  left: scaledX,
+                  top: index === 0 ? textY * STORY_HEIGHT : scaledY,
+                  transform: [
+                    { scale: index === 0 ? textScale : overlay.scale },
+                    { rotate: `${overlay.rotation || 0}deg` },
+                  ],
+                }}
+              >
+                <Text style={[styles.customText, { 
+                  color: index === 0 ? textColor : overlay.color, 
+                  fontSize: overlay.fontSize || 18,
+                  fontFamily: overlay.fontFamily,
+                }]}>
+                  {overlay.text}
+                </Text>
+              </View>
+            );
+          })}
         </View>
 
         {animation.hasGlow && (
