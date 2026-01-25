@@ -690,7 +690,22 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
       runOnJS(onScaleChange)(overlay.id, scale.value);
     });
 
-  const composedGesture = Gesture.Simultaneous(panGesture, rotationGesture, pinchGesture);
+  const tapGesture = Gesture.Tap()
+    .onEnd(() => {
+      runOnJS(onPress)();
+    });
+
+  const longPressGesture = Gesture.LongPress()
+    .minDuration(500)
+    .onEnd(() => {
+      runOnJS(onLongPress)();
+    });
+
+  const composedGesture = Gesture.Race(
+    Gesture.Simultaneous(panGesture, rotationGesture, pinchGesture),
+    longPressGesture,
+    tapGesture
+  );
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -706,25 +721,17 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
   return (
     <Animated.View style={[styles.textWrapper, { left: 0, top: 0 }, animatedStyle]} pointerEvents="box-none">
       <GestureDetector gesture={composedGesture}>
-        <Animated.View collapsable={false}>
-          <TouchableOpacity
-            onLongPress={onLongPress}
-            onPress={onPress}
-            activeOpacity={0.9}
-            delayLongPress={500}
-            style={styles.textTouchable}
-          >
-            <Text style={{
-              fontFamily: mobileFontFamily,
-              fontSize: overlay.fontSize,
-              color: overlay.color,
-            }}>
-              {overlay.text}
-            </Text>
-            {isSelected && (
-              <View style={styles.selectionBorder} pointerEvents="none" />
-            )}
-          </TouchableOpacity>
+        <Animated.View collapsable={false} style={styles.textTouchable}>
+          <Text style={{
+            fontFamily: mobileFontFamily,
+            fontSize: overlay.fontSize,
+            color: overlay.color,
+          }}>
+            {overlay.text}
+          </Text>
+          {isSelected && (
+            <View style={styles.selectionBorder} pointerEvents="none" />
+          )}
         </Animated.View>
       </GestureDetector>
       {isSelected && onFontPress && (
