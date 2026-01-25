@@ -626,9 +626,10 @@ interface DraggableTextProps {
   onLongPress: () => void;
   onPress: () => void;
   isSelected: boolean;
+  onFontPress?: () => void;
 }
 
-function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, isSelected }: DraggableTextProps) {
+function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, isSelected, onFontPress }: DraggableTextProps) {
   const mobileFontFamily = getMobileFontFamily(overlay.fontFamily);
   const translateX = useSharedValue(overlay.x);
   const translateY = useSharedValue(overlay.y);
@@ -726,6 +727,15 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
           </TouchableOpacity>
         </Animated.View>
       </GestureDetector>
+      {isSelected && onFontPress && (
+        <TouchableOpacity
+          style={styles.inlineFontButton}
+          onPress={onFontPress}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.inlineFontButtonText}>Aa</Text>
+        </TouchableOpacity>
+      )}
     </Animated.View>
   );
 }
@@ -1915,6 +1925,7 @@ export default function ResultScreen() {
                 onLongPress={() => removeTextOverlay(overlay.id)}
                 onPress={() => selectElement(overlay.id, 'text')}
                 isSelected={selectedElementId === overlay.id}
+                onFontPress={() => setShowFontPicker(!showFontPicker)}
               />
             ))}
           </View>
@@ -3088,6 +3099,28 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     borderRadius: 8,
     backgroundColor: 'transparent',
+  },
+  inlineFontButton: {
+    position: 'absolute',
+    top: -40,
+    right: -10,
+    backgroundColor: '#FF9800',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 100,
+  },
+  inlineFontButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
     pointerEvents: 'none',
   },
   welcomeMessageOverlay: {
