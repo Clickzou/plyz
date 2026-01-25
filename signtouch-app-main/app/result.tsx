@@ -1055,8 +1055,12 @@ export default function ResultScreen() {
     const activeColor = getActiveSignatureColor();
     console.log('🎨 Creating signature with color:', activeColor);
 
-    // Convert SVG to data URI - use 150x80 to match display dimensions
-    const svgString = `<svg width="150" height="80" xmlns="http://www.w3.org/2000/svg">${pathsToUse.map(path => `<path d="${path}" stroke="${activeColor}" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
+    // Drawing canvas dimensions: (SCREEN_WIDTH - 80) x 200
+    // Display dimensions: 150x80
+    // Use viewBox to scale the signature paths from canvas to display size
+    const canvasWidth = SCREEN_WIDTH - 80;
+    const canvasHeight = 200;
+    const svgString = `<svg width="150" height="80" viewBox="0 0 ${canvasWidth} ${canvasHeight}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${pathsToUse.map(path => `<path d="${path}" stroke="${activeColor}" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
     const dataUri = `data:image/svg+xml;base64,${btoa(svgString)}`;
 
     console.log('🔍 DEBUG: dataUri type:', dataUri.substring(0, 50));
@@ -1832,22 +1836,29 @@ export default function ResultScreen() {
         {/* Image with overlays */}
         <View style={styles.imageContainer} pointerEvents="box-none">
           <View ref={viewShotRef} style={styles.viewShot} collapsable={false}>
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => {
-                if (showTooltip) setShowTooltip(false);
-                if (showColorPicker) setShowColorPicker(false);
-              }}
-              style={StyleSheet.absoluteFillObject}
-            >
-              <FilteredImage
-                uri={displayUri}
-                brightness={showEffectsPanel ? tempBrightness : brightness}
-                contrast={showEffectsPanel ? tempContrast : contrast}
-                saturation={showEffectsPanel ? tempSaturation : saturation}
-                style={styles.image}
-              />
-            </TouchableOpacity>
+            <View style={StyleSheet.absoluteFillObject} pointerEvents={isEditMode ? "box-none" : "auto"}>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() => {
+                  if (showTooltip) setShowTooltip(false);
+                  if (showColorPicker) setShowColorPicker(false);
+                  // Deselect when tapping on background
+                  if (isEditMode && selectedElementId) {
+                    setSelectedElementId(null);
+                    setSelectedElementType(null);
+                  }
+                }}
+                style={StyleSheet.absoluteFillObject}
+              >
+                <FilteredImage
+                  uri={displayUri}
+                  brightness={showEffectsPanel ? tempBrightness : brightness}
+                  contrast={showEffectsPanel ? tempContrast : contrast}
+                  saturation={showEffectsPanel ? tempSaturation : saturation}
+                  style={styles.image}
+                />
+              </TouchableOpacity>
+            </View>
             {/* Static overlays (non-editable) */}
             {!isEditMode && signatureOverlays.map(overlay => (
               <StaticSignature
