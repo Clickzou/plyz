@@ -300,6 +300,17 @@ function InteractiveText({ overlay, isSelected, onSelect }: InteractiveTextProps
   const scaledX = (overlay.x / RESULT_IMAGE_WIDTH) * STORY_WIDTH;
   const scaledY = (overlay.y / RESULT_IMAGE_HEIGHT) * STORY_HEIGHT;
   
+  console.log('📝 InteractiveText rendering:', { 
+    text: overlay.text, 
+    originalX: overlay.x, 
+    originalY: overlay.y, 
+    scaledX, 
+    scaledY,
+    STORY_WIDTH,
+    STORY_HEIGHT,
+    color: overlay.color
+  });
+  
   const panGesture = Gesture.Pan()
     .onStart(() => {
       runOnJS(onSelect)();
@@ -360,12 +371,13 @@ function InteractiveText({ overlay, isSelected, onSelect }: InteractiveTextProps
           position: 'absolute',
           left: scaledX,
           top: scaledY,
-          zIndex: isSelected ? 100 : 15,
+          zIndex: isSelected ? 100 : 50,
           padding: 4,
-          borderWidth: isSelected ? 2 : 0,
+          borderWidth: isSelected ? 2 : 1,
           borderColor: '#10B981',
           borderRadius: 8,
           borderStyle: 'dashed',
+          backgroundColor: 'rgba(0,0,0,0.3)',
         }, animatedStyle]}
       >
         <Text style={{
