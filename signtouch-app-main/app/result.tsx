@@ -2237,7 +2237,7 @@ export default function ResultScreen() {
         )}
 
         {/* Bottom buttons */}
-        <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 20) }]}>
+        <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
           {isEditMode ? (
             // Edit mode - Single validate button
             <TouchableOpacity
