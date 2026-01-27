@@ -634,4 +634,7 @@ export default {
   retry: 'Retry',
   permissionDenied: 'Permission denied',
   cameraPermissionNeeded: 'Camera permission needed',
+  requiredField: '(required)',
+  warning: 'Warning',
+  enterNameFirst: 'Please enter a celebrity name before adding a new one',
 };

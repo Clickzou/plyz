@@ -634,4 +634,7 @@ export default {
   retry: 'Réessayer',
   permissionDenied: 'Permission refusée',
   cameraPermissionNeeded: 'Permission caméra requise',
+  requiredField: '(obligatoire)',
+  warning: 'Attention',
+  enterNameFirst: 'Veuillez entrer un nom de célébrité avant d'en ajouter une nouvelle',
 };
