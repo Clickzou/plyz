@@ -285,15 +285,23 @@ ALTER TABLE event_viewers ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can read live events" ON event_sessions
   FOR SELECT USING (status = 'live' OR status = 'scheduled');
 
--- event_sessions: Only creator can update/delete
-CREATE POLICY "Creator can manage own events" ON event_sessions
-  FOR ALL USING (auth.uid() = created_by);
+-- event_sessions: Anyone can create events (for celebrities without accounts)
+CREATE POLICY "Anyone can create events" ON event_sessions
+  FOR INSERT WITH CHECK (true);
+
+-- event_sessions: Anyone can update their own events
+CREATE POLICY "Anyone can update events" ON event_sessions
+  FOR UPDATE USING (true);
 
 -- event_signers: Anyone can read signers of live events
 CREATE POLICY "Anyone can read signers" ON event_signers
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM event_sessions WHERE id = event_id AND status IN ('live', 'scheduled'))
   );
+
+-- event_signers: Anyone can add signers
+CREATE POLICY "Anyone can add signers" ON event_signers
+  FOR INSERT WITH CHECK (true);
 
 -- event_assets: Anyone can read assets of live events
 CREATE POLICY "Anyone can read assets" ON event_assets
