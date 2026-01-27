@@ -9,14 +9,21 @@ import {
   Platform,
   ActivityIndicator,
   Image,
+  ScrollView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, QrCode, Search, Check, Download, Camera } from 'lucide-react-native';
+import { ArrowLeft, QrCode, Search, Check, Download, Camera, Users, Clock } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getEventByCode, LiveEvent } from '@/utils/liveEventStorage';
+import { 
+  joinEventSession, 
+  getOrCreateDeviceId,
+  EventSession,
+  EventSigner,
+} from '@/utils/eventSessionStorage';
 import BarCodeScannerWrapper, { requestCameraPermissionAsync, isBarCodeScannerAvailable } from '@/components/BarCodeScannerWrapper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -31,8 +38,12 @@ export default function JoinEventScreen() {
   const [code, setCode] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [foundEvent, setFoundEvent] = useState<LiveEvent | null>(null);
+  const [foundSession, setFoundSession] = useState<EventSession | null>(null);
+  const [sessionSigners, setSessionSigners] = useState<EventSigner[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [eventFull, setEventFull] = useState(false);
+  const [eventExpired, setEventExpired] = useState(false);
 
   const [showScanner, setShowScanner] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -53,11 +64,38 @@ export default function JoinEventScreen() {
     }
 
     setIsSearching(true);
+    setEventFull(false);
+    setEventExpired(false);
+    setFoundEvent(null);
+    setFoundSession(null);
+    
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
     try {
+      const viewerId = await getOrCreateDeviceId();
+      const sessionResult = await joinEventSession(codeToSearch, viewerId);
+      
+      if (sessionResult.allowed && sessionResult.session) {
+        setFoundSession(sessionResult.session);
+        setSessionSigners(sessionResult.signers || []);
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        return;
+      }
+      
+      if (sessionResult.reason === 'full') {
+        setEventFull(true);
+        return;
+      }
+      
+      if (sessionResult.reason === 'expired') {
+        setEventExpired(true);
+        return;
+      }
+
       const event = await getEventByCode(codeToSearch);
       
       if (event) {
@@ -100,52 +138,48 @@ export default function JoinEventScreen() {
     }
   };
 
-  const handleBarCodeScanned = ({ data }: { data: string }) => {
+  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
     setShowScanner(false);
     
-    const match = data.match(/signtouch:\/\/event\/([A-Z0-9]+)/i);
-    if (match) {
-      const eventCode = match[1].toUpperCase();
-      setCode(eventCode);
-      handleSearch(eventCode);
-    } else if (data.match(/^[A-Z0-9]{4,8}$/i)) {
-      setCode(data.toUpperCase());
-      handleSearch(data);
+    const codeMatch = data.match(/signtouch:\/\/event\/([A-Z0-9]+)/i);
+    if (codeMatch) {
+      const scannedCode = codeMatch[1].toUpperCase();
+      setCode(scannedCode);
+      handleSearch(scannedCode);
     } else {
-      Alert.alert(t('invalidQR') || 'Invalid QR', t('invalidQRMessage') || 'This QR code is not valid');
+      Alert.alert(
+        t('invalidQR') || 'Invalid QR',
+        t('invalidQRMessage') || 'This QR code is not valid'
+      );
     }
   };
 
-  const saveSignature = async () => {
+  const handleSaveSignature = async () => {
     if (!foundEvent?.signature_url) return;
-
+    
     setIsSaving(true);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+
     try {
-      const savedSignatures = await AsyncStorage.getItem(SAVED_SIGNATURES_KEY);
-      const signatures = savedSignatures ? JSON.parse(savedSignatures) : [];
+      const existingData = await AsyncStorage.getItem(SAVED_SIGNATURES_KEY);
+      const signatures = existingData ? JSON.parse(existingData) : [];
       
       const newSignature = {
-        id: `event_${foundEvent.id}_${Date.now()}`,
-        url: foundEvent.signature_url,
+        id: `sig_${Date.now()}`,
         eventName: foundEvent.name,
-        eventCode: foundEvent.code,
-        savedAt: Date.now(),
+        signatureUrl: foundEvent.signature_url,
+        savedAt: new Date().toISOString(),
       };
-
-      const exists = signatures.some((s: any) => s.url === foundEvent.signature_url);
-      if (!exists) {
-        signatures.unshift(newSignature);
-        await AsyncStorage.setItem(SAVED_SIGNATURES_KEY, JSON.stringify(signatures.slice(0, 50)));
-      }
-
+      
+      signatures.unshift(newSignature);
+      await AsyncStorage.setItem(SAVED_SIGNATURES_KEY, JSON.stringify(signatures.slice(0, 50)));
+      
       setSaved(true);
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-
-      setTimeout(() => {
-        router.push('/gallery');
-      }, 1500);
     } catch (error) {
       console.error('Error saving signature:', error);
       Alert.alert(t('error') || 'Error', t('saveFailed') || 'Failed to save signature');
@@ -154,354 +188,364 @@ export default function JoinEventScreen() {
     }
   };
 
-  const useSignatureNow = () => {
-    if (foundEvent?.signature_url) {
+  const goToGallery = () => {
+    if (foundSession) {
       router.push({
-        pathname: '/camera',
-        params: { eventSignature: foundEvent.signature_url, eventName: foundEvent.name }
+        pathname: '/event-gallery',
+        params: {
+          sessionId: foundSession.id,
+          sessionTitle: foundSession.title,
+          joinCode: foundSession.join_code,
+          endsAt: foundSession.ends_at,
+          signers: JSON.stringify(sessionSigners),
+        }
       });
     }
   };
 
+  const handleSearchAnother = () => {
+    setFoundEvent(null);
+    setFoundSession(null);
+    setCode('');
+    setSaved(false);
+    setEventFull(false);
+    setEventExpired(false);
+  };
+
   if (showScanner) {
     return (
-      <View style={styles.scannerContainer}>
-        <BarCodeScannerWrapper
-          onBarCodeScanned={handleBarCodeScanned}
-          style={StyleSheet.absoluteFillObject}
-        />
-        <View style={[styles.scannerOverlay, { paddingTop: insets.top }]}>
-          <TouchableOpacity
-            style={styles.closeScannerButton}
-            onPress={() => setShowScanner(false)}
-          >
-            <Text style={styles.closeScannerText}>{t('close') || 'Close'}</Text>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => setShowScanner(false)}>
+            <ArrowLeft size={24} color="#fff" />
           </TouchableOpacity>
-          <View style={styles.scanFrame} />
-          <Text style={styles.scannerHint}>{t('scanQRHint') || 'Point at the QR code'}</Text>
+          <Text style={styles.headerTitle}>{t('scan') || 'Scan'}</Text>
+          <View style={{ width: 44 }} />
+        </View>
+        <View style={styles.scannerContainer}>
+          <BarCodeScannerWrapper
+            onBarCodeScanned={handleBarCodeScanned}
+            style={StyleSheet.absoluteFillObject}
+          />
+          <View style={styles.scannerOverlay}>
+            <View style={styles.scannerFrame} />
+            <Text style={styles.scannerHint}>{t('scanQRHint') || 'Point at the QR code'}</Text>
+          </View>
         </View>
       </View>
     );
   }
 
   return (
-    <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <ArrowLeft size={24} color="#ffffff" />
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />
+      
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('joinEvent') || 'Join Event'}</Text>
-        <View style={styles.headerRight} />
+        <Text style={styles.headerTitle}>{t('liveEvents') || 'Live Events'}</Text>
+        <View style={{ width: 44 }} />
       </View>
 
-      <View style={styles.content}>
-        {!foundEvent ? (
+      <ScrollView 
+        style={styles.content}
+        contentContainerStyle={[styles.contentContainer, { paddingBottom: Math.max(insets.bottom, 16) + 20 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {!foundEvent && !foundSession && !eventFull ? (
           <>
-            <Text style={styles.instructions}>
-              {t('enterEventCode') || 'Enter the event code or scan the QR code to get the signature'}
-            </Text>
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="ABC123"
-                placeholderTextColor="rgba(255,255,255,0.3)"
-                value={code}
-                onChangeText={(text) => setCode(text.toUpperCase())}
-                maxLength={8}
-                autoCapitalize="characters"
-                autoCorrect={false}
-              />
+            <View style={styles.inputSection}>
+              <Text style={styles.inputLabel}>{t('enterEventCode') || 'Enter the event code'}</Text>
+              <View style={styles.inputRow}>
+                <TextInput
+                  style={styles.codeInput}
+                  placeholder="ABC123"
+                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  value={code}
+                  onChangeText={(text) => setCode(text.toUpperCase())}
+                  autoCapitalize="characters"
+                  maxLength={6}
+                />
+                <TouchableOpacity
+                  style={[styles.searchButton, isSearching && styles.searchButtonDisabled]}
+                  onPress={() => handleSearch()}
+                  disabled={isSearching}
+                >
+                  {isSearching ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Search size={22} color="#fff" />
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <View style={styles.actionsRow}>
-              <TouchableOpacity
-                style={[styles.searchButton, isSearching && styles.buttonDisabled]}
-                onPress={() => handleSearch()}
-                disabled={isSearching}
-                activeOpacity={0.8}
-              >
-                {isSearching ? (
-                  <ActivityIndicator color="#ffffff" />
-                ) : (
-                  <>
-                    <Search size={20} color="#ffffff" />
-                    <Text style={styles.buttonText}>{t('search') || 'Search'}</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.scanButton}
-                onPress={requestCameraPermission}
-                activeOpacity={0.8}
-              >
-                <QrCode size={20} color="#ffffff" />
-                <Text style={styles.buttonText}>{t('scan') || 'Scan'}</Text>
-              </TouchableOpacity>
+            <View style={styles.orDivider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.orText}>{t('or') || 'or'}</Text>
+              <View style={styles.dividerLine} />
             </View>
+
+            <TouchableOpacity style={styles.scanButton} onPress={requestCameraPermission}>
+              <QrCode size={28} color="#10B981" />
+              <Text style={styles.scanButtonText}>{t('scan') || 'Scan QR Code'}</Text>
+            </TouchableOpacity>
           </>
-        ) : (
-          <View style={styles.eventFoundContainer}>
+        ) : eventFull ? (
+          <View style={styles.resultContainer}>
+            <View style={styles.fullIcon}>
+              <Users size={40} color="#ef4444" />
+            </View>
+            <Text style={styles.fullTitle}>{t('eventFull') || 'Event Full'}</Text>
+            <Text style={styles.fullMessage}>
+              {t('eventFullMessage') || 'This event has reached its viewer limit. Please try again later.'}
+            </Text>
+            <TouchableOpacity style={styles.retryButton} onPress={() => handleSearch()}>
+              <Text style={styles.retryButtonText}>{t('retry') || 'Retry'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.searchAnotherButton} onPress={handleSearchAnother}>
+              <Text style={styles.searchAnotherText}>{t('searchAnother') || 'Search another event'}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : eventExpired ? (
+          <View style={styles.resultContainer}>
+            <View style={styles.fullIcon}>
+              <Clock size={40} color="#f59e0b" />
+            </View>
+            <Text style={styles.expiredTitle}>{t('eventExpired') || 'Event Expired'}</Text>
+            <Text style={styles.fullMessage}>
+              {t('eventExpiredMessage') || 'This event has ended. Check with the organizer for future events.'}
+            </Text>
+            <TouchableOpacity style={styles.searchAnotherButton} onPress={handleSearchAnother}>
+              <Text style={styles.searchAnotherText}>{t('searchAnother') || 'Search another event'}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : foundSession ? (
+          <View style={styles.resultContainer}>
             <View style={styles.successIcon}>
               <Check size={40} color="#10B981" />
             </View>
+            <Text style={styles.foundTitle}>{foundSession.title}</Text>
+            
+            <View style={styles.sessionInfo}>
+              <View style={styles.sessionInfoItem}>
+                <Users size={18} color="#10B981" />
+                <Text style={styles.sessionInfoText}>{sessionSigners.length} {t('celebrities') || 'celebrities'}</Text>
+              </View>
+              <View style={styles.sessionInfoItem}>
+                <Clock size={18} color="#f59e0b" />
+                <Text style={styles.sessionInfoText}>
+                  {t('until') || 'Until'} {new Date(foundSession.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+              </View>
+            </View>
 
-            <Text style={styles.eventFoundTitle}>{t('signatureFound') || 'Signature Found!'}</Text>
+            {sessionSigners.length > 0 && (
+              <View style={styles.signersPreview}>
+                {sessionSigners.slice(0, 3).map((signer) => (
+                  <View key={signer.id} style={styles.signerChip}>
+                    <Text style={styles.signerChipText}>{signer.display_name}</Text>
+                  </View>
+                ))}
+                {sessionSigners.length > 3 && (
+                  <View style={styles.signerChip}>
+                    <Text style={styles.signerChipText}>+{sessionSigners.length - 3}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            <TouchableOpacity style={styles.joinButton} onPress={goToGallery}>
+              <Text style={styles.joinButtonText}>{t('liveSessionJoin') || 'Join Event'}</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.searchAnotherButton} onPress={handleSearchAnother}>
+              <Text style={styles.searchAnotherText}>{t('searchAnother') || 'Search another event'}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : foundEvent ? (
+          <View style={styles.resultContainer}>
+            <View style={styles.successIcon}>
+              <Check size={40} color="#10B981" />
+            </View>
+            <Text style={styles.foundTitle}>{t('signatureFound') || 'Signature Found!'}</Text>
             <Text style={styles.eventName}>{foundEvent.name}</Text>
 
             {foundEvent.signature_url && (
               <View style={styles.signaturePreview}>
-                <Image
-                  source={{ uri: foundEvent.signature_url }}
-                  style={styles.signatureImage}
-                  resizeMode="contain"
-                />
+                <Image source={{ uri: foundEvent.signature_url }} style={styles.signatureImage} resizeMode="contain" />
               </View>
             )}
 
-            <View style={styles.eventActions}>
+            <View style={styles.actionButtons}>
               <TouchableOpacity
-                style={[styles.saveButton, (isSaving || saved) && styles.buttonDisabled]}
-                onPress={saveSignature}
+                style={[styles.saveButton, saved && styles.savedButton]}
+                onPress={handleSaveSignature}
                 disabled={isSaving || saved}
-                activeOpacity={0.8}
               >
                 {isSaving ? (
-                  <ActivityIndicator color="#ffffff" />
+                  <ActivityIndicator color="#fff" size="small" />
                 ) : saved ? (
                   <>
-                    <Check size={20} color="#ffffff" />
-                    <Text style={styles.buttonText}>{t('saved') || 'Saved!'}</Text>
+                    <Check size={20} color="#fff" />
+                    <Text style={styles.saveButtonText}>{t('done') || 'Saved'}</Text>
                   </>
                 ) : (
                   <>
-                    <Download size={20} color="#ffffff" />
-                    <Text style={styles.buttonText}>{t('saveSignature') || 'Save'}</Text>
+                    <Download size={20} color="#fff" />
+                    <Text style={styles.saveButtonText}>{t('saveSignature') || 'Save'}</Text>
                   </>
                 )}
               </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.useNowButton}
-                onPress={useSignatureNow}
-                activeOpacity={0.8}
-              >
-                <Camera size={20} color="#ffffff" />
-                <Text style={styles.buttonText}>{t('useNow') || 'Use Now'}</Text>
-              </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={styles.searchAnotherButton}
-              onPress={() => {
-                setFoundEvent(null);
-                setCode('');
-                setSaved(false);
-              }}
-            >
+            <TouchableOpacity style={styles.searchAnotherButton} onPress={handleSearchAnother}>
               <Text style={styles.searchAnotherText}>{t('searchAnother') || 'Search another event'}</Text>
             </TouchableOpacity>
           </View>
-        )}
-      </View>
-    </LinearGradient>
+        ) : null}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: '#1a1a2e' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   backButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#ffffff',
-  },
-  headerRight: {
-    width: 44,
-  },
-  content: {
+  headerTitle: { fontSize: 18, fontWeight: '600', color: '#fff' },
+  content: { flex: 1 },
+  contentContainer: { padding: 20 },
+  inputSection: { marginBottom: 24 },
+  inputLabel: { fontSize: 16, color: 'rgba(255,255,255,0.8)', marginBottom: 12, textAlign: 'center' },
+  inputRow: { flexDirection: 'row', gap: 12 },
+  codeInput: {
     flex: 1,
-    padding: 20,
-  },
-  instructions: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.7)',
-    textAlign: 'center',
-    marginBottom: 30,
-    lineHeight: 24,
-  },
-  inputContainer: {
-    marginBottom: 24,
-  },
-  input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 16,
-    padding: 20,
-    fontSize: 28,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    fontSize: 24,
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#fff',
     textAlign: 'center',
-    letterSpacing: 8,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 16,
+    letterSpacing: 4,
   },
   searchButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#6366f1',
+    width: 60,
+    height: 60,
     borderRadius: 16,
-    padding: 18,
-    gap: 10,
-  },
-  scanButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#10B981',
-    borderRadius: 16,
-    padding: 18,
-    gap: 10,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  scannerContainer: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  scannerOverlay: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  closeScannerButton: {
-    position: 'absolute',
-    top: 60,
-    right: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  closeScannerText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  scanFrame: {
-    width: 250,
-    height: 250,
-    borderWidth: 3,
-    borderColor: '#ffffff',
-    borderRadius: 20,
-  },
-  scannerHint: {
-    marginTop: 30,
-    fontSize: 16,
-    color: '#ffffff',
-    textAlign: 'center',
-  },
-  eventFoundContainer: {
-    flex: 1,
+  searchButtonDisabled: { opacity: 0.7 },
+  orDivider: { flexDirection: 'row', alignItems: 'center', marginVertical: 24 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
+  orText: { marginHorizontal: 16, color: 'rgba(255,255,255,0.5)', fontSize: 14 },
+  scanButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 40,
+    justifyContent: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(16,185,129,0.2)',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
   },
+  scanButtonText: { fontSize: 16, color: '#10B981', fontWeight: '600' },
+  scannerContainer: { flex: 1 },
+  scannerOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center' },
+  scannerFrame: { width: 250, height: 250, borderWidth: 2, borderColor: '#10B981', borderRadius: 20 },
+  scannerHint: { marginTop: 20, color: '#fff', fontSize: 16 },
+  resultContainer: { alignItems: 'center', paddingTop: 40 },
   successIcon: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    backgroundColor: 'rgba(16,185,129,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
-  eventFoundTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#ffffff',
-    marginBottom: 8,
+  fullIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(239,68,68,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  eventName: {
-    fontSize: 18,
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 30,
+  foundTitle: { fontSize: 24, fontWeight: '700', color: '#fff', marginBottom: 8 },
+  fullTitle: { fontSize: 24, fontWeight: '700', color: '#ef4444', marginBottom: 12 },
+  expiredTitle: { fontSize: 24, fontWeight: '700', color: '#f59e0b', marginBottom: 12 },
+  fullMessage: { fontSize: 16, color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: 24, paddingHorizontal: 20 },
+  eventName: { fontSize: 18, color: 'rgba(255,255,255,0.7)', marginBottom: 24 },
+  sessionInfo: { flexDirection: 'row', gap: 20, marginBottom: 16 },
+  sessionInfoItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  sessionInfoText: { fontSize: 14, color: 'rgba(255,255,255,0.7)' },
+  signersPreview: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24, justifyContent: 'center' },
+  signerChip: {
+    backgroundColor: 'rgba(16,185,129,0.2)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
   },
+  signerChipText: { fontSize: 14, color: '#10B981', fontWeight: '500' },
   signaturePreview: {
-    width: '100%',
-    height: 150,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
     borderRadius: 16,
-    marginBottom: 30,
-    overflow: 'hidden',
-  },
-  signatureImage: {
+    padding: 20,
+    marginBottom: 24,
     width: '100%',
-    height: '100%',
+    aspectRatio: 2,
   },
-  eventActions: {
-    flexDirection: 'row',
-    gap: 16,
-    width: '100%',
-  },
+  signatureImage: { width: '100%', height: '100%' },
+  actionButtons: { flexDirection: 'row', gap: 12, marginBottom: 24 },
   saveButton: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#6366f1',
-    borderRadius: 16,
-    padding: 18,
-    gap: 10,
-  },
-  useNowButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
     backgroundColor: '#10B981',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
     borderRadius: 16,
-    padding: 18,
-    gap: 10,
   },
-  searchAnotherButton: {
-    marginTop: 24,
-    padding: 12,
+  savedButton: { backgroundColor: '#059669' },
+  saveButtonText: { fontSize: 16, color: '#fff', fontWeight: '600' },
+  joinButton: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 48,
+    paddingVertical: 16,
+    borderRadius: 16,
+    marginBottom: 16,
   },
-  searchAnotherText: {
-    color: 'rgba(255, 255, 255, 0.6)',
-    fontSize: 14,
+  joinButtonText: { fontSize: 18, color: '#fff', fontWeight: '600' },
+  retryButton: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 48,
+    paddingVertical: 16,
+    borderRadius: 16,
+    marginBottom: 16,
   },
+  retryButtonText: { fontSize: 16, color: '#fff', fontWeight: '600' },
+  searchAnotherButton: { paddingVertical: 12 },
+  searchAnotherText: { fontSize: 14, color: 'rgba(255,255,255,0.6)' },
 });

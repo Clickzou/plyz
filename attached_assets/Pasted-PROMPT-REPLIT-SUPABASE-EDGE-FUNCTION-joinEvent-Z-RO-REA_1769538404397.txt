@@ -1,0 +1,115 @@
+PROMPT REPLIT — SUPABASE EDGE FUNCTION joinEvent (ZÉRO REALTIME)
+
+OBJECTIF
+Créer une Supabase Edge Function nommée `joinEvent` qui permet à un fan de rejoindre une session événement via `join_code`, tout en LIMITANT de façon fiable le nombre de viewers (sans Realtime).
+La fonction doit être ATOMIQUE (pas de race condition) : nettoyage des viewers expirés + comptage + insertion/upsert dans une seule transaction.
+
+STACK
+- Supabase Edge Functions (Deno / TypeScript)
+- Supabase Postgres
+- App Expo/React Native côté client
+
+PRÉREQUIS DB (à créer si absent)
+1) Table event_sessions
+- id uuid pk default gen_random_uuid()
+- title text not null
+- starts_at timestamptz not null
+- ends_at timestamptz not null
+- status text not null default 'live'  -- 'scheduled'|'live'|'ended'
+- join_code text unique not null
+- viewer_soft_limit int default 5000
+- created_by uuid
+
+2) Table event_viewers
+- id uuid pk default gen_random_uuid()
+- event_id uuid not null references event_sessions(id) on delete cascade
+- viewer_id text not null
+- last_seen_at timestamptz not null default now()
+- created_at timestamptz not null default now()
+UNIQUE(event_id, viewer_id)
+
+Index:
+- create index on event_viewers(event_id, last_seen_at desc)
+- create index on event_sessions(join_code)
+
+RLS
+- L’edge function utilisera le Service Role pour bypass RLS.
+- Le client n’a PAS besoin d’insert direct dans event_viewers.
+
+SPÉCIFICATIONS API
+Route: POST /functions/v1/joinEvent
+Body JSON:
+{
+  "join_code": "ABC123",
+  "viewer_id": "user-uuid-or-device-id",
+  "client_ts": "optional ISO date"
+}
+
+Réponse JSON succès:
+{
+  "allowed": true,
+  "event": {
+    "id": "...",
+    "title": "...",
+    "status": "live",
+    "ends_at": "...",
+    "viewer_soft_limit": 5000
+  }
+}
+
+Réponse JSON refus:
+{
+  "allowed": false,
+  "reason": "full" | "not_found" | "ended" | "not_live" | "bad_request",
+  "message": "..."
+}
+
+RÈGLES MÉTIER joinEvent
+1) Trouver l’événement via join_code
+2) Refuser si event.status != 'live' OU ends_at < now()
+3) Nettoyer les viewers expirés : last_seen_at < now() - 2 minutes (TTL=120s)
+4) Compter viewers actifs (après cleanup)
+5) Si count >= viewer_soft_limit => refuser (allowed=false, reason=full)
+6) Sinon upsert viewer (event_id, viewer_id) en mettant last_seen_at=now()
+7) Retourner allowed=true + infos event
+
+IMPORTANT: ATOMICITÉ
+- Toute la logique doit être faite en 1 transaction SQL.
+- Utiliser une fonction SQL (RPC) pour garantir atomicité, puis l’appeler depuis l’Edge Function.
+=> Donc : créer une fonction Postgres `join_event(join_code text, viewer_id text)` qui renvoie (allowed bool, reason text, event jsonb).
+
+À IMPLÉMENTER (LIVRABLES)
+A) SQL : fonction RPC `join_event` + tables/index (si besoin)
+B) Edge Function `joinEvent` (Deno TS) qui :
+- valide input
+- appelle supabase.rpc('join_event', { p_join_code, p_viewer_id })
+- renvoie JSON propre + codes HTTP
+
+DÉTAILS SQL RPC (à générer)
+Créer la fonction SQL `join_event` qui :
+- récupère event_sessions row FOR UPDATE (verrou)
+- fait cleanup
+- compte
+- décide
+- upsert
+- renvoie un JSON
+
+ATTENTES QUALITÉ
+- logs clairs
+- gestion des erreurs (bad json, missing fields)
+- sécurité : refuse si join_code/viewer_id vides
+- perf : queries optimisées, index ok
+
+CLIENT EXEMPLE (Expo)
+Donner un snippet d’appel côté client:
+fetch(`${SUPABASE_URL}/functions/v1/joinEvent`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ join_code, viewer_id }) })
+
+NOTE
+- Utiliser SUPABASE_SERVICE_ROLE_KEY côté Edge Function (env var) pour exécuter la RPC.
+- Ne jamais exposer la service role au client.
+
+PRODUIS:
+1) Le SQL complet (tables/index + function join_event)
+2) Le code complet `supabase/functions/joinEvent/index.ts`
+3) Les commandes supabase CLI pour deploy la function
+4) Un exemple d’appel Expo + gestion réponse

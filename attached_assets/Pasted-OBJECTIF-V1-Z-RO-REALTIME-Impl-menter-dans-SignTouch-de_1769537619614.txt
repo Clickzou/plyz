@@ -1,0 +1,159 @@
+OBJECTIF (V1 — ZÉRO REALTIME)
+Implémenter dans SignTouch des “Sessions Événement” accessibles par QR code, SANS utiliser Supabase Realtime (aucun WebSocket, aucune subscription). Les fans voient la galerie via :
+- Pull-to-refresh manuel
+- Polling léger (toutes 15–30s, configurable)
+
+On veut garder les coûts Supabase bas : uniquement des requêtes HTTP (PostgREST) + Storage.
+
+CONTEXTE
+- Expo / React Native
+- Supabase (DB + Storage + Auth)
+- Un QR code correspond à 1 event_session
+- Pendant la session, l’organisateur / célébrités publient :
+  - photo
+  - signature (asset)
+  - photo + signature (image composée ou info de signature associée)
+- Les fans consultent la galerie et téléchargent.
+
+RÈGLES PRODUIT (SIMPLIFICATION + ANTI-CHAOS)
+1) ZÉRO multi-signatures en v1 : 1 signature max par photo.
+2) La galerie doit être organisée par onglets :
+   - “Officielles” (publiées par célébrités/joueurs)
+   - “Signées”
+   - “Tout”
+3) Les fans ne publient rien dans le live en v1 (lecture uniquement).
+4) Limitations utilisateurs :
+   - Soft limit (ex: 5 000 spectateurs) => si atteint, afficher “événement saturé” et proposer “réessayer” ou “mode lecture différée”.
+   - IMPORTANT : cette limitation est best-effort pour v1 (sans realtime). Option edge function pour plus fiable.
+
+DB À CRÉER (SUPABASE)
+Créer / vérifier tables + index :
+
+TABLE event_sessions
+- id uuid pk default gen_random_uuid()
+- title text not null
+- starts_at timestamptz not null
+- ends_at timestamptz not null
+- status text not null default 'live'  -- 'scheduled'|'live'|'ended'
+- join_code text unique not null       -- pour QR
+- viewer_soft_limit int default 5000
+- created_by uuid
+
+TABLE event_signers
+- id uuid pk
+- event_id uuid fk -> event_sessions(id)
+- display_name text
+- avatar_url text
+- signature_url text  -- storage url
+- created_at timestamptz default now()
+
+TABLE event_assets
+- id uuid pk
+- event_id uuid fk
+- signer_id uuid nullable fk -> event_signers(id)
+- type text not null  -- 'photo'|'photo_signed'|'signature'
+- image_url text not null
+- created_at timestamptz default now()
+
+TABLE event_viewers (pour limiter utilisateurs — sans realtime)
+- id uuid pk
+- event_id uuid fk
+- viewer_id text not null  -- user.id si loggé sinon device_id
+- last_seen_at timestamptz not null default now()
+- created_at timestamptz default now()
+UNIQUE(event_id, viewer_id)
+
+INDEX
+- event_assets(event_id, created_at desc)
+- event_viewers(event_id, last_seen_at desc)
+
+RLS (V1 SIMPLE)
+- Lecture event_sessions/event_signers/event_assets autorisée si join_code valide.
+  (Si c’est trop complexe RLS, v1 = lecture publique mais avec join_code non devinable)
+- Écriture event_assets uniquement pour organisateur / signers (role/admin).
+
+LOGIQUE JOIN EVENT (SANS REALTIME)
+Créer une fonction joinEvent(join_code, viewer_id) :
+1) Fetch event_sessions by join_code
+2) Cleanup viewers expirés :
+   delete from event_viewers where event_id = X and last_seen_at < now() - interval '2 minutes'
+3) Count active viewers :
+   select count(*) from event_viewers where event_id = X
+4) Si count >= viewer_soft_limit :
+   return { allowed: false, reason: 'full' }
+   sinon upsert viewer :
+   upsert (event_id, viewer_id) set last_seen_at = now()
+   return { allowed: true, event_id, ends_at, title }
+
+IMPORTANT
+- Idéalement joinEvent doit être une Edge Function Supabase (atomicité).
+- Si Edge Function trop long à faire, v1 peut faire best-effort côté client (mais moins fiable).
+
+FRONTEND (EXPO) — ÉCRANS ET COMPORTEMENT
+1) JoinEventScreen
+- scan QR => récupère join_code
+- génère viewer_id :
+  - si user connecté => user.id
+  - sinon => device_id persistant (AsyncStorage)
+- appelle joinEvent(join_code, viewer_id)
+- si full => écran “Événement saturé” + bouton réessayer
+- sinon => navigation EventGalleryScreen
+
+2) EventGalleryScreen (SANS REALTIME)
+- état : assets[], lastFetchedAt, loading, refreshing, tab('all'|'signed'|'official')
+
+Chargement initial :
+- query event_assets where event_id = X
+- order by created_at desc
+- limit 30
+- stocker lastFetchedAt = now() ou created_at max
+
+Polling (standard) :
+- setInterval 15–30s :
+   fetchNewAssets():
+   select * from event_assets
+   where event_id = X and created_at > lastMaxCreatedAt
+   order by created_at desc limit 50
+   merge sans doublons
+- Ne pas poll si écran pas focus (useFocusEffect) ou app background (AppState)
+
+Pull-to-refresh :
+- recharge page 1
+- remet la liste
+
+Pagination :
+- onEndReached => charger plus ancien :
+  where created_at < oldestCreatedAt order by created_at desc limit 30
+
+Heartbeat viewers (limitation utilisateurs) :
+- toutes 60s :
+   update event_viewers set last_seen_at=now() for (event_id, viewer_id)
+- au leave/unmount : option delete row (best-effort)
+
+3) Upload côté signers (Organisateur/Célébrité)
+- écran publish :
+  - upload image dans Storage
+  - insert row dans event_assets (type + signer_id + image_url)
+- IMPORTANT : pas de broadcast realtime, uniquement insert DB
+- Les fans verront la photo au prochain poll (<= 15–30s) ou refresh.
+
+PERFORMANCE / COÛT
+- Polling à 20s par défaut
+- Désactiver polling en background
+- Toujours paginer
+- Jamais télécharger des images full-res en liste (utiliser thumbnails si possible)
+
+LIVRABLES ATTENDUS
+1) SQL migrations tables + index + contraintes unique
+2) (Option A) Edge Function joinEvent (recommandé)
+3) Code RN :
+- JoinEventScreen + QR
+- EventGalleryScreen avec tabs + polling + refresh + pagination + stop polling background
+- helper viewer_id (AsyncStorage)
+- helper fetchNewAssets + merge unique
+4) Upload flow signers (insert event_assets)
+
+CONTRAINTES
+- Ne pas utiliser Supabase Realtime.
+- Code clair, stable, production-ready.
+- Logs utiles en dev.
