@@ -81,6 +81,25 @@ Preferred communication style: Simple, everyday language.
 - **i18n**: Fully internationalized with 35+ new translation keys across all 15 languages
 - **Dependencies**: `react-native-qrcode-svg` for QR generation, `expo-barcode-scanner` for scanning
 
+### Event Sessions System (January 2026)
+- **Multi-Celebrity Sessions**: Advanced event system supporting multiple celebrities at once
+  - Configurable duration (10 min to 24h)
+  - Collect signatures from multiple celebrities before publishing
+  - Soft viewer limit (5000 concurrent viewers) with graceful handling
+- **Fan Gallery**: Real-time polling-based gallery for fans
+  - 20-second polling interval for new assets
+  - Tabs: All / Official (photos) / Signed (photos with signatures)
+  - Pull-to-refresh and auto-download functionality
+  - Viewer heartbeat tracking (60s interval)
+- **Celebrity Publish Interface**: Celebrities can publish during event
+  - Upload photos with or without signatures
+  - Signature-only uploads
+  - Asset management
+- **Database Tables**: `event_sessions`, `event_signers`, `event_assets`, `event_viewers`
+- **Screens**: `create-event.tsx` (multi-step), `event-gallery.tsx` (fan), `event-publish.tsx` (celebrity)
+- **Utility**: `eventSessionStorage.ts` for session CRUD, asset upload, heartbeat
+- **Dual Mode**: join-event.tsx supports both legacy events and new session system
+
 ## External Dependencies
 
 ### Backend Services

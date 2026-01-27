@@ -629,6 +629,8 @@ export default {
   eventEnded: 'Event ended',
   eventFull: 'Event Full',
   eventFullMessage: 'This event has reached its viewer limit. Please try again later.',
+  eventExpired: 'Event Expired',
+  eventExpiredMessage: 'This event has ended. Check with the organizer for future events.',
   retry: 'Retry',
   permissionDenied: 'Permission denied',
   cameraPermissionNeeded: 'Camera permission needed',

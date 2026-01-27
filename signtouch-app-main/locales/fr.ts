@@ -629,6 +629,8 @@ export default {
   eventEnded: 'Événement terminé',
   eventFull: 'Événement complet',
   eventFullMessage: 'Cet événement a atteint sa limite de spectateurs. Veuillez réessayer plus tard.',
+  eventExpired: 'Événement expiré',
+  eventExpiredMessage: 'Cet événement est terminé. Vérifiez auprès de l\'organisateur pour les prochains événements.',
   retry: 'Réessayer',
   permissionDenied: 'Permission refusée',
   cameraPermissionNeeded: 'Permission caméra requise',
