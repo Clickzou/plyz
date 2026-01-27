@@ -290,6 +290,7 @@ export default function CreateEventScreen() {
               <View style={styles.section}>
                 <View style={styles.sectionHeaderRow}>
                   <Text style={styles.sectionTitle}>{t('eventName') || 'Event Name'}</Text>
+                  <Text style={styles.requiredHint}>{t('requiredField') || '(required)'}</Text>
                 </View>
                 <TextInput
                   style={styles.input}
