@@ -21,6 +21,11 @@ export default function SocialShareModal({ visible, onClose, imageUri, onSave }:
     }
 
     try {
+      // Save to story gallery first
+      if (onSave) {
+        await onSave();
+      }
+      
       if (Platform.OS !== 'web') {
         const isAvailable = await Sharing.isAvailableAsync();
         if (isAvailable) {
@@ -57,15 +62,17 @@ export default function SocialShareModal({ visible, onClose, imageUri, onSave }:
     }
 
     try {
+      // Save to story gallery first
       if (onSave) {
         await onSave();
-        onClose();
-      } else if (Platform.OS !== 'web') {
+      }
+      
+      // Also save to device
+      if (Platform.OS !== 'web') {
         const { status } = await MediaLibrary.requestPermissionsAsync();
         if (status === 'granted') {
           await MediaLibrary.saveToLibraryAsync(imageUri);
           Alert.alert(t('done'), t('storySaved'));
-          onClose();
         }
       } else {
         const link = document.createElement('a');
@@ -74,8 +81,8 @@ export default function SocialShareModal({ visible, onClose, imageUri, onSave }:
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        onClose();
       }
+      onClose();
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
     }

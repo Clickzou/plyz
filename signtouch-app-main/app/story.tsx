@@ -1468,6 +1468,16 @@ export default function StoryScreen() {
         visible={showShareModal}
         onClose={() => setShowShareModal(false)}
         imageUri={shareImageUri || ''}
+        onSave={async () => {
+          if (shareImageUri) {
+            await saveStory({
+              uri: shareImageUri,
+              template: selectedAnimation.id,
+              customText,
+              sourceMemoryId: params.memoryId as string,
+            });
+          }
+        }}
       />
     </View>
   );
