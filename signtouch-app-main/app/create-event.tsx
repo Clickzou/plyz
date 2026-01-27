@@ -288,7 +288,9 @@ export default function CreateEventScreen() {
           {step === 'config' && (
             <>
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('eventName') || 'Event Name'}</Text>
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={styles.sectionTitle}>{t('eventName') || 'Event Name'}</Text>
+                </View>
                 <TextInput
                   style={styles.input}
                   placeholder={t('eventNamePlaceholder') || 'Concert, Match, Meeting...'}
