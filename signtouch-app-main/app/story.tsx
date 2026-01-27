@@ -1454,22 +1454,10 @@ export default function StoryScreen() {
 
         <View style={styles.exportSection}>
           <TouchableOpacity
-            style={styles.exportButton}
-            onPress={handleExport}
-            disabled={isExporting}
-          >
-            <Download size={20} color="#fff" />
-            <Text style={styles.exportButtonText}>
-              {isExporting ? t('storyExporting') : t('storySave')}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.exportButton, styles.shareButton]}
+            style={styles.shareIconButton}
             onPress={handleShare}
           >
-            <Share2 size={20} color="#fff" />
-            <Text style={styles.exportButtonText}>{t('storyShare')}</Text>
+            <Share2 size={28} color="#fff" />
           </TouchableOpacity>
         </View>
 
@@ -1755,7 +1743,7 @@ const styles = StyleSheet.create({
   },
   exportSection: {
     flexDirection: 'row',
-    gap: 12,
+    justifyContent: 'center',
     marginBottom: 16,
   },
   exportButton: {
@@ -1770,6 +1758,14 @@ const styles = StyleSheet.create({
   },
   shareButton: {
     backgroundColor: '#10B981',
+  },
+  shareIconButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   exportButtonText: {
     color: '#fff',
