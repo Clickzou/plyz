@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -34,9 +35,13 @@ export default function CelebrityMenuScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      <View style={styles.content}>
+      <ScrollView 
+        style={styles.content} 
+        contentContainerStyle={[styles.contentContainer, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.iconContainer}>
-          <Star size={60} color="#fff" fill="#fff" />
+          <Star size={48} color="#fff" fill="#fff" />
         </View>
 
         <Text style={styles.title}>{t('celebrityMenuTitle')}</Text>
@@ -48,7 +53,7 @@ export default function CelebrityMenuScreen() {
             onPress={() => router.push('/create-event')}
           >
             <View style={styles.optionIcon}>
-              <QrCode size={40} color="#10B981" />
+              <QrCode size={32} color="#10B981" />
             </View>
             <Text style={styles.optionTitle}>{t('celebrityEventSimple')}</Text>
             <Text style={styles.optionDescription}>{t('celebrityEventSimpleDesc')}</Text>
@@ -59,7 +64,7 @@ export default function CelebrityMenuScreen() {
             onPress={() => router.push('/create-live-session')}
           >
             <View style={[styles.optionIcon, styles.liveIcon]}>
-              <Video size={40} color="#ef4444" />
+              <Video size={32} color="#ef4444" />
             </View>
             <View style={styles.liveBadge}>
               <Text style={styles.liveBadgeText}>LIVE</Text>
@@ -68,7 +73,7 @@ export default function CelebrityMenuScreen() {
             <Text style={styles.optionDescription}>{t('celebrityLiveSessionDesc')}</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -99,33 +104,36 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 20,
+  },
+  contentContainer: {
+    padding: 16,
   },
   iconContainer: {
     alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 24,
+    marginTop: 8,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     color: '#fff',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.8)',
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 20,
+    paddingHorizontal: 8,
   },
   optionsContainer: {
-    gap: 16,
+    gap: 12,
   },
   optionCard: {
     backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 16,
+    padding: 16,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -134,13 +142,13 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   optionIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: 'rgba(16, 185, 129, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   liveIcon: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -160,15 +168,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   optionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#1f2937',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   optionDescription: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#6b7280',
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 18,
   },
 });
