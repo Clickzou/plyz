@@ -3,6 +3,7 @@ import { X, Share2, Download } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SocialShareModalProps {
@@ -14,6 +15,7 @@ interface SocialShareModalProps {
 
 export default function SocialShareModal({ visible, onClose, imageUri, onSave }: SocialShareModalProps) {
   const { t } = useLanguage();
+  const insets = useSafeAreaInsets();
 
   const handleShare = async () => {
     if (Platform.OS !== 'web') {
@@ -104,7 +106,7 @@ export default function SocialShareModal({ visible, onClose, imageUri, onSave }:
             </TouchableOpacity>
           </View>
 
-          <View style={styles.content}>
+          <View style={[styles.content, { paddingBottom: Math.max(insets.bottom, 16) + 24 }]}>
             <Text style={styles.description}>{t('socialShareDescription')}</Text>
 
             <View style={styles.buttonsRow}>
