@@ -134,6 +134,14 @@ export default function CreateEventScreen() {
   };
 
   const addSigner = () => {
+    const currentSigner = signers[activeSignerIndex];
+    if (!currentSigner.name.trim()) {
+      Alert.alert(
+        t('warning') || 'Warning',
+        t('enterNameFirst') || 'Please enter a celebrity name before adding a new one'
+      );
+      return;
+    }
     setSigners(prev => [...prev, { name: '', paths: [] }]);
     setActiveSignerIndex(signers.length);
   };
@@ -355,7 +363,10 @@ export default function CreateEventScreen() {
               </View>
 
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('celebrityName') || 'Celebrity Name'}</Text>
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={styles.sectionTitle}>{t('celebrityName') || 'Celebrity Name'}</Text>
+                  <Text style={styles.requiredHint}>{t('requiredField') || '(required)'}</Text>
+                </View>
                 <TextInput
                   style={styles.input}
                   placeholder={t('enterName') || 'Enter name...'}
@@ -536,6 +547,7 @@ const styles = StyleSheet.create({
   section: { marginBottom: 28 },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   sectionTitle: { fontSize: 16, fontWeight: '600', color: '#ffffff' },
+  requiredHint: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' },
   input: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
