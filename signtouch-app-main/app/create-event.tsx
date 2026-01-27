@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Share,
+  GestureResponderEvent,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,11 +19,7 @@ import { ArrowLeft, Sparkles, QrCode, Copy, Share2, Check, Plus, X, Clock, Users
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import Svg, { Path, G } from 'react-native-svg';
-import { 
-  GestureHandlerRootView,
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 const QRCode = require('react-native-qrcode-svg').default;
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -76,20 +73,36 @@ export default function CreateEventScreen() {
   const signatureColor = '#FFFFFF';
   const strokeWidth = 3;
 
-  const handlePanGesture = useCallback((event: PanGestureHandlerGestureEvent) => {
-    const { x, y } = event.nativeEvent;
-    
-    if (event.nativeEvent.state === 2) {
-      currentPathRef.current = `M${x},${y}`;
-      setCurrentPath(currentPathRef.current);
-    } else if (event.nativeEvent.state === 4) {
-      currentPathRef.current += ` L${x},${y}`;
-      setCurrentPath(currentPathRef.current);
-    }
+  const canvasRef = useRef<View>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const canvasLayoutRef = useRef<{ x: number; y: number; width: number; height: number }>({ x: 0, y: 0, width: 300, height: 200 });
+
+  const getPointerPosition = useCallback((event: GestureResponderEvent) => {
+    const { locationX, locationY } = event.nativeEvent;
+    const scaleX = 300 / canvasLayoutRef.current.width;
+    const scaleY = 200 / canvasLayoutRef.current.height;
+    return {
+      x: Math.max(0, Math.min(300, locationX * scaleX)),
+      y: Math.max(0, Math.min(200, locationY * scaleY)),
+    };
   }, []);
 
-  const handlePanEnd = useCallback(() => {
-    if (currentPathRef.current) {
+  const handleTouchStart = useCallback((event: GestureResponderEvent) => {
+    const { x, y } = getPointerPosition(event);
+    currentPathRef.current = `M${x.toFixed(1)},${y.toFixed(1)}`;
+    setCurrentPath(currentPathRef.current);
+    setIsDrawing(true);
+  }, [getPointerPosition]);
+
+  const handleTouchMove = useCallback((event: GestureResponderEvent) => {
+    if (!isDrawing) return;
+    const { x, y } = getPointerPosition(event);
+    currentPathRef.current += ` L${x.toFixed(1)},${y.toFixed(1)}`;
+    setCurrentPath(currentPathRef.current);
+  }, [isDrawing, getPointerPosition]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (currentPathRef.current && isDrawing) {
       const newPath: PathData = {
         id: Date.now().toString(),
         d: currentPathRef.current,
@@ -107,7 +120,8 @@ export default function CreateEventScreen() {
       currentPathRef.current = '';
       setCurrentPath('');
     }
-  }, [activeSignerIndex]);
+    setIsDrawing(false);
+  }, [activeSignerIndex, isDrawing]);
 
   const clearSignature = () => {
     setSigners(prev => {
@@ -145,7 +159,7 @@ export default function CreateEventScreen() {
     const pathsString = paths.map(p => 
       `<path d="${p.d}" stroke="${p.color}" stroke-width="${p.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
     ).join('');
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="150" viewBox="0 0 300 150"><g>${pathsString}</g></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200"><g>${pathsString}</g></svg>`;
     return `data:image/svg+xml;base64,${btoa(svg)}`;
   };
 
@@ -361,46 +375,56 @@ export default function CreateEventScreen() {
                     </TouchableOpacity>
                   )}
                 </View>
-                <View style={styles.signatureContainer}>
-                  <PanGestureHandler
-                    onGestureEvent={handlePanGesture}
-                    onEnded={handlePanEnd}
-                  >
-                    <View style={styles.signatureCanvas}>
-                      <Svg width="100%" height="100%" viewBox="0 0 300 150">
-                        <G>
-                          {activeSigner.paths.map((path) => (
-                            <Path
-                              key={path.id}
-                              d={path.d}
-                              stroke={path.color}
-                              strokeWidth={path.strokeWidth}
-                              fill="none"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          ))}
-                          {currentPath && (
-                            <Path
-                              d={currentPath}
-                              stroke={signatureColor}
-                              strokeWidth={strokeWidth}
-                              fill="none"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          )}
-                        </G>
-                      </Svg>
-                      {activeSigner.paths.length === 0 && !currentPath && (
-                        <View style={styles.signaturePlaceholder}>
-                          <Text style={styles.signaturePlaceholderText}>
-                            {t('drawSignatureHere') || 'Draw signature here'}
-                          </Text>
-                        </View>
+                <View 
+                  style={styles.signatureContainer}
+                  ref={canvasRef}
+                  onLayout={(e) => {
+                    canvasLayoutRef.current = {
+                      x: e.nativeEvent.layout.x,
+                      y: e.nativeEvent.layout.y,
+                      width: e.nativeEvent.layout.width,
+                      height: e.nativeEvent.layout.height,
+                    };
+                  }}
+                  onStartShouldSetResponder={() => true}
+                  onMoveShouldSetResponder={() => true}
+                  onResponderGrant={handleTouchStart}
+                  onResponderMove={handleTouchMove}
+                  onResponderRelease={handleTouchEnd}
+                  onResponderTerminate={handleTouchEnd}
+                >
+                  <Svg width="100%" height="100%" viewBox="0 0 300 200" style={styles.signatureSvg}>
+                    <G>
+                      {activeSigner.paths.map((path) => (
+                        <Path
+                          key={path.id}
+                          d={path.d}
+                          stroke={path.color}
+                          strokeWidth={path.strokeWidth}
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      ))}
+                      {currentPath && (
+                        <Path
+                          d={currentPath}
+                          stroke={signatureColor}
+                          strokeWidth={strokeWidth}
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       )}
+                    </G>
+                  </Svg>
+                  {activeSigner.paths.length === 0 && !currentPath && (
+                    <View style={styles.signaturePlaceholder}>
+                      <Text style={styles.signaturePlaceholderText}>
+                        {t('drawSignatureHere') || 'Draw signature here'}
+                      </Text>
                     </View>
-                  </PanGestureHandler>
+                  )}
                 </View>
               </View>
 
@@ -509,7 +533,7 @@ const styles = StyleSheet.create({
   headerRight: { width: 44 },
   content: { flex: 1 },
   contentContainer: { padding: 20 },
-  section: { marginBottom: 24 },
+  section: { marginBottom: 28 },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   sectionTitle: { fontSize: 16, fontWeight: '600', color: '#ffffff' },
   input: {
@@ -566,10 +590,10 @@ const styles = StyleSheet.create({
   },
   clearBtn: { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(239,68,68,0.2)', borderRadius: 8 },
   clearBtnText: { color: '#ef4444', fontSize: 14, fontWeight: '500' },
-  signatureContainer: { backgroundColor: '#000000', borderRadius: 16, overflow: 'hidden' },
-  signatureCanvas: { height: 150, position: 'relative' },
-  signaturePlaceholder: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' },
-  signaturePlaceholderText: { fontSize: 14, color: 'rgba(255,255,255,0.4)' },
+  signatureContainer: { backgroundColor: '#000000', borderRadius: 16, overflow: 'hidden', height: 250, marginTop: 8 },
+  signatureSvg: { flex: 1 },
+  signaturePlaceholder: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', pointerEvents: 'none' },
+  signaturePlaceholderText: { fontSize: 16, color: 'rgba(255,255,255,0.4)' },
   signersSummary: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20, justifyContent: 'center' },
   signersSummaryText: { color: 'rgba(255,255,255,0.7)', fontSize: 14 },
   createButton: {
