@@ -203,6 +203,79 @@ export const joinEventSession = async (
   viewerId: string
 ): Promise<JoinEventResult> => {
   try {
+    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+    
+    if (supabaseUrl) {
+      try {
+        const response = await fetch(`${supabaseUrl}/functions/v1/joinEvent`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            join_code: joinCode.toUpperCase(),
+            viewer_id: viewerId,
+          }),
+        });
+
+        const result = await response.json();
+        
+        if (result.allowed && result.event) {
+          return {
+            allowed: true,
+            session: {
+              id: result.event.id,
+              title: result.event.title,
+              status: result.event.status,
+              starts_at: result.event.starts_at,
+              ends_at: result.event.ends_at,
+              join_code: joinCode.toUpperCase(),
+              viewer_soft_limit: result.event.viewer_soft_limit,
+              created_by: null,
+              created_at: '',
+            },
+            signers: result.signers || [],
+          };
+        }
+        
+        return {
+          allowed: false,
+          reason: result.reason || 'not_found',
+        };
+      } catch (edgeFnError) {
+        console.log('Edge Function not available, falling back to RPC');
+      }
+    }
+
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('join_event', {
+      p_join_code: joinCode.toUpperCase(),
+      p_viewer_id: viewerId,
+    });
+
+    if (!rpcError && rpcResult) {
+      if (rpcResult.allowed && rpcResult.event) {
+        return {
+          allowed: true,
+          session: {
+            id: rpcResult.event.id,
+            title: rpcResult.event.title,
+            status: rpcResult.event.status,
+            starts_at: rpcResult.event.starts_at,
+            ends_at: rpcResult.event.ends_at,
+            join_code: joinCode.toUpperCase(),
+            viewer_soft_limit: rpcResult.event.viewer_soft_limit,
+            created_by: null,
+            created_at: '',
+          },
+          signers: rpcResult.signers || [],
+        };
+      }
+      return {
+        allowed: false,
+        reason: rpcResult.reason || 'not_found',
+      };
+    }
+
     const { data: session, error: sessionError } = await supabase
       .from('event_sessions')
       .select('*')
