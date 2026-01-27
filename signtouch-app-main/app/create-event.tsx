@@ -73,7 +73,7 @@ export default function CreateEventScreen() {
   const [activeSignerIndex, setActiveSignerIndex] = useState(0);
   const [currentPath, setCurrentPath] = useState<string>('');
   const currentPathRef = useRef<string>('');
-  const signatureColor = '#000000';
+  const signatureColor = '#FFFFFF';
   const strokeWidth = 3;
 
   const handlePanGesture = useCallback((event: PanGestureHandlerGestureEvent) => {
@@ -566,10 +566,10 @@ const styles = StyleSheet.create({
   },
   clearBtn: { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(239,68,68,0.2)', borderRadius: 8 },
   clearBtnText: { color: '#ef4444', fontSize: 14, fontWeight: '500' },
-  signatureContainer: { backgroundColor: '#ffffff', borderRadius: 16, overflow: 'hidden' },
+  signatureContainer: { backgroundColor: '#000000', borderRadius: 16, overflow: 'hidden' },
   signatureCanvas: { height: 150, position: 'relative' },
   signaturePlaceholder: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' },
-  signaturePlaceholderText: { fontSize: 14, color: 'rgba(0,0,0,0.3)' },
+  signaturePlaceholderText: { fontSize: 14, color: 'rgba(255,255,255,0.4)' },
   signersSummary: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20, justifyContent: 'center' },
   signersSummaryText: { color: 'rgba(255,255,255,0.7)', fontSize: 14 },
   createButton: {
