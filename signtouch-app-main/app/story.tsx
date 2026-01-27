@@ -1338,13 +1338,26 @@ export default function StoryScreen() {
     }
     
     try {
-      if (viewShotRef.current?.capture) {
+      if (Platform.OS === 'web' && webContainerRef.current) {
+        const html2canvas = (await import('html2canvas')).default;
+        const canvas = await html2canvas(webContainerRef.current, {
+          backgroundColor: null,
+          scale: 2,
+          useCORS: true,
+        });
+        const uri = canvas.toDataURL('image/png');
+        setShareImageUri(uri);
+        setShowShareModal(true);
+      } else if (viewShotRef.current?.capture) {
         const uri = await viewShotRef.current.capture();
         setShareImageUri(uri);
+        setShowShareModal(true);
+      } else {
         setShowShareModal(true);
       }
     } catch (error) {
       console.error('Share error:', error);
+      setShowShareModal(true);
     }
   };
 
