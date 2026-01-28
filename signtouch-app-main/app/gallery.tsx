@@ -169,7 +169,7 @@ export default function GalleryScreen() {
         
         if (status === 'paid') return;
         
-        const trialStatus = await getTrialStatus();
+        const trialStatus = await getTrialStatus(user?.id || null);
         setTrialDaysRemaining(trialStatus.daysRemaining);
         
         setTimeout(() => {

@@ -1,7 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from './supabase';
 
 const TRIAL_START_KEY = '@signtouch_trial_start';
 const FIRST_PHOTO_SAVED_KEY = '@signtouch_first_photo_saved';
+const DEVICE_ID_KEY = '@signtouch_device_id';
 const TRIAL_DAYS = 7;
 
 export interface TrialStatus {
@@ -12,17 +14,100 @@ export interface TrialStatus {
   hasFirstPhotoSaved: boolean;
 }
 
-export const startTrial = async (): Promise<void> => {
-  const existing = await AsyncStorage.getItem(TRIAL_START_KEY);
-  if (!existing) {
-    await AsyncStorage.setItem(TRIAL_START_KEY, new Date().toISOString());
+const getDeviceId = async (): Promise<string> => {
+  let deviceId = await AsyncStorage.getItem(DEVICE_ID_KEY);
+  if (!deviceId) {
+    deviceId = 'device_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+    await AsyncStorage.setItem(DEVICE_ID_KEY, deviceId);
+  }
+  return deviceId;
+};
+
+const syncTrialFromServer = async (userId: string | null): Promise<string | null> => {
+  try {
+    const deviceId = await getDeviceId();
+    
+    let trialRecord = null;
+    
+    if (userId) {
+      const { data } = await supabase
+        .from('device_trials')
+        .select('trial_start_date')
+        .eq('user_id', userId)
+        .single();
+      trialRecord = data;
+    }
+    
+    if (!trialRecord) {
+      const { data } = await supabase
+        .from('device_trials')
+        .select('trial_start_date')
+        .eq('device_id', deviceId)
+        .single();
+      trialRecord = data;
+    }
+    
+    if (trialRecord?.trial_start_date) {
+      await AsyncStorage.setItem(TRIAL_START_KEY, trialRecord.trial_start_date);
+      await AsyncStorage.setItem(FIRST_PHOTO_SAVED_KEY, 'true');
+      return trialRecord.trial_start_date;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error syncing trial from server:', error);
+    return null;
   }
 };
 
-export const getTrialStatus = async (): Promise<TrialStatus> => {
+const saveTrialToServer = async (userId: string | null, trialStartDate: string): Promise<void> => {
   try {
-    const trialStart = await AsyncStorage.getItem(TRIAL_START_KEY);
+    const deviceId = await getDeviceId();
+    
+    const { error } = await supabase
+      .from('device_trials')
+      .upsert({
+        device_id: deviceId,
+        user_id: userId || null,
+        trial_start_date: trialStartDate,
+        first_photo_saved_at: new Date().toISOString(),
+      }, {
+        onConflict: userId ? 'user_id' : 'device_id',
+      });
+    
+    if (error) {
+      console.error('Error saving trial to server:', error);
+    }
+  } catch (error) {
+    console.error('Error saving trial to server:', error);
+  }
+};
+
+export const startTrial = async (userId: string | null = null): Promise<void> => {
+  const existing = await AsyncStorage.getItem(TRIAL_START_KEY);
+  if (!existing) {
+    const serverTrial = await syncTrialFromServer(userId);
+    if (serverTrial) {
+      return;
+    }
+    
+    const trialStartDate = new Date().toISOString();
+    await AsyncStorage.setItem(TRIAL_START_KEY, trialStartDate);
+    await saveTrialToServer(userId, trialStartDate);
+  }
+};
+
+export const getTrialStatus = async (userId: string | null = null): Promise<TrialStatus> => {
+  try {
+    let trialStart = await AsyncStorage.getItem(TRIAL_START_KEY);
     const firstPhotoSaved = await AsyncStorage.getItem(FIRST_PHOTO_SAVED_KEY);
+    
+    if (!trialStart && firstPhotoSaved === 'true') {
+      const serverTrial = await syncTrialFromServer(userId);
+      if (serverTrial) {
+        trialStart = serverTrial;
+      }
+    }
     
     if (!trialStart) {
       return {
@@ -59,17 +144,38 @@ export const getTrialStatus = async (): Promise<TrialStatus> => {
   }
 };
 
-export const markFirstPhotoSaved = async (): Promise<void> => {
+export const markFirstPhotoSaved = async (userId: string | null = null): Promise<void> => {
   const existing = await AsyncStorage.getItem(FIRST_PHOTO_SAVED_KEY);
   if (!existing) {
     await AsyncStorage.setItem(FIRST_PHOTO_SAVED_KEY, 'true');
-    await startTrial();
+    await startTrial(userId);
   }
 };
 
 export const hasFirstPhotoBeenSaved = async (): Promise<boolean> => {
   const value = await AsyncStorage.getItem(FIRST_PHOTO_SAVED_KEY);
   return value === 'true';
+};
+
+export const linkTrialToUser = async (userId: string): Promise<void> => {
+  try {
+    const deviceId = await getDeviceId();
+    const trialStart = await AsyncStorage.getItem(TRIAL_START_KEY);
+    
+    if (trialStart) {
+      await supabase
+        .from('device_trials')
+        .upsert({
+          device_id: deviceId,
+          user_id: userId,
+          trial_start_date: trialStart,
+        }, {
+          onConflict: 'user_id',
+        });
+    }
+  } catch (error) {
+    console.error('Error linking trial to user:', error);
+  }
 };
 
 export const clearTrialData = async (): Promise<void> => {

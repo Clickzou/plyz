@@ -15,7 +15,7 @@ export const saveMemory = async (
     isEdited?: boolean;
   }
 ): Promise<Memory> => {
-  await markFirstPhotoSaved();
+  await markFirstPhotoSaved(userId);
   
   if (userId) {
     return await CloudStorage.saveMemoryToCloud(imageUri, userId, metadata);

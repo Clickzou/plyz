@@ -199,7 +199,7 @@ export default function HomeScreen() {
       const firstPhotoSaved = await hasFirstPhotoBeenSaved();
       if (!firstPhotoSaved) return;
       
-      const trialStatus = await getTrialStatus();
+      const trialStatus = await getTrialStatus(null);
       if (trialStatus.isExpired) {
         setIsTrialExpired(true);
         setShowTrialExpiredModal(true);
