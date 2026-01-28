@@ -48,6 +48,13 @@ const DURATION_OPTIONS = [
   { label: '1h', value: 60 },
   { label: '2h', value: 120 },
   { label: '4h', value: 240 },
+  { label: '5h', value: 300 },
+  { label: '6h', value: 360 },
+  { label: '7h', value: 420 },
+  { label: '8h', value: 480 },
+  { label: '9h', value: 540 },
+  { label: '10h', value: 600 },
+  { label: '11h', value: 660 },
   { label: '12h', value: 720 },
   { label: '24h', value: 1440 },
 ];
