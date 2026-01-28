@@ -411,9 +411,6 @@ export default function CreateEventScreen() {
                     </TouchableOpacity>
                   ))}
                 </View>
-                <Text style={styles.durationHint}>
-                  {t('endsAt') || 'Ends at'}: {formatDuration(selectedDuration)}
-                </Text>
               </View>
 
               <View style={styles.section}>
@@ -487,6 +484,47 @@ export default function CreateEventScreen() {
                     );
                   })}
                 </View>
+              </View>
+
+              <View style={styles.eventSummaryBox}>
+                <Text style={styles.eventSummaryText}>
+                  {t('eventSummary') || 'Votre événement commence le'}{' '}
+                  <Text style={styles.eventSummaryHighlight}>
+                    {new Date(eventDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+                  </Text>
+                  {eventTime ? (
+                    <>
+                      {' '}{t('at') || 'à'}{' '}
+                      <Text style={styles.eventSummaryHighlight}>{eventTime}</Text>
+                    </>
+                  ) : null}
+                  {' '}{t('andEnds') || 'et se termine le'}{' '}
+                  <Text style={styles.eventSummaryHighlight}>
+                    {(() => {
+                      const startDate = new Date(eventDate);
+                      if (eventTime) {
+                        const [h, m] = eventTime.split(':').map(Number);
+                        startDate.setHours(h, m, 0, 0);
+                      }
+                      const endDate = new Date(startDate.getTime() + selectedDuration * 60 * 1000);
+                      return endDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+                    })()}
+                  </Text>
+                  {' '}{t('at') || 'à'}{' '}
+                  <Text style={styles.eventSummaryHighlight}>
+                    {(() => {
+                      const startDate = new Date(eventDate);
+                      if (eventTime) {
+                        const [h, m] = eventTime.split(':').map(Number);
+                        startDate.setHours(h, m, 0, 0);
+                      } else {
+                        startDate.setHours(new Date().getHours(), new Date().getMinutes(), 0, 0);
+                      }
+                      const endDate = new Date(startDate.getTime() + selectedDuration * 60 * 1000);
+                      return endDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                    })()}
+                  </Text>
+                </Text>
               </View>
 
               <TouchableOpacity
@@ -841,6 +879,24 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   nextButtonText: { color: '#ffffff', fontSize: 18, fontWeight: '600' },
+  eventSummaryBox: {
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
+  },
+  eventSummaryText: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.8)',
+    lineHeight: 24,
+    textAlign: 'center',
+  },
+  eventSummaryHighlight: {
+    color: '#10B981',
+    fontWeight: '600',
+  },
   signerTabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
   signerTab: {
     flexDirection: 'row',
