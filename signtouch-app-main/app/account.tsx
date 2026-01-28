@@ -154,9 +154,12 @@ export default function AccountScreen() {
     }
     await clearTrialData();
     await AsyncStorage.removeItem('@signtouch_device_id');
+    // Also reset subscription status to free for testing
     if (Platform.OS === 'web') {
-      alert('Données de trial réinitialisées! Rafraîchissez la page pour voir le flux nouvel utilisateur.');
+      localStorage.removeItem('subscription_status');
+      alert('Données de trial et abonnement réinitialisées! Rafraîchissez la page pour voir le flux nouvel utilisateur.');
     } else {
+      await AsyncStorage.removeItem('subscription_status');
       Alert.alert(
         'Trial réinitialisé',
         'Les données de trial ont été effacées. Redémarrez l\'app pour tester le flux nouvel utilisateur.',
