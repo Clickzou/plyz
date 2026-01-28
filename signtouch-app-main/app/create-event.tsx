@@ -38,6 +38,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { 
   createEventSession, 
   addEventSigner, 
+  startScheduledEvent,
+  getMyScheduledEvents,
   EventSession,
   EventSigner 
 } from '@/utils/eventSessionStorage';
@@ -82,6 +84,8 @@ export default function CreateEventScreen() {
   const [selectedDuration, setSelectedDuration] = useState(60);
   const [eventLocation, setEventLocation] = useState('');
   const [eventDate, setEventDate] = useState(new Date().toISOString().split('T')[0]);
+  const [eventTime, setEventTime] = useState('');
+  const [isScheduled, setIsScheduled] = useState(false);
   const [eventType, setEventType] = useState<EventType>('rencontre');
   const [isCreating, setIsCreating] = useState(false);
   const [createdSession, setCreatedSession] = useState<EventSession | null>(null);
@@ -201,10 +205,23 @@ export default function CreateEventScreen() {
     setStep('signers');
   };
 
+  const getScheduledStartDate = (): Date | undefined => {
+    if (!isScheduled || !eventTime) return undefined;
+    const [hours, minutes] = eventTime.split(':').map(Number);
+    const startDate = new Date(eventDate);
+    startDate.setHours(hours, minutes, 0, 0);
+    return startDate;
+  };
+
   const handleCreateEvent = async () => {
     const validSigners = signers.filter(s => s.name.trim() && s.paths.length > 0);
     if (validSigners.length === 0) {
       Alert.alert(t('error') || 'Error', t('atLeastOneSigner') || 'Add at least one signature');
+      return;
+    }
+
+    if (isScheduled && !eventTime) {
+      Alert.alert(t('error') || 'Error', (t as any)('selectStartTime') || 'Please select a start time');
       return;
     }
 
@@ -215,7 +232,8 @@ export default function CreateEventScreen() {
 
     try {
       const creatorId = user?.id || undefined;
-      const session = await createEventSession(eventName.trim(), selectedDuration, creatorId);
+      const scheduledStart = getScheduledStartDate();
+      const session = await createEventSession(eventName.trim(), selectedDuration, creatorId, scheduledStart);
       
       const addedSigners: EventSigner[] = [];
       for (const signer of validSigners) {
@@ -383,6 +401,42 @@ export default function CreateEventScreen() {
               </View>
 
               <View style={styles.section}>
+                <TouchableOpacity
+                  style={styles.scheduleToggle}
+                  onPress={() => setIsScheduled(!isScheduled)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.scheduleToggleLeft}>
+                    <Clock size={18} color={isScheduled ? '#10B981' : 'rgba(255,255,255,0.5)'} />
+                    <Text style={[styles.scheduleToggleText, isScheduled && styles.scheduleToggleTextActive]}>
+                      {(t as any)('scheduleForLater') || 'Schedule for later'}
+                    </Text>
+                  </View>
+                  <View style={[styles.toggleSwitch, isScheduled && styles.toggleSwitchActive]}>
+                    <View style={[styles.toggleKnob, isScheduled && styles.toggleKnobActive]} />
+                  </View>
+                </TouchableOpacity>
+                
+                {isScheduled && (
+                  <View style={styles.timeInputContainer}>
+                    <Clock size={16} color="#10B981" />
+                    <TextInput
+                      style={styles.timeInput}
+                      placeholder="HH:MM"
+                      placeholderTextColor="rgba(255,255,255,0.4)"
+                      value={eventTime}
+                      onChangeText={setEventTime}
+                      keyboardType="numbers-and-punctuation"
+                      maxLength={5}
+                    />
+                    <Text style={styles.timeHint}>
+                      {(t as any)('startTimeHint') || 'Event will start at this time'}
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.section}>
                 <Text style={styles.sectionTitle}>{t('eventType') || 'Event Type'}</Text>
                 <View style={styles.eventTypesGrid}>
                   {EVENT_TYPES.map((et) => {
@@ -545,11 +599,28 @@ export default function CreateEventScreen() {
 
           {step === 'success' && createdSession && (
             <View style={styles.successContainer}>
-              <View style={styles.successIcon}>
-                <Check size={40} color="#10B981" />
+              <View style={[styles.successIcon, createdSession.status === 'scheduled' && styles.scheduledIcon]}>
+                {createdSession.status === 'scheduled' ? (
+                  <Clock size={40} color="#f59e0b" />
+                ) : (
+                  <Check size={40} color="#10B981" />
+                )}
               </View>
-              <Text style={styles.successTitle}>{t('eventCreated') || 'Event Created!'}</Text>
+              <Text style={styles.successTitle}>
+                {createdSession.status === 'scheduled' 
+                  ? ((t as any)('eventScheduled') || 'Event Scheduled!')
+                  : (t('eventCreated') || 'Event Created!')}
+              </Text>
               <Text style={styles.eventNameText}>{createdSession.title}</Text>
+
+              {createdSession.status === 'scheduled' && (
+                <View style={styles.scheduledBanner}>
+                  <Clock size={16} color="#f59e0b" />
+                  <Text style={styles.scheduledBannerText}>
+                    {(t as any)('startsAt') || 'Starts at'}: {new Date(createdSession.starts_at).toLocaleDateString()} {new Date(createdSession.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </Text>
+                </View>
+              )}
 
               <View style={styles.statsRow}>
                 <View style={styles.statItem}>
@@ -760,4 +831,92 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   shareButtonText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
+  scheduleToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12,
+    padding: 16,
+  },
+  scheduleToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  scheduleToggleText: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.6)',
+    fontWeight: '500',
+  },
+  scheduleToggleTextActive: {
+    color: '#10B981',
+  },
+  toggleSwitch: {
+    width: 50,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    padding: 2,
+  },
+  toggleSwitchActive: {
+    backgroundColor: '#10B981',
+  },
+  toggleKnob: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+  },
+  toggleKnobActive: {
+    alignSelf: 'flex-end',
+  },
+  timeInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 12,
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
+  },
+  timeInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '600',
+    minWidth: 80,
+    textAlign: 'center',
+  },
+  timeHint: {
+    flex: 1,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  scheduledIcon: {
+    backgroundColor: 'rgba(245,158,11,0.2)',
+  },
+  scheduledBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(245,158,11,0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.3)',
+  },
+  scheduledBannerText: {
+    fontSize: 14,
+    color: '#f59e0b',
+    fontWeight: '500',
+  },
 });

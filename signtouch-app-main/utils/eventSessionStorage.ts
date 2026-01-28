@@ -136,19 +136,21 @@ export const getSessionImageUrl = (path: string): string => {
 export const createEventSession = async (
   title: string,
   durationMinutes: number,
-  creatorId?: string
+  creatorId?: string,
+  scheduledStartAt?: Date
 ): Promise<EventSession> => {
   const joinCode = generateJoinCode();
-  const now = new Date();
-  const endsAt = new Date(now.getTime() + durationMinutes * 60 * 1000);
+  const isScheduled = scheduledStartAt && scheduledStartAt.getTime() > Date.now() + 60000;
+  const startsAt = isScheduled ? scheduledStartAt : new Date();
+  const endsAt = new Date(startsAt.getTime() + durationMinutes * 60 * 1000);
 
   const { data, error } = await supabase
     .from('event_sessions')
     .insert({
       title,
-      starts_at: now.toISOString(),
+      starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
-      status: 'live',
+      status: isScheduled ? 'scheduled' : 'live',
       join_code: joinCode,
       created_by: creatorId || null,
     })
@@ -157,6 +159,51 @@ export const createEventSession = async (
 
   if (error) throw new Error(`Create session error: ${error.message}`);
   return data;
+};
+
+export const startScheduledEvent = async (sessionId: string): Promise<EventSession> => {
+  const { data: session } = await supabase
+    .from('event_sessions')
+    .select('*')
+    .eq('id', sessionId)
+    .single();
+  
+  if (!session) throw new Error('Session not found');
+  
+  const now = new Date();
+  const originalDuration = new Date(session.ends_at).getTime() - new Date(session.starts_at).getTime();
+  const newEndsAt = new Date(now.getTime() + originalDuration);
+
+  const { data, error } = await supabase
+    .from('event_sessions')
+    .update({
+      starts_at: now.toISOString(),
+      ends_at: newEndsAt.toISOString(),
+      status: 'live',
+    })
+    .eq('id', sessionId)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Start event error: ${error.message}`);
+  return data;
+};
+
+export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSession[]> => {
+  if (!creatorId) return [];
+  
+  const { data, error } = await supabase
+    .from('event_sessions')
+    .select('*')
+    .eq('created_by', creatorId)
+    .in('status', ['scheduled', 'live'])
+    .order('starts_at', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching scheduled events:', error);
+    return [];
+  }
+  return data || [];
 };
 
 export const addEventSigner = async (
