@@ -676,7 +676,7 @@ export default {
   cloudSync: 'Synchronisation cloud',
   continueWithEmail: 'Recevoir un mail',
   enterYourEmail: 'Entrez votre email',
-  magicLinkExplanation: 'Nous vous enverrons un lien magique pour vous connecter instantanément',
+  magicLinkExplanation: 'Nous vous enverrons un lien sécurisé pour vous connecter instantanément.',
   emailPlaceholder: 'votre@email.com',
   sendMagicLink: 'Envoyer le lien',
   checkYourEmail: 'Vérifiez votre email',
