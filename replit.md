@@ -40,7 +40,12 @@ Preferred communication style: Simple, everyday language.
 ### Subscription Model
 - **RevenueCat Integration** (prepared but requires native build): Handles in-app purchases for iOS and Android
 - **Freemium Tiers**: Free tier with ads, premium tier with full features
-- **Trial System**: 7-day free trial with automatic billing
+- **Trial System**: 7-day free trial starting from first photo save
+  - Trial countdown stored in AsyncStorage (`trialStorage.ts`)
+  - After first photo: AccountModal (if not logged in) or TrialModal (if logged in but free)
+  - After 7 days: App blocked with mandatory subscription modal on home screen
+  - Components: `TrialModal.tsx`, `AccountModal.tsx`
+  - i18n: trialExpired, chooseSubscription, freeAppRemaining, trialDay, trialDays, subscribeToAccess
 
 ### Story Mode (January 2026)
 - **Animation System**: 3 animation types replacing previous category/style system
