@@ -15,7 +15,9 @@ export const saveMemory = async (
     isEdited?: boolean;
   }
 ): Promise<Memory> => {
+  console.log('[StorageService] saveMemory called, marking first photo...');
   await markFirstPhotoSaved(userId);
+  console.log('[StorageService] markFirstPhotoSaved completed');
   
   if (userId) {
     return await CloudStorage.saveMemoryToCloud(imageUri, userId, metadata);

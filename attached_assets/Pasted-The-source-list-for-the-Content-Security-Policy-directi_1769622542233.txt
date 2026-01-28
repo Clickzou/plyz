@@ -1,0 +1,176 @@
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+789247da73c8ef16.js:2 [Coframe] Replit Enterprise watcher loaded
+signtouch-app-mainzip:1 The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+signtouch-app-mainzip:1 The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+signtouch-app-mainzip:1 The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+789247da73c8ef16.js:2 
+      /////////////////////
+   ///////////////////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////        Curious and driven?
+  ///////////////@@@@@@@///////        Work with us!
+  ///////////////@@@@@@@///////
+  ///////////////@@@@@@@///////        https://join.replit.com/hack.with.us
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@#//////////////
+   ///////////////////////////
+      /////////////////////
+      
+789247da73c8ef16.js:2 Download the Apollo DevTools for a better development experience: https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm
+789247da73c8ef16.js:2 [LaunchDarkly] LaunchDarkly client initialized
+signtouch-app-mainzip:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+789247da73c8ef16.js:2 [ai-chat] Creating connection with chat proxy enabled
+(anonymous) @ 789247da73c8ef16.js:2
+9a2446c69ceea6f9.js:2 Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Unrecognized feature: 'ambient-light-sensor'.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Unrecognized feature: 'battery'.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Unrecognized feature: 'execution-while-not-rendered'.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Unrecognized feature: 'execution-while-out-of-viewport'.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Unrecognized feature: 'layout-animations'.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Unrecognized feature: 'legacy-image-formats'.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Unrecognized feature: 'navigation-override'.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Unrecognized feature: 'oversized-images'.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Unrecognized feature: 'publickey-credentials'.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Unrecognized feature: 'speaker-selection'.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Unrecognized feature: 'unoptimized-images'.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Unrecognized feature: 'unsized-media'.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Unrecognized feature: 'pointer-lock'.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Allow attribute will take precedence over 'allowfullscreen'.
+z @ 9a2446c69ceea6f9.js:2
+9a2446c69ceea6f9.js:2 Allow attribute will take precedence over 'allowpaymentrequest'.
+z @ 9a2446c69ceea6f9.js:2
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Unrecognized feature: 'battery'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Unrecognized feature: 'layout-animations'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Unrecognized feature: 'navigation-override'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Unrecognized feature: 'oversized-images'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Unrecognized feature: 'speaker-selection'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Unrecognized feature: 'unsized-media'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.html?initialPath=%2F&id=%3Ar2h%3A:32 Allow attribute will take precedence over 'allowpaymentrequest'.
+injected.js:37 Running application "main" with appParams:
+ Object 
+Development-level warnings: ON.
+Performance optimizations: OFF.
+injected.js:37 "shadow*" style props are deprecated. Use "boxShadow".
+(anonymous) @ injected.js:37
+injected.js:37 "textShadow*" style props are deprecated. Use "textShadow".
+(anonymous) @ injected.js:37
+injected.js:37 [Subscription] Callback registered
+injected.js:37 [PostPurchaseAccount] Callback registered
+injected.js:37 [PostPurchaseAccount] Manual callback registered
+injected.js:37 The <CameraView> component does not support children. This may lead to inconsistent behaviour or crashes. If you want to render content on top of the Camera, consider using absolute positioning.
+(anonymous) @ injected.js:37
+injected.js:37 🎨 Conversion de la signature en image...
+injected.js:37 🔍 [WEB] Conversion de la signature...
+injected.js:37 ✅ [WEB] Signature convertie en SVG
+injected.js:37 🔍 [WEB] SVG Data URI type: data:image/svg+xml;base64,PHN2
+injected.js:37 🔍 [WEB] Is SVG? true
+injected.js:37 ✅ Signature convertie, URI: data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMTEuNTMyNz...
+injected.js:37 Image: style.tintColor is deprecated. Please use props.tintColor.
+(anonymous) @ injected.js:37
+injected.js:37 📸 Capture de la composition...
+injected.js:37 🎨 Début capture Web...
+injected.js:37 📸 Photo URI: data:image/png;base64,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
+injected.js:37 ✍️ Signatures: 1
+injected.js:37 props.pointerEvents is deprecated. Use style.pointerEvents
+(anonymous) @ injected.js:37
+injected.js:37 ✅ Photo chargée
+injected.js:37 📐 Canvas: 402 x 874
+injected.js:37 📐 Photo: 640 x 480
+injected.js:37 ✅ Photo dessinée sur le canvas
+injected.js:37 ✅ Signature 1 chargée
+injected.js:37 ✅ Toutes les signatures chargées
+injected.js:37 🎯 Signature 1 - Position: 141 377 Scale: 1.5 Rotation: 0 Color: #ffffff
+injected.js:37 ✅ Toutes les signatures dessinées sur le canvas
+injected.js:37 ✅ Tous les textes dessinés sur le canvas
+injected.js:37 ✅ Data URL créé, longueur: 34779
+injected.js:37 ✅ Image capturée: data:image/jpeg;base64,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
+injected.js:37 💾 Sauvegarde dans la galerie avec overlays...
+injected.js:37 ✅ Souvenir sauvegardé
+injected.js:37 ✨ Animation de succès...
+injected.js:37 🚀 Navigation vers la galerie
+injected.js:37 ✅ Nettoyage: 5 → 5 souvenirs
+injected.js:37 📦 Loaded memory memory_1769622517365.jpg with 1 signatures
+injected.js:37   Signature 0: color=#ffffff
+injected.js:37 📦 Loaded memory memory_1769622264405.jpg with 1 signatures
+injected.js:37   Signature 0: color=#ffffff
+injected.js:37 📦 Loaded memory memory_1769622091381.jpg with 1 signatures
+injected.js:37   Signature 0: color=#ffffff
+injected.js:37 📦 Loaded memory memory_1769621952156.jpg with 1 signatures
+injected.js:37   Signature 0: color=#eab308
+injected.js:37 📦 Loaded memory memory_1769298066622.jpg with 1 signatures
+injected.js:37   Signature 0: color=#eab308
+injected.js:37 📦 Loaded memory memory_1769298066622.jpg with 1 text overlays
+injected.js:37   Text 0: text=ftufjfj, font=Caveat
+injected.js:37 [Trial] First photo saved: false Already checked: false
+stallwart.build.js:1 stallwart: failed ping 1
