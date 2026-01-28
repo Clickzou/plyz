@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -5,22 +6,52 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  Modal,
+  TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import {
   ArrowLeft,
   Crown,
-  Check
+  Check,
+  Gift,
+  X,
 } from 'lucide-react-native';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { validatePromoCode } from '@/utils/promoCodeStorage';
 
 export default function SubscriptionScreen() {
   const insets = useSafeAreaInsets();
   const { setStatus } = useSubscription();
   const { t } = useLanguage();
+  const [showPromoModal, setShowPromoModal] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoMessage, setPromoMessage] = useState<{ text: string; success: boolean } | null>(null);
+
+  const handlePromoSubmit = async () => {
+    if (!promoCode.trim()) return;
+    
+    setPromoLoading(true);
+    setPromoMessage(null);
+    
+    const result = await validatePromoCode(promoCode);
+    
+    setPromoMessage({ text: result.message, success: result.success });
+    setPromoLoading(false);
+    
+    if (result.success) {
+      await setStatus('paid');
+      setTimeout(() => {
+        setShowPromoModal(false);
+        router.back();
+      }, 1500);
+    }
+  };
 
   const handleSubscribe = async (plan: string) => {
     if (Platform.OS !== 'web') {
@@ -136,6 +167,15 @@ export default function SubscriptionScreen() {
           </TouchableOpacity>
         </View>
 
+        <TouchableOpacity
+          style={styles.promoButton}
+          onPress={() => setShowPromoModal(true)}
+          activeOpacity={0.7}
+        >
+          <Gift size={20} color="#f59e0b" />
+          <Text style={styles.promoButtonText}>{t('havePromoCode') || 'Vous avez un code promo ?'}</Text>
+        </TouchableOpacity>
+
         <View style={styles.footer}>
           <Text style={styles.footerText}>
             {t('autoRenewal')}
@@ -159,6 +199,66 @@ export default function SubscriptionScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <Modal
+        visible={showPromoModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowPromoModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={() => setShowPromoModal(false)}
+          />
+          <View style={styles.promoModalContent}>
+            <TouchableOpacity
+              style={styles.promoCloseBtn}
+              onPress={() => setShowPromoModal(false)}
+            >
+              <X size={24} color="#6b7280" />
+            </TouchableOpacity>
+            
+            <Gift size={48} color="#f59e0b" style={{ marginBottom: 16 }} />
+            <Text style={styles.promoTitle}>{t('promoCode') || 'Code promo'}</Text>
+            <Text style={styles.promoSubtitle}>
+              {t('enterPromoCode') || 'Entrez votre code promotionnel'}
+            </Text>
+            
+            <TextInput
+              style={styles.promoInput}
+              placeholder="XXXXXX"
+              placeholderTextColor="#9ca3af"
+              value={promoCode}
+              onChangeText={setPromoCode}
+              autoCapitalize="characters"
+              maxLength={20}
+            />
+            
+            {promoMessage && (
+              <Text style={[
+                styles.promoMessageText,
+                promoMessage.success ? styles.promoMessageSuccess : styles.promoMessageError
+              ]}>
+                {promoMessage.text}
+              </Text>
+            )}
+            
+            <TouchableOpacity
+              style={[styles.promoSubmitButton, promoLoading && styles.promoButtonDisabled]}
+              onPress={handlePromoSubmit}
+              disabled={promoLoading}
+            >
+              {promoLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.promoSubmitButtonText}>{t('validate') || 'Valider'}</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -329,5 +429,102 @@ const styles = StyleSheet.create({
   legalSeparator: {
     fontSize: 11,
     color: '#666',
+  },
+  promoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginTop: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+  },
+  promoButtonText: {
+    fontSize: 15,
+    color: '#f59e0b',
+    fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  modalBackdrop: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  promoModalContent: {
+    width: '85%',
+    maxWidth: 360,
+    backgroundColor: '#1f2937',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    position: 'relative' as const,
+  },
+  promoCloseBtn: {
+    position: 'absolute' as const,
+    top: 12,
+    right: 12,
+    padding: 4,
+  },
+  promoTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  promoSubtitle: {
+    fontSize: 14,
+    color: '#9ca3af',
+    textAlign: 'center' as const,
+    marginBottom: 20,
+  },
+  promoInput: {
+    width: '100%',
+    backgroundColor: '#374151',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center' as const,
+    letterSpacing: 2,
+    marginBottom: 16,
+  },
+  promoMessageText: {
+    fontSize: 14,
+    textAlign: 'center' as const,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+  },
+  promoMessageSuccess: {
+    color: '#10b981',
+  },
+  promoMessageError: {
+    color: '#ef4444',
+  },
+  promoSubmitButton: {
+    width: '100%',
+    backgroundColor: '#f59e0b',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+  },
+  promoButtonDisabled: {
+    opacity: 0.6,
+  },
+  promoSubmitButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });

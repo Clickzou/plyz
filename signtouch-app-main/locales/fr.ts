@@ -71,6 +71,7 @@ export default {
   promoCodeSuccess: 'Code activé ! Profitez de 30 jours Premium gratuits.',
   promoCodeInvalid: 'Code invalide ou expiré.',
   promoCodeAlreadyUsed: 'Ce code a déjà été utilisé sur cet appareil.',
+  havePromoCode: 'Vous avez un code promo ?',
   tapToEdit: 'Appuyez sur l\'image pour commencer',
   enterText: 'Entrez votre texte',
   textColor: 'Couleur du texte',
