@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'rea
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/utils/supabase';
+import * as Linking from 'expo-linking';
 
 export default function AuthCallbackScreen() {
   const { user } = useAuth();
@@ -13,37 +14,65 @@ export default function AuthCallbackScreen() {
   useEffect(() => {
     let processed = false;
 
+    const parseUrlParams = (url: string) => {
+      const parsedUrl = Linking.parse(url);
+      return {
+        token_hash: parsedUrl.queryParams?.token_hash as string | undefined,
+        type: parsedUrl.queryParams?.type as string | undefined,
+      };
+    };
+
+    const handleAuth = async (tokenHash: string, tokenType: string) => {
+      try {
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: tokenType as any,
+        });
+
+        if (verifyError) {
+          setError(verifyError.message);
+          setVerifying(false);
+          return;
+        }
+
+        setTimeout(() => {
+          router.replace('/subscription');
+        }, 1000);
+      } catch (err) {
+        setError('Erreur lors de la connexion');
+        setVerifying(false);
+      }
+    };
+
     const handleDeepLink = async () => {
       if (processed) return;
       processed = true;
 
       try {
-        const { token_hash, type } = params;
+        let tokenHash = params.token_hash;
+        let tokenType = params.type;
 
-        if (token_hash && type === 'magiclink') {
-          // Vérifier le token avec Supabase
-          const { error } = await supabase.auth.verifyOtp({
-            token_hash,
-            type: 'magiclink',
-          });
-
-          if (error) {
-            setError(error.message);
-            setVerifying(false);
-            return;
+        if (!tokenHash || !tokenType) {
+          const initialUrl = await Linking.getInitialURL();
+          if (initialUrl) {
+            const urlParams = parseUrlParams(initialUrl);
+            tokenHash = urlParams.token_hash;
+            tokenType = urlParams.type;
           }
+        }
 
-          // Attendre un court instant pour que la session soit établie
-          setTimeout(async () => {
-            // Rediriger vers l'écran d'abonnement pour choisir un plan
-            router.replace('/subscription');
-          }, 1000);
+        if (tokenHash && (tokenType === 'magiclink' || tokenType === 'email')) {
+          await handleAuth(tokenHash, tokenType);
         } else if (user) {
-          // Pas de token mais utilisateur connecté - aller à l'abonnement
           router.replace('/subscription');
         } else {
-          setError('Lien invalide ou expiré');
-          setVerifying(false);
+          const { data } = await supabase.auth.getSession();
+          if (data.session) {
+            router.replace('/subscription');
+          } else {
+            setError('Lien invalide ou expiré');
+            setVerifying(false);
+          }
         }
       } catch (err) {
         setError('Erreur lors de la connexion');
@@ -51,7 +80,11 @@ export default function AuthCallbackScreen() {
       }
     };
 
-    handleDeepLink();
+    const timeout = setTimeout(() => {
+      handleDeepLink();
+    }, 500);
+
+    return () => clearTimeout(timeout);
   }, [user, params]);
 
   if (error) {
@@ -60,9 +93,9 @@ export default function AuthCallbackScreen() {
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity
           style={styles.button}
-          onPress={() => router.replace('/account')}
+          onPress={() => router.replace('/')}
         >
-          <Text style={styles.buttonText}>Retour au compte</Text>
+          <Text style={styles.buttonText}>Retour à l'accueil</Text>
         </TouchableOpacity>
       </View>
     );
