@@ -716,12 +716,17 @@ export default function CreateEventScreen() {
               <Text style={styles.eventNameText}>{createdSession.title}</Text>
 
               {createdSession.status === 'scheduled' && (
-                <View style={styles.scheduledBanner}>
-                  <Clock size={16} color="#f59e0b" />
-                  <Text style={styles.scheduledBannerText}>
-                    {(t as any)('startsAt') || 'Starts at'}: {new Date(createdSession.starts_at).toLocaleDateString()} {new Date(createdSession.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <>
+                  <View style={styles.scheduledBanner}>
+                    <Clock size={16} color="#f59e0b" />
+                    <Text style={styles.scheduledBannerText}>
+                      {(t as any)('startsAt') || 'Starts at'}: {new Date(createdSession.starts_at).toLocaleDateString()} {new Date(createdSession.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                  </View>
+                  <Text style={styles.scheduledIntroText}>
+                    {t('scheduledEventIntro')}
                   </Text>
-                </View>
+                </>
               )}
 
               <View style={styles.statsRow}>
@@ -759,7 +764,11 @@ export default function CreateEventScreen() {
               <View style={styles.actionsColumn}>
                 <TouchableOpacity style={styles.publishButton} onPress={goToPublish}>
                   <Sparkles size={20} color="#ffffff" />
-                  <Text style={styles.publishButtonText}>{t('publishPhotos') || 'Publish Photos'}</Text>
+                  <Text style={styles.publishButtonText}>
+                    {createdSession.status === 'scheduled' 
+                      ? (t('schedulePhotos') || 'Schedule your Photos')
+                      : (t('publishPhotos') || 'Publish Photos')}
+                  </Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity style={styles.shareButton} onPress={shareEvent}>
@@ -1265,6 +1274,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#f59e0b',
     fontWeight: '500',
+  },
+  scheduledIntroText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginTop: 16,
+    marginHorizontal: 10,
   },
   datePickerButton: {
     flexDirection: 'row',

@@ -606,6 +606,8 @@ export default {
   celebrities: 'celebrities',
   until: 'Until',
   publishPhotos: 'Publish Photos',
+  schedulePhotos: 'Schedule your Photos',
+  scheduledEventIntro: 'Your event is now scheduled. You can share the code or QR code with your fans. The session will open at the scheduled time. In the meantime, you can schedule your photos in advance and add more during the live event.',
   shareQRCode: 'Share QR Code',
   publish: 'Publish',
   selectSigner: 'Select Signer',
