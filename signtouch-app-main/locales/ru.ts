@@ -504,4 +504,5 @@ export default {
   scannerNotOnWeb: 'QR-сканер недоступен в веб-версии. Пожалуйста, введите код вручную.',
   cameraNotAvailable: 'Камера недоступна',
   useMobileOrGallery: 'Камера недоступна в веб-версии. Используйте галерею или мобильное устройство.',
+  publishIntro: 'Elige cómo compartir contenido con tus fans. Pueden ver y descargar desde su galería en tiempo real.',
 };

@@ -639,4 +639,5 @@ export default {
   enterNameFirst: 'Please enter a celebrity name before adding a new one',
   cameraNotAvailable: 'Camera not available',
   useMobileOrGallery: 'Camera is not available on web. Please use the gallery or try on a mobile device.',
+  publishIntro: 'Choose how to share content with your fans. They can view and download from their gallery in real-time.',
 };

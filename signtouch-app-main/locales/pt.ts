@@ -479,4 +479,5 @@ export default {
   scannerNotOnWeb: 'O scanner QR não está disponível na web. Por favor, insira o código manualmente.',
   cameraNotAvailable: 'Câmera não disponível',
   useMobileOrGallery: 'A câmera não está disponível na web. Use a galeria ou tente em um dispositivo móvel.',
+  publishIntro: 'Elige cómo compartir contenido con tus fans. Pueden ver y descargar desde su galería en tiempo real.',
 };

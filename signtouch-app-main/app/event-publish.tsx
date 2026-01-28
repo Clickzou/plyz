@@ -261,22 +261,10 @@ export default function EventPublishScreen() {
         </View>
 
         <Text style={styles.sectionTitle}>{t('publishOptions') || 'Publish Options'}</Text>
+        <Text style={styles.introText}>
+          {t('publishIntro') || 'Choose how to share content with your fans. They can view and download from their gallery in real-time.'}
+        </Text>
         <View style={styles.publishOptions}>
-          <TouchableOpacity
-            style={[styles.publishBtn, styles.publishBtnPhoto, (!selectedImage || isPublishing) && styles.publishBtnDisabled]}
-            onPress={() => handlePublish('photo')}
-            disabled={!selectedImage || isPublishing}
-          >
-            {isPublishing ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <ImageIcon size={20} color="#fff" />
-                <Text style={styles.publishBtnText}>{t('publishPhotoOnly') || 'Photo Only'}</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={[styles.publishBtn, styles.publishBtnSigned, (!selectedImage || !selectedSignerId || isPublishing) && styles.publishBtnDisabled]}
             onPress={() => handlePublish('photo_signed')}
@@ -361,6 +349,7 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4 },
   statDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
   sectionTitle: { fontSize: 16, fontWeight: '600', color: '#fff', marginBottom: 12 },
+  introText: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 16, lineHeight: 20 },
   signersScroll: { marginBottom: 20 },
   signersRow: { flexDirection: 'row', gap: 12 },
   signerCard: {

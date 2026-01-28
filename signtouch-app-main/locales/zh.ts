@@ -504,4 +504,5 @@ export default {
   scannerNotOnWeb: 'QR扫描仪在网页上不可用。请手动输入代码。',
   cameraNotAvailable: '相机不可用',
   useMobileOrGallery: '网页上无法使用相机。请使用相册或在移动设备上尝试。',
+  publishIntro: 'Elige cómo compartir contenido con tus fans. Pueden ver y descargar desde su galería en tiempo real.',
 };

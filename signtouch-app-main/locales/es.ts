@@ -504,6 +504,7 @@ export default {
   scannerNotOnWeb: 'El escáner QR no está disponible en la web. Por favor, introduce el código manualmente.',
   cameraNotAvailable: 'Cámara no disponible',
   useMobileOrGallery: 'La cámara no está disponible en la web. Use la galería o pruebe en un dispositivo móvil.',
+  publishIntro: 'Elige cómo compartir contenido con tus fans. Pueden ver y descargar desde su galería en tiempo real.',
 
 
   // Live Sessions

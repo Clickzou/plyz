@@ -504,4 +504,5 @@ export default {
   scannerNotOnWeb: 'QR اسکینر ویب پر دستیاب نہیں ہے۔ براہ کرم کوڈ دستی طور پر درج کریں۔',
   cameraNotAvailable: 'کیمرہ دستیاب نہیں',
   useMobileOrGallery: 'ویب پر کیمرہ دستیاب نہیں ہے۔ براہ کرم گیلری استعمال کریں یا موبائل ڈیوائس پر کوشش کریں۔',
+  publishIntro: 'Elige cómo compartir contenido con tus fans. Pueden ver y descargar desde su galería en tiempo real.',
 };
