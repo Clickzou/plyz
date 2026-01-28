@@ -68,21 +68,29 @@ export default function EventPublishScreen() {
   const viewShotRef = useRef<ViewShot>(null);
   const previewContainerRef = useRef<View>(null);
   const [containerLayout, setContainerLayout] = useState({ width: 0, height: 0 });
+  const lastPanOffset = useRef({ x: 0, y: 0 });
   
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
+        lastPanOffset.current = { x: 0, y: 0 };
         if (Platform.OS !== 'web') {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
       },
       onPanResponderMove: (_, gestureState) => {
-        setSignaturePosition(prev => ({
-          x: prev.x + gestureState.dx * 0.5,
-          y: prev.y + gestureState.dy * 0.5,
-        }));
+        const deltaX = gestureState.dx - lastPanOffset.current.x;
+        const deltaY = gestureState.dy - lastPanOffset.current.y;
+        lastPanOffset.current = { x: gestureState.dx, y: gestureState.dy };
+        
+        setSignaturePosition(prev => {
+          const maxOffset = 120;
+          const newX = Math.max(-maxOffset, Math.min(maxOffset, prev.x + deltaX));
+          const newY = Math.max(-maxOffset, Math.min(maxOffset, prev.y + deltaY));
+          return { x: newX, y: newY };
+        });
       },
     })
   ).current;
