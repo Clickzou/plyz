@@ -138,23 +138,63 @@ export default function EventPublishScreen() {
   };
 
   const captureComposite = async (): Promise<string> => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx || !selectedImage) throw new Error('Canvas not available');
+        
+        const img = new (window as any).Image() as HTMLImageElement;
+        img.crossOrigin = 'anonymous';
+        
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error('Image load failed'));
+          img.src = selectedImage;
+        });
+        
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        
+        if (selectedSigner?.signature_url) {
+          const sigImg = new (window as any).Image() as HTMLImageElement;
+          sigImg.crossOrigin = 'anonymous';
+          
+          await new Promise<void>((resolve, reject) => {
+            sigImg.onload = () => resolve();
+            sigImg.onerror = () => reject(new Error('Signature load failed'));
+            sigImg.src = selectedSigner.signature_url!;
+          });
+          
+          const sigWidth = 150 * signatureScale;
+          const sigHeight = (sigImg.height / sigImg.width) * sigWidth;
+          const sigX = (canvas.width / 2) + signaturePosition.x - (sigWidth / 2);
+          const sigY = (canvas.height / 2) + signaturePosition.y - (sigHeight / 2);
+          
+          ctx.save();
+          ctx.translate(sigX + sigWidth / 2, sigY + sigHeight / 2);
+          ctx.rotate((signatureRotation * Math.PI) / 180);
+          ctx.drawImage(sigImg, -sigWidth / 2, -sigHeight / 2, sigWidth, sigHeight);
+          ctx.restore();
+        }
+        
+        return canvas.toDataURL('image/jpeg', 0.9);
+      } catch (e) {
+        console.error('Web capture failed:', e);
+        return selectedImage || '';
+      }
+    }
+    
     if (viewShotRef.current) {
       try {
         const uri = await (viewShotRef.current as any).capture();
         if (uri) return uri;
       } catch (e) {
         console.error('Capture failed:', e);
-        if (Platform.OS === 'web') {
-          Alert.alert(
-            t('error') || 'Error',
-            'Image capture is not fully supported on web. Please use the mobile app for best results.'
-          );
-          throw new Error('Web capture not supported');
-        }
       }
     }
-    if (selectedImage) return selectedImage;
-    throw new Error('No image to capture');
+    return selectedImage || '';
   };
 
   const pickImage = async () => {
