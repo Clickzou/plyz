@@ -25,7 +25,7 @@ export default function AccountModal({
       <View style={styles.overlay}>
         <View style={styles.container}>
           <View style={styles.iconContainer}>
-            <User size={48} color="#3b82f6" />
+            <User size={48} color="#22c55e" />
           </View>
 
           <Text style={styles.title}>
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
     width: '100%',
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#22c55e',
     paddingVertical: 16,
     borderRadius: 14,
     marginBottom: 12,
