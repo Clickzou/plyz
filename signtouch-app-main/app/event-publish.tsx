@@ -14,7 +14,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Pen, MapPin, Calendar, Music, Trophy, Palette, Star, User } from 'lucide-react-native';
+import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Pen, MapPin, Calendar, Music, Trophy, Palette, Star, User, Send } from 'lucide-react-native';
 import { EventType } from '@/utils/memoriesStorage';
 
 const EVENT_TYPES: { type: EventType; icon: any; color: string; labelKey: string }[] = [
@@ -320,7 +320,7 @@ export default function EventPublishScreen() {
             <ActivityIndicator color="#fff" />
           ) : (
             <>
-              <Pen size={20} color="#fff" />
+              <Send size={20} color="#fff" />
               <Text style={styles.publishBtnText}>
                 {(t as any)('sendDedication') || 'Send Dedication'}
               </Text>
