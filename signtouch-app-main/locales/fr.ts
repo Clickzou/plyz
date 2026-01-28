@@ -662,4 +662,18 @@ export default {
   eventScheduled: 'Événement planifié!',
   startsAt: 'Commence à',
   fanGalleryHint: 'Appuyez pour télécharger. Utilisez l\'icône copier pour créer votre propre photo avec cette signature!',
+
+  // Trial System
+  trialExpired: 'Votre essai gratuit est terminé',
+  chooseSubscription: 'Choisir mon abonnement',
+  freeAppRemaining: 'Votre app gratuite encore',
+  day: 'jour',
+  days: 'jours',
+  subscribeToAccess: 'Abonnez-vous pour continuer à utiliser SignTouch',
+  choosePlan: 'Choisir mon offre',
+  maybeLater: 'Plus tard',
+  createAccountToSave: 'Créer un compte',
+  createAccountSubtitle: 'Sauvegardez vos photos en sécurité et accédez-y depuis n\'importe quel appareil',
+  createAccount: 'Créer un compte',
+  skipForNow: 'Passer pour le moment',
 };

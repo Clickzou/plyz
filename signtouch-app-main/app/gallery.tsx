@@ -28,7 +28,9 @@ type GalleryTab = 'photos' | 'stories';
 import { useAuth } from '@/contexts/AuthContext';
 import AdModal from '@/components/AdModal';
 import SocialShareModal from '@/components/SocialShareModal';
-import { maybeShowSubscriptionOffer } from '@/utils/subscriptionOffer';
+import TrialModal from '@/components/TrialModal';
+import AccountModal from '@/components/AccountModal';
+import { getTrialStatus, hasFirstPhotoBeenSaved } from '@/utils/trialStorage';
 
 const EVENT_TYPE_ICONS: Record<EventType, any> = {
   concert: Music,
@@ -67,6 +69,10 @@ export default function GalleryScreen() {
   const [selectedFilter, setSelectedFilter] = useState<EventType | 'all'>('all');
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedMemories, setSelectedMemories] = useState<Set<string>>(new Set());
+  const [showTrialModal, setShowTrialModal] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [trialDaysRemaining, setTrialDaysRemaining] = useState(7);
+  const [hasCheckedFirstPhoto, setHasCheckedFirstPhoto] = useState(false);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { status } = useSubscription();
@@ -153,13 +159,30 @@ export default function GalleryScreen() {
       loadMemories();
       loadStoriesData();
 
-      // Afficher le modal d'abonnement 1 seconde après l'arrivée sur la galerie
-      const timer = setTimeout(() => {
-        maybeShowSubscriptionOffer();
-      }, 1000);
+      const checkAndShowModals = async () => {
+        if (hasCheckedFirstPhoto) return;
+        
+        const firstPhotoSaved = await hasFirstPhotoBeenSaved();
+        if (!firstPhotoSaved) return;
+        
+        setHasCheckedFirstPhoto(true);
+        
+        if (status === 'premium') return;
+        
+        const trialStatus = await getTrialStatus();
+        setTrialDaysRemaining(trialStatus.daysRemaining);
+        
+        setTimeout(() => {
+          if (!user) {
+            setShowAccountModal(true);
+          } else if (status === 'free') {
+            setShowTrialModal(true);
+          }
+        }, 1000);
+      };
 
-      return () => clearTimeout(timer);
-    }, [])
+      checkAndShowModals();
+    }, [user, status, hasCheckedFirstPhoto])
   );
 
   const openMemory = (memory: Memory) => {
@@ -892,6 +915,26 @@ export default function GalleryScreen() {
         onSave={handleMetadataSave}
         onSkip={handleMetadataSkip}
         initialMetadata={selectionMode ? undefined : selectedMemory?.metadata}
+      />
+
+      <TrialModal
+        visible={showTrialModal}
+        daysRemaining={trialDaysRemaining}
+        isExpired={false}
+        onSubscribe={() => {
+          setShowTrialModal(false);
+          router.push('/subscription');
+        }}
+        onLater={() => setShowTrialModal(false)}
+      />
+
+      <AccountModal
+        visible={showAccountModal}
+        onCreateAccount={() => {
+          setShowAccountModal(false);
+          router.push('/account');
+        }}
+        onSkip={() => setShowAccountModal(false)}
       />
 
       {selectionMode && selectedMemories.size > 0 && (
