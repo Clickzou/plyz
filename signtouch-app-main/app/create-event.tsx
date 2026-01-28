@@ -377,24 +377,6 @@ export default function CreateEventScreen() {
                 {t('eventIntro') || 'Programmez votre événement QR à l\'avance ou lancez-le immédiatement en cochant le bouton Live.'}
               </Text>
 
-              <TouchableOpacity
-                style={[styles.liveToggle, isLive && styles.liveToggleActive]}
-                onPress={() => setIsLive(!isLive)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.liveToggleLeft}>
-                  <View style={[styles.liveIndicator, isLive && styles.liveIndicatorActive]}>
-                    <Text style={styles.liveIndicatorText}>LIVE</Text>
-                  </View>
-                  <Text style={[styles.liveToggleText, isLive && styles.liveToggleTextActive]}>
-                    {t('eventLive') || 'Événement Live'}
-                  </Text>
-                </View>
-                <View style={[styles.toggleSwitch, isLive && styles.toggleSwitchActive]}>
-                  <View style={[styles.toggleKnob, isLive && styles.toggleKnobActive]} />
-                </View>
-              </TouchableOpacity>
-
               <View style={styles.section}>
                 <View style={styles.sectionHeaderRow}>
                   <Text style={styles.sectionTitle}>{t('eventName') || 'Event Name'}</Text>
@@ -450,6 +432,24 @@ export default function CreateEventScreen() {
                   maxLength={100}
                 />
               </View>
+
+              <TouchableOpacity
+                style={[styles.liveToggle, isLive && styles.liveToggleActive]}
+                onPress={() => setIsLive(!isLive)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.liveToggleLeft}>
+                  <View style={[styles.liveIndicator, isLive && styles.liveIndicatorActive]}>
+                    <Text style={styles.liveIndicatorText}>LIVE</Text>
+                  </View>
+                  <Text style={[styles.liveToggleText, isLive && styles.liveToggleTextActive]}>
+                    {t('eventLive') || 'Événement Live'}
+                  </Text>
+                </View>
+                <View style={[styles.toggleSwitch, isLive && styles.toggleSwitchActive]}>
+                  <View style={[styles.toggleKnob, isLive && styles.toggleKnobActive]} />
+                </View>
+              </TouchableOpacity>
 
               {!isLive && (
                 <>
