@@ -631,7 +631,7 @@ export default {
   cameraPermissionNeeded: 'Permission caméra requise',
   requiredField: '(obligatoire)',
   warning: 'Attention',
-  enterNameFirst: 'Veuillez entrer un nom de célébrité avant d'en ajouter une nouvelle',
+  enterNameFirst: 'Veuillez entrer un nom de célébrité avant d\'en ajouter une nouvelle',
   cameraNotAvailable: 'Caméra non disponible',
-  useMobileOrGallery: 'La caméra n'est pas disponible sur le web. Utilisez la galerie ou essayez sur un appareil mobile.',
+  useMobileOrGallery: 'La caméra n\'est pas disponible sur le web. Utilisez la galerie ou essayez sur un appareil mobile.',
 };
