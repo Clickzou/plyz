@@ -90,6 +90,7 @@ export default function CreateEventScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [eventType, setEventType] = useState<EventType>('rencontre');
+  const [isLive, setIsLive] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createdSession, setCreatedSession] = useState<EventSession | null>(null);
   const [createdSigners, setCreatedSigners] = useState<EventSigner[]>([]);
@@ -372,6 +373,28 @@ export default function CreateEventScreen() {
         >
           {step === 'config' && (
             <>
+              <Text style={styles.introText}>
+                {t('eventIntro') || 'Programmez votre événement QR à l\'avance ou lancez-le immédiatement en cochant le bouton Live.'}
+              </Text>
+
+              <TouchableOpacity
+                style={[styles.liveToggle, isLive && styles.liveToggleActive]}
+                onPress={() => setIsLive(!isLive)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.liveToggleLeft}>
+                  <View style={[styles.liveIndicator, isLive && styles.liveIndicatorActive]}>
+                    <Text style={styles.liveIndicatorText}>LIVE</Text>
+                  </View>
+                  <Text style={[styles.liveToggleText, isLive && styles.liveToggleTextActive]}>
+                    {t('eventLive') || 'Événement Live'}
+                  </Text>
+                </View>
+                <View style={[styles.toggleSwitch, isLive && styles.toggleSwitchActive]}>
+                  <View style={[styles.toggleKnob, isLive && styles.toggleKnobActive]} />
+                </View>
+              </TouchableOpacity>
+
               <View style={styles.section}>
                 <View style={styles.sectionHeaderRow}>
                   <Text style={styles.sectionTitle}>{t('eventName') || 'Event Name'}</Text>
@@ -428,38 +451,42 @@ export default function CreateEventScreen() {
                 />
               </View>
 
-              <View style={styles.section}>
-                <View style={styles.sectionHeaderRow}>
-                  <Calendar size={18} color="#22c55e" />
-                  <Text style={styles.sectionTitle}>{t('eventDate') || 'Date'}</Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.datePickerButton}
-                  onPress={() => setShowDatePicker(true)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.datePickerText}>{formatDisplayDate(eventDate)}</Text>
-                  <Calendar size={20} color="#10B981" />
-                </TouchableOpacity>
-              </View>
+              {!isLive && (
+                <>
+                  <View style={styles.section}>
+                    <View style={styles.sectionHeaderRow}>
+                      <Calendar size={18} color="#22c55e" />
+                      <Text style={styles.sectionTitle}>{t('eventDate') || 'Date'}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.datePickerButton}
+                      onPress={() => setShowDatePicker(true)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.datePickerText}>{formatDisplayDate(eventDate)}</Text>
+                      <Calendar size={20} color="#10B981" />
+                    </TouchableOpacity>
+                  </View>
 
-              <View style={styles.section}>
-                <View style={styles.sectionHeaderRow}>
-                  <Clock size={18} color="#10B981" />
-                  <Text style={styles.sectionTitle}>{t('eventTime') || 'Heure'}</Text>
-                </View>
-                <View style={styles.timePickerRow}>
-                  <TextInput
-                    style={styles.timePickerInput}
-                    placeholder="HH:MM"
-                    placeholderTextColor="rgba(255,255,255,0.4)"
-                    value={eventTime}
-                    onChangeText={setEventTime}
-                    keyboardType="numbers-and-punctuation"
-                    maxLength={5}
-                  />
-                </View>
-              </View>
+                  <View style={styles.section}>
+                    <View style={styles.sectionHeaderRow}>
+                      <Clock size={18} color="#10B981" />
+                      <Text style={styles.sectionTitle}>{t('eventTime') || 'Heure'}</Text>
+                    </View>
+                    <View style={styles.timePickerRow}>
+                      <TextInput
+                        style={styles.timePickerInput}
+                        placeholder="HH:MM"
+                        placeholderTextColor="rgba(255,255,255,0.4)"
+                        value={eventTime}
+                        onChangeText={setEventTime}
+                        keyboardType="numbers-and-punctuation"
+                        maxLength={5}
+                      />
+                    </View>
+                  </View>
+                </>
+              )}
 
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>{t('eventType') || 'Event Type'}</Text>
@@ -486,45 +513,54 @@ export default function CreateEventScreen() {
                 </View>
               </View>
 
-              <View style={styles.eventSummaryBox}>
-                <Text style={styles.eventSummaryText}>
-                  {t('eventSummary') || 'Votre événement commence le'}{' '}
-                  <Text style={styles.eventSummaryHighlight}>
-                    {new Date(eventDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+              <View style={[styles.eventSummaryBox, isLive && styles.eventSummaryBoxLive]}>
+                {isLive ? (
+                  <Text style={styles.eventSummaryText}>
+                    {t('liveSummary') || 'Votre événement démarre immédiatement et dure'}{' '}
+                    <Text style={styles.eventSummaryHighlight}>
+                      {selectedDuration >= 60 ? `${selectedDuration / 60}h` : `${selectedDuration} min`}
+                    </Text>
                   </Text>
-                  {eventTime ? (
-                    <>
-                      {' '}{t('at') || 'à'}{' '}
-                      <Text style={styles.eventSummaryHighlight}>{eventTime}</Text>
-                    </>
-                  ) : null}
-                  {' '}{t('andEnds') || 'et se termine le'}{' '}
-                  <Text style={styles.eventSummaryHighlight}>
-                    {(() => {
-                      const startDate = new Date(eventDate);
-                      if (eventTime) {
-                        const [h, m] = eventTime.split(':').map(Number);
-                        startDate.setHours(h, m, 0, 0);
-                      }
-                      const endDate = new Date(startDate.getTime() + selectedDuration * 60 * 1000);
-                      return endDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
-                    })()}
+                ) : (
+                  <Text style={styles.eventSummaryText}>
+                    {t('eventSummary') || 'Votre événement commence le'}{' '}
+                    <Text style={styles.eventSummaryHighlight}>
+                      {new Date(eventDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+                    </Text>
+                    {eventTime ? (
+                      <>
+                        {' '}{t('at') || 'à'}{' '}
+                        <Text style={styles.eventSummaryHighlight}>{eventTime}</Text>
+                      </>
+                    ) : null}
+                    {' '}{t('andEnds') || 'et se termine le'}{' '}
+                    <Text style={styles.eventSummaryHighlight}>
+                      {(() => {
+                        const startDate = new Date(eventDate);
+                        if (eventTime) {
+                          const [h, m] = eventTime.split(':').map(Number);
+                          startDate.setHours(h, m, 0, 0);
+                        }
+                        const endDate = new Date(startDate.getTime() + selectedDuration * 60 * 1000);
+                        return endDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+                      })()}
+                    </Text>
+                    {' '}{t('at') || 'à'}{' '}
+                    <Text style={styles.eventSummaryHighlight}>
+                      {(() => {
+                        const startDate = new Date(eventDate);
+                        if (eventTime) {
+                          const [h, m] = eventTime.split(':').map(Number);
+                          startDate.setHours(h, m, 0, 0);
+                        } else {
+                          startDate.setHours(new Date().getHours(), new Date().getMinutes(), 0, 0);
+                        }
+                        const endDate = new Date(startDate.getTime() + selectedDuration * 60 * 1000);
+                        return endDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                      })()}
+                    </Text>
                   </Text>
-                  {' '}{t('at') || 'à'}{' '}
-                  <Text style={styles.eventSummaryHighlight}>
-                    {(() => {
-                      const startDate = new Date(eventDate);
-                      if (eventTime) {
-                        const [h, m] = eventTime.split(':').map(Number);
-                        startDate.setHours(h, m, 0, 0);
-                      } else {
-                        startDate.setHours(new Date().getHours(), new Date().getMinutes(), 0, 0);
-                      }
-                      const endDate = new Date(startDate.getTime() + selectedDuration * 60 * 1000);
-                      return endDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                    })()}
-                  </Text>
-                </Text>
+                )}
               </View>
 
               <TouchableOpacity
@@ -896,6 +932,80 @@ const styles = StyleSheet.create({
   eventSummaryHighlight: {
     color: '#10B981',
     fontWeight: '600',
+  },
+  eventSummaryBoxLive: {
+    backgroundColor: 'rgba(239,68,68,0.1)',
+    borderColor: 'rgba(239,68,68,0.3)',
+  },
+  introText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  liveToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  liveToggleActive: {
+    backgroundColor: 'rgba(239,68,68,0.15)',
+    borderColor: 'rgba(239,68,68,0.4)',
+  },
+  liveToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  liveIndicator: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  liveIndicatorActive: {
+    backgroundColor: '#ef4444',
+  },
+  liveIndicatorText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#ffffff',
+    letterSpacing: 1,
+  },
+  liveToggleText: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.6)',
+    fontWeight: '500',
+  },
+  liveToggleTextActive: {
+    color: '#ef4444',
+  },
+  toggleSwitch: {
+    width: 50,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    padding: 2,
+  },
+  toggleSwitchActive: {
+    backgroundColor: '#ef4444',
+  },
+  toggleKnob: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+  },
+  toggleKnobActive: {
+    alignSelf: 'flex-end',
   },
   signerTabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
   signerTab: {
