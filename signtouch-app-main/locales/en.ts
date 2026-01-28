@@ -637,4 +637,6 @@ export default {
   requiredField: '(required)',
   warning: 'Warning',
   enterNameFirst: 'Please enter a celebrity name before adding a new one',
+  cameraNotAvailable: 'Camera not available',
+  useMobileOrGallery: 'Camera is not available on web. Please use the gallery or try on a mobile device.',
 };

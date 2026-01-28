@@ -477,4 +477,6 @@ export default {
   fanMode: 'Sono un Fan',
   notAvailable: 'Non disponibile',
   scannerNotOnWeb: 'Lo scanner QR non è disponibile sul web. Inserisci il codice manualmente.',
+  cameraNotAvailable: 'Fotocamera non disponibile',
+  useMobileOrGallery: 'La fotocamera non è disponibile sul web. Usa la galleria o prova su un dispositivo mobile.',
 };

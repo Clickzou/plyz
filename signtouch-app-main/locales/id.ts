@@ -502,4 +502,6 @@ export default {
   fanMode: 'Saya penggemar',
   notAvailable: 'Tidak tersedia',
   scannerNotOnWeb: 'Pemindai QR tidak tersedia di web. Silakan masukkan kode secara manual.',
+  cameraNotAvailable: 'Kamera tidak tersedia',
+  useMobileOrGallery: 'Kamera tidak tersedia di web. Silakan gunakan galeri atau coba di perangkat seluler.',
 };

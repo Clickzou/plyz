@@ -75,6 +75,14 @@ export default function EventPublishScreen() {
   };
 
   const takePhoto = async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert(
+        t('cameraNotAvailable') || 'Camera not available',
+        t('useMobileOrGallery') || 'Camera is not available on web. Please use the gallery or try on a mobile device.'
+      );
+      return;
+    }
+    
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert(t('error') || 'Error', t('cameraPermissionNeeded') || 'Camera permission needed');

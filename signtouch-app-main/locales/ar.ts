@@ -502,4 +502,6 @@ export default {
   fanMode: 'أنا معجب',
   notAvailable: 'غير متاح',
   scannerNotOnWeb: 'ماسح QR غير متاح على الويب. يرجى إدخال الرمز يدوياً.',
+  cameraNotAvailable: 'الكاميرا غير متاحة',
+  useMobileOrGallery: 'الكاميرا غير متاحة على الويب. استخدم المعرض أو جرب على جهاز محمول.',
 };

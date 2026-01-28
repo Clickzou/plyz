@@ -502,4 +502,6 @@ export default {
   fanMode: 'ファンです',
   notAvailable: '利用できません',
   scannerNotOnWeb: 'ウェブではQRスキャナーは利用できません。コードを手動で入力してください。',
+  cameraNotAvailable: 'カメラが利用できません',
+  useMobileOrGallery: 'ウェブではカメラは利用できません。ギャラリーを使用するか、モバイルデバイスでお試しください。',
 };
