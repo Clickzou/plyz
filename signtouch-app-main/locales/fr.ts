@@ -448,6 +448,9 @@ export default {
   eventIntro: 'Programmez votre événement QR à l\'avance ou lancez-le immédiatement en cochant le bouton Live.',
   eventLive: 'Événement Live',
   liveSummary: 'Votre événement démarre immédiatement et dure',
+  eventSummary: 'Votre événement commence le',
+  andEnds: 'et se termine le',
+  at: 'à',
   notebookSaveSuccess: 'Ajouté à votre carnet !',
 
   // Story Mode
