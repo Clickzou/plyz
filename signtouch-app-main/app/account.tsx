@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   debugButtonText: {
-    color: '#fbbf24',
+    color: '#ffffff',
     fontSize: 14,
     fontWeight: '500',
     textAlign: 'center',
