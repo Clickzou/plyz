@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,11 @@ import {
   Platform,
   Modal,
   Alert,
+  TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
-import { Crown, Info, Heart, Share2, Globe, Check, FileText, Shield, LogOut } from 'lucide-react-native';
+import { Crown, Info, Heart, Share2, Globe, Check, FileText, Shield, LogOut, Gift, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import * as Clipboard from 'expo-clipboard';
@@ -19,6 +21,7 @@ import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Language } from '@/locales';
 import { showAccountModal } from '@/utils/postPurchaseAccount';
+import { validatePromoCode, getPromoPremiumStatus } from '@/utils/promoCodeStorage';
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -42,6 +45,43 @@ export default function AccountScreen() {
   const { t, language, setLanguage } = useTranslation();
   const { user, signOut } = useAuth();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showPromoModal, setShowPromoModal] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoMessage, setPromoMessage] = useState<{ text: string; success: boolean } | null>(null);
+  const [promoPremiumExpires, setPromoPremiumExpires] = useState<string | null>(null);
+
+  useEffect(() => {
+    checkPromoPremium();
+  }, []);
+
+  const checkPromoPremium = async () => {
+    const status = await getPromoPremiumStatus();
+    if (status.isActive && status.expiresAt) {
+      setPromoPremiumExpires(status.expiresAt);
+    }
+  };
+
+  const handlePromoSubmit = async () => {
+    if (!promoCode.trim()) return;
+    
+    setPromoLoading(true);
+    setPromoMessage(null);
+    
+    const result = await validatePromoCode(promoCode);
+    
+    setPromoMessage({ text: result.message, success: result.success });
+    setPromoLoading(false);
+    
+    if (result.success && result.expiresAt) {
+      setPromoPremiumExpires(result.expiresAt);
+      setTimeout(() => {
+        setShowPromoModal(false);
+        setPromoCode('');
+        setPromoMessage(null);
+      }, 2000);
+    }
+  };
 
   const handlePress = (action: string) => {
     if (Platform.OS !== 'web') {
@@ -164,6 +204,24 @@ export default function AccountScreen() {
             <Text style={styles.menuText}>{t('mySubscription')}</Text>
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => setShowPromoModal(true)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.menuIcon}>
+              <Gift size={24} color="#f59e0b" strokeWidth={2} />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={styles.menuText}>{t('promoCode') || 'Code promo'}</Text>
+              {promoPremiumExpires && (
+                <Text style={styles.menuSubtextGreen}>
+                  Premium jusqu'au {new Date(promoPremiumExpires).toLocaleDateString()}
+                </Text>
+              )}
+            </View>
+          </TouchableOpacity>
+
           {user && (
             <TouchableOpacity
               style={styles.menuItem}
@@ -251,6 +309,66 @@ export default function AccountScreen() {
           </Text>
         </View>
       </ScrollView>
+
+      <Modal
+        visible={showPromoModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowPromoModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={() => setShowPromoModal(false)}
+          />
+          <View style={styles.promoModalContent}>
+            <TouchableOpacity
+              style={styles.promoCloseBtn}
+              onPress={() => setShowPromoModal(false)}
+            >
+              <X size={24} color="#6b7280" />
+            </TouchableOpacity>
+            
+            <Gift size={48} color="#f59e0b" style={{ marginBottom: 16 }} />
+            <Text style={styles.promoTitle}>{t('promoCode') || 'Code promo'}</Text>
+            <Text style={styles.promoSubtitle}>
+              {t('enterPromoCode') || 'Entrez votre code promotionnel'}
+            </Text>
+            
+            <TextInput
+              style={styles.promoInput}
+              placeholder="XXXXXX"
+              placeholderTextColor="#9ca3af"
+              value={promoCode}
+              onChangeText={setPromoCode}
+              autoCapitalize="characters"
+              maxLength={20}
+            />
+            
+            {promoMessage && (
+              <Text style={[
+                styles.promoMessage,
+                promoMessage.success ? styles.promoMessageSuccess : styles.promoMessageError
+              ]}>
+                {promoMessage.text}
+              </Text>
+            )}
+            
+            <TouchableOpacity
+              style={[styles.promoButton, promoLoading && styles.promoButtonDisabled]}
+              onPress={handlePromoSubmit}
+              disabled={promoLoading}
+            >
+              {promoLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.promoButtonText}>{t('validate') || 'Valider'}</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={showLanguageModal}
@@ -465,5 +583,76 @@ const styles = StyleSheet.create({
     color: '#fbbf24',
     opacity: 0.8,
     lineHeight: 16,
+  },
+  menuSubtextGreen: {
+    fontSize: 12,
+    color: '#10b981',
+    marginTop: 2,
+  },
+  promoModalContent: {
+    width: '85%',
+    maxWidth: 360,
+    backgroundColor: '#1f2937',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    position: 'relative' as const,
+  },
+  promoCloseBtn: {
+    position: 'absolute' as const,
+    top: 12,
+    right: 12,
+    padding: 4,
+  },
+  promoTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  promoSubtitle: {
+    fontSize: 14,
+    color: '#9ca3af',
+    textAlign: 'center' as const,
+    marginBottom: 20,
+  },
+  promoInput: {
+    width: '100%',
+    backgroundColor: '#374151',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center' as const,
+    letterSpacing: 2,
+    marginBottom: 16,
+  },
+  promoMessage: {
+    fontSize: 14,
+    textAlign: 'center' as const,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+  },
+  promoMessageSuccess: {
+    color: '#10b981',
+  },
+  promoMessageError: {
+    color: '#ef4444',
+  },
+  promoButton: {
+    width: '100%',
+    backgroundColor: '#f59e0b',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+  },
+  promoButtonDisabled: {
+    opacity: 0.6,
+  },
+  promoButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });

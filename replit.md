@@ -100,6 +100,14 @@ Preferred communication style: Simple, everyday language.
 - **Utility**: `eventSessionStorage.ts` for session CRUD, asset upload, heartbeat
 - **Dual Mode**: join-event.tsx supports both legacy events and new session system
 
+### Promotional Code System (January 2026)
+- **Influencer Free Trials**: Promotional codes for 30-day free premium access
+- **Database Tables**: `promo_codes`, `promo_code_uses`
+- **Device-based Validation**: Codes can only be used once per device (device ID stored in AsyncStorage)
+- **UI**: Modal on account screen for code entry with validation feedback
+- **Utility**: `promoCodeStorage.ts` for code validation and premium status tracking
+- **i18n**: Translation keys: promoCode, enterPromoCode, promoCodeSuccess, promoCodeInvalid, promoCodeAlreadyUsed
+
 ## External Dependencies
 
 ### Backend Services
