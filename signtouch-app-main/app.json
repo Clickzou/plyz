@@ -29,7 +29,8 @@
         "NSCameraUsageDescription": "SignTouch a besoin d'accéder à votre caméra pour prendre des photos.",
         "NSPhotoLibraryUsageDescription": "SignTouch a besoin d'accéder à votre galerie pour sauvegarder vos photos signées.",
         "NSPhotoLibraryAddUsageDescription": "SignTouch a besoin d'accéder à votre galerie pour sauvegarder vos photos signées."
-      }
+      },
+      "associatedDomains": ["applinks:signtouch.app"]
     },
     "android": {
       "permissions": [
@@ -52,7 +53,21 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#000000"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "signtouch.app",
+              "pathPrefix": "/join"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",

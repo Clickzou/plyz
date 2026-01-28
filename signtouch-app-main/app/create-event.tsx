@@ -298,7 +298,10 @@ export default function CreateEventScreen() {
     return endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const qrValue = createdSession ? `signtouch://event/${createdSession.join_code}` : '';
+  const WEB_BASE_URL = 'https://signtouch.app';
+  const qrValue = createdSession 
+    ? `${WEB_BASE_URL}/join?code=${createdSession.join_code}` 
+    : '';
   const activeSigner = signers[activeSignerIndex];
 
   return (
