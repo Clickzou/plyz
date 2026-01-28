@@ -635,4 +635,6 @@ export default {
   cameraNotAvailable: 'Caméra non disponible',
   useMobileOrGallery: 'La caméra n\'est pas disponible sur le web. Utilisez la galerie ou essayez sur un appareil mobile.',
   publishIntro: 'Choisissez comment partager avec vos fans. Ils pourront voir et télécharger depuis leur galerie en temps réel.',
+  eventDetails: 'Détails de l'événement',
+  metadataHint: 'Ces infos seront pré-remplies pour les fans quand ils enregistrent la photo.',
 };

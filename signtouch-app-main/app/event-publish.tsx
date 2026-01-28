@@ -9,11 +9,24 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Pen } from 'lucide-react-native';
+import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Pen, MapPin, Calendar, Music, Trophy, Palette, Star, User } from 'lucide-react-native';
+import { EventType } from '@/utils/memoriesStorage';
+
+const EVENT_TYPES: { type: EventType; icon: any; color: string; labelKey: string }[] = [
+  { type: 'concert', icon: Music, color: '#8b5cf6', labelKey: 'eventConcert' },
+  { type: 'match', icon: Trophy, color: '#22c55e', labelKey: 'eventMatch' },
+  { type: 'expo', icon: Palette, color: '#f59e0b', labelKey: 'eventExpo' },
+  { type: 'salon', icon: Users, color: '#3b82f6', labelKey: 'eventSalon' },
+  { type: 'dedicace', icon: Star, color: '#ec4899', labelKey: 'eventDedicace' },
+  { type: 'rencontre', icon: User, color: '#14b8a6', labelKey: 'eventRencontre' },
+  { type: 'amis', icon: Users, color: '#f472b6', labelKey: 'eventAmis' },
+  { type: 'autre', icon: Calendar, color: '#6b7280', labelKey: 'eventAutre' },
+];
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -40,6 +53,9 @@ export default function EventPublishScreen() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
   const [publishedCount, setPublishedCount] = useState(0);
+  const [eventLocation, setEventLocation] = useState('');
+  const [eventDate, setEventDate] = useState(new Date().toISOString().split('T')[0]);
+  const [eventType, setEventType] = useState<EventType>('rencontre');
 
   useEffect(() => {
     const loadData = async () => {
@@ -137,38 +153,6 @@ export default function EventPublishScreen() {
     }
   };
 
-  const publishSignatureOnly = async () => {
-    if (!selectedSignerId) {
-      Alert.alert(t('error') || 'Error', t('selectSignerFirst') || 'Select a signer first');
-      return;
-    }
-
-    const signer = signers.find((s) => s.id === selectedSignerId);
-    if (!signer?.signature_url) {
-      Alert.alert(t('error') || 'Error', t('noSignatureAvailable') || 'No signature available');
-      return;
-    }
-
-    setIsPublishing(true);
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-
-    try {
-      await publishEventAsset(sessionId, signer.signature_url, 'signature', selectedSignerId);
-      setPublishedCount((prev) => prev + 1);
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-      Alert.alert(t('done') || 'Done', t('signaturePublished') || 'Signature published!');
-    } catch (error) {
-      console.error('Publish error:', error);
-      Alert.alert(t('error') || 'Error', t('publishFailed') || 'Failed to publish');
-    } finally {
-      setIsPublishing(false);
-    }
-  };
-
   const selectedSigner = signers.find((s) => s.id === selectedSignerId);
 
   return (
@@ -236,6 +220,66 @@ export default function EventPublishScreen() {
           </View>
         </ScrollView>
 
+        <Text style={styles.sectionTitle}>{(t as any)('eventDetails') || 'Event Details'}</Text>
+        <Text style={styles.metadataHint}>
+          {(t as any)('metadataHint') || 'This info will be pre-filled for fans when they save the photo.'}
+        </Text>
+        
+        <View style={styles.metadataSection}>
+          <View style={styles.inputGroup}>
+            <View style={styles.labelRow}>
+              <MapPin size={18} color="#ec4899" />
+              <Text style={styles.inputLabel}>{t('eventLocation') || 'Location'}</Text>
+            </View>
+            <TextInput
+              style={styles.metadataInput}
+              value={eventLocation}
+              onChangeText={setEventLocation}
+              placeholder={t('eventLocationPlaceholder') || 'Ex: Stade de France'}
+              placeholderTextColor="#6b7280"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <View style={styles.labelRow}>
+              <Calendar size={18} color="#22c55e" />
+              <Text style={styles.inputLabel}>{t('eventDate') || 'Date'}</Text>
+            </View>
+            <TextInput
+              style={styles.metadataInput}
+              value={eventDate}
+              onChangeText={setEventDate}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor="#6b7280"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>{t('eventType') || 'Event Type'}</Text>
+            <View style={styles.eventTypesGrid}>
+              {EVENT_TYPES.map((et) => {
+                const IconComponent = et.icon;
+                const isSelected = eventType === et.type;
+                return (
+                  <TouchableOpacity
+                    key={et.type}
+                    style={[
+                      styles.eventTypeChip,
+                      isSelected && { backgroundColor: et.color, borderColor: et.color },
+                    ]}
+                    onPress={() => setEventType(et.type)}
+                  >
+                    <IconComponent size={14} color={isSelected ? '#fff' : et.color} />
+                    <Text style={[styles.eventTypeLabel, isSelected && { color: '#fff' }]}>
+                      {(t as any)(et.labelKey) || et.type}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+
         <Text style={styles.sectionTitle}>{t('selectPhoto') || 'Select Photo'}</Text>
         <View style={styles.photoSection}>
           {selectedImage ? (
@@ -277,24 +321,6 @@ export default function EventPublishScreen() {
                 <Pen size={20} color="#fff" />
                 <Text style={styles.publishBtnText}>
                   {t('photoWithSignature') || 'Photo + Signature'}
-                  {selectedSigner && ` (${selectedSigner.display_name})`}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.publishBtn, styles.publishBtnSignature, (!selectedSignerId || isPublishing) && styles.publishBtnDisabled]}
-            onPress={publishSignatureOnly}
-            disabled={!selectedSignerId || isPublishing}
-          >
-            {isPublishing ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Send size={20} color="#fff" />
-                <Text style={styles.publishBtnText}>
-                  {t('signatureOnly') || 'Signature Only'}
                   {selectedSigner && ` (${selectedSigner.display_name})`}
                 </Text>
               </>
@@ -350,6 +376,34 @@ const styles = StyleSheet.create({
   statDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
   sectionTitle: { fontSize: 16, fontWeight: '600', color: '#fff', marginBottom: 12 },
   introText: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 16, lineHeight: 20 },
+  metadataHint: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 12, fontStyle: 'italic' },
+  metadataSection: { marginBottom: 20 },
+  inputGroup: { marginBottom: 14 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  inputLabel: { fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '500' },
+  metadataInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  eventTypesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
+  eventTypeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  eventTypeLabel: { fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: '500' },
   signersScroll: { marginBottom: 20 },
   signersRow: { flexDirection: 'row', gap: 12 },
   signerCard: {
