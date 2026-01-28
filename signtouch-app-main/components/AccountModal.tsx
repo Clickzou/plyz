@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ActivityIndicator, Platform } from 'react-native';
-import { User, Shield, Mail, ArrowLeft, CheckCircle } from 'lucide-react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { Mail, X, CheckCircle } from 'lucide-react-native';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -17,7 +17,7 @@ export default function AccountModal({
 }: AccountModalProps) {
   const { t, language } = useTranslation();
   const { sendMagicLink } = useAuth();
-  const [step, setStep] = useState<'intro' | 'email' | 'sent'>('intro');
+  const [step, setStep] = useState<'email' | 'sent'>('email');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -46,72 +46,26 @@ export default function AccountModal({
   };
 
   const handleClose = () => {
-    setStep('intro');
+    setStep('email');
     setEmail('');
     setError('');
     onClose();
   };
 
   const handleSkip = () => {
-    setStep('intro');
+    setStep('email');
     setEmail('');
     setError('');
     onSkip();
   };
 
-  const renderIntro = () => (
-    <>
-      <View style={styles.iconContainer}>
-        <User size={48} color="#22c55e" />
-      </View>
-
-      <Text style={styles.title}>
-        {t('createAccountToSave') || 'Créer un compte'}
-      </Text>
-
-      <Text style={styles.subtitle}>
-        {t('createAccountSubtitle') || 'Sauvegardez vos photos en sécurité et accédez-y depuis n\'importe quel appareil'}
-      </Text>
-
-      <View style={styles.benefitsContainer}>
-        <View style={styles.benefitRow}>
-          <Shield size={18} color="#10b981" />
-          <Text style={styles.benefitText}>
-            {t('cloudSync') || 'Synchronisation cloud'}
-          </Text>
-        </View>
-      </View>
-
-      <TouchableOpacity
-        style={styles.createButton}
-        onPress={() => setStep('email')}
-        activeOpacity={0.8}
-      >
-        <Mail size={20} color="#fff" />
-        <Text style={styles.createButtonText}>
-          {t('continueWithEmail') || 'Continuer avec email'}
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.skipButton}
-        onPress={handleSkip}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.skipButtonText}>
-          {t('skipForNow') || 'Passer pour le moment'}
-        </Text>
-      </TouchableOpacity>
-    </>
-  );
-
   const renderEmailForm = () => (
     <>
       <TouchableOpacity 
-        style={styles.backButton}
-        onPress={() => setStep('intro')}
+        style={styles.closeButton}
+        onPress={handleSkip}
       >
-        <ArrowLeft size={24} color="#9ca3af" />
+        <X size={24} color="#9ca3af" />
       </TouchableOpacity>
 
       <View style={styles.iconContainer}>
@@ -119,16 +73,16 @@ export default function AccountModal({
       </View>
 
       <Text style={styles.title}>
-        {t('enterYourEmail') || 'Entrez votre email'}
+        {t('securePhotosTitle') || 'Sécurisez vos photos et votre abonnement'}
       </Text>
 
       <Text style={styles.subtitle}>
-        {t('magicLinkExplanation') || 'Nous vous enverrons un lien magique pour vous connecter instantanément'}
+        {t('securePhotosSubtitle') || 'Connectez-vous pour retrouver vos dédicaces et conserver votre abonnement si vous changez d\'appareil.'}
       </Text>
 
       <TextInput
         style={styles.input}
-        placeholder={t('emailPlaceholder') || 'votre@email.com'}
+        placeholder={t('emailPlaceholder') || 'Votre adresse email'}
         placeholderTextColor="#6b7280"
         value={email}
         onChangeText={setEmail}
@@ -143,7 +97,7 @@ export default function AccountModal({
       ) : null}
 
       <TouchableOpacity
-        style={[styles.createButton, loading && styles.buttonDisabled]}
+        style={[styles.sendButton, loading && styles.buttonDisabled]}
         onPress={handleSendLink}
         activeOpacity={0.8}
         disabled={loading}
@@ -151,22 +105,26 @@ export default function AccountModal({
         {loading ? (
           <ActivityIndicator color="#fff" size="small" />
         ) : (
-          <>
-            <Mail size={20} color="#fff" />
-            <Text style={styles.createButtonText}>
-              {t('sendMagicLink') || 'Envoyer le lien'}
-            </Text>
-          </>
+          <Text style={styles.sendButtonText}>
+            {t('receiveConnectionLink') || 'Recevoir un lien de connexion'}
+          </Text>
         )}
       </TouchableOpacity>
 
+      <Text style={styles.noPasswordText}>
+        {t('noPasswordRequired') || 'Aucun mot de passe requis'}
+      </Text>
+      <Text style={styles.secureEmailText}>
+        {t('secureEmailExplanation') || 'Vous recevrez un lien sécurisé par email.'}
+      </Text>
+
       <TouchableOpacity
-        style={styles.skipButton}
+        style={styles.laterButton}
         onPress={handleSkip}
         activeOpacity={0.7}
       >
-        <Text style={styles.skipButtonText}>
-          {t('skipForNow') || 'Passer pour le moment'}
+        <Text style={styles.laterButtonText}>
+          {t('later') || 'Plus tard'}
         </Text>
       </TouchableOpacity>
     </>
@@ -174,6 +132,13 @@ export default function AccountModal({
 
   const renderSent = () => (
     <>
+      <TouchableOpacity 
+        style={styles.closeButton}
+        onPress={handleClose}
+      >
+        <X size={24} color="#9ca3af" />
+      </TouchableOpacity>
+
       <View style={[styles.iconContainer, styles.successIcon]}>
         <CheckCircle size={48} color="#22c55e" />
       </View>
@@ -187,11 +152,11 @@ export default function AccountModal({
       </Text>
 
       <TouchableOpacity
-        style={styles.createButton}
+        style={styles.sendButton}
         onPress={handleClose}
         activeOpacity={0.8}
       >
-        <Text style={styles.createButtonText}>
+        <Text style={styles.sendButtonText}>
           {t('understood') || 'Compris'}
         </Text>
       </TouchableOpacity>
@@ -207,7 +172,6 @@ export default function AccountModal({
     >
       <View style={styles.overlay}>
         <View style={styles.container}>
-          {step === 'intro' && renderIntro()}
           {step === 'email' && renderEmailForm()}
           {step === 'sent' && renderSent()}
         </View>
@@ -230,13 +194,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#1f2937',
     borderRadius: 24,
     padding: 28,
+    paddingTop: 48,
     alignItems: 'center',
   },
-  backButton: {
+  closeButton: {
     position: 'absolute',
     top: 16,
-    left: 16,
-    padding: 8,
+    right: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#374151',
+    justifyContent: 'center',
+    alignItems: 'center',
     zIndex: 10,
   },
   iconContainer: {
@@ -246,7 +216,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(34, 197, 94, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   successIcon: {
     backgroundColor: 'rgba(34, 197, 94, 0.25)',
@@ -257,27 +227,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     marginBottom: 12,
+    lineHeight: 28,
   },
   subtitle: {
     fontSize: 15,
     color: '#9ca3af',
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: 20,
-  },
-  benefitsContainer: {
-    width: '100%',
     marginBottom: 24,
-  },
-  benefitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 8,
-  },
-  benefitText: {
-    fontSize: 14,
-    color: '#d1d5db',
   },
   input: {
     width: '100%',
@@ -297,31 +254,42 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: 'center',
   },
-  createButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
+  sendButton: {
     width: '100%',
     backgroundColor: '#22c55e',
     paddingVertical: 16,
     borderRadius: 14,
-    marginBottom: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   buttonDisabled: {
     opacity: 0.7,
   },
-  createButtonText: {
+  sendButtonText: {
     fontSize: 17,
     fontWeight: '600',
     color: '#fff',
   },
-  skipButton: {
+  noPasswordText: {
+    fontSize: 14,
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  secureEmailText: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  laterButton: {
     paddingVertical: 12,
     paddingHorizontal: 20,
   },
-  skipButtonText: {
+  laterButtonText: {
     fontSize: 15,
     color: '#9ca3af',
+    fontWeight: '500',
   },
 });

@@ -681,4 +681,10 @@ export default {
   magicLinkSent: 'We sent a login link. Click the link to sign in.',
   understood: 'Got it',
   invalidEmail: 'Invalid email address',
+  securePhotosTitle: 'Secure your photos and subscription',
+  securePhotosSubtitle: 'Sign in to recover your autographs and keep your subscription if you change devices.',
+  receiveConnectionLink: 'Get a login link',
+  noPasswordRequired: 'No password required',
+  secureEmailExplanation: 'You will receive a secure link by email.',
+  later: 'Later',
 };

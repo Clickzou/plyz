@@ -683,4 +683,10 @@ export default {
   magicLinkSent: 'Nous avons envoyé un lien de connexion. Cliquez sur le lien pour vous connecter.',
   understood: 'Compris',
   invalidEmail: 'Adresse email invalide',
+  securePhotosTitle: 'Sécurisez vos photos et votre abonnement',
+  securePhotosSubtitle: 'Connectez-vous pour retrouver vos dédicaces et conserver votre abonnement si vous changez d\'appareil.',
+  receiveConnectionLink: 'Recevoir un lien de connexion',
+  noPasswordRequired: 'Aucun mot de passe requis',
+  secureEmailExplanation: 'Vous recevrez un lien sécurisé par email.',
+  later: 'Plus tard',
 };
