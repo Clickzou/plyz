@@ -76,10 +76,13 @@ export default function EventPublishScreen() {
 
   const takePhoto = async () => {
     if (Platform.OS === 'web') {
-      Alert.alert(
-        t('cameraNotAvailable') || 'Camera not available',
-        t('useMobileOrGallery') || 'Camera is not available on web. Please use the gallery or try on a mobile device.'
-      );
+      const message = (t('cameraNotAvailable') || 'Camera not available') + '\n\n' + 
+        (t('useMobileOrGallery') || 'Camera is not available on web. Please use the gallery or try on a mobile device.');
+      if (typeof window !== 'undefined') {
+        window.alert(message);
+      } else {
+        Alert.alert(t('cameraNotAvailable') || 'Camera not available', t('useMobileOrGallery') || 'Camera is not available on web.');
+      }
       return;
     }
     
