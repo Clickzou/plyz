@@ -75,10 +75,10 @@ const saveTrialToServer = async (userId: string | null, trialStartDate: string):
       });
     
     if (error) {
-      console.error('Error saving trial to server:', error);
+      // Silently ignore - server sync is optional, local storage is primary
     }
   } catch (error) {
-    console.error('Error saving trial to server:', error);
+    // Silently ignore - server sync is optional, local storage is primary
   }
 };
 
