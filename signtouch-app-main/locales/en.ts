@@ -672,4 +672,13 @@ export default {
   createAccountSubtitle: 'Save your photos securely and access them from any device',
   skipForNow: 'Skip for now',
   cloudSync: 'Cloud sync',
+  continueWithEmail: 'Continue with email',
+  enterYourEmail: 'Enter your email',
+  magicLinkExplanation: 'We will send you a magic link to sign in instantly',
+  emailPlaceholder: 'your@email.com',
+  sendMagicLink: 'Send magic link',
+  checkYourEmail: 'Check your email',
+  magicLinkSent: 'We sent a login link. Click the link to sign in.',
+  understood: 'Got it',
+  invalidEmail: 'Invalid email address',
 };

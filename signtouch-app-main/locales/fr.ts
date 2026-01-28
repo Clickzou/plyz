@@ -674,4 +674,13 @@ export default {
   createAccountSubtitle: 'Sauvegardez vos photos en sécurité et accédez-y depuis n\'importe quel appareil',
   skipForNow: 'Passer pour le moment',
   cloudSync: 'Synchronisation cloud',
+  continueWithEmail: 'Continuer avec email',
+  enterYourEmail: 'Entrez votre email',
+  magicLinkExplanation: 'Nous vous enverrons un lien magique pour vous connecter instantanément',
+  emailPlaceholder: 'votre@email.com',
+  sendMagicLink: 'Envoyer le lien',
+  checkYourEmail: 'Vérifiez votre email',
+  magicLinkSent: 'Nous avons envoyé un lien de connexion. Cliquez sur le lien pour vous connecter.',
+  understood: 'Compris',
+  invalidEmail: 'Adresse email invalide',
 };

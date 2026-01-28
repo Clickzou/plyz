@@ -937,10 +937,7 @@ export default function GalleryScreen() {
 
       <AccountModal
         visible={showAccountModal}
-        onCreateAccount={() => {
-          setShowAccountModal(false);
-          router.push('/account');
-        }}
+        onClose={() => setShowAccountModal(false)}
         onSkip={() => setShowAccountModal(false)}
       />
 
