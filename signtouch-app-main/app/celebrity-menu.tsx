@@ -46,7 +46,7 @@ export default function CelebrityMenuScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <LinearGradient
-        colors={['#10B981', '#059669']}
+        colors={['#188661', '#188661']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -55,7 +55,7 @@ export default function CelebrityMenuScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <ArrowLeft size={24} color="#fff" />
+          <ArrowLeft size={24} color="#188661" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('celebrity')}</Text>
         <View style={{ width: 40 }} />
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
   },
