@@ -167,7 +167,7 @@ export default function GalleryScreen() {
         
         setHasCheckedFirstPhoto(true);
         
-        if (status === 'premium') return;
+        if (status === 'paid') return;
         
         const trialStatus = await getTrialStatus();
         setTrialDaysRemaining(trialStatus.daysRemaining);

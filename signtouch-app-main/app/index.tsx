@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, useWindowDimensions, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,6 +15,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import BottomNav from '@/components/BottomNav';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import TrialModal from '@/components/TrialModal';
+import { getTrialStatus, hasFirstPhotoBeenSaved } from '@/utils/trialStorage';
 
 function SignatureImage({ delay }: { delay: number }) {
   const clipWidth = useSharedValue(400);
@@ -126,7 +129,11 @@ export default function HomeScreen() {
   const router = useRouter();
   const { width, height } = useWindowDimensions();
   const { t } = useLanguage();
+  const { status } = useSubscription();
   const isTablet = width >= 768;
+  
+  const [showTrialExpiredModal, setShowTrialExpiredModal] = useState(false);
+  const [isTrialExpired, setIsTrialExpired] = useState(false);
 
   const titleOpacity = useSharedValue(1);
   const titleTranslateY = useSharedValue(0);
@@ -184,6 +191,23 @@ export default function HomeScreen() {
       )
     );
   }, []);
+
+  useEffect(() => {
+    const checkTrialExpired = async () => {
+      if (status === 'paid') return;
+      
+      const firstPhotoSaved = await hasFirstPhotoBeenSaved();
+      if (!firstPhotoSaved) return;
+      
+      const trialStatus = await getTrialStatus();
+      if (trialStatus.isExpired) {
+        setIsTrialExpired(true);
+        setShowTrialExpiredModal(true);
+      }
+    };
+
+    checkTrialExpired();
+  }, [status]);
 
   const titleStyle = useAnimatedStyle(() => ({
     opacity: titleOpacity.value,
@@ -264,6 +288,16 @@ export default function HomeScreen() {
         </View>
       </LinearGradient>
       <BottomNav />
+      
+      <TrialModal
+        visible={showTrialExpiredModal}
+        daysRemaining={0}
+        isExpired={true}
+        onSubscribe={() => {
+          setShowTrialExpiredModal(false);
+          router.push('/subscription');
+        }}
+      />
     </View>
   );
 }

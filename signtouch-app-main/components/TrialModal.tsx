@@ -45,7 +45,7 @@ export default function TrialModal({
               <Text style={styles.counterText}>
                 {t('freeAppRemaining') || 'Votre app gratuite encore'}{' '}
                 <Text style={styles.counterDays}>{daysRemaining}</Text>{' '}
-                {daysRemaining === 1 ? (t('day') || 'jour') : (t('days') || 'jours')}
+                {daysRemaining === 1 ? (t('trialDay') || 'jour') : (t('trialDays') || 'jours')}
               </Text>
             </View>
           )}
