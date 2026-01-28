@@ -144,10 +144,14 @@ export const getTrialStatus = async (userId: string | null = null): Promise<Tria
 };
 
 export const markFirstPhotoSaved = async (userId: string | null = null): Promise<void> => {
+  console.log('[Trial] markFirstPhotoSaved called with userId:', userId);
   const existing = await AsyncStorage.getItem(FIRST_PHOTO_SAVED_KEY);
+  console.log('[Trial] Existing value:', existing);
   if (!existing) {
     await AsyncStorage.setItem(FIRST_PHOTO_SAVED_KEY, 'true');
+    console.log('[Trial] Set FIRST_PHOTO_SAVED_KEY to true');
     await startTrial(userId);
+    console.log('[Trial] Trial started');
   }
 };
 
