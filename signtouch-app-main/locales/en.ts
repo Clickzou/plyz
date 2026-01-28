@@ -443,6 +443,7 @@ export default {
   eventLocation: 'Location',
   eventLocationPlaceholder: 'E.g: Wembley Stadium',
   eventDate: 'Date',
+  eventTime: 'Time',
   eventType: 'Event type',
   notebookSaveSuccess: 'Added to your notebook!',
 

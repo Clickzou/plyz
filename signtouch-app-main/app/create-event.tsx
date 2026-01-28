@@ -87,7 +87,6 @@ export default function CreateEventScreen() {
   const [eventLocation, setEventLocation] = useState('');
   const [eventDate, setEventDate] = useState(new Date().toISOString().split('T')[0]);
   const [eventTime, setEventTime] = useState('');
-  const [isScheduled, setIsScheduled] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [eventType, setEventType] = useState<EventType>('rencontre');
@@ -210,7 +209,7 @@ export default function CreateEventScreen() {
   };
 
   const getScheduledStartDate = (): Date | undefined => {
-    if (!isScheduled || !eventTime) return undefined;
+    if (!eventTime) return undefined;
     const [hours, minutes] = eventTime.split(':').map(Number);
     const startDate = new Date(eventDate);
     startDate.setHours(hours, minutes, 0, 0);
@@ -221,11 +220,6 @@ export default function CreateEventScreen() {
     const validSigners = signers.filter(s => s.name.trim() && s.paths.length > 0);
     if (validSigners.length === 0) {
       Alert.alert(t('error') || 'Error', t('atLeastOneSigner') || 'Add at least one signature');
-      return;
-    }
-
-    if (isScheduled && !eventTime) {
-      Alert.alert(t('error') || 'Error', (t as any)('selectStartTime') || 'Please select a start time');
       return;
     }
 
@@ -453,39 +447,21 @@ export default function CreateEventScreen() {
               </View>
 
               <View style={styles.section}>
-                <TouchableOpacity
-                  style={styles.scheduleToggle}
-                  onPress={() => setIsScheduled(!isScheduled)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.scheduleToggleLeft}>
-                    <Clock size={18} color={isScheduled ? '#10B981' : 'rgba(255,255,255,0.5)'} />
-                    <Text style={[styles.scheduleToggleText, isScheduled && styles.scheduleToggleTextActive]}>
-                      {(t as any)('scheduleForLater') || 'Schedule for later'}
-                    </Text>
-                  </View>
-                  <View style={[styles.toggleSwitch, isScheduled && styles.toggleSwitchActive]}>
-                    <View style={[styles.toggleKnob, isScheduled && styles.toggleKnobActive]} />
-                  </View>
-                </TouchableOpacity>
-                
-                {isScheduled && (
-                  <View style={styles.timeInputContainer}>
-                    <Clock size={16} color="#10B981" />
-                    <TextInput
-                      style={styles.timeInput}
-                      placeholder="HH:MM"
-                      placeholderTextColor="rgba(255,255,255,0.4)"
-                      value={eventTime}
-                      onChangeText={setEventTime}
-                      keyboardType="numbers-and-punctuation"
-                      maxLength={5}
-                    />
-                    <Text style={styles.timeHint}>
-                      {(t as any)('startTimeHint') || 'Event will start at this time'}
-                    </Text>
-                  </View>
-                )}
+                <View style={styles.sectionHeaderRow}>
+                  <Clock size={18} color="#10B981" />
+                  <Text style={styles.sectionTitle}>{t('eventTime') || 'Heure'}</Text>
+                </View>
+                <View style={styles.timePickerRow}>
+                  <TextInput
+                    style={styles.timePickerInput}
+                    placeholder="HH:MM"
+                    placeholderTextColor="rgba(255,255,255,0.4)"
+                    value={eventTime}
+                    onChangeText={setEventTime}
+                    keyboardType="numbers-and-punctuation"
+                    maxLength={5}
+                  />
+                </View>
               </View>
 
               <View style={styles.section}>
@@ -1022,6 +998,23 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     color: 'rgba(255,255,255,0.5)',
+  },
+  timePickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timePickerInput: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 18,
+    color: '#ffffff',
+    textAlign: 'center',
+    fontWeight: '600',
+    letterSpacing: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
   },
   scheduledIcon: {
     backgroundColor: 'rgba(245,158,11,0.2)',

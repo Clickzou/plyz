@@ -443,6 +443,7 @@ export default {
   eventLocation: 'Lieu',
   eventLocationPlaceholder: 'Ex: Stade de France',
   eventDate: 'Date',
+  eventTime: 'Heure',
   eventType: 'Type d\'événement',
   notebookSaveSuccess: 'Ajouté à votre carnet !',
 
