@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import {
-  ArrowLeft,
   Crown,
   Check,
   Gift,
@@ -60,20 +59,14 @@ export default function SubscriptionScreen() {
     console.log('Subscribe to:', plan);
     await setStatus('paid');
 
-    router.back();
+    // Rediriger vers l'accueil après abonnement
+    router.replace('/');
   };
 
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <ArrowLeft size={24} color="#ffffff" strokeWidth={2} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('subscriptionTitle')}</Text>
+        <Text style={styles.headerTitleCentered}>{t('subscriptionTitle')}</Text>
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
@@ -289,6 +282,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#ffffff',
     marginLeft: 15,
+  },
+  headerTitleCentered: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#ffffff',
+    textAlign: 'center',
+    flex: 1,
   },
   content: {
     flex: 1,

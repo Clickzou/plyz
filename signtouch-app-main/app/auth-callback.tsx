@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/utils/supabase';
 
 export default function AuthCallbackScreen() {
-  const { user, getPostAuthRedirect, clearPostAuthRedirect } = useAuth();
+  const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(true);
   const params = useLocalSearchParams<{ token_hash?: string; type?: string }>();
@@ -35,25 +35,12 @@ export default function AuthCallbackScreen() {
 
           // Attendre un court instant pour que la session soit établie
           setTimeout(async () => {
-            const redirectPath = await getPostAuthRedirect();
-            await clearPostAuthRedirect();
-
-            if (redirectPath) {
-              router.replace(redirectPath as any);
-            } else {
-              router.replace('/account');
-            }
+            // Rediriger vers l'écran d'abonnement pour choisir un plan
+            router.replace('/subscription');
           }, 1000);
         } else if (user) {
-          // Pas de token mais utilisateur connecté
-          const redirectPath = await getPostAuthRedirect();
-          await clearPostAuthRedirect();
-
-          if (redirectPath) {
-            router.replace(redirectPath as any);
-          } else {
-            router.replace('/account');
-          }
+          // Pas de token mais utilisateur connecté - aller à l'abonnement
+          router.replace('/subscription');
         } else {
           setError('Lien invalide ou expiré');
           setVerifying(false);
