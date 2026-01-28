@@ -97,13 +97,25 @@ export const uploadSessionImage = async (
   try {
     const timestamp = Date.now();
     const isSvg = imageUri.startsWith('data:image/svg+xml');
-    const extension = isSvg ? 'svg' : 'png';
-    const contentType = isSvg ? 'image/svg+xml' : 'image/png';
+    const isJpeg = imageUri.startsWith('data:image/jpeg');
+    const isBase64 = imageUri.startsWith('data:');
+    
+    let extension = 'png';
+    let contentType = 'image/png';
+    
+    if (isSvg) {
+      extension = 'svg';
+      contentType = 'image/svg+xml';
+    } else if (isJpeg) {
+      extension = 'jpg';
+      contentType = 'image/jpeg';
+    }
+    
     const fileName = `sessions/${eventId}/${type}_${timestamp}.${extension}`;
 
     let fileData: Uint8Array | ArrayBuffer;
 
-    if (isSvg) {
+    if (isBase64) {
       const base64Data = imageUri.split(',')[1];
       fileData = base64ToUint8Array(base64Data);
     } else if (Platform.OS === 'web') {
@@ -116,11 +128,18 @@ export const uploadSessionImage = async (
       fileData = base64ToUint8Array(base64);
     }
 
+    console.log('Uploading to events bucket:', fileName, 'size:', fileData.byteLength);
+
     const { data, error } = await supabase.storage
       .from('events')
       .upload(fileName, fileData, { contentType, upsert: true });
 
-    if (error) throw new Error(`Upload error: ${error.message}`);
+    if (error) {
+      console.error('Supabase upload error:', error);
+      throw new Error(`Upload error: ${error.message}`);
+    }
+    
+    console.log('Upload success:', data.path);
     return data.path;
   } catch (error) {
     console.error('Error uploading session image:', error);
