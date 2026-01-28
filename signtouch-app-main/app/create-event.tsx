@@ -15,13 +15,25 @@ import {
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Sparkles, QrCode, Copy, Share2, Check, Plus, X, Clock, Users } from 'lucide-react-native';
+import { ArrowLeft, Sparkles, QrCode, Copy, Share2, Check, Plus, X, Clock, Users, MapPin, Calendar, Music, Trophy, Palette, Star, User } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import Svg, { Path, G } from 'react-native-svg';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 const QRCode = require('react-native-qrcode-svg').default;
 import { useLanguage } from '@/contexts/LanguageContext';
+import { EventType } from '@/utils/memoriesStorage';
+
+const EVENT_TYPES: { type: EventType; icon: any; color: string; labelKey: string }[] = [
+  { type: 'concert', icon: Music, color: '#8b5cf6', labelKey: 'eventConcert' },
+  { type: 'match', icon: Trophy, color: '#22c55e', labelKey: 'eventMatch' },
+  { type: 'expo', icon: Palette, color: '#f59e0b', labelKey: 'eventExpo' },
+  { type: 'salon', icon: Users, color: '#3b82f6', labelKey: 'eventSalon' },
+  { type: 'dedicace', icon: Star, color: '#ec4899', labelKey: 'eventDedicace' },
+  { type: 'rencontre', icon: User, color: '#14b8a6', labelKey: 'eventRencontre' },
+  { type: 'amis', icon: Users, color: '#f472b6', labelKey: 'eventAmis' },
+  { type: 'autre', icon: Calendar, color: '#6b7280', labelKey: 'eventAutre' },
+];
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   createEventSession, 
@@ -68,6 +80,9 @@ export default function CreateEventScreen() {
   const [step, setStep] = useState<'config' | 'signers' | 'success'>('config');
   const [eventName, setEventName] = useState('');
   const [selectedDuration, setSelectedDuration] = useState(60);
+  const [eventLocation, setEventLocation] = useState('');
+  const [eventDate, setEventDate] = useState(new Date().toISOString().split('T')[0]);
+  const [eventType, setEventType] = useState<EventType>('rencontre');
   const [isCreating, setIsCreating] = useState(false);
   const [createdSession, setCreatedSession] = useState<EventSession | null>(null);
   const [createdSigners, setCreatedSigners] = useState<EventSigner[]>([]);
@@ -338,6 +353,60 @@ export default function CreateEventScreen() {
                 </Text>
               </View>
 
+              <View style={styles.section}>
+                <View style={styles.sectionHeaderRow}>
+                  <MapPin size={18} color="#ec4899" />
+                  <Text style={styles.sectionTitle}>{t('eventLocation') || 'Location'}</Text>
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder={t('eventLocationPlaceholder') || 'Ex: Stade de France'}
+                  placeholderTextColor="rgba(255,255,255,0.4)"
+                  value={eventLocation}
+                  onChangeText={setEventLocation}
+                  maxLength={100}
+                />
+              </View>
+
+              <View style={styles.section}>
+                <View style={styles.sectionHeaderRow}>
+                  <Calendar size={18} color="#22c55e" />
+                  <Text style={styles.sectionTitle}>{t('eventDate') || 'Date'}</Text>
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor="rgba(255,255,255,0.4)"
+                  value={eventDate}
+                  onChangeText={setEventDate}
+                />
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{t('eventType') || 'Event Type'}</Text>
+                <View style={styles.eventTypesGrid}>
+                  {EVENT_TYPES.map((et) => {
+                    const IconComponent = et.icon;
+                    const isSelected = eventType === et.type;
+                    return (
+                      <TouchableOpacity
+                        key={et.type}
+                        style={[
+                          styles.eventTypeChip,
+                          isSelected && { backgroundColor: et.color, borderColor: et.color },
+                        ]}
+                        onPress={() => setEventType(et.type)}
+                      >
+                        <IconComponent size={14} color={isSelected ? '#fff' : et.color} />
+                        <Text style={[styles.eventTypeLabel, isSelected && { color: '#fff' }]}>
+                          {(t as any)(et.labelKey) || et.type}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
               <TouchableOpacity
                 style={styles.nextButton}
                 onPress={handleNext}
@@ -580,6 +649,19 @@ const styles = StyleSheet.create({
   durationButtonText: { color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
   durationButtonTextActive: { color: '#ffffff' },
   durationHint: { marginTop: 12, color: 'rgba(255,255,255,0.5)', fontSize: 14 },
+  eventTypesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
+  eventTypeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  eventTypeLabel: { fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: '500' },
   nextButton: {
     backgroundColor: '#10B981',
     borderRadius: 16,
