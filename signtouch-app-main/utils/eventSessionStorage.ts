@@ -190,13 +190,23 @@ export const startScheduledEvent = async (sessionId: string): Promise<EventSessi
 };
 
 export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSession[]> => {
-  if (!creatorId) return [];
+  let userId = creatorId;
+  
+  if (!userId) {
+    const { data: { user } } = await supabase.auth.getUser();
+    userId = user?.id;
+  }
+  
+  if (!userId) {
+    console.log('No user found for getMyScheduledEvents');
+    return [];
+  }
   
   const { data, error } = await supabase
     .from('event_sessions')
     .select('*')
-    .eq('created_by', creatorId)
-    .in('status', ['scheduled', 'live'])
+    .eq('created_by', userId)
+    .in('status', ['scheduled', 'active'])
     .order('starts_at', { ascending: true });
 
   if (error) {
