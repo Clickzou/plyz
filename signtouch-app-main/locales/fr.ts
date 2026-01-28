@@ -641,7 +641,7 @@ export default {
   dragToMove: 'Faites glisser la signature pour la déplacer',
   scheduleForLater: 'Planifier pour plus tard',
   selectStartTime: 'Veuillez sélectionner une heure de début',
-  startTimeHint: 'L'événement commencera à cette heure',
+  startTimeHint: 'L\'événement commencera à cette heure',
   eventScheduled: 'Événement planifié!',
   startsAt: 'Commence à',
   fanGalleryHint: 'Appuyez pour télécharger. Utilisez l\'icône copier pour créer votre propre photo avec cette signature!',
