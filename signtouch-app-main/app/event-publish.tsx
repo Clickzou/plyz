@@ -285,6 +285,13 @@ export default function EventPublishScreen() {
           {selectedImage ? (
             <View style={styles.previewContainer}>
               <Image source={{ uri: selectedImage }} style={styles.previewImage} resizeMode="cover" />
+              {selectedSigner?.signature_url && (
+                <Image 
+                  source={{ uri: selectedSigner.signature_url }} 
+                  style={styles.signatureOverlay} 
+                  resizeMode="contain" 
+                />
+              )}
               <TouchableOpacity style={styles.changePhotoBtn} onPress={pickImage}>
                 <ImageIcon size={16} color="#fff" />
                 <Text style={styles.changePhotoBtnText}>{t('change') || 'Change'}</Text>
@@ -436,6 +443,13 @@ const styles = StyleSheet.create({
   photoButtonText: { fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '500' },
   previewContainer: { position: 'relative' },
   previewImage: { width: '100%', aspectRatio: 3 / 4, borderRadius: 16 },
+  signatureOverlay: {
+    position: 'absolute',
+    bottom: 60,
+    left: 20,
+    right: 20,
+    height: 80,
+  },
   changePhotoBtn: {
     position: 'absolute',
     bottom: 12,
