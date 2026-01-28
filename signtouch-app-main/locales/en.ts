@@ -605,6 +605,8 @@ export default {
   atLeastOneSigner: 'Add at least one signature',
   celebrities: 'celebrities',
   celebrity: 'Celebrity',
+  myActiveEvents: 'My active events',
+  continue: 'Continue',
   until: 'Until',
   publishPhotos: 'Publish Photos',
   schedulePhotos: 'Schedule your Photos',
