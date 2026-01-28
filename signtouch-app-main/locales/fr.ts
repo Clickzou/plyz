@@ -670,7 +670,7 @@ export default {
   trialDay: 'jour',
   trialDays: 'jours',
   subscribeToAccess: 'Abonnez-vous pour continuer à utiliser SignTouch',
-  createAccountToSave: 'Créer un compte',
+  createAccountToSave: 'Créez un compte gratuitement',
   createAccountSubtitle: 'Sauvegardez vos photos en sécurité et accédez-y depuis n\'importe quel appareil',
   skipForNow: 'Passer pour le moment',
   cloudSync: 'Synchronisation cloud',
