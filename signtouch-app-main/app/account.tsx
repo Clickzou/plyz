@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
   debugTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#fbbf24',
+    color: '#ffffff',
     marginBottom: 10,
   },
   debugButton: {
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
   },
   debugHint: {
     fontSize: 12,
-    color: '#fbbf24',
+    color: '#ffffff',
     opacity: 0.8,
     lineHeight: 16,
   },
