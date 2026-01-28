@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { Memory, SignatureOverlay, TextOverlay, PhotoAdjustments } from './memoriesStorage';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 
 interface CloudMemory {
