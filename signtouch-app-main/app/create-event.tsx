@@ -11,6 +11,8 @@ import {
   ActivityIndicator,
   Share,
   GestureResponderEvent,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -86,6 +88,8 @@ export default function CreateEventScreen() {
   const [eventDate, setEventDate] = useState(new Date().toISOString().split('T')[0]);
   const [eventTime, setEventTime] = useState('');
   const [isScheduled, setIsScheduled] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [eventType, setEventType] = useState<EventType>('rencontre');
   const [isCreating, setIsCreating] = useState(false);
   const [createdSession, setCreatedSession] = useState<EventSession | null>(null);
@@ -298,6 +302,50 @@ export default function CreateEventScreen() {
     return endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const getCalendarDays = () => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDayOfWeek = firstDay.getDay();
+    
+    const days: (number | null)[] = [];
+    for (let i = 0; i < startDayOfWeek; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(i);
+    }
+    return days;
+  };
+
+  const formatDisplayDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('fr-FR', { 
+      weekday: 'long', 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    });
+  };
+
+  const handleSelectDate = (day: number) => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const newDate = new Date(year, month, day);
+    setEventDate(newDate.toISOString().split('T')[0]);
+    setShowDatePicker(false);
+  };
+
+  const changeMonth = (direction: number) => {
+    const newMonth = new Date(calendarMonth);
+    newMonth.setMonth(newMonth.getMonth() + direction);
+    setCalendarMonth(newMonth);
+  };
+
+  const WEEKDAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+
   const WEB_BASE_URL = 'https://signtouch.app';
   const qrValue = createdSession 
     ? `${WEB_BASE_URL}/join?code=${createdSession.join_code}` 
@@ -394,13 +442,14 @@ export default function CreateEventScreen() {
                   <Calendar size={18} color="#22c55e" />
                   <Text style={styles.sectionTitle}>{t('eventDate') || 'Date'}</Text>
                 </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor="rgba(255,255,255,0.4)"
-                  value={eventDate}
-                  onChangeText={setEventDate}
-                />
+                <TouchableOpacity
+                  style={styles.datePickerButton}
+                  onPress={() => setShowDatePicker(true)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.datePickerText}>{formatDisplayDate(eventDate)}</Text>
+                  <Calendar size={20} color="#10B981" />
+                </TouchableOpacity>
               </View>
 
               <View style={styles.section}>
@@ -671,6 +720,78 @@ export default function CreateEventScreen() {
             </View>
           )}
         </ScrollView>
+
+        <Modal
+          visible={showDatePicker}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowDatePicker(false)}
+        >
+          <Pressable 
+            style={styles.modalOverlay} 
+            onPress={() => setShowDatePicker(false)}
+          >
+            <Pressable style={styles.calendarModal} onPress={(e) => e.stopPropagation()}>
+              <View style={styles.calendarHeader}>
+                <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.calendarNavBtn}>
+                  <Text style={styles.calendarNavText}>{'<'}</Text>
+                </TouchableOpacity>
+                <Text style={styles.calendarMonthText}>
+                  {calendarMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                </Text>
+                <TouchableOpacity onPress={() => changeMonth(1)} style={styles.calendarNavBtn}>
+                  <Text style={styles.calendarNavText}>{'>'}</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.weekdaysRow}>
+                {WEEKDAYS.map((day) => (
+                  <Text key={day} style={styles.weekdayText}>{day}</Text>
+                ))}
+              </View>
+
+              <View style={styles.daysGrid}>
+                {getCalendarDays().map((day, index) => {
+                  const isSelected = day && eventDate === 
+                    `${calendarMonth.getFullYear()}-${String(calendarMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                  const today = new Date();
+                  const isToday = day && 
+                    today.getDate() === day && 
+                    today.getMonth() === calendarMonth.getMonth() && 
+                    today.getFullYear() === calendarMonth.getFullYear();
+                  
+                  return (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.dayCell,
+                        isSelected && styles.dayCellSelected,
+                        isToday && !isSelected && styles.dayCellToday,
+                      ]}
+                      onPress={() => day && handleSelectDate(day)}
+                      disabled={!day}
+                    >
+                      <Text style={[
+                        styles.dayText,
+                        isSelected && styles.dayTextSelected,
+                        isToday && !isSelected && styles.dayTextToday,
+                      ]}>
+                        {day || ''}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <TouchableOpacity 
+                style={styles.calendarCloseBtn}
+                onPress={() => setShowDatePicker(false)}
+              >
+                <Text style={styles.calendarCloseBtnText}>Fermer</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+        </Modal>
       </LinearGradient>
     </GestureHandlerRootView>
   );
@@ -921,5 +1042,115 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#f59e0b',
     fontWeight: '500',
+  },
+  datePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
+  },
+  datePickerText: {
+    fontSize: 16,
+    color: '#ffffff',
+    textTransform: 'capitalize',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  calendarModal: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 20,
+    padding: 20,
+    width: '100%',
+    maxWidth: 360,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  calendarNavBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  calendarNavText: {
+    fontSize: 20,
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  calendarMonthText: {
+    fontSize: 18,
+    color: '#ffffff',
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  weekdaysRow: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  weekdayText: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '600',
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  dayCell: {
+    width: '14.28%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dayCellSelected: {
+    backgroundColor: '#10B981',
+    borderRadius: 20,
+  },
+  dayCellToday: {
+    borderWidth: 2,
+    borderColor: '#10B981',
+    borderRadius: 20,
+  },
+  dayText: {
+    fontSize: 16,
+    color: '#ffffff',
+  },
+  dayTextSelected: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  dayTextToday: {
+    color: '#10B981',
+    fontWeight: '600',
+  },
+  calendarCloseBtn: {
+    marginTop: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+  },
+  calendarCloseBtnText: {
+    fontSize: 16,
+    color: '#ffffff',
+    fontWeight: '600',
   },
 });
