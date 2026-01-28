@@ -22,6 +22,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Language } from '@/locales';
 import { showAccountModal } from '@/utils/postPurchaseAccount';
 import { validatePromoCode, getPromoPremiumStatus } from '@/utils/promoCodeStorage';
+import { clearTrialData } from '@/utils/trialStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -146,6 +148,23 @@ export default function AccountScreen() {
     );
   };
 
+  const handleResetTrial = async () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    await clearTrialData();
+    await AsyncStorage.removeItem('@signtouch_device_id');
+    if (Platform.OS === 'web') {
+      alert('Données de trial réinitialisées! Rafraîchissez la page pour voir le flux nouvel utilisateur.');
+    } else {
+      Alert.alert(
+        'Trial réinitialisé',
+        'Les données de trial ont été effacées. Redémarrez l\'app pour tester le flux nouvel utilisateur.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content}>
@@ -154,20 +173,36 @@ export default function AccountScreen() {
           <Text style={styles.subtitle}>SignTouch</Text>
         </View>
 
-        {__DEV__ && Platform.OS !== 'web' && (
+        {__DEV__ && (
           <View style={styles.debugSection}>
             <Text style={styles.debugTitle}>🔧 Mode Debug</Text>
+            {Platform.OS !== 'web' && (
+              <>
+                <TouchableOpacity
+                  style={styles.debugButton}
+                  onPress={handleTestDeepLink}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.debugButtonText}>
+                    Obtenir l'URL de redirection Supabase
+                  </Text>
+                </TouchableOpacity>
+                <Text style={styles.debugHint}>
+                  Si le lien de confirmation d'email ne fonctionne pas, clique ici pour obtenir l'URL à ajouter dans Supabase Dashboard
+                </Text>
+              </>
+            )}
             <TouchableOpacity
-              style={styles.debugButton}
-              onPress={handleTestDeepLink}
+              style={[styles.debugButton, { backgroundColor: '#ef4444', marginTop: 12 }]}
+              onPress={handleResetTrial}
               activeOpacity={0.7}
             >
               <Text style={styles.debugButtonText}>
-                Obtenir l'URL de redirection Supabase
+                Réinitialiser le trial (test nouvel utilisateur)
               </Text>
             </TouchableOpacity>
             <Text style={styles.debugHint}>
-              Si le lien de confirmation d'email ne fonctionne pas, clique ici pour obtenir l'URL à ajouter dans Supabase Dashboard
+              Efface les données de trial pour tester le flux d'un nouvel utilisateur
             </Text>
           </View>
         )}
