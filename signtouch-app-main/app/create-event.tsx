@@ -739,7 +739,7 @@ export default function CreateEventScreen() {
               <View style={styles.statsRow}>
                 <View style={styles.statItem}>
                   <Users size={18} color="#10B981" />
-                  <Text style={styles.statText}>{createdSigners.length} {t('celebrities') || 'celebrities'}</Text>
+                  <Text style={styles.statText}>{t('celebrity') || 'Celebrity'} : {createdSigners.length}</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Clock size={18} color="#10B981" />

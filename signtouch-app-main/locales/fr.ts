@@ -601,6 +601,7 @@ export default {
   signaturesReady: 'signatures prêtes',
   atLeastOneSigner: 'Ajoutez au moins une signature',
   celebrities: 'célébrités',
+  celebrity: 'Célébrité',
   until: 'Jusqu\'à',
   publishPhotos: 'Publier des Photos',
   schedulePhotos: 'Programmer vos Photos',
