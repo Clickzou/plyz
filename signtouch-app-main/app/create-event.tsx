@@ -563,13 +563,20 @@ export default function CreateEventScreen() {
                 )}
               </View>
 
-              <TouchableOpacity
-                style={styles.nextButton}
-                onPress={handleNext}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.nextButtonText}>{t('next') || 'Next'}</Text>
-              </TouchableOpacity>
+              {(() => {
+                const canProceed = eventName.trim() && eventLocation.trim() && (isLive || eventTime);
+                return (
+                  <TouchableOpacity
+                    style={[styles.nextButton, !canProceed && styles.nextButtonDisabled]}
+                    onPress={canProceed ? handleNext : undefined}
+                    activeOpacity={canProceed ? 0.8 : 1}
+                  >
+                    <Text style={[styles.nextButtonText, !canProceed && styles.nextButtonTextDisabled]}>
+                      {t('next') || 'Next'}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })()}
             </>
           )}
 
@@ -988,6 +995,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   nextButtonText: { color: '#ffffff', fontSize: 18, fontWeight: '600' },
+  nextButtonDisabled: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    opacity: 0.5,
+  },
+  nextButtonTextDisabled: {
+    color: 'rgba(255,255,255,0.5)',
+  },
   eventSummaryBox: {
     backgroundColor: 'rgba(16,185,129,0.1)',
     borderRadius: 12,
