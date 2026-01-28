@@ -304,29 +304,22 @@ export default function EventPublishScreen() {
           )}
         </View>
 
-        <Text style={styles.sectionTitle}>{t('publishOptions') || 'Publish Options'}</Text>
-        <Text style={styles.introText}>
-          {t('publishIntro') || 'Choose how to share content with your fans. They can view and download from their gallery in real-time.'}
-        </Text>
-        <View style={styles.publishOptions}>
-          <TouchableOpacity
-            style={[styles.publishBtn, styles.publishBtnSigned, (!selectedImage || !selectedSignerId || isPublishing) && styles.publishBtnDisabled]}
-            onPress={() => handlePublish('photo_signed')}
-            disabled={!selectedImage || !selectedSignerId || isPublishing}
-          >
-            {isPublishing ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Pen size={20} color="#fff" />
-                <Text style={styles.publishBtnText}>
-                  {t('photoWithSignature') || 'Photo + Signature'}
-                  {selectedSigner && ` (${selectedSigner.display_name})`}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={[styles.publishBtn, styles.publishBtnSigned, (!selectedImage || !selectedSignerId || isPublishing) && styles.publishBtnDisabled]}
+          onPress={() => handlePublish('photo_signed')}
+          disabled={!selectedImage || !selectedSignerId || isPublishing}
+        >
+          {isPublishing ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Pen size={20} color="#fff" />
+              <Text style={styles.publishBtnText}>
+                {(t as any)('sendDedication') || 'Send Dedication'}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );

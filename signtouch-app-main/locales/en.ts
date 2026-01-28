@@ -642,4 +642,5 @@ export default {
   publishIntro: 'Choose how to share content with your fans. They can view and download from their gallery in real-time.',
   eventDetails: 'Event Details',
   metadataHint: 'This info will be pre-filled for fans when they save the photo.',
+  sendDedication: 'Send Dedication',
 };

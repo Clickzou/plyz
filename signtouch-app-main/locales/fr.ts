@@ -637,4 +637,5 @@ export default {
   publishIntro: 'Choisissez comment partager avec vos fans. Ils pourront voir et télécharger depuis leur galerie en temps réel.',
   eventDetails: 'Détails de l\'événement',
   metadataHint: 'Ces infos seront pré-remplies pour les fans quand ils enregistrent la photo.',
+  sendDedication: 'Envoyer la dédicace',
 };
