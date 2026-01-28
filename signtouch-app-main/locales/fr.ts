@@ -638,5 +638,6 @@ export default {
   eventDetails: 'Détails de l\'événement',
   metadataHint: 'Ces infos seront pré-remplies pour les fans quand ils enregistrent la photo.',
   sendDedication: 'Envoyer la dédicace',
+  dragToMove: 'Faites glisser la signature pour la déplacer',
   fanGalleryHint: 'Appuyez pour télécharger. Utilisez l\'icône copier pour créer votre propre photo avec cette signature!',
 };

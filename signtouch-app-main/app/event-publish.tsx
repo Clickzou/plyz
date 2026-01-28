@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,29 @@ import {
   Platform,
   ActivityIndicator,
   TextInput,
+  Dimensions,
+  PanResponder,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send } from 'lucide-react-native';
+import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Move, ZoomIn, ZoomOut, RotateCcw, Palette } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import ViewShot from 'react-native-view-shot';
+import { SvgUri } from 'react-native-svg';
+
+const SIGNATURE_COLORS = [
+  '#FFFFFF',
+  '#000000',
+  '#10B981',
+  '#3B82F6',
+  '#8B5CF6',
+  '#EC4899',
+  '#F59E0B',
+  '#EF4444',
+  '#6B7280',
+  '#FFD700',
+];
 import * as ImagePicker from 'expo-image-picker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -41,6 +58,34 @@ export default function EventPublishScreen() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
   const [publishedCount, setPublishedCount] = useState(0);
+  
+  const [signaturePosition, setSignaturePosition] = useState({ x: 0, y: 0 });
+  const [signatureScale, setSignatureScale] = useState(1);
+  const [signatureRotation, setSignatureRotation] = useState(0);
+  const [signatureColor, setSignatureColor] = useState('#FFFFFF');
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  
+  const viewShotRef = useRef<ViewShot>(null);
+  const previewContainerRef = useRef<View>(null);
+  const [containerLayout, setContainerLayout] = useState({ width: 0, height: 0 });
+  
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        if (Platform.OS !== 'web') {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+      },
+      onPanResponderMove: (_, gestureState) => {
+        setSignaturePosition(prev => ({
+          x: prev.x + gestureState.dx * 0.5,
+          y: prev.y + gestureState.dy * 0.5,
+        }));
+      },
+    })
+  ).current;
 
   useEffect(() => {
     const loadData = async () => {
@@ -62,7 +107,40 @@ export default function EventPublishScreen() {
     return () => clearInterval(interval);
   }, [sessionId]);
 
+  const resetSignatureTransform = () => {
+    setSignaturePosition({ x: 0, y: 0 });
+    setSignatureScale(1);
+    setSignatureRotation(0);
+  };
+
+  const adjustScale = (delta: number) => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setSignatureScale(prev => Math.max(0.3, Math.min(3, prev + delta)));
+  };
+
+  const adjustRotation = (delta: number) => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setSignatureRotation(prev => prev + delta);
+  };
+
+  const captureComposite = async (): Promise<string> => {
+    if (viewShotRef.current) {
+      try {
+        const uri = await (viewShotRef.current as any).capture();
+        return uri;
+      } catch (e) {
+        console.error('Capture failed:', e);
+      }
+    }
+    return selectedImage || '';
+  };
+
   const pickImage = async () => {
+    resetSignatureTransform();
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
@@ -116,9 +194,11 @@ export default function EventPublishScreen() {
     }
 
     try {
+      const imageToPublish = type === 'photo_signed' ? await captureComposite() : selectedImage;
+      
       await publishEventAsset(
         sessionId,
-        selectedImage,
+        imageToPublish,
         type,
         type === 'photo_signed' ? selectedSignerId || undefined : undefined
       );
@@ -208,20 +288,103 @@ export default function EventPublishScreen() {
         <Text style={styles.sectionTitle}>{t('selectPhoto') || 'Select Photo'}</Text>
         <View style={styles.photoSection}>
           {selectedImage ? (
-            <View style={styles.previewContainer}>
-              <Image source={{ uri: selectedImage }} style={styles.previewImage} resizeMode="cover" />
+            <>
+              <ViewShot 
+                ref={viewShotRef} 
+                options={{ format: 'png', quality: 1 }}
+                style={styles.viewShotContainer}
+              >
+                <View 
+                  style={styles.previewContainer}
+                  onLayout={(e) => setContainerLayout({ 
+                    width: e.nativeEvent.layout.width, 
+                    height: e.nativeEvent.layout.height 
+                  })}
+                >
+                  <Image source={{ uri: selectedImage }} style={styles.previewImage} resizeMode="cover" />
+                  {selectedSigner?.signature_url && (
+                    <View
+                      {...panResponder.panHandlers}
+                      style={[
+                        styles.signatureOverlay,
+                        {
+                          transform: [
+                            { translateX: signaturePosition.x },
+                            { translateY: signaturePosition.y },
+                            { scale: signatureScale },
+                            { rotate: `${signatureRotation}deg` },
+                          ],
+                        },
+                      ]}
+                    >
+                      <Image 
+                        source={{ uri: selectedSigner.signature_url }} 
+                        style={[styles.signatureImage, { tintColor: signatureColor }]} 
+                        resizeMode="contain" 
+                      />
+                    </View>
+                  )}
+                </View>
+              </ViewShot>
+              
               {selectedSigner?.signature_url && (
-                <Image 
-                  source={{ uri: selectedSigner.signature_url }} 
-                  style={styles.signatureOverlay} 
-                  resizeMode="contain" 
-                />
+                <View style={styles.editControls}>
+                  <View style={styles.editRow}>
+                    <TouchableOpacity style={styles.editBtn} onPress={() => adjustScale(-0.1)}>
+                      <ZoomOut size={20} color="#fff" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.editBtn} onPress={() => adjustScale(0.1)}>
+                      <ZoomIn size={20} color="#fff" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.editBtn} onPress={() => adjustRotation(-15)}>
+                      <RotateCcw size={20} color="#fff" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.editBtn} onPress={() => adjustRotation(15)}>
+                      <RotateCcw size={20} color="#fff" style={{ transform: [{ scaleX: -1 }] }} />
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.editBtn, showColorPicker && styles.editBtnActive]} 
+                      onPress={() => setShowColorPicker(!showColorPicker)}
+                    >
+                      <Palette size={20} color="#fff" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.editBtn} onPress={resetSignatureTransform}>
+                      <Text style={styles.resetText}>Reset</Text>
+                    </TouchableOpacity>
+                  </View>
+                  
+                  {showColorPicker && (
+                    <View style={styles.colorPickerRow}>
+                      {SIGNATURE_COLORS.map((color) => (
+                        <TouchableOpacity
+                          key={color}
+                          style={[
+                            styles.colorDot,
+                            { backgroundColor: color },
+                            signatureColor === color && styles.colorDotActive,
+                          ]}
+                          onPress={() => {
+                            setSignatureColor(color);
+                            if (Platform.OS !== 'web') {
+                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            }
+                          }}
+                        />
+                      ))}
+                    </View>
+                  )}
+                  
+                  <Text style={styles.editHint}>
+                    {(t as any)('dragToMove') || 'Drag the signature to move it'}
+                  </Text>
+                </View>
               )}
+              
               <TouchableOpacity style={styles.changePhotoBtn} onPress={pickImage}>
                 <ImageIcon size={16} color="#fff" />
                 <Text style={styles.changePhotoBtnText}>{t('change') || 'Change'}</Text>
               </TouchableOpacity>
-            </View>
+            </>
           ) : (
             <View style={styles.photoButtons}>
               <TouchableOpacity style={styles.photoButton} onPress={takePhoto}>
@@ -337,26 +500,89 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   photoButtonText: { fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '500' },
-  previewContainer: { position: 'relative' },
+  viewShotContainer: { 
+    overflow: 'hidden',
+    borderRadius: 16,
+  },
+  previewContainer: { 
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: 16,
+  },
   previewImage: { width: '100%', aspectRatio: 3 / 4, borderRadius: 16 },
   signatureOverlay: {
     position: 'absolute',
-    bottom: 60,
-    left: 20,
-    right: 20,
-    height: 80,
+    bottom: 80,
+    left: 0,
+    right: 0,
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  signatureImage: {
+    width: '80%',
+    height: '100%',
+  },
+  editControls: {
+    marginTop: 16,
+    gap: 12,
+  },
+  editRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  editBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  editBtnActive: {
+    backgroundColor: '#8b5cf6',
+  },
+  resetText: {
+    fontSize: 11,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  colorPickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 10,
+    paddingVertical: 8,
+  },
+  colorDot: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  colorDotActive: {
+    borderColor: '#fff',
+    borderWidth: 3,
+  },
+  editHint: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
+    fontStyle: 'italic',
   },
   changePhotoBtn: {
-    position: 'absolute',
-    bottom: 12,
-    right: 12,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 20,
+    marginTop: 12,
+    alignSelf: 'center',
   },
   changePhotoBtnText: { fontSize: 13, color: '#fff', fontWeight: '500' },
   publishOptions: { gap: 12 },
