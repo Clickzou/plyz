@@ -15,7 +15,7 @@ import {
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Download, Users, Clock, Image as ImageIcon, Pen } from 'lucide-react-native';
+import { ArrowLeft, Download, Users, Clock, Image as ImageIcon, Pen, Copy, Info } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
@@ -244,6 +244,22 @@ export default function EventGalleryScreen() {
     }
   };
 
+  const handleClone = (asset: EventAsset) => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    router.push({
+      pathname: '/',
+      params: {
+        cloneSignatureUrl: asset.signer?.signature_url || '',
+        cloneSignerName: asset.signer?.display_name || '',
+        eventLocation: params.eventLocation || '',
+        eventDate: params.eventDate || '',
+        eventType: params.eventType || '',
+      }
+    });
+  };
+
   const renderAsset = ({ item }: { item: EventAsset }) => (
     <TouchableOpacity style={styles.assetCard} onPress={() => handleDownload(item)} activeOpacity={0.9}>
       <Image source={{ uri: item.image_url }} style={styles.assetImage} resizeMode="cover" />
@@ -253,9 +269,16 @@ export default function EventGalleryScreen() {
             <Text style={styles.signerBadgeText}>{item.signer.display_name}</Text>
           </View>
         )}
-        <TouchableOpacity style={styles.downloadBtn} onPress={() => handleDownload(item)}>
-          <Download size={18} color="#fff" />
-        </TouchableOpacity>
+        <View style={styles.actionButtons}>
+          {item.type === 'photo_signed' && item.signer && (
+            <TouchableOpacity style={styles.cloneBtn} onPress={() => handleClone(item)}>
+              <Copy size={16} color="#fff" />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.downloadBtn} onPress={() => handleDownload(item)}>
+            <Download size={18} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
       {item.type === 'photo_signed' && (
         <View style={styles.signedBadge}>
@@ -321,6 +344,13 @@ export default function EventGalleryScreen() {
             </Text>
           </TouchableOpacity>
         ))}
+      </View>
+
+      <View style={styles.infoBanner}>
+        <Info size={16} color="#10B981" />
+        <Text style={styles.infoBannerText}>
+          {(t as any)('fanGalleryHint') || 'Tap to download. Use the copy icon to create your own photo with this signature!'}
+        </Text>
       </View>
 
       {isLoading ? (
@@ -448,6 +478,18 @@ const styles = StyleSheet.create({
   },
   signerBadge: { backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
   signerBadgeText: { fontSize: 11, color: '#fff', fontWeight: '500' },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  cloneBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#8b5cf6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   downloadBtn: {
     width: 36,
     height: 36,
@@ -455,6 +497,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  infoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    marginHorizontal: 16,
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
+  },
+  infoBannerText: {
+    flex: 1,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    lineHeight: 18,
   },
   signedBadge: {
     position: 'absolute',

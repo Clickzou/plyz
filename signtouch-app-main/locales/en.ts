@@ -643,4 +643,5 @@ export default {
   eventDetails: 'Event Details',
   metadataHint: 'This info will be pre-filled for fans when they save the photo.',
   sendDedication: 'Send Dedication',
+  fanGalleryHint: 'Tap to download. Use the copy icon to create your own photo with this signature!',
 };
