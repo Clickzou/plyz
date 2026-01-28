@@ -86,9 +86,9 @@ export default function EventPublishScreen() {
         lastPanOffset.current = { x: gestureState.dx, y: gestureState.dy };
         
         setSignaturePosition(prev => {
-          const maxOffsetX = 150;
-          const maxOffsetUp = 200;
-          const maxOffsetDown = 150;
+          const maxOffsetX = 200;
+          const maxOffsetUp = 350;
+          const maxOffsetDown = 350;
           const newX = Math.max(-maxOffsetX, Math.min(maxOffsetX, prev.x + deltaX));
           const newY = Math.max(-maxOffsetUp, Math.min(maxOffsetDown, prev.y + deltaY));
           return { x: newX, y: newY };
