@@ -445,6 +445,9 @@ export default {
   eventDate: 'Date',
   eventTime: 'Time',
   eventType: 'Event type',
+  eventIntro: 'Schedule your QR event in advance or launch it immediately by checking the Live button.',
+  eventLive: 'Live Event',
+  liveSummary: 'Your event starts immediately and lasts',
   notebookSaveSuccess: 'Added to your notebook!',
 
   // Story Mode
