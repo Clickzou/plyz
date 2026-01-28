@@ -674,7 +674,7 @@ export default {
   createAccountSubtitle: 'Sauvegardez vos photos en sécurité et accédez-y depuis n\'importe quel appareil',
   skipForNow: 'Passer pour le moment',
   cloudSync: 'Synchronisation cloud',
-  continueWithEmail: 'Continuer avec email',
+  continueWithEmail: 'Recevoir un mail',
   enterYourEmail: 'Entrez votre email',
   magicLinkExplanation: 'Nous vous enverrons un lien magique pour vous connecter instantanément',
   emailPlaceholder: 'votre@email.com',
