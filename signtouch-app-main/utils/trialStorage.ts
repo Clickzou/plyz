@@ -29,22 +29,21 @@ const syncTrialFromServer = async (userId: string | null): Promise<string | null
     
     let trialRecord = null;
     
-    if (userId) {
-      const { data } = await supabase
+    const { data: deviceTrial } = await supabase
+      .from('device_trials')
+      .select('trial_start_date')
+      .eq('device_id', deviceId)
+      .single();
+    
+    if (deviceTrial) {
+      trialRecord = deviceTrial;
+    } else if (userId) {
+      const { data: userTrial } = await supabase
         .from('device_trials')
         .select('trial_start_date')
         .eq('user_id', userId)
         .single();
-      trialRecord = data;
-    }
-    
-    if (!trialRecord) {
-      const { data } = await supabase
-        .from('device_trials')
-        .select('trial_start_date')
-        .eq('device_id', deviceId)
-        .single();
-      trialRecord = data;
+      trialRecord = userTrial;
     }
     
     if (trialRecord?.trial_start_date) {
