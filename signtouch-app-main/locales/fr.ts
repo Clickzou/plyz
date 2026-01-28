@@ -428,7 +428,7 @@ export default {
   notebookEmpty: 'Aucune rencontre',
   notebookEmptyDescription: 'Vos dédicaces avec informations apparaîtront ici',
   eventConcert: 'Concert',
-  eventMatch: 'Match',
+  eventMatch: 'Sport',
   eventExpo: 'Expo',
   eventSalon: 'Salon',
   eventDedicace: 'Dédicace',
