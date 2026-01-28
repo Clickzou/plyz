@@ -88,6 +88,9 @@ export default function CreateEventScreen() {
   const [eventDate, setEventDate] = useState(new Date().toISOString().split('T')[0]);
   const [eventTime, setEventTime] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedHour, setSelectedHour] = useState(12);
+  const [selectedMinute, setSelectedMinute] = useState(0);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [eventType, setEventType] = useState<EventType>('rencontre');
   const [isLive, setIsLive] = useState(false);
@@ -473,17 +476,14 @@ export default function CreateEventScreen() {
                       <Clock size={18} color="#10B981" />
                       <Text style={styles.sectionTitle}>{t('eventTime') || 'Heure'}</Text>
                     </View>
-                    <View style={styles.timePickerRow}>
-                      <TextInput
-                        style={styles.timePickerInput}
-                        placeholder="HH:MM"
-                        placeholderTextColor="rgba(255,255,255,0.4)"
-                        value={eventTime}
-                        onChangeText={setEventTime}
-                        keyboardType="numbers-and-punctuation"
-                        maxLength={5}
-                      />
-                    </View>
+                    <TouchableOpacity 
+                      style={styles.timePickerButton}
+                      onPress={() => setShowTimePicker(true)}
+                    >
+                      <Text style={[styles.timePickerButtonText, !eventTime && styles.timePickerButtonPlaceholder]}>
+                        {eventTime || 'HH:MM'}
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 </>
               )}
@@ -838,6 +838,70 @@ export default function CreateEventScreen() {
                 onPress={() => setShowDatePicker(false)}
               >
                 <Text style={styles.calendarCloseBtnText}>Fermer</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        <Modal
+          visible={showTimePicker}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowTimePicker(false)}
+        >
+          <Pressable 
+            style={styles.modalOverlay} 
+            onPress={() => setShowTimePicker(false)}
+          >
+            <Pressable style={styles.timePickerModal} onPress={(e) => e.stopPropagation()}>
+              <Text style={styles.timePickerTitle}>{t('eventTime') || 'Heure'}</Text>
+              
+              <View style={styles.timePickerColumns}>
+                <View style={styles.timePickerColumn}>
+                  <Text style={styles.timePickerLabel}>Heures</Text>
+                  <ScrollView style={styles.timePickerScroll} showsVerticalScrollIndicator={false}>
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <TouchableOpacity
+                        key={i}
+                        style={[styles.timePickerItem, selectedHour === i && styles.timePickerItemSelected]}
+                        onPress={() => setSelectedHour(i)}
+                      >
+                        <Text style={[styles.timePickerItemText, selectedHour === i && styles.timePickerItemTextSelected]}>
+                          {String(i).padStart(2, '0')}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+                
+                <Text style={styles.timePickerSeparator}>:</Text>
+                
+                <View style={styles.timePickerColumn}>
+                  <Text style={styles.timePickerLabel}>Minutes</Text>
+                  <ScrollView style={styles.timePickerScroll} showsVerticalScrollIndicator={false}>
+                    {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => (
+                      <TouchableOpacity
+                        key={m}
+                        style={[styles.timePickerItem, selectedMinute === m && styles.timePickerItemSelected]}
+                        onPress={() => setSelectedMinute(m)}
+                      >
+                        <Text style={[styles.timePickerItemText, selectedMinute === m && styles.timePickerItemTextSelected]}>
+                          {String(m).padStart(2, '0')}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              </View>
+
+              <TouchableOpacity 
+                style={styles.timePickerConfirmBtn}
+                onPress={() => {
+                  setEventTime(`${String(selectedHour).padStart(2, '0')}:${String(selectedMinute).padStart(2, '0')}`);
+                  setShowTimePicker(false);
+                }}
+              >
+                <Text style={styles.timePickerConfirmText}>Valider</Text>
               </TouchableOpacity>
             </Pressable>
           </Pressable>
@@ -1311,5 +1375,89 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#ffffff',
     fontWeight: '600',
+  },
+  timePickerButton: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  timePickerButtonText: {
+    fontSize: 18,
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  timePickerButtonPlaceholder: {
+    color: 'rgba(255,255,255,0.4)',
+  },
+  timePickerModal: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 20,
+    padding: 20,
+    width: '100%',
+    maxWidth: 320,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  timePickerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  timePickerColumns: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timePickerColumn: {
+    alignItems: 'center',
+    width: 80,
+  },
+  timePickerLabel: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 10,
+  },
+  timePickerScroll: {
+    height: 200,
+  },
+  timePickerItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginVertical: 2,
+  },
+  timePickerItemSelected: {
+    backgroundColor: '#10B981',
+  },
+  timePickerItemText: {
+    fontSize: 20,
+    color: 'rgba(255,255,255,0.6)',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  timePickerItemTextSelected: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  timePickerSeparator: {
+    fontSize: 32,
+    color: '#ffffff',
+    fontWeight: '700',
+    marginHorizontal: 10,
+  },
+  timePickerConfirmBtn: {
+    marginTop: 20,
+    backgroundColor: '#10B981',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+  },
+  timePickerConfirmText: {
+    fontSize: 16,
+    color: '#ffffff',
+    fontWeight: '700',
   },
 });
