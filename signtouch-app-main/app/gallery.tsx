@@ -160,22 +160,29 @@ export default function GalleryScreen() {
       loadStoriesData();
 
       const checkAndShowModals = async () => {
-        if (hasCheckedFirstPhoto) return;
-        
         const firstPhotoSaved = await hasFirstPhotoBeenSaved();
+        console.log('[Trial] First photo saved:', firstPhotoSaved, 'Already checked:', hasCheckedFirstPhoto);
+        
         if (!firstPhotoSaved) return;
+        if (hasCheckedFirstPhoto) return;
         
         setHasCheckedFirstPhoto(true);
         
-        if (status === 'paid') return;
+        if (status === 'paid') {
+          console.log('[Trial] User is paid, skipping modal');
+          return;
+        }
         
         const trialStatus = await getTrialStatus(user?.id || null);
+        console.log('[Trial] Trial status:', trialStatus);
         setTrialDaysRemaining(trialStatus.daysRemaining);
         
         setTimeout(() => {
           if (!user) {
+            console.log('[Trial] Showing account modal');
             setShowAccountModal(true);
           } else if (status === 'free') {
+            console.log('[Trial] Showing trial modal');
             setShowTrialModal(true);
           }
         }, 1000);
