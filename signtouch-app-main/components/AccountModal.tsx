@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
-import { Mail, X, CheckCircle } from 'lucide-react-native';
+import { Mail, CheckCircle } from 'lucide-react-native';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -61,13 +61,6 @@ export default function AccountModal({
 
   const renderEmailForm = () => (
     <>
-      <TouchableOpacity 
-        style={styles.closeButton}
-        onPress={handleSkip}
-      >
-        <X size={24} color="#9ca3af" />
-      </TouchableOpacity>
-
       <View style={styles.iconContainer}>
         <Mail size={48} color="#22c55e" />
       </View>
@@ -117,28 +110,11 @@ export default function AccountModal({
       <Text style={styles.secureEmailText}>
         {t('secureEmailExplanation') || 'Vous recevrez un lien sécurisé par email.'}
       </Text>
-
-      <TouchableOpacity
-        style={styles.laterButton}
-        onPress={handleSkip}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.laterButtonText}>
-          {t('later') || 'Plus tard'}
-        </Text>
-      </TouchableOpacity>
     </>
   );
 
   const renderSent = () => (
     <>
-      <TouchableOpacity 
-        style={styles.closeButton}
-        onPress={handleClose}
-      >
-        <X size={24} color="#9ca3af" />
-      </TouchableOpacity>
-
       <View style={[styles.iconContainer, styles.successIcon]}>
         <CheckCircle size={48} color="#22c55e" />
       </View>
@@ -194,20 +170,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1f2937',
     borderRadius: 24,
     padding: 28,
-    paddingTop: 48,
     alignItems: 'center',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#374151',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
   },
   iconContainer: {
     width: 80,
@@ -281,15 +244,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7280',
     textAlign: 'center',
-    marginBottom: 16,
-  },
-  laterButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-  },
-  laterButtonText: {
-    fontSize: 15,
-    color: '#9ca3af',
-    fontWeight: '500',
   },
 });
