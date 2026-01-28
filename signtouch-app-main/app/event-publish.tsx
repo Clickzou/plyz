@@ -141,12 +141,20 @@ export default function EventPublishScreen() {
     if (viewShotRef.current) {
       try {
         const uri = await (viewShotRef.current as any).capture();
-        return uri;
+        if (uri) return uri;
       } catch (e) {
         console.error('Capture failed:', e);
+        if (Platform.OS === 'web') {
+          Alert.alert(
+            t('error') || 'Error',
+            'Image capture is not fully supported on web. Please use the mobile app for best results.'
+          );
+          throw new Error('Web capture not supported');
+        }
       }
     }
-    return selectedImage || '';
+    if (selectedImage) return selectedImage;
+    throw new Error('No image to capture');
   };
 
   const pickImage = async () => {
