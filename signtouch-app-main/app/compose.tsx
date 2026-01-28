@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import { markFirstPhotoSaved } from '@/utils/trialStorage';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
   GestureDetector,
@@ -973,6 +974,8 @@ export default function ComposeScreen() {
             throw quotaError;
           }
         }
+        // Mark first photo saved for trial tracking (web)
+        await markFirstPhotoSaved(user?.id || null);
       } else {
         // Mobile: utiliser StorageService avec AsyncStorage ou cloud
         // baseUri = image originale sans overlays, uri = image avec overlays
