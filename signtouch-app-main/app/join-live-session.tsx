@@ -21,7 +21,9 @@ import {
   Users,
   Clock,
   Check,
+  QrCode,
 } from 'lucide-react-native';
+import BarCodeScannerWrapper, { requestCameraPermissionAsync, isBarCodeScannerAvailable } from '@/components/BarCodeScannerWrapper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -52,6 +54,8 @@ export default function JoinLiveSessionScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [queueEntry, setQueueEntry] = useState<QueueEntry | null>(null);
   const [queuePosition, setQueuePosition] = useState(0);
+  const [showScanner, setShowScanner] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
   const fanId = useMemo(() => `fan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, []);
   const sessionChannelRef = useRef<RealtimeChannel | null>(null);
@@ -115,6 +119,46 @@ export default function JoinLiveSessionScreen() {
       Alert.alert(t('error'), t('liveSessionJoinError'));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const requestCameraPermission = async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert(t('info') || 'Info', t('qrWebNotSupported') || 'QR scanning is not available on web. Please enter the code manually.');
+      return;
+    }
+    
+    if (!isBarCodeScannerAvailable()) {
+      Alert.alert(t('info') || 'Info', t('qrNotAvailable') || 'QR scanning is not available. Please enter the code manually.');
+      return;
+    }
+
+    const granted = await requestCameraPermissionAsync();
+    setHasPermission(granted);
+    if (granted) {
+      setShowScanner(true);
+    } else {
+      Alert.alert(t('permissionDenied') || 'Permission Denied', t('cameraPermissionNeeded') || 'Camera permission is needed to scan QR codes.');
+    }
+  };
+
+  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
+    setShowScanner(false);
+    let scannedCode = data;
+    if (data.includes('code=')) {
+      const match = data.match(/code=([A-Z0-9]+)/i);
+      if (match) {
+        scannedCode = match[1].toUpperCase();
+      }
+    } else if (data.length === 6 && /^[A-Z0-9]+$/i.test(data)) {
+      scannedCode = data.toUpperCase();
+    }
+    
+    if (scannedCode && scannedCode.length >= 4 && scannedCode.length <= 6) {
+      setCode(scannedCode);
+      handleJoinWithCode(scannedCode);
+    } else {
+      Alert.alert(t('error') || 'Error', t('invalidQRCode') || 'Invalid QR code');
     }
   };
 
@@ -226,6 +270,17 @@ export default function JoinLiveSessionScreen() {
           <Text style={styles.primaryButtonText}>{t('liveSessionJoin')}</Text>
         )}
       </TouchableOpacity>
+
+      <View style={styles.orDivider}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.orText}>{t('or') || 'ou'}</Text>
+        <View style={styles.dividerLine} />
+      </View>
+
+      <TouchableOpacity style={styles.scanButton} onPress={requestCameraPermission}>
+        <QrCode size={28} color="#6366f1" />
+        <Text style={styles.scanButtonText}>{t('scanQRCode') || 'Scanner un QR Code'}</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -332,6 +387,28 @@ export default function JoinLiveSessionScreen() {
       <Text style={styles.waitingNote}>{t('liveSessionWatchSignature')}</Text>
     </View>
   );
+
+  if (showScanner) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <LinearGradient colors={['#6366f1', '#4f46e5']} style={StyleSheet.absoluteFill} />
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => setShowScanner(false)}>
+            <ArrowLeft size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('scanQRCode') || 'Scanner QR Code'}</Text>
+          <View style={{ width: 40 }} />
+        </View>
+        <View style={styles.scannerContainer}>
+          <BarCodeScannerWrapper
+            onBarCodeScanned={handleBarCodeScanned}
+            style={StyleSheet.absoluteFillObject}
+          />
+          <Text style={styles.scannerHint}>{t('scanQRHint') || 'Pointez vers le QR code'}</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -514,5 +591,54 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     justifyContent: 'center',
     alignSelf: 'center',
+  },
+  orDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+    width: '100%',
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  orText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 14,
+    marginHorizontal: 16,
+  },
+  scanButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    gap: 10,
+  },
+  scanButtonText: {
+    color: '#6366f1',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  scannerContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  scannerHint: {
+    position: 'absolute',
+    bottom: 100,
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingVertical: 12,
+    marginHorizontal: 40,
+    borderRadius: 8,
   },
 });
