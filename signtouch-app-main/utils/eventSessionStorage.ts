@@ -163,6 +163,8 @@ export const createEventSession = async (
   const startsAt = isScheduled ? scheduledStartAt : new Date();
   const endsAt = new Date(startsAt.getTime() + durationMinutes * 60 * 1000);
 
+  console.log('Creating event session with join_code:', joinCode);
+
   const { data, error } = await supabase
     .from('event_sessions')
     .insert({
@@ -176,7 +178,12 @@ export const createEventSession = async (
     .select()
     .single();
 
-  if (error) throw new Error(`Create session error: ${error.message}`);
+  if (error) {
+    console.error('Create session DB error:', error);
+    throw new Error(`Create session error: ${error.message}`);
+  }
+  
+  console.log('Session created successfully:', data.id, 'join_code:', data.join_code);
   return data;
 };
 

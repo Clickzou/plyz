@@ -96,19 +96,10 @@ export default function JoinEventScreen() {
         return;
       }
 
-      const event = await getEventByCode(codeToSearch);
-      
-      if (event) {
-        setFoundEvent(event);
-        if (Platform.OS !== 'web') {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        }
-      } else {
-        Alert.alert(
-          t('eventNotFound') || 'Event Not Found',
-          t('eventNotFoundMessage') || 'This event does not exist or has expired'
-        );
-      }
+      Alert.alert(
+        t('eventNotFound') || 'Event Not Found',
+        t('eventNotFoundMessage') || 'This event does not exist or has expired'
+      );
     } catch (error) {
       console.error('Error searching event:', error);
       Alert.alert(t('error') || 'Error', t('searchFailed') || 'Failed to search for event');
