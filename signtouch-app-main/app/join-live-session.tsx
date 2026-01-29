@@ -123,13 +123,11 @@ export default function JoinLiveSessionScreen() {
   };
 
   const requestCameraPermission = async () => {
-    if (Platform.OS === 'web') {
-      Alert.alert(t('info') || 'Info', t('qrWebNotSupported') || 'QR scanning is not available on web. Please enter the code manually.');
-      return;
-    }
-    
-    if (!isBarCodeScannerAvailable()) {
-      Alert.alert(t('info') || 'Info', t('qrNotAvailable') || 'QR scanning is not available. Please enter the code manually.');
+    if (Platform.OS === 'web' || !isBarCodeScannerAvailable()) {
+      Alert.alert(
+        'Info', 
+        'Le scan QR n\'est pas disponible sur le navigateur web. Entrez le code manuellement ci-dessus.'
+      );
       return;
     }
 
