@@ -257,15 +257,16 @@ export default function HomeScreen() {
 
         <View style={styles.content}>
           <View style={styles.logoContainer}>
-            <Animated.Image
-              source={require('@/assets/images/signtouch-logo-white.png')}
+            <Animated.Text 
               style={[
-                styles.logoImage,
-                { width: isTablet ? 400 : 280, height: isTablet ? 120 : 85 },
+                styles.logoText, 
+                { fontSize: isTablet ? 100 : 72 }, 
                 titleStyle,
+                glowStyle,
               ]}
-              resizeMode="contain"
-            />
+            >
+              SignTouch
+            </Animated.Text>
             <Animated.Text style={[styles.subtitleText, subtitleStyle]}>
               CAPTUREZ VOS RENCONTRES
             </Animated.Text>
