@@ -257,16 +257,15 @@ export default function HomeScreen() {
 
         <View style={styles.content}>
           <View style={styles.logoContainer}>
-            <Animated.Text 
+            <Animated.Image
+              source={require('@/assets/images/signtouch-logo-white.png')}
               style={[
-                styles.logoText, 
-                { fontSize: isTablet ? 100 : 72 }, 
+                styles.logoImage,
+                { width: isTablet ? 400 : 280, height: isTablet ? 120 : 85 },
                 titleStyle,
-                glowStyle,
               ]}
-            >
-              Signtouch
-            </Animated.Text>
+              resizeMode="contain"
+            />
             <Animated.Text style={[styles.subtitleText, subtitleStyle]}>
               CAPTUREZ VOS RENCONTRES
             </Animated.Text>
@@ -332,6 +331,9 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 3, height: 3 },
     textShadowRadius: 15,
     letterSpacing: 2,
+  },
+  logoImage: {
+    marginBottom: 10,
   },
   subtitleText: {
     fontSize: 16,
