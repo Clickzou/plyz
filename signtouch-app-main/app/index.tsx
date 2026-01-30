@@ -265,7 +265,7 @@ export default function HomeScreen() {
                 glowStyle,
               ]}
             >
-              SignTouch
+              Signtouch
             </Animated.Text>
             <Animated.Text style={[styles.subtitleText, subtitleStyle]}>
               CAPTUREZ VOS RENCONTRES
@@ -332,9 +332,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 3, height: 3 },
     textShadowRadius: 15,
     letterSpacing: 2,
-  },
-  logoImage: {
-    marginBottom: 10,
   },
   subtitleText: {
     fontSize: 16,
