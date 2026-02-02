@@ -913,17 +913,6 @@ export default function ComposeScreen() {
   };
 
   const validateComposition = async () => {
-    // Vérifier si l'utilisateur est connecté et abonné
-    if (!user) {
-      setShowAccountModal(true);
-      return;
-    }
-    
-    if (status !== 'paid') {
-      router.push('/subscription');
-      return;
-    }
-
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
