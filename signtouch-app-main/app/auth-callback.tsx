@@ -9,68 +9,132 @@ export default function AuthCallbackScreen() {
   const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(true);
-  const params = useLocalSearchParams<{ token_hash?: string; type?: string }>();
+  const [debugInfo, setDebugInfo] = useState<string>('');
+  const params = useLocalSearchParams<{ token_hash?: string; type?: string; access_token?: string; refresh_token?: string }>();
 
   useEffect(() => {
     let processed = false;
-    let retryCount = 0;
-    const maxRetries = 5;
 
-    const checkSession = async (): Promise<boolean> => {
-      const { data } = await supabase.auth.getSession();
-      return !!data.session;
-    };
-
-    const handleDeepLink = async () => {
+    const handleAuth = async () => {
       if (processed) return;
       processed = true;
 
-      console.log('[AuthCallback] Starting...');
+      try {
+        console.log('[AuthCallback] Starting...');
+        console.log('[AuthCallback] Params:', JSON.stringify(params));
+        
+        const initialUrl = await Linking.getInitialURL();
+        console.log('[AuthCallback] Initial URL:', initialUrl);
+        setDebugInfo(`URL: ${initialUrl?.substring(0, 100)}...`);
 
-      // Attendre un peu que Supabase synchronise la session
-      const checkWithRetry = async () => {
-        for (let i = 0; i < maxRetries; i++) {
-          console.log('[AuthCallback] Checking session, attempt:', i + 1);
+        let accessToken: string | undefined;
+        let refreshToken: string | undefined;
+        let tokenHash: string | undefined = params.token_hash;
+        let tokenType: string | undefined = params.type;
+
+        if (initialUrl) {
+          if (initialUrl.includes('#')) {
+            const fragment = initialUrl.split('#')[1];
+            if (fragment) {
+              const fragmentParams = new URLSearchParams(fragment);
+              accessToken = fragmentParams.get('access_token') || undefined;
+              refreshToken = fragmentParams.get('refresh_token') || undefined;
+              tokenHash = tokenHash || fragmentParams.get('token_hash') || undefined;
+              tokenType = tokenType || fragmentParams.get('type') || undefined;
+              console.log('[AuthCallback] Fragment tokens found:', !!accessToken, !!refreshToken);
+            }
+          }
           
-          if (user) {
-            console.log('[AuthCallback] User found from context, redirecting...');
-            router.replace('/subscription');
-            return true;
+          if (initialUrl.includes('?')) {
+            const queryString = initialUrl.split('?')[1]?.split('#')[0];
+            if (queryString) {
+              const queryParams = new URLSearchParams(queryString);
+              accessToken = accessToken || queryParams.get('access_token') || undefined;
+              refreshToken = refreshToken || queryParams.get('refresh_token') || undefined;
+              tokenHash = tokenHash || queryParams.get('token_hash') || undefined;
+              tokenType = tokenType || queryParams.get('type') || undefined;
+            }
           }
-
-          const hasSession = await checkSession();
-          if (hasSession) {
-            console.log('[AuthCallback] Session found, redirecting...');
-            router.replace('/subscription');
-            return true;
-          }
-
-          // Attendre avant de réessayer
-          await new Promise(resolve => setTimeout(resolve, 1000));
         }
-        return false;
-      };
 
-      const success = await checkWithRetry();
-      
-      if (!success) {
-        console.log('[AuthCallback] No session found after retries');
+        accessToken = accessToken || params.access_token;
+        refreshToken = refreshToken || params.refresh_token;
+
+        console.log('[AuthCallback] Has access_token:', !!accessToken);
+        console.log('[AuthCallback] Has refresh_token:', !!refreshToken);
+        console.log('[AuthCallback] Token hash:', tokenHash);
+        console.log('[AuthCallback] Token type:', tokenType);
+
+        if (accessToken && refreshToken) {
+          console.log('[AuthCallback] Setting session with tokens...');
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          
+          if (sessionError) {
+            console.log('[AuthCallback] Session error:', sessionError.message);
+            setError(sessionError.message);
+            setVerifying(false);
+            return;
+          }
+          
+          console.log('[AuthCallback] Session set successfully!');
+          router.replace('/subscription');
+          return;
+        }
+
+        if (tokenHash && tokenType) {
+          console.log('[AuthCallback] Verifying OTP with token_hash...');
+          const { error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: tokenType as any,
+          });
+
+          if (verifyError) {
+            console.log('[AuthCallback] Verify error:', verifyError.message);
+            setError(verifyError.message);
+            setVerifying(false);
+            return;
+          }
+
+          console.log('[AuthCallback] OTP verified!');
+          router.replace('/subscription');
+          return;
+        }
+
+        if (user) {
+          console.log('[AuthCallback] User already logged in');
+          router.replace('/subscription');
+          return;
+        }
+
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          console.log('[AuthCallback] Existing session found');
+          router.replace('/subscription');
+          return;
+        }
+
+        console.log('[AuthCallback] No valid tokens or session found');
         setError('Lien invalide ou expiré');
+        setVerifying(false);
+      } catch (err) {
+        console.log('[AuthCallback] Error:', err);
+        setError('Erreur lors de la connexion');
         setVerifying(false);
       }
     };
 
-    const timeout = setTimeout(() => {
-      handleDeepLink();
-    }, 500);
-
+    const timeout = setTimeout(handleAuth, 300);
     return () => clearTimeout(timeout);
-  }, [user]);
+  }, []);
 
   if (error) {
     return (
       <View style={styles.container}>
         <Text style={styles.errorText}>{error}</Text>
+        {debugInfo ? <Text style={styles.debugText}>{debugInfo}</Text> : null}
         <TouchableOpacity
           style={styles.button}
           onPress={() => router.replace('/')}
@@ -85,6 +149,7 @@ export default function AuthCallbackScreen() {
     <View style={styles.container}>
       <ActivityIndicator size="large" color="#10b981" />
       <Text style={styles.text}>Connexion en cours...</Text>
+      {debugInfo ? <Text style={styles.debugText}>{debugInfo}</Text> : null}
     </View>
   );
 }
@@ -107,6 +172,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 20,
+  },
+  debugText: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 10,
   },
   button: {
     backgroundColor: '#10b981',
