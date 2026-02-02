@@ -22,6 +22,8 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  sendOtpCode: (email: string) => Promise<{ error: Error | null }>;
+  verifyOtpCode: (email: string, token: string) => Promise<{ error: Error | null }>;
   sendMagicLink: (email: string, language?: string) => Promise<{ error: Error | null }>;
   setPostAuthRedirect: (path: string) => Promise<void>;
   getPostAuthRedirect: () => Promise<string | null>;
@@ -95,6 +97,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await supabase.auth.signOut();
   };
 
+  const sendOtpCode = async (email: string) => {
+    try {
+      console.log('[Auth] Sending OTP code to:', email);
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+        },
+      });
+
+      if (error) {
+        console.log('[Auth] OTP send error:', error.message);
+        return { error };
+      }
+      console.log('[Auth] OTP code sent successfully');
+      return { error: null };
+    } catch (error) {
+      console.log('[Auth] OTP send exception:', error);
+      return { error: error as Error };
+    }
+  };
+
+  const verifyOtpCode = async (email: string, token: string) => {
+    try {
+      console.log('[Auth] Verifying OTP code for:', email);
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'email',
+      });
+
+      if (error) {
+        console.log('[Auth] OTP verify error:', error.message);
+        return { error };
+      }
+      console.log('[Auth] OTP verified successfully');
+      return { error: null };
+    } catch (error) {
+      console.log('[Auth] OTP verify exception:', error);
+      return { error: error as Error };
+    }
+  };
+
   const sendMagicLink = async (email: string, language: string = 'en') => {
     try {
       const redirectTo = getAuthRedirectUrl();
@@ -148,6 +193,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         signUp,
         signIn,
         signOut,
+        sendOtpCode,
+        verifyOtpCode,
         sendMagicLink,
         setPostAuthRedirect,
         getPostAuthRedirect,

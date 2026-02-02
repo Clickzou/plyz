@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
-import { Mail, CheckCircle } from 'lucide-react-native';
+import { Mail, CheckCircle, KeyRound } from 'lucide-react-native';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { router } from 'expo-router';
 
 interface AccountModalProps {
   visible: boolean;
@@ -15,14 +16,15 @@ export default function AccountModal({
   onClose,
   onSkip 
 }: AccountModalProps) {
-  const { t, language } = useTranslation();
-  const { sendMagicLink } = useAuth();
-  const [step, setStep] = useState<'email' | 'sent'>('email');
+  const { t } = useTranslation();
+  const { sendOtpCode, verifyOtpCode } = useAuth();
+  const [step, setStep] = useState<'email' | 'code' | 'success'>('email');
   const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSendLink = async () => {
+  const handleSendCode = async () => {
     if (!email.trim() || !email.includes('@')) {
       setError(t('invalidEmail') || 'Adresse email invalide');
       return;
@@ -32,11 +34,55 @@ export default function AccountModal({
     setError('');
     
     try {
-      const { error: sendError } = await sendMagicLink(email.trim(), language);
+      const { error: sendError } = await sendOtpCode(email.trim());
       if (sendError) {
         setError(sendError.message);
       } else {
-        setStep('sent');
+        setStep('code');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Une erreur est survenue');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!code.trim() || code.trim().length < 6) {
+      setError(t('invalidCode') || 'Code invalide');
+      return;
+    }
+    
+    setLoading(true);
+    setError('');
+    
+    try {
+      const { error: verifyError } = await verifyOtpCode(email.trim(), code.trim());
+      if (verifyError) {
+        setError(verifyError.message);
+      } else {
+        setStep('success');
+        setTimeout(() => {
+          handleClose();
+          router.replace('/subscription');
+        }, 1500);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Une erreur est survenue');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setLoading(true);
+    setError('');
+    setCode('');
+    
+    try {
+      const { error: sendError } = await sendOtpCode(email.trim());
+      if (sendError) {
+        setError(sendError.message);
       }
     } catch (err: any) {
       setError(err.message || 'Une erreur est survenue');
@@ -48,6 +94,7 @@ export default function AccountModal({
   const handleClose = () => {
     setStep('email');
     setEmail('');
+    setCode('');
     setError('');
     onClose();
   };
@@ -55,6 +102,7 @@ export default function AccountModal({
   const handleSkip = () => {
     setStep('email');
     setEmail('');
+    setCode('');
     setError('');
     onSkip();
   };
@@ -91,7 +139,7 @@ export default function AccountModal({
 
       <TouchableOpacity
         style={[styles.sendButton, loading && styles.buttonDisabled]}
-        onPress={handleSendLink}
+        onPress={handleSendCode}
         activeOpacity={0.8}
         disabled={loading}
       >
@@ -99,7 +147,7 @@ export default function AccountModal({
           <ActivityIndicator color="#fff" size="small" />
         ) : (
           <Text style={styles.sendButtonText}>
-            {t('receiveConnectionLink') || 'Recevoir un lien de connexion'}
+            {t('receiveCode') || 'Recevoir un code de connexion'}
           </Text>
         )}
       </TouchableOpacity>
@@ -108,34 +156,94 @@ export default function AccountModal({
         {t('noPasswordRequired') || 'Aucun mot de passe requis'}
       </Text>
       <Text style={styles.secureEmailText}>
-        {t('secureEmailExplanation') || 'Vous recevrez un lien sécurisé par email.'}
+        {t('secureCodeExplanation') || 'Vous recevrez un code à 6 chiffres par email.'}
       </Text>
     </>
   );
 
-  const renderSent = () => (
+  const renderCodeForm = () => (
+    <>
+      <View style={styles.iconContainer}>
+        <KeyRound size={48} color="#22c55e" />
+      </View>
+
+      <Text style={styles.title}>
+        {t('enterCode') || 'Entrez votre code'}
+      </Text>
+
+      <Text style={styles.subtitle}>
+        {t('codeSentTo') || `Nous avons envoyé un code à 6 chiffres à ${email}. Copiez-collez le code ci-dessous.`}
+      </Text>
+
+      <TextInput
+        style={[styles.input, styles.codeInput]}
+        placeholder="000000"
+        placeholderTextColor="#6b7280"
+        value={code}
+        onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, 6))}
+        keyboardType="number-pad"
+        autoCapitalize="none"
+        maxLength={6}
+        editable={!loading}
+      />
+
+      {error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : null}
+
+      <TouchableOpacity
+        style={[styles.sendButton, loading && styles.buttonDisabled]}
+        onPress={handleVerifyCode}
+        activeOpacity={0.8}
+        disabled={loading || code.length < 6}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" size="small" />
+        ) : (
+          <Text style={styles.sendButtonText}>
+            {t('verify') || 'Vérifier'}
+          </Text>
+        )}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={handleResendCode}
+        disabled={loading}
+        style={styles.resendButton}
+      >
+        <Text style={styles.resendText}>
+          {t('resendCode') || 'Renvoyer le code'}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          setStep('email');
+          setCode('');
+          setError('');
+        }}
+        style={styles.changeEmailButton}
+      >
+        <Text style={styles.changeEmailText}>
+          {t('changeEmail') || 'Changer d\'adresse email'}
+        </Text>
+      </TouchableOpacity>
+    </>
+  );
+
+  const renderSuccess = () => (
     <>
       <View style={[styles.iconContainer, styles.successIcon]}>
         <CheckCircle size={48} color="#22c55e" />
       </View>
 
       <Text style={styles.title}>
-        {t('checkYourEmail') || 'Vérifiez votre email'}
+        {t('connectionSuccess') || 'Connexion réussie !'}
       </Text>
 
       <Text style={styles.subtitle}>
-        {t('magicLinkSent') || `Nous avons envoyé un lien de connexion à ${email}. Cliquez sur le lien pour vous connecter.`}
+        {t('welcomeBack') || 'Bienvenue ! Vos photos sont maintenant sécurisées.'}
       </Text>
-
-      <TouchableOpacity
-        style={styles.sendButton}
-        onPress={handleClose}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.sendButtonText}>
-          {t('understood') || 'Compris'}
-        </Text>
-      </TouchableOpacity>
     </>
   );
 
@@ -149,7 +257,8 @@ export default function AccountModal({
       <View style={styles.overlay}>
         <View style={styles.container}>
           {step === 'email' && renderEmailForm()}
-          {step === 'sent' && renderSent()}
+          {step === 'code' && renderCodeForm()}
+          {step === 'success' && renderSuccess()}
         </View>
       </View>
     </Modal>
@@ -211,6 +320,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#4b5563',
   },
+  codeInput: {
+    fontSize: 28,
+    fontWeight: '700',
+    textAlign: 'center',
+    letterSpacing: 8,
+  },
   errorText: {
     color: '#ef4444',
     fontSize: 14,
@@ -244,5 +359,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7280',
     textAlign: 'center',
+  },
+  resendButton: {
+    marginBottom: 8,
+  },
+  resendText: {
+    fontSize: 14,
+    color: '#22c55e',
+    textAlign: 'center',
+  },
+  changeEmailButton: {
+    marginTop: 4,
+  },
+  changeEmailText: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    textDecorationLine: 'underline',
   },
 });
