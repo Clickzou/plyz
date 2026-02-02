@@ -1423,10 +1423,12 @@ export default function ResultScreen() {
 
   // Save function
   const handleSaveEdits = async () => {
+    console.log('🔒 handleSaveEdits appelé, user:', user?.id, 'status:', status);
     if (!memory || !memoryId) return;
 
     // Vérifier si l'utilisateur est connecté et abonné
     if (!user) {
+      console.log('🔒 Pas de user, affichage du modal de compte');
       setShowAccountModal(true);
       return;
     }
