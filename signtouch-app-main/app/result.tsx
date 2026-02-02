@@ -30,6 +30,7 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-g
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, runOnJS } from 'react-native-reanimated';
 import Svg, { Path, Defs, Filter, FeColorMatrix, Image as SvgImage } from 'react-native-svg';
 import PremiumModal from '@/components/PremiumModal';
+import AccountModal from '@/components/AccountModal';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { maybeShowSubscriptionOffer } from '@/utils/subscriptionOffer';
 import Slider from '@react-native-community/slider';
@@ -793,6 +794,7 @@ export default function ResultScreen() {
   const [showSignatureMode, setShowSignatureMode] = useState(false);
   const [showEffectsPanel, setShowEffectsPanel] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
   const [limitType, setLimitType] = useState<'signature' | 'text' | null>(null);
   const [showMetadataModal, setShowMetadataModal] = useState(false);
 
@@ -1422,6 +1424,17 @@ export default function ResultScreen() {
   // Save function
   const handleSaveEdits = async () => {
     if (!memory || !memoryId) return;
+
+    // Vérifier si l'utilisateur est connecté et abonné
+    if (!user) {
+      setShowAccountModal(true);
+      return;
+    }
+    
+    if (status !== 'paid') {
+      router.push('/subscription');
+      return;
+    }
 
     try {
       setSaving(true);
@@ -2344,6 +2357,12 @@ export default function ResultScreen() {
               ? t('limitReachedSignatureMessage')
               : t('limitReachedTextMessage')
           }
+        />
+
+        <AccountModal
+          visible={showAccountModal}
+          onClose={() => setShowAccountModal(false)}
+          onSkip={() => setShowAccountModal(false)}
         />
 
         {/* Text Input Modal */}
