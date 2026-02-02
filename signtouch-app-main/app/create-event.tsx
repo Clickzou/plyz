@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -37,6 +37,8 @@ const EVENT_TYPES: { type: EventType; icon: any; color: string; labelKey: string
   { type: 'autre', icon: Calendar, color: '#6b7280', labelKey: 'eventAutre' },
 ];
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import AccountModal from '@/components/AccountModal';
 import { 
   createEventSession, 
   addEventSigner, 
@@ -80,6 +82,19 @@ export default function CreateEventScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { status } = useSubscription();
+  const [showAccountModal, setShowAccountModal] = useState(false);
+
+  // Vérifier compte et abonnement au chargement
+  useEffect(() => {
+    if (!user) {
+      // Pas connecté - afficher modal de connexion
+      setShowAccountModal(true);
+    } else if (status !== 'paid') {
+      // Connecté mais pas abonné - rediriger vers abonnement
+      router.replace('/subscription');
+    }
+  }, [user, status]);
 
   const [step, setStep] = useState<'config' | 'signers' | 'success'>('config');
   const [eventName, setEventName] = useState('');
@@ -922,6 +937,22 @@ export default function CreateEventScreen() {
             </Pressable>
           </Pressable>
         </Modal>
+
+        <AccountModal
+          visible={showAccountModal}
+          onClose={() => {
+            setShowAccountModal(false);
+            // Après connexion, vérifier l'abonnement
+            if (status !== 'paid') {
+              router.replace('/subscription');
+            }
+          }}
+          onSkip={() => {
+            // Pas d'échappatoire - retour à l'accueil
+            setShowAccountModal(false);
+            router.replace('/');
+          }}
+        />
       </LinearGradient>
     </GestureHandlerRootView>
   );
