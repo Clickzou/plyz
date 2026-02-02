@@ -35,6 +35,7 @@ import * as StorageService from '@/utils/storageService';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import PremiumModal from '@/components/PremiumModal';
+import AccountModal from '@/components/AccountModal';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useFonts } from 'expo-font';
 import { ShadowsIntoLight_400Regular } from '@expo-google-fonts/shadows-into-light';
@@ -388,6 +389,7 @@ export default function ComposeScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
   const [showTextModal, setShowTextModal] = useState(false);
   const [textInput, setTextInput] = useState('');
@@ -1000,10 +1002,17 @@ export default function ComposeScreen() {
       console.log('✨ Animation de succès...');
 
       setTimeout(() => {
-        console.log('🚀 Navigation vers la galerie');
         setIsSaving(false);
         setIsSaved(false);
-        router.push('/gallery');
+        
+        // Si l'utilisateur n'est pas connecté, afficher le modal de connexion obligatoire
+        if (!user) {
+          console.log('🔐 Affichage du modal de connexion obligatoire');
+          setShowAccountModal(true);
+        } else {
+          console.log('🚀 Navigation vers la galerie');
+          router.push('/gallery');
+        }
       }, 800);
     } catch (error) {
       console.error('❌ Erreur lors de la validation:', error);
@@ -1352,6 +1361,17 @@ export default function ComposeScreen() {
         }}
         title={t('limitReached')}
         message={t('limitReachedSignatureMessage')}
+      />
+
+      <AccountModal
+        visible={showAccountModal}
+        onClose={() => {
+          // Appelé uniquement après connexion réussie (la redirection est gérée dans AccountModal)
+          setShowAccountModal(false);
+        }}
+        onSkip={() => {
+          // Jamais appelé car le modal est non-fermable
+        }}
       />
 
       <Modal

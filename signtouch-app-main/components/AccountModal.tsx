@@ -252,7 +252,9 @@ export default function AccountModal({
       visible={visible}
       transparent={true}
       animationType="fade"
-      onRequestClose={handleSkip}
+      onRequestClose={() => {
+        // Modal non-fermable - l'utilisateur doit se connecter
+      }}
     >
       <View style={styles.overlay}>
         <View style={styles.container}>
