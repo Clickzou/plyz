@@ -18,21 +18,21 @@ export default function AuthCallbackScreen() {
       const parsedUrl = Linking.parse(url);
       let tokenHash = parsedUrl.queryParams?.token_hash as string | undefined;
       let tokenType = parsedUrl.queryParams?.type as string | undefined;
+      let accessToken: string | undefined;
+      let refreshToken: string | undefined;
       
-      if (!tokenHash && url.includes('#')) {
+      if (url.includes('#')) {
         const fragment = url.split('#')[1];
         if (fragment) {
           const fragmentParams = new URLSearchParams(fragment);
-          tokenHash = fragmentParams.get('token_hash') || undefined;
-          tokenType = fragmentParams.get('type') || undefined;
-          
-          if (!tokenHash && fragmentParams.get('access_token')) {
-            return { hasSession: true };
-          }
+          tokenHash = tokenHash || fragmentParams.get('token_hash') || undefined;
+          tokenType = tokenType || fragmentParams.get('type') || undefined;
+          accessToken = fragmentParams.get('access_token') || undefined;
+          refreshToken = fragmentParams.get('refresh_token') || undefined;
         }
       }
       
-      return { token_hash: tokenHash, type: tokenType };
+      return { token_hash: tokenHash, type: tokenType, access_token: accessToken, refresh_token: refreshToken };
     };
 
     const handleAuth = async (tokenHash: string, tokenType: string) => {
@@ -69,25 +69,38 @@ export default function AuthCallbackScreen() {
         console.log('[AuthCallback] Starting, params:', params);
         let tokenHash = params.token_hash;
         let tokenType = params.type;
+        let accessToken: string | undefined;
+        let refreshToken: string | undefined;
 
-        if (!tokenHash || !tokenType) {
-          const initialUrl = await Linking.getInitialURL();
-          console.log('[AuthCallback] Initial URL:', initialUrl);
-          if (initialUrl) {
-            const urlParams = parseUrlParams(initialUrl);
-            if ('hasSession' in urlParams && urlParams.hasSession) {
-              const { data } = await supabase.auth.getSession();
-              if (data.session) {
-                router.replace('/subscription');
-                return;
-              }
-            }
-            tokenHash = urlParams.token_hash;
-            tokenType = urlParams.type;
-          }
+        const initialUrl = await Linking.getInitialURL();
+        console.log('[AuthCallback] Initial URL:', initialUrl);
+        
+        if (initialUrl) {
+          const urlParams = parseUrlParams(initialUrl);
+          tokenHash = tokenHash || urlParams.token_hash;
+          tokenType = tokenType || urlParams.type;
+          accessToken = urlParams.access_token;
+          refreshToken = urlParams.refresh_token;
         }
 
-        console.log('[AuthCallback] Token hash:', tokenHash, 'Type:', tokenType);
+        console.log('[AuthCallback] Token hash:', tokenHash, 'Type:', tokenType, 'Has access_token:', !!accessToken);
+
+        if (accessToken && refreshToken) {
+          console.log('[AuthCallback] Setting session with tokens...');
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (sessionError) {
+            console.log('[AuthCallback] Session error:', sessionError.message);
+            setError(sessionError.message);
+            setVerifying(false);
+            return;
+          }
+          console.log('[AuthCallback] Session set, redirecting...');
+          router.replace('/subscription');
+          return;
+        }
 
         if (tokenHash && (tokenType === 'magiclink' || tokenType === 'email' || tokenType === 'signup')) {
           await handleAuth(tokenHash, tokenType);
