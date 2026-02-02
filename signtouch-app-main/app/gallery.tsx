@@ -384,6 +384,18 @@ export default function GalleryScreen() {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    
+    // Vérifier si l'utilisateur est connecté et abonné
+    if (!user) {
+      setShowAccountModal(true);
+      return;
+    }
+    
+    if (status !== 'paid') {
+      router.push('/subscription');
+      return;
+    }
+    
     setSelectedMemory(null);
     router.push({
       pathname: '/result',

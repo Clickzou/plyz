@@ -17,6 +17,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, QrCode, Search, Check, Download, Camera, Users, Clock } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import AccountModal from '@/components/AccountModal';
 import { getEventByCode, LiveEvent } from '@/utils/liveEventStorage';
 import { 
   joinEventSession, 
@@ -34,6 +37,9 @@ export default function JoinEventScreen() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const { status } = useSubscription();
+  const [showAccountModal, setShowAccountModal] = useState(false);
 
   const [code, setCode] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -146,6 +152,17 @@ export default function JoinEventScreen() {
   };
 
   const handleSaveSignature = async () => {
+    // Vérifier si l'utilisateur est connecté et abonné
+    if (!user) {
+      setShowAccountModal(true);
+      return;
+    }
+    
+    if (status !== 'paid') {
+      router.push('/subscription');
+      return;
+    }
+    
     if (!foundEvent?.signature_url) return;
     
     setIsSaving(true);
@@ -398,6 +415,12 @@ export default function JoinEventScreen() {
           </View>
         ) : null}
       </ScrollView>
+
+      <AccountModal
+        visible={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+        onSkip={() => setShowAccountModal(false)}
+      />
     </View>
   );
 }

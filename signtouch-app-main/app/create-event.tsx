@@ -24,6 +24,8 @@ import Svg, { Path, G } from 'react-native-svg';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 const QRCode = require('react-native-qrcode-svg').default;
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import AccountModal from '@/components/AccountModal';
 import { EventType } from '@/utils/memoriesStorage';
 
 const EVENT_TYPES: { type: EventType; icon: any; color: string; labelKey: string }[] = [
@@ -80,6 +82,8 @@ export default function CreateEventScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { status } = useSubscription();
+  const [showAccountModal, setShowAccountModal] = useState(false);
 
   const [step, setStep] = useState<'config' | 'signers' | 'success'>('config');
   const [eventName, setEventName] = useState('');
@@ -221,6 +225,17 @@ export default function CreateEventScreen() {
   };
 
   const handleCreateEvent = async () => {
+    // Vérifier si l'utilisateur est connecté et abonné
+    if (!user) {
+      setShowAccountModal(true);
+      return;
+    }
+    
+    if (status !== 'paid') {
+      router.push('/subscription');
+      return;
+    }
+    
     const validSigners = signers.filter(s => s.name.trim() && s.paths.length > 0);
     if (validSigners.length === 0) {
       Alert.alert(t('error') || 'Error', t('atLeastOneSigner') || 'Add at least one signature');
@@ -922,6 +937,12 @@ export default function CreateEventScreen() {
             </Pressable>
           </Pressable>
         </Modal>
+
+        <AccountModal
+          visible={showAccountModal}
+          onClose={() => setShowAccountModal(false)}
+          onSkip={() => setShowAccountModal(false)}
+        />
       </LinearGradient>
     </GestureHandlerRootView>
   );
