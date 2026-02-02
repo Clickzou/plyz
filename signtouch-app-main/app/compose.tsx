@@ -35,6 +35,7 @@ import * as StorageService from '@/utils/storageService';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import PremiumModal from '@/components/PremiumModal';
+import AccountModal from '@/components/AccountModal';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useFonts } from 'expo-font';
 import { ShadowsIntoLight_400Regular } from '@expo-google-fonts/shadows-into-light';
@@ -388,6 +389,7 @@ export default function ComposeScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
   const [showTextModal, setShowTextModal] = useState(false);
   const [textInput, setTextInput] = useState('');
@@ -911,6 +913,17 @@ export default function ComposeScreen() {
   };
 
   const validateComposition = async () => {
+    // Vérifier si l'utilisateur est connecté et abonné
+    if (!user) {
+      setShowAccountModal(true);
+      return;
+    }
+    
+    if (status !== 'paid') {
+      router.push('/subscription');
+      return;
+    }
+
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -1354,6 +1367,11 @@ export default function ComposeScreen() {
         message={t('limitReachedSignatureMessage')}
       />
 
+      <AccountModal
+        visible={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+        onSkip={() => setShowAccountModal(false)}
+      />
 
       <Modal
         visible={showTextModal}
