@@ -26,6 +26,9 @@ import {
 } from '@/utils/eventSessionStorage';
 import BarCodeScannerWrapper, { requestCameraPermissionAsync, isBarCodeScannerAvailable } from '@/components/BarCodeScannerWrapper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import AccountModal from '@/components/AccountModal';
 
 const SAVED_SIGNATURES_KEY = '@signtouch_event_signatures';
 
@@ -34,6 +37,18 @@ export default function JoinEventScreen() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const { status } = useSubscription();
+  const [showAccountModal, setShowAccountModal] = useState(false);
+
+  // Vérifier compte et abonnement au chargement
+  useEffect(() => {
+    if (!user) {
+      setShowAccountModal(true);
+    } else if (status !== 'paid') {
+      router.replace('/subscription');
+    }
+  }, [user, status]);
 
   const [code, setCode] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -398,6 +413,20 @@ export default function JoinEventScreen() {
           </View>
         ) : null}
       </ScrollView>
+
+      <AccountModal
+        visible={showAccountModal}
+        onClose={() => {
+          setShowAccountModal(false);
+          if (status !== 'paid') {
+            router.replace('/subscription');
+          }
+        }}
+        onSkip={() => {
+          setShowAccountModal(false);
+          router.replace('/');
+        }}
+      />
     </View>
   );
 }
