@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -37,8 +37,6 @@ const EVENT_TYPES: { type: EventType; icon: any; color: string; labelKey: string
   { type: 'autre', icon: Calendar, color: '#6b7280', labelKey: 'eventAutre' },
 ];
 import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription } from '@/contexts/SubscriptionContext';
-import AccountModal from '@/components/AccountModal';
 import { 
   createEventSession, 
   addEventSigner, 
@@ -82,9 +80,6 @@ export default function CreateEventScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { status } = useSubscription();
-  const [showAccountModal, setShowAccountModal] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'create' | null>(null);
 
   const [step, setStep] = useState<'config' | 'signers' | 'success'>('config');
   const [eventName, setEventName] = useState('');
@@ -229,18 +224,6 @@ export default function CreateEventScreen() {
     const validSigners = signers.filter(s => s.name.trim() && s.paths.length > 0);
     if (validSigners.length === 0) {
       Alert.alert(t('error') || 'Error', t('atLeastOneSigner') || 'Add at least one signature');
-      return;
-    }
-
-    // Paywall: vérifier compte et abonnement avant de créer le QR code
-    if (!user) {
-      setPendingAction('create');
-      setShowAccountModal(true);
-      return;
-    }
-    if (status !== 'paid') {
-      setPendingAction('create');
-      router.push('/subscription');
       return;
     }
 
@@ -939,25 +922,6 @@ export default function CreateEventScreen() {
             </Pressable>
           </Pressable>
         </Modal>
-
-        <AccountModal
-          visible={showAccountModal}
-          onClose={() => {
-            setShowAccountModal(false);
-            // Après connexion, vérifier l'abonnement puis relancer l'action
-            if (status !== 'paid') {
-              router.push('/subscription');
-            } else if (pendingAction === 'create') {
-              setPendingAction(null);
-              handleCreateEvent();
-            }
-          }}
-          onSkip={() => {
-            // Annuler l'action pendante
-            setPendingAction(null);
-            setShowAccountModal(false);
-          }}
-        />
       </LinearGradient>
     </GestureHandlerRootView>
   );
