@@ -13,112 +13,49 @@ export default function AuthCallbackScreen() {
 
   useEffect(() => {
     let processed = false;
+    let retryCount = 0;
+    const maxRetries = 5;
 
-    const parseUrlParams = (url: string) => {
-      const parsedUrl = Linking.parse(url);
-      let tokenHash = parsedUrl.queryParams?.token_hash as string | undefined;
-      let tokenType = parsedUrl.queryParams?.type as string | undefined;
-      let accessToken: string | undefined;
-      let refreshToken: string | undefined;
-      
-      if (url.includes('#')) {
-        const fragment = url.split('#')[1];
-        if (fragment) {
-          const fragmentParams = new URLSearchParams(fragment);
-          tokenHash = tokenHash || fragmentParams.get('token_hash') || undefined;
-          tokenType = tokenType || fragmentParams.get('type') || undefined;
-          accessToken = fragmentParams.get('access_token') || undefined;
-          refreshToken = fragmentParams.get('refresh_token') || undefined;
-        }
-      }
-      
-      return { token_hash: tokenHash, type: tokenType, access_token: accessToken, refresh_token: refreshToken };
-    };
-
-    const handleAuth = async (tokenHash: string, tokenType: string) => {
-      try {
-        console.log('[AuthCallback] Verifying OTP:', tokenType);
-        const { error: verifyError } = await supabase.auth.verifyOtp({
-          token_hash: tokenHash,
-          type: tokenType as any,
-        });
-
-        if (verifyError) {
-          console.log('[AuthCallback] Verify error:', verifyError.message);
-          setError(verifyError.message);
-          setVerifying(false);
-          return;
-        }
-
-        console.log('[AuthCallback] Success, redirecting...');
-        setTimeout(() => {
-          router.replace('/subscription');
-        }, 1000);
-      } catch (err) {
-        console.log('[AuthCallback] Error:', err);
-        setError('Erreur lors de la connexion');
-        setVerifying(false);
-      }
+    const checkSession = async (): Promise<boolean> => {
+      const { data } = await supabase.auth.getSession();
+      return !!data.session;
     };
 
     const handleDeepLink = async () => {
       if (processed) return;
       processed = true;
 
-      try {
-        console.log('[AuthCallback] Starting, params:', params);
-        let tokenHash = params.token_hash;
-        let tokenType = params.type;
-        let accessToken: string | undefined;
-        let refreshToken: string | undefined;
+      console.log('[AuthCallback] Starting...');
 
-        const initialUrl = await Linking.getInitialURL();
-        console.log('[AuthCallback] Initial URL:', initialUrl);
-        
-        if (initialUrl) {
-          const urlParams = parseUrlParams(initialUrl);
-          tokenHash = tokenHash || urlParams.token_hash;
-          tokenType = tokenType || urlParams.type;
-          accessToken = urlParams.access_token;
-          refreshToken = urlParams.refresh_token;
-        }
-
-        console.log('[AuthCallback] Token hash:', tokenHash, 'Type:', tokenType, 'Has access_token:', !!accessToken);
-
-        if (accessToken && refreshToken) {
-          console.log('[AuthCallback] Setting session with tokens...');
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-          if (sessionError) {
-            console.log('[AuthCallback] Session error:', sessionError.message);
-            setError(sessionError.message);
-            setVerifying(false);
-            return;
-          }
-          console.log('[AuthCallback] Session set, redirecting...');
-          router.replace('/subscription');
-          return;
-        }
-
-        if (tokenHash && (tokenType === 'magiclink' || tokenType === 'email' || tokenType === 'signup')) {
-          await handleAuth(tokenHash, tokenType);
-        } else if (user) {
-          router.replace('/subscription');
-        } else {
-          const { data } = await supabase.auth.getSession();
-          if (data.session) {
+      // Attendre un peu que Supabase synchronise la session
+      const checkWithRetry = async () => {
+        for (let i = 0; i < maxRetries; i++) {
+          console.log('[AuthCallback] Checking session, attempt:', i + 1);
+          
+          if (user) {
+            console.log('[AuthCallback] User found from context, redirecting...');
             router.replace('/subscription');
-          } else {
-            console.log('[AuthCallback] No valid token found');
-            setError('Lien invalide ou expiré');
-            setVerifying(false);
+            return true;
           }
+
+          const hasSession = await checkSession();
+          if (hasSession) {
+            console.log('[AuthCallback] Session found, redirecting...');
+            router.replace('/subscription');
+            return true;
+          }
+
+          // Attendre avant de réessayer
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
-      } catch (err) {
-        console.log('[AuthCallback] Error:', err);
-        setError('Erreur lors de la connexion');
+        return false;
+      };
+
+      const success = await checkWithRetry();
+      
+      if (!success) {
+        console.log('[AuthCallback] No session found after retries');
+        setError('Lien invalide ou expiré');
         setVerifying(false);
       }
     };
@@ -128,7 +65,7 @@ export default function AuthCallbackScreen() {
     }, 500);
 
     return () => clearTimeout(timeout);
-  }, [user, params]);
+  }, [user]);
 
   if (error) {
     return (
