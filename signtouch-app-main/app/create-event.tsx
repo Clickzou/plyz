@@ -84,17 +84,7 @@ export default function CreateEventScreen() {
   const { user } = useAuth();
   const { status } = useSubscription();
   const [showAccountModal, setShowAccountModal] = useState(false);
-
-  // Vérifier compte et abonnement au chargement
-  useEffect(() => {
-    if (!user) {
-      // Pas connecté - afficher modal de connexion
-      setShowAccountModal(true);
-    } else if (status !== 'paid') {
-      // Connecté mais pas abonné - rediriger vers abonnement
-      router.replace('/subscription');
-    }
-  }, [user, status]);
+  const [pendingAction, setPendingAction] = useState<'create' | null>(null);
 
   const [step, setStep] = useState<'config' | 'signers' | 'success'>('config');
   const [eventName, setEventName] = useState('');
@@ -239,6 +229,18 @@ export default function CreateEventScreen() {
     const validSigners = signers.filter(s => s.name.trim() && s.paths.length > 0);
     if (validSigners.length === 0) {
       Alert.alert(t('error') || 'Error', t('atLeastOneSigner') || 'Add at least one signature');
+      return;
+    }
+
+    // Paywall: vérifier compte et abonnement avant de créer le QR code
+    if (!user) {
+      setPendingAction('create');
+      setShowAccountModal(true);
+      return;
+    }
+    if (status !== 'paid') {
+      setPendingAction('create');
+      router.push('/subscription');
       return;
     }
 
@@ -942,15 +944,18 @@ export default function CreateEventScreen() {
           visible={showAccountModal}
           onClose={() => {
             setShowAccountModal(false);
-            // Après connexion, vérifier l'abonnement
+            // Après connexion, vérifier l'abonnement puis relancer l'action
             if (status !== 'paid') {
-              router.replace('/subscription');
+              router.push('/subscription');
+            } else if (pendingAction === 'create') {
+              setPendingAction(null);
+              handleCreateEvent();
             }
           }}
           onSkip={() => {
-            // Pas d'échappatoire - retour à l'accueil
+            // Annuler l'action pendante
+            setPendingAction(null);
             setShowAccountModal(false);
-            router.replace('/');
           }}
         />
       </LinearGradient>

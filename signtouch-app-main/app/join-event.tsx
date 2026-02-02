@@ -40,15 +40,7 @@ export default function JoinEventScreen() {
   const { user } = useAuth();
   const { status } = useSubscription();
   const [showAccountModal, setShowAccountModal] = useState(false);
-
-  // Vérifier compte et abonnement au chargement
-  useEffect(() => {
-    if (!user) {
-      setShowAccountModal(true);
-    } else if (status !== 'paid') {
-      router.replace('/subscription');
-    }
-  }, [user, status]);
+  const [pendingAction, setPendingAction] = useState<'view' | 'save' | null>(null);
 
   const [code, setCode] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -163,6 +155,18 @@ export default function JoinEventScreen() {
   const handleSaveSignature = async () => {
     if (!foundEvent?.signature_url) return;
     
+    // Paywall: vérifier compte et abonnement avant de sauvegarder
+    if (!user) {
+      setPendingAction('save');
+      setShowAccountModal(true);
+      return;
+    }
+    if (status !== 'paid') {
+      setPendingAction('save');
+      router.push('/subscription');
+      return;
+    }
+
     setIsSaving(true);
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -195,18 +199,30 @@ export default function JoinEventScreen() {
   };
 
   const goToGallery = () => {
-    if (foundSession) {
-      router.push({
-        pathname: '/event-gallery',
-        params: {
-          sessionId: foundSession.id,
-          sessionTitle: foundSession.title,
-          joinCode: foundSession.join_code,
-          endsAt: foundSession.ends_at,
-          signers: JSON.stringify(sessionSigners),
-        }
-      });
+    if (!foundSession) return;
+    
+    // Paywall: vérifier compte et abonnement avant d'accéder à la galerie
+    if (!user) {
+      setPendingAction('view');
+      setShowAccountModal(true);
+      return;
     }
+    if (status !== 'paid') {
+      setPendingAction('view');
+      router.push('/subscription');
+      return;
+    }
+
+    router.push({
+      pathname: '/event-gallery',
+      params: {
+        sessionId: foundSession.id,
+        sessionTitle: foundSession.title,
+        joinCode: foundSession.join_code,
+        endsAt: foundSession.ends_at,
+        signers: JSON.stringify(sessionSigners),
+      }
+    });
   };
 
   const handleSearchAnother = () => {
@@ -418,13 +434,21 @@ export default function JoinEventScreen() {
         visible={showAccountModal}
         onClose={() => {
           setShowAccountModal(false);
+          // Après connexion, vérifier l'abonnement puis relancer l'action
           if (status !== 'paid') {
-            router.replace('/subscription');
+            router.push('/subscription');
+          } else if (pendingAction === 'save') {
+            setPendingAction(null);
+            handleSaveSignature();
+          } else if (pendingAction === 'view') {
+            setPendingAction(null);
+            goToGallery();
           }
         }}
         onSkip={() => {
+          // Annuler l'action pendante
+          setPendingAction(null);
           setShowAccountModal(false);
-          router.replace('/');
         }}
       />
     </View>
