@@ -1523,6 +1523,20 @@ export default function ResultScreen() {
 
   // Save and return to gallery
   const saveAndReturn = async () => {
+    console.log('🔒 saveAndReturn appelé, user:', user?.id, 'status:', status);
+    
+    // Vérifier si l'utilisateur est connecté et abonné
+    if (!user) {
+      console.log('🔒 Pas de user, affichage du modal de compte');
+      setShowAccountModal(true);
+      return;
+    }
+    
+    if (status !== 'paid') {
+      router.push('/subscription');
+      return;
+    }
+
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
