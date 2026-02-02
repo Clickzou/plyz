@@ -176,16 +176,6 @@ export default function GalleryScreen() {
         const trialStatus = await getTrialStatus(user?.id || null);
         console.log('[Trial] Trial status:', trialStatus);
         setTrialDaysRemaining(trialStatus.daysRemaining);
-        
-        setTimeout(() => {
-          if (!user) {
-            console.log('[Trial] Showing account modal');
-            setShowAccountModal(true);
-          } else if (status === 'free') {
-            console.log('[Trial] Showing trial modal');
-            setShowTrialModal(true);
-          }
-        }, 1000);
       };
 
       checkAndShowModals();
