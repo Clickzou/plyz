@@ -33,7 +33,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       (async () => {
         setSession(session);
         setUser(session?.user ?? null);
@@ -43,17 +45,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // ✅ SIGN UP (Confirm sign-up) + redirection vers l’app
   const signUp = async (email: string, password: string) => {
     try {
+      // Deep link vers l’écran/callback de l’app
+      const redirectTo = Linking.createURL('auth-callback');
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          // IMPORTANT : force Supabase à mettre CE redirect dans le mail de confirmation
+          emailRedirectTo: redirectTo,
+        },
       });
 
-      if (error) {
-        return { error };
-      }
-
+      if (error) return { error };
       return { error: null };
     } catch (error) {
       return { error: error as Error };
@@ -67,10 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         password,
       });
 
-      if (error) {
-        return { error };
-      }
-
+      if (error) return { error };
       return { error: null };
     } catch (error) {
       return { error: error as Error };
@@ -92,10 +96,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         },
       });
 
-      if (error) {
-        return { error };
-      }
-
+      if (error) return { error };
       return { error: null };
     } catch (error) {
       return { error: error as Error };
@@ -128,18 +129,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{
-      session,
-      user,
-      loading,
-      signUp,
-      signIn,
-      signOut,
-      sendMagicLink,
-      setPostAuthRedirect,
-      getPostAuthRedirect,
-      clearPostAuthRedirect
-    }}>
+    <AuthContext.Provider
+      value={{
+        session,
+        user,
+        loading,
+        signUp,
+        signIn,
+        signOut,
+        sendMagicLink,
+        setPostAuthRedirect,
+        getPostAuthRedirect,
+        clearPostAuthRedirect,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

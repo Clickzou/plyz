@@ -1,7 +1,7 @@
 modules = ["nodejs-20", "postgresql-16"]
 [nix]
 channel = "stable-25_05"
-packages = ["unzip"]
+packages = ["unzip", "nano"]
 
 [agent]
 expertMode = true
@@ -31,9 +31,21 @@ args = "cd signtouch-app-main && npx expo start --clear --web --port 5000 --tunn
 waitForPort = 5000
 
 [[ports]]
+localPort = 3000
+externalPort = 3000
+
+[[ports]]
 localPort = 5000
 externalPort = 80
 
 [[ports]]
 localPort = 5001
 externalPort = 3002
+
+[[ports]]
+localPort = 8081
+externalPort = 8081
+
+[userenv]
+
+[userenv.shared]
