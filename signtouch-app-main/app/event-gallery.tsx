@@ -224,7 +224,7 @@ export default function EventGalleryScreen() {
     try {
       if (Platform.OS === 'web') {
         const link = document.createElement('a');
-        link.href = asset.image_url;
+        link.href = asset.asset_url;
         link.download = `signtouch-${Date.now()}.png`;
         link.click();
       } else {
@@ -234,7 +234,7 @@ export default function EventGalleryScreen() {
           return;
         }
         const fileUri = (FileSystem.documentDirectory || '') + `signtouch-${Date.now()}.png`;
-        await FileSystem.downloadAsync(asset.image_url, fileUri);
+        await FileSystem.downloadAsync(asset.asset_url, fileUri);
         await MediaLibrary.saveToLibraryAsync(fileUri);
         Alert.alert(t('done') || 'Done', t('imageSaved') || 'Image saved!');
       }
@@ -262,7 +262,7 @@ export default function EventGalleryScreen() {
 
   const renderAsset = ({ item }: { item: EventAsset }) => (
     <TouchableOpacity style={styles.assetCard} onPress={() => handleDownload(item)} activeOpacity={0.9}>
-      <Image source={{ uri: item.image_url }} style={styles.assetImage} resizeMode="cover" />
+      <Image source={{ uri: item.asset_url }} style={styles.assetImage} resizeMode="cover" />
       <View style={styles.assetOverlay}>
         {item.signer && (
           <View style={styles.signerBadge}>
@@ -270,7 +270,7 @@ export default function EventGalleryScreen() {
           </View>
         )}
         <View style={styles.actionButtons}>
-          {item.type === 'photo_signed' && item.signer && (
+          {(item.asset_type === 'photo_signed' || item.asset_type === 'signed_photo') && item.signer && (
             <TouchableOpacity style={styles.cloneBtn} onPress={() => handleClone(item)}>
               <Copy size={16} color="#fff" />
             </TouchableOpacity>
@@ -280,7 +280,7 @@ export default function EventGalleryScreen() {
           </TouchableOpacity>
         </View>
       </View>
-      {item.type === 'photo_signed' && (
+      {(item.asset_type === 'photo_signed' || item.asset_type === 'signed_photo') && (
         <View style={styles.signedBadge}>
           <Pen size={12} color="#fff" />
         </View>

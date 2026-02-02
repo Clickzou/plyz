@@ -30,8 +30,8 @@ export interface EventAsset {
   id: string;
   event_id: string;
   signer_id: string | null;
-  type: 'photo' | 'photo_signed' | 'signature';
-  image_url: string;
+  asset_type: 'photo' | 'photo_signed' | 'signature' | 'signed_photo' | 'signature_only';
+  asset_url: string;
   created_at: string;
   signer?: EventSigner;
 }
@@ -379,13 +379,16 @@ export const publishEventAsset = async (
     .insert({
       event_id: eventId,
       signer_id: signerId || null,
-      type,
-      image_url: imageUrl,
+      asset_type: type,
+      asset_url: imageUrl,
     })
     .select()
     .single();
 
-  if (error) throw new Error(`Publish asset error: ${error.message}`);
+  if (error) {
+    console.error('Insert asset error:', error);
+    throw new Error(`Publish asset error: ${error.message}`);
+  }
   return data;
 };
 
@@ -413,9 +416,9 @@ export const fetchEventAssets = async (
   }
   if (options?.type && options.type !== 'all') {
     if (options.type === 'photo_signed') {
-      query = query.in('type', ['photo_signed', 'signature']);
+      query = query.in('asset_type', ['photo_signed', 'signature']);
     } else {
-      query = query.eq('type', options.type);
+      query = query.eq('asset_type', options.type);
     }
   }
 
