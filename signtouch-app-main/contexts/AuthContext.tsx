@@ -3,8 +3,17 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/utils/supabase';
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
 const POST_AUTH_REDIRECT_KEY = '@post_auth_redirect';
+
+const getAuthRedirectUrl = () => {
+  const isDev = __DEV__ || Constants.appOwnership === 'expo';
+  if (isDev) {
+    return 'exp+signtouch://auth-callback';
+  }
+  return 'signtouch://auth-callback';
+};
 
 interface AuthContextType {
   session: Session | null;
@@ -49,7 +58,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string) => {
     try {
       // Deep link vers l’écran/callback de l’app
-      const redirectTo = Linking.createURL('auth-callback');
+      const redirectTo = getAuthRedirectUrl();
+      console.log('[Auth] Redirect URL:', redirectTo);
 
       const { error } = await supabase.auth.signUp({
         email,
@@ -87,7 +97,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const sendMagicLink = async (email: string, language: string = 'en') => {
     try {
-      const redirectTo = Linking.createURL('auth-callback');
+      const redirectTo = getAuthRedirectUrl();
+      console.log('[Auth] Redirect URL:', redirectTo);
 
       const { error } = await supabase.auth.signInWithOtp({
         email,
