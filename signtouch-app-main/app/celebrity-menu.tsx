@@ -154,9 +154,8 @@ export default function CelebrityMenuScreen() {
           style={[styles.tab, activeTab === 'create' && styles.tabActive]}
           onPress={() => setActiveTab('create')}
         >
-          <Plus size={16} color={activeTab === 'create' ? '#188661' : '#fff'} />
           <Text style={[styles.tabText, activeTab === 'create' && styles.tabTextActive]}>
-            Créer
+            Création événement
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
