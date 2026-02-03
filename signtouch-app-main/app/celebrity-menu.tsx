@@ -40,7 +40,7 @@ export default function CelebrityMenuScreen() {
   };
 
   const handleContinueEvent = (event: EventSession) => {
-    router.push(`/event-publish?sessionId=${event.id}`);
+    router.push(`/event-publish?sessionId=${event.id}&sessionTitle=${encodeURIComponent(event.title)}&joinCode=${event.join_code}`);
   };
 
   return (

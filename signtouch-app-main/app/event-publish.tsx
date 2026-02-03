@@ -16,7 +16,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Move, ZoomIn, ZoomOut, RotateCcw, Palette } from 'lucide-react-native';
+import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Move, ZoomIn, ZoomOut, RotateCcw, Palette, QrCode, X, Copy, Share2 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
 import { SvgUri } from 'react-native-svg';
@@ -34,7 +34,9 @@ const SIGNATURE_COLORS = [
   '#FFD700',
 ];
 import * as ImagePicker from 'expo-image-picker';
+import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/contexts/LanguageContext';
+const QRCodeSvg = require('react-native-qrcode-svg').default;
 import {
   EventSigner,
   getEventSigners,
@@ -64,6 +66,8 @@ export default function EventPublishScreen() {
   const [signatureRotation, setSignatureRotation] = useState(0);
   const [signatureColor, setSignatureColor] = useState('#FFFFFF');
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [copied, setCopied] = useState(false);
   
   const viewShotRef = useRef<ViewShot>(null);
   const previewContainerRef = useRef<View>(null);
@@ -135,6 +139,30 @@ export default function EventPublishScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setSignatureRotation(prev => prev + delta);
+  };
+
+  const handleCopyCode = async () => {
+    try {
+      await Clipboard.setStringAsync(joinCode);
+      setCopied(true);
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      console.error('Copy failed:', e);
+    }
+  };
+
+  const handleShareCode = async () => {
+    try {
+      await navigator.share?.({
+        title: sessionTitle,
+        text: `Rejoignez mon événement SignTouch avec le code: ${joinCode}`,
+      }) || Alert.alert('Partager', `Code: ${joinCode}`);
+    } catch (e) {
+      Alert.alert('Partager', `Code: ${joinCode}`);
+    }
   };
 
   const captureComposite = async (): Promise<string> => {
@@ -312,10 +340,13 @@ export default function EventPublishScreen() {
             <Text style={styles.statLabel}>{t('viewers') || 'Viewers'}</Text>
           </View>
           <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{joinCode}</Text>
-            <Text style={styles.statLabel}>{t('code') || 'Code'}</Text>
-          </View>
+          <TouchableOpacity style={styles.statItem} onPress={() => setShowQrModal(true)}>
+            <View style={styles.codeContainer}>
+              <Text style={styles.statValue}>{joinCode}</Text>
+              <QrCode size={14} color="#10B981" />
+            </View>
+            <Text style={styles.statLabel}>{t('showQrCode') || 'Voir QR'}</Text>
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.sectionTitle}>{t('selectSigner') || 'Select Signer'}</Text>
@@ -474,6 +505,42 @@ export default function EventPublishScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      {/* QR Code Modal */}
+      {showQrModal && (
+        <View style={styles.qrModalOverlay}>
+          <View style={styles.qrModalContent}>
+            <TouchableOpacity style={styles.qrModalClose} onPress={() => setShowQrModal(false)}>
+              <X size={24} color="#fff" />
+            </TouchableOpacity>
+            
+            <Text style={styles.qrModalTitle}>{t('shareEvent') || 'Partager l\'événement'}</Text>
+            <Text style={styles.qrModalSubtitle}>{sessionTitle}</Text>
+            
+            <View style={styles.qrCodeContainer}>
+              <QRCodeSvg
+                value={`signtouch://join/${joinCode}`}
+                size={200}
+                backgroundColor="#ffffff"
+                color="#1a1a2e"
+              />
+            </View>
+            
+            <Text style={styles.joinCodeDisplay}>{joinCode}</Text>
+            
+            <View style={styles.qrModalActions}>
+              <TouchableOpacity style={styles.qrModalBtn} onPress={handleCopyCode}>
+                {copied ? <Check size={20} color="#10B981" /> : <Copy size={20} color="#fff" />}
+                <Text style={styles.qrModalBtnText}>{copied ? (t('copied') || 'Copié!') : (t('copy') || 'Copier')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.qrModalBtn} onPress={handleShareCode}>
+                <Share2 size={20} color="#fff" />
+                <Text style={styles.qrModalBtnText}>{t('share') || 'Partager'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -657,4 +724,84 @@ const styles = StyleSheet.create({
   publishBtnSignature: { backgroundColor: '#f59e0b' },
   publishBtnDisabled: { opacity: 0.5 },
   publishBtnText: { fontSize: 16, color: '#fff', fontWeight: '600' },
+  codeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  qrModalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  qrModalContent: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    width: '90%',
+    maxWidth: 340,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  qrModalClose: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  qrModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 4,
+    marginTop: 16,
+  },
+  qrModalSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 20,
+  },
+  qrCodeContainer: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  joinCodeDisplay: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#10B981',
+    letterSpacing: 4,
+    marginBottom: 20,
+  },
+  qrModalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  qrModalBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  qrModalBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+  },
 });
