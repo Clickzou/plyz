@@ -301,7 +301,7 @@ export default function CelebrityMenuScreen() {
                           {eventEnded
                             ? `Terminé le ${new Date(event.ends_at).toLocaleDateString()}`
                             : eventLive
-                            ? `Jusqu'à ${new Date(event.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                            ? `Jusqu'au ${new Date(event.ends_at).toLocaleDateString()} à ${new Date(event.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                             : `${new Date(event.starts_at).toLocaleDateString()} à ${new Date(event.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                           }
                         </Text>
