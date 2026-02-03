@@ -112,6 +112,7 @@ export default function CreateEventScreen() {
 
   const canvasRef = useRef<View>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const isDrawingRef = useRef(false);
   const canvasLayoutRef = useRef<{ x: number; y: number; width: number; height: number }>({ x: 0, y: 0, width: 300, height: 200 });
 
   const getPointerPosition = useCallback((event: GestureResponderEvent) => {
@@ -133,6 +134,7 @@ export default function CreateEventScreen() {
     hasMoved.current = false;
     currentPathRef.current = `M${x.toFixed(1)},${y.toFixed(1)}`;
     setCurrentPath(currentPathRef.current);
+    isDrawingRef.current = true;
     setIsDrawing(true);
   }, [getPointerPosition]);
 
@@ -145,7 +147,7 @@ export default function CreateEventScreen() {
   }, [isDrawing, getPointerPosition]);
 
   const handleTouchEnd = useCallback(() => {
-    if (currentPathRef.current && isDrawing) {
+    if (currentPathRef.current && isDrawingRef.current) {
       let pathData = currentPathRef.current;
       
       // Si c'est un tap (pas de mouvement), ajouter un micro-segment pour rendre le point visible
@@ -174,10 +176,11 @@ export default function CreateEventScreen() {
       currentPathRef.current = '';
       setCurrentPath('');
     }
+    isDrawingRef.current = false;
     setIsDrawing(false);
     startPointRef.current = null;
     hasMoved.current = false;
-  }, [activeSignerIndex, isDrawing]);
+  }, [activeSignerIndex]);
 
   const clearSignature = () => {
     setSigners(prev => {
