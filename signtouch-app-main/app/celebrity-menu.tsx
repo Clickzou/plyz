@@ -226,9 +226,9 @@ export default function CelebrityMenuScreen() {
           <Text style={[styles.tabText, activeTab === 'events' && styles.tabTextActive]}>
             Mes événements
           </Text>
-          {myEvents.length > 0 && (
+          {myEvents.filter(e => getEventStatus(e) !== 'ended').length > 0 && (
             <View style={styles.tabBadge}>
-              <Text style={styles.tabBadgeText}>{myEvents.length}</Text>
+              <Text style={styles.tabBadgeText}>{myEvents.filter(e => getEventStatus(e) !== 'ended').length}</Text>
             </View>
           )}
         </TouchableOpacity>
