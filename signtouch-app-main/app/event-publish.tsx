@@ -16,7 +16,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Move, ZoomIn, ZoomOut, RotateCcw, Palette, QrCode, X, Copy, Share2 } from 'lucide-react-native';
+import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Move, ZoomIn, ZoomOut, RotateCcw, Palette, QrCode, X, Copy, Share2, Plus, UserPlus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
 import { SvgUri } from 'react-native-svg';
@@ -371,6 +371,13 @@ export default function EventPublishScreen() {
                 )}
               </TouchableOpacity>
             ))}
+            <TouchableOpacity
+              style={styles.addSignerCard}
+              onPress={() => router.push(`/add-signer?sessionId=${sessionId}`)}
+            >
+              <UserPlus size={24} color="#10B981" />
+              <Text style={styles.addSignerText}>Ajouter</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
 
@@ -613,6 +620,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  addSignerCard: {
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
+    borderWidth: 2,
+    borderColor: '#10B981',
+    borderStyle: 'dashed',
+    gap: 6,
+  },
+  addSignerText: {
+    fontSize: 12,
+    color: '#10B981',
+    fontWeight: '600',
   },
   photoSection: { marginBottom: 20 },
   photoButtons: { flexDirection: 'row', gap: 12 },
