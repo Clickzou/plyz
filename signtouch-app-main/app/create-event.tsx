@@ -183,8 +183,8 @@ export default function CreateEventScreen() {
       await AsyncStorage.removeItem(EVENT_PENDING_CREATE_KEY);
       await AsyncStorage.removeItem(EVENT_FORM_STORAGE_KEY);
       
-      // Si l'utilisateur est connecté et abonné, continuer automatiquement
-      if (user && status === 'paid') {
+      // Si l'utilisateur est connecté et abonné (paid ou trial), continuer automatiquement
+      if (user && (status === 'paid' || status === 'trial')) {
         // Attendre que les states soient mis à jour, puis créer l'événement
         setTimeout(() => {
           handleCreateEventAfterRestore(formData);
@@ -457,7 +457,7 @@ export default function CreateEventScreen() {
       return;
     }
     
-    if (status !== 'paid') {
+    if (status !== 'paid' && status !== 'trial') {
       // Sauvegarder les données du formulaire avant de rediriger
       await saveFormData();
       await setPostAuthRedirect('/create-event');
