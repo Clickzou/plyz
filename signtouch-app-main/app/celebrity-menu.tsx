@@ -41,9 +41,6 @@ export default function CelebrityMenuScreen() {
         e.status === 'scheduled' || e.status === 'live'
       );
       setMyEvents(activeOrScheduled);
-      if (activeOrScheduled.length > 0) {
-        setActiveTab('events');
-      }
     } catch (error) {
       console.error('Error loading events:', error);
     } finally {
@@ -158,7 +155,7 @@ export default function CelebrityMenuScreen() {
           onPress={() => setActiveTab('events')}
         >
           <Text style={[styles.tabText, activeTab === 'events' && styles.tabTextActive]}>
-            {t('myEvents') || 'Mes événements'}
+            Mes événements
           </Text>
           {myEvents.length > 0 && (
             <View style={styles.tabBadge}>
@@ -172,7 +169,7 @@ export default function CelebrityMenuScreen() {
         >
           <Plus size={16} color={activeTab === 'create' ? '#188661' : '#fff'} />
           <Text style={[styles.tabText, activeTab === 'create' && styles.tabTextActive]}>
-            {t('createNew') || 'Créer'}
+            Créer
           </Text>
         </TouchableOpacity>
       </View>
