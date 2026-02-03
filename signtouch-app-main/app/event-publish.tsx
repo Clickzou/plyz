@@ -354,8 +354,13 @@ export default function EventPublishScreen() {
         </View>
 
         <Text style={styles.sectionTitle}>{t('selectSigner') || 'Select Signer'}</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.signersScroll}>
-          <View style={styles.signersRow}>
+        <View style={styles.signersContainer}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={true} 
+            style={styles.signersScroll}
+            contentContainerStyle={styles.signersScrollContent}
+          >
             {signers.map((signer) => (
               <TouchableOpacity
                 key={signer.id}
@@ -375,15 +380,15 @@ export default function EventPublishScreen() {
                 )}
               </TouchableOpacity>
             ))}
-            <TouchableOpacity
-              style={styles.addSignerCard}
-              onPress={() => router.push(`/add-signer?sessionId=${sessionId}`)}
-            >
-              <UserPlus size={24} color="#10B981" />
-              <Text style={styles.addSignerText}>Ajouter</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+          </ScrollView>
+          <TouchableOpacity
+            style={styles.addSignerCard}
+            onPress={() => router.push(`/add-signer?sessionId=${sessionId}`)}
+          >
+            <UserPlus size={24} color="#10B981" />
+            <Text style={styles.addSignerText}>Ajouter</Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.sectionTitle}>{t('selectPhoto') || 'Select Photo'}</Text>
         <View style={styles.photoSection}>
@@ -599,8 +604,21 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4 },
   statDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
   sectionTitle: { fontSize: 16, fontWeight: '600', color: '#fff', marginBottom: 12 },
-  signersScroll: { marginBottom: 20 },
-  signersRow: { flexDirection: 'row', gap: 12 },
+  signersContainer: { 
+    flexDirection: 'row', 
+    marginBottom: 20, 
+    gap: 12,
+    alignItems: 'flex-start',
+  },
+  signersScroll: { 
+    flex: 1,
+    maxHeight: 100,
+  },
+  signersScrollContent: { 
+    flexDirection: 'row', 
+    gap: 12,
+    paddingRight: 8,
+  },
   signerCard: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 12,
