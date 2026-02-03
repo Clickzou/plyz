@@ -288,12 +288,7 @@ export default function EventGalleryScreen() {
     </TouchableOpacity>
   );
 
-  const tabs: { key: TabType; label: string; icon: React.ReactNode }[] = [
-    { key: 'all', label: t('all') || 'All', icon: null },
-    { key: 'official', label: t('official') || 'Official', icon: <ImageIcon size={14} color="#fff" /> },
-    { key: 'signed', label: t('signed') || 'Signed', icon: <Pen size={14} color="#fff" /> },
-  ];
-
+  
   return (
     <View style={styles.container}>
       <LinearGradient colors={['#1a1a2e', '#16213e']} style={StyleSheet.absoluteFill} />
@@ -331,21 +326,7 @@ export default function EventGalleryScreen() {
         )}
       </View>
 
-      <View style={styles.tabsContainer}>
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-            onPress={() => setActiveTab(tab.key)}
-          >
-            {tab.icon}
-            <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
+      
       <View style={styles.infoBanner}>
         <Info size={16} color="#10B981" />
         <Text style={styles.infoBannerText}>
