@@ -13,6 +13,7 @@ import {
   GestureResponderEvent,
   Modal,
   Pressable,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -754,64 +755,60 @@ export default function CreateEventScreen() {
                     </TouchableOpacity>
                   )}
                 </View>
-                <TapGestureHandler onHandlerStateChange={onTapGestureEvent}>
-                  <PanGestureHandler 
-                    onHandlerStateChange={onPanGestureEvent}
-                    onGestureEvent={onPanGestureEvent}
-                    minDist={0}
-                  >
-                    <View
-                      style={styles.signatureContainer}
-                      ref={canvasRef}
-                      onLayout={(e) => {
-                        canvasLayoutRef.current = {
-                          x: e.nativeEvent.layout.x,
-                          y: e.nativeEvent.layout.y,
-                          width: e.nativeEvent.layout.width,
-                          height: e.nativeEvent.layout.height,
-                        };
-                      }}
-                      // @ts-ignore - mouse events for web
-                      onMouseDown={handleTouchStart}
-                      onMouseMove={(e: any) => isDrawingRef.current && handleTouchMove(e)}
-                      onMouseUp={handleTouchEnd}
-                      onMouseLeave={handleTouchEnd}
-                    >
-                      <Svg width="100%" height="100%" viewBox="0 0 300 200" style={styles.signatureSvg}>
-                        <G>
-                          {activeSigner.paths.map((path) => (
-                            <Path
-                              key={path.id}
-                              d={path.d}
-                              stroke={path.color}
-                              strokeWidth={path.strokeWidth}
-                              fill="none"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          ))}
-                          {currentPath && (
-                            <Path
-                              d={currentPath}
-                              stroke={signatureColor}
-                              strokeWidth={strokeWidth}
-                              fill="none"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          )}
-                        </G>
-                      </Svg>
-                      {activeSigner.paths.length === 0 && !currentPath && (
-                        <View style={styles.signaturePlaceholder}>
-                          <Text style={styles.signaturePlaceholderText}>
-                            {t('drawSignatureHere') || 'Draw signature here'}
-                          </Text>
-                        </View>
+                <View
+                  style={styles.signatureContainer}
+                  ref={canvasRef}
+                  onLayout={(e) => {
+                    canvasLayoutRef.current = {
+                      x: e.nativeEvent.layout.x,
+                      y: e.nativeEvent.layout.y,
+                      width: e.nativeEvent.layout.width,
+                      height: e.nativeEvent.layout.height,
+                    };
+                  }}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  onTouchCancel={handleTouchEnd}
+                  // @ts-ignore - mouse events for web
+                  onMouseDown={handleTouchStart}
+                  onMouseMove={(e: any) => isDrawingRef.current && handleTouchMove(e)}
+                  onMouseUp={handleTouchEnd}
+                  onMouseLeave={handleTouchEnd}
+                >
+                  <Svg width="100%" height="100%" viewBox="0 0 300 200" style={styles.signatureSvg}>
+                    <G>
+                      {activeSigner.paths.map((path) => (
+                        <Path
+                          key={path.id}
+                          d={path.d}
+                          stroke={path.color}
+                          strokeWidth={path.strokeWidth}
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      ))}
+                      {currentPath && (
+                        <Path
+                          d={currentPath}
+                          stroke={signatureColor}
+                          strokeWidth={strokeWidth}
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       )}
+                    </G>
+                  </Svg>
+                  {activeSigner.paths.length === 0 && !currentPath && (
+                    <View style={styles.signaturePlaceholder}>
+                      <Text style={styles.signaturePlaceholderText}>
+                        {t('drawSignatureHere') || 'Draw signature here'}
+                      </Text>
                     </View>
-                  </PanGestureHandler>
-                </TapGestureHandler>
+                  )}
+                </View>
               </View>
 
               <View style={styles.signersSummary}>
