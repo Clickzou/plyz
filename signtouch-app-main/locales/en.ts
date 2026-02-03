@@ -103,6 +103,7 @@ export default {
   saved: 'Saved',
   downloaded: 'Downloaded',
   downloadedMessage: 'The image has been saved to your gallery.',
+  savedToGallery: 'Photo saved to your SignTouch gallery!',
   error: 'Error',
   saveError: 'Unable to save',
   downloadError: 'Unable to download the image.',

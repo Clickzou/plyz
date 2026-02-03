@@ -103,6 +103,7 @@ export default {
   saved: 'Enregistré',
   downloaded: 'Téléchargé',
   downloadedMessage: 'L\'image a été enregistrée dans votre galerie.',
+  savedToGallery: 'Photo enregistrée dans votre galerie SignTouch !',
   error: 'Erreur',
   saveError: 'Impossible d\'enregistrer',
   downloadError: 'Impossible de télécharger l\'image.',
