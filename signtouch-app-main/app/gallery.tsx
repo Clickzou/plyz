@@ -368,7 +368,7 @@ export default function GalleryScreen() {
     router.push('/camera');
   };
 
-  const editMemory = () => {
+  const editMemory = async () => {
     if (!selectedMemory) return;
 
     if (Platform.OS !== 'web') {
