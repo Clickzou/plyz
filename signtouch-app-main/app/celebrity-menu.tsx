@@ -21,6 +21,7 @@ import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalVi
 const QRCodeSvg = require('react-native-qrcode-svg').default;
 
 type TabType = 'create' | 'events';
+type FilterType = 'all' | 'live' | 'ended' | 'scheduled';
 
 export default function CelebrityMenuScreen() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function CelebrityMenuScreen() {
   const [showQrModal, setShowQrModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [eventViews, setEventViews] = useState<Record<string, number>>({});
+  const [eventFilter, setEventFilter] = useState<FilterType>('all');
 
   const loadMyEvents = useCallback(async () => {
     try {
@@ -179,6 +181,17 @@ export default function CelebrityMenuScreen() {
     return 'scheduled';
   };
 
+  const filteredEvents = myEvents.filter((event) => {
+    if (eventFilter === 'all') return true;
+    const status = getEventStatus(event);
+    return status === eventFilter;
+  });
+
+  const getFilterCount = (filter: FilterType) => {
+    if (filter === 'all') return myEvents.length;
+    return myEvents.filter((e) => getEventStatus(e) === filter).length;
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <LinearGradient
@@ -246,14 +259,49 @@ export default function CelebrityMenuScreen() {
                 </TouchableOpacity>
               </View>
             ) : (
-              <View style={styles.eventsList}>
-                {myEvents.map((event) => {
+              <>
+                <View style={styles.filterRow}>
+                  <TouchableOpacity
+                    style={[styles.filterBtn, eventFilter === 'all' && styles.filterBtnActive]}
+                    onPress={() => setEventFilter('all')}
+                  >
+                    <Text style={[styles.filterBtnText, eventFilter === 'all' && styles.filterBtnTextActive]}>
+                      {t('all') || 'Tous'} ({getFilterCount('all')})
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.filterBtn, eventFilter === 'live' && styles.filterBtnActive]}
+                    onPress={() => setEventFilter('live')}
+                  >
+                    <Text style={[styles.filterBtnText, eventFilter === 'live' && styles.filterBtnTextActive]}>
+                      {t('inProgress') || 'En cours'} ({getFilterCount('live')})
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.filterBtn, eventFilter === 'scheduled' && styles.filterBtnActive]}
+                    onPress={() => setEventFilter('scheduled')}
+                  >
+                    <Text style={[styles.filterBtnText, eventFilter === 'scheduled' && styles.filterBtnTextActive]}>
+                      {t('upcoming') || 'À venir'} ({getFilterCount('scheduled')})
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.filterBtn, eventFilter === 'ended' && styles.filterBtnActive]}
+                    onPress={() => setEventFilter('ended')}
+                  >
+                    <Text style={[styles.filterBtnText, eventFilter === 'ended' && styles.filterBtnTextActive]}>
+                      {t('past') || 'Passés'} ({getFilterCount('ended')})
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.eventsList}>
+                {filteredEvents.map((event) => {
                   const isLiveVideo = event.event_type === 'live_video';
                   const eventEnded = isEventEnded(event);
                   const eventLive = isEventLive(event);
                   const currentStatus = getEventStatus(event);
                   return (
-                    <View key={event.id} style={[styles.eventCard, eventEnded && styles.eventCardEnded]}>
+                    <View key={event.id} style={styles.eventCard}>
                       <View style={styles.eventHeader}>
                         <View style={styles.eventTypeBadges}>
                           <View style={[
@@ -293,11 +341,11 @@ export default function CelebrityMenuScreen() {
                         </TouchableOpacity>
                       </View>
                       
-                      <Text style={[styles.eventTitle, eventEnded && styles.eventTitleEnded]}>{event.title}</Text>
+                      <Text style={styles.eventTitle}>{event.title}</Text>
                       
                       <View style={styles.eventTime}>
-                        <Clock size={14} color={eventEnded ? "#9ca3af" : "#6b7280"} />
-                        <Text style={[styles.eventTimeText, eventEnded && styles.eventTimeTextEnded]}>
+                        <Clock size={14} color="#6b7280" />
+                        <Text style={styles.eventTimeText}>
                           {eventEnded
                             ? `Terminé le ${new Date(event.ends_at).toLocaleDateString()}`
                             : eventLive
@@ -308,8 +356,8 @@ export default function CelebrityMenuScreen() {
                       </View>
 
                       <View style={styles.eventCode}>
-                        <Text style={[styles.eventCodeLabel, eventEnded && styles.eventCodeLabelEnded]}>{t('code') || 'Code'}:</Text>
-                        <Text style={[styles.eventCodeValue, eventEnded && styles.eventCodeValueEnded]}>{event.join_code}</Text>
+                        <Text style={styles.eventCodeLabel}>{t('code') || 'Code'}:</Text>
+                        <Text style={styles.eventCodeValue}>{event.join_code}</Text>
                       </View>
 
                       <View style={styles.eventViewsRow}>
@@ -347,6 +395,7 @@ export default function CelebrityMenuScreen() {
                   );
                 })}
               </View>
+              </>
             )}
           </>
         ) : (
@@ -537,6 +586,29 @@ const styles = StyleSheet.create({
   },
   eventsList: {
     gap: 12,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  filterBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  filterBtnActive: {
+    backgroundColor: '#fff',
+  },
+  filterBtnText: {
+    fontSize: 13,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  filterBtnTextActive: {
+    color: '#188661',
   },
   eventCard: {
     backgroundColor: '#ffffff',
