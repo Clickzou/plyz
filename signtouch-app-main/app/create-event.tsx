@@ -758,7 +758,6 @@ export default function CreateEventScreen() {
                 <View
                   style={styles.signatureContainer}
                   ref={canvasRef}
-                  pointerEvents="box-only"
                   onLayout={(e) => {
                     canvasLayoutRef.current = {
                       x: e.nativeEvent.layout.x,
@@ -767,16 +766,21 @@ export default function CreateEventScreen() {
                       height: e.nativeEvent.layout.height,
                     };
                   }}
-                  onStartShouldSetResponder={() => true}
+                  onStartShouldSetResponder={() => {
+                    setScrollEnabled(false);
+                    return true;
+                  }}
+                  onStartShouldSetResponderCapture={() => {
+                    setScrollEnabled(false);
+                    return true;
+                  }}
                   onMoveShouldSetResponder={() => true}
+                  onMoveShouldSetResponderCapture={() => true}
+                  onResponderTerminationRequest={() => false}
                   onResponderGrant={handleTouchStart}
                   onResponderMove={handleTouchMove}
                   onResponderRelease={handleTouchEnd}
                   onResponderTerminate={handleTouchEnd}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  onTouchCancel={handleTouchEnd}
                   // @ts-ignore - mouse events for web
                   onMouseDown={handleTouchStart}
                   onMouseMove={(e: any) => isDrawingRef.current && handleTouchMove(e)}
