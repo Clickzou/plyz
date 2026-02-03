@@ -102,23 +102,28 @@ export default function AddSignerScreen() {
 
     try {
       setIsSaving(true);
+      console.log('[AddSigner] Starting save, sessionId:', sessionId);
 
       let signatureUri: string | undefined;
 
       if (viewShotRef.current) {
+        console.log('[AddSigner] Capturing signature...');
         signatureUri = await (viewShotRef.current as any).capture();
+        console.log('[AddSigner] Captured URI length:', signatureUri?.length);
       }
 
+      console.log('[AddSigner] Calling addEventSigner...');
       await addEventSigner(sessionId, displayName.trim(), signatureUri);
+      console.log('[AddSigner] Signer added successfully');
 
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
 
       router.back();
-    } catch (error) {
-      console.error('Error adding signer:', error);
-      Alert.alert('Erreur', 'Impossible d\'ajouter le signataire');
+    } catch (error: any) {
+      console.error('Error adding signer:', error?.message || error);
+      Alert.alert('Erreur', error?.message || 'Impossible d\'ajouter le signataire');
     } finally {
       setIsSaving(false);
     }
