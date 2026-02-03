@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   Dimensions,
   PanResponder,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Move, ZoomIn, ZoomOut, RotateCcw, Palette, QrCode, X, Copy, Share2, Plus, UserPlus } from 'lucide-react-native';
@@ -101,18 +101,22 @@ export default function EventPublishScreen() {
     })
   ).current;
 
-  useEffect(() => {
-    const loadData = async () => {
-      const loadedSigners = await getEventSigners(sessionId);
-      setSigners(loadedSigners);
-      if (loadedSigners.length > 0) {
-        setSelectedSignerId(loadedSigners[0].id);
-      }
-      const count = await getActiveViewerCount(sessionId);
-      setViewerCount(count);
-    };
-    loadData();
+  const loadSigners = useCallback(async () => {
+    const loadedSigners = await getEventSigners(sessionId);
+    setSigners(loadedSigners);
+    if (loadedSigners.length > 0 && !selectedSignerId) {
+      setSelectedSignerId(loadedSigners[0].id);
+    }
+  }, [sessionId, selectedSignerId]);
 
+  useFocusEffect(
+    useCallback(() => {
+      loadSigners();
+      getActiveViewerCount(sessionId).then(setViewerCount);
+    }, [sessionId, loadSigners])
+  );
+
+  useEffect(() => {
     const interval = setInterval(async () => {
       const count = await getActiveViewerCount(sessionId);
       setViewerCount(count);
