@@ -457,8 +457,11 @@ export default function CreateEventScreen() {
   };
 
   const handleCreateEvent = async () => {
+    console.log('[handleCreateEvent] Called, user:', user?.id, 'status:', status);
+    
     // Vérifier si l'utilisateur est connecté et abonné
     if (!user) {
+      console.log('[handleCreateEvent] No user, showing AccountModal');
       // Sauvegarder les données du formulaire avant de rediriger
       await saveFormData();
       setShowAccountModal(true);
@@ -466,12 +469,15 @@ export default function CreateEventScreen() {
     }
     
     if (status !== 'paid' && status !== 'trial') {
+      console.log('[handleCreateEvent] User not subscribed, redirecting to subscription');
       // Sauvegarder les données du formulaire avant de rediriger
       await saveFormData();
       await setPostAuthRedirect('/create-event');
       router.push('/subscription');
       return;
     }
+    
+    console.log('[handleCreateEvent] User is subscribed, creating event');
     
     const validSigners = signers.filter(s => s.name.trim() && s.paths.length > 0);
     if (validSigners.length === 0) {
