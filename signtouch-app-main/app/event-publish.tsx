@@ -42,6 +42,7 @@ import {
   getEventSigners,
   publishEventAsset,
   getActiveViewerCount,
+  fetchEventAssets,
 } from '@/utils/eventSessionStorage';
 
 export default function EventPublishScreen() {
@@ -113,6 +114,9 @@ export default function EventPublishScreen() {
     useCallback(() => {
       loadSigners();
       getActiveViewerCount(sessionId).then(setViewerCount);
+      fetchEventAssets(sessionId, { limit: 1000 }).then((assets) => {
+        setPublishedCount(assets.length);
+      });
     }, [sessionId, loadSigners])
   );
 
