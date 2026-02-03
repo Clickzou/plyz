@@ -10,12 +10,14 @@ import {
   ActivityIndicator,
   Image,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, QrCode, Search, Check, Download, Camera, Users, Clock } from 'lucide-react-native';
+import { ArrowLeft, QrCode, Search, Check, Download, Camera, Users, Clock, Calendar, Bell, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import * as Notifications from 'expo-notifications';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -50,6 +52,9 @@ export default function JoinEventScreen() {
   const [saved, setSaved] = useState(false);
   const [eventFull, setEventFull] = useState(false);
   const [eventExpired, setEventExpired] = useState(false);
+  const [eventScheduled, setEventScheduled] = useState(false);
+  const [scheduledSession, setScheduledSession] = useState<EventSession | null>(null);
+  const [notificationSet, setNotificationSet] = useState(false);
 
   const [showScanner, setShowScanner] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -72,6 +77,8 @@ export default function JoinEventScreen() {
     setIsSearching(true);
     setEventFull(false);
     setEventExpired(false);
+    setEventScheduled(false);
+    setScheduledSession(null);
     setFoundEvent(null);
     setFoundSession(null);
     
@@ -99,6 +106,12 @@ export default function JoinEventScreen() {
       
       if (sessionResult.reason === 'expired') {
         setEventExpired(true);
+        return;
+      }
+
+      if (sessionResult.reason === 'scheduled' && sessionResult.session) {
+        setEventScheduled(true);
+        setScheduledSession(sessionResult.session);
         return;
       }
 
@@ -219,6 +232,56 @@ export default function JoinEventScreen() {
     setSaved(false);
     setEventFull(false);
     setEventExpired(false);
+    setEventScheduled(false);
+    setScheduledSession(null);
+    setNotificationSet(false);
+  };
+
+  const handleSetNotification = async () => {
+    if (!scheduledSession) return;
+
+    try {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          t('permissionRequired') || 'Permission Required',
+          t('notificationPermissionMessage') || 'Please enable notifications to receive reminders'
+        );
+        return;
+      }
+
+      const startTime = new Date(scheduledSession.starts_at).getTime();
+      const notifyTime = startTime - 2 * 60 * 1000;
+      const now = Date.now();
+
+      if (notifyTime <= now) {
+        Alert.alert(
+          t('eventStartingSoon') || 'Event Starting Soon',
+          t('eventStartsSoon') || 'The event starts in less than 2 minutes!'
+        );
+        return;
+      }
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: scheduledSession.title,
+          body: t('eventStartsIn2Min') || 'The event starts in 2 minutes! Join now.',
+          data: { joinCode: scheduledSession.join_code },
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: new Date(notifyTime),
+        },
+      });
+
+      setNotificationSet(true);
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('Error setting notification:', error);
+      Alert.alert(t('error') || 'Error', t('notificationFailed') || 'Failed to set notification');
+    }
   };
 
   if (showScanner) {
@@ -327,6 +390,39 @@ export default function JoinEventScreen() {
             <Text style={styles.fullMessage}>
               {t('eventExpiredMessage') || 'This event has ended. Check with the organizer for future events.'}
             </Text>
+            <TouchableOpacity style={styles.searchAnotherButton} onPress={handleSearchAnother}>
+              <Text style={styles.searchAnotherText}>{t('searchAnother') || 'Search another event'}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : eventScheduled && scheduledSession ? (
+          <View style={styles.resultContainer}>
+            <View style={styles.scheduledIcon}>
+              <Calendar size={40} color="#3b82f6" />
+            </View>
+            <Text style={styles.scheduledTitle}>{scheduledSession.title}</Text>
+            <Text style={styles.scheduledMessage}>
+              {t('eventScheduledMessage') || 'This event has not started yet.'}
+            </Text>
+            <View style={styles.scheduledDateCard}>
+              <Calendar size={20} color="#3b82f6" />
+              <View style={styles.scheduledDateInfo}>
+                <Text style={styles.scheduledDateLabel}>{t('startsAt') || 'Starts at'}</Text>
+                <Text style={styles.scheduledDateValue}>
+                  {new Date(scheduledSession.starts_at).toLocaleDateString()} {t('at') || 'at'} {new Date(scheduledSession.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+              </View>
+            </View>
+            {!notificationSet ? (
+              <TouchableOpacity style={styles.notifyButton} onPress={handleSetNotification}>
+                <Bell size={20} color="#fff" />
+                <Text style={styles.notifyButtonText}>{t('notifyMe') || 'Notify me 2 min before'}</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.notificationSetCard}>
+                <Check size={20} color="#10B981" />
+                <Text style={styles.notificationSetText}>{t('notificationSet') || 'Notification scheduled!'}</Text>
+              </View>
+            )}
             <TouchableOpacity style={styles.searchAnotherButton} onPress={handleSearchAnother}>
               <Text style={styles.searchAnotherText}>{t('searchAnother') || 'Search another event'}</Text>
             </TouchableOpacity>
@@ -512,6 +608,55 @@ const styles = StyleSheet.create({
   foundTitle: { fontSize: 24, fontWeight: '700', color: '#fff', marginBottom: 8 },
   fullTitle: { fontSize: 24, fontWeight: '700', color: '#ef4444', marginBottom: 12 },
   expiredTitle: { fontSize: 24, fontWeight: '700', color: '#f59e0b', marginBottom: 12 },
+  scheduledIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(59,130,246,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  scheduledTitle: { fontSize: 24, fontWeight: '700', color: '#3b82f6', marginBottom: 12 },
+  scheduledMessage: { fontSize: 16, color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: 20 },
+  scheduledDateCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(59,130,246,0.15)',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    gap: 12,
+  },
+  scheduledDateInfo: {
+    flex: 1,
+  },
+  scheduledDateLabel: { fontSize: 13, color: 'rgba(255,255,255,0.6)' },
+  scheduledDateValue: { fontSize: 18, fontWeight: '700', color: '#3b82f6' },
+  notifyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#3b82f6',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  notifyButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
+  notificationSetCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(16,185,129,0.15)',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  notificationSetText: { fontSize: 16, fontWeight: '600', color: '#10B981' },
   fullMessage: { fontSize: 16, color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: 24, paddingHorizontal: 20 },
   eventName: { fontSize: 18, color: 'rgba(255,255,255,0.7)', marginBottom: 24 },
   sessionInfo: { flexDirection: 'row', gap: 20, marginBottom: 16 },

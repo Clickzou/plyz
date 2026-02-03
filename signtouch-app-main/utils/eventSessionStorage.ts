@@ -39,7 +39,7 @@ export interface EventAsset {
 
 export interface JoinEventResult {
   allowed: boolean;
-  reason?: 'full' | 'expired' | 'not_found';
+  reason?: 'full' | 'expired' | 'not_found' | 'scheduled';
   session?: EventSession;
   signers?: EventSigner[];
 }
@@ -321,6 +321,14 @@ export const joinEventSession = async (
 
     if (new Date(session.ends_at) < new Date()) {
       return { allowed: false, reason: 'expired' };
+    }
+
+    if (new Date(session.starts_at) > new Date()) {
+      return { 
+        allowed: false, 
+        reason: 'scheduled', 
+        session: session as EventSession 
+      };
     }
 
     await supabase
