@@ -157,6 +157,12 @@ export default function CreateEventScreen() {
   const restoreAndContinue = useCallback(async () => {
     if (hasRestoredRef.current) return;
     
+    // Ne pas restaurer si l'utilisateur n'est pas connecté
+    if (!user) {
+      console.log('[RestoreAndContinue] No user, skipping restore');
+      return;
+    }
+    
     try {
       const pending = await AsyncStorage.getItem(EVENT_PENDING_CREATE_KEY);
       if (pending !== 'true') return;
@@ -164,6 +170,7 @@ export default function CreateEventScreen() {
       const savedData = await AsyncStorage.getItem(EVENT_FORM_STORAGE_KEY);
       if (!savedData) return;
       
+      console.log('[RestoreAndContinue] Restoring form data for user:', user.id);
       const formData = JSON.parse(savedData);
       hasRestoredRef.current = true;
       
@@ -183,8 +190,9 @@ export default function CreateEventScreen() {
       await AsyncStorage.removeItem(EVENT_PENDING_CREATE_KEY);
       await AsyncStorage.removeItem(EVENT_FORM_STORAGE_KEY);
       
-      // Si l'utilisateur est connecté et abonné (paid ou trial), continuer automatiquement
-      if (user && (status === 'paid' || status === 'trial')) {
+      // Si l'utilisateur est abonné (paid ou trial), continuer automatiquement
+      if (status === 'paid' || status === 'trial') {
+        console.log('[RestoreAndContinue] User is subscribed, creating event automatically');
         // Attendre que les states soient mis à jour, puis créer l'événement
         setTimeout(() => {
           handleCreateEventAfterRestore(formData);
