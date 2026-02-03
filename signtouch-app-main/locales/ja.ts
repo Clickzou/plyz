@@ -504,5 +504,8 @@ export default {
   scannerNotOnWeb: 'ウェブではQRスキャナーは利用できません。コードを手動で入力してください。',
   cameraNotAvailable: 'カメラが利用できません',
   useMobileOrGallery: 'ウェブではカメラは利用できません。ギャラリーを使用するか、モバイルデバイスでお試しください。',
-  publishIntro: 'Elige cómo compartir contenido con tus fans. Pueden ver y descargar desde su galería en tiempo real.',
+  publishIntro: 'ファンとコンテンツを共有する方法を選択してください。彼らはリアルタイムでギャラリーから閲覧・ダウンロードできます。',
+  at: 'に',
+  activeViewers: 'アクティブ視聴者',
+  totalViews: '総視聴回数',
 };

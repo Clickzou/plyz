@@ -504,5 +504,8 @@ export default {
   scannerNotOnWeb: 'Pemindai QR tidak tersedia di web. Silakan masukkan kode secara manual.',
   cameraNotAvailable: 'Kamera tidak tersedia',
   useMobileOrGallery: 'Kamera tidak tersedia di web. Silakan gunakan galeri atau coba di perangkat seluler.',
-  publishIntro: 'Elige cómo compartir contenido con tus fans. Pueden ver y descargar desde su galería en tiempo real.',
+  publishIntro: 'Pilih cara berbagi konten dengan penggemar Anda. Mereka dapat melihat dan mengunduh dari galeri secara real-time.',
+  at: 'pukul',
+  activeViewers: 'penonton aktif',
+  totalViews: 'total tayangan',
 };

@@ -479,5 +479,8 @@ export default {
   scannerNotOnWeb: 'QR-Scanner ist im Web nicht verfügbar. Bitte geben Sie den Code manuell ein.',
   cameraNotAvailable: 'Kamera nicht verfügbar',
   useMobileOrGallery: 'Die Kamera ist im Web nicht verfügbar. Bitte nutzen Sie die Galerie oder ein Mobilgerät.',
-  publishIntro: 'Elige cómo compartir contenido con tus fans. Pueden ver y descargar desde su galería en tiempo real.',
+  publishIntro: 'Wählen Sie, wie Sie Inhalte mit Ihren Fans teilen möchten. Sie können in Echtzeit über ihre Galerie ansehen und herunterladen.',
+  at: 'um',
+  activeViewers: 'aktive Zuschauer',
+  totalViews: 'Gesamtaufrufe',
 };

@@ -504,5 +504,8 @@ export default {
   scannerNotOnWeb: 'QR स्कैनर वेब पर उपलब्ध नहीं है। कृपया कोड मैन्युअल रूप से दर्ज करें।',
   cameraNotAvailable: 'कैमरा उपलब्ध नहीं',
   useMobileOrGallery: 'वेब पर कैमरा उपलब्ध नहीं है। कृपया गैलरी का उपयोग करें या मोबाइल डिवाइस पर प्रयास करें।',
-  publishIntro: 'Elige cómo compartir contenido con tus fans. Pueden ver y descargar desde su galería en tiempo real.',
+  publishIntro: 'अपने प्रशंसकों के साथ सामग्री साझा करने का तरीका चुनें। वे अपनी गैलरी से वास्तविक समय में देख और डाउनलोड कर सकते हैं।',
+  at: 'पर',
+  activeViewers: 'सक्रिय दर्शक',
+  totalViews: 'कुल दृश्य',
 };

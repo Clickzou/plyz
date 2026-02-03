@@ -504,5 +504,8 @@ export default {
   scannerNotOnWeb: 'ماسح QR غير متاح على الويب. يرجى إدخال الرمز يدوياً.',
   cameraNotAvailable: 'الكاميرا غير متاحة',
   useMobileOrGallery: 'الكاميرا غير متاحة على الويب. استخدم المعرض أو جرب على جهاز محمول.',
-  publishIntro: 'Elige cómo compartir contenido con tus fans. Pueden ver y descargar desde su galería en tiempo real.',
+  publishIntro: 'اختر كيفية مشاركة المحتوى مع معجبيك. يمكنهم المشاهدة والتنزيل من معرضهم في الوقت الفعلي.',
+  at: 'في',
+  activeViewers: 'مشاهدون نشطون',
+  totalViews: 'إجمالي المشاهدات',
 };

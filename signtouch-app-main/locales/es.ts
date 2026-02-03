@@ -566,4 +566,7 @@ export default {
   liveSessionWatchLive: 'Ver Firma en Vivo',
   liveSessionSigningInProgress: 'Firmando...',
   liveSessionWatchHint: 'La firma aparecerá en tiempo real',
+  at: 'a las',
+  activeViewers: 'espectadores activos',
+  totalViews: 'vistas totales',
 };

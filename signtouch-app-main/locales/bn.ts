@@ -504,5 +504,8 @@ export default {
   scannerNotOnWeb: 'ওয়েবে QR স্ক্যানার উপলব্ধ নয়। অনুগ্রহ করে ম্যানুয়ালি কোড দিন।',
   cameraNotAvailable: 'ক্যামেরা উপলব্ধ নয়',
   useMobileOrGallery: 'ওয়েবে ক্যামেরা উপলব্ধ নয়। গ্যালারি ব্যবহার করুন বা মোবাইল ডিভাইসে চেষ্টা করুন।',
-  publishIntro: 'Elige cómo compartir contenido con tus fans. Pueden ver y descargar desde su galería en tiempo real.',
+  publishIntro: 'আপনার ভক্তদের সাথে কন্টেন্ট শেয়ার করার উপায় বেছে নিন। তারা তাদের গ্যালারি থেকে রিয়েল-টাইমে দেখতে এবং ডাউনলোড করতে পারবে।',
+  at: 'এ',
+  activeViewers: 'সক্রিয় দর্শক',
+  totalViews: 'মোট দেখা',
 };
