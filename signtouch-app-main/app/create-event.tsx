@@ -81,7 +81,7 @@ export default function CreateEventScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, setPostAuthRedirect } = useAuth();
   const { status } = useSubscription();
   const [showAccountModal, setShowAccountModal] = useState(false);
 
@@ -232,6 +232,7 @@ export default function CreateEventScreen() {
     }
     
     if (status !== 'paid') {
+      await setPostAuthRedirect('/create-event');
       router.push('/subscription');
       return;
     }

@@ -77,7 +77,7 @@ export default function GalleryScreen() {
   const insets = useSafeAreaInsets();
   const { status } = useSubscription();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, setPostAuthRedirect } = useAuth();
 
   const filteredMemories = selectedFilter === 'all' 
     ? memories 
@@ -382,6 +382,7 @@ export default function GalleryScreen() {
     }
     
     if (status !== 'paid') {
+      await setPostAuthRedirect('/gallery');
       router.push('/subscription');
       return;
     }

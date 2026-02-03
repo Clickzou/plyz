@@ -774,7 +774,7 @@ export default function ResultScreen() {
   const insets = useSafeAreaInsets();
   const { status } = useSubscription();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, setPostAuthRedirect } = useAuth();
 
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
@@ -1434,6 +1434,7 @@ export default function ResultScreen() {
     }
     
     if (status !== 'paid') {
+      await setPostAuthRedirect('/gallery');
       router.push('/subscription');
       return;
     }
@@ -1533,6 +1534,7 @@ export default function ResultScreen() {
     }
     
     if (status !== 'paid') {
+      await setPostAuthRedirect('/gallery');
       router.push('/subscription');
       return;
     }
@@ -2363,8 +2365,9 @@ export default function ResultScreen() {
         <PremiumModal
           visible={showPremiumModal}
           onClose={() => setShowPremiumModal(false)}
-          onUpgrade={() => {
+          onUpgrade={async () => {
             setShowPremiumModal(false);
+            await setPostAuthRedirect('/gallery');
             router.push('/subscription');
           }}
           title={t('limitReached')}

@@ -37,7 +37,7 @@ export default function JoinEventScreen() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, setPostAuthRedirect } = useAuth();
   const { status } = useSubscription();
   const [showAccountModal, setShowAccountModal] = useState(false);
 
@@ -159,6 +159,7 @@ export default function JoinEventScreen() {
     }
     
     if (status !== 'paid') {
+      await setPostAuthRedirect('/join-event');
       router.push('/subscription');
       return;
     }
