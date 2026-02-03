@@ -113,6 +113,7 @@ export default function CreateEventScreen() {
   const canvasRef = useRef<View>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const isDrawingRef = useRef(false);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
   const canvasLayoutRef = useRef<{ x: number; y: number; width: number; height: number }>({ x: 0, y: 0, width: 300, height: 200 });
 
   const getPointerPosition = useCallback((event: GestureResponderEvent) => {
@@ -141,6 +142,8 @@ export default function CreateEventScreen() {
   }, []);
 
   const handleTouchStart = useCallback((event: any) => {
+    // Désactiver le scroll du parent immédiatement
+    setScrollEnabled(false);
     const nativeEvent = event.nativeEvent || event;
     const { x, y } = getPointerPositionFromNative(nativeEvent);
     startPointRef.current = { x, y };
@@ -190,6 +193,7 @@ export default function CreateEventScreen() {
     }
     isDrawingRef.current = false;
     setIsDrawing(false);
+    setScrollEnabled(true);
     startPointRef.current = null;
     hasMoved.current = false;
   }, [activeSignerIndex]);
@@ -423,6 +427,7 @@ export default function CreateEventScreen() {
           style={styles.content}
           contentContainerStyle={[styles.contentContainer, { paddingBottom: Math.max(insets.bottom, 16) + 20 }]}
           showsVerticalScrollIndicator={false}
+          scrollEnabled={scrollEnabled}
         >
           {step === 'config' && (
             <>
