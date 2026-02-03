@@ -56,10 +56,16 @@ export default function CelebrityMenuScreen() {
     }, [loadMyEvents])
   );
 
+  const isEventLiveCheck = (event: EventSession) => {
+    if (event.status === 'ended') return false;
+    if (event.ends_at && new Date(event.ends_at) < new Date()) return false;
+    return event.status === 'live' || event.status === 'active';
+  };
+
   const loadEventViews = useCallback(async () => {
     const views: Record<string, number> = {};
     for (const event of myEvents) {
-      if (event.status === 'live') {
+      if (isEventLiveCheck(event)) {
         views[event.id] = await getActiveViewerCount(event.id);
       } else {
         views[event.id] = await getEventTotalViews(event.id);
@@ -71,7 +77,7 @@ export default function CelebrityMenuScreen() {
   useEffect(() => {
     if (myEvents.length > 0) {
       loadEventViews();
-      const hasLiveEvents = myEvents.some(e => e.status === 'live');
+      const hasLiveEvents = myEvents.some(e => isEventLiveCheck(e));
       if (hasLiveEvents) {
         const interval = setInterval(loadEventViews, 15000);
         return () => clearInterval(interval);
@@ -156,8 +162,22 @@ export default function CelebrityMenuScreen() {
     }
   };
 
-  const isLiveOrActive = (status: string) => status === 'live' || status === 'active';
-  const isEnded = (status: string) => status === 'ended';
+  const isEventEnded = (event: EventSession) => {
+    if (event.status === 'ended') return true;
+    if (event.ends_at && new Date(event.ends_at) < new Date()) return true;
+    return false;
+  };
+  
+  const isEventLive = (event: EventSession) => {
+    if (isEventEnded(event)) return false;
+    return event.status === 'live' || event.status === 'active';
+  };
+  
+  const getEventStatus = (event: EventSession) => {
+    if (isEventEnded(event)) return 'ended';
+    if (event.status === 'live' || event.status === 'active') return 'live';
+    return 'scheduled';
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -229,7 +249,9 @@ export default function CelebrityMenuScreen() {
               <View style={styles.eventsList}>
                 {myEvents.map((event) => {
                   const isLiveVideo = event.event_type === 'live_video';
-                  const eventEnded = isEnded(event.status);
+                  const eventEnded = isEventEnded(event);
+                  const eventLive = isEventLive(event);
+                  const currentStatus = getEventStatus(event);
                   return (
                     <View key={event.id} style={[styles.eventCard, eventEnded && styles.eventCardEnded]}>
                       <View style={styles.eventHeader}>
@@ -250,17 +272,17 @@ export default function CelebrityMenuScreen() {
                           </View>
                           <View style={[
                             styles.eventStatusBadge,
-                            isLiveOrActive(event.status) ? styles.badgeLive : 
+                            eventLive ? styles.badgeLive : 
                             eventEnded ? styles.badgeEndedStatus : styles.badgeScheduled
                           ]}>
-                            {isLiveOrActive(event.status) ? (
+                            {eventLive ? (
                               <Play size={10} color="#fff" fill="#fff" />
                             ) : eventEnded ? (
                               <Clock size={10} color="#fff" />
                             ) : (
                               <Calendar size={10} color="#fff" />
                             )}
-                            <Text style={styles.eventStatusText}>{getStatusLabel(event.status)}</Text>
+                            <Text style={styles.eventStatusText}>{getStatusLabel(currentStatus)}</Text>
                           </View>
                         </View>
                         <TouchableOpacity
@@ -278,7 +300,7 @@ export default function CelebrityMenuScreen() {
                         <Text style={[styles.eventTimeText, eventEnded && styles.eventTimeTextEnded]}>
                           {eventEnded
                             ? `Terminé le ${new Date(event.ends_at).toLocaleDateString()}`
-                            : isLiveOrActive(event.status)
+                            : eventLive
                             ? `Jusqu'à ${new Date(event.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                             : `${new Date(event.starts_at).toLocaleDateString()} à ${new Date(event.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                           }
@@ -291,9 +313,9 @@ export default function CelebrityMenuScreen() {
                       </View>
 
                       <View style={styles.eventViewsRow}>
-                        <Eye size={16} color={event.status === 'live' ? '#10b981' : '#6b7280'} />
-                        <Text style={[styles.eventViewsText, event.status === 'live' && styles.eventViewsTextLive]}>
-                          {eventViews[event.id] || 0} {event.status === 'live' ? (t('activeViewers') || 'spectateurs actifs') : (t('totalViews') || 'vues totales')}
+                        <Eye size={16} color={eventLive ? '#10b981' : '#6b7280'} />
+                        <Text style={[styles.eventViewsText, eventLive && styles.eventViewsTextLive]}>
+                          {eventViews[event.id] || 0} {eventLive ? (t('activeViewers') || 'spectateurs actifs') : (t('totalViews') || 'vues totales')}
                         </Text>
                       </View>
 
