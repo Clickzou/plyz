@@ -17,8 +17,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Download, Users, Clock, Image as ImageIcon, Pen, Copy, Info } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import * as MediaLibrary from 'expo-media-library';
-import * as FileSystem from 'expo-file-system/legacy';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   EventSession,
@@ -30,6 +28,8 @@ import {
   getOrCreateDeviceId,
   getActiveViewerCount,
 } from '@/utils/eventSessionStorage';
+import { saveMemory } from '@/utils/storageService';
+import { useAuth } from '@/contexts/AuthContext';
 
 type TabType = 'all' | 'official' | 'signed';
 
@@ -41,6 +41,7 @@ export default function EventGalleryScreen() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [assets, setAssets] = useState<EventAsset[]>([]);
@@ -222,22 +223,14 @@ export default function EventGalleryScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     try {
-      if (Platform.OS === 'web') {
-        const link = document.createElement('a');
-        link.href = asset.asset_url;
-        link.download = `signtouch-${Date.now()}.png`;
-        link.click();
-      } else {
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert(t('error') || 'Error', t('permissionDenied') || 'Permission denied');
-          return;
-        }
-        const fileUri = (FileSystem.documentDirectory || '') + `signtouch-${Date.now()}.png`;
-        await FileSystem.downloadAsync(asset.asset_url, fileUri);
-        await MediaLibrary.saveToLibraryAsync(fileUri);
-        Alert.alert(t('done') || 'Done', t('imageSaved') || 'Image saved!');
-      }
+      // Save to SignTouch gallery (not directly to phone)
+      await saveMemory(asset.asset_url, user?.id || null, {
+        isEdited: true,
+      });
+      Alert.alert(
+        t('done') || 'Done', 
+        (t as any)('savedToGallery') || 'Photo saved to your SignTouch gallery!'
+      );
     } catch (error) {
       console.error('Download error:', error);
       Alert.alert(t('error') || 'Error', t('downloadFailed') || 'Download failed');
