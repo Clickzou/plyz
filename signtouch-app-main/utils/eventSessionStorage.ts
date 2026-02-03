@@ -232,7 +232,7 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
     .from('event_sessions')
     .select('*')
     .eq('created_by', userId)
-    .in('status', ['scheduled', 'active'])
+    .in('status', ['scheduled', 'active', 'live'])
     .order('starts_at', { ascending: true });
 
   if (error) {
@@ -240,6 +240,18 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
     return [];
   }
   return data || [];
+};
+
+export const deleteEventSession = async (sessionId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('event_sessions')
+    .update({ status: 'ended' })
+    .eq('id', sessionId);
+
+  if (error) {
+    console.error('Error deleting event session:', error);
+    throw new Error(`Delete session error: ${error.message}`);
+  }
 };
 
 export const addEventSigner = async (
