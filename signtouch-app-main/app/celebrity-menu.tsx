@@ -241,7 +241,7 @@ export default function CelebrityMenuScreen() {
                       <Text style={styles.eventTitle}>{event.title}</Text>
                       
                       <View style={styles.eventTime}>
-                        <Clock size={14} color="rgba(255,255,255,0.6)" />
+                        <Clock size={14} color="#6b7280" />
                         <Text style={styles.eventTimeText}>
                           {isLiveOrActive(event.status)
                             ? `Jusqu'à ${new Date(event.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
@@ -260,20 +260,20 @@ export default function CelebrityMenuScreen() {
                           style={styles.actionBtn}
                           onPress={() => handleShowQr(event)}
                         >
-                          <QrCode size={18} color="#fff" />
-                          <Text style={styles.actionBtnText}>{t('showQrCode') || 'QR Code'}</Text>
+                          <QrCode size={18} color="#374151" />
+                          <Text style={styles.actionBtnText}>QR Code</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[styles.actionBtn, styles.actionBtnPrimary]}
                           onPress={() => handleContinueEvent(event)}
                         >
                           {isLiveVideo ? (
-                            <Video size={18} color="#188661" />
+                            <Video size={18} color="#fff" />
                           ) : (
-                            <Edit3 size={18} color="#188661" />
+                            <Edit3 size={18} color="#fff" />
                           )}
                           <Text style={[styles.actionBtnText, styles.actionBtnTextPrimary]}>
-                            {isLiveVideo ? 'Live' : (t('publish') || 'Publier')}
+                            {isLiveVideo ? 'Live' : 'Publier'}
                           </Text>
                         </TouchableOpacity>
                       </View>
@@ -473,11 +473,14 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   eventCard: {
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
   },
   eventHeader: {
     flexDirection: 'row',
@@ -532,14 +535,14 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(239,68,68,0.15)',
+    backgroundColor: 'rgba(239,68,68,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   eventTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#fff',
+    color: '#1f2937',
     marginBottom: 8,
   },
   eventTime: {
@@ -550,26 +553,26 @@ const styles = StyleSheet.create({
   },
   eventTimeText: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.7)',
+    color: '#6b7280',
   },
   eventCode: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#f3f4f6',
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: 10,
+    borderRadius: 10,
     marginBottom: 14,
   },
   eventCodeLabel: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    color: '#6b7280',
   },
   eventCodeValue: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#10B981',
+    color: '#188661',
     letterSpacing: 2,
   },
   eventActions: {
@@ -582,20 +585,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: '#f3f4f6',
     paddingVertical: 12,
     borderRadius: 10,
   },
   actionBtnPrimary: {
-    backgroundColor: '#fff',
+    backgroundColor: '#188661',
   },
   actionBtnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#fff',
+    color: '#374151',
   },
   actionBtnTextPrimary: {
-    color: '#188661',
+    color: '#fff',
   },
   iconContainer: {
     alignItems: 'center',
