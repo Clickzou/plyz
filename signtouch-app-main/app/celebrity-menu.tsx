@@ -37,10 +37,11 @@ export default function CelebrityMenuScreen() {
     try {
       setLoading(true);
       const events = await getMyScheduledEvents();
-      const activeOrScheduled = events.filter(e => 
-        e.status === 'scheduled' || e.status === 'live'
-      );
-      setMyEvents(activeOrScheduled);
+      const sortedEvents = events.sort((a, b) => {
+        const statusOrder = { live: 0, scheduled: 1, ended: 2 };
+        return (statusOrder[a.status as keyof typeof statusOrder] || 2) - (statusOrder[b.status as keyof typeof statusOrder] || 2);
+      });
+      setMyEvents(sortedEvents);
     } catch (error) {
       console.error('Error loading events:', error);
     } finally {
@@ -123,13 +124,16 @@ export default function CelebrityMenuScreen() {
       case 'active':
         return 'EN COURS';
       case 'scheduled':
-        return 'PLANIFIÉ';
+        return 'À VENIR';
+      case 'ended':
+        return 'TERMINÉ';
       default:
         return status.toUpperCase();
     }
   };
 
   const isLiveOrActive = (status: string) => status === 'live' || status === 'active';
+  const isEnded = (status: string) => status === 'ended';
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -201,13 +205,15 @@ export default function CelebrityMenuScreen() {
               <View style={styles.eventsList}>
                 {myEvents.map((event) => {
                   const isLiveVideo = event.event_type === 'live_video';
+                  const eventEnded = isEnded(event.status);
                   return (
-                    <View key={event.id} style={styles.eventCard}>
+                    <View key={event.id} style={[styles.eventCard, eventEnded && styles.eventCardEnded]}>
                       <View style={styles.eventHeader}>
                         <View style={styles.eventTypeBadges}>
                           <View style={[
                             styles.eventTypeBadge,
-                            isLiveVideo ? styles.badgeLiveVideo : styles.badgeQr
+                            isLiveVideo ? styles.badgeLiveVideo : styles.badgeQr,
+                            eventEnded && styles.badgeEnded
                           ]}>
                             {isLiveVideo ? (
                               <Video size={12} color="#fff" />
@@ -220,10 +226,13 @@ export default function CelebrityMenuScreen() {
                           </View>
                           <View style={[
                             styles.eventStatusBadge,
-                            isLiveOrActive(event.status) ? styles.badgeLive : styles.badgeScheduled
+                            isLiveOrActive(event.status) ? styles.badgeLive : 
+                            eventEnded ? styles.badgeEndedStatus : styles.badgeScheduled
                           ]}>
                             {isLiveOrActive(event.status) ? (
                               <Play size={10} color="#fff" fill="#fff" />
+                            ) : eventEnded ? (
+                              <Clock size={10} color="#fff" />
                             ) : (
                               <Calendar size={10} color="#fff" />
                             )}
@@ -238,12 +247,14 @@ export default function CelebrityMenuScreen() {
                         </TouchableOpacity>
                       </View>
                       
-                      <Text style={styles.eventTitle}>{event.title}</Text>
+                      <Text style={[styles.eventTitle, eventEnded && styles.eventTitleEnded]}>{event.title}</Text>
                       
                       <View style={styles.eventTime}>
-                        <Clock size={14} color="#6b7280" />
-                        <Text style={styles.eventTimeText}>
-                          {isLiveOrActive(event.status)
+                        <Clock size={14} color={eventEnded ? "#9ca3af" : "#6b7280"} />
+                        <Text style={[styles.eventTimeText, eventEnded && styles.eventTimeTextEnded]}>
+                          {eventEnded
+                            ? `Terminé le ${new Date(event.ends_at).toLocaleDateString()}`
+                            : isLiveOrActive(event.status)
                             ? `Jusqu'à ${new Date(event.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                             : `${new Date(event.starts_at).toLocaleDateString()} à ${new Date(event.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                           }
@@ -251,32 +262,34 @@ export default function CelebrityMenuScreen() {
                       </View>
 
                       <View style={styles.eventCode}>
-                        <Text style={styles.eventCodeLabel}>{t('code') || 'Code'}:</Text>
-                        <Text style={styles.eventCodeValue}>{event.join_code}</Text>
+                        <Text style={[styles.eventCodeLabel, eventEnded && styles.eventCodeLabelEnded]}>{t('code') || 'Code'}:</Text>
+                        <Text style={[styles.eventCodeValue, eventEnded && styles.eventCodeValueEnded]}>{event.join_code}</Text>
                       </View>
 
-                      <View style={styles.eventActions}>
-                        <TouchableOpacity
-                          style={styles.actionBtn}
-                          onPress={() => handleShowQr(event)}
-                        >
-                          <QrCode size={18} color="#374151" />
-                          <Text style={styles.actionBtnText}>QR Code</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[styles.actionBtn, styles.actionBtnPrimary]}
-                          onPress={() => handleContinueEvent(event)}
-                        >
-                          {isLiveVideo ? (
-                            <Video size={18} color="#fff" />
-                          ) : (
-                            <Edit3 size={18} color="#fff" />
-                          )}
-                          <Text style={[styles.actionBtnText, styles.actionBtnTextPrimary]}>
-                            {isLiveVideo ? 'Live' : 'Éditer'}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
+                      {!eventEnded && (
+                        <View style={styles.eventActions}>
+                          <TouchableOpacity
+                            style={styles.actionBtn}
+                            onPress={() => handleShowQr(event)}
+                          >
+                            <QrCode size={18} color="#374151" />
+                            <Text style={styles.actionBtnText}>QR Code</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.actionBtn, styles.actionBtnPrimary]}
+                            onPress={() => handleContinueEvent(event)}
+                          >
+                            {isLiveVideo ? (
+                              <Video size={18} color="#fff" />
+                            ) : (
+                              <Edit3 size={18} color="#fff" />
+                            )}
+                            <Text style={[styles.actionBtnText, styles.actionBtnTextPrimary]}>
+                              {isLiveVideo ? 'Live' : 'Éditer'}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
                     </View>
                   );
                 })}
@@ -482,6 +495,10 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 5,
   },
+  eventCardEnded: {
+    backgroundColor: '#f3f4f6',
+    opacity: 0.8,
+  },
   eventHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -526,6 +543,12 @@ const styles = StyleSheet.create({
   badgeScheduled: {
     backgroundColor: '#f59e0b',
   },
+  badgeEnded: {
+    backgroundColor: '#6b7280',
+  },
+  badgeEndedStatus: {
+    backgroundColor: '#9ca3af',
+  },
   eventStatusText: {
     fontSize: 10,
     fontWeight: '700',
@@ -545,6 +568,9 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     marginBottom: 8,
   },
+  eventTitleEnded: {
+    color: '#9ca3af',
+  },
   eventTime: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -554,6 +580,9 @@ const styles = StyleSheet.create({
   eventTimeText: {
     fontSize: 13,
     color: '#6b7280',
+  },
+  eventTimeTextEnded: {
+    color: '#9ca3af',
   },
   eventCode: {
     flexDirection: 'row',
@@ -569,11 +598,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6b7280',
   },
+  eventCodeLabelEnded: {
+    color: '#9ca3af',
+  },
   eventCodeValue: {
     fontSize: 18,
     fontWeight: '800',
     color: '#188661',
     letterSpacing: 2,
+  },
+  eventCodeValueEnded: {
+    color: '#9ca3af',
   },
   eventActions: {
     flexDirection: 'row',
