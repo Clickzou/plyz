@@ -627,6 +627,7 @@ export default {
   selectSignerFirst: 'Select a signer first',
   noSignatureAvailable: 'No signature available',
   photoPublished: 'Photo published!',
+  photoPublishedContinue: 'Photo published! You can add another one.',
   signaturePublished: 'Signature published!',
   publishFailed: 'Failed to publish',
   published: 'Published',

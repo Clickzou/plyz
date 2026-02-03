@@ -629,6 +629,7 @@ export default {
   selectSignerFirst: 'Sélectionnez d\'abord un signataire',
   noSignatureAvailable: 'Aucune signature disponible',
   photoPublished: 'Photo publiée !',
+  photoPublishedContinue: 'Photo publiée ! Vous pouvez en ajouter une autre.',
   signaturePublished: 'Signature publiée !',
   publishFailed: 'Échec de la publication',
   published: 'Publiés',

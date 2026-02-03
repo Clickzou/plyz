@@ -295,11 +295,15 @@ export default function EventPublishScreen() {
 
       setPublishedCount((prev) => prev + 1);
       setSelectedImage(null);
+      resetSignatureTransform();
 
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      Alert.alert(t('done') || 'Done', t('photoPublished') || 'Photo published!');
+      Alert.alert(
+        t('done') || 'Done', 
+        (t('photoPublishedContinue') || 'Photo published! You can add another one.')
+      );
     } catch (error) {
       console.error('Publish error:', error);
       Alert.alert(t('error') || 'Error', t('publishFailed') || 'Failed to publish');
