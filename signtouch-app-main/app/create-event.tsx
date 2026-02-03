@@ -21,7 +21,7 @@ import { ArrowLeft, Sparkles, QrCode, Copy, Share2, Check, Plus, X, Clock, Users
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import Svg, { Path, G } from 'react-native-svg';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { GestureHandlerRootView, PanGestureHandler, TapGestureHandler, State } from 'react-native-gesture-handler';
 const QRCode = require('react-native-qrcode-svg').default;
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -141,8 +141,81 @@ export default function CreateEventScreen() {
     };
   }, []);
 
+  // Handler pour les taps (react-native-gesture-handler)
+  const onTapGestureEvent = useCallback((event: any) => {
+    if (event.nativeEvent.state === State.ACTIVE) {
+      const { x, y } = event.nativeEvent;
+      const scaleX = 300 / canvasLayoutRef.current.width;
+      const scaleY = 200 / canvasLayoutRef.current.height;
+      const scaledX = Math.max(0, Math.min(300, x * scaleX));
+      const scaledY = Math.max(0, Math.min(200, y * scaleY));
+      
+      // Créer un petit point visible pour le tap
+      const pathData = `M${scaledX.toFixed(1)},${scaledY.toFixed(1)} L${(scaledX + 2).toFixed(1)},${(scaledY + 2).toFixed(1)} L${scaledX.toFixed(1)},${(scaledY + 2).toFixed(1)}`;
+      
+      const newPath: PathData = {
+        id: Date.now().toString(),
+        d: pathData,
+        color: signatureColor,
+        strokeWidth,
+      };
+      setSigners(prev => {
+        const updated = [...prev];
+        updated[activeSignerIndex] = {
+          ...updated[activeSignerIndex],
+          paths: [...updated[activeSignerIndex].paths, newPath],
+        };
+        return updated;
+      });
+    }
+  }, [activeSignerIndex]);
+
+  // Handler pour le pan/dessin (react-native-gesture-handler)
+  const onPanGestureEvent = useCallback((event: any) => {
+    const { x, y } = event.nativeEvent;
+    const scaleX = 300 / canvasLayoutRef.current.width;
+    const scaleY = 200 / canvasLayoutRef.current.height;
+    const scaledX = Math.max(0, Math.min(300, x * scaleX));
+    const scaledY = Math.max(0, Math.min(200, y * scaleY));
+    
+    if (event.nativeEvent.state === State.BEGAN) {
+      setScrollEnabled(false);
+      currentPathRef.current = `M${scaledX.toFixed(1)},${scaledY.toFixed(1)}`;
+      setCurrentPath(currentPathRef.current);
+      isDrawingRef.current = true;
+      setIsDrawing(true);
+    } else if (event.nativeEvent.state === State.ACTIVE) {
+      if (isDrawingRef.current) {
+        currentPathRef.current += ` L${scaledX.toFixed(1)},${scaledY.toFixed(1)}`;
+        setCurrentPath(currentPathRef.current);
+      }
+    } else if (event.nativeEvent.state === State.END || event.nativeEvent.state === State.CANCELLED) {
+      if (currentPathRef.current && isDrawingRef.current) {
+        const newPath: PathData = {
+          id: Date.now().toString(),
+          d: currentPathRef.current,
+          color: signatureColor,
+          strokeWidth,
+        };
+        setSigners(prev => {
+          const updated = [...prev];
+          updated[activeSignerIndex] = {
+            ...updated[activeSignerIndex],
+            paths: [...updated[activeSignerIndex].paths, newPath],
+          };
+          return updated;
+        });
+        currentPathRef.current = '';
+        setCurrentPath('');
+      }
+      isDrawingRef.current = false;
+      setIsDrawing(false);
+      setScrollEnabled(true);
+    }
+  }, [activeSignerIndex]);
+
+  // Ancien handler pour web (souris)
   const handleTouchStart = useCallback((event: any) => {
-    // Désactiver le scroll du parent immédiatement
     setScrollEnabled(false);
     const nativeEvent = event.nativeEvent || event;
     const { x, y } = getPointerPositionFromNative(nativeEvent);
@@ -167,10 +240,8 @@ export default function CreateEventScreen() {
     if (currentPathRef.current && isDrawingRef.current) {
       let pathData = currentPathRef.current;
       
-      // Si c'est un tap (pas de mouvement), ajouter un micro-segment pour rendre le point visible
       if (!hasMoved.current && startPointRef.current) {
         const { x, y } = startPointRef.current;
-        // Ajouter un petit segment diagonal pour créer un point visible
         pathData += ` L${(x + 2).toFixed(1)},${(y + 2).toFixed(1)} L${x.toFixed(1)},${(y + 2).toFixed(1)}`;
       }
       
@@ -683,62 +754,64 @@ export default function CreateEventScreen() {
                     </TouchableOpacity>
                   )}
                 </View>
-                <Pressable
-                  style={styles.signatureContainer}
-                  ref={canvasRef}
-                  onLayout={(e) => {
-                    canvasLayoutRef.current = {
-                      x: e.nativeEvent.layout.x,
-                      y: e.nativeEvent.layout.y,
-                      width: e.nativeEvent.layout.width,
-                      height: e.nativeEvent.layout.height,
-                    };
-                  }}
-                  onPressIn={handleTouchStart}
-                  onStartShouldSetResponder={() => true}
-                  onMoveShouldSetResponder={() => true}
-                  onResponderMove={handleTouchMove}
-                  onResponderRelease={handleTouchEnd}
-                  onResponderTerminate={handleTouchEnd}
-                  // @ts-ignore - mouse events for web (more reliable for quick clicks)
-                  onMouseDown={handleTouchStart}
-                  onMouseMove={(e: any) => isDrawingRef.current && handleTouchMove(e)}
-                  onMouseUp={handleTouchEnd}
-                  onMouseLeave={handleTouchEnd}
-                >
-                  <Svg width="100%" height="100%" viewBox="0 0 300 200" style={styles.signatureSvg}>
-                    <G>
-                      {activeSigner.paths.map((path) => (
-                        <Path
-                          key={path.id}
-                          d={path.d}
-                          stroke={path.color}
-                          strokeWidth={path.strokeWidth}
-                          fill="none"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      ))}
-                      {currentPath && (
-                        <Path
-                          d={currentPath}
-                          stroke={signatureColor}
-                          strokeWidth={strokeWidth}
-                          fill="none"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
+                <TapGestureHandler onHandlerStateChange={onTapGestureEvent}>
+                  <PanGestureHandler 
+                    onHandlerStateChange={onPanGestureEvent}
+                    onGestureEvent={onPanGestureEvent}
+                    minDist={0}
+                  >
+                    <View
+                      style={styles.signatureContainer}
+                      ref={canvasRef}
+                      onLayout={(e) => {
+                        canvasLayoutRef.current = {
+                          x: e.nativeEvent.layout.x,
+                          y: e.nativeEvent.layout.y,
+                          width: e.nativeEvent.layout.width,
+                          height: e.nativeEvent.layout.height,
+                        };
+                      }}
+                      // @ts-ignore - mouse events for web
+                      onMouseDown={handleTouchStart}
+                      onMouseMove={(e: any) => isDrawingRef.current && handleTouchMove(e)}
+                      onMouseUp={handleTouchEnd}
+                      onMouseLeave={handleTouchEnd}
+                    >
+                      <Svg width="100%" height="100%" viewBox="0 0 300 200" style={styles.signatureSvg}>
+                        <G>
+                          {activeSigner.paths.map((path) => (
+                            <Path
+                              key={path.id}
+                              d={path.d}
+                              stroke={path.color}
+                              strokeWidth={path.strokeWidth}
+                              fill="none"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          ))}
+                          {currentPath && (
+                            <Path
+                              d={currentPath}
+                              stroke={signatureColor}
+                              strokeWidth={strokeWidth}
+                              fill="none"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          )}
+                        </G>
+                      </Svg>
+                      {activeSigner.paths.length === 0 && !currentPath && (
+                        <View style={styles.signaturePlaceholder}>
+                          <Text style={styles.signaturePlaceholderText}>
+                            {t('drawSignatureHere') || 'Draw signature here'}
+                          </Text>
+                        </View>
                       )}
-                    </G>
-                  </Svg>
-                  {activeSigner.paths.length === 0 && !currentPath && (
-                    <View style={styles.signaturePlaceholder}>
-                      <Text style={styles.signaturePlaceholderText}>
-                        {t('drawSignatureHere') || 'Draw signature here'}
-                      </Text>
                     </View>
-                  )}
-                </Pressable>
+                  </PanGestureHandler>
+                </TapGestureHandler>
               </View>
 
               <View style={styles.signersSummary}>
