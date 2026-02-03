@@ -354,41 +354,46 @@ export default function EventPublishScreen() {
         </View>
 
         <Text style={styles.sectionTitle}>{t('selectSigner') || 'Select Signer'}</Text>
-        <View style={styles.signersContainer}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={true} 
-            style={styles.signersScroll}
-            contentContainerStyle={styles.signersScrollContent}
-          >
-            {signers.map((signer) => (
-              <TouchableOpacity
-                key={signer.id}
-                style={[styles.signerCard, selectedSignerId === signer.id && styles.signerCardActive]}
-                onPress={() => setSelectedSignerId(signer.id)}
-              >
-                {signer.signature_url && (
-                  <Image source={{ uri: signer.signature_url }} style={styles.signerSignature} resizeMode="contain" />
-                )}
-                <Text style={[styles.signerName, selectedSignerId === signer.id && styles.signerNameActive]}>
-                  {signer.display_name}
-                </Text>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          style={styles.signersScroll}
+          contentContainerStyle={styles.signersScrollContent}
+        >
+          {signers.map((signer, index) => (
+            <TouchableOpacity
+              key={signer.id}
+              style={styles.signerBadgeWrapper}
+              onPress={() => setSelectedSignerId(signer.id)}
+            >
+              <View style={[
+                styles.signerBadge, 
+                selectedSignerId === signer.id && styles.signerBadgeActive
+              ]}>
+                <Text style={styles.signerBadgeNumber}>#{index + 1}</Text>
                 {selectedSignerId === signer.id && (
-                  <View style={styles.checkBadge}>
-                    <Check size={12} color="#fff" />
+                  <View style={styles.signerBadgeCheck}>
+                    <Check size={10} color="#fff" />
                   </View>
                 )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+              </View>
+              <Text style={[
+                styles.signerBadgeName, 
+                selectedSignerId === signer.id && styles.signerBadgeNameActive
+              ]} numberOfLines={1}>
+                {signer.display_name}
+              </Text>
+            </TouchableOpacity>
+          ))}
           <TouchableOpacity
-            style={styles.addSignerCard}
+            style={styles.signerBadgeWrapper}
             onPress={() => router.push(`/add-signer?sessionId=${sessionId}`)}
           >
-            <UserPlus size={24} color="#10B981" />
-            <Text style={styles.addSignerText}>Ajouter</Text>
+            <View style={styles.addSignerBadge}>
+              <Plus size={20} color="#10B981" />
+            </View>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
 
         <Text style={styles.sectionTitle}>{t('selectPhoto') || 'Select Photo'}</Text>
         <View style={styles.photoSection}>
@@ -604,56 +609,66 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4 },
   statDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
   sectionTitle: { fontSize: 16, fontWeight: '600', color: '#fff', marginBottom: 12 },
-  signersContainer: { 
-    flexDirection: 'row', 
-    marginBottom: 20, 
-    gap: 12,
-    alignItems: 'flex-start',
-  },
   signersScroll: { 
-    flex: 1,
-    maxHeight: 100,
+    marginBottom: 20,
   },
   signersScrollContent: { 
     flexDirection: 'row', 
-    gap: 12,
-    paddingRight: 8,
+    gap: 16,
+    paddingRight: 16,
   },
-  signerCard: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 12,
-    padding: 12,
+  signerBadgeWrapper: {
     alignItems: 'center',
-    minWidth: 100,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    width: 56,
   },
-  signerCardActive: { borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,0.2)' },
-  signerSignature: { width: 80, height: 40, marginBottom: 8 },
-  signerName: { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
-  signerNameActive: { color: '#10B981' },
-  checkBadge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  signerBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#10B981',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 6,
   },
-  addSignerCard: {
-    backgroundColor: 'rgba(16,185,129,0.1)',
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
+  signerBadgeActive: {
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  signerBadgeNumber: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  signerBadgeCheck: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#fff',
     justifyContent: 'center',
-    minWidth: 80,
+    alignItems: 'center',
+  },
+  signerBadgeName: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+  },
+  signerBadgeNameActive: {
+    color: '#10B981',
+    fontWeight: '600',
+  },
+  addSignerBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(16,185,129,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 2,
     borderColor: '#10B981',
     borderStyle: 'dashed',
-    gap: 6,
   },
   addSignerText: {
     fontSize: 12,
