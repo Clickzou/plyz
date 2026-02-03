@@ -152,17 +152,26 @@ export default function AccountScreen() {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    
+    // Déconnecter l'utilisateur
+    await signOut();
+    
+    // Nettoyer toutes les données
     await clearTrialData();
     await AsyncStorage.removeItem('@signtouch_device_id');
-    // Also reset subscription status to free for testing
+    await AsyncStorage.removeItem('@create_event_form_data');
+    await AsyncStorage.removeItem('@create_event_pending');
+    await AsyncStorage.removeItem('@post_auth_redirect');
+    
+    // Reset subscription status
     if (Platform.OS === 'web') {
       localStorage.removeItem('subscription_status');
-      alert('Données de trial et abonnement réinitialisées! Rafraîchissez la page pour voir le flux nouvel utilisateur.');
+      alert('Compte déconnecté et données réinitialisées! Rafraîchissez la page pour tester comme nouvel utilisateur.');
     } else {
       await AsyncStorage.removeItem('subscription_status');
       Alert.alert(
-        'Trial réinitialisé',
-        'Les données de trial ont été effacées. Redémarrez l\'app pour tester le flux nouvel utilisateur.',
+        'Réinitialisation complète',
+        'Compte déconnecté et données effacées. Redémarrez l\'app pour tester le flux nouvel utilisateur.',
         [{ text: 'OK' }]
       );
     }
