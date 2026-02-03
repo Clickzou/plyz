@@ -287,12 +287,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
     borderRadius: 16,
     overflow: 'hidden',
-    height: 250,
+    height: 200,
   },
   signatureCanvas: {
-    flex: 1,
+    width: '100%',
+    height: '100%',
     backgroundColor: '#000000',
-    borderRadius: 16,
   },
   signatureSvg: {
     flex: 1,
