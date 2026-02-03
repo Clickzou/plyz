@@ -136,8 +136,14 @@ export default function GalleryScreen() {
   const loadMemories = async () => {
     try {
       setLoading(true);
-      const loadedMemories = await StorageService.getAllMemories(user?.id || null);
-      setMemories(loadedMemories);
+      // Sur web, toujours utiliser localStorage (pas de cloud storage)
+      if (Platform.OS === 'web') {
+        const localMemories = JSON.parse(localStorage.getItem('memories') || '[]');
+        setMemories(localMemories);
+      } else {
+        const loadedMemories = await StorageService.getAllMemories(user?.id || null);
+        setMemories(loadedMemories);
+      }
     } catch (error) {
       console.error('Error loading memories:', error);
     } finally {
