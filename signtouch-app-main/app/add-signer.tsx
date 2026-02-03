@@ -160,7 +160,7 @@ export default function AddSignerScreen() {
               style={styles.signatureCanvas}
               {...panResponder.panHandlers}
             >
-              <Svg width="100%" height="100%" viewBox="0 0 300 200" style={styles.signatureSvg}>
+              <Svg style={StyleSheet.absoluteFill}>
                 {paths.map((path, index) => (
                   <Path
                     key={index}
