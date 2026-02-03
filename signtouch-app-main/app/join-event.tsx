@@ -17,7 +17,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, QrCode, Search, Check, Download, Camera, Users, Clock, Calendar, Bell, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import * as Notifications from 'expo-notifications';
+let Notifications: any = null;
+try {
+  Notifications = require('expo-notifications');
+} catch (e) {
+  console.log('expo-notifications not available');
+}
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -239,6 +244,14 @@ export default function JoinEventScreen() {
 
   const handleSetNotification = async () => {
     if (!scheduledSession) return;
+    
+    if (!Notifications) {
+      Alert.alert(
+        t('notAvailable') || 'Not Available',
+        t('notificationsNotSupported') || 'Notifications are not supported in this environment'
+      );
+      return;
+    }
 
     try {
       const { status } = await Notifications.requestPermissionsAsync();
