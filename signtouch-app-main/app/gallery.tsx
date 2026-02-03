@@ -307,7 +307,13 @@ export default function GalleryScreen() {
       setIsDeleting(true);
       console.log('🗑️ Suppression de:', selectedMemory.id);
 
-      await StorageService.deleteMemory(selectedMemory.id, user?.id || null);
+      if (Platform.OS === 'web') {
+        const memories = JSON.parse(localStorage.getItem('memories') || '[]');
+        const filtered = memories.filter((m: Memory) => m.id !== selectedMemory.id);
+        localStorage.setItem('memories', JSON.stringify(filtered));
+      } else {
+        await StorageService.deleteMemory(selectedMemory.id, user?.id || null);
+      }
       console.log('✅ Souvenir supprimé');
 
       if (Platform.OS !== 'web') {
@@ -494,8 +500,14 @@ export default function GalleryScreen() {
     try {
       setIsDeleting(true);
 
-      for (const memoryId of selectedMemories) {
-        await StorageService.deleteMemory(memoryId, user?.id || null);
+      if (Platform.OS === 'web') {
+        const memories = JSON.parse(localStorage.getItem('memories') || '[]');
+        const filtered = memories.filter((m: Memory) => !selectedMemories.has(m.id));
+        localStorage.setItem('memories', JSON.stringify(filtered));
+      } else {
+        for (const memoryId of selectedMemories) {
+          await StorageService.deleteMemory(memoryId, user?.id || null);
+        }
       }
 
       if (Platform.OS !== 'web') {
