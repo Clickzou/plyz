@@ -203,63 +203,87 @@ export default function CelebrityMenuScreen() {
               </View>
             ) : (
               <View style={styles.eventsList}>
-                {myEvents.map((event) => (
-                  <View key={event.id} style={styles.eventCard}>
-                    <View style={styles.eventHeader}>
-                      <View style={[
-                        styles.eventStatusBadge,
-                        isLiveOrActive(event.status) ? styles.badgeLive : styles.badgeScheduled
-                      ]}>
-                        {isLiveOrActive(event.status) ? (
-                          <Play size={10} color="#fff" fill="#fff" />
-                        ) : (
-                          <Calendar size={10} color="#fff" />
-                        )}
-                        <Text style={styles.eventStatusText}>{getStatusLabel(event.status)}</Text>
+                {myEvents.map((event) => {
+                  const isLiveVideo = event.event_type === 'live_video';
+                  return (
+                    <View key={event.id} style={styles.eventCard}>
+                      <View style={styles.eventHeader}>
+                        <View style={styles.eventTypeBadges}>
+                          <View style={[
+                            styles.eventTypeBadge,
+                            isLiveVideo ? styles.badgeLiveVideo : styles.badgeQr
+                          ]}>
+                            {isLiveVideo ? (
+                              <Video size={12} color="#fff" />
+                            ) : (
+                              <QrCode size={12} color="#fff" />
+                            )}
+                            <Text style={styles.eventTypeText}>
+                              {isLiveVideo ? 'LIVE' : 'QR'}
+                            </Text>
+                          </View>
+                          <View style={[
+                            styles.eventStatusBadge,
+                            isLiveOrActive(event.status) ? styles.badgeLive : styles.badgeScheduled
+                          ]}>
+                            {isLiveOrActive(event.status) ? (
+                              <Play size={10} color="#fff" fill="#fff" />
+                            ) : (
+                              <Calendar size={10} color="#fff" />
+                            )}
+                            <Text style={styles.eventStatusText}>{getStatusLabel(event.status)}</Text>
+                          </View>
+                        </View>
+                        <TouchableOpacity
+                          style={styles.deleteBtn}
+                          onPress={() => handleDeleteEvent(event)}
+                        >
+                          <Trash2 size={18} color="#ef4444" />
+                        </TouchableOpacity>
                       </View>
-                      <TouchableOpacity
-                        style={styles.deleteBtn}
-                        onPress={() => handleDeleteEvent(event)}
-                      >
-                        <Trash2 size={18} color="#ef4444" />
-                      </TouchableOpacity>
-                    </View>
-                    
-                    <Text style={styles.eventTitle}>{event.title}</Text>
-                    
-                    <View style={styles.eventTime}>
-                      <Clock size={14} color="rgba(255,255,255,0.6)" />
-                      <Text style={styles.eventTimeText}>
-                        {isLiveOrActive(event.status)
-                          ? `Jusqu'à ${new Date(event.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                          : `${new Date(event.starts_at).toLocaleDateString()} à ${new Date(event.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                        }
-                      </Text>
-                    </View>
+                      
+                      <Text style={styles.eventTitle}>{event.title}</Text>
+                      
+                      <View style={styles.eventTime}>
+                        <Clock size={14} color="rgba(255,255,255,0.6)" />
+                        <Text style={styles.eventTimeText}>
+                          {isLiveOrActive(event.status)
+                            ? `Jusqu'à ${new Date(event.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                            : `${new Date(event.starts_at).toLocaleDateString()} à ${new Date(event.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                          }
+                        </Text>
+                      </View>
 
-                    <View style={styles.eventCode}>
-                      <Text style={styles.eventCodeLabel}>{t('code') || 'Code'}:</Text>
-                      <Text style={styles.eventCodeValue}>{event.join_code}</Text>
-                    </View>
+                      <View style={styles.eventCode}>
+                        <Text style={styles.eventCodeLabel}>{t('code') || 'Code'}:</Text>
+                        <Text style={styles.eventCodeValue}>{event.join_code}</Text>
+                      </View>
 
-                    <View style={styles.eventActions}>
-                      <TouchableOpacity
-                        style={styles.actionBtn}
-                        onPress={() => handleShowQr(event)}
-                      >
-                        <QrCode size={18} color="#fff" />
-                        <Text style={styles.actionBtnText}>{t('showQrCode') || 'QR Code'}</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.actionBtn, styles.actionBtnPrimary]}
-                        onPress={() => handleContinueEvent(event)}
-                      >
-                        <Edit3 size={18} color="#188661" />
-                        <Text style={[styles.actionBtnText, styles.actionBtnTextPrimary]}>{t('publish') || 'Publier'}</Text>
-                      </TouchableOpacity>
+                      <View style={styles.eventActions}>
+                        <TouchableOpacity
+                          style={styles.actionBtn}
+                          onPress={() => handleShowQr(event)}
+                        >
+                          <QrCode size={18} color="#fff" />
+                          <Text style={styles.actionBtnText}>{t('showQrCode') || 'QR Code'}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.actionBtn, styles.actionBtnPrimary]}
+                          onPress={() => handleContinueEvent(event)}
+                        >
+                          {isLiveVideo ? (
+                            <Video size={18} color="#188661" />
+                          ) : (
+                            <Edit3 size={18} color="#188661" />
+                          )}
+                          <Text style={[styles.actionBtnText, styles.actionBtnTextPrimary]}>
+                            {isLiveVideo ? 'Live' : (t('publish') || 'Publier')}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                  </View>
-                ))}
+                  );
+                })}
               </View>
             )}
           </>
@@ -464,6 +488,30 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+  },
+  eventTypeBadges: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  eventTypeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    gap: 5,
+  },
+  badgeQr: {
+    backgroundColor: '#10B981',
+  },
+  badgeLiveVideo: {
+    backgroundColor: '#8b5cf6',
+  },
+  eventTypeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#fff',
   },
   eventStatusBadge: {
     flexDirection: 'row',

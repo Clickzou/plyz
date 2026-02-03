@@ -15,6 +15,7 @@ export interface EventSession {
   viewer_soft_limit: number;
   created_by: string | null;
   created_at: string;
+  event_type?: 'qr' | 'live_video';
 }
 
 export interface EventSigner {
