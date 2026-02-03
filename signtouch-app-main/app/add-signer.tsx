@@ -8,6 +8,8 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
+  PanResponder,
+  GestureResponderEvent,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -34,30 +36,41 @@ export default function AddSignerScreen() {
   const [isSaving, setIsSaving] = useState(false);
 
   const viewShotRef = useRef<ViewShot>(null);
+  const pathRef = useRef<string>('');
+  const pathsRef = useRef<string[]>([]);
 
-  const handleTouchStart = (event: any) => {
-    const { locationX, locationY } = event.nativeEvent;
-    setIsDrawing(true);
-    setCurrentPath(`M${locationX},${locationY}`);
-  };
-
-  const handleTouchMove = (event: any) => {
-    if (!isDrawing) return;
-    const { locationX, locationY } = event.nativeEvent;
-    setCurrentPath(prev => `${prev} L${locationX},${locationY}`);
-  };
-
-  const handleTouchEnd = () => {
-    if (currentPath) {
-      setPaths(prev => [...prev, currentPath]);
-      setCurrentPath('');
-    }
-    setIsDrawing(false);
-  };
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt: GestureResponderEvent) => {
+        const { locationX, locationY } = evt.nativeEvent;
+        pathRef.current = `M${locationX.toFixed(1)},${locationY.toFixed(1)}`;
+        setCurrentPath(pathRef.current);
+        setIsDrawing(true);
+      },
+      onPanResponderMove: (evt: GestureResponderEvent) => {
+        const { locationX, locationY } = evt.nativeEvent;
+        pathRef.current = `${pathRef.current} L${locationX.toFixed(1)},${locationY.toFixed(1)}`;
+        setCurrentPath(pathRef.current);
+      },
+      onPanResponderRelease: () => {
+        if (pathRef.current) {
+          pathsRef.current = [...pathsRef.current, pathRef.current];
+          setPaths([...pathsRef.current]);
+          pathRef.current = '';
+          setCurrentPath('');
+        }
+        setIsDrawing(false);
+      },
+    })
+  ).current;
 
   const handleClear = () => {
     setPaths([]);
     setCurrentPath('');
+    pathRef.current = '';
+    pathsRef.current = [];
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -145,9 +158,7 @@ export default function AddSignerScreen() {
           >
             <View
               style={styles.signatureCanvas}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+              {...panResponder.panHandlers}
             >
               <Svg style={StyleSheet.absoluteFill}>
                 {paths.map((path, index) => (
