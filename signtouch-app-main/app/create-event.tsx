@@ -170,11 +170,11 @@ export default function CreateEventScreen() {
       const savedData = await AsyncStorage.getItem(EVENT_FORM_STORAGE_KEY);
       if (!savedData) return;
       
-      console.log('[RestoreAndContinue] Restoring form data for user:', user.id);
+      console.log('[RestoreAndContinue] Restoring form data for user:', user.id, 'status:', status);
       const formData = JSON.parse(savedData);
       hasRestoredRef.current = true;
       
-      // Restaurer les données
+      // Restaurer les données dans les states
       setStep(formData.step || 'signers');
       setEventName(formData.eventName || '');
       setSelectedDuration(formData.selectedDuration || 60);
@@ -186,17 +186,19 @@ export default function CreateEventScreen() {
       setSigners(formData.signers || [{ name: '', paths: [] }]);
       setActiveSignerIndex(formData.activeSignerIndex || 0);
       
-      // Nettoyer le flag pending
-      await AsyncStorage.removeItem(EVENT_PENDING_CREATE_KEY);
-      await AsyncStorage.removeItem(EVENT_FORM_STORAGE_KEY);
-      
-      // Si l'utilisateur est abonné (paid ou trial), continuer automatiquement
+      // Si l'utilisateur est abonné (paid ou trial), créer l'événement et nettoyer
       if (status === 'paid' || status === 'trial') {
         console.log('[RestoreAndContinue] User is subscribed, creating event automatically');
+        // Nettoyer les données sauvegardées MAINTENANT car on va créer l'événement
+        await AsyncStorage.removeItem(EVENT_PENDING_CREATE_KEY);
+        await AsyncStorage.removeItem(EVENT_FORM_STORAGE_KEY);
         // Attendre que les states soient mis à jour, puis créer l'événement
         setTimeout(() => {
           handleCreateEventAfterRestore(formData);
         }, 100);
+      } else {
+        console.log('[RestoreAndContinue] User not subscribed yet, keeping data for later');
+        // Ne PAS supprimer les données - l'utilisateur doit encore s'abonner
       }
     } catch (error) {
       console.error('Error restoring form data:', error);
