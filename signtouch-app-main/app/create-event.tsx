@@ -758,6 +758,7 @@ export default function CreateEventScreen() {
                 <View
                   style={styles.signatureContainer}
                   ref={canvasRef}
+                  pointerEvents="box-only"
                   onLayout={(e) => {
                     canvasLayoutRef.current = {
                       x: e.nativeEvent.layout.x,
@@ -768,7 +769,6 @@ export default function CreateEventScreen() {
                   }}
                   onStartShouldSetResponder={() => true}
                   onMoveShouldSetResponder={() => true}
-                  onResponderTerminationRequest={() => false}
                   onResponderGrant={handleTouchStart}
                   onResponderMove={handleTouchMove}
                   onResponderRelease={handleTouchEnd}
