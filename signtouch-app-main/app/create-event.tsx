@@ -151,7 +151,9 @@ export default function CreateEventScreen() {
       // Si c'est un tap (pas de mouvement), ajouter un micro-segment pour rendre le point visible
       if (!hasMoved.current && startPointRef.current) {
         const { x, y } = startPointRef.current;
-        pathData += ` L${(x + 0.5).toFixed(1)},${(y + 0.5).toFixed(1)}`;
+        // Ajouter un petit segment diagonal pour créer un point visible
+        pathData += ` L${(x + 2).toFixed(1)},${(y + 2).toFixed(1)} L${x.toFixed(1)},${(y + 2).toFixed(1)}`;
+        console.log('TAP detected - adding point at:', x, y);
       }
       
       const newPath: PathData = {
@@ -160,6 +162,7 @@ export default function CreateEventScreen() {
         color: signatureColor,
         strokeWidth,
       };
+      console.log('Saving path:', pathData);
       setSigners(prev => {
         const updated = [...prev];
         updated[activeSignerIndex] = {
