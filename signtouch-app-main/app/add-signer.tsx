@@ -8,8 +8,6 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
-  PanResponder,
-  GestureResponderEvent,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -38,33 +36,48 @@ export default function AddSignerScreen() {
   const viewShotRef = useRef<ViewShot>(null);
   const pathRef = useRef<string>('');
   const pathsRef = useRef<string[]>([]);
+  const canvasLayoutRef = useRef({ width: 300, height: 200 });
+  const isDrawingRef = useRef(false);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (evt: GestureResponderEvent) => {
-        const { locationX, locationY } = evt.nativeEvent;
-        pathRef.current = `M${locationX.toFixed(1)},${locationY.toFixed(1)}`;
-        setCurrentPath(pathRef.current);
-        setIsDrawing(true);
-      },
-      onPanResponderMove: (evt: GestureResponderEvent) => {
-        const { locationX, locationY } = evt.nativeEvent;
-        pathRef.current = `${pathRef.current} L${locationX.toFixed(1)},${locationY.toFixed(1)}`;
-        setCurrentPath(pathRef.current);
-      },
-      onPanResponderRelease: () => {
-        if (pathRef.current) {
-          pathsRef.current = [...pathsRef.current, pathRef.current];
-          setPaths([...pathsRef.current]);
-          pathRef.current = '';
-          setCurrentPath('');
-        }
-        setIsDrawing(false);
-      },
-    })
-  ).current;
+  const getScaledPosition = (nativeEvent: any) => {
+    const { locationX, locationY, offsetX, offsetY } = nativeEvent;
+    const x = locationX ?? offsetX ?? 0;
+    const y = locationY ?? offsetY ?? 0;
+    const scaleX = 300 / canvasLayoutRef.current.width;
+    const scaleY = 200 / canvasLayoutRef.current.height;
+    return {
+      x: Math.max(0, Math.min(300, x * scaleX)),
+      y: Math.max(0, Math.min(200, y * scaleY)),
+    };
+  };
+
+  const handleTouchStart = (event: any) => {
+    const nativeEvent = event.nativeEvent || event;
+    const { x, y } = getScaledPosition(nativeEvent);
+    pathRef.current = `M${x.toFixed(1)},${y.toFixed(1)}`;
+    setCurrentPath(pathRef.current);
+    isDrawingRef.current = true;
+    setIsDrawing(true);
+  };
+
+  const handleTouchMove = (event: any) => {
+    if (!isDrawingRef.current) return;
+    const nativeEvent = event.nativeEvent || event;
+    const { x, y } = getScaledPosition(nativeEvent);
+    pathRef.current = `${pathRef.current} L${x.toFixed(1)},${y.toFixed(1)}`;
+    setCurrentPath(pathRef.current);
+  };
+
+  const handleTouchEnd = () => {
+    if (pathRef.current && isDrawingRef.current) {
+      pathsRef.current = [...pathsRef.current, pathRef.current];
+      setPaths([...pathsRef.current]);
+      pathRef.current = '';
+      setCurrentPath('');
+    }
+    isDrawingRef.current = false;
+    setIsDrawing(false);
+  };
 
   const handleClear = () => {
     setPaths([]);
@@ -158,9 +171,29 @@ export default function AddSignerScreen() {
           >
             <View
               style={styles.signatureCanvas}
-              {...panResponder.panHandlers}
+              onLayout={(e) => {
+                canvasLayoutRef.current = {
+                  width: e.nativeEvent.layout.width,
+                  height: e.nativeEvent.layout.height,
+                };
+              }}
+              onStartShouldSetResponder={() => true}
+              onMoveShouldSetResponder={() => true}
+              onResponderGrant={handleTouchStart}
+              onResponderMove={handleTouchMove}
+              onResponderRelease={handleTouchEnd}
+              onResponderTerminate={handleTouchEnd}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onTouchCancel={handleTouchEnd}
+              // @ts-ignore - mouse events for web
+              onMouseDown={handleTouchStart}
+              onMouseMove={(e: any) => isDrawingRef.current && handleTouchMove(e)}
+              onMouseUp={handleTouchEnd}
+              onMouseLeave={handleTouchEnd}
             >
-              <Svg style={StyleSheet.absoluteFill}>
+              <Svg width="100%" height="100%" viewBox="0 0 300 200" style={styles.signatureSvg}>
                 {paths.map((path, index) => (
                   <Path
                     key={index}
