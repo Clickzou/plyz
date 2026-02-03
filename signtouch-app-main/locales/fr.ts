@@ -457,6 +457,8 @@ export default {
   eventSummary: 'Votre événement commence le',
   andEnds: 'et se termine le',
   at: 'à',
+  activeViewers: 'spectateurs actifs',
+  totalViews: 'vues totales',
   notebookSaveSuccess: 'Ajouté à votre carnet !',
 
   // Story Mode

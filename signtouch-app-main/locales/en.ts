@@ -457,6 +457,8 @@ export default {
   eventSummary: 'Your event starts on',
   andEnds: 'and ends on',
   at: 'at',
+  activeViewers: 'active viewers',
+  totalViews: 'total views',
   notebookSaveSuccess: 'Added to your notebook!',
 
   // Story Mode

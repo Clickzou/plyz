@@ -478,3 +478,23 @@ export const getActiveViewerCount = async (eventId: string): Promise<number> => 
   if (error) return 0;
   return count || 0;
 };
+
+export const getEventTotalViews = async (eventId: string): Promise<number> => {
+  const { count, error } = await supabase
+    .from('event_viewers')
+    .select('*', { count: 'exact', head: true })
+    .eq('event_id', eventId);
+
+  if (error) return 0;
+  return count || 0;
+};
+
+export const getEventPublishedCount = async (eventId: string): Promise<number> => {
+  const { count, error } = await supabase
+    .from('event_assets')
+    .select('*', { count: 'exact', head: true })
+    .eq('event_id', eventId);
+
+  if (error) return 0;
+  return count || 0;
+};

@@ -12,12 +12,12 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus } from 'lucide-react-native';
+import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getMyScheduledEvents, EventSession, deleteEventSession } from '@/utils/eventSessionStorage';
+import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount } from '@/utils/eventSessionStorage';
 const QRCodeSvg = require('react-native-qrcode-svg').default;
 
 type TabType = 'create' | 'events';
@@ -32,6 +32,7 @@ export default function CelebrityMenuScreen() {
   const [selectedEvent, setSelectedEvent] = useState<EventSession | null>(null);
   const [showQrModal, setShowQrModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [eventViews, setEventViews] = useState<Record<string, number>>({});
 
   const loadMyEvents = useCallback(async () => {
     try {
@@ -54,6 +55,29 @@ export default function CelebrityMenuScreen() {
       loadMyEvents();
     }, [loadMyEvents])
   );
+
+  const loadEventViews = useCallback(async () => {
+    const views: Record<string, number> = {};
+    for (const event of myEvents) {
+      if (event.status === 'live') {
+        views[event.id] = await getActiveViewerCount(event.id);
+      } else {
+        views[event.id] = await getEventTotalViews(event.id);
+      }
+    }
+    setEventViews(views);
+  }, [myEvents]);
+
+  useEffect(() => {
+    if (myEvents.length > 0) {
+      loadEventViews();
+      const hasLiveEvents = myEvents.some(e => e.status === 'live');
+      if (hasLiveEvents) {
+        const interval = setInterval(loadEventViews, 15000);
+        return () => clearInterval(interval);
+      }
+    }
+  }, [myEvents, loadEventViews]);
 
   const handleContinueEvent = (event: EventSession) => {
     router.push(`/event-publish?sessionId=${event.id}&sessionTitle=${encodeURIComponent(event.title)}&joinCode=${event.join_code}`);
@@ -264,6 +288,13 @@ export default function CelebrityMenuScreen() {
                       <View style={styles.eventCode}>
                         <Text style={[styles.eventCodeLabel, eventEnded && styles.eventCodeLabelEnded]}>{t('code') || 'Code'}:</Text>
                         <Text style={[styles.eventCodeValue, eventEnded && styles.eventCodeValueEnded]}>{event.join_code}</Text>
+                      </View>
+
+                      <View style={styles.eventViewsRow}>
+                        <Eye size={16} color={event.status === 'live' ? '#10b981' : '#6b7280'} />
+                        <Text style={[styles.eventViewsText, event.status === 'live' && styles.eventViewsTextLive]}>
+                          {eventViews[event.id] || 0} {event.status === 'live' ? (t('activeViewers') || 'spectateurs actifs') : (t('totalViews') || 'vues totales')}
+                        </Text>
                       </View>
 
                       {!eventEnded && (
@@ -609,6 +640,20 @@ const styles = StyleSheet.create({
   },
   eventCodeValueEnded: {
     color: '#9ca3af',
+  },
+  eventViewsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 14,
+  },
+  eventViewsText: {
+    fontSize: 13,
+    color: '#6b7280',
+  },
+  eventViewsTextLive: {
+    color: '#10b981',
+    fontWeight: '600',
   },
   eventActions: {
     flexDirection: 'row',
