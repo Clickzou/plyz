@@ -273,7 +273,7 @@ export default function CelebrityMenuScreen() {
                             <Edit3 size={18} color="#fff" />
                           )}
                           <Text style={[styles.actionBtnText, styles.actionBtnTextPrimary]}>
-                            {isLiveVideo ? 'Live' : 'Publier'}
+                            {isLiveVideo ? 'Live' : 'Éditer'}
                           </Text>
                         </TouchableOpacity>
                       </View>
