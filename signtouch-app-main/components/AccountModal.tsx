@@ -9,15 +9,17 @@ interface AccountModalProps {
   visible: boolean;
   onClose: () => void;
   onSkip: () => void;
+  returnPath?: string;
 }
 
 export default function AccountModal({ 
   visible, 
   onClose,
-  onSkip 
+  onSkip,
+  returnPath 
 }: AccountModalProps) {
   const { t } = useTranslation();
-  const { sendOtpCode, verifyOtpCode } = useAuth();
+  const { sendOtpCode, verifyOtpCode, setPostAuthRedirect } = useAuth();
   const [step, setStep] = useState<'email' | 'code' | 'success'>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -61,6 +63,10 @@ export default function AccountModal({
       if (verifyError) {
         setError(verifyError.message);
       } else {
+        // Sauvegarder le chemin de retour avant de rediriger vers subscription
+        if (returnPath) {
+          await setPostAuthRedirect(returnPath);
+        }
         setStep('success');
         setTimeout(() => {
           handleClose();

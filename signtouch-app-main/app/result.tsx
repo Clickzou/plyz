@@ -2379,6 +2379,7 @@ export default function ResultScreen() {
           visible={showAccountModal}
           onClose={() => setShowAccountModal(false)}
           onSkip={() => setShowAccountModal(false)}
+          returnPath="/gallery"
         />
 
         {/* Text Input Modal */}

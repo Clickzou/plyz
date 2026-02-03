@@ -941,6 +941,7 @@ export default function GalleryScreen() {
         visible={showAccountModal}
         onClose={() => setShowAccountModal(false)}
         onSkip={() => setShowAccountModal(false)}
+        returnPath="/gallery"
       />
 
       {selectionMode && selectedMemories.size > 0 && (

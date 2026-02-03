@@ -942,6 +942,7 @@ export default function CreateEventScreen() {
           visible={showAccountModal}
           onClose={() => setShowAccountModal(false)}
           onSkip={() => setShowAccountModal(false)}
+          returnPath="/create-event"
         />
       </LinearGradient>
     </GestureHandlerRootView>

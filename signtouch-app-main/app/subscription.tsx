@@ -19,6 +19,7 @@ import {
 } from 'lucide-react-native';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { validatePromoCode } from '@/utils/promoCodeStorage';
@@ -27,6 +28,7 @@ export default function SubscriptionScreen() {
   const insets = useSafeAreaInsets();
   const { setStatus } = useSubscription();
   const { t } = useLanguage();
+  const { getPostAuthRedirect, clearPostAuthRedirect } = useAuth();
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
@@ -59,8 +61,14 @@ export default function SubscriptionScreen() {
     console.log('Subscribe to:', plan);
     await setStatus('paid');
 
-    // Rediriger vers l'accueil après abonnement
-    router.replace('/');
+    // Vérifier s'il y a une redirection post-auth
+    const returnPath = await getPostAuthRedirect();
+    if (returnPath) {
+      await clearPostAuthRedirect();
+      router.replace(returnPath as any);
+    } else {
+      router.replace('/');
+    }
   };
 
   return (

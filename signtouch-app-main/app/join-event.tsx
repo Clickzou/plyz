@@ -420,6 +420,7 @@ export default function JoinEventScreen() {
         visible={showAccountModal}
         onClose={() => setShowAccountModal(false)}
         onSkip={() => setShowAccountModal(false)}
+        returnPath="/join-event"
       />
     </View>
   );
