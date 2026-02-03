@@ -124,8 +124,13 @@ export default function CreateEventScreen() {
     };
   }, []);
 
+  const startPointRef = useRef<{ x: number; y: number } | null>(null);
+  const hasMoved = useRef(false);
+
   const handleTouchStart = useCallback((event: GestureResponderEvent) => {
     const { x, y } = getPointerPosition(event);
+    startPointRef.current = { x, y };
+    hasMoved.current = false;
     currentPathRef.current = `M${x.toFixed(1)},${y.toFixed(1)}`;
     setCurrentPath(currentPathRef.current);
     setIsDrawing(true);
@@ -134,15 +139,24 @@ export default function CreateEventScreen() {
   const handleTouchMove = useCallback((event: GestureResponderEvent) => {
     if (!isDrawing) return;
     const { x, y } = getPointerPosition(event);
+    hasMoved.current = true;
     currentPathRef.current += ` L${x.toFixed(1)},${y.toFixed(1)}`;
     setCurrentPath(currentPathRef.current);
   }, [isDrawing, getPointerPosition]);
 
   const handleTouchEnd = useCallback(() => {
     if (currentPathRef.current && isDrawing) {
+      let pathData = currentPathRef.current;
+      
+      // Si c'est un tap (pas de mouvement), ajouter un micro-segment pour rendre le point visible
+      if (!hasMoved.current && startPointRef.current) {
+        const { x, y } = startPointRef.current;
+        pathData += ` L${(x + 0.5).toFixed(1)},${(y + 0.5).toFixed(1)}`;
+      }
+      
       const newPath: PathData = {
         id: Date.now().toString(),
-        d: currentPathRef.current,
+        d: pathData,
         color: signatureColor,
         strokeWidth,
       };
@@ -158,6 +172,8 @@ export default function CreateEventScreen() {
       setCurrentPath('');
     }
     setIsDrawing(false);
+    startPointRef.current = null;
+    hasMoved.current = false;
   }, [activeSignerIndex, isDrawing]);
 
   const clearSignature = () => {
