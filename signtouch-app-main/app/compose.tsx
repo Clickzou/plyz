@@ -964,13 +964,23 @@ export default function ComposeScreen() {
           localStorage.setItem('memories', JSON.stringify(memories));
         } catch (quotaError: any) {
           if (quotaError.name === 'QuotaExceededError') {
-            console.error('❌ Quota dépassé, nettoyage...');
-            const reducedMemories = memories.slice(0, 3);
+            console.error('❌ Quota dépassé, tentative de sauvegarde réduite...');
+            // Garder au moins les 5 dernières photos au lieu de 3
+            const reducedMemories = memories.slice(0, 5);
             try {
               localStorage.setItem('memories', JSON.stringify(reducedMemories));
+              // Avertir l'utilisateur
+              Alert.alert(
+                t('storageWarning') || 'Stockage limité',
+                t('storageWarningMessage') || 'Certaines anciennes photos ont été supprimées pour libérer de l\'espace. Connectez-vous pour sauvegarder vos photos dans le cloud.'
+              );
             } catch (e) {
-              localStorage.clear();
+              // En dernier recours, ne garder que la nouvelle photo
               localStorage.setItem('memories', JSON.stringify([newMemory]));
+              Alert.alert(
+                t('storageFull') || 'Stockage plein',
+                t('storageFullMessage') || 'Le stockage local est plein. Seule votre dernière photo a été conservée. Connectez-vous pour sauvegarder dans le cloud.'
+              );
             }
           } else {
             throw quotaError;

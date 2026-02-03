@@ -703,4 +703,8 @@ export default {
   changeEmail: 'Change email address',
   connectionSuccess: 'Successfully connected!',
   welcomeBack: 'Welcome! Your photos are now secured.',
+  storageWarning: 'Storage limited',
+  storageWarningMessage: 'Some older photos were removed to free space. Sign in to save your photos to the cloud.',
+  storageFull: 'Storage full',
+  storageFullMessage: 'Local storage is full. Only your latest photo was saved. Sign in to save to the cloud.',
 };
