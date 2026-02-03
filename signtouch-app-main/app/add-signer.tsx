@@ -15,9 +15,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Check, Trash2 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Svg, { Path } from 'react-native-svg';
+import {
+  GestureDetector,
+  Gesture,
+  GestureHandlerRootView,
+} from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
 import ViewShot from 'react-native-view-shot';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { addEventSigner } from '@/utils/eventSessionStorage';
+
+interface DrawingPath {
+  path: string;
+}
 
 export default function AddSignerScreen() {
   const router = useRouter();
@@ -28,62 +38,61 @@ export default function AddSignerScreen() {
   const sessionId = params.sessionId as string;
 
   const [displayName, setDisplayName] = useState('');
-  const [paths, setPaths] = useState<string[]>([]);
+  const [paths, setPaths] = useState<DrawingPath[]>([]);
   const [currentPath, setCurrentPath] = useState('');
-  const [isDrawing, setIsDrawing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const viewShotRef = useRef<ViewShot>(null);
-  const pathRef = useRef<string>('');
-  const pathsRef = useRef<string[]>([]);
-  const canvasLayoutRef = useRef({ width: 300, height: 200 });
-  const isDrawingRef = useRef(false);
+  const currentPathRef = useRef<string>('');
+  const startPointRef = useRef<{ x: number; y: number } | null>(null);
 
-  const getScaledPosition = useCallback((nativeEvent: any) => {
-    const { locationX, locationY, offsetX, offsetY } = nativeEvent;
-    const x = locationX ?? offsetX ?? 0;
-    const y = locationY ?? offsetY ?? 0;
-    const scaleX = 300 / canvasLayoutRef.current.width;
-    const scaleY = 200 / canvasLayoutRef.current.height;
-    return {
-      x: Math.max(0, Math.min(300, x * scaleX)),
-      y: Math.max(0, Math.min(200, y * scaleY)),
-    };
+  const onDrawStart = useCallback((x: number, y: number) => {
+    startPointRef.current = { x, y };
+    const newPath = `M ${x} ${y}`;
+    currentPathRef.current = newPath;
+    setCurrentPath(newPath);
   }, []);
 
-  const handleTouchStart = useCallback((event: any) => {
-    const nativeEvent = event.nativeEvent || event;
-    const { x, y } = getScaledPosition(nativeEvent);
-    pathRef.current = `M${x.toFixed(1)},${y.toFixed(1)}`;
-    setCurrentPath(pathRef.current);
-    isDrawingRef.current = true;
-    setIsDrawing(true);
-  }, [getScaledPosition]);
+  const onDrawUpdate = useCallback((x: number, y: number) => {
+    currentPathRef.current = currentPathRef.current + ` L ${x} ${y}`;
+    setCurrentPath(currentPathRef.current);
+  }, []);
 
-  const handleTouchMove = useCallback((event: any) => {
-    if (!isDrawingRef.current) return;
-    const nativeEvent = event.nativeEvent || event;
-    const { x, y } = getScaledPosition(nativeEvent);
-    pathRef.current = `${pathRef.current} L${x.toFixed(1)},${y.toFixed(1)}`;
-    setCurrentPath(pathRef.current);
-  }, [getScaledPosition]);
+  const onDrawEnd = useCallback((endX: number, endY: number) => {
+    const startPoint = startPointRef.current;
+    if (currentPathRef.current && startPoint) {
+      const dx = Math.abs(endX - startPoint.x);
+      const dy = Math.abs(endY - startPoint.y);
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
-  const handleTouchEnd = useCallback(() => {
-    if (pathRef.current && isDrawingRef.current) {
-      pathsRef.current = [...pathsRef.current, pathRef.current];
-      setPaths([...pathsRef.current]);
-      pathRef.current = '';
+      let finalPath = currentPathRef.current;
+      if (distance < 5) {
+        finalPath = `M ${startPoint.x - 2} ${startPoint.y} L ${startPoint.x + 2} ${startPoint.y} L ${startPoint.x} ${startPoint.y - 2} L ${startPoint.x} ${startPoint.y + 2}`;
+      }
+
+      setPaths((prev) => [...prev, { path: finalPath }]);
       setCurrentPath('');
+      currentPathRef.current = '';
+      startPointRef.current = null;
     }
-    isDrawingRef.current = false;
-    setIsDrawing(false);
   }, []);
+
+  const panDraw = Gesture.Pan()
+    .onStart((event) => {
+      runOnJS(onDrawStart)(event.x, event.y);
+    })
+    .onUpdate((event) => {
+      runOnJS(onDrawUpdate)(event.x, event.y);
+    })
+    .onEnd((event) => {
+      runOnJS(onDrawEnd)(event.x, event.y);
+    });
 
   const handleClear = () => {
     setPaths([]);
     setCurrentPath('');
-    pathRef.current = '';
-    pathsRef.current = [];
+    currentPathRef.current = '';
+    startPointRef.current = null;
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -132,125 +141,106 @@ export default function AddSignerScreen() {
   const hasSignature = paths.length > 0 || currentPath.length > 0;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <LinearGradient
-        colors={['#1a1a2e', '#16213e']}
-        style={StyleSheet.absoluteFill}
-      />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <LinearGradient
+          colors={['#1a1a2e', '#16213e']}
+          style={StyleSheet.absoluteFill}
+        />
 
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Ajouter un signataire</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.inputSection}>
-          <Text style={styles.label}>Nom du signataire</Text>
-          <TextInput
-            style={styles.input}
-            value={displayName}
-            onChangeText={setDisplayName}
-            placeholder="Ex: Jean Dupont"
-            placeholderTextColor="rgba(255,255,255,0.4)"
-          />
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <ArrowLeft size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Ajouter un signataire</Text>
+          <View style={{ width: 40 }} />
         </View>
 
-        <View style={styles.signatureSection}>
-          <View style={styles.signatureHeader}>
-            <Text style={styles.label}>Signature</Text>
-            {hasSignature && (
-              <TouchableOpacity style={styles.clearBtn} onPress={handleClear}>
-                <Trash2 size={18} color="#ef4444" />
-                <Text style={styles.clearBtnText}>Effacer</Text>
-              </TouchableOpacity>
-            )}
+        <View style={styles.content}>
+          <View style={styles.inputSection}>
+            <Text style={styles.label}>Nom du signataire</Text>
+            <TextInput
+              style={styles.input}
+              value={displayName}
+              onChangeText={setDisplayName}
+              placeholder="Ex: Jean Dupont"
+              placeholderTextColor="rgba(255,255,255,0.4)"
+            />
           </View>
-          
-          <ViewShot
-            ref={viewShotRef}
-            options={{ format: 'png', quality: 1 }}
-            style={styles.signatureCanvasContainer}
-          >
-            <View
-              style={styles.signatureCanvas}
-              onLayout={(e) => {
-                canvasLayoutRef.current = {
-                  width: e.nativeEvent.layout.width,
-                  height: e.nativeEvent.layout.height,
-                };
-              }}
-              onStartShouldSetResponder={() => true}
-              onMoveShouldSetResponder={() => true}
-              onResponderGrant={handleTouchStart}
-              onResponderMove={handleTouchMove}
-              onResponderRelease={handleTouchEnd}
-              onResponderTerminate={handleTouchEnd}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              onTouchCancel={handleTouchEnd}
-              // @ts-ignore - mouse events for web
-              onMouseDown={handleTouchStart}
-              onMouseMove={(e: any) => isDrawingRef.current && handleTouchMove(e)}
-              onMouseUp={handleTouchEnd}
-              onMouseLeave={handleTouchEnd}
-            >
-              <Svg width="100%" height="100%" viewBox="0 0 300 200" style={styles.signatureSvg}>
-                {paths.map((path, index) => (
-                  <Path
-                    key={index}
-                    d={path}
-                    stroke="#FFFFFF"
-                    strokeWidth={3}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                ))}
-                {currentPath && (
-                  <Path
-                    d={currentPath}
-                    stroke="#FFFFFF"
-                    strokeWidth={3}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                )}
-              </Svg>
-              {!hasSignature && (
-                <View style={styles.signaturePlaceholder}>
-                  <Text style={styles.signaturePlaceholderText}>
-                    Dessinez votre signature ici
-                  </Text>
-                </View>
+
+          <View style={styles.signatureSection}>
+            <View style={styles.signatureHeader}>
+              <Text style={styles.label}>Signature</Text>
+              {hasSignature && (
+                <TouchableOpacity style={styles.clearBtn} onPress={handleClear}>
+                  <Trash2 size={18} color="#ef4444" />
+                  <Text style={styles.clearBtnText}>Effacer</Text>
+                </TouchableOpacity>
               )}
             </View>
-          </ViewShot>
-        </View>
+            
+            <ViewShot
+              ref={viewShotRef}
+              options={{ format: 'png', quality: 1 }}
+              style={styles.signatureCanvasContainer}
+            >
+              <GestureDetector gesture={panDraw}>
+                <View style={styles.signatureCanvas}>
+                  <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+                    {paths.map((item, index) => (
+                      <Path
+                        key={index}
+                        d={item.path}
+                        stroke="#FFFFFF"
+                        strokeWidth={3}
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    ))}
+                    {currentPath && (
+                      <Path
+                        d={currentPath}
+                        stroke="#FFFFFF"
+                        strokeWidth={3}
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    )}
+                  </Svg>
+                  {!hasSignature && (
+                    <View style={styles.signaturePlaceholder}>
+                      <Text style={styles.signaturePlaceholderText}>
+                        Dessinez votre signature ici
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </GestureDetector>
+            </ViewShot>
+          </View>
 
-        <TouchableOpacity
-          style={[
-            styles.saveButton,
-            (!displayName.trim() || !hasSignature) && styles.saveButtonDisabled
-          ]}
-          onPress={handleSave}
-          disabled={!displayName.trim() || !hasSignature || isSaving}
-        >
-          {isSaving ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Check size={20} color="#fff" />
-              <Text style={styles.saveButtonText}>Enregistrer</Text>
-            </>
-          )}
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.saveButton,
+              (!displayName.trim() || !hasSignature) && styles.saveButtonDisabled
+            ]}
+            onPress={handleSave}
+            disabled={!displayName.trim() || !hasSignature || isSaving}
+          >
+            {isSaving ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Check size={20} color="#fff" />
+                <Text style={styles.saveButtonText}>Enregistrer</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -325,15 +315,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
     borderRadius: 16,
     overflow: 'hidden',
-    height: 200,
+    flex: 1,
   },
   signatureCanvas: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#000000',
-  },
-  signatureSvg: {
     flex: 1,
+    backgroundColor: '#000000',
   },
   signaturePlaceholder: {
     position: 'absolute',
