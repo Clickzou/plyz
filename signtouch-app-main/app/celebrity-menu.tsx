@@ -151,6 +151,15 @@ export default function CelebrityMenuScreen() {
 
       <View style={styles.tabsContainer}>
         <TouchableOpacity
+          style={[styles.tab, activeTab === 'create' && styles.tabActive]}
+          onPress={() => setActiveTab('create')}
+        >
+          <Plus size={16} color={activeTab === 'create' ? '#188661' : '#fff'} />
+          <Text style={[styles.tabText, activeTab === 'create' && styles.tabTextActive]}>
+            Créer
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           style={[styles.tab, activeTab === 'events' && styles.tabActive]}
           onPress={() => setActiveTab('events')}
         >
@@ -162,15 +171,6 @@ export default function CelebrityMenuScreen() {
               <Text style={styles.tabBadgeText}>{myEvents.length}</Text>
             </View>
           )}
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'create' && styles.tabActive]}
-          onPress={() => setActiveTab('create')}
-        >
-          <Plus size={16} color={activeTab === 'create' ? '#188661' : '#fff'} />
-          <Text style={[styles.tabText, activeTab === 'create' && styles.tabTextActive]}>
-            Créer
-          </Text>
         </TouchableOpacity>
       </View>
 
