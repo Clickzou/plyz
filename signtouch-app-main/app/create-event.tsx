@@ -128,23 +128,37 @@ export default function CreateEventScreen() {
   const startPointRef = useRef<{ x: number; y: number } | null>(null);
   const hasMoved = useRef(false);
 
-  const handleTouchStart = useCallback((event: GestureResponderEvent) => {
-    const { x, y } = getPointerPosition(event);
+  const getPointerPositionFromNative = useCallback((nativeEvent: any) => {
+    const { locationX, locationY, offsetX, offsetY } = nativeEvent;
+    const x = locationX ?? offsetX ?? 0;
+    const y = locationY ?? offsetY ?? 0;
+    const scaleX = 300 / canvasLayoutRef.current.width;
+    const scaleY = 200 / canvasLayoutRef.current.height;
+    return {
+      x: Math.max(0, Math.min(300, x * scaleX)),
+      y: Math.max(0, Math.min(200, y * scaleY)),
+    };
+  }, []);
+
+  const handleTouchStart = useCallback((event: any) => {
+    const nativeEvent = event.nativeEvent || event;
+    const { x, y } = getPointerPositionFromNative(nativeEvent);
     startPointRef.current = { x, y };
     hasMoved.current = false;
     currentPathRef.current = `M${x.toFixed(1)},${y.toFixed(1)}`;
     setCurrentPath(currentPathRef.current);
     isDrawingRef.current = true;
     setIsDrawing(true);
-  }, [getPointerPosition]);
+  }, [getPointerPositionFromNative]);
 
-  const handleTouchMove = useCallback((event: GestureResponderEvent) => {
-    if (!isDrawing) return;
-    const { x, y } = getPointerPosition(event);
+  const handleTouchMove = useCallback((event: any) => {
+    if (!isDrawingRef.current) return;
+    const nativeEvent = event.nativeEvent || event;
+    const { x, y } = getPointerPositionFromNative(nativeEvent);
     hasMoved.current = true;
     currentPathRef.current += ` L${x.toFixed(1)},${y.toFixed(1)}`;
     setCurrentPath(currentPathRef.current);
-  }, [isDrawing, getPointerPosition]);
+  }, [getPointerPositionFromNative]);
 
   const handleTouchEnd = useCallback(() => {
     if (currentPathRef.current && isDrawingRef.current) {
@@ -155,7 +169,6 @@ export default function CreateEventScreen() {
         const { x, y } = startPointRef.current;
         // Ajouter un petit segment diagonal pour créer un point visible
         pathData += ` L${(x + 2).toFixed(1)},${(y + 2).toFixed(1)} L${x.toFixed(1)},${(y + 2).toFixed(1)}`;
-        console.log('TAP detected - adding point at:', x, y);
       }
       
       const newPath: PathData = {
@@ -164,7 +177,6 @@ export default function CreateEventScreen() {
         color: signatureColor,
         strokeWidth,
       };
-      console.log('Saving path:', pathData);
       setSigners(prev => {
         const updated = [...prev];
         updated[activeSignerIndex] = {
@@ -683,9 +695,11 @@ export default function CreateEventScreen() {
                   onResponderMove={handleTouchMove}
                   onResponderRelease={handleTouchEnd}
                   onResponderTerminate={handleTouchEnd}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
+                  // @ts-ignore - pointer events for web
+                  onPointerDown={handleTouchStart}
+                  onPointerMove={handleTouchMove}
+                  onPointerUp={handleTouchEnd}
+                  onPointerLeave={handleTouchEnd}
                 >
                   <Svg width="100%" height="100%" viewBox="0 0 300 200" style={styles.signatureSvg}>
                     <G>
