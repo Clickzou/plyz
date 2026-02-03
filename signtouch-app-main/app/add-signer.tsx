@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -39,7 +39,7 @@ export default function AddSignerScreen() {
   const canvasLayoutRef = useRef({ width: 300, height: 200 });
   const isDrawingRef = useRef(false);
 
-  const getScaledPosition = (nativeEvent: any) => {
+  const getScaledPosition = useCallback((nativeEvent: any) => {
     const { locationX, locationY, offsetX, offsetY } = nativeEvent;
     const x = locationX ?? offsetX ?? 0;
     const y = locationY ?? offsetY ?? 0;
@@ -49,26 +49,26 @@ export default function AddSignerScreen() {
       x: Math.max(0, Math.min(300, x * scaleX)),
       y: Math.max(0, Math.min(200, y * scaleY)),
     };
-  };
+  }, []);
 
-  const handleTouchStart = (event: any) => {
+  const handleTouchStart = useCallback((event: any) => {
     const nativeEvent = event.nativeEvent || event;
     const { x, y } = getScaledPosition(nativeEvent);
     pathRef.current = `M${x.toFixed(1)},${y.toFixed(1)}`;
     setCurrentPath(pathRef.current);
     isDrawingRef.current = true;
     setIsDrawing(true);
-  };
+  }, [getScaledPosition]);
 
-  const handleTouchMove = (event: any) => {
+  const handleTouchMove = useCallback((event: any) => {
     if (!isDrawingRef.current) return;
     const nativeEvent = event.nativeEvent || event;
     const { x, y } = getScaledPosition(nativeEvent);
     pathRef.current = `${pathRef.current} L${x.toFixed(1)},${y.toFixed(1)}`;
     setCurrentPath(pathRef.current);
-  };
+  }, [getScaledPosition]);
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = useCallback(() => {
     if (pathRef.current && isDrawingRef.current) {
       pathsRef.current = [...pathsRef.current, pathRef.current];
       setPaths([...pathsRef.current]);
@@ -77,7 +77,7 @@ export default function AddSignerScreen() {
     }
     isDrawingRef.current = false;
     setIsDrawing(false);
-  };
+  }, []);
 
   const handleClear = () => {
     setPaths([]);
