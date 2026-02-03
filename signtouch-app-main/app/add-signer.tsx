@@ -160,12 +160,12 @@ export default function AddSignerScreen() {
               style={styles.signatureCanvas}
               {...panResponder.panHandlers}
             >
-              <Svg style={StyleSheet.absoluteFill}>
+              <Svg width="100%" height="100%" viewBox="0 0 300 200" style={styles.signatureSvg}>
                 {paths.map((path, index) => (
                   <Path
                     key={index}
                     d={path}
-                    stroke="#10B981"
+                    stroke="#FFFFFF"
                     strokeWidth={3}
                     fill="none"
                     strokeLinecap="round"
@@ -175,7 +175,7 @@ export default function AddSignerScreen() {
                 {currentPath && (
                   <Path
                     d={currentPath}
-                    stroke="#10B981"
+                    stroke="#FFFFFF"
                     strokeWidth={3}
                     fill="none"
                     strokeLinecap="round"
@@ -184,9 +184,11 @@ export default function AddSignerScreen() {
                 )}
               </Svg>
               {!hasSignature && (
-                <Text style={styles.signaturePlaceholder}>
-                  Dessinez la signature ici
-                </Text>
+                <View style={styles.signaturePlaceholder}>
+                  <Text style={styles.signaturePlaceholderText}>
+                    Dessinez votre signature ici
+                  </Text>
+                </View>
               )}
             </View>
           </ViewShot>
@@ -282,23 +284,32 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   signatureCanvasContainer: {
-    flex: 1,
+    backgroundColor: '#000000',
     borderRadius: 16,
     overflow: 'hidden',
+    height: 250,
   },
   signatureCanvas: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#000000',
     borderRadius: 16,
-    borderWidth: 2,
-    borderColor: 'rgba(16,185,129,0.3)',
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
+  },
+  signatureSvg: {
+    flex: 1,
   },
   signaturePlaceholder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    pointerEvents: 'none',
+  },
+  signaturePlaceholderText: {
     fontSize: 16,
-    color: 'rgba(255,255,255,0.3)',
+    color: 'rgba(255,255,255,0.4)',
   },
   saveButton: {
     flexDirection: 'row',
