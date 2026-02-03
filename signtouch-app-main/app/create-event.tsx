@@ -1,4 +1,5 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   View,
   Text,
@@ -78,6 +79,9 @@ const DURATION_OPTIONS = [
   { label: '24h', value: 1440 },
 ];
 
+const EVENT_FORM_STORAGE_KEY = '@create_event_form_data';
+const EVENT_PENDING_CREATE_KEY = '@create_event_pending';
+
 export default function CreateEventScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -129,6 +133,116 @@ export default function CreateEventScreen() {
 
   const startPointRef = useRef<{ x: number; y: number } | null>(null);
   const hasMoved = useRef(false);
+  const hasRestoredRef = useRef(false);
+
+  // Sauvegarder les données du formulaire
+  const saveFormData = useCallback(async () => {
+    const formData = {
+      step,
+      eventName,
+      selectedDuration,
+      eventLocation,
+      eventDate,
+      eventTime,
+      eventType,
+      isLive,
+      signers,
+      activeSignerIndex,
+    };
+    await AsyncStorage.setItem(EVENT_FORM_STORAGE_KEY, JSON.stringify(formData));
+    await AsyncStorage.setItem(EVENT_PENDING_CREATE_KEY, 'true');
+  }, [step, eventName, selectedDuration, eventLocation, eventDate, eventTime, eventType, isLive, signers, activeSignerIndex]);
+
+  // Restaurer les données du formulaire et continuer
+  const restoreAndContinue = useCallback(async () => {
+    if (hasRestoredRef.current) return;
+    
+    try {
+      const pending = await AsyncStorage.getItem(EVENT_PENDING_CREATE_KEY);
+      if (pending !== 'true') return;
+      
+      const savedData = await AsyncStorage.getItem(EVENT_FORM_STORAGE_KEY);
+      if (!savedData) return;
+      
+      const formData = JSON.parse(savedData);
+      hasRestoredRef.current = true;
+      
+      // Restaurer les données
+      setStep(formData.step || 'signers');
+      setEventName(formData.eventName || '');
+      setSelectedDuration(formData.selectedDuration || 60);
+      setEventLocation(formData.eventLocation || '');
+      setEventDate(formData.eventDate || new Date().toISOString().split('T')[0]);
+      setEventTime(formData.eventTime || '');
+      setEventType(formData.eventType || 'rencontre');
+      setIsLive(formData.isLive || false);
+      setSigners(formData.signers || [{ name: '', paths: [] }]);
+      setActiveSignerIndex(formData.activeSignerIndex || 0);
+      
+      // Nettoyer le flag pending
+      await AsyncStorage.removeItem(EVENT_PENDING_CREATE_KEY);
+      await AsyncStorage.removeItem(EVENT_FORM_STORAGE_KEY);
+      
+      // Si l'utilisateur est connecté et abonné, continuer automatiquement
+      if (user && status === 'paid') {
+        // Attendre que les states soient mis à jour, puis créer l'événement
+        setTimeout(() => {
+          handleCreateEventAfterRestore(formData);
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Error restoring form data:', error);
+    }
+  }, [user, status]);
+
+  // Fonction pour créer l'événement après restauration
+  const handleCreateEventAfterRestore = async (formData: any) => {
+    const validSigners = (formData.signers || []).filter((s: SignerEntry) => s.name.trim() && s.paths.length > 0);
+    if (validSigners.length === 0) return;
+
+    setIsCreating(true);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+
+    try {
+      const creatorId = user?.id || undefined;
+      const scheduledStart = formData.isLive ? undefined : (() => {
+        if (!formData.eventTime) return undefined;
+        const [hours, minutes] = formData.eventTime.split(':').map(Number);
+        const startDate = new Date(formData.eventDate);
+        startDate.setHours(hours, minutes, 0, 0);
+        return startDate;
+      })();
+      
+      const session = await createEventSession(formData.eventName.trim(), formData.selectedDuration, creatorId, scheduledStart);
+      
+      const addedSigners: EventSigner[] = [];
+      for (const signer of validSigners) {
+        const signatureUri = getSignatureSvgUri(signer.paths);
+        const addedSigner = await addEventSigner(session.id, signer.name.trim(), signatureUri);
+        addedSigners.push(addedSigner);
+      }
+
+      setCreatedSession(session);
+      setCreatedSigners(addedSigners);
+      setStep('success');
+      
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('Error creating session:', error);
+      Alert.alert(t('error') || 'Error', t('eventCreationFailed') || 'Failed to create event');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  // Vérifier au montage si on doit restaurer
+  useEffect(() => {
+    restoreAndContinue();
+  }, [user, status]);
 
   const getPointerPositionFromNative = useCallback((nativeEvent: any) => {
     const { locationX, locationY, offsetX, offsetY } = nativeEvent;
@@ -337,11 +451,15 @@ export default function CreateEventScreen() {
   const handleCreateEvent = async () => {
     // Vérifier si l'utilisateur est connecté et abonné
     if (!user) {
+      // Sauvegarder les données du formulaire avant de rediriger
+      await saveFormData();
       setShowAccountModal(true);
       return;
     }
     
     if (status !== 'paid') {
+      // Sauvegarder les données du formulaire avant de rediriger
+      await saveFormData();
       await setPostAuthRedirect('/create-event');
       router.push('/subscription');
       return;
