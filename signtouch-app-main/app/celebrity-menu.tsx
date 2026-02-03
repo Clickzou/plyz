@@ -360,12 +360,14 @@ export default function CelebrityMenuScreen() {
                         <Text style={styles.eventCodeValue}>{event.join_code}</Text>
                       </View>
 
-                      <View style={styles.eventViewsRow}>
-                        <Eye size={16} color={eventLive ? '#10b981' : '#6b7280'} />
-                        <Text style={[styles.eventViewsText, eventLive && styles.eventViewsTextLive]}>
-                          {eventViews[event.id] || 0} {eventLive ? (t('activeViewers') || 'spectateurs actifs') : (t('totalViews') || 'vues totales')}
-                        </Text>
-                      </View>
+                      {eventLive && (
+                        <View style={styles.eventViewsRow}>
+                          <Eye size={16} color="#10b981" />
+                          <Text style={[styles.eventViewsText, styles.eventViewsTextLive]}>
+                            {eventViews[event.id] || 0} {t('activeViewers') || 'spectateurs actifs'}
+                          </Text>
+                        </View>
+                      )}
 
                       {!eventEnded && (
                         <View style={styles.eventActions}>
