@@ -98,6 +98,61 @@ export default function AddSignerScreen() {
     }
   };
 
+  const convertSvgToDataUri = useCallback((): string => {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    paths.forEach((item) => {
+      const pathData = item.path;
+      const commands = pathData.split(/(?=[ML])/);
+
+      commands.forEach((command) => {
+        const parts = command.trim().split(/\s+/);
+        const type = parts[0];
+
+        if (type === 'M' || type === 'L') {
+          const x = parseFloat(parts[1]);
+          const y = parseFloat(parts[2]);
+          minX = Math.min(minX, x);
+          minY = Math.min(minY, y);
+          maxX = Math.max(maxX, x);
+          maxY = Math.max(maxY, y);
+        }
+      });
+    });
+
+    const padding = 20;
+
+    if (minX === Infinity || minY === Infinity || maxX === -Infinity || maxY === -Infinity) {
+      throw new Error('Invalid path bounds');
+    }
+
+    const normalizedPaths = paths.map(item => {
+      const pathData = item.path;
+      const commands = pathData.split(/(?=[ML])/);
+      let d = '';
+      commands.forEach(command => {
+        const parts = command.trim().split(/\s+/);
+        const type = parts[0];
+        if (type === 'M' || type === 'L') {
+          const x = parseFloat(parts[1]) - minX + padding;
+          const y = parseFloat(parts[2]) - minY + padding;
+          d += `${type} ${x} ${y} `;
+        }
+      });
+      return d.trim();
+    });
+
+    const boundingWidth = maxX - minX + padding * 2;
+    const boundingHeight = maxY - minY + padding * 2;
+
+    const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${boundingWidth}" height="${boundingHeight}" viewBox="0 0 ${boundingWidth} ${boundingHeight}">
+  ${normalizedPaths.map(pathData => `<path d="${pathData}" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" />`).join('\n  ')}
+</svg>`;
+
+    const svgBase64 = btoa(unescape(encodeURIComponent(svgString)));
+    return `data:image/svg+xml;base64,${svgBase64}`;
+  }, [paths]);
+
   const handleSave = async () => {
     if (!displayName.trim()) {
       Alert.alert('Erreur', 'Veuillez entrer un nom');
@@ -115,10 +170,16 @@ export default function AddSignerScreen() {
 
       let signatureUri: string | undefined;
 
-      if (viewShotRef.current) {
-        console.log('[AddSigner] Capturing signature...');
-        signatureUri = await (viewShotRef.current as any).capture();
-        console.log('[AddSigner] Captured URI length:', signatureUri?.length);
+      if (Platform.OS === 'web') {
+        console.log('[AddSigner] Web: Converting SVG to data URI...');
+        signatureUri = convertSvgToDataUri();
+        console.log('[AddSigner] SVG Data URI created, length:', signatureUri?.length);
+      } else {
+        if (viewShotRef.current) {
+          console.log('[AddSigner] Mobile: Capturing signature...');
+          signatureUri = await (viewShotRef.current as any).capture();
+          console.log('[AddSigner] Captured URI length:', signatureUri?.length);
+        }
       }
 
       console.log('[AddSigner] Calling addEventSigner...');
