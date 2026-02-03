@@ -683,7 +683,7 @@ export default function CreateEventScreen() {
                     </TouchableOpacity>
                   )}
                 </View>
-                <View 
+                <Pressable
                   style={styles.signatureContainer}
                   ref={canvasRef}
                   onLayout={(e) => {
@@ -694,11 +694,9 @@ export default function CreateEventScreen() {
                       height: e.nativeEvent.layout.height,
                     };
                   }}
+                  onPressIn={handleTouchStart}
                   onStartShouldSetResponder={() => true}
                   onMoveShouldSetResponder={() => true}
-                  onStartShouldSetResponderCapture={() => true}
-                  onMoveShouldSetResponderCapture={() => true}
-                  onResponderGrant={handleTouchStart}
                   onResponderMove={handleTouchMove}
                   onResponderRelease={handleTouchEnd}
                   onResponderTerminate={handleTouchEnd}
@@ -740,7 +738,7 @@ export default function CreateEventScreen() {
                       </Text>
                     </View>
                   )}
-                </View>
+                </Pressable>
               </View>
 
               <View style={styles.signersSummary}>
