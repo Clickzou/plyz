@@ -691,15 +691,17 @@ export default function CreateEventScreen() {
                   }}
                   onStartShouldSetResponder={() => true}
                   onMoveShouldSetResponder={() => true}
+                  onStartShouldSetResponderCapture={() => true}
+                  onMoveShouldSetResponderCapture={() => true}
                   onResponderGrant={handleTouchStart}
                   onResponderMove={handleTouchMove}
                   onResponderRelease={handleTouchEnd}
                   onResponderTerminate={handleTouchEnd}
-                  // @ts-ignore - pointer events for web
-                  onPointerDown={handleTouchStart}
-                  onPointerMove={handleTouchMove}
-                  onPointerUp={handleTouchEnd}
-                  onPointerLeave={handleTouchEnd}
+                  // @ts-ignore - mouse events for web (more reliable for quick clicks)
+                  onMouseDown={handleTouchStart}
+                  onMouseMove={(e: any) => isDrawingRef.current && handleTouchMove(e)}
+                  onMouseUp={handleTouchEnd}
+                  onMouseLeave={handleTouchEnd}
                 >
                   <Svg width="100%" height="100%" viewBox="0 0 300 200" style={styles.signatureSvg}>
                     <G>
