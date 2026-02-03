@@ -133,6 +133,12 @@ export default function EventPublishScreen() {
     setSignaturePosition({ x: 0, y: 0 });
     setSignatureScale(1);
     setSignatureRotation(0);
+    setSignatureColor('#FFFFFF');
+  };
+  
+  const resetAll = () => {
+    resetSignatureTransform();
+    setSelectedImage(null);
   };
 
   const adjustScale = (delta: number) => {
@@ -475,7 +481,7 @@ export default function EventPublishScreen() {
                     >
                       <Palette size={20} color="#fff" />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.editBtn} onPress={resetSignatureTransform}>
+                    <TouchableOpacity style={styles.editBtn} onPress={resetAll}>
                       <Text style={styles.resetText}>Reset</Text>
                     </TouchableOpacity>
                   </View>
