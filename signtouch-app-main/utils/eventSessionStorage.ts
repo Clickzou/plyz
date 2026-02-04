@@ -244,20 +244,34 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
 };
 
 export const deleteEventSession = async (sessionId: string): Promise<void> => {
+  console.log('[deleteEventSession] Starting delete for:', sessionId);
+  
   // First delete related data
-  await supabase.from('event_assets').delete().eq('session_id', sessionId);
-  await supabase.from('event_signers').delete().eq('session_id', sessionId);
-  await supabase.from('event_viewers').delete().eq('session_id', sessionId);
+  const { error: assetsError } = await supabase.from('event_assets').delete().eq('session_id', sessionId);
+  console.log('[deleteEventSession] Assets delete:', assetsError ? assetsError.message : 'success');
+  
+  const { error: signersError } = await supabase.from('event_signers').delete().eq('session_id', sessionId);
+  console.log('[deleteEventSession] Signers delete:', signersError ? signersError.message : 'success');
+  
+  const { error: viewersError } = await supabase.from('event_viewers').delete().eq('session_id', sessionId);
+  console.log('[deleteEventSession] Viewers delete:', viewersError ? viewersError.message : 'success');
   
   // Then delete the session itself
-  const { error } = await supabase
+  const { data, error, count } = await supabase
     .from('event_sessions')
     .delete()
-    .eq('id', sessionId);
+    .eq('id', sessionId)
+    .select();
+
+  console.log('[deleteEventSession] Session delete result:', { data, error, count });
 
   if (error) {
     console.error('Error deleting event session:', error);
     throw new Error(`Delete session error: ${error.message}`);
+  }
+  
+  if (!data || data.length === 0) {
+    console.warn('[deleteEventSession] No rows deleted - RLS policy may be blocking');
   }
 };
 
