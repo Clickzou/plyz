@@ -365,6 +365,8 @@ export default {
   trialThenYearly: '7 hari gratis, kemudian €19.99/tahun (~€1.66/bulan)',
   yearlyPrice19: '€19.99/tahun (~€1.66/bulan)',
   monthlyPrice2: '€2.99/bulan',
+  yearlyPrice29: '€29.99/tahun (~€2.50/bulan) - Hemat 50%',
+  monthlyPrice4: '€4.99/bulan',
   paymentLegalText: 'Pembayaran akan ditagih ke akun Anda yang terkait dengan platform unduhan, seperti Google Play atau App Store, pada akhir periode percobaan atau saat konfirmasi pembelian jika Anda tidak memulai percobaan. Langganan akan diperpanjang secara otomatis kecuali Anda membatalkan setidaknya 24 jam sebelum akhir periode percobaan atau periode saat ini. Akun Anda akan ditagih untuk perpanjangan dalam 24 jam sebelum akhir periode saat ini.',
   moreInfoConsult: 'Untuk informasi lebih lanjut, silakan lihat',
   termsOfUse: 'Ketentuan Penggunaan',

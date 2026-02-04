@@ -366,6 +366,8 @@ export default {
   trialThenYearly: '7 days free, then €19.99/year (~€1.66/month)',
   yearlyPrice19: '€19.99/year (~€1.66/month)',
   monthlyPrice2: '€2.99/month',
+  yearlyPrice29: '€29.99/year (~€2.50/month) - Save 50%',
+  monthlyPrice4: '€4.99/month',
   paymentLegalText: 'Payment will be charged to your account associated with the download platform, such as Google Play or the App Store, at the end of your trial period or upon purchase confirmation if you do not start a trial. The subscription will automatically renew unless you cancel at least 24 hours before the end of the trial period or the current period. Your account will be charged for renewal within 24 hours before the end of the current period.',
   moreInfoConsult: 'For more information, please consult our',
   termsOfUse: 'Terms of Use',

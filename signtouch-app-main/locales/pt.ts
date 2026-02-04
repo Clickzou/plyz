@@ -365,6 +365,8 @@ export default {
   trialThenYearly: '7 dias grátis, depois €19.99/ano (~€1.66/mês)',
   yearlyPrice19: '€19.99/ano (~€1.66/mês)',
   monthlyPrice2: '€2.99/mês',
+  yearlyPrice29: '€29.99/ano (~€2.50/mês) - Economize 50%',
+  monthlyPrice4: '€4.99/mês',
   paymentLegalText: 'O pagamento será cobrado da sua conta associada à plataforma de download, como Google Play ou App Store, no final do período de teste ou na confirmação da compra se você não iniciar um teste. A assinatura será renovada automaticamente, a menos que você cancele pelo menos 24 horas antes do final do período de teste ou do período atual. Sua conta será cobrada pela renovação dentro de 24 horas antes do final do período atual.',
   moreInfoConsult: 'Para mais informações, consulte nossos',
   termsOfUse: 'Termos de uso',

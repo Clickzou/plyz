@@ -365,6 +365,8 @@ export default {
   trialThenYearly: '7 Tage kostenlos, dann €19.99/Jahr (~€1.66/Monat)',
   yearlyPrice19: '€19.99/Jahr (~€1.66/Monat)',
   monthlyPrice2: '€2.99/Monat',
+  yearlyPrice29: '€29.99/Jahr (~€2.50/Monat) - 50% sparen',
+  monthlyPrice4: '€4.99/Monat',
   paymentLegalText: 'Die Zahlung wird von deinem mit der Download-Plattform verknüpften Konto abgebucht, z. B. Google Play oder App Store, am Ende deiner Testphase oder bei Kaufbestätigung, wenn du keine Testphase startest. Das Abonnement verlängert sich automatisch, es sei denn, du kündigst mindestens 24 Stunden vor Ende der Testphase oder der aktuellen Periode. Dein Konto wird innerhalb von 24 Stunden vor dem Ende der aktuellen Periode für die Verlängerung belastet.',
   moreInfoConsult: 'Weitere Informationen findest du in unseren',
   termsOfUse: 'Nutzungsbedingungen',

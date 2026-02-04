@@ -365,6 +365,8 @@ export default {
   trialThenYearly: '7 hari percuma, kemudian €19.99/tahun (~€1.66/bulan)',
   yearlyPrice19: '€19.99/tahun (~€1.66/bulan)',
   monthlyPrice2: '€2.99/bulan',
+  yearlyPrice29: '€29.99/tahun (~€2.50/bulan) - Jimat 50%',
+  monthlyPrice4: '€4.99/bulan',
   paymentLegalText: 'Bayaran akan dicaj ke akaun anda yang berkaitan dengan platform muat turun, seperti Google Play atau App Store, pada akhir tempoh percubaan atau semasa pengesahan pembelian jika anda tidak memulakan percubaan. Langganan akan diperbaharui secara automatik melainkan anda membatalkan sekurang-kurangnya 24 jam sebelum akhir tempoh percubaan atau tempoh semasa. Akaun anda akan dicaj untuk pembaharuan dalam 24 jam sebelum akhir tempoh semasa.',
   moreInfoConsult: 'Untuk maklumat lanjut, sila rujuk',
   termsOfUse: 'Terma Penggunaan',

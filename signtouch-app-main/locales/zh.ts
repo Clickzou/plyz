@@ -365,6 +365,8 @@ export default {
   trialThenYearly: '7天免费，然后€19.99/年（~€1.66/月）',
   yearlyPrice19: '€19.99/年（~€1.66/月）',
   monthlyPrice2: '€2.99/月',
+  yearlyPrice29: '€29.99/年（~€2.50/月）- 节省50%',
+  monthlyPrice4: '€4.99/月',
   paymentLegalText: '付款将从您与下载平台关联的帐户中扣除，例如Google Play或App Store，在您的试用期结束时或购买确认时（如果您不开始试用）。除非您在试用期或当前期结束前至少24小时取消，否则订阅将自动续订。您的帐户将在当前期结束前24小时内收取续订费用。',
   moreInfoConsult: '如需更多信息，请查看我们的',
   termsOfUse: '使用条款',

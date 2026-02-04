@@ -154,7 +154,7 @@ export default function SubscriptionOfferModal({ visible, onClose, onPurchaseSuc
                 >
                   <View style={styles.planLeft}>
                     <Text style={styles.planTitleNew}>{t('oneYear')}</Text>
-                    <Text style={styles.planSubtextNew}>€19.99</Text>
+                    <Text style={styles.planSubtextNew}>€29.99 <Text style={styles.savingText}>(-50%)</Text></Text>
                   </View>
                   {selectedPlan === 'yearly' && (
                     <View style={styles.checkBadge}>
@@ -170,7 +170,7 @@ export default function SubscriptionOfferModal({ visible, onClose, onPurchaseSuc
                 >
                   <View style={styles.planLeft}>
                     <Text style={styles.planTitleNew}>{t('oneMonth')}</Text>
-                    <Text style={styles.planSubtextNew}>€2.99</Text>
+                    <Text style={styles.planSubtextNew}>€4.99</Text>
                   </View>
                   {selectedPlan === 'monthly' && (
                     <View style={styles.checkBadge}>
@@ -340,6 +340,10 @@ const styles = StyleSheet.create({
   planSubtextNew: {
     fontSize: 14,
     color: '#999999',
+  },
+  savingText: {
+    color: '#4ade80',
+    fontWeight: '700',
   },
   checkBadge: {
     width: 32,

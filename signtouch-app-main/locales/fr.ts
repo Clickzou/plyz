@@ -366,6 +366,8 @@ export default {
   trialThenYearly: '7 jours gratuits, puis €19.99/an (~€1.66/mois)',
   yearlyPrice19: '€19.99/an (~€1.66/mois)',
   monthlyPrice2: '€2.99/mois',
+  yearlyPrice29: '€29.99/an (~€2.50/mois) - Économisez 50%',
+  monthlyPrice4: '€4.99/mois',
   paymentLegalText: 'Le paiement sera débité de votre compte associé à la plateforme de téléchargement, par exemple Google Play ou l\'App Store, à la fin de votre période d\'essai ou lors de la confirmation de l\'achat si vous ne démarrez pas d\'essai. L\'abonnement se renouvellera automatiquement, sauf si vous l\'annulez au moins 24 heures avant la fin de la période d\'essai ou de la période en cours. Votre compte sera débité pour le renouvellement dans les 24 heures précédant la fin de la période en cours.',
   moreInfoConsult: 'Pour plus d\'informations, veuillez consulter nos',
   termsOfUse: 'Conditions d\'utilisation',

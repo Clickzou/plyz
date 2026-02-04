@@ -365,6 +365,8 @@ export default {
   trialThenYearly: '7 giorni gratis, poi €19.99/anno (~€1.66/mese)',
   yearlyPrice19: '€19.99/anno (~€1.66/mese)',
   monthlyPrice2: '€2.99/mese',
+  yearlyPrice29: '€29.99/anno (~€2.50/mese) - Risparmia 50%',
+  monthlyPrice4: '€4.99/mese',
   paymentLegalText: 'Il pagamento verrà addebitato sul tuo account associato alla piattaforma di download, come Google Play o App Store, alla fine del periodo di prova o alla conferma dell\'acquisto se non inizi una prova. L\'abbonamento si rinnoverà automaticamente a meno che non lo annulli almeno 24 ore prima della fine del periodo di prova o del periodo corrente. Il tuo account verrà addebitato per il rinnovo entro 24 ore prima della fine del periodo corrente.',
   moreInfoConsult: 'Per maggiori informazioni, consulta i nostri',
   termsOfUse: 'Termini di utilizzo',

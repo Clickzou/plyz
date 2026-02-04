@@ -152,11 +152,14 @@ export default function SubscriptionScreen() {
             <View style={styles.planHeader}>
               <View style={styles.planLeft}>
                 <Text style={styles.planName}>{t('oneYear')}</Text>
-                <Text style={styles.planPrice}>€19.99</Text>
+                <Text style={styles.planPrice}>€29.99</Text>
+              </View>
+              <View style={styles.saveBadge}>
+                <Text style={styles.saveBadgeText}>-50%</Text>
               </View>
             </View>
             <Text style={styles.planDescription}>
-              {t('yearlyPrice19')}
+              {t('yearlyPrice29')}
             </Text>
           </TouchableOpacity>
 
@@ -168,11 +171,11 @@ export default function SubscriptionScreen() {
             <View style={styles.planHeader}>
               <View style={styles.planLeft}>
                 <Text style={styles.planName}>{t('oneMonth')}</Text>
-                <Text style={styles.planPrice}>€2.99</Text>
+                <Text style={styles.planPrice}>€4.99</Text>
               </View>
             </View>
             <Text style={styles.planDescription}>
-              {t('monthlyPrice2')}
+              {t('monthlyPrice4')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -396,6 +399,17 @@ const styles = StyleSheet.create({
   planPrice: {
     fontSize: 14,
     color: '#999999',
+  },
+  saveBadge: {
+    backgroundColor: '#4ade80',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  saveBadgeText: {
+    color: '#000000',
+    fontSize: 12,
+    fontWeight: '700',
   },
   planDescription: {
     fontSize: 13,
