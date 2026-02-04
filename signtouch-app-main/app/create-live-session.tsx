@@ -323,7 +323,7 @@ export default function CreateLiveSessionScreen() {
             <Text style={styles.summaryValue}>{(price * calculatedMaxFans / 100).toFixed(0)}€</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabelSmall}>Commission SignTouch (10%):</Text>
+            <Text style={styles.summaryLabelSmall}>Frais de fonctionnement (10%):</Text>
             <Text style={styles.summaryValueSmall}>-{(price * calculatedMaxFans * SIGNTOUCH_COMMISSION / 100).toFixed(0)}€</Text>
           </View>
           <View style={styles.summaryRow}>
