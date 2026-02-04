@@ -688,32 +688,35 @@ export default function EventPublishScreen() {
           )}
         </TouchableOpacity>
 
-        {publishedAssets.length > 0 && (
-          <>
-            <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
-              {t('publishedPhotos') || 'Published Photos'} ({publishedAssets.length})
-            </Text>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.publishedCarousel}
-            >
-              {publishedAssets.map((asset) => (
-                <View key={asset.id} style={styles.publishedCarouselItem}>
-                  <Image 
-                    source={{ uri: asset.image_url }} 
-                    style={styles.publishedImage} 
-                    resizeMode="cover"
-                  />
-                  {asset.type === 'photo_signed' && (
-                    <View style={styles.signedBadge}>
-                      <Check size={10} color="#fff" />
-                    </View>
-                  )}
-                </View>
-              ))}
-            </ScrollView>
-          </>
+        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
+          {t('publishedPhotos') || 'Published Photos'} ({publishedAssets.length})
+        </Text>
+        {publishedAssets.length > 0 ? (
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.publishedCarousel}
+            style={{ marginBottom: 20 }}
+          >
+            {publishedAssets.map((asset) => (
+              <View key={asset.id} style={styles.publishedCarouselItem}>
+                <Image 
+                  source={{ uri: asset.image_url }} 
+                  style={styles.publishedImage} 
+                  resizeMode="cover"
+                />
+                {asset.type === 'photo_signed' && (
+                  <View style={styles.signedBadge}>
+                    <Check size={10} color="#fff" />
+                  </View>
+                )}
+              </View>
+            ))}
+          </ScrollView>
+        ) : (
+          <Text style={{ color: '#9ca3af', fontSize: 14, marginBottom: 20, fontStyle: 'italic' }}>
+            {t('noPhotosPublished') || 'No photos published yet'}
+          </Text>
         )}
       </ScrollView>
 
@@ -987,14 +990,17 @@ const styles = StyleSheet.create({
   },
   publishedCarousel: {
     paddingHorizontal: 4,
-    gap: 8,
+    gap: 12,
+    paddingVertical: 8,
   },
   publishedCarouselItem: {
-    width: 80,
-    height: 100,
-    borderRadius: 8,
+    width: 100,
+    height: 130,
+    borderRadius: 12,
     overflow: 'hidden',
     position: 'relative',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   publishedGrid: {
     flexDirection: 'row',
