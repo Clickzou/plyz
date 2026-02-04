@@ -124,30 +124,50 @@ export default function CelebrityMenuScreen() {
     }
   };
 
-  const handleDeleteEvent = (event: EventSession) => {
-    Alert.alert(
-      t('deleteEvent') || 'Supprimer l\'événement',
-      t('deleteEventConfirm') || `Êtes-vous sûr de vouloir supprimer "${event.title}" ?`,
-      [
-        { text: t('cancel') || 'Annuler', style: 'cancel' },
-        {
-          text: t('delete') || 'Supprimer',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteEventSession(event.id);
-              if (Platform.OS !== 'web') {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              }
-              loadMyEvents();
-            } catch (error) {
-              console.error('Delete failed:', error);
-              Alert.alert(t('error') || 'Erreur', t('deleteFailed') || 'Échec de la suppression');
-            }
-          },
-        },
-      ]
-    );
+  const handleDeleteEvent = async (event: EventSession) => {
+    const confirmMessage = t('deleteEventConfirm') || `Êtes-vous sûr de vouloir supprimer "${event.title}" ?`;
+    
+    let confirmed = false;
+    if (Platform.OS === 'web') {
+      confirmed = window.confirm(confirmMessage);
+    } else {
+      return new Promise<void>((resolve) => {
+        Alert.alert(
+          t('deleteEvent') || 'Supprimer l\'événement',
+          confirmMessage,
+          [
+            { text: t('cancel') || 'Annuler', style: 'cancel', onPress: () => resolve() },
+            {
+              text: t('delete') || 'Supprimer',
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  await deleteEventSession(event.id);
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  loadMyEvents();
+                } catch (error) {
+                  console.error('Delete failed:', error);
+                  Alert.alert(t('error') || 'Erreur', t('deleteFailed') || 'Échec de la suppression');
+                }
+                resolve();
+              },
+            },
+          ]
+        );
+      });
+    }
+
+    if (confirmed) {
+      try {
+        await deleteEventSession(event.id);
+        loadMyEvents();
+      } catch (error) {
+        console.error('Delete failed:', error);
+        if (Platform.OS === 'web') {
+          window.alert(t('deleteFailed') || 'Échec de la suppression');
+        }
+      }
+    }
   };
 
   const getStatusLabel = (status: string) => {
