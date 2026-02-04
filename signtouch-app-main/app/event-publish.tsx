@@ -134,17 +134,67 @@ export default function EventPublishScreen() {
     };
   }, []);
   
+  const lastDistance = useRef<number | null>(null);
+  const lastAngle = useRef<number | null>(null);
+  const baseScale = useRef(signatureScale);
+  const baseRotation = useRef(signatureRotation);
+
+  const getDistance = (touches: any[]) => {
+    if (touches.length < 2) return null;
+    const dx = touches[0].pageX - touches[1].pageX;
+    const dy = touches[0].pageY - touches[1].pageY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const getAngle = (touches: any[]) => {
+    if (touches.length < 2) return null;
+    const dx = touches[1].pageX - touches[0].pageX;
+    const dy = touches[1].pageY - touches[0].pageY;
+    return Math.atan2(dy, dx) * (180 / Math.PI);
+  };
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
+      onPanResponderGrant: (evt) => {
         lastPanOffset.current = { x: 0, y: 0 };
+        lastDistance.current = null;
+        lastAngle.current = null;
+        baseScale.current = signatureScale;
+        baseRotation.current = signatureRotation;
         if (Platform.OS !== 'web') {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
       },
-      onPanResponderMove: (_, gestureState) => {
+      onPanResponderMove: (evt, gestureState) => {
+        const touches = evt.nativeEvent.touches;
+        
+        // Two-finger gestures: pinch to scale, rotate
+        if (touches && touches.length === 2) {
+          const currentDistance = getDistance(touches);
+          const currentAngle = getAngle(touches);
+          
+          if (currentDistance !== null && currentAngle !== null) {
+            if (lastDistance.current !== null && lastAngle.current !== null) {
+              // Scale
+              const scaleDelta = currentDistance / lastDistance.current;
+              const newScale = Math.max(0.3, Math.min(3, signatureScale * scaleDelta));
+              setSignatureScale(newScale);
+              
+              // Rotation
+              let angleDelta = currentAngle - lastAngle.current;
+              if (angleDelta > 180) angleDelta -= 360;
+              if (angleDelta < -180) angleDelta += 360;
+              setSignatureRotation(prev => prev + angleDelta);
+            }
+            lastDistance.current = currentDistance;
+            lastAngle.current = currentAngle;
+          }
+          return;
+        }
+        
+        // Single finger: move
         const deltaX = gestureState.dx - lastPanOffset.current.x;
         const deltaY = gestureState.dy - lastPanOffset.current.y;
         lastPanOffset.current = { x: gestureState.dx, y: gestureState.dy };
@@ -157,6 +207,10 @@ export default function EventPublishScreen() {
           const newY = Math.max(-maxOffsetUp, Math.min(maxOffsetDown, prev.y + deltaY));
           return { x: newX, y: newY };
         });
+      },
+      onPanResponderRelease: () => {
+        lastDistance.current = null;
+        lastAngle.current = null;
       },
     })
   ).current;
@@ -535,6 +589,8 @@ export default function EventPublishScreen() {
                           uri={selectedSigner.signature_url}
                           width={200}
                           height={100}
+                          color={signatureColor}
+                          stroke={signatureColor}
                           fill={signatureColor}
                         />
                       </View>
