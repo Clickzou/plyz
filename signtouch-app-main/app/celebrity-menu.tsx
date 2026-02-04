@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/contexts/LanguageContext';
+import BottomNav from '@/components/BottomNav';
 import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount } from '@/utils/eventSessionStorage';
 const QRCodeSvg = require('react-native-qrcode-svg').default;
 
@@ -483,6 +484,7 @@ export default function CelebrityMenuScreen() {
           </View>
         </View>
       )}
+      <BottomNav />
     </View>
   );
 }

@@ -52,6 +52,7 @@ const getColorFilter = (hexColor: string): string => {
 import * as ImagePicker from 'expo-image-picker';
 import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/contexts/LanguageContext';
+import BottomNav from '@/components/BottomNav';
 const QRCodeSvg = require('react-native-qrcode-svg').default;
 import {
   EventSigner,
@@ -874,6 +875,7 @@ export default function EventPublishScreen() {
           </View>
         </View>
       )}
+      <BottomNav />
     </View>
   );
 }
