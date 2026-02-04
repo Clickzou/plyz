@@ -325,6 +325,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
     zIndex: 999,
+    overflow: 'visible',
   },
   logoText: {
     fontFamily: 'Pacifico',
@@ -335,8 +336,10 @@ const styles = StyleSheet.create({
     textShadowRadius: 15,
     letterSpacing: 2,
     paddingTop: 25,
+    paddingBottom: 20,
     marginBottom: 30,
     zIndex: 999,
+    overflow: 'visible',
   },
   subtitleText: {
     fontSize: 16,
