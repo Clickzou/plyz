@@ -90,7 +90,7 @@ export default function CelebrityMenuScreen() {
   }, [myEvents, loadEventViews]);
 
   const handleContinueEvent = (event: EventSession) => {
-    router.push(`/event-publish?sessionId=${event.id}&sessionTitle=${encodeURIComponent(event.title)}&joinCode=${event.join_code}`);
+    router.push(`/event-publish?sessionId=${event.id}&sessionTitle=${encodeURIComponent(event.title)}&joinCode=${event.join_code}&eventType=${event.event_type || 'qr'}&startsAt=${encodeURIComponent(event.starts_at)}&endsAt=${encodeURIComponent(event.ends_at)}`);
   };
 
   const handleShowQr = (event: EventSession) => {

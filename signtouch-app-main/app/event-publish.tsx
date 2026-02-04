@@ -16,7 +16,7 @@ import {
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Move, ZoomIn, ZoomOut, RotateCcw, Palette, QrCode, X, Copy, Share2, Plus, UserPlus } from 'lucide-react-native';
+import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Move, ZoomIn, ZoomOut, RotateCcw, Palette, QrCode, X, Copy, Share2, Plus, UserPlus, Calendar, Clock, Video } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
 import { SvgUri, SvgXml } from 'react-native-svg';
@@ -70,6 +70,25 @@ export default function EventPublishScreen() {
   const sessionId = params.sessionId as string;
   const sessionTitle = params.sessionTitle as string;
   const joinCode = params.joinCode as string;
+  const eventType = params.eventType as string || 'qr';
+  const startsAt = params.startsAt as string;
+  const endsAt = params.endsAt as string;
+  
+  const formatDateTime = (dateStr: string) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleString('fr-FR', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    } catch {
+      return dateStr;
+    }
+  };
 
   const [signers, setSigners] = useState<EventSigner[]>([]);
   const [selectedSignerId, setSelectedSignerId] = useState<string | null>(null);
@@ -518,6 +537,31 @@ export default function EventPublishScreen() {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.eventInfoCard}>
+          <View style={styles.eventInfoRow}>
+            {eventType === 'live_video' ? (
+              <Video size={16} color="#10B981" />
+            ) : (
+              <QrCode size={16} color="#10B981" />
+            )}
+            <Text style={styles.eventInfoText}>
+              {eventType === 'live_video' ? (t('liveVideo') || 'Vidéo en direct') : (t('qrEvent') || 'Événement QR')}
+            </Text>
+          </View>
+          {startsAt && (
+            <View style={styles.eventInfoRow}>
+              <Calendar size={16} color="#9ca3af" />
+              <Text style={styles.eventInfoText}>{t('startsAt') || 'Début'}: {formatDateTime(startsAt)}</Text>
+            </View>
+          )}
+          {endsAt && (
+            <View style={styles.eventInfoRow}>
+              <Clock size={16} color="#9ca3af" />
+              <Text style={styles.eventInfoText}>{t('endsAt') || 'Fin'}: {formatDateTime(endsAt)}</Text>
+            </View>
+          )}
+        </View>
+
         <Text style={styles.sectionTitle}>{t('selectSigner') || 'Select Signer'}</Text>
         <ScrollView 
           horizontal 
@@ -869,6 +913,24 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 20, fontWeight: '700', color: '#fff' },
   statLabel: { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4 },
   statDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
+  eventInfoCard: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  eventInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    gap: 10,
+  },
+  eventInfoText: {
+    color: '#d1d5db',
+    fontSize: 14,
+  },
   sectionTitle: { fontSize: 16, fontWeight: '600', color: '#fff', marginBottom: 12 },
   signersScroll: { 
     marginBottom: 20,
