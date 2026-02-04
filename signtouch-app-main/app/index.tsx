@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginTop: 35,
     fontWeight: '600',
-    letterSpacing: 2,
+    letterSpacing: 5,
     textTransform: 'uppercase',
     textShadowColor: 'rgba(0, 0, 0, 0.35)',
     textShadowOffset: { width: 1, height: 1 },
