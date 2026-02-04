@@ -612,8 +612,8 @@ export default function CreateEventScreen() {
   const activeSigner = signers[activeSignerIndex];
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={styles.container}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#1a1a2e' }}>
+      <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={{ flex: 1 }}>
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
           <TouchableOpacity
             style={styles.backButton}
