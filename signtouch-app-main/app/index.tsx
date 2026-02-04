@@ -260,7 +260,7 @@ export default function HomeScreen() {
             <Animated.Text 
               style={[
                 styles.logoText, 
-                { fontSize: isTablet ? 100 : 72 }, 
+                { fontSize: isTablet ? 90 : 56 }, 
                 titleStyle,
                 glowStyle,
               ]}
