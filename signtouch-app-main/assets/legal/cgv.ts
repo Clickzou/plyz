@@ -51,21 +51,20 @@ Toutes les transactions sont sécurisées par les systèmes de paiement d'Apple,
 
 ARTICLE 6 - DROIT DE RÉTRACTATION ET REMBOURSEMENT
 
-6.1 Délai de rétractation
-Conformément au droit européen, les consommateurs disposent d'un délai de 14 jours pour exercer leur droit de rétractation.
+6.1 Renonciation au droit de rétractation
+Conformément à l'article L221-28 du Code de la consommation, l'utilisateur reconnaît et accepte que le service proposé par SignTouch constitue un contenu numérique fourni sur un support immatériel dont l'exécution commence immédiatement après validation de la commande.
 
-Toutefois, conformément à l'article L221-28 du Code de la consommation, le droit de rétractation ne peut être exercé pour les services pleinement exécutés avant la fin du délai de rétractation et dont l'exécution a commencé avec l'accord préalable et exprès du consommateur.
+En validant sa réservation pour une session live, l'utilisateur renonce expressément à son droit de rétractation de 14 jours prévu par le Code de la consommation.
 
-Dans le cas de SignTouch, si la session live a eu lieu ou si l'utilisateur a expressément renoncé à son droit de rétractation pour bénéficier immédiatement du service, aucun remboursement n'est possible.
+6.2 Clause de non-remboursement
+Absence de remboursement en cas d'interruption technique : L'utilisateur reconnaît et accepte qu'une fois qu'une session live avec une célébrité est confirmée et validée, aucun remboursement ne sera accordé, y compris en cas d'interruption de la session due à un problème de connexion de l'utilisateur, de la célébrité, ou à un dysfonctionnement technique de la plateforme SignTouch.
 
-6.2 Cas de remboursement
-Un remboursement intégral est accordé dans les cas suivants :
-- Annulation de la session par la célébrité
-- Problème technique imputable à SignTouch empêchant la session
-- Session non accessible malgré le paiement effectué
+Cette condition s'applique sans exception et l'utilisateur renonce à toute demande de remboursement ou de crédit en cas d'interruption, quelle qu'en soit la cause technique.
 
-6.3 Procédure de remboursement
-Les demandes de remboursement doivent être adressées à contact@clickzou.fr dans un délai de 7 jours suivant l'incident. Le remboursement est effectué par le même moyen de paiement utilisé lors de l'achat.
+En validant la réservation, l'utilisateur accepte expressément cette clause de non-remboursement.
+
+6.3 Acceptation des conditions
+Avant toute réservation payante, l'utilisateur doit cocher une case confirmant qu'il a lu et accepté les présentes conditions, notamment la clause de non-remboursement.
 
 ARTICLE 7 - OBLIGATIONS DES PARTIES
 
