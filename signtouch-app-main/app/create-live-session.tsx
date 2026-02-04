@@ -33,15 +33,15 @@ const formatDuration = (minutes: number): string => {
 };
 
 const PRICE_OPTIONS = [
-  { label: 'Free', value: 0 },
   { label: '2€', value: 200 },
   { label: '5€', value: 500 },
   { label: '10€', value: 1000 },
+  { label: '20€', value: 2000 },
   { label: '50€', value: 5000 },
   { label: '100€', value: 10000 },
-  { label: '200€', value: 20000 },
-  { label: '500€', value: 50000 },
 ];
+
+const SIGNTOUCH_COMMISSION = 0.10; // 10% commission
 
 export default function CreateLiveSessionScreen() {
   const router = useRouter();
@@ -51,7 +51,7 @@ export default function CreateLiveSessionScreen() {
   const [celebrityName, setCelebrityName] = useState('');
   const [durationPerFan, setDurationPerFan] = useState(5);
   const [totalDuration, setTotalDuration] = useState(30);
-  const [price, setPrice] = useState(0);
+  const [price, setPrice] = useState(200); // Prix minimum 2€
   const [isCustomPrice, setIsCustomPrice] = useState(false);
   const [customPriceText, setCustomPriceText] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -315,18 +315,23 @@ export default function CreateLiveSessionScreen() {
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>{t('liveSessionPrice')}:</Text>
-            <Text style={styles.summaryValue}>
-              {price === 0 ? t('liveSessionFree') : `${price / 100}€`}
+            <Text style={styles.summaryValue}>{price / 100}€ par fan</Text>
+          </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Revenu total potentiel:</Text>
+            <Text style={styles.summaryValue}>{(price * calculatedMaxFans / 100).toFixed(0)}€</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabelSmall}>Commission SignTouch (10%):</Text>
+            <Text style={styles.summaryValueSmall}>-{(price * calculatedMaxFans * SIGNTOUCH_COMMISSION / 100).toFixed(0)}€</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabelHighlight}>{t('liveSessionYourRevenue')}:</Text>
+            <Text style={styles.summaryValueHighlight}>
+              {(price * calculatedMaxFans * (1 - SIGNTOUCH_COMMISSION) / 100).toFixed(0)}€ max
             </Text>
           </View>
-          {price > 0 && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>{t('liveSessionYourRevenue')}:</Text>
-              <Text style={styles.summaryValueHighlight}>
-                {((price * calculatedMaxFans * 0.9) / 100).toFixed(0)}€ max
-              </Text>
-            </View>
-          )}
         </View>
 
         <TouchableOpacity
@@ -335,10 +340,10 @@ export default function CreateLiveSessionScreen() {
           disabled={isCreating}
         >
           {isCreating ? (
-            <ActivityIndicator color="#f59e0b" />
+            <ActivityIndicator color="#10B981" />
           ) : (
             <>
-              <Play size={24} color="#f59e0b" fill="#f59e0b" />
+              <Play size={24} color="#10B981" fill="#10B981" />
               <Text style={styles.createButtonText}>{t('liveSessionStart')}</Text>
             </>
           )}
@@ -544,8 +549,26 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   summaryValueHighlight: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
+    color: '#4ade80',
+  },
+  summaryDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginVertical: 12,
+  },
+  summaryLabelSmall: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  summaryValueSmall: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  summaryLabelHighlight: {
+    fontSize: 14,
+    fontWeight: '600',
     color: '#4ade80',
   },
   createButton: {
@@ -569,6 +592,6 @@ const styles = StyleSheet.create({
   createButtonText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#f59e0b',
+    color: '#10B981',
   },
 });
