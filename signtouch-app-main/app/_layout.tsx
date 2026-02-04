@@ -66,8 +66,17 @@ function AppContent() {
 
   return (
     <>
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ 
+        headerShown: false,
+        animation: 'fade',
+        animationDuration: 200,
+      }}>
         <Stack.Screen name="+not-found" />
+        <Stack.Screen name="index" options={{ animation: 'none' }} />
+        <Stack.Screen name="gallery" options={{ animation: 'none' }} />
+        <Stack.Screen name="account" options={{ animation: 'none' }} />
+        <Stack.Screen name="celebrity-menu" options={{ animation: 'none' }} />
+        <Stack.Screen name="join-event" options={{ animation: 'none' }} />
       </Stack>
       <StatusBar style="auto" />
       <SubscriptionOfferModal
