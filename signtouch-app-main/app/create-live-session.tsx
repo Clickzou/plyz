@@ -319,14 +319,6 @@ export default function CreateLiveSessionScreen() {
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Revenu total potentiel:</Text>
-            <Text style={styles.summaryValue}>{(price * calculatedMaxFans / 100).toFixed(0)}€</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabelSmall}>Frais de fonctionnement:</Text>
-            <Text style={styles.summaryValueSmall}>-{(price * calculatedMaxFans * TOTAL_FEES / 100).toFixed(0)}€</Text>
-          </View>
-          <View style={styles.summaryRow}>
             <Text style={styles.summaryLabelHighlight}>{t('liveSessionYourRevenue')}:</Text>
             <Text style={styles.summaryValueHighlight}>
               {(price * calculatedMaxFans * (1 - TOTAL_FEES) / 100).toFixed(0)}€ max
