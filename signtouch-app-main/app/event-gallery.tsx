@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Download, Users, Clock, Image as ImageIcon, Pen, Copy, Info } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   EventSession,
@@ -223,8 +224,17 @@ export default function EventGalleryScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     try {
-      // Save to SignTouch gallery (not directly to phone)
-      await saveMemory(asset.asset_url, user?.id || null, {
+      let imageUri = asset.asset_url;
+      
+      // On mobile, download the image first to a local file
+      if (Platform.OS !== 'web') {
+        const localUri = FileSystem.documentDirectory + `signtouch-${Date.now()}.png`;
+        const downloadResult = await FileSystem.downloadAsync(asset.asset_url, localUri);
+        imageUri = downloadResult.uri;
+      }
+      
+      // Save to SignTouch gallery
+      await saveMemory(imageUri, user?.id || null, {
         isEdited: true,
       });
       Alert.alert(
