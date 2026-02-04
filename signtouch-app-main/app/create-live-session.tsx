@@ -41,7 +41,7 @@ const PRICE_OPTIONS = [
   { label: '100€', value: 10000 },
 ];
 
-const TOTAL_FEES = 0.35; // 35% frais totaux (Apple/Google + SignTouch)
+const TOTAL_FEES = 0.45; // 45% frais totaux (Apple/Google 30% + SignTouch 15%)
 
 export default function CreateLiveSessionScreen() {
   const router = useRouter();
