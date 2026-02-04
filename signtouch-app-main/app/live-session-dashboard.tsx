@@ -236,7 +236,7 @@ export default function LiveSessionDashboardScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <LinearGradient colors={['#f59e0b', '#d97706']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>
         <View style={styles.headerInfo}>
@@ -357,7 +357,7 @@ export default function LiveSessionDashboardScreen() {
                     <Text style={styles.skipButtonText}>{t('liveSessionSkip')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.nextButton} onPress={handleNextFan}>
-                    <Check size={20} color="#f59e0b" />
+                    <Check size={20} color="#4ade80" />
                     <Text style={styles.nextButtonText}>{t('liveSessionSendNext')}</Text>
                   </TouchableOpacity>
                 </View>
@@ -371,7 +371,7 @@ export default function LiveSessionDashboardScreen() {
                 </Text>
                 {waitingCount > 0 && (
                   <TouchableOpacity style={styles.callNextButton} onPress={handleNextFan}>
-                    <Users size={24} color="#f59e0b" />
+                    <Users size={24} color="#4ade80" />
                     <Text style={styles.callNextButtonText}>{t('liveSessionCallNext')}</Text>
                   </TouchableOpacity>
                 )}
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   nextButtonText: {
-    color: '#f59e0b',
+    color: '#4ade80',
     fontSize: 16,
     fontWeight: '700',
   },
@@ -625,7 +625,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   callNextButtonText: {
-    color: '#f59e0b',
+    color: '#4ade80',
     fontSize: 18,
     fontWeight: '700',
   },
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   backHomeButtonText: {
-    color: '#f59e0b',
+    color: '#4ade80',
     fontSize: 16,
     fontWeight: '700',
   },
