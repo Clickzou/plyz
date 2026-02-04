@@ -244,9 +244,15 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
 };
 
 export const deleteEventSession = async (sessionId: string): Promise<void> => {
+  // First delete related data
+  await supabase.from('event_assets').delete().eq('session_id', sessionId);
+  await supabase.from('event_signers').delete().eq('session_id', sessionId);
+  await supabase.from('event_viewers').delete().eq('session_id', sessionId);
+  
+  // Then delete the session itself
   const { error } = await supabase
     .from('event_sessions')
-    .update({ status: 'ended' })
+    .delete()
     .eq('id', sessionId);
 
   if (error) {
