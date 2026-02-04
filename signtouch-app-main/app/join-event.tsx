@@ -344,28 +344,29 @@ export default function JoinEventScreen() {
           <>
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>{t('enterEventCode') || 'Enter the event code'}</Text>
-              <View style={styles.inputRow}>
-                <TextInput
-                  style={styles.codeInput}
-                  placeholder="ABC123"
-                  placeholderTextColor="rgba(255,255,255,0.3)"
-                  value={code}
-                  onChangeText={(text) => setCode(text.toUpperCase())}
-                  autoCapitalize="characters"
-                  maxLength={6}
-                />
-                <TouchableOpacity
-                  style={[styles.searchButton, isSearching && styles.searchButtonDisabled]}
-                  onPress={() => handleSearch()}
-                  disabled={isSearching}
-                >
-                  {isSearching ? (
-                    <ActivityIndicator color="#fff" size="small" />
-                  ) : (
+              <TextInput
+                style={styles.codeInputFull}
+                placeholder="ABC123"
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                value={code}
+                onChangeText={(text) => setCode(text.toUpperCase())}
+                autoCapitalize="characters"
+                maxLength={6}
+              />
+              <TouchableOpacity
+                style={[styles.searchButtonFull, isSearching && styles.searchButtonDisabled]}
+                onPress={() => handleSearch()}
+                disabled={isSearching}
+              >
+                {isSearching ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <>
                     <Search size={22} color="#fff" />
-                  )}
-                </TouchableOpacity>
-              </View>
+                    <Text style={styles.searchButtonText}>{t('search') || 'Search'}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
 
             <View style={styles.orDivider}>
@@ -583,6 +584,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   searchButtonDisabled: { opacity: 0.7 },
+  codeInputFull: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
+    textAlign: 'center',
+    letterSpacing: 4,
+    marginBottom: 16,
+  },
+  searchButtonFull: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#10B981',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+  },
+  searchButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   orDivider: { flexDirection: 'row', alignItems: 'center', marginVertical: 24 },
   dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
   orText: { marginHorizontal: 16, color: 'rgba(255,255,255,0.5)', fontSize: 14 },
