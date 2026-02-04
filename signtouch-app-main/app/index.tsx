@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     zIndex: 10,
-    paddingTop: 100,
+    paddingTop: 120,
     paddingBottom: 80,
   },
   logoContainer: {
@@ -333,7 +333,8 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 3, height: 3 },
     textShadowRadius: 15,
     letterSpacing: 2,
-    paddingTop: 15,
+    paddingTop: 25,
+    marginBottom: 30,
   },
   subtitleText: {
     fontSize: 16,
