@@ -39,7 +39,9 @@ export default function CelebrityMenuScreen() {
   const loadMyEvents = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('[loadMyEvents] Fetching events...');
       const events = await getMyScheduledEvents();
+      console.log('[loadMyEvents] Got', events.length, 'events:', events.map(e => e.id));
       const sortedEvents = events.sort((a, b) => {
         const statusOrder = { live: 0, scheduled: 1, ended: 2 };
         return (statusOrder[a.status as keyof typeof statusOrder] || 2) - (statusOrder[b.status as keyof typeof statusOrder] || 2);
