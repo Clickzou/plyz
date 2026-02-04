@@ -23,6 +23,8 @@ export default {
   galleryStories: 'القصص',
   noStories: 'لا توجد قصص بعد',
   noStoriesHint: 'أنشئ قصة من نتيجة صورتك',
+  noEvents: 'لا توجد أحداث',
+  noEventsHint: 'أنشئ حدثًا أو انضم إلى واحد',
   storiesInstruction: 'لإنشاء قصة، قم بتحرير صورة ثم انقر على أيقونة "السينما".',
   galleryInstruction: 'انقر على الصورة لتحريرها (الألوان والنصوص والتوقيع والتأثيرات) أو مشاركتها أو حفظها على جهازك.',
   select: 'اختيار',

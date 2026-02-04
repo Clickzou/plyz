@@ -23,6 +23,8 @@ export default {
   galleryStories: '故事',
   noStories: '暂无故事',
   noStoriesHint: '从照片结果创建故事',
+  noEvents: '没有活动',
+  noEventsHint: '创建活动或加入一个',
   storiesInstruction: '要创建故事，请编辑照片然后点击"电影"图标。',
   galleryInstruction: '点击照片进行编辑（颜色、文字、签名、特效）、分享或保存到设备。',
   select: '选择',

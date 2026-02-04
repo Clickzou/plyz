@@ -23,6 +23,8 @@ export default {
   galleryStories: 'Storie',
   noStories: 'Nessuna storia ancora',
   noStoriesHint: 'Crea una storia dal risultato della tua foto',
+  noEvents: 'Nessun evento',
+  noEventsHint: 'Crea un evento o partecipa a uno',
   storiesInstruction: 'Per creare una storia, modifica una foto e clicca sull\'icona "cinema".',
   galleryInstruction: 'Clicca su una foto per modificarla (colori, testi, firma, effetti), condividerla o salvarla sul tuo dispositivo.',
   select: 'Seleziona',

@@ -23,6 +23,8 @@ export default {
   galleryStories: 'Cerita',
   noStories: 'Belum ada cerita',
   noStoriesHint: 'Cipta cerita daripada hasil foto anda',
+  noEvents: 'Tiada acara',
+  noEventsHint: 'Cipta acara atau sertai satu',
   storiesInstruction: 'Untuk mencipta cerita, edit foto kemudian klik ikon "sinema".',
   galleryInstruction: 'Klik pada gambar untuk mengeditnya (warna, teks, tandatangan, kesan), berkongsi atau menyimpannya pada peranti anda.',
   select: 'Pilih',
