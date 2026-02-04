@@ -16,6 +16,7 @@ export interface EventSession {
   created_by: string | null;
   created_at: string;
   event_type?: 'qr' | 'live_video';
+  location?: string;
 }
 
 export interface EventSigner {
@@ -157,7 +158,8 @@ export const createEventSession = async (
   title: string,
   durationMinutes: number,
   creatorId?: string,
-  scheduledStartAt?: Date
+  scheduledStartAt?: Date,
+  location?: string
 ): Promise<EventSession> => {
   const joinCode = generateJoinCode();
   const isScheduled = scheduledStartAt && scheduledStartAt.getTime() > Date.now() + 60000;
@@ -175,6 +177,7 @@ export const createEventSession = async (
       status: isScheduled ? 'scheduled' : 'live',
       join_code: joinCode,
       created_by: creatorId || null,
+      location: location || null,
     })
     .select()
     .single();

@@ -225,7 +225,7 @@ export default function CreateEventScreen() {
         return startDate;
       })();
       
-      const session = await createEventSession(formData.eventName.trim(), formData.selectedDuration, creatorId, scheduledStart);
+      const session = await createEventSession(formData.eventName.trim(), formData.selectedDuration, creatorId, scheduledStart, formData.eventLocation?.trim());
       
       const addedSigners: EventSigner[] = [];
       for (const signer of validSigners) {
@@ -495,7 +495,7 @@ export default function CreateEventScreen() {
     try {
       const creatorId = user?.id || undefined;
       const scheduledStart = getScheduledStartDate();
-      const session = await createEventSession(eventName.trim(), selectedDuration, creatorId, scheduledStart);
+      const session = await createEventSession(eventName.trim(), selectedDuration, creatorId, scheduledStart, eventLocation?.trim());
       
       const addedSigners: EventSigner[] = [];
       for (const signer of validSigners) {

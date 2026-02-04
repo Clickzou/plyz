@@ -16,7 +16,7 @@ import {
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Move, ZoomIn, ZoomOut, RotateCcw, Palette, QrCode, X, Copy, Share2, Plus, UserPlus, Calendar, Clock, Video } from 'lucide-react-native';
+import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Move, ZoomIn, ZoomOut, RotateCcw, Palette, QrCode, X, Copy, Share2, Plus, UserPlus, Calendar, Clock, Video, MapPin } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
 import { SvgUri, SvgXml } from 'react-native-svg';
@@ -73,6 +73,7 @@ export default function EventPublishScreen() {
   const eventType = params.eventType as string || 'qr';
   const startsAt = params.startsAt as string;
   const endsAt = params.endsAt as string;
+  const location = params.location as string;
   
   const formatDateTime = (dateStr: string) => {
     if (!dateStr) return '';
@@ -548,6 +549,12 @@ export default function EventPublishScreen() {
               {eventType === 'live_video' ? (t('liveVideo') || 'Vidéo en direct') : (t('qrEvent') || 'Événement QR')}
             </Text>
           </View>
+          {location && (
+            <View style={styles.eventInfoRow}>
+              <MapPin size={16} color="#9ca3af" />
+              <Text style={styles.eventInfoText}>{location}</Text>
+            </View>
+          )}
           {startsAt && (
             <View style={styles.eventInfoRow}>
               <Calendar size={16} color="#9ca3af" />
