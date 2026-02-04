@@ -19,7 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Move, ZoomIn, ZoomOut, RotateCcw, Palette, QrCode, X, Copy, Share2, Plus, UserPlus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
-import { SvgUri } from 'react-native-svg';
+import { SvgUri, SvgXml } from 'react-native-svg';
 
 const SIGNATURE_COLORS = [
   '#FFFFFF',
@@ -84,6 +84,41 @@ export default function EventPublishScreen() {
   const [signatureRotation, setSignatureRotation] = useState(0);
   const [signatureColor, setSignatureColor] = useState('#FFFFFF');
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [coloredSvgXml, setColoredSvgXml] = useState<string | null>(null);
+  
+  // Fetch and colorize SVG for mobile
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    if (!selectedSigner?.signature_url) {
+      setColoredSvgXml(null);
+      return;
+    }
+    
+    const fetchAndColorSvg = async () => {
+      try {
+        const response = await fetch(selectedSigner.signature_url);
+        let svgText = await response.text();
+        
+        // Replace stroke and fill colors with the selected color
+        svgText = svgText.replace(/stroke="[^"]*"/g, `stroke="${signatureColor}"`);
+        svgText = svgText.replace(/fill="[^"]*"/g, `fill="${signatureColor}"`);
+        svgText = svgText.replace(/stroke:[^;"]*/g, `stroke:${signatureColor}`);
+        svgText = svgText.replace(/fill:[^;"]*/g, `fill:${signatureColor}`);
+        
+        // If no stroke/fill found, add them to path elements
+        if (!svgText.includes('stroke=')) {
+          svgText = svgText.replace(/<path/g, `<path stroke="${signatureColor}"`);
+        }
+        
+        setColoredSvgXml(svgText);
+      } catch (error) {
+        console.error('Error fetching SVG:', error);
+        setColoredSvgXml(null);
+      }
+    };
+    
+    fetchAndColorSvg();
+  }, [selectedSigner?.signature_url, signatureColor]);
   const [showQrModal, setShowQrModal] = useState(false);
   const [copied, setCopied] = useState(false);
   
@@ -585,14 +620,19 @@ export default function EventPublishScreen() {
                           },
                         ]}
                       >
-                        <SvgUri 
-                          uri={selectedSigner.signature_url}
-                          width={200}
-                          height={100}
-                          color={signatureColor}
-                          stroke={signatureColor}
-                          fill={signatureColor}
-                        />
+                        {coloredSvgXml ? (
+                          <SvgXml 
+                            xml={coloredSvgXml}
+                            width={200}
+                            height={100}
+                          />
+                        ) : (
+                          <SvgUri 
+                            uri={selectedSigner.signature_url}
+                            width={200}
+                            height={100}
+                          />
+                        )}
                       </View>
                     )
                   )}
