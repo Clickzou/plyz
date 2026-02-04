@@ -15,18 +15,170 @@ import { CGV_CONTENT, CGU_CONTENT, PRIVACY_CONTENT, MENTIONS_CONTENT } from '@/a
 
 type LegalDocument = 'cgv' | 'cgu' | 'privacy' | 'mentions' | null;
 
-const DOCUMENTS = [
-  { id: 'cgu' as LegalDocument, title: "Conditions Générales d'Utilisation", icon: FileText, content: CGU_CONTENT },
-  { id: 'cgv' as LegalDocument, title: 'Conditions Générales de Vente', icon: Scale, content: CGV_CONTENT },
-  { id: 'privacy' as LegalDocument, title: 'Politique de Confidentialité', icon: Shield, content: PRIVACY_CONTENT },
-  { id: 'mentions' as LegalDocument, title: 'Mentions Légales', icon: Building, content: MENTIONS_CONTENT },
-];
+const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
+  fr: {
+    cgu: "Conditions Générales d'Utilisation",
+    cgv: 'Conditions Générales de Vente',
+    privacy: 'Politique de Confidentialité',
+    mentions: 'Mentions Légales',
+    header: 'Documents Légaux',
+    intro: 'Consultez nos documents légaux pour comprendre comment fonctionne SignTouch et comment nous protégeons vos données.',
+    contact: 'Pour toute question, contactez-nous :',
+  },
+  en: {
+    cgu: 'Terms of Use',
+    cgv: 'Terms of Sale',
+    privacy: 'Privacy Policy',
+    mentions: 'Legal Notices',
+    header: 'Legal Documents',
+    intro: 'Review our legal documents to understand how SignTouch works and how we protect your data.',
+    contact: 'For any questions, contact us:',
+  },
+  es: {
+    cgu: 'Condiciones de Uso',
+    cgv: 'Condiciones de Venta',
+    privacy: 'Política de Privacidad',
+    mentions: 'Aviso Legal',
+    header: 'Documentos Legales',
+    intro: 'Consulte nuestros documentos legales para entender cómo funciona SignTouch y cómo protegemos sus datos.',
+    contact: 'Para cualquier pregunta, contáctenos:',
+  },
+  de: {
+    cgu: 'Nutzungsbedingungen',
+    cgv: 'Verkaufsbedingungen',
+    privacy: 'Datenschutzrichtlinie',
+    mentions: 'Impressum',
+    header: 'Rechtliche Dokumente',
+    intro: 'Lesen Sie unsere rechtlichen Dokumente, um zu verstehen, wie SignTouch funktioniert und wie wir Ihre Daten schützen.',
+    contact: 'Bei Fragen kontaktieren Sie uns:',
+  },
+  it: {
+    cgu: 'Condizioni di Utilizzo',
+    cgv: 'Condizioni di Vendita',
+    privacy: 'Informativa sulla Privacy',
+    mentions: 'Note Legali',
+    header: 'Documenti Legali',
+    intro: 'Consulta i nostri documenti legali per capire come funziona SignTouch e come proteggiamo i tuoi dati.',
+    contact: 'Per qualsiasi domanda, contattaci:',
+  },
+  pt: {
+    cgu: 'Condições de Utilização',
+    cgv: 'Condições de Venda',
+    privacy: 'Política de Privacidade',
+    mentions: 'Avisos Legais',
+    header: 'Documentos Legais',
+    intro: 'Consulte os nossos documentos legais para entender como o SignTouch funciona e como protegemos os seus dados.',
+    contact: 'Para qualquer dúvida, contacte-nos:',
+  },
+  ru: {
+    cgu: 'Условия использования',
+    cgv: 'Условия продажи',
+    privacy: 'Политика конфиденциальности',
+    mentions: 'Юридическая информация',
+    header: 'Юридические документы',
+    intro: 'Ознакомьтесь с нашими юридическими документами, чтобы понять, как работает SignTouch и как мы защищаем ваши данные.',
+    contact: 'По любым вопросам свяжитесь с нами:',
+  },
+  ja: {
+    cgu: '利用規約',
+    cgv: '販売条件',
+    privacy: 'プライバシーポリシー',
+    mentions: '法的通知',
+    header: '法的文書',
+    intro: 'SignTouchの仕組みと、お客様のデータをどのように保護しているかを理解するために、法的文書をご確認ください。',
+    contact: 'ご質問はこちらまで：',
+  },
+  zh: {
+    cgu: '使用条款',
+    cgv: '销售条款',
+    privacy: '隐私政策',
+    mentions: '法律声明',
+    header: '法律文件',
+    intro: '查看我们的法律文件，了解SignTouch如何运作以及我们如何保护您的数据。',
+    contact: '如有任何问题，请联系我们：',
+  },
+  ar: {
+    cgu: 'شروط الاستخدام',
+    cgv: 'شروط البيع',
+    privacy: 'سياسة الخصوصية',
+    mentions: 'إشعارات قانونية',
+    header: 'المستندات القانونية',
+    intro: 'اطلع على مستنداتنا القانونية لفهم كيفية عمل SignTouch وكيف نحمي بياناتك.',
+    contact: 'لأي استفسار، تواصل معنا:',
+  },
+  hi: {
+    cgu: 'उपयोग की शर्तें',
+    cgv: 'बिक्री की शर्तें',
+    privacy: 'गोपनीयता नीति',
+    mentions: 'कानूनी सूचनाएं',
+    header: 'कानूनी दस्तावेज़',
+    intro: 'SignTouch कैसे काम करता है और हम आपके डेटा की कैसे सुरक्षा करते हैं, यह समझने के लिए हमारे कानूनी दस्तावेज़ देखें।',
+    contact: 'किसी भी प्रश्न के लिए, हमसे संपर्क करें:',
+  },
+  bn: {
+    cgu: 'ব্যবহারের শর্তাবলী',
+    cgv: 'বিক্রয়ের শর্তাবলী',
+    privacy: 'গোপনীয়তা নীতি',
+    mentions: 'আইনি বিজ্ঞপ্তি',
+    header: 'আইনি নথি',
+    intro: 'SignTouch কীভাবে কাজ করে এবং আমরা কীভাবে আপনার ডেটা রক্ষা করি তা বুঝতে আমাদের আইনি নথি পর্যালোচনা করুন।',
+    contact: 'যেকোনো প্রশ্নের জন্য, আমাদের সাথে যোগাযোগ করুন:',
+  },
+  ur: {
+    cgu: 'استعمال کی شرائط',
+    cgv: 'فروخت کی شرائط',
+    privacy: 'رازداری کی پالیسی',
+    mentions: 'قانونی نوٹس',
+    header: 'قانونی دستاویزات',
+    intro: 'SignTouch کیسے کام کرتا ہے اور ہم آپ کے ڈیٹا کی حفاظت کیسے کرتے ہیں، یہ سمجھنے کے لیے ہماری قانونی دستاویزات دیکھیں۔',
+    contact: 'کسی بھی سوال کے لیے، ہم سے رابطہ کریں:',
+  },
+  ms: {
+    cgu: 'Syarat Penggunaan',
+    cgv: 'Syarat Jualan',
+    privacy: 'Dasar Privasi',
+    mentions: 'Notis Undang-undang',
+    header: 'Dokumen Undang-undang',
+    intro: 'Semak dokumen undang-undang kami untuk memahami cara SignTouch berfungsi dan cara kami melindungi data anda.',
+    contact: 'Untuk sebarang pertanyaan, hubungi kami:',
+  },
+  id: {
+    cgu: 'Syarat Penggunaan',
+    cgv: 'Syarat Penjualan',
+    privacy: 'Kebijakan Privasi',
+    mentions: 'Pemberitahuan Hukum',
+    header: 'Dokumen Hukum',
+    intro: 'Tinjau dokumen hukum kami untuk memahami cara kerja SignTouch dan cara kami melindungi data Anda.',
+    contact: 'Untuk pertanyaan apa pun, hubungi kami:',
+  },
+};
 
 export default function LegalScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { t } = useLanguage();
+  const { currentLanguage } = useLanguage();
   const [selectedDoc, setSelectedDoc] = useState<LegalDocument>(null);
+
+  const lang = currentLanguage || 'fr';
+  const titles = DOCUMENT_TITLES[lang] || DOCUMENT_TITLES.fr;
+
+  const getDocumentContent = (docId: 'cgv' | 'cgu' | 'privacy' | 'mentions'): string => {
+    const contentMap = {
+      cgu: CGU_CONTENT,
+      cgv: CGV_CONTENT,
+      privacy: PRIVACY_CONTENT,
+      mentions: MENTIONS_CONTENT,
+    } as const;
+    const content = contentMap[docId];
+    return content[lang] || content.fr || '';
+  };
+
+  const DOCUMENTS = [
+    { id: 'cgu' as LegalDocument, title: titles.cgu, icon: FileText },
+    { id: 'cgv' as LegalDocument, title: titles.cgv, icon: Scale },
+    { id: 'privacy' as LegalDocument, title: titles.privacy, icon: Shield },
+    { id: 'mentions' as LegalDocument, title: titles.mentions, icon: Building },
+  ];
 
   const selectedDocument = DOCUMENTS.find(d => d.id === selectedDoc);
 
@@ -42,7 +194,7 @@ export default function LegalScreen() {
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
-          {selectedDoc ? selectedDocument?.title : 'Documents Légaux'}
+          {selectedDoc ? selectedDocument?.title : titles.header}
         </Text>
         <View style={styles.headerSpacer} />
       </View>
@@ -50,7 +202,7 @@ export default function LegalScreen() {
       {!selectedDoc ? (
         <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
           <Text style={styles.intro}>
-            Consultez nos documents légaux pour comprendre comment fonctionne SignTouch et comment nous protégeons vos données.
+            {titles.intro}
           </Text>
 
           {DOCUMENTS.map((doc) => {
@@ -71,15 +223,15 @@ export default function LegalScreen() {
           })}
 
           <Text style={styles.contact}>
-            Pour toute question, contactez-nous :{'\n'}
+            {titles.contact}{'\n'}
             contact@clickzou.fr
           </Text>
         </ScrollView>
-      ) : (
+      ) : selectedDoc ? (
         <ScrollView style={styles.content} contentContainerStyle={styles.docContent}>
-          <Text style={styles.docText}>{selectedDocument?.content}</Text>
+          <Text style={styles.docText}>{getDocumentContent(selectedDoc)}</Text>
         </ScrollView>
-      )}
+      ) : null}
     </View>
   );
 }

@@ -113,6 +113,18 @@ Preferred communication style: Simple, everyday language.
 - **Utility**: `promoCodeStorage.ts` for code validation and premium status tracking
 - **i18n**: Translation keys: promoCode, enterPromoCode, promoCodeSuccess, promoCodeInvalid, promoCodeAlreadyUsed
 
+### Legal Documents System (February 2026)
+- **Multi-Language Legal Documents**: All 4 legal documents translated into 15 languages
+  - CGV (Conditions Générales de Vente / Terms of Sale)
+  - CGU (Conditions Générales d'Utilisation / Terms of Use)
+  - Privacy Policy (Politique de Confidentialité)
+  - Legal Notices (Mentions Légales)
+- **Languages Supported**: fr, en, es, de, it, pt, ru, ja, zh, ar, hi, bn, ur, ms, id
+- **Dynamic Language Display**: Legal screen automatically displays documents in user's current language
+- **Fallback System**: Falls back to French if translation not available
+- **File Structure**: `assets/legal/cgv.ts`, `cgu.ts`, `privacy.ts`, `mentions.ts` - each exports language-keyed object
+- **Company Info**: Clickzou SASU, capital €1,000, SIRET 950 814 426 00025, RCS Toulouse
+
 ## External Dependencies
 
 ### Backend Services
