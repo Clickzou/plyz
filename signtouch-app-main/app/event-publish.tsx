@@ -699,12 +699,19 @@ export default function EventPublishScreen() {
             style={{ marginBottom: 20 }}
           >
             {publishedAssets.map((asset) => (
-              <View key={asset.id} style={styles.publishedCarouselItem}>
-                <Image 
-                  source={{ uri: asset.image_url }} 
-                  style={styles.publishedImage} 
-                  resizeMode="cover"
-                />
+              <View key={asset.id} style={[styles.publishedCarouselItem, { backgroundColor: '#374151' }]}>
+                {asset.image_url ? (
+                  <Image 
+                    source={{ uri: asset.image_url }} 
+                    style={styles.publishedImage} 
+                    resizeMode="cover"
+                    onError={(e) => console.log('Image load error:', asset.image_url, e.nativeEvent.error)}
+                  />
+                ) : (
+                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ImageIcon size={24} color="#9ca3af" />
+                  </View>
+                )}
                 {asset.type === 'photo_signed' && (
                   <View style={styles.signedBadge}>
                     <Check size={10} color="#fff" />
