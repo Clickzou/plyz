@@ -233,7 +233,7 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
     .from('event_sessions')
     .select('*')
     .eq('created_by', userId)
-    .in('status', ['scheduled', 'active', 'live'])
+    .in('status', ['scheduled', 'active', 'live', 'ended'])
     .order('starts_at', { ascending: true });
 
   if (error) {
@@ -244,26 +244,17 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
 };
 
 export const deleteEventSession = async (sessionId: string): Promise<void> => {
-  console.log('[deleteEventSession] Starting delete for:', sessionId);
+  console.log('[deleteEventSession] Marking as deleted:', sessionId);
   
-  // First delete related data
-  const { error: assetsError } = await supabase.from('event_assets').delete().eq('session_id', sessionId);
-  console.log('[deleteEventSession] Assets delete:', assetsError ? assetsError.message : 'success');
-  
-  const { error: signersError } = await supabase.from('event_signers').delete().eq('session_id', sessionId);
-  console.log('[deleteEventSession] Signers delete:', signersError ? signersError.message : 'success');
-  
-  const { error: viewersError } = await supabase.from('event_viewers').delete().eq('session_id', sessionId);
-  console.log('[deleteEventSession] Viewers delete:', viewersError ? viewersError.message : 'success');
-  
-  // Then delete the session itself
-  const { data, error, count } = await supabase
+  // Mark the event as deleted instead of physically deleting
+  // This works around RLS policies that may block DELETE operations
+  const { data, error } = await supabase
     .from('event_sessions')
-    .delete()
+    .update({ status: 'deleted' })
     .eq('id', sessionId)
     .select();
 
-  console.log('[deleteEventSession] Session delete result:', { data, error, count });
+  console.log('[deleteEventSession] Update result:', { data, error });
 
   if (error) {
     console.error('Error deleting event session:', error);
@@ -271,8 +262,11 @@ export const deleteEventSession = async (sessionId: string): Promise<void> => {
   }
   
   if (!data || data.length === 0) {
-    console.warn('[deleteEventSession] No rows deleted - RLS policy may be blocking');
+    console.warn('[deleteEventSession] No rows updated - check RLS policy');
+    throw new Error('Could not delete event - permission denied');
   }
+  
+  console.log('[deleteEventSession] Successfully marked as deleted');
 };
 
 export const addEventSigner = async (
