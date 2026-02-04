@@ -13,28 +13,24 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Clock, Users, DollarSign, Play, Star } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Slider from '@react-native-community/slider';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { createLiveSession } from '@/utils/liveSessionStorage';
 
-const DURATION_PER_FAN_OPTIONS = [
-  { label: '2 min', value: 2 },
-  { label: '5 min', value: 5 },
-  { label: '10 min', value: 10 },
-  { label: '15 min', value: 15 },
-  { label: '20 min', value: 20 },
-  { label: '30 min', value: 30 },
-  { label: '45 min', value: 45 },
-  { label: '60 min', value: 60 },
-];
-
-const TOTAL_DURATION_OPTIONS = [
-  { label: '15 min', value: 15 },
-  { label: '30 min', value: 30 },
-  { label: '45 min', value: 45 },
-  { label: '1h', value: 60 },
-  { label: '1h30', value: 90 },
-  { label: '2h', value: 120 },
-];
+const formatDuration = (minutes: number): string => {
+  if (minutes < 1) {
+    return `${Math.round(minutes * 60)} sec`;
+  } else if (minutes < 60) {
+    return `${Math.round(minutes)} min`;
+  } else {
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    if (mins === 0) {
+      return `${hours}h`;
+    }
+    return `${hours}h${mins.toString().padStart(2, '0')}`;
+  }
+};
 
 const PRICE_OPTIONS = [
   { label: 'Free', value: 0 },
@@ -195,51 +191,49 @@ export default function CreateLiveSessionScreen() {
         )}
 
         <Text style={styles.sectionTitle}>{t('liveSessionDurationPerFan') || 'Durée par Fan'}</Text>
-        <View style={styles.optionsRow}>
-          {DURATION_PER_FAN_OPTIONS.map((option) => (
-            <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.optionButton,
-                durationPerFan === option.value && styles.optionButtonActive,
-              ]}
-              onPress={() => setDurationPerFan(option.value)}
-            >
-              <Clock size={16} color={durationPerFan === option.value ? '#10B981' : '#fff'} />
-              <Text
-                style={[
-                  styles.optionText,
-                  durationPerFan === option.value && styles.optionTextActive,
-                ]}
-              >
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.sliderContainer}>
+          <View style={styles.sliderValueContainer}>
+            <Clock size={18} color="#10B981" />
+            <Text style={styles.sliderValue}>{formatDuration(durationPerFan)}</Text>
+          </View>
+          <Slider
+            style={styles.slider}
+            minimumValue={0.5}
+            maximumValue={60}
+            step={0.5}
+            value={durationPerFan}
+            onValueChange={setDurationPerFan}
+            minimumTrackTintColor="#10B981"
+            maximumTrackTintColor="rgba(255,255,255,0.3)"
+            thumbTintColor="#10B981"
+          />
+          <View style={styles.sliderLabels}>
+            <Text style={styles.sliderLabel}>30 sec</Text>
+            <Text style={styles.sliderLabel}>1h</Text>
+          </View>
         </View>
 
         <Text style={styles.sectionTitle}>{t('liveSessionTotalDuration') || 'Durée Totale'}</Text>
-        <View style={styles.optionsRow}>
-          {TOTAL_DURATION_OPTIONS.map((option) => (
-            <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.optionButton,
-                totalDuration === option.value && styles.optionButtonActive,
-              ]}
-              onPress={() => setTotalDuration(option.value)}
-            >
-              <Clock size={16} color={totalDuration === option.value ? '#10B981' : '#fff'} />
-              <Text
-                style={[
-                  styles.optionText,
-                  totalDuration === option.value && styles.optionTextActive,
-                ]}
-              >
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.sliderContainer}>
+          <View style={styles.sliderValueContainer}>
+            <Clock size={18} color="#10B981" />
+            <Text style={styles.sliderValue}>{formatDuration(totalDuration)}</Text>
+          </View>
+          <Slider
+            style={styles.slider}
+            minimumValue={10}
+            maximumValue={300}
+            step={5}
+            value={totalDuration}
+            onValueChange={setTotalDuration}
+            minimumTrackTintColor="#10B981"
+            maximumTrackTintColor="rgba(255,255,255,0.3)"
+            thumbTintColor="#10B981"
+          />
+          <View style={styles.sliderLabels}>
+            <Text style={styles.sliderLabel}>10 min</Text>
+            <Text style={styles.sliderLabel}>5h</Text>
+          </View>
         </View>
 
         <View style={styles.calculatedFansCard}>
@@ -445,6 +439,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#fff',
+  },
+  sliderContainer: {
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 8,
+  },
+  sliderValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  sliderValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#10B981',
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  sliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  sliderLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
   },
   calculatedFansCard: {
     flexDirection: 'row',
