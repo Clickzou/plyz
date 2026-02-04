@@ -41,6 +41,7 @@ const EVENT_TYPES: { type: EventType; icon: any; color: string; labelKey: string
   { type: 'autre', icon: Calendar, color: '#6b7280', labelKey: 'eventAutre' },
 ];
 import { useAuth } from '@/contexts/AuthContext';
+import BottomNav from '@/components/BottomNav';
 import { 
   createEventSession, 
   addEventSigner, 
@@ -1201,6 +1202,7 @@ export default function CreateEventScreen() {
           returnPath="/create-event"
         />
       </LinearGradient>
+      <BottomNav />
     </GestureHandlerRootView>
   );
 }
