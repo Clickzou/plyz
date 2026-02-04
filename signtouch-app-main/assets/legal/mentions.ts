@@ -5,30 +5,34 @@ Dernière mise à jour : Février 2026
 
 1. ÉDITEUR DE L'APPLICATION
 
-Raison sociale : Clickzou
-Forme juridique : SAS (Société par Actions Simplifiée)
-Capital social : [À compléter]
-Siège social : 5 impasse de la colombette - 31000 Toulouse, France
+Dénomination sociale : CLICKZOU SASU
+Forme juridique : Société par Actions Simplifiée Unipersonnelle
+Capital social : 1 000 €
+Siège social : 5 Impasse de la Colombette - 31000 Toulouse, France
 SIRET : 950 814 426 00025
-RCS : Toulouse [À compléter]
-TVA Intracommunautaire : [À compléter]
+RCS : 950 814 426 R.C.S. Toulouse
+TVA Intracommunautaire : FR83 950814426
 
 Directeur de la publication : Jean-Christophe CASTANET
 
 Contact :
 Email : contact@clickzou.fr
-Téléphone : [À compléter]
+Téléphone : 09 87 41 64 01
 
-2. HÉBERGEMENT DES DONNÉES
+2. HÉBERGEMENT
 
-Base de données :
+L'application et ses données sont hébergées par :
+
+Plateforme de développement :
+Replit, Inc.
+San Francisco, CA, USA
+https://replit.com
+
+Base de données et stockage :
 Supabase Inc.
 970 Toa Payoh North #07-04
 Singapore 318992
 https://supabase.com
-
-Stockage des fichiers :
-Supabase Storage (intégré à Supabase)
 
 Services de paiement :
 Stripe, Inc.
@@ -93,10 +97,16 @@ Conformément à la loi pour la confiance dans l'économie numérique (LCEN), vo
 
 Nous nous engageons à retirer promptement tout contenu illicite qui nous serait signalé.
 
-9. MÉDIATION
+9. MÉDIATION DE LA CONSOMMATION
 
-En cas de litige, vous pouvez recourir gratuitement au service de médiation suivant :
-[À compléter avec le médiateur de la consommation]
+Conformément à l'article L.611-1 du Code de la consommation, en cas de litige non résolu avec notre service client, vous pouvez recourir gratuitement au service de médiation suivant :
+
+Centre de Médiation et d'Arbitrage de Toulouse (CMAT)
+Adresse : 2 rue d'Alsace-Lorraine - 31000 Toulouse
+Site internet : https://www.cmat.asso.fr
+Email : contact@cmat.asso.fr
+
+Pour saisir le médiateur, vous devez au préalable avoir tenté de résoudre votre litige directement auprès de notre service client par une réclamation écrite à contact@clickzou.fr
 
 10. DROIT APPLICABLE
 
