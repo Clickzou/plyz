@@ -333,6 +333,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 3, height: 3 },
     textShadowRadius: 15,
     letterSpacing: 2,
+    paddingTop: 15,
   },
   subtitleText: {
     fontSize: 16,
