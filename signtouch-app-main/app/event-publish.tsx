@@ -85,6 +85,7 @@ export default function EventPublishScreen() {
   const [signatureColor, setSignatureColor] = useState('#FFFFFF');
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [coloredSvgXml, setColoredSvgXml] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   
   // Fetch and colorize SVG for mobile
   useEffect(() => {
@@ -463,10 +464,7 @@ export default function EventPublishScreen() {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      Alert.alert(
-        t('done') || 'Done', 
-        (t('photoPublishedContinue') || 'Photo published! You can add another one.')
-      );
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Publish error:', error);
       Alert.alert(t('error') || 'Error', t('publishFailed') || 'Failed to publish');
@@ -768,6 +766,27 @@ export default function EventPublishScreen() {
           </Text>
         )}
       </ScrollView>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <View style={styles.successModalOverlay}>
+          <View style={styles.successModalContent}>
+            <View style={styles.successIconContainer}>
+              <Check size={48} color="#fff" />
+            </View>
+            <Text style={styles.successTitle}>{t('done') || 'Terminé'}</Text>
+            <Text style={styles.successMessage}>
+              {t('photoPublishedContinue') || 'Photo publiée ! Vous pouvez en ajouter une autre.'}
+            </Text>
+            <TouchableOpacity 
+              style={styles.successButton}
+              onPress={() => setShowSuccessModal(false)}
+            >
+              <Text style={styles.successButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {/* QR Code Modal */}
       {showQrModal && (
@@ -1077,6 +1096,60 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  successModalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  successModalContent: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    width: '85%',
+    maxWidth: 320,
+    borderWidth: 2,
+    borderColor: '#10B981',
+  },
+  successIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#10B981',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 12,
+  },
+  successMessage: {
+    fontSize: 16,
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  successButton: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 48,
+    paddingVertical: 14,
+    borderRadius: 30,
+  },
+  successButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   qrModalOverlay: {
     position: 'absolute',
