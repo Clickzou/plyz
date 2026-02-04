@@ -41,7 +41,7 @@ const PRICE_OPTIONS = [
   { label: '100€', value: 10000 },
 ];
 
-const SIGNTOUCH_COMMISSION = 0.10; // 10% commission
+const TOTAL_FEES = 0.35; // 35% frais totaux (Apple/Google + SignTouch)
 
 export default function CreateLiveSessionScreen() {
   const router = useRouter();
@@ -324,12 +324,12 @@ export default function CreateLiveSessionScreen() {
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabelSmall}>Frais de fonctionnement:</Text>
-            <Text style={styles.summaryValueSmall}>-{(price * calculatedMaxFans * SIGNTOUCH_COMMISSION / 100).toFixed(0)}€</Text>
+            <Text style={styles.summaryValueSmall}>-{(price * calculatedMaxFans * TOTAL_FEES / 100).toFixed(0)}€</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabelHighlight}>{t('liveSessionYourRevenue')}:</Text>
             <Text style={styles.summaryValueHighlight}>
-              {(price * calculatedMaxFans * (1 - SIGNTOUCH_COMMISSION) / 100).toFixed(0)}€ max
+              {(price * calculatedMaxFans * (1 - TOTAL_FEES) / 100).toFixed(0)}€ max
             </Text>
           </View>
         </View>
