@@ -99,16 +99,17 @@ export default function EventPublishScreen() {
         const response = await fetch(selectedSigner.signature_url);
         let svgText = await response.text();
         
-        // Replace stroke and fill colors with the selected color
-        svgText = svgText.replace(/stroke="[^"]*"/g, `stroke="${signatureColor}"`);
-        svgText = svgText.replace(/fill="[^"]*"/g, `fill="${signatureColor}"`);
-        svgText = svgText.replace(/stroke:[^;"]*/g, `stroke:${signatureColor}`);
-        svgText = svgText.replace(/fill:[^;"]*/g, `fill:${signatureColor}`);
+        // Only replace stroke colors, preserve fill="none" for transparent backgrounds
+        svgText = svgText.replace(/stroke="(?!none)[^"]*"/g, `stroke="${signatureColor}"`);
+        svgText = svgText.replace(/stroke:[^;}"]*(?!none)/g, `stroke:${signatureColor}`);
         
-        // If no stroke/fill found, add them to path elements
+        // Add stroke to paths that don't have one
         if (!svgText.includes('stroke=')) {
-          svgText = svgText.replace(/<path/g, `<path stroke="${signatureColor}"`);
+          svgText = svgText.replace(/<path/g, `<path stroke="${signatureColor}" fill="none"`);
         }
+        
+        // Make sure paths have fill="none" to avoid solid shapes
+        svgText = svgText.replace(/<path([^>]*?)(?!fill=)>/g, '<path$1 fill="none">');
         
         setColoredSvgXml(svgText);
       } catch (error) {
@@ -173,6 +174,12 @@ export default function EventPublishScreen() {
   const lastAngle = useRef<number | null>(null);
   const baseScale = useRef(signatureScale);
   const baseRotation = useRef(signatureRotation);
+  const currentScaleRef = useRef(signatureScale);
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    currentScaleRef.current = signatureScale;
+  }, [signatureScale]);
 
   const getDistance = (touches: any[]) => {
     if (touches.length < 2) return null;
@@ -214,7 +221,7 @@ export default function EventPublishScreen() {
             if (lastDistance.current !== null && lastAngle.current !== null) {
               // Scale
               const scaleDelta = currentDistance / lastDistance.current;
-              const newScale = Math.max(0.3, Math.min(3, signatureScale * scaleDelta));
+              const newScale = Math.max(0.3, Math.min(3, currentScaleRef.current * scaleDelta));
               setSignatureScale(newScale);
               
               // Rotation
