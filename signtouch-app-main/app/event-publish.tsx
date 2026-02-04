@@ -304,8 +304,7 @@ export default function EventPublishScreen() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
-      allowsEditing: true,
-      aspect: [3, 4],
+      allowsEditing: false,
     });
 
     if (!result.canceled && result.assets[0]) {
@@ -333,8 +332,7 @@ export default function EventPublishScreen() {
 
     const result = await ImagePicker.launchCameraAsync({
       quality: 0.8,
-      allowsEditing: true,
-      aspect: [3, 4],
+      allowsEditing: false,
     });
 
     if (!result.canceled && result.assets[0]) {
