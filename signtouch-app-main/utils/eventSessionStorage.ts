@@ -246,12 +246,21 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
 export const deleteEventSession = async (sessionId: string): Promise<void> => {
   console.log('[deleteEventSession] Marking as deleted:', sessionId);
   
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  console.log('[deleteEventSession] Current user:', user?.id);
+  
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
+  
   // Mark the event as deleted instead of physically deleting
-  // This works around RLS policies that may block DELETE operations
+  // RLS policy requires created_by to match authenticated user
   const { data, error } = await supabase
     .from('event_sessions')
     .update({ status: 'deleted' })
     .eq('id', sessionId)
+    .eq('created_by', user.id)
     .select();
 
   console.log('[deleteEventSession] Update result:', { data, error });
@@ -262,7 +271,7 @@ export const deleteEventSession = async (sessionId: string): Promise<void> => {
   }
   
   if (!data || data.length === 0) {
-    console.warn('[deleteEventSession] No rows updated - check RLS policy');
+    console.warn('[deleteEventSession] No rows updated - you may not own this event');
     throw new Error('Could not delete event - permission denied');
   }
   
