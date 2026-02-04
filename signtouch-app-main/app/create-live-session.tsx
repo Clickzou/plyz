@@ -300,30 +300,10 @@ export default function CreateLiveSessionScreen() {
         )}
 
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>{t('liveSessionSummary')}</Text>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>{t('liveSessionDurationPerFan') || 'Durée par Fan'}:</Text>
-            <Text style={styles.summaryValue}>{durationPerFan} min</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>{t('liveSessionTotalDuration') || 'Durée Totale'}:</Text>
-            <Text style={styles.summaryValue}>{totalDuration} min</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>{t('liveSessionMaxSlots')}:</Text>
-            <Text style={styles.summaryValue}>{calculatedMaxFans} fans</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>{t('liveSessionPrice')}:</Text>
-            <Text style={styles.summaryValue}>{price / 100}€ par fan</Text>
-          </View>
-          <View style={styles.summaryDivider} />
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabelHighlight}>{t('liveSessionYourRevenue')}:</Text>
-            <Text style={styles.summaryValueHighlight}>
-              {(price * calculatedMaxFans * (1 - TOTAL_FEES) / 100).toFixed(0)}€ max
-            </Text>
-          </View>
+          <Text style={styles.summaryTitle}>Vos revenus</Text>
+          <Text style={styles.revenueAmount}>
+            {(price * calculatedMaxFans * (1 - TOTAL_FEES) / 100).toFixed(0)}€ max
+          </Text>
         </View>
 
         <TouchableOpacity
@@ -524,6 +504,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
     marginBottom: 16,
+    textAlign: 'center',
+  },
+  revenueAmount: {
+    fontSize: 36,
+    fontWeight: '700',
+    color: '#4ade80',
     textAlign: 'center',
   },
   summaryRow: {
