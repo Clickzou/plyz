@@ -34,7 +34,7 @@ export default function CelebrityMenuScreen() {
   const [showQrModal, setShowQrModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [eventViews, setEventViews] = useState<Record<string, number>>({});
-  const [eventFilter, setEventFilter] = useState<FilterType>('all');
+  const [eventFilter, setEventFilter] = useState<FilterType>('live');
 
   const loadMyEvents = useCallback(async () => {
     try {
@@ -279,14 +279,6 @@ export default function CelebrityMenuScreen() {
             ) : (
               <>
                 <View style={styles.filterRow}>
-                  <TouchableOpacity
-                    style={[styles.filterBtn, eventFilter === 'all' && styles.filterBtnActive]}
-                    onPress={() => setEventFilter('all')}
-                  >
-                    <Text style={[styles.filterBtnText, eventFilter === 'all' && styles.filterBtnTextActive]}>
-                      {t('all') || 'Tous'} ({getFilterCount('all')})
-                    </Text>
-                  </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.filterBtn, eventFilter === 'live' && styles.filterBtnActive]}
                     onPress={() => setEventFilter('live')}
