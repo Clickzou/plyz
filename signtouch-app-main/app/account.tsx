@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
-import { Crown, Info, Heart, Share2, Globe, Check, FileText, Shield, LogOut, Gift, X } from 'lucide-react-native';
+import { Crown, Info, Heart, Share2, Globe, Check, FileText, LogOut, Gift, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import * as Clipboard from 'expo-clipboard';
@@ -102,10 +102,8 @@ export default function AccountScreen() {
       router.push('/share');
     } else if (action === 'language') {
       setShowLanguageModal(true);
-    } else if (action === 'privacy') {
-      router.push('/privacy');
-    } else if (action === 'terms') {
-      router.push('/terms');
+    } else if (action === 'legal') {
+      router.push('/legal');
     } else {
       console.log('Action:', action);
     }
@@ -328,24 +326,13 @@ export default function AccountScreen() {
 
           <TouchableOpacity
             style={[styles.menuItem, isRTL && styles.menuItemRTL]}
-            onPress={() => handlePress('privacy')}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
-              <Shield size={24} color="#10b981" strokeWidth={2} />
-            </View>
-            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('privacy')}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
-            onPress={() => handlePress('terms')}
+            onPress={() => handlePress('legal')}
             activeOpacity={0.7}
           >
             <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
               <FileText size={24} color="#10b981" strokeWidth={2} />
             </View>
-            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('terms')}</Text>
+            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>Documents Légaux</Text>
           </TouchableOpacity>
         </View>
 
