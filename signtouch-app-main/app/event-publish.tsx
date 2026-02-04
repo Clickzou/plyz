@@ -77,6 +77,7 @@ export default function EventPublishScreen() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
   const [publishedCount, setPublishedCount] = useState(0);
+  const [publishedAssets, setPublishedAssets] = useState<any[]>([]);
   
   const [signaturePosition, setSignaturePosition] = useState({ x: 0, y: 0 });
   const [signatureScale, setSignatureScale] = useState(1);
@@ -130,8 +131,9 @@ export default function EventPublishScreen() {
     useCallback(() => {
       loadSigners();
       getActiveViewerCount(sessionId).then(setViewerCount);
-      fetchEventAssets(sessionId, { limit: 1000 }).then((assets) => {
+      fetchEventAssets(sessionId, { limit: 100 }).then((assets) => {
         setPublishedCount(assets.length);
+        setPublishedAssets(assets);
       });
     }, [sessionId, loadSigners])
   );
@@ -322,6 +324,10 @@ export default function EventPublishScreen() {
       setPublishedCount((prev) => prev + 1);
       setSelectedImage(null);
       resetSignatureTransform();
+      
+      // Refresh published assets
+      const updatedAssets = await fetchEventAssets(sessionId, { limit: 100 });
+      setPublishedAssets(updatedAssets);
 
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -349,7 +355,7 @@ export default function EventPublishScreen() {
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>{t('publish') || 'Publish'}</Text>
+          <Text style={styles.headerTitle}>{t('myEvents') || 'My Events'}</Text>
           <Text style={styles.headerSubtitle}>{sessionTitle}</Text>
         </View>
         <View style={styles.viewerBadge}>
@@ -376,8 +382,8 @@ export default function EventPublishScreen() {
           <View style={styles.statDivider} />
           <TouchableOpacity style={styles.statItem} onPress={() => setShowQrModal(true)}>
             <View style={styles.codeContainer}>
-              <Text style={styles.statValue}>{joinCode}</Text>
-              <QrCode size={14} color="#10B981" />
+              <Text style={styles.codeValue}>{joinCode}</Text>
+              <QrCode size={12} color="#10B981" />
             </View>
             <Text style={styles.statLabel}>{t('showQrCode') || 'Voir QR'}</Text>
           </TouchableOpacity>
@@ -569,6 +575,30 @@ export default function EventPublishScreen() {
             </>
           )}
         </TouchableOpacity>
+
+        {publishedAssets.length > 0 && (
+          <>
+            <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
+              {t('publishedPhotos') || 'Published Photos'} ({publishedAssets.length})
+            </Text>
+            <View style={styles.publishedGrid}>
+              {publishedAssets.map((asset) => (
+                <View key={asset.id} style={styles.publishedItem}>
+                  <Image 
+                    source={{ uri: asset.image_url }} 
+                    style={styles.publishedImage} 
+                    resizeMode="cover"
+                  />
+                  {asset.type === 'photo_signed' && (
+                    <View style={styles.signedBadge}>
+                      <Check size={10} color="#fff" />
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          </>
+        )}
       </ScrollView>
 
       {/* QR Code Modal */}
@@ -833,6 +863,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+  },
+  codeValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  publishedGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  publishedItem: {
+    width: '31%',
+    aspectRatio: 3/4,
+    borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  publishedImage: {
+    width: '100%',
+    height: '100%',
+  },
+  signedBadge: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#10B981',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   qrModalOverlay: {
     position: 'absolute',

@@ -615,6 +615,8 @@ export default {
   scheduledEventIntro: 'تم جدولة حدثك الآن. يمكنك مشاركة الرمز أو رمز QR مع معجبيك. ستفتح الجلسة في الوقت المحدد. في غضون ذلك، يمكنك جدولة صورك مسبقاً وإضافة المزيد خلال الحدث المباشر.',
   shareQRCode: 'مشاركة رمز QR',
   publish: 'نشر',
+  myEvents: 'فعالياتي',
+  publishedPhotos: 'الصور المنشورة',
   selectSigner: 'اختر الموقع',
   selectPhoto: 'اختر صورة',
   fromGallery: 'من المعرض',

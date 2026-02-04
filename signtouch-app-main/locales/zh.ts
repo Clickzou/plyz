@@ -615,6 +615,8 @@ export default {
   scheduledEventIntro: '您的活动已安排。您可以与粉丝分享代码或二维码。会话将在预定时间开始。同时，您可以提前安排照片，并在直播期间添加更多。',
   shareQRCode: '分享二维码',
   publish: '发布',
+  myEvents: '我的活动',
+  publishedPhotos: '已发布的照片',
   selectSigner: '选择签名者',
   selectPhoto: '选择照片',
   fromGallery: '从相册',

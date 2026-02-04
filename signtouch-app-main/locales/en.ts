@@ -616,6 +616,8 @@ export default {
   scheduledEventIntro: 'Your event is now scheduled. You can share the code or QR code with your fans. The session will open at the scheduled time. In the meantime, you can schedule your photos in advance and add more during the live event.',
   shareQRCode: 'Share QR Code',
   publish: 'Publish',
+  myEvents: 'My Events',
+  publishedPhotos: 'Published Photos',
   selectSigner: 'Select Signer',
   selectPhoto: 'Select Photo',
   fromGallery: 'From Gallery',

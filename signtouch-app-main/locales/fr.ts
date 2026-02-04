@@ -618,6 +618,8 @@ export default {
   scheduledEventIntro: 'Votre événement est désormais planifié. Vous pouvez communiquer le code ou le QR code à vos fans. La session s\'ouvrira à l\'heure planifiée. En attendant, vous pouvez programmer vos photos à l\'avance puis en ajouter d\'autres en live.',
   shareQRCode: 'Partager le QR Code',
   publish: 'Publier',
+  myEvents: 'Mes événements',
+  publishedPhotos: 'Photos publiées',
   selectSigner: 'Sélectionner un signataire',
   selectPhoto: 'Sélectionner une photo',
   fromGallery: 'Depuis la galerie',

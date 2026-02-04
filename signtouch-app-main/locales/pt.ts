@@ -615,6 +615,8 @@ export default {
   scheduledEventIntro: 'Seu evento está agendado. Você pode compartilhar o código ou QR code com seus fãs. A sessão abrirá no horário agendado. Enquanto isso, você pode agendar suas fotos com antecedência e adicionar mais durante o evento ao vivo.',
   shareQRCode: 'Compartilhar Código QR',
   publish: 'Publicar',
+  myEvents: 'Meus eventos',
+  publishedPhotos: 'Fotos publicadas',
   selectSigner: 'Selecionar Assinante',
   selectPhoto: 'Selecionar Foto',
   fromGallery: 'Da Galeria',

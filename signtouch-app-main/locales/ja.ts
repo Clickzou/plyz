@@ -615,6 +615,8 @@ export default {
   scheduledEventIntro: 'イベントがスケジュールされました。コードまたはQRコードをファンと共有できます。セッションは予定時刻に開始されます。その間、事前に写真をスケジュールしたり、ライブイベント中に追加することができます。',
   shareQRCode: 'QRコードを共有',
   publish: '公開',
+  myEvents: 'マイイベント',
+  publishedPhotos: '公開済みの写真',
   selectSigner: '署名者を選択',
   selectPhoto: '写真を選択',
   fromGallery: 'ギャラリーから',

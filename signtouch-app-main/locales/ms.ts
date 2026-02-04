@@ -615,6 +615,8 @@ export default {
   scheduledEventIntro: 'Acara anda kini dijadualkan. Anda boleh berkongsi kod atau kod QR dengan peminat anda. Sesi akan dibuka pada masa yang dijadualkan. Sementara itu, anda boleh menjadualkan foto anda lebih awal dan menambah lagi semasa acara langsung.',
   shareQRCode: 'Kongsi Kod QR',
   publish: 'Terbitkan',
+  myEvents: 'Acara Saya',
+  publishedPhotos: 'Foto yang Diterbitkan',
   selectSigner: 'Pilih Penandatangan',
   selectPhoto: 'Pilih Foto',
   fromGallery: 'Dari Galeri',
