@@ -127,46 +127,42 @@ export default function CelebrityMenuScreen() {
   const handleDeleteEvent = async (event: EventSession) => {
     const confirmMessage = t('deleteEventConfirm') || `Êtes-vous sûr de vouloir supprimer "${event.title}" ?`;
     
-    let confirmed = false;
     if (Platform.OS === 'web') {
-      confirmed = window.confirm(confirmMessage);
-    } else {
-      return new Promise<void>((resolve) => {
-        Alert.alert(
-          t('deleteEvent') || 'Supprimer l\'événement',
-          confirmMessage,
-          [
-            { text: t('cancel') || 'Annuler', style: 'cancel', onPress: () => resolve() },
-            {
-              text: t('delete') || 'Supprimer',
-              style: 'destructive',
-              onPress: async () => {
-                try {
-                  await deleteEventSession(event.id);
-                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                  loadMyEvents();
-                } catch (error) {
-                  console.error('Delete failed:', error);
-                  Alert.alert(t('error') || 'Erreur', t('deleteFailed') || 'Échec de la suppression');
-                }
-                resolve();
-              },
-            },
-          ]
-        );
-      });
-    }
-
-    if (confirmed) {
-      try {
-        await deleteEventSession(event.id);
-        loadMyEvents();
-      } catch (error) {
-        console.error('Delete failed:', error);
-        if (Platform.OS === 'web') {
+      const confirmed = window.confirm(confirmMessage);
+      console.log('[Delete] Confirmed:', confirmed, 'Event ID:', event.id);
+      if (confirmed) {
+        try {
+          console.log('[Delete] Deleting event:', event.id);
+          await deleteEventSession(event.id);
+          console.log('[Delete] Success, reloading events');
+          loadMyEvents();
+        } catch (error) {
+          console.error('[Delete] Failed:', error);
           window.alert(t('deleteFailed') || 'Échec de la suppression');
         }
       }
+    } else {
+      Alert.alert(
+        t('deleteEvent') || 'Supprimer l\'événement',
+        confirmMessage,
+        [
+          { text: t('cancel') || 'Annuler', style: 'cancel' },
+          {
+            text: t('delete') || 'Supprimer',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await deleteEventSession(event.id);
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                loadMyEvents();
+              } catch (error) {
+                console.error('Delete failed:', error);
+                Alert.alert(t('error') || 'Erreur', t('deleteFailed') || 'Échec de la suppression');
+              }
+            },
+          },
+        ]
+      );
     }
   };
 
