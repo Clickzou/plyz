@@ -253,11 +253,26 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
 // Local storage key for deleted events (workaround for RLS restrictions)
 const DELETED_EVENTS_KEY = 'signtouch_deleted_events';
 
+// In-memory cache for deleted events (loaded from storage on first access)
+let deletedEventsCache: string[] | null = null;
+
 const getLocallyDeletedEvents = (): string[] => {
+  // Return cached value if available
+  if (deletedEventsCache !== null) {
+    return deletedEventsCache;
+  }
+  
   try {
-    const stored = localStorage.getItem(DELETED_EVENTS_KEY);
-    return stored ? JSON.parse(stored) : [];
+    // Use localStorage on web, will be synced with AsyncStorage on mobile
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem(DELETED_EVENTS_KEY);
+      deletedEventsCache = stored ? JSON.parse(stored) : [];
+    } else {
+      deletedEventsCache = [];
+    }
+    return deletedEventsCache;
   } catch {
+    deletedEventsCache = [];
     return [];
   }
 };
@@ -266,7 +281,30 @@ const addLocallyDeletedEvent = (sessionId: string): void => {
   const deleted = getLocallyDeletedEvents();
   if (!deleted.includes(sessionId)) {
     deleted.push(sessionId);
-    localStorage.setItem(DELETED_EVENTS_KEY, JSON.stringify(deleted));
+    deletedEventsCache = deleted;
+    
+    // Save to localStorage on web
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(DELETED_EVENTS_KEY, JSON.stringify(deleted));
+    }
+    
+    // Also save to AsyncStorage for mobile (import dynamically to avoid web issues)
+    import('@react-native-async-storage/async-storage').then(({ default: AsyncStorage }) => {
+      AsyncStorage.setItem(DELETED_EVENTS_KEY, JSON.stringify(deleted)).catch(() => {});
+    }).catch(() => {});
+  }
+};
+
+// Initialize deleted events from AsyncStorage on mobile
+export const initDeletedEventsCache = async (): Promise<void> => {
+  try {
+    const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
+    const stored = await AsyncStorage.getItem(DELETED_EVENTS_KEY);
+    if (stored) {
+      deletedEventsCache = JSON.parse(stored);
+    }
+  } catch {
+    // On web or if AsyncStorage fails, use localStorage
   }
 };
 
