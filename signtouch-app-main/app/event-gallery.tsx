@@ -31,6 +31,7 @@ import {
 } from '@/utils/eventSessionStorage';
 import { saveMemory } from '@/utils/storageService';
 import { useAuth } from '@/contexts/AuthContext';
+import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
 type TabType = 'all' | 'official' | 'signed';
 
@@ -353,7 +354,7 @@ export default function EventGalleryScreen() {
           renderItem={renderAsset}
           keyExtractor={(item) => item.id}
           numColumns={2}
-          contentContainerStyle={[styles.listContent, { paddingBottom: Math.max(insets.bottom, 16) + 20 }]}
+          contentContainerStyle={[styles.listContent, { paddingBottom: BOTTOM_NAV_HEIGHT + 20 }]}
           columnWrapperStyle={styles.row}
           refreshControl={
             <RefreshControl
@@ -380,6 +381,8 @@ export default function EventGalleryScreen() {
           onEndReachedThreshold={0.5}
         />
       )}
+      
+      <BottomNav />
     </View>
   );
 }

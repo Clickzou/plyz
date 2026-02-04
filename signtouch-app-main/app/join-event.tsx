@@ -28,6 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import AccountModal from '@/components/AccountModal';
 import { getEventByCode, LiveEvent } from '@/utils/liveEventStorage';
+import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import { 
   joinEventSession, 
   getOrCreateDeviceId,
@@ -336,7 +337,7 @@ export default function JoinEventScreen() {
 
       <ScrollView 
         style={styles.content}
-        contentContainerStyle={[styles.contentContainer, { paddingBottom: Math.max(insets.bottom, 16) + 20 }]}
+        contentContainerStyle={[styles.contentContainer, { paddingBottom: BOTTOM_NAV_HEIGHT + 20 }]}
         showsVerticalScrollIndicator={false}
       >
         {!foundEvent && !foundSession && !eventFull ? (
@@ -532,6 +533,8 @@ export default function JoinEventScreen() {
         onSkip={() => setShowAccountModal(false)}
         returnPath="/join-event"
       />
+      
+      <BottomNav />
     </View>
   );
 }
