@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   subtitleText: {
     fontSize: 16,
     color: '#FFFFFF',
-    marginTop: 20,
+    marginTop: 35,
     fontWeight: '600',
     letterSpacing: 5,
     textTransform: 'uppercase',
