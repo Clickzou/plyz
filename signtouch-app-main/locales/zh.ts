@@ -289,7 +289,7 @@ export default {
   mySubscription: '我的订阅',
   rateApp: '评价应用',
   shareApp: '分享应用',
-  offlineApp: '100% 离线应用',
+  offlineApp: '由Clickzou创建',
   selectLanguage: '选择语言',
   subscription: '订阅',
   language: '语言',

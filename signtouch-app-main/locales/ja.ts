@@ -289,7 +289,7 @@ export default {
   mySubscription: 'マイサブスクリプション',
   rateApp: 'アプリを評価',
   shareApp: 'アプリをシェア',
-  offlineApp: '100%オフラインアプリ',
+  offlineApp: 'Clickzou制作',
   selectLanguage: '言語を選択',
   subscription: 'サブスクリプション',
   language: '言語',

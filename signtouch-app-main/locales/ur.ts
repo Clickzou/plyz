@@ -289,7 +289,7 @@ export default {
   mySubscription: 'میری سبسکرپشن',
   rateApp: 'ایپ کی درجہ بندی کریں',
   shareApp: 'ایپ شیئر کریں',
-  offlineApp: '100% آف لائن ایپ',
+  offlineApp: 'Clickzou کی طرف سے بنایا گیا',
   selectLanguage: 'زبان منتخب کریں',
   subscription: 'سبسکرپشن',
   language: 'زبان',

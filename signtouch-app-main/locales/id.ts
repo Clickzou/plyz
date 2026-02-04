@@ -289,7 +289,7 @@ export default {
   mySubscription: 'Langganan saya',
   rateApp: 'Nilai aplikasi',
   shareApp: 'Bagikan aplikasi',
-  offlineApp: 'Aplikasi 100% offline',
+  offlineApp: 'Dibuat oleh Clickzou',
   selectLanguage: 'Pilih bahasa',
   subscription: 'Langganan',
   language: 'Bahasa',

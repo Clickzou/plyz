@@ -289,7 +289,7 @@ export default {
   mySubscription: 'Il mio abbonamento',
   rateApp: 'Valuta l\'app',
   shareApp: 'Condividi l\'app',
-  offlineApp: 'App 100% offline',
+  offlineApp: 'Creato da Clickzou',
   selectLanguage: 'Seleziona lingua',
   subscription: 'Abbonamento',
   language: 'Lingua',
