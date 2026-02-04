@@ -295,6 +295,7 @@ export default {
   subscription: 'Subscription',
   language: 'Language',
   notifications: 'Notifications',
+  legal: 'Legal',
   privacy: 'Privacy',
   terms: 'Terms of Service',
   support: 'Support',

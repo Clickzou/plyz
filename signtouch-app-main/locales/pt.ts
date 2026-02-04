@@ -294,6 +294,7 @@ export default {
   subscription: 'Assinatura',
   language: 'Idioma',
   notifications: 'Notificações',
+  legal: 'Legal',
   privacy: 'Privacidade',
   terms: 'Termos de serviço',
   support: 'Suporte',

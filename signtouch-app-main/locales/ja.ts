@@ -294,6 +294,7 @@ export default {
   subscription: 'サブスクリプション',
   language: '言語',
   notifications: '通知',
+  legal: '法的事項',
   privacy: 'プライバシー',
   terms: '利用規約',
   support: 'サポート',

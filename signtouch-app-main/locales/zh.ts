@@ -294,6 +294,7 @@ export default {
   subscription: '订阅',
   language: '语言',
   notifications: '通知',
+  legal: '法律',
   privacy: '隐私',
   terms: '服务条款',
   support: '支持',

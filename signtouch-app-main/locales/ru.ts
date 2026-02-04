@@ -294,6 +294,7 @@ export default {
   subscription: 'Подписка',
   language: 'Язык',
   notifications: 'Уведомления',
+  legal: 'Правовая информация',
   privacy: 'Конфиденциальность',
   terms: 'Условия использования',
   support: 'Поддержка',

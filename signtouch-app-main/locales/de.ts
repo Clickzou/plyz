@@ -294,6 +294,7 @@ export default {
   subscription: 'Abonnement',
   language: 'Sprache',
   notifications: 'Benachrichtigungen',
+  legal: 'Rechtliches',
   privacy: 'Datenschutz',
   terms: 'Nutzungsbedingungen',
   support: 'Support',

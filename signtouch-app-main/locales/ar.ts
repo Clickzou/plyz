@@ -294,6 +294,7 @@ export default {
   subscription: 'الاشتراك',
   language: 'اللغة',
   notifications: 'الإشعارات',
+  legal: 'قانوني',
   privacy: 'الخصوصية',
   terms: 'شروط الخدمة',
   support: 'الدعم',

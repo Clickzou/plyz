@@ -294,6 +294,7 @@ export default {
   subscription: 'सदस्यता',
   language: 'भाषा',
   notifications: 'सूचनाएं',
+  legal: 'कानूनी',
   privacy: 'गोपनीयता',
   terms: 'सेवा की शर्तें',
   support: 'समर्थन',

@@ -294,6 +294,7 @@ export default {
   subscription: 'Langganan',
   language: 'Bahasa',
   notifications: 'Pemberitahuan',
+  legal: 'Undang-undang',
   privacy: 'Privasi',
   terms: 'Terma Perkhidmatan',
   support: 'Sokongan',

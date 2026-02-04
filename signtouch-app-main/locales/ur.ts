@@ -294,6 +294,7 @@ export default {
   subscription: 'سبسکرپشن',
   language: 'زبان',
   notifications: 'اطلاعات',
+  legal: 'قانونی',
   privacy: 'رازداری',
   terms: 'سروس کی شرائط',
   support: 'معاونت',

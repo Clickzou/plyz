@@ -17,7 +17,7 @@ import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import * as Clipboard from 'expo-clipboard';
 import BottomNav from '@/components/BottomNav';
-import { useTranslation } from '@/contexts/LanguageContext';
+import { useTranslation, useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Language } from '@/locales';
 import { showAccountModal } from '@/utils/postPurchaseAccount';
@@ -44,7 +44,7 @@ const LANGUAGES: { code: Language; name: string; flag: string }[] = [
 ];
 
 export default function AccountScreen() {
-  const { t, language, setLanguage } = useTranslation();
+  const { t, language, setLanguage, isRTL } = useTranslation();
   const { user, signOut } = useAuth();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showPromoModal, setShowPromoModal] = useState(false);
@@ -220,49 +220,49 @@ export default function AccountScreen() {
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('preferences')}</Text>
+          <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>{t('preferences')}</Text>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
             onPress={() => handlePress('language')}
             activeOpacity={0.7}
           >
-            <View style={styles.menuIcon}>
+            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
               <Globe size={24} color="#10b981" strokeWidth={2} />
             </View>
             <View style={styles.menuTextContainer}>
-              <Text style={styles.menuText}>{t('language')}</Text>
-              <Text style={styles.menuSubtext}>{getCurrentLanguageName()}</Text>
+              <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('language')}</Text>
+              <Text style={[styles.menuSubtext, isRTL && styles.menuSubtextRTL]}>{getCurrentLanguageName()}</Text>
             </View>
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('application')}</Text>
+          <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>{t('application')}</Text>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
             onPress={() => handlePress('subscription')}
             activeOpacity={0.7}
           >
-            <View style={styles.menuIcon}>
+            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
               <Crown size={24} color="#10b981" strokeWidth={2} />
             </View>
-            <Text style={styles.menuText}>{t('mySubscription')}</Text>
+            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('mySubscription')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
             onPress={() => setShowPromoModal(true)}
             activeOpacity={0.7}
           >
-            <View style={styles.menuIcon}>
+            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
               <Gift size={24} color="#f59e0b" strokeWidth={2} />
             </View>
             <View style={styles.menuTextContainer}>
-              <Text style={styles.menuText}>{t('promoCode') || 'Code promo'}</Text>
+              <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('promoCode') || 'Code promo'}</Text>
               {promoPremiumExpires && (
-                <Text style={styles.menuSubtextGreen}>
+                <Text style={[styles.menuSubtextGreen, isRTL && styles.menuSubtextRTL]}>
                   Premium jusqu'au {new Date(promoPremiumExpires).toLocaleDateString()}
                 </Text>
               )}
@@ -271,81 +271,81 @@ export default function AccountScreen() {
 
           {user && (
             <TouchableOpacity
-              style={styles.menuItem}
+              style={[styles.menuItem, isRTL && styles.menuItemRTL]}
               onPress={handleSignOut}
               activeOpacity={0.7}
             >
-              <View style={styles.menuIcon}>
+              <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
                 <LogOut size={24} color="#ef4444" strokeWidth={2} />
               </View>
               <View style={styles.menuTextContainer}>
-                <Text style={styles.menuText}>{t('signOut')}</Text>
-                <Text style={styles.menuSubtext}>{user.email}</Text>
+                <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('signOut')}</Text>
+                <Text style={[styles.menuSubtext, isRTL && styles.menuSubtextRTL]}>{user.email}</Text>
               </View>
             </TouchableOpacity>
           )}
 
           <TouchableOpacity
-            style={styles.menuItem}
+            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
             onPress={() => handlePress('about')}
             activeOpacity={0.7}
           >
-            <View style={styles.menuIcon}>
+            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
               <Info size={24} color="#10b981" strokeWidth={2} />
             </View>
-            <Text style={styles.menuText}>{t('about')}</Text>
+            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('about')}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('community')}</Text>
+          <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>{t('community')}</Text>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
             onPress={() => handlePress('rate')}
             activeOpacity={0.7}
           >
-            <View style={styles.menuIcon}>
+            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
               <Heart size={24} color="#10b981" strokeWidth={2} />
             </View>
-            <Text style={styles.menuText}>{t('rateApp')}</Text>
+            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('rateApp')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
             onPress={() => handlePress('share')}
             activeOpacity={0.7}
           >
-            <View style={styles.menuIcon}>
+            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
               <Share2 size={24} color="#10b981" strokeWidth={2} />
             </View>
-            <Text style={styles.menuText}>{t('shareApp')}</Text>
+            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('shareApp')}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Légal</Text>
+          <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>{t('legal') || 'Légal'}</Text>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
             onPress={() => handlePress('privacy')}
             activeOpacity={0.7}
           >
-            <View style={styles.menuIcon}>
+            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
               <Shield size={24} color="#10b981" strokeWidth={2} />
             </View>
-            <Text style={styles.menuText}>{t('privacy')}</Text>
+            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('privacy')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
             onPress={() => handlePress('terms')}
             activeOpacity={0.7}
           >
-            <View style={styles.menuIcon}>
+            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
               <FileText size={24} color="#10b981" strokeWidth={2} />
             </View>
-            <Text style={styles.menuText}>{t('terms')}</Text>
+            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('terms')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -506,6 +506,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 10,
   },
+  menuItemRTL: {
+    flexDirection: 'row-reverse',
+  },
   menuIcon: {
     width: 40,
     height: 40,
@@ -515,6 +518,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 15,
   },
+  menuIconRTL: {
+    marginRight: 0,
+    marginLeft: 15,
+  },
   menuTextContainer: {
     flex: 1,
   },
@@ -523,10 +530,16 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '500',
   },
+  menuTextRTL: {
+    textAlign: 'right',
+  },
   menuSubtext: {
     fontSize: 13,
     color: '#888',
     marginTop: 2,
+  },
+  menuSubtextRTL: {
+    textAlign: 'right',
   },
   footer: {
     paddingHorizontal: 20,

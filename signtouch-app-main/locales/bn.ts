@@ -294,6 +294,7 @@ export default {
   subscription: 'সাবস্ক্রিপশন',
   language: 'ভাষা',
   notifications: 'বিজ্ঞপ্তি',
+  legal: 'আইনি',
   privacy: 'গোপনীয়তা',
   terms: 'সেবার শর্তাবলী',
   support: 'সহায়তা',

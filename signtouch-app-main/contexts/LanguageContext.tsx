@@ -1,12 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as Localization from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { I18nManager } from 'react-native';
 import { translations, Language, TranslationKeys, getLanguageFromLocale } from '@/locales';
+
+const RTL_LANGUAGES = ['ar', 'ur'];
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (language: Language) => Promise<void>;
   t: (key: TranslationKeys, params?: Record<string, string | number>) => string;
+  isRTL: boolean;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -17,6 +21,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en');
   const [isLoading, setIsLoading] = useState(true);
 
+  const isRTL = RTL_LANGUAGES.includes(language);
+
   // Initialize language from storage or device locale
   useEffect(() => {
     const initLanguage = async () => {
@@ -26,12 +32,22 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
         if (savedLanguage && savedLanguage in translations) {
           setLanguageState(savedLanguage as Language);
+          const shouldBeRTL = RTL_LANGUAGES.includes(savedLanguage);
+          if (I18nManager.isRTL !== shouldBeRTL) {
+            I18nManager.allowRTL(shouldBeRTL);
+            I18nManager.forceRTL(shouldBeRTL);
+          }
         } else {
           // Use device locale
           const locales = Localization.getLocales();
           const deviceLocale = locales[0]?.languageCode || 'en';
           const detectedLanguage = getLanguageFromLocale(deviceLocale);
           setLanguageState(detectedLanguage);
+          const shouldBeRTL = RTL_LANGUAGES.includes(detectedLanguage);
+          if (I18nManager.isRTL !== shouldBeRTL) {
+            I18nManager.allowRTL(shouldBeRTL);
+            I18nManager.forceRTL(shouldBeRTL);
+          }
         }
       } catch (error) {
         console.error('Error loading language:', error);
@@ -48,6 +64,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     try {
       await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, newLanguage);
       setLanguageState(newLanguage);
+      const shouldBeRTL = RTL_LANGUAGES.includes(newLanguage);
+      if (I18nManager.isRTL !== shouldBeRTL) {
+        I18nManager.allowRTL(shouldBeRTL);
+        I18nManager.forceRTL(shouldBeRTL);
+      }
     } catch (error) {
       console.error('Error saving language:', error);
     }
@@ -104,7 +125,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, isRTL }}>
       {children}
     </LanguageContext.Provider>
   );
