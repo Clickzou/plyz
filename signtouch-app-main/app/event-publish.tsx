@@ -33,6 +33,25 @@ const SIGNATURE_COLORS = [
   '#6B7280',
   '#FFD700',
 ];
+
+const getHueRotation = (hexColor: string): number => {
+  const hex = hexColor.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  if (max !== min) {
+    const d = max - min;
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return Math.round(h * 360);
+};
 import * as ImagePicker from 'expo-image-picker';
 import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -442,12 +461,21 @@ export default function EventPublishScreen() {
                       ]}
                     >
                       {Platform.OS === 'web' ? (
-                        <SvgUri 
-                          uri={selectedSigner.signature_url}
-                          width="100%"
-                          height="100%"
-                          fill={signatureColor}
-                        />
+                        <View style={{ width: '100%', height: '100%' }}>
+                          <img 
+                            src={selectedSigner.signature_url}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'contain',
+                              filter: signatureColor === '#FFFFFF' 
+                                ? 'brightness(0) invert(1)' 
+                                : signatureColor === '#000000'
+                                ? 'brightness(0)'
+                                : `brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(${getHueRotation(signatureColor)}deg)`,
+                            }}
+                          />
+                        </View>
                       ) : (
                         <Image 
                           source={{ uri: selectedSigner.signature_url }} 
