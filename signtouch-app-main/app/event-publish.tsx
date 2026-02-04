@@ -531,10 +531,11 @@ export default function EventPublishScreen() {
                           },
                         ]}
                       >
-                        <Image 
-                          source={{ uri: selectedSigner.signature_url }} 
-                          style={[styles.signatureImage, { tintColor: signatureColor }]} 
-                          resizeMode="contain" 
+                        <SvgUri 
+                          uri={selectedSigner.signature_url}
+                          width={200}
+                          height={100}
+                          fill={signatureColor}
                         />
                       </View>
                     )
