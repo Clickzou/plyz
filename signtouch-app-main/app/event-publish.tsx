@@ -91,6 +91,48 @@ export default function EventPublishScreen() {
   const previewContainerRef = useRef<View>(null);
   const [containerLayout, setContainerLayout] = useState({ width: 0, height: 0 });
   const lastPanOffset = useRef({ x: 0, y: 0 });
+  const isDragging = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const positionAtDragStart = useRef({ x: 0, y: 0 });
+  
+  const handleWebDragStart = useCallback((e: React.MouseEvent) => {
+    if (Platform.OS !== 'web') return;
+    e.preventDefault();
+    e.stopPropagation();
+    isDragging.current = true;
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    positionAtDragStart.current = { ...signaturePosition };
+  }, [signaturePosition]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      e.preventDefault();
+      const deltaX = e.clientX - dragStart.current.x;
+      const deltaY = e.clientY - dragStart.current.y;
+      
+      const maxOffsetX = 200;
+      const maxOffsetUp = 350;
+      const maxOffsetDown = 350;
+      const newX = Math.max(-maxOffsetX, Math.min(maxOffsetX, positionAtDragStart.current.x + deltaX));
+      const newY = Math.max(-maxOffsetUp, Math.min(maxOffsetDown, positionAtDragStart.current.y + deltaY));
+      setSignaturePosition({ x: newX, y: newY });
+    };
+
+    const handleMouseUp = () => {
+      isDragging.current = false;
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
   
   const panResponder = useRef(
     PanResponder.create({
@@ -449,40 +491,55 @@ export default function EventPublishScreen() {
                 >
                   <Image source={{ uri: selectedImage }} style={styles.previewImage} resizeMode="cover" />
                   {selectedSigner?.signature_url && (
-                    <View
-                      {...panResponder.panHandlers}
-                      style={[
-                        styles.signatureOverlay,
-                        {
-                          transform: [
-                            { translateX: signaturePosition.x },
-                            { translateY: signaturePosition.y },
-                            { scale: signatureScale },
-                            { rotate: `${signatureRotation}deg` },
-                          ],
-                        },
-                      ]}
-                    >
-                      {Platform.OS === 'web' ? (
-                        <View style={{ width: '100%', height: '100%' }}>
-                          <img 
-                            src={selectedSigner.signature_url}
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'contain',
-                              filter: getColorFilter(signatureColor),
-                            }}
-                          />
-                        </View>
-                      ) : (
+                    Platform.OS === 'web' ? (
+                      <div
+                        onMouseDown={handleWebDragStart as any}
+                        style={{
+                          position: 'absolute',
+                          width: 200,
+                          height: 100,
+                          cursor: 'grab',
+                          transform: `translate(${signaturePosition.x}px, ${signaturePosition.y}px) scale(${signatureScale}) rotate(${signatureRotation}deg)`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          userSelect: 'none' as const,
+                        }}
+                      >
+                        <img 
+                          src={selectedSigner.signature_url}
+                          draggable={false}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain' as const,
+                            filter: getColorFilter(signatureColor),
+                            pointerEvents: 'none' as const,
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <View
+                        {...panResponder.panHandlers}
+                        style={[
+                          styles.signatureOverlay,
+                          {
+                            transform: [
+                              { translateX: signaturePosition.x },
+                              { translateY: signaturePosition.y },
+                              { scale: signatureScale },
+                              { rotate: `${signatureRotation}deg` },
+                            ],
+                          },
+                        ]}
+                      >
                         <Image 
                           source={{ uri: selectedSigner.signature_url }} 
                           style={[styles.signatureImage, { tintColor: signatureColor }]} 
                           resizeMode="contain" 
                         />
-                      )}
-                    </View>
+                      </View>
+                    )
                   )}
                 </View>
               </ViewShot>
