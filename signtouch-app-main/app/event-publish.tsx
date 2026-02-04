@@ -638,9 +638,13 @@ export default function EventPublishScreen() {
             <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
               {t('publishedPhotos') || 'Published Photos'} ({publishedAssets.length})
             </Text>
-            <View style={styles.publishedGrid}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.publishedCarousel}
+            >
               {publishedAssets.map((asset) => (
-                <View key={asset.id} style={styles.publishedItem}>
+                <View key={asset.id} style={styles.publishedCarouselItem}>
                   <Image 
                     source={{ uri: asset.image_url }} 
                     style={styles.publishedImage} 
@@ -653,7 +657,7 @@ export default function EventPublishScreen() {
                   )}
                 </View>
               ))}
-            </View>
+            </ScrollView>
           </>
         )}
       </ScrollView>
@@ -925,6 +929,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#fff',
+  },
+  publishedCarousel: {
+    paddingHorizontal: 4,
+    gap: 8,
+  },
+  publishedCarouselItem: {
+    width: 80,
+    height: 100,
+    borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
   },
   publishedGrid: {
     flexDirection: 'row',
