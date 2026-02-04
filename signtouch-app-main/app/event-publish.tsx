@@ -99,17 +99,12 @@ export default function EventPublishScreen() {
         const response = await fetch(selectedSigner.signature_url);
         let svgText = await response.text();
         
-        // Only replace stroke colors, preserve fill="none" for transparent backgrounds
-        svgText = svgText.replace(/stroke="(?!none)[^"]*"/g, `stroke="${signatureColor}"`);
-        svgText = svgText.replace(/stroke:[^;}"]*(?!none)/g, `stroke:${signatureColor}`);
-        
-        // Add stroke to paths that don't have one
-        if (!svgText.includes('stroke=')) {
-          svgText = svgText.replace(/<path/g, `<path stroke="${signatureColor}" fill="none"`);
-        }
-        
-        // Make sure paths have fill="none" to avoid solid shapes
-        svgText = svgText.replace(/<path([^>]*?)(?!fill=)>/g, '<path$1 fill="none">');
+        // Simple approach: replace stroke colors but keep fill="none"
+        // Replace stroke attribute values (but not "none")
+        svgText = svgText.replace(/stroke="#[0-9a-fA-F]{3,6}"/g, `stroke="${signatureColor}"`);
+        svgText = svgText.replace(/stroke="rgb[^"]*"/g, `stroke="${signatureColor}"`);
+        svgText = svgText.replace(/stroke="black"/g, `stroke="${signatureColor}"`);
+        svgText = svgText.replace(/stroke="white"/g, `stroke="${signatureColor}"`);
         
         setColoredSvgXml(svgText);
       } catch (error) {
