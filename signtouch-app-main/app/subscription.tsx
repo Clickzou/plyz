@@ -10,12 +10,13 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import {
   Crown,
   Check,
   Gift,
   X,
+  ArrowLeft,
 } from 'lucide-react-native';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -29,6 +30,8 @@ export default function SubscriptionScreen() {
   const { setStatus } = useSubscription();
   const { t } = useLanguage();
   const { getPostAuthRedirect, clearPostAuthRedirect } = useAuth();
+  const params = useLocalSearchParams();
+  const fromAccount = params.fromAccount === 'true';
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
@@ -74,7 +77,13 @@ export default function SubscriptionScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
+        {fromAccount ? (
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <ArrowLeft size={24} color="#fff" />
+          </TouchableOpacity>
+        ) : null}
         <Text style={styles.headerTitleCentered}>{t('subscriptionTitle')}</Text>
+        {fromAccount ? <View style={{ width: 40 }} /> : null}
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
