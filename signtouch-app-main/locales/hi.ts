@@ -114,6 +114,11 @@ export default {
   webDownloadError: 'वेब पूर्वावलोकन में डाउनलोड उपलब्ध नहीं है। मोबाइल ऐप पर परीक्षण करें।',
   permissionRequired: 'अनुमति आवश्यक',
   galleryPermissionMessage: 'सहेजने के लिए गैलरी एक्सेस आवश्यक है।',
+  cameraPermissionRequired: 'कैमरा अनुमति आवश्यक है',
+  cameraError: 'कैमरा एक्सेस नहीं हो सका',
+  retake: 'दोबारा लें',
+  liveSessionFieldsRequired: 'कृपया सभी आवश्यक फ़ील्ड भरें',
+  liveSessionPhotoRequired: 'फोटो आवश्यक है',
 
   // Share Modal
   shareTitle: 'शेयर करें',
@@ -720,6 +725,10 @@ export default {
   premiumUntil: 'प्रीमियम तक',
   yourEarnings: 'आपकी कमाई',
   earningsExplanation: 'अनुमानित राशि यदि सभी प्रशंसक सत्र पूरा करते हैं',
+  grossRevenue: 'सकल राजस्व',
+  storeFees: 'स्टोर शुल्क (30%)',
+  signTouchFees: 'SignTouch शुल्क (15%)',
+  netRevenue: 'नेट (Stripe Connect द्वारा)',
   welcomeBack: 'स्वागत है! आपकी फोटो अब सुरक्षित हैं।',
   storageWarning: 'स्टोरेज सीमित',
   storageWarningMessage: 'जगह खाली करने के लिए कुछ पुरानी फोटो हटा दी गईं। अपनी फोटो क्लाउड में सहेजने के लिए साइन इन करें।',

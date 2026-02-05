@@ -114,6 +114,11 @@ export default {
   webDownloadError: 'التنزيل غير متاح في معاينة الويب. اختبر على تطبيق الجوال.',
   permissionRequired: 'إذن مطلوب',
   galleryPermissionMessage: 'الوصول إلى المعرض مطلوب للحفظ.',
+  cameraPermissionRequired: 'إذن الكاميرا مطلوب',
+  cameraError: 'تعذر الوصول إلى الكاميرا',
+  retake: 'إعادة التقاط',
+  liveSessionFieldsRequired: 'يرجى ملء جميع الحقول المطلوبة',
+  liveSessionPhotoRequired: 'الصورة مطلوبة',
 
   // Share Modal
   shareTitle: 'مشاركة',
@@ -720,6 +725,10 @@ export default {
   premiumUntil: 'بريميوم حتى',
   yourEarnings: 'أرباحك',
   earningsExplanation: 'المبلغ المقدر إذا أكمل جميع المعجبين الجلسة',
+  grossRevenue: 'الإيرادات الإجمالية',
+  storeFees: 'رسوم المتاجر (30%)',
+  signTouchFees: 'رسوم SignTouch (15%)',
+  netRevenue: 'صافي (عبر Stripe Connect)',
   welcomeBack: 'مرحباً! صورك الآن آمنة.',
   storageWarning: 'المساحة التخزينية محدودة',
   storageWarningMessage: 'تمت إزالة بعض الصور القديمة لتوفير المساحة. سجّل الدخول لحفظ صورك في السحابة.',

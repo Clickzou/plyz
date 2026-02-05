@@ -114,6 +114,11 @@ export default {
   webDownloadError: 'ওয়েব প্রিভিউতে ডাউনলোড উপলব্ধ নয়। মোবাইল অ্যাপে পরীক্ষা করুন।',
   permissionRequired: 'অনুমতি প্রয়োজন',
   galleryPermissionMessage: 'সংরক্ষণ করতে গ্যালারি অ্যাক্সেস প্রয়োজন।',
+  cameraPermissionRequired: 'ক্যামেরার অনুমতি প্রয়োজন',
+  cameraError: 'ক্যামেরা অ্যাক্সেস করা যায়নি',
+  retake: 'আবার নিন',
+  liveSessionFieldsRequired: 'অনুগ্রহ করে সমস্ত প্রয়োজনীয় ক্ষেত্র পূরণ করুন',
+  liveSessionPhotoRequired: 'ছবি প্রয়োজন',
 
   // Share Modal
   shareTitle: 'শেয়ার করুন',
@@ -720,6 +725,10 @@ export default {
   premiumUntil: 'প্রিমিয়াম পর্যন্ত',
   yourEarnings: 'আপনার উপার্জন',
   earningsExplanation: 'সমস্ত ফ্যান সেশন সম্পূর্ণ করলে আনুমানিক পরিমাণ',
+  grossRevenue: 'মোট আয়',
+  storeFees: 'স্টোর ফি (30%)',
+  signTouchFees: 'SignTouch ফি (15%)',
+  netRevenue: 'নিট (Stripe Connect এর মাধ্যমে)',
   welcomeBack: 'স্বাগতম! আপনার ফটো এখন সুরক্ষিত।',
   storageWarning: 'স্টোরেজ সীমিত',
   storageWarningMessage: 'জায়গা খালি করতে কিছু পুরানো ফটো সরানো হয়েছে। ক্লাউডে সংরক্ষণ করতে সাইন ইন করুন।',

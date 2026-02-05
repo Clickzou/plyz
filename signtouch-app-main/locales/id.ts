@@ -114,6 +114,11 @@ export default {
   webDownloadError: 'Unduhan tidak tersedia di pratinjau web. Uji di aplikasi seluler.',
   permissionRequired: 'Izin diperlukan',
   galleryPermissionMessage: 'Akses galeri diperlukan untuk menyimpan.',
+  cameraPermissionRequired: 'Izin kamera diperlukan',
+  cameraError: 'Tidak dapat mengakses kamera',
+  retake: 'Ambil ulang',
+  liveSessionFieldsRequired: 'Harap isi semua bidang yang diperlukan',
+  liveSessionPhotoRequired: 'Foto diperlukan',
 
   // Share Modal
   shareTitle: 'Bagikan',
@@ -720,6 +725,10 @@ export default {
   premiumUntil: 'Premium hingga',
   yourEarnings: 'Penghasilan Anda',
   earningsExplanation: 'Perkiraan jumlah jika semua penggemar menyelesaikan sesi',
+  grossRevenue: 'Pendapatan kotor',
+  storeFees: 'Biaya toko (30%)',
+  signTouchFees: 'Biaya SignTouch (15%)',
+  netRevenue: 'Bersih (via Stripe Connect)',
   welcomeBack: 'Selamat datang! Foto Anda sekarang aman.',
   storageWarning: 'Penyimpanan terbatas',
   storageWarningMessage: 'Beberapa foto lama dihapus untuk mengosongkan ruang. Masuk untuk menyimpan foto Anda ke cloud.',

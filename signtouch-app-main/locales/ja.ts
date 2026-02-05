@@ -114,6 +114,11 @@ export default {
   webDownloadError: 'Webプレビューではダウンロードできません。モバイルアプリでテストしてください。',
   permissionRequired: '許可が必要',
   galleryPermissionMessage: '保存にはギャラリーアクセスが必要です。',
+  cameraPermissionRequired: 'カメラの許可が必要です',
+  cameraError: 'カメラにアクセスできませんでした',
+  retake: '撮り直す',
+  liveSessionFieldsRequired: '必須項目をすべて入力してください',
+  liveSessionPhotoRequired: '写真が必要です',
 
   // Share Modal
   shareTitle: 'シェア',
@@ -720,6 +725,10 @@ export default {
   premiumUntil: 'プレミアム期限',
   yourEarnings: 'あなたの収益',
   earningsExplanation: '全ファンがセッションを完了した場合の推定金額',
+  grossRevenue: '総収益',
+  storeFees: 'ストア手数料 (30%)',
+  signTouchFees: 'SignTouch手数料 (15%)',
+  netRevenue: '純収益 (Stripe Connect経由)',
   welcomeBack: 'おかえりなさい！写真は安全に保存されています。',
   storageWarning: 'ストレージ制限',
   storageWarningMessage: '古い写真の一部がスペースを空けるために削除されました。写真をクラウドに保存するにはサインインしてください。',

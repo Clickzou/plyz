@@ -114,6 +114,11 @@ export default {
   webDownloadError: 'Загрузка недоступна в веб-предварительном просмотре. Протестируйте в мобильном приложении.',
   permissionRequired: 'Требуется разрешение',
   galleryPermissionMessage: 'Для сохранения требуется доступ к галерее.',
+  cameraPermissionRequired: 'Требуется разрешение камеры',
+  cameraError: 'Не удалось получить доступ к камере',
+  retake: 'Переснять',
+  liveSessionFieldsRequired: 'Пожалуйста, заполните все обязательные поля',
+  liveSessionPhotoRequired: 'Фото обязательно',
 
   // Share Modal
   shareTitle: 'Поделиться',
@@ -720,6 +725,10 @@ export default {
   premiumUntil: 'Премиум до',
   yourEarnings: 'Ваш заработок',
   earningsExplanation: 'Ориентировочная сумма, если все фанаты завершат сессию',
+  grossRevenue: 'Валовой доход',
+  storeFees: 'Комиссия магазинов (30%)',
+  signTouchFees: 'Комиссия SignTouch (15%)',
+  netRevenue: 'Чистый (через Stripe Connect)',
   welcomeBack: 'Добро пожаловать! Ваши фото теперь защищены.',
   storageWarning: 'Ограниченное хранилище',
   storageWarningMessage: 'Некоторые старые фото были удалены для освобождения места. Войдите, чтобы сохранять фото в облако.',

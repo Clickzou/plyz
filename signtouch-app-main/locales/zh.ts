@@ -114,6 +114,11 @@ export default {
   webDownloadError: '网页预览中无法下载。请在移动应用上测试。',
   permissionRequired: '需要权限',
   galleryPermissionMessage: '需要图库访问权限才能保存。',
+  cameraPermissionRequired: '需要相机权限',
+  cameraError: '无法访问相机',
+  retake: '重新拍摄',
+  liveSessionFieldsRequired: '请填写所有必填字段',
+  liveSessionPhotoRequired: '需要照片',
 
   // Share Modal
   shareTitle: '分享',
@@ -720,6 +725,10 @@ export default {
   premiumUntil: '高级会员至',
   yourEarnings: '您的收益',
   earningsExplanation: '如果所有粉丝完成会话的预估金额',
+  grossRevenue: '总收入',
+  storeFees: '商店费用 (30%)',
+  signTouchFees: 'SignTouch费用 (15%)',
+  netRevenue: '净收入 (通过Stripe Connect)',
   welcomeBack: '欢迎！您的照片现已安全保存。',
   storageWarning: '存储空间有限',
   storageWarningMessage: '一些旧照片已被删除以释放空间。登录以将照片保存到云端。',

@@ -62,8 +62,6 @@ export default function CreateLiveSessionScreen() {
   const [coverPhotoUri, setCoverPhotoUri] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
   const handleWebFileChange = useCallback((event: Event) => {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
@@ -442,6 +440,24 @@ export default function CreateLiveSessionScreen() {
           <Text style={styles.revenueAmount}>
             {(price * calculatedMaxFans * (1 - TOTAL_FEES) / 100).toFixed(0)}€
           </Text>
+          <View style={styles.feesBreakdown}>
+            <View style={styles.feeRow}>
+              <Text style={styles.feeLabel}>{t('grossRevenue') || 'Revenus bruts'}</Text>
+              <Text style={styles.feeValue}>{(price * calculatedMaxFans / 100).toFixed(0)}€</Text>
+            </View>
+            <View style={styles.feeRow}>
+              <Text style={styles.feeLabel}>{t('storeFees') || 'Frais stores (30%)'}</Text>
+              <Text style={styles.feeValueNegative}>-{(price * calculatedMaxFans * 0.30 / 100).toFixed(0)}€</Text>
+            </View>
+            <View style={styles.feeRow}>
+              <Text style={styles.feeLabel}>{t('signTouchFees') || 'Frais SignTouch (15%)'}</Text>
+              <Text style={styles.feeValueNegative}>-{(price * calculatedMaxFans * 0.15 / 100).toFixed(0)}€</Text>
+            </View>
+            <View style={styles.feeRowTotal}>
+              <Text style={styles.feeLabelTotal}>{t('netRevenue') || 'Net (via Stripe Connect)'}</Text>
+              <Text style={styles.feeValueTotal}>{(price * calculatedMaxFans * (1 - TOTAL_FEES) / 100).toFixed(0)}€</Text>
+            </View>
+          </View>
           <Text style={styles.revenueExplanation}>
             {t('earningsExplanation') || 'Montant estimé si tous les fans complètent la session'}
           </Text>
@@ -728,6 +744,47 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 18,
+  },
+  feesBreakdown: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  feeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  feeRowTotal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.2)',
+  },
+  feeLabel: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  feeLabelTotal: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  feeValue: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  feeValueNegative: {
+    fontSize: 13,
+    color: '#f87171',
+  },
+  feeValueTotal: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#4ade80',
   },
   summaryRow: {
     flexDirection: 'row',

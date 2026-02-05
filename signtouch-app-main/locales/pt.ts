@@ -114,6 +114,11 @@ export default {
   webDownloadError: 'Download não disponível na visualização da web. Teste no aplicativo móvel.',
   permissionRequired: 'Permissão necessária',
   galleryPermissionMessage: 'O acesso à galeria é necessário para salvar.',
+  cameraPermissionRequired: 'Permissão de câmera necessária',
+  cameraError: 'Não foi possível acessar a câmera',
+  retake: 'Tirar novamente',
+  liveSessionFieldsRequired: 'Por favor, preencha todos os campos obrigatórios',
+  liveSessionPhotoRequired: 'Foto obrigatória',
 
   // Share Modal
   shareTitle: 'Compartilhar',
@@ -720,6 +725,10 @@ export default {
   premiumUntil: 'Premium até',
   yourEarnings: 'Seus ganhos',
   earningsExplanation: 'Valor estimado se todos os fãs completarem a sessão',
+  grossRevenue: 'Receita bruta',
+  storeFees: 'Taxas das lojas (30%)',
+  signTouchFees: 'Taxa SignTouch (15%)',
+  netRevenue: 'Líquido (via Stripe Connect)',
   welcomeBack: 'Bem-vindo! Suas fotos agora estão protegidas.',
   storageWarning: 'Armazenamento limitado',
   storageWarningMessage: 'Algumas fotos antigas foram removidas para liberar espaço. Faça login para salvar suas fotos na nuvem.',

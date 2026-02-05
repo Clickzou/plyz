@@ -114,6 +114,11 @@ export default {
   webDownloadError: 'Muat turun tidak tersedia dalam pratonton web. Uji pada aplikasi mudah alih.',
   permissionRequired: 'Kebenaran diperlukan',
   galleryPermissionMessage: 'Akses galeri diperlukan untuk menyimpan.',
+  cameraPermissionRequired: 'Kebenaran kamera diperlukan',
+  cameraError: 'Tidak dapat mengakses kamera',
+  retake: 'Ambil semula',
+  liveSessionFieldsRequired: 'Sila isikan semua medan yang diperlukan',
+  liveSessionPhotoRequired: 'Foto diperlukan',
 
   // Share Modal
   shareTitle: 'Kongsi',
@@ -720,6 +725,10 @@ export default {
   premiumUntil: 'Premium sehingga',
   yourEarnings: 'Pendapatan anda',
   earningsExplanation: 'Anggaran jumlah jika semua peminat melengkapkan sesi',
+  grossRevenue: 'Pendapatan kasar',
+  storeFees: 'Yuran kedai (30%)',
+  signTouchFees: 'Yuran SignTouch (15%)',
+  netRevenue: 'Bersih (melalui Stripe Connect)',
   welcomeBack: 'Selamat datang! Foto anda kini dilindungi.',
   storageWarning: 'Storan terhad',
   storageWarningMessage: 'Beberapa foto lama telah dibuang untuk mengosongkan ruang. Log masuk untuk menyimpan foto anda ke awan.',

@@ -114,6 +114,11 @@ export default {
   webDownloadError: 'ویب پیش نظارہ میں ڈاؤن لوڈ دستیاب نہیں ہے۔ موبائل ایپ پر ٹیسٹ کریں۔',
   permissionRequired: 'اجازت درکار ہے',
   galleryPermissionMessage: 'محفوظ کرنے کے لیے گیلری تک رسائی ضروری ہے۔',
+  cameraPermissionRequired: 'کیمرے کی اجازت درکار ہے',
+  cameraError: 'کیمرے تک رسائی نہیں ہو سکی',
+  retake: 'دوبارہ لیں',
+  liveSessionFieldsRequired: 'براہ کرم تمام ضروری فیلڈز پُر کریں',
+  liveSessionPhotoRequired: 'تصویر ضروری ہے',
 
   // Share Modal
   shareTitle: 'شیئر کریں',
@@ -720,6 +725,10 @@ export default {
   premiumUntil: 'پریمیم تک',
   yourEarnings: 'آپ کی کمائی',
   earningsExplanation: 'تخمینی رقم اگر تمام مداح سیشن مکمل کریں',
+  grossRevenue: 'مجموعی آمدنی',
+  storeFees: 'اسٹور فیس (30%)',
+  signTouchFees: 'SignTouch فیس (15%)',
+  netRevenue: 'خالص (Stripe Connect کے ذریعے)',
   welcomeBack: 'خوش آمدید! آپ کی تصاویر اب محفوظ ہیں۔',
   storageWarning: 'اسٹوریج محدود',
   storageWarningMessage: 'جگہ خالی کرنے کے لیے کچھ پرانی تصاویر ہٹا دی گئیں۔ اپنی تصاویر کلاؤڈ میں محفوظ کرنے کے لیے سائن ان کریں۔',
