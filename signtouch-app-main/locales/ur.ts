@@ -534,6 +534,9 @@ export default {
 
   // Live Sessions
   createLiveSession: 'لائیو سیشن بنائیں',
+  liveSessionCoverPhoto: 'کور فوٹو',
+  liveSessionCoverPhotoHint: 'یہ مداحوں کو دکھائی جائے گی',
+  tapToTakeSelfie: 'سیلفی لینے کے لیے ٹیپ کریں',
   liveSessionYourName: 'آپ کا نام / اسٹیج کا نام',
   liveSessionNamePlaceholder: 'اپنا نام درج کریں...',
   liveSessionNameRequired: 'براہ کرم اپنا نام درج کریں',

@@ -534,6 +534,9 @@ export default {
 
   // Live Sessions
   createLiveSession: 'Créer une Session Live',
+  liveSessionCoverPhoto: 'Photo de couverture',
+  liveSessionCoverPhotoHint: 'Elle sera affichée aux fans',
+  tapToTakeSelfie: 'Appuyez pour prendre un selfie',
   liveSessionYourName: 'Votre Nom / Nom de Scène',
   liveSessionNamePlaceholder: 'Entrez votre nom...',
   liveSessionNameRequired: 'Veuillez entrer votre nom',

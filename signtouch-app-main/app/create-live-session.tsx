@@ -64,6 +64,20 @@ export default function CreateLiveSessionScreen() {
 
   const handleTakeSelfie = async () => {
     try {
+      if (Platform.OS === 'web') {
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
+        });
+        if (!result.canceled && result.assets[0]) {
+          setCoverPhotoUri(result.assets[0].uri);
+          setPhotoError(false);
+        }
+        return;
+      }
+
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
       
       if (!permissionResult.granted) {

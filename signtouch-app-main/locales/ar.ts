@@ -534,6 +534,9 @@ export default {
 
   // Live Sessions
   createLiveSession: 'إنشاء جلسة مباشرة',
+  liveSessionCoverPhoto: 'صورة الغلاف',
+  liveSessionCoverPhotoHint: 'سيتم عرضها للمعجبين',
+  tapToTakeSelfie: 'اضغط لالتقاط سيلفي',
   liveSessionYourName: 'اسمك / اسمك الفني',
   liveSessionNamePlaceholder: 'أدخل اسمك...',
   liveSessionNameRequired: 'يرجى إدخال اسمك',
