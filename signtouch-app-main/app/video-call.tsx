@@ -13,6 +13,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, PhoneOff, Clock } from 'lucide-react-native';
 import { useLanguage } from '../contexts/LanguageContext';
+import RatingModal from '@/components/RatingModal';
+import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
 
 export default function VideoCallScreen() {
   const router = useRouter();
@@ -25,11 +27,16 @@ export default function VideoCallScreen() {
     sessionId: string;
     userName: string;
     durationPerFan: string;
+    queueEntryId: string;
+    otherUserId: string;
+    otherUserName: string;
   }>();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fanTimeRemaining, setFanTimeRemaining] = useState<string>('--:--');
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [hasLeftCall, setHasLeftCall] = useState(false);
   const callStartTime = useRef<number>(Date.now());
 
   useEffect(() => {
@@ -72,7 +79,7 @@ export default function VideoCallScreen() {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.action === 'left-meeting') {
-        router.back();
+        handleCallEnded();
       }
     } catch (e) {
     }
@@ -87,7 +94,38 @@ export default function VideoCallScreen() {
     setIsLoading(false);
   };
 
+  const handleCallEnded = () => {
+    if (!hasLeftCall) {
+      setHasLeftCall(true);
+      setShowRatingModal(true);
+    }
+  };
+
   const leaveCall = () => {
+    handleCallEnded();
+  };
+
+  const handleSubmitRating = async (rating: number) => {
+    try {
+      const myDeviceId = await getOrCreateDeviceId();
+      const otherUserId = params.otherUserId || (isHost ? 'fan_unknown' : params.sessionId || 'celebrity_unknown');
+      
+      await submitRating(
+        params.sessionId || '',
+        params.queueEntryId || null,
+        myDeviceId,
+        isHost ? 'celebrity' : 'fan',
+        otherUserId,
+        isHost ? 'fan' : 'celebrity',
+        rating
+      );
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+    }
+  };
+
+  const handleRatingModalClose = () => {
+    setShowRatingModal(false);
     router.back();
   };
 
@@ -191,6 +229,14 @@ export default function VideoCallScreen() {
           })}
         />
       )}
+
+      <RatingModal
+        visible={showRatingModal}
+        onClose={handleRatingModalClose}
+        onSubmit={handleSubmitRating}
+        userName={params.otherUserName || (isHost ? 'Fan' : params.userName || 'Celebrity')}
+        isCelebrity={isHost}
+      />
     </SafeAreaView>
   );
 }
