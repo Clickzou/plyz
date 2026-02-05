@@ -38,7 +38,6 @@ export default function SubscriptionScreen() {
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoMessage, setPromoMessage] = useState<{ text: string; success: boolean } | null>(null);
   const [promoPremiumExpires, setPromoPremiumExpires] = useState<string | null>(null);
-  const [promoCodeName, setPromoCodeName] = useState<string | null>(null);
 
   useEffect(() => {
     checkPromoPremium();
@@ -48,7 +47,6 @@ export default function SubscriptionScreen() {
     const status = await getPromoPremiumStatus();
     if (status.isActive && status.expiresAt) {
       setPromoPremiumExpires(status.expiresAt);
-      setPromoCodeName(status.code);
     }
   };
 
@@ -108,7 +106,6 @@ export default function SubscriptionScreen() {
             <View style={styles.promoActiveText}>
               <Text style={styles.promoActiveTitle}>
                 {t('promoCodeActive') || 'Code promo actif'}
-                {promoCodeName ? ` (${promoCodeName})` : ''}
               </Text>
               <Text style={styles.promoActiveExpiry}>
                 {t('premiumUntil') || 'Premium jusqu\'au'} {new Date(promoPremiumExpires).toLocaleDateString()}
