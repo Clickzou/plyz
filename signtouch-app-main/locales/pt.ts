@@ -615,6 +615,16 @@ export default {
   inQueue: 'na fila',
   estimatedWait: 'Espera estimada',
   failedToJoinQueue: 'Falha ao entrar na fila',
+  queueEmpty: 'Fila vazia',
+  noFansWaiting: 'Nenhum fã está esperando na fila.',
+  waitingForFan: 'Aguardando fã...',
+  skipAndCallNext: 'Pular e chamar próximo',
+  fansInQueue: 'fãs na fila',
+  callNextFan: 'Chamar próximo fã',
+  waitingQueue: 'Fila de espera',
+  called: 'Chamado',
+  waiting: 'Esperando',
+  more: 'mais',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Assinar Ao Vivo',

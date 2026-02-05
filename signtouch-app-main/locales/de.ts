@@ -615,6 +615,16 @@ export default {
   inQueue: 'in der Warteschlange',
   estimatedWait: 'Geschätzte Wartezeit',
   failedToJoinQueue: 'Beitritt zur Warteschlange fehlgeschlagen',
+  queueEmpty: 'Warteschlange leer',
+  noFansWaiting: 'Keine Fans warten in der Warteschlange.',
+  waitingForFan: 'Warten auf Fan...',
+  skipAndCallNext: 'Überspringen und nächsten anrufen',
+  fansInQueue: 'Fans in der Warteschlange',
+  callNextFan: 'Nächsten Fan anrufen',
+  waitingQueue: 'Warteschlange',
+  called: 'Angerufen',
+  waiting: 'Wartend',
+  more: 'mehr',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Live signieren',

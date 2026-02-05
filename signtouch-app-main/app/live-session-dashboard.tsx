@@ -85,7 +85,7 @@ export default function LiveSessionDashboardScreen() {
   
   const [sessionQueue, setSessionQueue] = useState<SessionQueueEntry[]>([]);
   const [calledFan, setCalledFan] = useState<SessionQueueEntry | null>(null);
-  const [fanCallTimeout, setFanCallTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [fanCallTimeout, setFanCallTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const FAN_RESPONSE_TIMEOUT_MS = 30000; // 30 seconds to respond
 
   useEffect(() => {
@@ -101,12 +101,16 @@ export default function LiveSessionDashboardScreen() {
           celebrity_id: 'local_celebrity',
           celebrity_name: 'Session Locale',
           duration_minutes: 30,
+          duration_per_fan_minutes: 5,
           max_slots: 10,
           price_cents: 0,
+          currency: 'EUR',
           status: 'active',
           current_fan_id: null,
+          started_at: now.toISOString(),
+          ends_at: expiresAt.toISOString(),
           created_at: now.toISOString(),
-          expires_at: expiresAt.toISOString(),
+          slots_used: 0,
         };
         setSession(localSession);
         return;
@@ -282,8 +286,17 @@ export default function LiveSessionDashboardScreen() {
 
   const handleStart = async () => {
     if (!sessionId) return;
-    await startSession(sessionId);
-    setShowQR(false);
+    console.log('[Dashboard] Starting session:', sessionId);
+    const result = await startSession(sessionId);
+    console.log('[Dashboard] Start session result:', result);
+    if (result) {
+      setShowQR(false);
+      const updatedSession = await getSessionById(sessionId);
+      if (updatedSession) {
+        setSession(updatedSession);
+        console.log('[Dashboard] Session updated:', updatedSession.status);
+      }
+    }
   };
 
   const handlePause = async () => {

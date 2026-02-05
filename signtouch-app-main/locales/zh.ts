@@ -615,6 +615,16 @@ export default {
   inQueue: '人排队',
   estimatedWait: '预计等待',
   failedToJoinQueue: '加入队列失败',
+  queueEmpty: '队列为空',
+  noFansWaiting: '没有粉丝在排队等候。',
+  waitingForFan: '等待粉丝...',
+  skipAndCallNext: '跳过并呼叫下一个',
+  fansInQueue: '粉丝排队中',
+  callNextFan: '呼叫下一位粉丝',
+  waitingQueue: '等候队列',
+  called: '已呼叫',
+  waiting: '等待中',
+  more: '更多',
 
   // Celebrity Menu
   celebrityMenuTitle: '实时签名',

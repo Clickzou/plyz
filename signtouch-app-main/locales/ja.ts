@@ -615,6 +615,16 @@ export default {
   inQueue: '人中',
   estimatedWait: '推定待ち時間',
   failedToJoinQueue: '列への参加に失敗しました',
+  queueEmpty: '列は空です',
+  noFansWaiting: '列に待っているファンはいません。',
+  waitingForFan: 'ファンを待っています...',
+  skipAndCallNext: 'スキップして次を呼ぶ',
+  fansInQueue: '人が列に並んでいます',
+  callNextFan: '次のファンを呼ぶ',
+  waitingQueue: '待機列',
+  called: '呼び出し済み',
+  waiting: '待機中',
+  more: 'その他',
 
   // Celebrity Menu
   celebrityMenuTitle: 'ライブサイン',

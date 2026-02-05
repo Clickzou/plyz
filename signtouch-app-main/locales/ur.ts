@@ -615,6 +615,16 @@ export default {
   inQueue: 'قطار میں',
   estimatedWait: 'متوقع انتظار',
   failedToJoinQueue: 'قطار میں شامل ہونے میں ناکام',
+  queueEmpty: 'قطار خالی ہے',
+  noFansWaiting: 'کوئی مداح قطار میں انتظار نہیں کر رہا۔',
+  waitingForFan: 'مداح کا انتظار...',
+  skipAndCallNext: 'چھوڑیں اور اگلے کو کال کریں',
+  fansInQueue: 'قطار میں مداح',
+  callNextFan: 'اگلے مداح کو کال کریں',
+  waitingQueue: 'انتظار کی قطار',
+  called: 'کال کیا گیا',
+  waiting: 'انتظار میں',
+  more: 'مزید',
 
   // Celebrity Menu
   celebrityMenuTitle: 'لائیو سائن کریں',

@@ -615,6 +615,16 @@ export default {
   inQueue: 'कतार में',
   estimatedWait: 'अनुमानित प्रतीक्षा',
   failedToJoinQueue: 'कतार में शामिल होने में विफल',
+  queueEmpty: 'कतार खाली',
+  noFansWaiting: 'कोई प्रशंसक कतार में प्रतीक्षा नहीं कर रहा।',
+  waitingForFan: 'प्रशंसक की प्रतीक्षा...',
+  skipAndCallNext: 'छोड़ें और अगले को कॉल करें',
+  fansInQueue: 'कतार में प्रशंसक',
+  callNextFan: 'अगले प्रशंसक को कॉल करें',
+  waitingQueue: 'प्रतीक्षा कतार',
+  called: 'कॉल किया गया',
+  waiting: 'प्रतीक्षा में',
+  more: 'और',
 
   // Celebrity Menu
   celebrityMenuTitle: 'लाइव साइन करें',

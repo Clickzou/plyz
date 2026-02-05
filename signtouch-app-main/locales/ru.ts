@@ -615,6 +615,16 @@ export default {
   inQueue: 'в очереди',
   estimatedWait: 'Ожидаемое ожидание',
   failedToJoinQueue: 'Не удалось присоединиться к очереди',
+  queueEmpty: 'Очередь пуста',
+  noFansWaiting: 'В очереди нет ожидающих фанатов.',
+  waitingForFan: 'Ожидание фаната...',
+  skipAndCallNext: 'Пропустить и вызвать следующего',
+  fansInQueue: 'фанатов в очереди',
+  callNextFan: 'Вызвать следующего фаната',
+  waitingQueue: 'Очередь ожидания',
+  called: 'Вызван',
+  waiting: 'Ожидание',
+  more: 'ещё',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Подписать вживую',

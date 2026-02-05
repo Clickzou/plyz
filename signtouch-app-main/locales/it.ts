@@ -615,6 +615,16 @@ export default {
   inQueue: 'in coda',
   estimatedWait: 'Attesa stimata',
   failedToJoinQueue: 'Impossibile unirsi alla coda',
+  queueEmpty: 'Coda vuota',
+  noFansWaiting: 'Nessun fan in attesa nella coda.',
+  waitingForFan: 'In attesa del fan...',
+  skipAndCallNext: 'Salta e chiama il prossimo',
+  fansInQueue: 'fan in coda',
+  callNextFan: 'Chiama prossimo fan',
+  waitingQueue: 'Coda di attesa',
+  called: 'Chiamato',
+  waiting: 'In attesa',
+  more: 'altri',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Firma dal vivo',

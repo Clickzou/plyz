@@ -615,6 +615,16 @@ export default {
   inQueue: 'في قائمة الانتظار',
   estimatedWait: 'وقت الانتظار المقدر',
   failedToJoinQueue: 'فشل الانضمام إلى قائمة الانتظار',
+  queueEmpty: 'قائمة الانتظار فارغة',
+  noFansWaiting: 'لا يوجد معجبون ينتظرون في قائمة الانتظار.',
+  waitingForFan: 'في انتظار المعجب...',
+  skipAndCallNext: 'تخطي واتصل بالتالي',
+  fansInQueue: 'معجبين في الانتظار',
+  callNextFan: 'اتصل بالمعجب التالي',
+  waitingQueue: 'قائمة الانتظار',
+  called: 'تم الاتصال',
+  waiting: 'في الانتظار',
+  more: 'المزيد',
 
   // Celebrity Menu
   celebrityMenuTitle: 'وقع مباشرة',

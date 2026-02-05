@@ -615,6 +615,16 @@ export default {
   inQueue: 'dalam antrean',
   estimatedWait: 'Perkiraan tunggu',
   failedToJoinQueue: 'Gagal bergabung dengan antrean',
+  queueEmpty: 'Antrean kosong',
+  noFansWaiting: 'Tidak ada penggemar yang menunggu di antrean.',
+  waitingForFan: 'Menunggu penggemar...',
+  skipAndCallNext: 'Lewati dan panggil berikutnya',
+  fansInQueue: 'penggemar dalam antrean',
+  callNextFan: 'Panggil penggemar berikutnya',
+  waitingQueue: 'Antrean menunggu',
+  called: 'Dipanggil',
+  waiting: 'Menunggu',
+  more: 'lagi',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Tanda Tangan Langsung',

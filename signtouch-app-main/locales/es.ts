@@ -615,6 +615,16 @@ export default {
   inQueue: 'en cola',
   estimatedWait: 'Espera estimada',
   failedToJoinQueue: 'Error al unirse a la cola',
+  queueEmpty: 'Cola vacía',
+  noFansWaiting: 'No hay fans esperando en la cola.',
+  waitingForFan: 'Esperando al fan...',
+  skipAndCallNext: 'Saltar y llamar siguiente',
+  fansInQueue: 'fans en cola',
+  callNextFan: 'Llamar siguiente fan',
+  waitingQueue: 'Cola de espera',
+  called: 'Llamado',
+  waiting: 'Esperando',
+  more: 'más',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Firmar en Vivo',

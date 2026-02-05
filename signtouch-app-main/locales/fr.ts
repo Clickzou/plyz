@@ -615,6 +615,16 @@ export default {
   inQueue: 'dans la file',
   estimatedWait: 'Attente estimée',
   failedToJoinQueue: 'Impossible de rejoindre la file',
+  queueEmpty: 'File vide',
+  noFansWaiting: 'Aucun fan n\'attend dans la file.',
+  waitingForFan: 'En attente du fan...',
+  skipAndCallNext: 'Passer et appeler suivant',
+  fansInQueue: 'fans dans la file',
+  callNextFan: 'Appeler le prochain fan',
+  waitingQueue: 'File d\'attente',
+  called: 'Appelé',
+  waiting: 'En attente',
+  more: 'de plus',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Signez en Direct',

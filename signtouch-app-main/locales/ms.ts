@@ -615,6 +615,16 @@ export default {
   inQueue: 'dalam barisan',
   estimatedWait: 'Anggaran menunggu',
   failedToJoinQueue: 'Gagal menyertai barisan',
+  queueEmpty: 'Barisan kosong',
+  noFansWaiting: 'Tiada peminat menunggu dalam barisan.',
+  waitingForFan: 'Menunggu peminat...',
+  skipAndCallNext: 'Langkau dan panggil seterusnya',
+  fansInQueue: 'peminat dalam barisan',
+  callNextFan: 'Panggil peminat seterusnya',
+  waitingQueue: 'Barisan menunggu',
+  called: 'Dipanggil',
+  waiting: 'Menunggu',
+  more: 'lagi',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Tandatangan Langsung',

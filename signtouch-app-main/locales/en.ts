@@ -615,6 +615,16 @@ export default {
   inQueue: 'in queue',
   estimatedWait: 'Estimated wait',
   failedToJoinQueue: 'Failed to join the queue',
+  queueEmpty: 'Queue Empty',
+  noFansWaiting: 'No fans are waiting in the queue.',
+  waitingForFan: 'Waiting for fan...',
+  skipAndCallNext: 'Skip and call next',
+  fansInQueue: 'fans in queue',
+  callNextFan: 'Call next fan',
+  waitingQueue: 'Waiting queue',
+  called: 'Called',
+  waiting: 'Waiting',
+  more: 'more',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Sign Live',

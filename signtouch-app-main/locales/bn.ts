@@ -615,6 +615,16 @@ export default {
   inQueue: 'সারিতে',
   estimatedWait: 'আনুমানিক অপেক্ষা',
   failedToJoinQueue: 'সারিতে যোগ দিতে ব্যর্থ',
+  queueEmpty: 'সারি খালি',
+  noFansWaiting: 'সারিতে কোনো ভক্ত অপেক্ষা করছে না।',
+  waitingForFan: 'ভক্তের জন্য অপেক্ষা...',
+  skipAndCallNext: 'এড়িয়ে পরবর্তীকে কল করুন',
+  fansInQueue: 'সারিতে ভক্ত',
+  callNextFan: 'পরবর্তী ভক্তকে কল করুন',
+  waitingQueue: 'অপেক্ষার সারি',
+  called: 'কল করা হয়েছে',
+  waiting: 'অপেক্ষায়',
+  more: 'আরো',
 
   // Celebrity Menu
   celebrityMenuTitle: 'লাইভ সাইন',
