@@ -713,6 +713,8 @@ export default {
   changeEmail: 'Change email address',
   connectionSuccess: 'Successfully connected!',
   accountSecured: 'Your account is now secured. Your photos and subscription will be synced.',
+  promoCodeActive: 'Promo code active',
+  premiumUntil: 'Premium until',
   welcomeBack: 'Welcome! Your photos are now secured.',
   storageWarning: 'Storage limited',
   storageWarningMessage: 'Some older photos were removed to free space. Sign in to save your photos to the cloud.',

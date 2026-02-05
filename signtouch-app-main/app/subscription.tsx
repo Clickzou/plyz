@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,13 +17,14 @@ import {
   Gift,
   X,
   ArrowLeft,
+  Ticket,
 } from 'lucide-react-native';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { validatePromoCode } from '@/utils/promoCodeStorage';
+import { validatePromoCode, getPromoPremiumStatus } from '@/utils/promoCodeStorage';
 
 export default function SubscriptionScreen() {
   const insets = useSafeAreaInsets();
@@ -36,6 +37,20 @@ export default function SubscriptionScreen() {
   const [promoCode, setPromoCode] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoMessage, setPromoMessage] = useState<{ text: string; success: boolean } | null>(null);
+  const [promoPremiumExpires, setPromoPremiumExpires] = useState<string | null>(null);
+  const [promoCodeName, setPromoCodeName] = useState<string | null>(null);
+
+  useEffect(() => {
+    checkPromoPremium();
+  }, []);
+
+  const checkPromoPremium = async () => {
+    const status = await getPromoPremiumStatus();
+    if (status.isActive && status.expiresAt) {
+      setPromoPremiumExpires(status.expiresAt);
+      setPromoCodeName(status.code);
+    }
+  };
 
   const handlePromoSubmit = async () => {
     if (!promoCode.trim()) return;
@@ -87,6 +102,21 @@ export default function SubscriptionScreen() {
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+        {promoPremiumExpires && (
+          <View style={styles.promoActiveBanner}>
+            <Ticket size={24} color="#10b981" />
+            <View style={styles.promoActiveText}>
+              <Text style={styles.promoActiveTitle}>
+                {t('promoCodeActive') || 'Code promo actif'}
+                {promoCodeName ? ` (${promoCodeName})` : ''}
+              </Text>
+              <Text style={styles.promoActiveExpiry}>
+                {t('premiumUntil') || 'Premium jusqu\'au'} {new Date(promoPremiumExpires).toLocaleDateString()}
+              </Text>
+            </View>
+          </View>
+        )}
+
         <View style={styles.hero}>
           <View style={styles.crownContainer}>
             <Crown size={60} color="#10b981" strokeWidth={2} />
@@ -315,6 +345,31 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingBottom: 40,
+  },
+  promoActiveBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    marginHorizontal: 20,
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  promoActiveText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  promoActiveTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#10b981',
+  },
+  promoActiveExpiry: {
+    fontSize: 14,
+    color: '#a3a3a3',
+    marginTop: 2,
   },
   hero: {
     alignItems: 'center',
