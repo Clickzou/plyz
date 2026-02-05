@@ -28,6 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import AccountModal from '@/components/AccountModal';
 import { getEventByCode, LiveEvent } from '@/utils/liveEventStorage';
+import { getSessionByCode, LiveSession } from '@/utils/liveSessionStorage';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import { 
   joinEventSession, 
@@ -53,6 +54,7 @@ export default function JoinEventScreen() {
   const [isSearching, setIsSearching] = useState(false);
   const [foundEvent, setFoundEvent] = useState<LiveEvent | null>(null);
   const [foundSession, setFoundSession] = useState<EventSession | null>(null);
+  const [foundLiveSession, setFoundLiveSession] = useState<LiveSession | null>(null);
   const [sessionSigners, setSessionSigners] = useState<EventSigner[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -87,12 +89,26 @@ export default function JoinEventScreen() {
     setScheduledSession(null);
     setFoundEvent(null);
     setFoundSession(null);
+    setFoundLiveSession(null);
     
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
     try {
+      // First try to find in live_sessions (new video call sessions)
+      const liveSession = await getSessionByCode(codeToSearch);
+      if (liveSession) {
+        console.log('Found live session:', liveSession);
+        setFoundLiveSession(liveSession);
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        setIsSearching(false);
+        return;
+      }
+
+      // Then try event_sessions
       const viewerId = await getOrCreateDeviceId();
       const sessionResult = await joinEventSession(codeToSearch, viewerId);
       
@@ -234,6 +250,7 @@ export default function JoinEventScreen() {
   const handleSearchAnother = () => {
     setFoundEvent(null);
     setFoundSession(null);
+    setFoundLiveSession(null);
     setCode('');
     setSaved(false);
     setEventFull(false);
@@ -340,7 +357,41 @@ export default function JoinEventScreen() {
         contentContainerStyle={[styles.contentContainer, { paddingBottom: BOTTOM_NAV_HEIGHT + 20 }]}
         showsVerticalScrollIndicator={false}
       >
-        {!foundEvent && !foundSession && !eventFull ? (
+        {foundLiveSession ? (
+          <View style={styles.resultContainer}>
+            <View style={styles.successIcon}>
+              <Check size={40} color="#10B981" />
+            </View>
+            <Text style={styles.celebrityName}>{foundLiveSession.celebrity_name}</Text>
+            <Text style={styles.sessionInfo}>
+              {t('liveSessionFound') || 'Live session found!'}
+            </Text>
+            <Text style={styles.priceText}>
+              {foundLiveSession.price_cents > 0 
+                ? `${(foundLiveSession.price_cents / 100).toFixed(2)} €` 
+                : t('free') || 'Free'}
+            </Text>
+            <TouchableOpacity
+              style={styles.joinButton}
+              onPress={() => {
+                router.push({
+                  pathname: '/video-call',
+                  params: {
+                    sessionId: foundLiveSession.id,
+                    sessionCode: foundLiveSession.code,
+                    celebrityName: foundLiveSession.celebrity_name,
+                    isCelebrity: 'false',
+                  }
+                });
+              }}
+            >
+              <Text style={styles.joinButtonText}>{t('joinVideoCall') || 'Join Video Call'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.searchAnotherButton} onPress={handleSearchAnother}>
+              <Text style={styles.searchAnotherText}>{t('searchAnother') || 'Search another event'}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : !foundEvent && !foundSession && !eventFull ? (
           <>
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>{t('enterEventCode') || 'Enter the event code'}</Text>
