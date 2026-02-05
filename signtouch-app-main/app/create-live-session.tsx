@@ -44,7 +44,10 @@ const PRICE_OPTIONS = [
   { label: '100€', value: 10000 },
 ];
 
-const TOTAL_FEES = 0.45; // 45% frais totaux (Apple/Google 30% + SignTouch 15%)
+const STORE_FEES = 0.30; // 30% Apple/Google
+const SIGNTOUCH_FEES = 0.15; // 15% SignTouch
+const STRIPE_PERCENT = 0.029; // 2.9% Stripe
+const STRIPE_FIXED = 30; // 0.30€ par transaction (en centimes)
 
 export default function CreateLiveSessionScreen() {
   const router = useRouter();
@@ -437,27 +440,46 @@ export default function CreateLiveSessionScreen() {
 
         <View style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>{t('yourEarnings') || 'Vos revenus'}</Text>
-          <Text style={styles.revenueAmount}>
-            {(price * calculatedMaxFans * (1 - TOTAL_FEES) / 100).toFixed(0)}€
-          </Text>
-          <View style={styles.feesBreakdown}>
-            <View style={styles.feeRow}>
-              <Text style={styles.feeLabel}>{t('grossRevenue') || 'Revenus bruts'}</Text>
-              <Text style={styles.feeValue}>{(price * calculatedMaxFans / 100).toFixed(0)}€</Text>
-            </View>
-            <View style={styles.feeRow}>
-              <Text style={styles.feeLabel}>{t('storeFees') || 'Frais stores (30%)'}</Text>
-              <Text style={styles.feeValueNegative}>-{(price * calculatedMaxFans * 0.30 / 100).toFixed(0)}€</Text>
-            </View>
-            <View style={styles.feeRow}>
-              <Text style={styles.feeLabel}>{t('signTouchFees') || 'Frais SignTouch (15%)'}</Text>
-              <Text style={styles.feeValueNegative}>-{(price * calculatedMaxFans * 0.15 / 100).toFixed(0)}€</Text>
-            </View>
-            <View style={styles.feeRowTotal}>
-              <Text style={styles.feeLabelTotal}>{t('netRevenue') || 'Net (via Stripe Connect)'}</Text>
-              <Text style={styles.feeValueTotal}>{(price * calculatedMaxFans * (1 - TOTAL_FEES) / 100).toFixed(0)}€</Text>
-            </View>
-          </View>
+          {(() => {
+            const grossCents = price * calculatedMaxFans;
+            const storeFeesCents = grossCents * STORE_FEES;
+            const signTouchFeesCents = grossCents * SIGNTOUCH_FEES;
+            const beforeStripeCents = grossCents - storeFeesCents - signTouchFeesCents;
+            const stripePercentCents = beforeStripeCents * STRIPE_PERCENT;
+            const stripeFixedCents = STRIPE_FIXED * calculatedMaxFans;
+            const stripeTotalCents = stripePercentCents + stripeFixedCents;
+            const netCents = beforeStripeCents - stripeTotalCents;
+            
+            return (
+              <>
+                <Text style={styles.revenueAmount}>
+                  {(netCents / 100).toFixed(0)}€
+                </Text>
+                <View style={styles.feesBreakdown}>
+                  <View style={styles.feeRow}>
+                    <Text style={styles.feeLabel}>{t('grossRevenue') || 'Revenus bruts'}</Text>
+                    <Text style={styles.feeValue}>{(grossCents / 100).toFixed(0)}€</Text>
+                  </View>
+                  <View style={styles.feeRow}>
+                    <Text style={styles.feeLabel}>{t('storeFees') || 'Frais stores (30%)'}</Text>
+                    <Text style={styles.feeValueNegative}>-{(storeFeesCents / 100).toFixed(0)}€</Text>
+                  </View>
+                  <View style={styles.feeRow}>
+                    <Text style={styles.feeLabel}>{t('signTouchFees') || 'Frais SignTouch (15%)'}</Text>
+                    <Text style={styles.feeValueNegative}>-{(signTouchFeesCents / 100).toFixed(0)}€</Text>
+                  </View>
+                  <View style={styles.feeRow}>
+                    <Text style={styles.feeLabel}>{t('stripeFees') || 'Frais Stripe (2.9% + 0.30€)'}</Text>
+                    <Text style={styles.feeValueNegative}>-{(stripeTotalCents / 100).toFixed(0)}€</Text>
+                  </View>
+                  <View style={styles.feeRowTotal}>
+                    <Text style={styles.feeLabelTotal}>{t('netRevenue') || 'Net reçu'}</Text>
+                    <Text style={styles.feeValueTotal}>{(netCents / 100).toFixed(0)}€</Text>
+                  </View>
+                </View>
+              </>
+            );
+          })()}
           <Text style={styles.revenueExplanation}>
             {t('earningsExplanation') || 'Montant estimé si tous les fans complètent la session'}
           </Text>
