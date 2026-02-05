@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,180 +7,77 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Platform,
-  Alert,
 } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { 
-  Mic, 
-  MicOff, 
-  Video, 
-  VideoOff, 
-  PhoneOff,
-  Users,
-  RotateCcw,
-} from 'lucide-react-native';
+import { ArrowLeft, PhoneOff } from 'lucide-react-native';
 import { useLanguage } from '../contexts/LanguageContext';
-
-interface Participant {
-  session_id: string;
-  user_id: string;
-  user_name: string;
-  local: boolean;
-  video: boolean;
-  audio: boolean;
-  tracks: {
-    video?: { state: string };
-    audio?: { state: string };
-  };
-}
 
 export default function VideoCallScreen() {
   const router = useRouter();
   const { t } = useLanguage();
+  const webViewRef = useRef<WebView>(null);
   const params = useLocalSearchParams<{
     roomUrl: string;
     token: string;
     isHost: string;
     sessionId: string;
+    userName: string;
   }>();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [callObject, setCallObject] = useState<any>(null);
-  const [participants, setParticipants] = useState<Record<string, Participant>>({});
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
-  const [isFrontCamera, setIsFrontCamera] = useState(true);
 
   const isHost = params.isHost === 'true';
+  const userName = params.userName || (isHost ? 'Host' : 'Guest');
 
-  useEffect(() => {
-    if (Platform.OS === 'web') {
-      setError(t('videoNotSupportedWeb'));
-      setIsLoading(false);
-      return;
+  const getDailyPrebuiltUrl = () => {
+    const baseUrl = params.roomUrl;
+    if (!baseUrl) return null;
+    
+    const urlParams = new URLSearchParams();
+    if (params.token) {
+      urlParams.append('t', params.token);
     }
+    urlParams.append('userName', userName);
+    urlParams.append('showLeaveButton', 'true');
+    urlParams.append('showFullscreenButton', 'true');
+    
+    return `${baseUrl}?${urlParams.toString()}`;
+  };
 
-    initializeCall();
-
-    return () => {
-      if (callObject) {
-        callObject.leave();
-        callObject.destroy();
-      }
-    };
-  }, []);
-
-  const initializeCall = async () => {
+  const handleWebViewMessage = (event: any) => {
     try {
-      const Daily = require('@daily-co/react-native-daily-js').default;
-      
-      const call = Daily.createCallObject({
-        audioSource: true,
-        videoSource: true,
-      });
-
-      call.on('joined-meeting', handleJoinedMeeting);
-      call.on('left-meeting', handleLeftMeeting);
-      call.on('participant-joined', handleParticipantUpdate);
-      call.on('participant-updated', handleParticipantUpdate);
-      call.on('participant-left', handleParticipantLeft);
-      call.on('error', handleError);
-
-      setCallObject(call);
-
-      await call.join({
-        url: params.roomUrl,
-        token: params.token,
-      });
-
-    } catch (err) {
-      console.error('Failed to initialize call:', err);
-      setError(t('videoCallError'));
-      setIsLoading(false);
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.action === 'left-meeting') {
+        router.back();
+      }
+    } catch (e) {
     }
   };
 
-  const handleJoinedMeeting = useCallback(() => {
+  const handleWebViewError = () => {
+    setError(t('videoCallError'));
     setIsLoading(false);
-    if (callObject) {
-      setParticipants(callObject.participants());
-    }
-  }, [callObject]);
+  };
 
-  const handleLeftMeeting = useCallback(() => {
+  const handleLoadEnd = () => {
+    setIsLoading(false);
+  };
+
+  const leaveCall = () => {
     router.back();
-  }, [router]);
+  };
 
-  const handleParticipantUpdate = useCallback(() => {
-    if (callObject) {
-      setParticipants({ ...callObject.participants() });
-    }
-  }, [callObject]);
+  const dailyUrl = getDailyPrebuiltUrl();
 
-  const handleParticipantLeft = useCallback((event: { participant: Participant }) => {
-    if (callObject) {
-      setParticipants({ ...callObject.participants() });
-    }
-  }, [callObject]);
-
-  const handleError = useCallback((event: { errorMsg: string }) => {
-    console.error('Daily error:', event.errorMsg);
-    setError(event.errorMsg);
-  }, []);
-
-  const toggleMute = useCallback(() => {
-    if (callObject) {
-      callObject.setLocalAudio(!isMuted);
-      setIsMuted(!isMuted);
-    }
-  }, [callObject, isMuted]);
-
-  const toggleVideo = useCallback(() => {
-    if (callObject) {
-      callObject.setLocalVideo(!isVideoOff);
-      setIsVideoOff(!isVideoOff);
-    }
-  }, [callObject, isVideoOff]);
-
-  const switchCamera = useCallback(() => {
-    if (callObject) {
-      callObject.cycleCamera();
-      setIsFrontCamera(!isFrontCamera);
-    }
-  }, [callObject, isFrontCamera]);
-
-  const leaveCall = useCallback(() => {
-    Alert.alert(
-      t('leaveCall'),
-      t('leaveCallConfirm'),
-      [
-        { text: t('cancel'), style: 'cancel' },
-        {
-          text: t('leave'),
-          style: 'destructive',
-          onPress: () => {
-            if (callObject) {
-              callObject.leave();
-            }
-            router.back();
-          },
-        },
-      ]
-    );
-  }, [callObject, router, t]);
-
-  const participantCount = Object.keys(participants).length;
-
-  if (Platform.OS === 'web') {
+  if (!dailyUrl) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar style="light" />
         <View style={styles.errorContainer}>
-          <VideoOff size={64} color="#ef4444" />
-          <Text style={styles.errorText}>{t('videoNotSupportedWeb')}</Text>
-          <Text style={styles.errorSubtext}>{t('videoWebHint')}</Text>
+          <Text style={styles.errorText}>{t('videoCallError')}</Text>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Text style={styles.backButtonText}>{t('goBack')}</Text>
           </TouchableOpacity>
@@ -189,119 +86,81 @@ export default function VideoCallScreen() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar style="light" />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#10B981" />
-          <Text style={styles.loadingText}>{t('connectingToCall')}</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar style="light" />
-        <View style={styles.errorContainer}>
-          <VideoOff size={64} color="#ef4444" />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>{t('goBack')}</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  const DailyMediaView = require('@daily-co/react-native-daily-js').DailyMediaView;
+  const injectedJavaScript = `
+    (function() {
+      window.addEventListener('message', function(event) {
+        if (event.data && event.data.action) {
+          window.ReactNativeWebView.postMessage(JSON.stringify(event.data));
+        }
+      });
+      
+      const observer = new MutationObserver(function(mutations) {
+        const leaveBtn = document.querySelector('[data-testid="leave-meeting"]');
+        if (leaveBtn) {
+          leaveBtn.addEventListener('click', function() {
+            window.ReactNativeWebView.postMessage(JSON.stringify({action: 'left-meeting'}));
+          });
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    })();
+    true;
+  `;
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
       
       <View style={styles.header}>
-        <View style={styles.participantBadge}>
-          <Users size={16} color="#fff" />
-          <Text style={styles.participantCount}>{participantCount}</Text>
+        <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
+          <ArrowLeft size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>
+          {isHost ? t('host') : t('startVideoCall')}
+        </Text>
+        <TouchableOpacity style={styles.endCallHeaderButton} onPress={leaveCall}>
+          <PhoneOff size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#10B981" />
+          <Text style={styles.loadingText}>{t('connectingToCall')}</Text>
         </View>
-        {isHost && (
-          <View style={styles.hostBadge}>
-            <Text style={styles.hostText}>{t('host')}</Text>
-          </View>
-        )}
-      </View>
+      )}
 
-      <View style={styles.videoGrid}>
-        {Object.values(participants).map((participant) => (
-          <View 
-            key={participant.session_id} 
-            style={[
-              styles.videoTile,
-              participant.local && styles.localVideoTile,
-            ]}
-          >
-            {participant.tracks?.video?.state === 'playable' ? (
-              <DailyMediaView
-                videoTrack={participant.tracks.video}
-                audioTrack={participant.local ? null : participant.tracks.audio}
-                mirror={participant.local && isFrontCamera}
-                zOrder={participant.local ? 1 : 0}
-                style={styles.videoView}
-              />
-            ) : (
-              <View style={styles.videoPlaceholder}>
-                <Text style={styles.videoPlaceholderText}>
-                  {participant.user_name?.charAt(0)?.toUpperCase() || '?'}
-                </Text>
-              </View>
-            )}
-            <View style={styles.participantNameContainer}>
-              <Text style={styles.participantName} numberOfLines={1}>
-                {participant.user_name || t('anonymous')}
-                {participant.local && ` (${t('you')})`}
-              </Text>
-              {!participant.tracks?.audio?.state && (
-                <MicOff size={12} color="#ef4444" />
-              )}
-            </View>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.controls}>
-        <TouchableOpacity 
-          style={[styles.controlButton, isMuted && styles.controlButtonActive]} 
-          onPress={toggleMute}
-        >
-          {isMuted ? (
-            <MicOff size={24} color="#fff" />
-          ) : (
-            <Mic size={24} color="#fff" />
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.controlButton, isVideoOff && styles.controlButtonActive]} 
-          onPress={toggleVideo}
-        >
-          {isVideoOff ? (
-            <VideoOff size={24} color="#fff" />
-          ) : (
-            <Video size={24} color="#fff" />
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.controlButton} onPress={switchCamera}>
-          <RotateCcw size={24} color="#fff" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.endCallButton} onPress={leaveCall}>
-          <PhoneOff size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
+      {error ? (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Text style={styles.backButtonText}>{t('goBack')}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <WebView
+          ref={webViewRef}
+          source={{ uri: dailyUrl }}
+          style={styles.webview}
+          onLoadEnd={handleLoadEnd}
+          onError={handleWebViewError}
+          onMessage={handleWebViewMessage}
+          injectedJavaScript={injectedJavaScript}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          mediaPlaybackRequiresUserAction={false}
+          allowsInlineMediaPlayback={true}
+          mediaCapturePermissionGrantType="grant"
+          startInLoadingState={false}
+          originWhitelist={['*']}
+          allowsFullscreenVideo={true}
+          userAgent={Platform.select({
+            ios: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1',
+            android: 'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
+            default: undefined,
+          })}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -311,10 +170,43 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0f0f0f',
   },
-  loadingContainer: {
-    flex: 1,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#1f1f1f',
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  endCallHeaderButton: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#dc2626',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  webview: {
+    flex: 1,
+    backgroundColor: '#0f0f0f',
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#0f0f0f',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
     gap: 16,
   },
   loadingText: {
@@ -350,116 +242,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  participantBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  participantCount: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  hostBadge: {
-    backgroundColor: '#10B981',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  hostText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  videoGrid: {
-    flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 8,
-    gap: 8,
-  },
-  videoTile: {
-    flex: 1,
-    minWidth: '45%',
-    aspectRatio: 3/4,
-    backgroundColor: '#1f2937',
-    borderRadius: 12,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  localVideoTile: {
-    borderWidth: 2,
-    borderColor: '#10B981',
-  },
-  videoView: {
-    flex: 1,
-  },
-  videoPlaceholder: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#374151',
-  },
-  videoPlaceholderText: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: '#9ca3af',
-  },
-  participantNameContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 8,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
-  participantName: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-    flex: 1,
-  },
-  controls: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 16,
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-  },
-  controlButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#374151',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  controlButtonActive: {
-    backgroundColor: '#ef4444',
-  },
-  endCallButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#dc2626',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });

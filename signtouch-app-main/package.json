@@ -13,8 +13,6 @@
     "react-native-worklets": "0.5.1"
   },
   "dependencies": {
-    "@daily-co/config-plugin-rn-daily-js": "^0.0.11",
-    "@daily-co/react-native-daily-js": "^0.83.0",
     "@expo-google-fonts/alex-brush": "^0.4.1",
     "@expo-google-fonts/alfa-slab-one": "^0.4.1",
     "@expo-google-fonts/allura": "^0.4.2",

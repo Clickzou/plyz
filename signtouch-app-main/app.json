@@ -94,15 +94,7 @@
           "isAccessMediaLocationEnabled": true
         }
       ],
-      "expo-barcode-scanner",
-      [
-        "@daily-co/config-plugin-rn-daily-js",
-        {
-          "enableCamera": true,
-          "enableMicrophone": true,
-          "enableScreenShare": false
-        }
-      ]
+      "expo-barcode-scanner"
     ],
     "experiments": {
       "typedRoutes": true
