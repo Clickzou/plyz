@@ -300,9 +300,12 @@ export default function CreateLiveSessionScreen() {
         )}
 
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Vos revenus</Text>
+          <Text style={styles.summaryTitle}>{t('yourEarnings') || 'Vos revenus'}</Text>
           <Text style={styles.revenueAmount}>
-            {(price * calculatedMaxFans * (1 - TOTAL_FEES) / 100).toFixed(0)}€ max
+            {(price * calculatedMaxFans * (1 - TOTAL_FEES) / 100).toFixed(0)}€
+          </Text>
+          <Text style={styles.revenueExplanation}>
+            {t('earningsExplanation') || 'Montant estimé si tous les fans complètent la session'}
           </Text>
         </View>
 
@@ -511,6 +514,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#4ade80',
     textAlign: 'center',
+  },
+  revenueExplanation: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 18,
   },
   summaryRow: {
     flexDirection: 'row',

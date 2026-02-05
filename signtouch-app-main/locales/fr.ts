@@ -717,6 +717,8 @@ export default {
   accountSecured: 'Votre compte est maintenant sécurisé. Vos photos et abonnement seront synchronisés.',
   promoCodeActive: 'Code promo actif',
   premiumUntil: 'Premium jusqu\'au',
+  yourEarnings: 'Vos revenus',
+  earningsExplanation: 'Montant estimé si tous les fans complètent la session',
   welcomeBack: 'Bienvenue ! Vos photos sont maintenant sécurisées.',
   storageWarning: 'Stockage limité',
   storageWarningMessage: 'Certaines anciennes photos ont été supprimées pour libérer de l\'espace. Connectez-vous pour sauvegarder vos photos dans le cloud.',

@@ -715,6 +715,8 @@ export default {
   accountSecured: 'Your account is now secured. Your photos and subscription will be synced.',
   promoCodeActive: 'Promo code active',
   premiumUntil: 'Premium until',
+  yourEarnings: 'Your earnings',
+  earningsExplanation: 'Estimated amount if all fans complete the session',
   welcomeBack: 'Welcome! Your photos are now secured.',
   storageWarning: 'Storage limited',
   storageWarningMessage: 'Some older photos were removed to free space. Sign in to save your photos to the cloud.',
