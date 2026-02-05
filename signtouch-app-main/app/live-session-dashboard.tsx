@@ -44,6 +44,7 @@ import {
   subscribeToQueue,
   broadcastSignatureStroke,
   updateSignatureSvg,
+  updateSessionRoomUrl,
 } from '@/utils/liveSessionStorage';
 import QRCode from 'react-native-qrcode-svg';
 import * as Clipboard from 'expo-clipboard';
@@ -214,6 +215,9 @@ export default function LiveSessionDashboardScreen() {
         setIsCreatingVideoRoom(false);
         return;
       }
+
+      // Save room URL to database so fans can join
+      await updateSessionRoomUrl(session.id, roomResult.roomUrl);
 
       const token = await createMeetingToken({
         roomName: roomResult.roomName,

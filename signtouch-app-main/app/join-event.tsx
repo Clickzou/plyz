@@ -371,22 +371,37 @@ export default function JoinEventScreen() {
                 ? `${(foundLiveSession.price_cents / 100).toFixed(2)} €` 
                 : t('free') || 'Free'}
             </Text>
-            <TouchableOpacity
-              style={styles.joinButton}
-              onPress={() => {
-                router.push({
-                  pathname: '/video-call',
-                  params: {
-                    sessionId: foundLiveSession.id,
-                    sessionCode: foundLiveSession.code,
-                    celebrityName: foundLiveSession.celebrity_name,
-                    isCelebrity: 'false',
-                  }
-                });
-              }}
-            >
-              <Text style={styles.joinButtonText}>{t('joinVideoCall') || 'Join Video Call'}</Text>
-            </TouchableOpacity>
+            {foundLiveSession.room_url ? (
+              <TouchableOpacity
+                style={styles.joinButton}
+                onPress={() => {
+                  router.push({
+                    pathname: '/video-call',
+                    params: {
+                      roomUrl: foundLiveSession.room_url || '',
+                      sessionId: foundLiveSession.id,
+                      isHost: 'false',
+                      userName: 'Fan',
+                    }
+                  });
+                }}
+              >
+                <Text style={styles.joinButtonText}>{t('joinVideoCall') || 'Join Video Call'}</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.waitingContainer}>
+                <ActivityIndicator color="#10B981" size="large" />
+                <Text style={styles.waitingText}>
+                  {t('waitingForCelebrity') || 'Waiting for the celebrity to start the video call...'}
+                </Text>
+                <TouchableOpacity
+                  style={styles.refreshButton}
+                  onPress={() => handleSearch(foundLiveSession.code)}
+                >
+                  <Text style={styles.refreshButtonText}>{t('refresh') || 'Refresh'}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
             <TouchableOpacity style={styles.searchAnotherButton} onPress={handleSearchAnother}>
               <Text style={styles.searchAnotherText}>{t('searchAnother') || 'Search another event'}</Text>
             </TouchableOpacity>
@@ -804,4 +819,28 @@ const styles = StyleSheet.create({
   retryButtonText: { fontSize: 16, color: '#fff', fontWeight: '600' },
   searchAnotherButton: { paddingVertical: 12 },
   searchAnotherText: { fontSize: 14, color: 'rgba(255,255,255,0.6)' },
+  waitingContainer: {
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  waitingText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  refreshButton: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#10B981',
+  },
+  refreshButtonText: {
+    fontSize: 14,
+    color: '#10B981',
+    fontWeight: '600',
+  },
 });

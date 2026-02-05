@@ -15,6 +15,7 @@ export interface LiveSession {
   ends_at: string | null;
   created_at: string;
   slots_used: number;
+  room_url?: string | null;
 }
 
 export interface QueueEntry {
@@ -115,6 +116,25 @@ export const getSessionById = async (sessionId: string): Promise<LiveSession | n
   } catch (error) {
     console.error('Error fetching session:', error);
     return null;
+  }
+};
+
+export const updateSessionRoomUrl = async (sessionId: string, roomUrl: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('live_sessions')
+      .update({ room_url: roomUrl, status: 'active' })
+      .eq('id', sessionId);
+
+    if (error) {
+      console.error('Error updating session room_url:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error updating session room_url:', error);
+    return false;
   }
 };
 
