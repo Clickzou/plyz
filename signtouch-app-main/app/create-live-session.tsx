@@ -59,6 +59,24 @@ export default function CreateLiveSessionScreen() {
 
   const calculatedMaxFans = Math.floor(totalDuration / durationPerFan);
   
+  const handleDurationPerFanChange = (value: number) => {
+    setDurationPerFan(value);
+    const minTotalDuration = value * 2;
+    if (totalDuration < minTotalDuration) {
+      setTotalDuration(Math.min(minTotalDuration, 300));
+    }
+  };
+
+  const handleTotalDurationChange = (value: number) => {
+    if (value >= durationPerFan) {
+      setTotalDuration(value);
+    } else {
+      setTotalDuration(durationPerFan);
+    }
+  };
+  
+  const minTotalDuration = Math.max(10, durationPerFan);
+  
   const handlePriceSelect = (value: number) => {
     setPrice(value);
     setIsCustomPrice(false);
@@ -202,7 +220,7 @@ export default function CreateLiveSessionScreen() {
             maximumValue={60}
             step={0.5}
             value={durationPerFan}
-            onValueChange={setDurationPerFan}
+            onValueChange={handleDurationPerFanChange}
             minimumTrackTintColor="#10B981"
             maximumTrackTintColor="rgba(255,255,255,0.3)"
             thumbTintColor="#10B981"
@@ -221,17 +239,17 @@ export default function CreateLiveSessionScreen() {
           </View>
           <Slider
             style={styles.slider}
-            minimumValue={10}
+            minimumValue={minTotalDuration}
             maximumValue={300}
             step={5}
             value={totalDuration}
-            onValueChange={setTotalDuration}
+            onValueChange={handleTotalDurationChange}
             minimumTrackTintColor="#10B981"
             maximumTrackTintColor="rgba(255,255,255,0.3)"
             thumbTintColor="#10B981"
           />
           <View style={styles.sliderLabels}>
-            <Text style={styles.sliderLabel}>10 min</Text>
+            <Text style={styles.sliderLabel}>{formatDuration(minTotalDuration)}</Text>
             <Text style={styles.sliderLabel}>5h</Text>
           </View>
         </View>
