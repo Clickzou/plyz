@@ -7,21 +7,29 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "env": {
+        "EXPO_USE_METRO_WORKSPACE_ROOT": "1"
+      },
       "ios": {
         "resourceClass": "m-medium"
       },
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "image": "latest"
       }
     },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "EXPO_USE_METRO_WORKSPACE_ROOT": "1"
+      },
       "ios": {
         "simulator": false,
         "resourceClass": "m-medium"
       },
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "image": "latest"
       }
     },
     "production": {
