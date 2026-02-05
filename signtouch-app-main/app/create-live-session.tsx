@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -62,33 +62,33 @@ export default function CreateLiveSessionScreen() {
   const [coverPhotoUri, setCoverPhotoUri] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState(false);
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleWebFileChange = useCallback((event: Event) => {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setCoverPhotoUri(e.target.result as string);
+          setPhotoError(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
+
   const handleTakeSelfie = async () => {
     try {
       if (Platform.OS === 'web') {
-        // On web, try camera first, fallback to gallery
-        try {
-          const result = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-          });
-          if (!result.canceled && result.assets[0]) {
-            setCoverPhotoUri(result.assets[0].uri);
-            setPhotoError(false);
-          }
-        } catch {
-          // Camera not available on web, use gallery
-          const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-          });
-          if (!result.canceled && result.assets[0]) {
-            setCoverPhotoUri(result.assets[0].uri);
-            setPhotoError(false);
-          }
-        }
+        // Use native HTML5 input with capture for camera on mobile web
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.capture = 'user'; // This opens front camera on mobile
+        input.onchange = handleWebFileChange as any;
+        input.click();
         return;
       }
 
