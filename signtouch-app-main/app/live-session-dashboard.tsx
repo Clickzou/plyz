@@ -50,6 +50,14 @@ import {
 import QRCode from 'react-native-qrcode-svg';
 import * as Clipboard from 'expo-clipboard';
 import { createSessionVideoRoom, createMeetingToken } from '@/utils/dailyService';
+import { 
+  callNextFan as callNextQueueFan, 
+  markFanAsMissed, 
+  getFullQueue, 
+  notifyUpcomingFans,
+  sendQueueNotification,
+  QueueEntry as SessionQueueEntry,
+} from '@/utils/sessionQueueStorage';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CANVAS_SIZE = SCREEN_WIDTH - 80;
@@ -73,6 +81,11 @@ export default function LiveSessionDashboardScreen() {
   const [paths, setPaths] = useState<string[]>([]);
   const [currentPath, setCurrentPath] = useState<string>('');
   const pathRef = useRef<string>('');
+  
+  const [sessionQueue, setSessionQueue] = useState<SessionQueueEntry[]>([]);
+  const [calledFan, setCalledFan] = useState<SessionQueueEntry | null>(null);
+  const [fanCallTimeout, setFanCallTimeout] = useState<NodeJS.Timeout | null>(null);
+  const FAN_RESPONSE_TIMEOUT_MS = 30000; // 30 seconds to respond
 
   useEffect(() => {
     if (!sessionId) return;
@@ -164,6 +177,93 @@ export default function LiveSessionDashboardScreen() {
 
     return () => clearInterval(interval);
   }, [session?.fan_call_started_at, session?.duration_per_fan_minutes, isInVideoCall]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const loadSessionQueue = async () => {
+      const fullQueue = await getFullQueue(sessionId);
+      setSessionQueue(fullQueue);
+    };
+
+    loadSessionQueue();
+    const queuePollInterval = setInterval(loadSessionQueue, 5000);
+
+    return () => {
+      clearInterval(queuePollInterval);
+    };
+  }, [sessionId]);
+
+  useEffect(() => {
+    return () => {
+      if (fanCallTimeout) {
+        clearTimeout(fanCallTimeout);
+      }
+    };
+  }, [fanCallTimeout]);
+
+  const handleCallNextFromQueue = async () => {
+    if (!sessionId || !session) return;
+
+    if (calledFan) {
+      await markFanAsMissed(calledFan.id);
+      setCalledFan(null);
+    }
+
+    if (fanCallTimeout) {
+      clearTimeout(fanCallTimeout);
+      setFanCallTimeout(null);
+    }
+
+    const nextFan = await callNextQueueFan(sessionId);
+    
+    if (nextFan) {
+      setCalledFan(nextFan);
+
+      if (nextFan.push_token) {
+        await sendQueueNotification(
+          nextFan.push_token,
+          `${session.celebrity_name} - SignTouch`,
+          "C'est votre tour ! Rejoignez l'appel maintenant.",
+          { sessionId, action: 'your_turn' }
+        );
+      }
+
+      await notifyUpcomingFans(
+        sessionId, 
+        session.celebrity_name, 
+        session.duration_per_fan_minutes || 5
+      );
+
+      const timeout = setTimeout(async () => {
+        if (calledFan && calledFan.id === nextFan.id) {
+          await markFanAsMissed(nextFan.id);
+          
+          if (nextFan.push_token) {
+            await sendQueueNotification(
+              nextFan.push_token,
+              `${session.celebrity_name} - SignTouch`,
+              "Vous avez manqué votre tour. Vous êtes maintenant à la fin de la file d'attente.",
+              { sessionId, action: 'missed_turn' }
+            );
+          }
+          
+          setCalledFan(null);
+          handleCallNextFromQueue();
+        }
+      }, FAN_RESPONSE_TIMEOUT_MS);
+
+      setFanCallTimeout(timeout);
+
+      const fullQueue = await getFullQueue(sessionId);
+      setSessionQueue(fullQueue);
+    } else {
+      Alert.alert(
+        t('queueEmpty') || 'Queue Empty', 
+        t('noFansWaiting') || 'No fans are waiting in the queue.'
+      );
+    }
+  };
 
   const handleStart = async () => {
     if (!sessionId) return;
@@ -459,6 +559,61 @@ export default function LiveSessionDashboardScreen() {
               </View>
             ) : (
               <View style={styles.waitingSection}>
+                {calledFan ? (
+                  <View style={styles.calledFanCard}>
+                    <View style={styles.calledFanPulse} />
+                    <Text style={styles.calledFanLabel}>{t('waitingForFan') || 'Waiting for fan to join...'}</Text>
+                    <Text style={styles.calledFanName}>{calledFan.fan_name}</Text>
+                    <Text style={styles.calledFanTimer}>30s</Text>
+                    <TouchableOpacity 
+                      style={styles.skipCalledFanButton}
+                      onPress={handleCallNextFromQueue}
+                    >
+                      <SkipForward size={18} color="#fff" />
+                      <Text style={styles.skipCalledFanText}>{t('skipAndCallNext') || 'Skip & call next'}</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <>
+                    <Text style={styles.waitingTitle}>
+                      {sessionQueue.length > 0
+                        ? t('fansInQueue', { count: sessionQueue.length }) || `${sessionQueue.length} fans in queue`
+                        : t('liveSessionNoFansYet')}
+                    </Text>
+                    {sessionQueue.length > 0 && (
+                      <TouchableOpacity style={styles.callNextButton} onPress={handleCallNextFromQueue}>
+                        <Users size={24} color="#4ade80" />
+                        <Text style={styles.callNextButtonText}>{t('callNextFan') || 'Call next fan'}</Text>
+                      </TouchableOpacity>
+                    )}
+                  </>
+                )}
+
+                {sessionQueue.length > 0 && (
+                  <View style={styles.queueListSection}>
+                    <Text style={styles.queueListTitle}>{t('waitingQueue') || 'Waiting Queue'}</Text>
+                    {sessionQueue.slice(0, 5).map((fan, index) => (
+                      <View key={fan.id} style={styles.queueListItem}>
+                        <Text style={styles.queuePosition}>#{index + 1}</Text>
+                        <Text style={styles.queueFanName}>{fan.fan_name}</Text>
+                        <View style={[
+                          styles.queueStatusBadge, 
+                          fan.status === 'called' && styles.queueStatusCalled
+                        ]}>
+                          <Text style={styles.queueStatusText}>
+                            {fan.status === 'called' ? (t('called') || 'Called') : (t('waiting') || 'Waiting')}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                    {sessionQueue.length > 5 && (
+                      <Text style={styles.queueMoreText}>
+                        +{sessionQueue.length - 5} {t('more') || 'more'}
+                      </Text>
+                    )}
+                  </View>
+                )}
+
                 <Text style={styles.waitingTitle}>
                   {waitingCount > 0
                     ? t('liveSessionFansWaiting', { count: waitingCount })
@@ -816,5 +971,107 @@ const styles = StyleSheet.create({
     color: '#4ade80',
     fontSize: 16,
     fontWeight: '700',
+  },
+  calledFanCard: {
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#f59e0b',
+    width: '100%',
+  },
+  calledFanPulse: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 16,
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+  },
+  calledFanLabel: {
+    fontSize: 14,
+    color: '#f59e0b',
+    marginBottom: 8,
+  },
+  calledFanName: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  calledFanTimer: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#f59e0b',
+    marginBottom: 16,
+  },
+  skipCalledFanButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  skipCalledFanText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  queueListSection: {
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  queueListTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 12,
+  },
+  queueListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  queuePosition: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#4ade80',
+    width: 40,
+  },
+  queueFanName: {
+    fontSize: 14,
+    color: '#fff',
+    flex: 1,
+  },
+  queueStatusBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  queueStatusCalled: {
+    backgroundColor: 'rgba(245, 158, 11, 0.3)',
+  },
+  queueStatusText: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  queueMoreText: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.5)',
+    textAlign: 'center',
+    marginTop: 10,
   },
 });
