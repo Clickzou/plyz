@@ -450,9 +450,6 @@ export default function JoinEventScreen() {
               </View>
             )}
             
-            <TouchableOpacity style={styles.searchAnotherButtonAlt} onPress={handleSearchAnother}>
-              <Text style={styles.searchAnotherTextAlt}>{t('searchAnother') || 'Search another event'}</Text>
-            </TouchableOpacity>
           </View>
         ) : !foundEvent && !foundSession && !eventFull ? (
           <>
