@@ -610,6 +610,11 @@ export default {
   enterNameToJoin: 'Masukkan nama Anda untuk bergabung dengan daftar tunggu',
   yourName: 'Nama Anda',
   joinQueue: 'Bergabung',
+  yourPosition: 'Posisi Anda',
+  outOf: 'dari',
+  inQueue: 'dalam antrean',
+  estimatedWait: 'Perkiraan tunggu',
+  failedToJoinQueue: 'Gagal bergabung dengan antrean',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Tanda Tangan Langsung',

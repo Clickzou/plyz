@@ -610,6 +610,11 @@ export default {
   enterNameToJoin: 'Введите своё имя, чтобы присоединиться к списку ожидания',
   yourName: 'Ваше имя',
   joinQueue: 'Присоединиться',
+  yourPosition: 'Ваша позиция',
+  outOf: 'из',
+  inQueue: 'в очереди',
+  estimatedWait: 'Ожидаемое ожидание',
+  failedToJoinQueue: 'Не удалось присоединиться к очереди',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Подписать вживую',

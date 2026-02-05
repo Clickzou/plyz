@@ -610,6 +610,11 @@ export default {
   enterNameToJoin: '待機リストに参加するには名前を入力してください',
   yourName: 'あなたの名前',
   joinQueue: '参加する',
+  yourPosition: 'あなたの順番',
+  outOf: '/',
+  inQueue: '人中',
+  estimatedWait: '推定待ち時間',
+  failedToJoinQueue: '列への参加に失敗しました',
 
   // Celebrity Menu
   celebrityMenuTitle: 'ライブサイン',

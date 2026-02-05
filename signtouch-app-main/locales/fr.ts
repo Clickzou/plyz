@@ -610,6 +610,11 @@ export default {
   enterNameToJoin: 'Entrez votre nom pour rejoindre la liste d\'attente',
   yourName: 'Votre nom',
   joinQueue: 'Rejoindre la file',
+  yourPosition: 'Votre position',
+  outOf: 'sur',
+  inQueue: 'dans la file',
+  estimatedWait: 'Attente estimée',
+  failedToJoinQueue: 'Impossible de rejoindre la file',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Signez en Direct',

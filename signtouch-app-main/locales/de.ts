@@ -610,6 +610,11 @@ export default {
   enterNameToJoin: 'Geben Sie Ihren Namen ein, um der Warteliste beizutreten',
   yourName: 'Ihr Name',
   joinQueue: 'Beitreten',
+  yourPosition: 'Ihre Position',
+  outOf: 'von',
+  inQueue: 'in der Warteschlange',
+  estimatedWait: 'Geschätzte Wartezeit',
+  failedToJoinQueue: 'Beitritt zur Warteschlange fehlgeschlagen',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Live signieren',

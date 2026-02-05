@@ -610,6 +610,11 @@ export default {
   enterNameToJoin: 'انتظار کی فہرست میں شامل ہونے کے لیے اپنا نام درج کریں',
   yourName: 'آپ کا نام',
   joinQueue: 'شامل ہوں',
+  yourPosition: 'آپ کی پوزیشن',
+  outOf: 'میں سے',
+  inQueue: 'قطار میں',
+  estimatedWait: 'متوقع انتظار',
+  failedToJoinQueue: 'قطار میں شامل ہونے میں ناکام',
 
   // Celebrity Menu
   celebrityMenuTitle: 'لائیو سائن کریں',

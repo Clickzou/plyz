@@ -610,6 +610,11 @@ export default {
   enterNameToJoin: 'Digite seu nome para entrar na lista de espera',
   yourName: 'Seu nome',
   joinQueue: 'Entrar na fila',
+  yourPosition: 'Sua posição',
+  outOf: 'de',
+  inQueue: 'na fila',
+  estimatedWait: 'Espera estimada',
+  failedToJoinQueue: 'Falha ao entrar na fila',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Assinar Ao Vivo',

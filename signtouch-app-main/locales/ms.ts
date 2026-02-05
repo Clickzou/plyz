@@ -610,6 +610,11 @@ export default {
   enterNameToJoin: 'Masukkan nama anda untuk menyertai senarai menunggu',
   yourName: 'Nama anda',
   joinQueue: 'Sertai',
+  yourPosition: 'Kedudukan anda',
+  outOf: 'daripada',
+  inQueue: 'dalam barisan',
+  estimatedWait: 'Anggaran menunggu',
+  failedToJoinQueue: 'Gagal menyertai barisan',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Tandatangan Langsung',

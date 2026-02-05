@@ -610,6 +610,11 @@ export default {
   enterNameToJoin: 'أدخل اسمك للانضمام إلى قائمة الانتظار',
   yourName: 'اسمك',
   joinQueue: 'انضمام',
+  yourPosition: 'موقعك',
+  outOf: 'من',
+  inQueue: 'في قائمة الانتظار',
+  estimatedWait: 'وقت الانتظار المقدر',
+  failedToJoinQueue: 'فشل الانضمام إلى قائمة الانتظار',
 
   // Celebrity Menu
   celebrityMenuTitle: 'وقع مباشرة',

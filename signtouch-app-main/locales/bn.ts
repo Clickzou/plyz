@@ -610,6 +610,11 @@ export default {
   enterNameToJoin: 'অপেক্ষার তালিকায় যোগ দিতে আপনার নাম লিখুন',
   yourName: 'আপনার নাম',
   joinQueue: 'যোগ দিন',
+  yourPosition: 'আপনার অবস্থান',
+  outOf: 'এর মধ্যে',
+  inQueue: 'সারিতে',
+  estimatedWait: 'আনুমানিক অপেক্ষা',
+  failedToJoinQueue: 'সারিতে যোগ দিতে ব্যর্থ',
 
   // Celebrity Menu
   celebrityMenuTitle: 'লাইভ সাইন',

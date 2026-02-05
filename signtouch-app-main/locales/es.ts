@@ -610,6 +610,11 @@ export default {
   enterNameToJoin: 'Ingresa tu nombre para unirte a la lista de espera',
   yourName: 'Tu nombre',
   joinQueue: 'Unirse a la cola',
+  yourPosition: 'Tu posición',
+  outOf: 'de',
+  inQueue: 'en cola',
+  estimatedWait: 'Espera estimada',
+  failedToJoinQueue: 'Error al unirse a la cola',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Firmar en Vivo',

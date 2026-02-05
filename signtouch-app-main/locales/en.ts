@@ -610,6 +610,11 @@ export default {
   enterNameToJoin: 'Enter your name to join the waiting list',
   yourName: 'Your name',
   joinQueue: 'Join Queue',
+  yourPosition: 'Your position',
+  outOf: 'out of',
+  inQueue: 'in queue',
+  estimatedWait: 'Estimated wait',
+  failedToJoinQueue: 'Failed to join the queue',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Sign Live',

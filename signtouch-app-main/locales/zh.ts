@@ -610,6 +610,11 @@ export default {
   enterNameToJoin: '输入您的姓名加入等候名单',
   yourName: '您的姓名',
   joinQueue: '加入队列',
+  yourPosition: '您的位置',
+  outOf: '共',
+  inQueue: '人排队',
+  estimatedWait: '预计等待',
+  failedToJoinQueue: '加入队列失败',
 
   // Celebrity Menu
   celebrityMenuTitle: '实时签名',
