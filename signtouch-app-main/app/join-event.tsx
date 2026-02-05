@@ -358,52 +358,100 @@ export default function JoinEventScreen() {
         showsVerticalScrollIndicator={false}
       >
         {foundLiveSession ? (
-          <View style={styles.resultContainer}>
-            <View style={styles.successIcon}>
-              <Check size={40} color="#10B981" />
+          <View style={styles.liveSessionContainer}>
+            <View style={styles.liveSessionHeader}>
+              <View style={styles.liveBadge}>
+                <View style={styles.liveIndicator} />
+                <Text style={styles.liveBadgeText}>LIVE</Text>
+              </View>
             </View>
-            <Text style={styles.celebrityName}>{foundLiveSession.celebrity_name}</Text>
-            <Text style={styles.sessionInfo}>
-              {t('liveSessionFound') || 'Live session found!'}
-            </Text>
-            <Text style={styles.priceText}>
-              {foundLiveSession.price_cents > 0 
-                ? `${(foundLiveSession.price_cents / 100).toFixed(2)} €` 
-                : t('free') || 'Free'}
-            </Text>
+            
+            <View style={styles.celebritySection}>
+              <View style={styles.celebrityAvatarContainer}>
+                <LinearGradient
+                  colors={['#10B981', '#059669', '#047857']}
+                  style={styles.celebrityAvatarGradient}
+                >
+                  <Text style={styles.celebrityInitial}>
+                    {foundLiveSession.celebrity_name.charAt(0).toUpperCase()}
+                  </Text>
+                </LinearGradient>
+              </View>
+              <Text style={styles.celebrityNameLarge}>{foundLiveSession.celebrity_name}</Text>
+              <Text style={styles.sessionFoundText}>
+                {t('liveSessionFound') || 'Live session found!'}
+              </Text>
+            </View>
+
+            <View style={styles.priceContainer}>
+              <Text style={styles.priceLabelText}>{t('sessionPrice') || 'Session price'}</Text>
+              <Text style={styles.priceValueText}>
+                {foundLiveSession.price_cents > 0 
+                  ? `${(foundLiveSession.price_cents / 100).toFixed(2)} €` 
+                  : t('free') || 'Free'}
+              </Text>
+            </View>
+
             {foundLiveSession.room_url ? (
-              <TouchableOpacity
-                style={styles.joinButton}
-                onPress={() => {
-                  router.push({
-                    pathname: '/video-call',
-                    params: {
-                      roomUrl: foundLiveSession.room_url || '',
-                      sessionId: foundLiveSession.id,
-                      isHost: 'false',
-                      userName: 'Fan',
-                    }
-                  });
-                }}
-              >
-                <Text style={styles.joinButtonText}>{t('joinVideoCall') || 'Join Video Call'}</Text>
-              </TouchableOpacity>
+              <View style={styles.readyToJoinContainer}>
+                <View style={styles.readyBadge}>
+                  <Check size={20} color="#10B981" />
+                  <Text style={styles.readyBadgeText}>{t('callReady') || 'Call is ready!'}</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.joinCallButton}
+                  onPress={() => {
+                    router.push({
+                      pathname: '/video-call',
+                      params: {
+                        roomUrl: foundLiveSession.room_url || '',
+                        sessionId: foundLiveSession.id,
+                        isHost: 'false',
+                        userName: 'Fan',
+                      }
+                    });
+                  }}
+                >
+                  <LinearGradient
+                    colors={['#10B981', '#059669']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.joinCallButtonGradient}
+                  >
+                    <Camera size={24} color="#fff" />
+                    <Text style={styles.joinCallButtonText}>{t('joinVideoCall') || 'Join Video Call'}</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
             ) : (
-              <View style={styles.waitingContainer}>
-                <ActivityIndicator color="#10B981" size="large" />
-                <Text style={styles.waitingText}>
+              <View style={styles.waitingSection}>
+                <View style={styles.pulseContainer}>
+                  <View style={styles.pulseOuter} />
+                  <View style={styles.pulseInner}>
+                    <Clock size={32} color="#fff" />
+                  </View>
+                </View>
+                <Text style={styles.waitingTitle}>
+                  {t('getReady') || 'Get ready!'}
+                </Text>
+                <Text style={styles.waitingSubtitle}>
                   {t('waitingForCelebrity') || 'Waiting for the celebrity to start the video call...'}
                 </Text>
+                <Text style={styles.waitingHint}>
+                  {t('stayOnPage') || 'Stay on this page - the call will start soon!'}
+                </Text>
                 <TouchableOpacity
-                  style={styles.refreshButton}
+                  style={styles.refreshButtonLarge}
                   onPress={() => handleSearch(foundLiveSession.code)}
                 >
-                  <Text style={styles.refreshButtonText}>{t('refresh') || 'Refresh'}</Text>
+                  <Search size={20} color="#10B981" />
+                  <Text style={styles.refreshButtonLargeText}>{t('checkAgain') || 'Check again'}</Text>
                 </TouchableOpacity>
               </View>
             )}
-            <TouchableOpacity style={styles.searchAnotherButton} onPress={handleSearchAnother}>
-              <Text style={styles.searchAnotherText}>{t('searchAnother') || 'Search another event'}</Text>
+            
+            <TouchableOpacity style={styles.searchAnotherButtonAlt} onPress={handleSearchAnother}>
+              <Text style={styles.searchAnotherTextAlt}>{t('searchAnother') || 'Search another event'}</Text>
             </TouchableOpacity>
           </View>
         ) : !foundEvent && !foundSession && !eventFull ? (
@@ -842,5 +890,203 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#10B981',
     fontWeight: '600',
+  },
+  liveSessionContainer: {
+    alignItems: 'center',
+    paddingTop: 20,
+    paddingHorizontal: 20,
+  },
+  liveSessionHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 8,
+  },
+  liveIndicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#ef4444',
+  },
+  liveBadgeText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#ef4444',
+    letterSpacing: 1,
+  },
+  celebritySection: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  celebrityAvatarContainer: {
+    marginBottom: 20,
+  },
+  celebrityAvatarGradient: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  celebrityInitial: {
+    fontSize: 48,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  celebrityNameLarge: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 8,
+    textShadowColor: 'rgba(16, 185, 129, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 10,
+  },
+  sessionFoundText: {
+    fontSize: 16,
+    color: '#10B981',
+    fontWeight: '600',
+  },
+  priceContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  priceLabelText: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 4,
+  },
+  priceValueText: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  readyToJoinContainer: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  readyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 8,
+    marginBottom: 20,
+  },
+  readyBadgeText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#10B981',
+  },
+  joinCallButton: {
+    width: '100%',
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  joinCallButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    gap: 12,
+  },
+  joinCallButtonText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  waitingSection: {
+    alignItems: 'center',
+    width: '100%',
+    paddingVertical: 20,
+  },
+  pulseContainer: {
+    width: 100,
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  pulseOuter: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  pulseInner: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(16, 185, 129, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  waitingTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 12,
+  },
+  waitingSubtitle: {
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 20,
+  },
+  waitingHint: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.6)',
+    textAlign: 'center',
+    marginBottom: 24,
+    fontStyle: 'italic',
+  },
+  refreshButtonLarge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#10B981',
+    gap: 10,
+  },
+  refreshButtonLargeText: {
+    fontSize: 16,
+    color: '#10B981',
+    fontWeight: '700',
+  },
+  searchAnotherButtonAlt: {
+    paddingVertical: 16,
+    marginTop: 16,
+  },
+  searchAnotherTextAlt: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.5)',
   },
 });
