@@ -604,6 +604,12 @@ export default {
   liveSessionWatchLive: 'Guarda la firma dal vivo',
   liveSessionSigningInProgress: 'Firma in corso...',
   liveSessionWatchHint: 'La firma apparirà in tempo reale',
+  liveSessionFound: 'Sessione live trovata!',
+  sessionPrice: 'Prezzo della sessione',
+  joinTheQueue: 'Unisciti alla coda',
+  enterNameToJoin: 'Inserisci il tuo nome per unirti alla lista d\'attesa',
+  yourName: 'Il tuo nome',
+  joinQueue: 'Unisciti',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Firma dal vivo',

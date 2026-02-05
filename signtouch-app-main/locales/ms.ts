@@ -604,6 +604,12 @@ export default {
   liveSessionWatchLive: 'Tonton Tandatangan Langsung',
   liveSessionSigningInProgress: 'Tandatangan sedang berlangsung...',
   liveSessionWatchHint: 'Tandatangan akan muncul secara masa nyata',
+  liveSessionFound: 'Sesi langsung ditemui!',
+  sessionPrice: 'Harga sesi',
+  joinTheQueue: 'Sertai barisan',
+  enterNameToJoin: 'Masukkan nama anda untuk menyertai senarai menunggu',
+  yourName: 'Nama anda',
+  joinQueue: 'Sertai',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Tandatangan Langsung',

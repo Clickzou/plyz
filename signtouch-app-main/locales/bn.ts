@@ -604,6 +604,12 @@ export default {
   liveSessionWatchLive: 'লাইভ সাইনিং দেখুন',
   liveSessionSigningInProgress: 'সাইনিং চলছে...',
   liveSessionWatchHint: 'স্বাক্ষর রিয়েল-টাইমে দেখা যাবে',
+  liveSessionFound: 'লাইভ সেশন পাওয়া গেছে!',
+  sessionPrice: 'সেশনের মূল্য',
+  joinTheQueue: 'সারিতে যোগ দিন',
+  enterNameToJoin: 'অপেক্ষার তালিকায় যোগ দিতে আপনার নাম লিখুন',
+  yourName: 'আপনার নাম',
+  joinQueue: 'যোগ দিন',
 
   // Celebrity Menu
   celebrityMenuTitle: 'লাইভ সাইন',

@@ -604,6 +604,12 @@ export default {
   liveSessionWatchLive: 'Assistir Assinatura Ao Vivo',
   liveSessionSigningInProgress: 'Assinatura em andamento...',
   liveSessionWatchHint: 'A assinatura aparecerá em tempo real',
+  liveSessionFound: 'Sessão ao vivo encontrada!',
+  sessionPrice: 'Preço da sessão',
+  joinTheQueue: 'Entrar na fila',
+  enterNameToJoin: 'Digite seu nome para entrar na lista de espera',
+  yourName: 'Seu nome',
+  joinQueue: 'Entrar na fila',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Assinar Ao Vivo',

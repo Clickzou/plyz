@@ -604,6 +604,12 @@ export default {
   liveSessionWatchLive: 'لائیو سائننگ دیکھیں',
   liveSessionSigningInProgress: 'سائننگ جاری ہے...',
   liveSessionWatchHint: 'دستخط ریئل ٹائم میں ظاہر ہوگا',
+  liveSessionFound: 'لائیو سیشن ملا!',
+  sessionPrice: 'سیشن کی قیمت',
+  joinTheQueue: 'قطار میں شامل ہوں',
+  enterNameToJoin: 'انتظار کی فہرست میں شامل ہونے کے لیے اپنا نام درج کریں',
+  yourName: 'آپ کا نام',
+  joinQueue: 'شامل ہوں',
 
   // Celebrity Menu
   celebrityMenuTitle: 'لائیو سائن کریں',

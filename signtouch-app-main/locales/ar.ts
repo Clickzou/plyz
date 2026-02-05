@@ -604,6 +604,12 @@ export default {
   liveSessionWatchLive: 'مشاهدة التوقيع المباشر',
   liveSessionSigningInProgress: 'جاري التوقيع...',
   liveSessionWatchHint: 'سيظهر التوقيع في الوقت الفعلي',
+  liveSessionFound: 'تم العثور على جلسة مباشرة!',
+  sessionPrice: 'سعر الجلسة',
+  joinTheQueue: 'انضم إلى قائمة الانتظار',
+  enterNameToJoin: 'أدخل اسمك للانضمام إلى قائمة الانتظار',
+  yourName: 'اسمك',
+  joinQueue: 'انضمام',
 
   // Celebrity Menu
   celebrityMenuTitle: 'وقع مباشرة',

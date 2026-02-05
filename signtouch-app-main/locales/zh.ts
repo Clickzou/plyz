@@ -604,6 +604,12 @@ export default {
   liveSessionWatchLive: '观看实时签名',
   liveSessionSigningInProgress: '签名进行中...',
   liveSessionWatchHint: '签名将实时出现',
+  liveSessionFound: '找到直播会话！',
+  sessionPrice: '会话价格',
+  joinTheQueue: '加入排队',
+  enterNameToJoin: '输入您的姓名加入等候名单',
+  yourName: '您的姓名',
+  joinQueue: '加入队列',
 
   // Celebrity Menu
   celebrityMenuTitle: '实时签名',

@@ -604,6 +604,12 @@ export default {
   liveSessionWatchLive: 'ライブ署名を見る',
   liveSessionSigningInProgress: '署名中...',
   liveSessionWatchHint: '署名がリアルタイムで表示されます',
+  liveSessionFound: 'ライブセッションが見つかりました！',
+  sessionPrice: 'セッション価格',
+  joinTheQueue: '列に並ぶ',
+  enterNameToJoin: '待機リストに参加するには名前を入力してください',
+  yourName: 'あなたの名前',
+  joinQueue: '参加する',
 
   // Celebrity Menu
   celebrityMenuTitle: 'ライブサイン',

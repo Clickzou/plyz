@@ -604,6 +604,12 @@ export default {
   liveSessionWatchLive: 'Live-Signierung ansehen',
   liveSessionSigningInProgress: 'Signierung läuft...',
   liveSessionWatchHint: 'Die Signatur erscheint in Echtzeit',
+  liveSessionFound: 'Live-Session gefunden!',
+  sessionPrice: 'Sitzungspreis',
+  joinTheQueue: 'Der Warteschlange beitreten',
+  enterNameToJoin: 'Geben Sie Ihren Namen ein, um der Warteliste beizutreten',
+  yourName: 'Ihr Name',
+  joinQueue: 'Beitreten',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Live signieren',

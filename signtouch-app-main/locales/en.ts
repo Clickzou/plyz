@@ -604,6 +604,12 @@ export default {
   liveSessionWatchLive: 'Watch Live Signing',
   liveSessionSigningInProgress: 'Signing in progress...',
   liveSessionWatchHint: 'The signature will appear in real-time',
+  liveSessionFound: 'Live session found!',
+  sessionPrice: 'Session price',
+  joinTheQueue: 'Join the queue',
+  enterNameToJoin: 'Enter your name to join the waiting list',
+  yourName: 'Your name',
+  joinQueue: 'Join Queue',
 
   // Celebrity Menu
   celebrityMenuTitle: 'Sign Live',
