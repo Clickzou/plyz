@@ -8,6 +8,7 @@ import {
   ScrollView,
   Image,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -46,6 +47,7 @@ import {
 } from '@/utils/liveSessionStorage';
 import QRCode from 'react-native-qrcode-svg';
 import * as Clipboard from 'expo-clipboard';
+import { createSessionVideoRoom, createMeetingToken } from '@/utils/dailyService';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CANVAS_SIZE = SCREEN_WIDTH - 80;
@@ -62,6 +64,7 @@ export default function LiveSessionDashboardScreen() {
   const [timeRemaining, setTimeRemaining] = useState<string>('--:--');
   const [showQR, setShowQR] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [isCreatingVideoRoom, setIsCreatingVideoRoom] = useState(false);
 
   const [paths, setPaths] = useState<string[]>([]);
   const [currentPath, setCurrentPath] = useState<string>('');
@@ -196,6 +199,45 @@ export default function LiveSessionDashboardScreen() {
       await Clipboard.setStringAsync(session.code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleStartVideoCall = async () => {
+    if (!session) return;
+    
+    setIsCreatingVideoRoom(true);
+    try {
+      const roomResult = await createSessionVideoRoom(session.id, session.celebrity_name);
+      
+      if (!roomResult) {
+        Alert.alert(t('error'), t('videoCallError'));
+        setIsCreatingVideoRoom(false);
+        return;
+      }
+
+      const token = await createMeetingToken({
+        roomName: roomResult.roomName,
+        userName: session.celebrity_name,
+        userId: session.celebrity_id,
+        isOwner: true,
+        expiryMinutes: 180,
+      });
+
+      router.push({
+        pathname: '/video-call',
+        params: {
+          roomUrl: roomResult.roomUrl,
+          token: token || '',
+          isHost: 'true',
+          sessionId: session.id,
+          userName: session.celebrity_name,
+        }
+      });
+    } catch (error) {
+      console.error('Error starting video call:', error);
+      Alert.alert(t('error'), t('videoCallError'));
+    } finally {
+      setIsCreatingVideoRoom(false);
     }
   };
 
@@ -386,19 +428,18 @@ export default function LiveSessionDashboardScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.videoCallButton}
-                  onPress={() => router.push({
-                    pathname: '/video-call',
-                    params: {
-                      roomUrl: `signtouch-${session.code}`,
-                      token: '',
-                      isHost: 'true',
-                      sessionId: session.id,
-                    }
-                  })}
+                  style={[styles.videoCallButton, isCreatingVideoRoom && styles.videoCallButtonDisabled]}
+                  onPress={handleStartVideoCall}
+                  disabled={isCreatingVideoRoom}
                 >
-                  <Video size={20} color="#fff" />
-                  <Text style={styles.videoCallButtonText}>{t('startVideoCall')}</Text>
+                  {isCreatingVideoRoom ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Video size={20} color="#fff" />
+                  )}
+                  <Text style={styles.videoCallButtonText}>
+                    {isCreatingVideoRoom ? t('connectingToCall') : t('startVideoCall')}
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -668,6 +709,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#3b82f6',
     borderRadius: 25,
+  },
+  videoCallButtonDisabled: {
+    opacity: 0.7,
   },
   videoCallButtonText: {
     color: '#fff',
