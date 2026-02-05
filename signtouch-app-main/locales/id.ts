@@ -724,7 +724,7 @@ export default {
   promoCodeActive: 'Kode promo aktif',
   premiumUntil: 'Premium hingga',
   yourEarnings: 'Penghasilan Anda',
-  earningsExplanation: 'Bersih setelah biaya toko (30%), SignTouch (15%) dan Stripe (2.9% + €0.30)',
+  earningsExplanation: 'Bersih setelah biaya Stripe (2.9% + €0.30)',
   grossRevenue: 'Pendapatan kotor',
   storeFees: 'Biaya toko (30%)',
   signTouchFees: 'Biaya SignTouch (15%)',

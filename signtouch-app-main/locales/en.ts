@@ -724,7 +724,7 @@ export default {
   promoCodeActive: 'Promo code active',
   premiumUntil: 'Premium until',
   yourEarnings: 'Your earnings',
-  earningsExplanation: 'Net after store fees (30%), SignTouch (15%) and Stripe (2.9% + €0.30)',
+  earningsExplanation: 'Net after Stripe fees (2.9% + €0.30)',
   grossRevenue: 'Gross revenue',
   storeFees: 'Store fees (30%)',
   signTouchFees: 'SignTouch fees (15%)',

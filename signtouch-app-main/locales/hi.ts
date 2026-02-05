@@ -724,7 +724,7 @@ export default {
   promoCodeActive: 'प्रोमो कोड सक्रिय',
   premiumUntil: 'प्रीमियम तक',
   yourEarnings: 'आपकी कमाई',
-  earningsExplanation: 'स्टोर शुल्क (30%), SignTouch (15%) और Stripe (2.9% + €0.30) के बाद नेट',
+  earningsExplanation: 'Stripe शुल्क (2.9% + €0.30) के बाद नेट',
   grossRevenue: 'सकल राजस्व',
   storeFees: 'स्टोर शुल्क (30%)',
   signTouchFees: 'SignTouch शुल्क (15%)',

@@ -724,7 +724,7 @@ export default {
   promoCodeActive: 'Código promocional activo',
   premiumUntil: 'Premium hasta',
   yourEarnings: 'Tus ganancias',
-  earningsExplanation: 'Neto después de comisiones tiendas (30%), SignTouch (15%) y Stripe (2.9% + 0.30€)',
+  earningsExplanation: 'Neto después de comisión Stripe (2.9% + 0.30€)',
   grossRevenue: 'Ingresos brutos',
   storeFees: 'Comisiones tiendas (30%)',
   signTouchFees: 'Comisión SignTouch (15%)',

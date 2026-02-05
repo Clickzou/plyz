@@ -724,7 +724,7 @@ export default {
   promoCodeActive: 'پرومو کوڈ فعال',
   premiumUntil: 'پریمیم تک',
   yourEarnings: 'آپ کی کمائی',
-  earningsExplanation: 'اسٹور فیس (30%)، SignTouch (15%) اور Stripe (2.9% + €0.30) کے بعد خالص',
+  earningsExplanation: 'Stripe فیس (2.9% + €0.30) کے بعد خالص',
   grossRevenue: 'مجموعی آمدنی',
   storeFees: 'اسٹور فیس (30%)',
   signTouchFees: 'SignTouch فیس (15%)',

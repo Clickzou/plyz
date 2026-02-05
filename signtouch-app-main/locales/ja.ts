@@ -724,7 +724,7 @@ export default {
   promoCodeActive: 'プロモコード有効',
   premiumUntil: 'プレミアム期限',
   yourEarnings: 'あなたの収益',
-  earningsExplanation: 'ストア手数料(30%)、SignTouch(15%)、Stripe(2.9% + €0.30)控除後の純額',
+  earningsExplanation: 'Stripe手数料(2.9% + €0.30)控除後の純額',
   grossRevenue: '総収益',
   storeFees: 'ストア手数料 (30%)',
   signTouchFees: 'SignTouch手数料 (15%)',

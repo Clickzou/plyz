@@ -724,7 +724,7 @@ export default {
   promoCodeActive: 'Código promocional ativo',
   premiumUntil: 'Premium até',
   yourEarnings: 'Seus ganhos',
-  earningsExplanation: 'Líquido após taxas das lojas (30%), SignTouch (15%) e Stripe (2.9% + 0.30€)',
+  earningsExplanation: 'Líquido após taxa Stripe (2.9% + 0.30€)',
   grossRevenue: 'Receita bruta',
   storeFees: 'Taxas das lojas (30%)',
   signTouchFees: 'Taxa SignTouch (15%)',
