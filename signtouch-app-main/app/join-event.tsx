@@ -378,14 +378,21 @@ export default function JoinEventScreen() {
             
             <View style={styles.celebritySection}>
               <View style={styles.celebrityAvatarContainer}>
-                <LinearGradient
-                  colors={['#10B981', '#059669', '#047857']}
-                  style={styles.celebrityAvatarGradient}
-                >
-                  <Text style={styles.celebrityInitial}>
-                    {foundLiveSession.celebrity_name.charAt(0).toUpperCase()}
-                  </Text>
-                </LinearGradient>
+                {foundLiveSession.cover_photo_url ? (
+                  <Image 
+                    source={{ uri: foundLiveSession.cover_photo_url }} 
+                    style={styles.celebrityCoverPhoto} 
+                  />
+                ) : (
+                  <LinearGradient
+                    colors={['#10B981', '#059669', '#047857']}
+                    style={styles.celebrityAvatarGradient}
+                  >
+                    <Text style={styles.celebrityInitial}>
+                      {foundLiveSession.celebrity_name.charAt(0).toUpperCase()}
+                    </Text>
+                  </LinearGradient>
+                )}
               </View>
               <Text style={styles.celebrityNameLarge}>{foundLiveSession.celebrity_name}</Text>
               <Text style={styles.sessionFoundText}>
@@ -445,17 +452,35 @@ export default function JoinEventScreen() {
                   {t('getReady') || 'Get ready!'}
                 </Text>
                 <Text style={styles.waitingSubtitle}>
-                  {t('waitingForCelebrity') || 'Waiting for the celebrity to start the video call...'}
+                  {t('waitingForCelebrityToConnect') || `Please wait, ${foundLiveSession.celebrity_name} is connecting...`}
                 </Text>
                 <Text style={styles.waitingHint}>
                   {t('stayOnPage') || 'Stay on this page - the call will start soon!'}
                 </Text>
+                
+                <View style={styles.waitTimeCard}>
+                  <Clock size={18} color="#f59e0b" />
+                  <Text style={styles.waitTimeText}>
+                    {t('estimatedWait') || 'Estimated wait'}: ~{foundLiveSession.duration_per_fan_minutes || 5} min
+                  </Text>
+                </View>
+                
                 <TouchableOpacity
                   style={styles.refreshButtonLarge}
                   onPress={() => handleSearch(foundLiveSession.code)}
                 >
                   <Search size={20} color="#10B981" />
                   <Text style={styles.refreshButtonLargeText}>{t('checkAgain') || 'Check again'}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.leaveNotifyButton}
+                  onPress={handleSetNotification}
+                >
+                  <Bell size={18} color="#3b82f6" />
+                  <Text style={styles.leaveNotifyText}>
+                    {t('leaveAndNotify') || 'Leave app & get notified 2 min before'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -942,6 +967,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#10B981',
+  },
+  celebrityCoverPhoto: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: '#10B981',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 16,
@@ -1095,5 +1127,38 @@ const styles = StyleSheet.create({
   searchAnotherTextAlt: {
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.5)',
+  },
+  waitTimeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 10,
+    marginBottom: 20,
+  },
+  waitTimeText: {
+    fontSize: 14,
+    color: '#f59e0b',
+    fontWeight: '600',
+  },
+  leaveNotifyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 10,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+  },
+  leaveNotifyText: {
+    fontSize: 14,
+    color: '#3b82f6',
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
