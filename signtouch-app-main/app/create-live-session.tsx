@@ -65,15 +65,29 @@ export default function CreateLiveSessionScreen() {
   const handleTakeSelfie = async () => {
     try {
       if (Platform.OS === 'web') {
-        const result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
-          aspect: [1, 1],
-          quality: 0.8,
-        });
-        if (!result.canceled && result.assets[0]) {
-          setCoverPhotoUri(result.assets[0].uri);
-          setPhotoError(false);
+        // On web, try camera first, fallback to gallery
+        try {
+          const result = await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+          });
+          if (!result.canceled && result.assets[0]) {
+            setCoverPhotoUri(result.assets[0].uri);
+            setPhotoError(false);
+          }
+        } catch {
+          // Camera not available on web, use gallery
+          const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+          });
+          if (!result.canceled && result.assets[0]) {
+            setCoverPhotoUri(result.assets[0].uri);
+            setPhotoError(false);
+          }
         }
         return;
       }
