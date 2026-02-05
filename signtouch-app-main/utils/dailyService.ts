@@ -1,6 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from './supabase';
-
 const DAILY_API_URL = 'https://api.daily.co/v1';
 
 interface DailyRoom {
@@ -37,27 +34,17 @@ interface CreateTokenOptions {
   expiryMinutes?: number;
 }
 
-export const getDailyApiKey = async (): Promise<string | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('app_settings')
-      .select('value')
-      .eq('key', 'daily_api_key')
-      .single();
-    
-    if (error || !data) {
-      console.log('Daily API key not found in database');
-      return null;
-    }
-    return data.value;
-  } catch (error) {
-    console.error('Error fetching Daily API key:', error);
+export const getDailyApiKey = (): string | null => {
+  const apiKey = process.env.DAILY_API_KEY || process.env.EXPO_PUBLIC_DAILY_API_KEY;
+  if (!apiKey) {
+    console.log('Daily API key not found in environment variables');
     return null;
   }
+  return apiKey;
 };
 
 export const createDailyRoom = async (options: CreateRoomOptions = {}): Promise<DailyRoom | null> => {
-  const apiKey = await getDailyApiKey();
+  const apiKey = getDailyApiKey();
   if (!apiKey) {
     console.error('Daily API key not configured');
     return null;
@@ -107,7 +94,7 @@ export const createDailyRoom = async (options: CreateRoomOptions = {}): Promise<
 };
 
 export const createMeetingToken = async (options: CreateTokenOptions): Promise<string | null> => {
-  const apiKey = await getDailyApiKey();
+  const apiKey = getDailyApiKey();
   if (!apiKey) {
     console.error('Daily API key not configured');
     return null;
@@ -157,7 +144,7 @@ export const createMeetingToken = async (options: CreateTokenOptions): Promise<s
 };
 
 export const deleteDailyRoom = async (roomName: string): Promise<boolean> => {
-  const apiKey = await getDailyApiKey();
+  const apiKey = getDailyApiKey();
   if (!apiKey) {
     return false;
   }
@@ -178,7 +165,7 @@ export const deleteDailyRoom = async (roomName: string): Promise<boolean> => {
 };
 
 export const getDailyRoom = async (roomName: string): Promise<DailyRoom | null> => {
-  const apiKey = await getDailyApiKey();
+  const apiKey = getDailyApiKey();
   if (!apiKey) {
     return null;
   }
