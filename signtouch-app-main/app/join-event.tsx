@@ -345,7 +345,17 @@ export default function JoinEventScreen() {
       <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />
       
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => {
+            if (foundLiveSession) {
+              setFoundLiveSession(null);
+              setCode('');
+            } else {
+              router.back();
+            }
+          }}
+        >
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('liveEvents') || 'Live Events'}</Text>
