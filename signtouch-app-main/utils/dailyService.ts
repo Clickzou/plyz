@@ -72,7 +72,6 @@ export const createDailyRoom = async (options: CreateRoomOptions = {}): Promise<
           max_participants: maxParticipants,
           enable_chat: true,
           enable_screenshare: false,
-          enable_recording: 'cloud',
           start_video_off: false,
           start_audio_off: true,
         },
