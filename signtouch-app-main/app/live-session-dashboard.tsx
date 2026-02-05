@@ -343,6 +343,21 @@ export default function LiveSessionDashboardScreen() {
               )}
             </TouchableOpacity>
             <Text style={styles.qrHint}>{t('liveSessionShareHint')}</Text>
+            
+            <TouchableOpacity
+              style={[styles.startVideoCallButton, isCreatingVideoRoom && styles.videoCallButtonDisabled]}
+              onPress={handleStartVideoCall}
+              disabled={isCreatingVideoRoom}
+            >
+              {isCreatingVideoRoom ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Video size={24} color="#fff" />
+              )}
+              <Text style={styles.startVideoCallButtonText}>
+                {isCreatingVideoRoom ? t('connectingToCall') : t('startVideoCall')}
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -721,6 +736,27 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  startVideoCallButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    backgroundColor: '#10B981',
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    borderRadius: 16,
+    marginTop: 24,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  startVideoCallButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
   },
   endedSection: {
     alignItems: 'center',
