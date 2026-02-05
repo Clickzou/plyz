@@ -318,7 +318,7 @@ export default function CreateLiveSessionScreen() {
             <ActivityIndicator color="#10B981" />
           ) : (
             <>
-              <Play size={24} color="#10B981" fill="#10B981" />
+              <Play size={24} color="#ffffff" fill="#ffffff" />
               <Text style={styles.createButtonText}>{t('liveSessionStart')}</Text>
             </>
           )}
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    backgroundColor: '#fff',
+    backgroundColor: '#188661',
     borderRadius: 30,
     paddingVertical: 18,
     marginTop: 24,
@@ -580,6 +580,6 @@ const styles = StyleSheet.create({
   createButtonText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#10B981',
+    color: '#ffffff',
   },
 });
