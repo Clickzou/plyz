@@ -26,9 +26,11 @@
       "bundleIdentifier": "com.signtouch.app",
       "buildNumber": "1",
       "infoPlist": {
-        "NSCameraUsageDescription": "SignTouch a besoin d'accéder à votre caméra pour prendre des photos.",
+        "NSCameraUsageDescription": "SignTouch a besoin d'accéder à votre caméra pour prendre des photos et les appels vidéo.",
         "NSPhotoLibraryUsageDescription": "SignTouch a besoin d'accéder à votre galerie pour sauvegarder vos photos signées.",
-        "NSPhotoLibraryAddUsageDescription": "SignTouch a besoin d'accéder à votre galerie pour sauvegarder vos photos signées."
+        "NSPhotoLibraryAddUsageDescription": "SignTouch a besoin d'accéder à votre galerie pour sauvegarder vos photos signées.",
+        "NSMicrophoneUsageDescription": "SignTouch a besoin d'accéder à votre microphone pour les appels vidéo en direct.",
+        "UIBackgroundModes": ["voip"]
       },
       "associatedDomains": ["applinks:signtouch.app"]
     },
@@ -92,7 +94,15 @@
           "isAccessMediaLocationEnabled": true
         }
       ],
-      "expo-barcode-scanner"
+      "expo-barcode-scanner",
+      [
+        "@daily-co/config-plugin-rn-daily-js",
+        {
+          "enableCamera": true,
+          "enableMicrophone": true,
+          "enableScreenShare": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
