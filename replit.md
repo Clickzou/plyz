@@ -128,6 +128,33 @@ Preferred communication style: Simple, everyday language.
 - **i18n**: 17 new translation keys for video call UI (all 15 languages)
 - **Note**: Requires native build (EAS) - does not work in Expo Go or web
 
+### Dynamic Queue System (February 2026)
+- **Session Queue Management**: Real-time queue system for live video sessions
+  - Fans join queue by entering their name on `join-event.tsx`
+  - Push token registration for Expo Push Notifications
+  - 5-second polling interval for real-time position updates
+- **Celebrity Dashboard**: Queue management UI in `live-session-dashboard.tsx`
+  - "Call next fan" button with automatic notification
+  - Visual queue list showing waiting fans
+  - 30-second timeout for fans to respond
+  - Automatic skip and re-queue for missed fans
+- **Push Notifications**: Via Expo Push API
+  - "Your turn" notification when fan is called
+  - "Missed turn" notification if fan doesn't respond
+  - Advance notifications for fans 2-5 minutes out
+- **Missed Fan Handling**: Automatic recalculation
+  - Fan moved to end of queue with incremented missed_count
+  - Other fans' positions automatically adjusted
+  - New estimated wait times calculated
+- **Storage**: `sessionQueueStorage.ts` with functions:
+  - `joinQueue`, `getQueuePosition`, `getMyQueueEntry`
+  - `callNextFan`, `markFanAsMissed`, `getFullQueue`
+  - `sendQueueNotification`, `notifyUpcomingFans`
+- **Database Table**: `session_queue` with columns:
+  - session_id, fan_id, fan_name, push_token
+  - position, status (waiting/called/in_call/missed/completed/left)
+  - estimated_call_time, called_at, completed_at, missed_count
+
 ### Legal Documents System (February 2026)
 - **Multi-Language Legal Documents**: All 4 legal documents translated into 15 languages
   - CGV (Conditions Générales de Vente / Terms of Sale)

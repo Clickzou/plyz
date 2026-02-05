@@ -119,11 +119,17 @@ export const getQueuePosition = async (
       return null;
     }
 
+    const { data: allWaiting } = await supabase
+      .from('session_queue')
+      .select('id, position')
+      .eq('session_id', sessionId)
+      .in('status', ['waiting', 'called', 'in_call']);
+
     const { data: waitingAhead } = await supabase
       .from('session_queue')
       .select('id')
       .eq('session_id', sessionId)
-      .in('status', ['waiting', 'called', 'in_call'])
+      .eq('status', 'waiting')
       .lt('position', myEntry.position);
 
     const { data: session } = await supabase
@@ -139,13 +145,17 @@ export const getQueuePosition = async (
       .eq('status', 'in_call')
       .single();
 
+    const totalInQueue = allWaiting?.length || 0;
     const aheadCount = waitingAhead?.length || 0;
     const durationPerFan = session?.duration_per_fan_minutes || 5;
+    
+    const hasCurrentCall = currentFan ? 1 : 0;
+    const myPosition = aheadCount + 1 + hasCurrentCall;
 
     return {
-      totalInQueue: aheadCount + 1,
-      currentPosition: aheadCount + 1,
-      estimatedWaitMinutes: aheadCount * durationPerFan,
+      totalInQueue,
+      currentPosition: myPosition,
+      estimatedWaitMinutes: (aheadCount + hasCurrentCall) * durationPerFan,
       currentFanName: currentFan?.fan_name || null,
       sessionStatus: session?.status || 'waiting',
     };

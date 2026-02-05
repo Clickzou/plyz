@@ -202,11 +202,14 @@ export default function LiveSessionDashboardScreen() {
     };
   }, [fanCallTimeout]);
 
+  const calledFanIdRef = useRef<string | null>(null);
+
   const handleCallNextFromQueue = async () => {
     if (!sessionId || !session) return;
 
-    if (calledFan) {
-      await markFanAsMissed(calledFan.id);
+    if (calledFanIdRef.current) {
+      await markFanAsMissed(calledFanIdRef.current);
+      calledFanIdRef.current = null;
       setCalledFan(null);
     }
 
@@ -219,6 +222,7 @@ export default function LiveSessionDashboardScreen() {
     
     if (nextFan) {
       setCalledFan(nextFan);
+      calledFanIdRef.current = nextFan.id;
 
       if (nextFan.push_token) {
         await sendQueueNotification(
@@ -235,21 +239,31 @@ export default function LiveSessionDashboardScreen() {
         session.duration_per_fan_minutes || 5
       );
 
+      const calledFanId = nextFan.id;
+      const calledFanPushToken = nextFan.push_token;
+      
       const timeout = setTimeout(async () => {
-        if (calledFan && calledFan.id === nextFan.id) {
-          await markFanAsMissed(nextFan.id);
+        if (calledFanIdRef.current === calledFanId) {
+          await markFanAsMissed(calledFanId);
           
-          if (nextFan.push_token) {
+          if (calledFanPushToken) {
             await sendQueueNotification(
-              nextFan.push_token,
+              calledFanPushToken,
               `${session.celebrity_name} - SignTouch`,
               "Vous avez manqué votre tour. Vous êtes maintenant à la fin de la file d'attente.",
               { sessionId, action: 'missed_turn' }
             );
           }
           
+          calledFanIdRef.current = null;
           setCalledFan(null);
-          handleCallNextFromQueue();
+          
+          const updatedQueue = await getFullQueue(sessionId);
+          setSessionQueue(updatedQueue);
+          
+          if (updatedQueue.length > 0) {
+            handleCallNextFromQueue();
+          }
         }
       }, FAN_RESPONSE_TIMEOUT_MS);
 
@@ -612,18 +626,6 @@ export default function LiveSessionDashboardScreen() {
                       </Text>
                     )}
                   </View>
-                )}
-
-                <Text style={styles.waitingTitle}>
-                  {waitingCount > 0
-                    ? t('liveSessionFansWaiting', { count: waitingCount })
-                    : t('liveSessionNoFansYet')}
-                </Text>
-                {waitingCount > 0 && (
-                  <TouchableOpacity style={styles.callNextButton} onPress={handleNextFan}>
-                    <Users size={24} color="#4ade80" />
-                    <Text style={styles.callNextButtonText}>{t('liveSessionCallNext')}</Text>
-                  </TouchableOpacity>
                 )}
 
                 <TouchableOpacity
