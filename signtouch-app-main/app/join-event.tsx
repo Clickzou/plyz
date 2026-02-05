@@ -89,7 +89,7 @@ export default function JoinEventScreen() {
   }, [params.code]);
 
   useEffect(() => {
-    let pollInterval: NodeJS.Timeout | null = null;
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
 
     const pollQueuePosition = async () => {
       if (foundLiveSession && hasJoinedQueue) {
@@ -663,7 +663,7 @@ export default function JoinEventScreen() {
                 <View style={styles.pulseContainer}>
                   <View style={styles.pulseOuter} />
                   <View style={styles.pulseInner}>
-                    <Clock size={32} color="#fff" />
+                    <Clock size={22} color="#fff" />
                   </View>
                 </View>
 
@@ -1358,23 +1358,23 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   pulseContainer: {
-    width: 80,
-    height: 80,
+    width: 56,
+    height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   pulseOuter: {
     position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-  },
-  pulseInner: {
     width: 56,
     height: 56,
     borderRadius: 28,
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  pulseInner: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: 'rgba(16, 185, 129, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1393,21 +1393,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   waitingHint: {
-    fontSize: 12,
+    fontSize: 11,
     color: 'rgba(255, 255, 255, 0.6)',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
     fontStyle: 'italic',
   },
   behaviorWarningCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     backgroundColor: 'rgba(245, 158, 11, 0.15)',
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 20,
-    marginBottom: 16,
-    gap: 12,
+    borderRadius: 10,
+    padding: 10,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    gap: 8,
     borderWidth: 1,
     borderColor: 'rgba(245, 158, 11, 0.3)',
   },
@@ -1560,27 +1560,27 @@ const styles = StyleSheet.create({
   },
   queuePositionCard: {
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 10,
     borderWidth: 2,
     borderColor: '#10B981',
     width: '100%',
   },
   queuePositionLabel: {
-    fontSize: 14,
+    fontSize: 13,
     color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   queuePositionNumber: {
-    fontSize: 48,
+    fontSize: 36,
     fontWeight: '900',
     color: '#10B981',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   queuePositionTotal: {
-    fontSize: 14,
+    fontSize: 13,
     color: 'rgba(255, 255, 255, 0.6)',
   },
   currentFanCard: {
