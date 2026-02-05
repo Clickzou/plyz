@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ActivityIndicator, Platform } from 'react-native';
-import { X, Mail } from 'lucide-react-native';
+import { X, Mail, KeyRound, CheckCircle } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/contexts/LanguageContext';
@@ -10,13 +10,14 @@ interface PostPurchaseAccountModalProps {
 }
 
 export default function PostPurchaseAccountModal({ visible, onClose }: PostPurchaseAccountModalProps) {
-  const { user, session, sendMagicLink } = useAuth();
-  const { t, language } = useTranslation();
+  const { user, session, sendOtpCode, verifyOtpCode } = useAuth();
+  const { t } = useTranslation();
 
+  const [step, setStep] = useState<'email' | 'code' | 'success'>('email');
   const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     if (visible && (user || session)) {
@@ -26,9 +27,10 @@ export default function PostPurchaseAccountModal({ visible, onClose }: PostPurch
 
   useEffect(() => {
     if (!visible) {
+      setStep('email');
       setEmail('');
+      setCode('');
       setError('');
-      setSuccess(false);
       setLoading(false);
     }
   }, [visible]);
@@ -38,32 +40,74 @@ export default function PostPurchaseAccountModal({ visible, onClose }: PostPurch
     return emailRegex.test(email);
   };
 
-  const handleSendLink = async () => {
+  const handleSendCode = async () => {
     if (!email.trim()) {
-      setError(t('invalidEmail'));
+      setError(t('invalidEmail') || 'Adresse email invalide');
       return;
     }
 
     if (!validateEmail(email)) {
-      setError(t('invalidEmail'));
+      setError(t('invalidEmail') || 'Adresse email invalide');
       return;
     }
 
     setLoading(true);
     setError('');
-    setSuccess(false);
 
     try {
-      const { error: sendError } = await sendMagicLink(email, language);
+      const { error: sendError } = await sendOtpCode(email.trim());
 
       if (sendError) {
         setError(sendError.message || t('emailLinkError'));
       } else {
-        setSuccess(true);
-        setEmail('');
+        setStep('code');
       }
     } catch (err) {
-      setError(t('emailLinkError'));
+      setError(t('emailLinkError') || 'Une erreur est survenue');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!code.trim() || code.trim().length < 6) {
+      setError(t('invalidCode') || 'Code invalide');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const { error: verifyError } = await verifyOtpCode(email.trim(), code.trim());
+
+      if (verifyError) {
+        setError(verifyError.message || t('invalidCode'));
+      } else {
+        setStep('success');
+        setTimeout(() => {
+          onClose();
+        }, 2000);
+      }
+    } catch (err) {
+      setError(t('invalidCode') || 'Code invalide');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setLoading(true);
+    setError('');
+    setCode('');
+
+    try {
+      const { error: sendError } = await sendOtpCode(email.trim());
+      if (sendError) {
+        setError(sendError.message);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }
@@ -78,6 +122,131 @@ export default function PostPurchaseAccountModal({ visible, onClose }: PostPurch
       onClose();
     }
   };
+
+  const renderEmailStep = () => (
+    <>
+      <View style={styles.iconContainer}>
+        <Mail size={48} color="#10b981" strokeWidth={2} />
+      </View>
+
+      <Text style={styles.title}>{t('postPurchaseTitle') || 'Sécurisez vos photos et votre abonnement'}</Text>
+      <Text style={styles.description}>{t('postPurchaseDescription') || 'Connectez-vous pour retrouver vos dédicaces et conserver votre abonnement si vous changez d\'appareil.'}</Text>
+
+      <TextInput
+        style={[styles.input, error && styles.inputError]}
+        placeholder={t('postPurchasePlaceholder') || 'Votre adresse email'}
+        placeholderTextColor="#666666"
+        value={email}
+        onChangeText={(text) => {
+          setEmail(text);
+          setError('');
+        }}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        editable={!loading}
+      />
+
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+      <TouchableOpacity
+        style={[styles.primaryButton, loading && styles.buttonDisabled]}
+        onPress={handleSendCode}
+        disabled={loading}
+        activeOpacity={0.8}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <Text style={styles.primaryButtonText}>{t('sendCode') || 'Envoyer le code'}</Text>
+        )}
+      </TouchableOpacity>
+
+      <View style={styles.infoContainer}>
+        <Text style={styles.infoText}>{t('noPasswordRequired') || 'Pas de mot de passe requis'}</Text>
+      </View>
+
+      <TouchableOpacity
+        style={styles.laterButton}
+        onPress={handleLater}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.laterButtonText}>{t('postPurchaseLater') || 'Plus tard'}</Text>
+      </TouchableOpacity>
+    </>
+  );
+
+  const renderCodeStep = () => (
+    <>
+      <View style={styles.iconContainer}>
+        <KeyRound size={48} color="#10b981" strokeWidth={2} />
+      </View>
+
+      <Text style={styles.title}>{t('enterCode') || 'Entrez le code'}</Text>
+      <Text style={styles.description}>
+        {t('codeSentToEmail') || `Nous avons envoyé un code à 8 chiffres à ${email}. Copiez-collez le code ci-dessous.`}
+      </Text>
+
+      <TextInput
+        style={[styles.input, styles.codeInput, error && styles.inputError]}
+        placeholder="12345678"
+        placeholderTextColor="#666666"
+        value={code}
+        onChangeText={(text) => {
+          setCode(text.replace(/[^0-9]/g, ''));
+          setError('');
+        }}
+        keyboardType="number-pad"
+        maxLength={8}
+        editable={!loading}
+      />
+
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+      <TouchableOpacity
+        style={[styles.primaryButton, loading && styles.buttonDisabled]}
+        onPress={handleVerifyCode}
+        disabled={loading}
+        activeOpacity={0.8}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <Text style={styles.primaryButtonText}>{t('verify') || 'Vérifier'}</Text>
+        )}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.resendButton}
+        onPress={handleResendCode}
+        disabled={loading}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.resendButtonText}>{t('resendCode') || 'Renvoyer le code'}</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.laterButton}
+        onPress={() => setStep('email')}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.laterButtonText}>{t('changeEmail') || 'Changer d\'email'}</Text>
+      </TouchableOpacity>
+    </>
+  );
+
+  const renderSuccessStep = () => (
+    <>
+      <View style={[styles.iconContainer, styles.successIcon]}>
+        <CheckCircle size={48} color="#10b981" strokeWidth={2} />
+      </View>
+
+      <Text style={styles.title}>{t('connectionSuccess') || 'Connexion réussie !'}</Text>
+      <Text style={styles.description}>
+        {t('accountSecured') || 'Votre compte est maintenant sécurisé. Vos photos et abonnement seront synchronisés.'}
+      </Text>
+    </>
+  );
 
   return (
     <Modal
@@ -105,63 +274,9 @@ export default function PostPurchaseAccountModal({ visible, onClose }: PostPurch
           </TouchableOpacity>
 
           <View style={styles.content}>
-            <View style={styles.iconContainer}>
-              <Mail size={48} color="#10b981" strokeWidth={2} />
-            </View>
-
-            <Text style={styles.title}>{t('postPurchaseTitle')}</Text>
-            <Text style={styles.description}>{t('postPurchaseDescription')}</Text>
-
-            {success ? (
-              <View style={styles.successContainer}>
-                <Text style={styles.successText}>{t('postPurchaseSuccess')}</Text>
-              </View>
-            ) : (
-              <>
-                <TextInput
-                  style={[styles.input, error && styles.inputError]}
-                  placeholder={t('postPurchasePlaceholder')}
-                  placeholderTextColor="#666666"
-                  value={email}
-                  onChangeText={(text) => {
-                    setEmail(text);
-                    setError('');
-                  }}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  editable={!loading}
-                />
-
-                {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-                <TouchableOpacity
-                  style={[styles.primaryButton, loading && styles.buttonDisabled]}
-                  onPress={handleSendLink}
-                  disabled={loading}
-                  activeOpacity={0.8}
-                >
-                  {loading ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <Text style={styles.primaryButtonText}>{t('postPurchaseSendLink')}</Text>
-                  )}
-                </TouchableOpacity>
-
-                <View style={styles.infoContainer}>
-                  <Text style={styles.infoText}>{t('noPasswordRequired')}</Text>
-                  <Text style={styles.infoText}>{t('postPurchaseSecureLink')}</Text>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.laterButton}
-                  onPress={handleLater}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.laterButtonText}>{t('postPurchaseLater')}</Text>
-                </TouchableOpacity>
-              </>
-            )}
+            {step === 'email' && renderEmailStep()}
+            {step === 'code' && renderCodeStep()}
+            {step === 'success' && renderSuccessStep()}
           </View>
         </TouchableOpacity>
       </TouchableOpacity>
@@ -221,6 +336,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 24,
   },
+  successIcon: {
+    backgroundColor: 'rgba(16, 185, 129, 0.25)',
+  },
   title: {
     fontSize: 24,
     fontWeight: '700',
@@ -245,6 +363,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 2,
     borderColor: '#2a2a2a',
+  },
+  codeInput: {
+    fontSize: 24,
+    fontWeight: '600',
+    textAlign: 'center',
+    letterSpacing: 4,
   },
   inputError: {
     borderColor: '#ef4444',
@@ -282,6 +406,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
+  resendButton: {
+    paddingVertical: 8,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  resendButtonText: {
+    color: '#10b981',
+    fontSize: 15,
+    fontWeight: '500',
+  },
   laterButton: {
     paddingVertical: 12,
     alignItems: 'center',
@@ -290,17 +424,5 @@ const styles = StyleSheet.create({
     color: '#a3a3a3',
     fontSize: 15,
     fontWeight: '500',
-  },
-  successContainer: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    borderRadius: 12,
-    padding: 20,
-    marginTop: 8,
-  },
-  successText: {
-    color: '#10b981',
-    fontSize: 15,
-    textAlign: 'center',
-    lineHeight: 22,
   },
 });
