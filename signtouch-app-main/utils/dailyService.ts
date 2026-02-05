@@ -35,9 +35,11 @@ interface CreateTokenOptions {
 }
 
 export const getDailyApiKey = (): string | null => {
-  const apiKey = process.env.DAILY_API_KEY || process.env.EXPO_PUBLIC_DAILY_API_KEY;
+  // EXPO_PUBLIC_ prefix is required for client-side access in Expo
+  const apiKey = process.env.EXPO_PUBLIC_DAILY_API_KEY;
+  console.log('[Daily] Checking API key, found:', apiKey ? 'YES' : 'NO');
   if (!apiKey) {
-    console.log('Daily API key not found in environment variables');
+    console.error('[Daily] API key not found - make sure EXPO_PUBLIC_DAILY_API_KEY is set');
     return null;
   }
   return apiKey;
@@ -58,6 +60,7 @@ export const createDailyRoom = async (options: CreateRoomOptions = {}): Promise<
   } = options;
 
   try {
+    console.log('[Daily] Creating room:', name);
     const response = await fetch(`${DAILY_API_URL}/rooms`, {
       method: 'POST',
       headers: {
@@ -78,16 +81,19 @@ export const createDailyRoom = async (options: CreateRoomOptions = {}): Promise<
       }),
     });
 
+    console.log('[Daily] Response status:', response.status);
+    
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Failed to create Daily room:', errorData);
+      console.error('[Daily] Failed to create room:', errorData);
       return null;
     }
 
     const room = await response.json();
+    console.log('[Daily] Room created successfully:', room.url);
     return room;
   } catch (error) {
-    console.error('Error creating Daily room:', error);
+    console.error('[Daily] Error creating room:', error);
     return null;
   }
 };
