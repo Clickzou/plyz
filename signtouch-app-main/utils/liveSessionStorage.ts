@@ -18,6 +18,7 @@ export interface LiveSession {
   slots_used: number;
   room_url?: string | null;
   fan_call_started_at?: string | null;
+  cover_photo_url?: string | null;
 }
 
 export interface QueueEntry {
@@ -45,13 +46,44 @@ const generateSessionCode = (): string => {
   return code;
 };
 
+export const uploadCoverPhoto = async (
+  sessionId: string,
+  photoUri: string
+): Promise<string | null> => {
+  try {
+    const response = await fetch(photoUri);
+    const blob = await response.blob();
+    const fileName = `cover_${sessionId}_${Date.now()}.jpg`;
+    const filePath = `live-sessions/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('memories')
+      .upload(filePath, blob, { contentType: 'image/jpeg', upsert: true });
+
+    if (uploadError) {
+      console.error('Error uploading cover photo:', uploadError);
+      return null;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('memories')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  } catch (error) {
+    console.error('Error uploading cover photo:', error);
+    return null;
+  }
+};
+
 export const createLiveSession = async (
   celebrityId: string,
   celebrityName: string,
   durationMinutes: number,
   maxSlots: number,
   priceCents: number = 0,
-  durationPerFanMinutes: number = 5
+  durationPerFanMinutes: number = 5,
+  coverPhotoUrl: string | null = null
 ): Promise<LiveSession | null> => {
   try {
     const code = generateSessionCode();
@@ -67,6 +99,7 @@ export const createLiveSession = async (
         max_slots: maxSlots,
         price_cents: priceCents,
         status: 'waiting',
+        cover_photo_url: coverPhotoUrl,
       })
       .select()
       .single();
