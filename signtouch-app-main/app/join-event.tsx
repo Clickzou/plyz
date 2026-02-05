@@ -29,6 +29,14 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import AccountModal from '@/components/AccountModal';
 import { getEventByCode, LiveEvent } from '@/utils/liveEventStorage';
 import { getSessionByCode, LiveSession } from '@/utils/liveSessionStorage';
+import { 
+  joinQueue, 
+  getQueuePosition, 
+  getMyQueueEntry,
+  updatePushToken,
+  QueueEntry,
+  QueueStats,
+} from '@/utils/sessionQueueStorage';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import { 
   joinEventSession, 
@@ -67,12 +75,49 @@ export default function JoinEventScreen() {
   const [showScanner, setShowScanner] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
+  const [queueEntry, setQueueEntry] = useState<QueueEntry | null>(null);
+  const [queueStats, setQueueStats] = useState<QueueStats | null>(null);
+  const [fanName, setFanName] = useState('');
+  const [hasJoinedQueue, setHasJoinedQueue] = useState(false);
+  const [isJoiningQueue, setIsJoiningQueue] = useState(false);
+
   useEffect(() => {
     if (params.code) {
       setCode(String(params.code));
       handleSearch(String(params.code));
     }
   }, [params.code]);
+
+  useEffect(() => {
+    let pollInterval: NodeJS.Timeout | null = null;
+
+    const pollQueuePosition = async () => {
+      if (foundLiveSession && hasJoinedQueue) {
+        const stats = await getQueuePosition(foundLiveSession.id);
+        if (stats) {
+          setQueueStats(stats);
+          
+          if (stats.currentPosition === 1 && stats.sessionStatus === 'live') {
+            const entry = await getMyQueueEntry(foundLiveSession.id);
+            if (entry && (entry.status === 'called' || entry.status === 'in_call')) {
+              setQueueEntry(entry);
+            }
+          }
+        }
+      }
+    };
+
+    if (foundLiveSession && hasJoinedQueue) {
+      pollQueuePosition();
+      pollInterval = setInterval(pollQueuePosition, 5000);
+    }
+
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
+  }, [foundLiveSession, hasJoinedQueue]);
 
   const handleSearch = async (searchCode?: string) => {
     const codeToSearch = (searchCode || code).trim().toUpperCase();
@@ -258,6 +303,54 @@ export default function JoinEventScreen() {
     setEventScheduled(false);
     setScheduledSession(null);
     setNotificationSet(false);
+    setHasJoinedQueue(false);
+    setQueueEntry(null);
+    setQueueStats(null);
+    setFanName('');
+  };
+
+  const handleJoinQueue = async () => {
+    if (!foundLiveSession || !fanName.trim()) {
+      Alert.alert(t('error') || 'Error', t('enterYourName') || 'Please enter your name');
+      return;
+    }
+
+    setIsJoiningQueue(true);
+
+    try {
+      let pushToken: string | null = null;
+      
+      if (Notifications && Platform.OS !== 'web') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status === 'granted') {
+          const tokenData = await Notifications.getExpoPushTokenAsync();
+          pushToken = tokenData.data;
+        }
+      }
+
+      const entry = await joinQueue(foundLiveSession.id, fanName.trim(), pushToken);
+      
+      if (entry) {
+        setQueueEntry(entry);
+        setHasJoinedQueue(true);
+        
+        const stats = await getQueuePosition(foundLiveSession.id);
+        if (stats) {
+          setQueueStats(stats);
+        }
+
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+      } else {
+        Alert.alert(t('error') || 'Error', t('failedToJoinQueue') || 'Failed to join the queue');
+      }
+    } catch (error) {
+      console.error('Error joining queue:', error);
+      Alert.alert(t('error') || 'Error', t('failedToJoinQueue') || 'Failed to join the queue');
+    } finally {
+      setIsJoiningQueue(false);
+    }
   };
 
   const handleSetNotification = async () => {
@@ -466,11 +559,11 @@ export default function JoinEventScreen() {
               </Text>
             </View>
 
-            {foundLiveSession.room_url ? (
+            {queueEntry && (queueEntry.status === 'called' || queueEntry.status === 'in_call') && foundLiveSession.room_url ? (
               <View style={styles.readyToJoinContainer}>
                 <View style={styles.readyBadge}>
                   <Check size={20} color="#10B981" />
-                  <Text style={styles.readyBadgeText}>{t('callReady') || 'Call is ready!'}</Text>
+                  <Text style={styles.readyBadgeText}>{t('itsYourTurn') || "It's your turn!"}</Text>
                 </View>
                 <TouchableOpacity
                   style={styles.joinCallButton}
@@ -481,7 +574,8 @@ export default function JoinEventScreen() {
                         roomUrl: foundLiveSession.room_url || '',
                         sessionId: foundLiveSession.id,
                         isHost: 'false',
-                        userName: 'Fan',
+                        userName: fanName || 'Fan',
+                        queueEntryId: queueEntry.id,
                       }
                     });
                   }}
@@ -496,38 +590,93 @@ export default function JoinEventScreen() {
                     <Text style={styles.joinCallButtonText}>{t('joinVideoCall') || 'Join Video Call'}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
+                <Text style={styles.joinNowHint}>
+                  {t('joinNowHint') || 'Join now before you miss your turn!'}
+                </Text>
+              </View>
+            ) : !hasJoinedQueue ? (
+              <View style={styles.joinQueueSection}>
+                <Text style={styles.joinQueueTitle}>
+                  {t('joinTheQueue') || 'Join the queue to call'}
+                </Text>
+                <Text style={styles.joinQueueSubtitle}>
+                  {t('enterNameToJoin') || 'Enter your name to join the waiting list'}
+                </Text>
+                
+                <TextInput
+                  style={styles.nameInput}
+                  placeholder={t('yourName') || 'Your name'}
+                  placeholderTextColor="rgba(255,255,255,0.4)"
+                  value={fanName}
+                  onChangeText={setFanName}
+                  maxLength={50}
+                />
+
+                <TouchableOpacity
+                  style={[styles.joinQueueButton, isJoiningQueue && styles.joinQueueButtonDisabled]}
+                  onPress={handleJoinQueue}
+                  disabled={isJoiningQueue}
+                >
+                  <LinearGradient
+                    colors={['#10B981', '#059669']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.joinQueueButtonGradient}
+                  >
+                    {isJoiningQueue ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <>
+                        <Users size={22} color="#fff" />
+                        <Text style={styles.joinQueueButtonText}>{t('joinQueue') || 'Join Queue'}</Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
               </View>
             ) : (
               <View style={styles.waitingSection}>
+                <View style={styles.queuePositionCard}>
+                  <Text style={styles.queuePositionLabel}>{t('yourPosition') || 'Your position'}</Text>
+                  <Text style={styles.queuePositionNumber}>#{queueStats?.currentPosition || 1}</Text>
+                  <Text style={styles.queuePositionTotal}>
+                    {t('outOf') || 'out of'} {queueStats?.totalInQueue || 1} {t('inQueue') || 'in queue'}
+                  </Text>
+                </View>
+
+                <View style={styles.waitTimeCard}>
+                  <Clock size={18} color="#f59e0b" />
+                  <Text style={styles.waitTimeText}>
+                    {t('estimatedWait') || 'Estimated wait'}: ~{queueStats?.estimatedWaitMinutes || 0} min
+                  </Text>
+                </View>
+
+                {queueStats?.currentFanName && (
+                  <View style={styles.currentFanCard}>
+                    <Camera size={16} color="#10B981" />
+                    <Text style={styles.currentFanText}>
+                      {t('currentlyWith') || 'Currently with'}: {queueStats.currentFanName}
+                    </Text>
+                  </View>
+                )}
+
                 <View style={styles.pulseContainer}>
                   <View style={styles.pulseOuter} />
                   <View style={styles.pulseInner}>
                     <Clock size={32} color="#fff" />
                   </View>
                 </View>
-                <Text style={styles.waitingTitle}>
-                  {t('getReady') || 'Get ready!'}
-                </Text>
-                <Text style={styles.waitingSubtitle}>
-                  {t('waitingForCelebrityToConnect') || `Please wait, ${foundLiveSession.celebrity_name} is connecting...`}
-                </Text>
+
                 <Text style={styles.waitingHint}>
                   {t('stayOnPage') || 'Stay on this page - the call will start soon!'}
                 </Text>
-                
-                <View style={styles.waitTimeCard}>
-                  <Clock size={18} color="#f59e0b" />
-                  <Text style={styles.waitTimeText}>
-                    {t('estimatedWait') || 'Estimated wait'}: ~{foundLiveSession.duration_per_fan_minutes || 5} min
-                  </Text>
-                </View>
                 
                 <TouchableOpacity
                   style={styles.refreshButtonLarge}
                   onPress={() => handleSearch(foundLiveSession.code)}
                 >
                   <Search size={20} color="#10B981" />
-                  <Text style={styles.refreshButtonLargeText}>{t('checkAgain') || 'Check again'}</Text>
+                  <Text style={styles.refreshButtonLargeText}>{t('refreshPosition') || 'Refresh position'}</Text>
                 </TouchableOpacity>
 
                 {!notificationSet ? (
@@ -1249,5 +1398,101 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     flex: 1,
+  },
+  joinNowHint: {
+    fontSize: 12,
+    color: '#10B981',
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  joinQueueSection: {
+    alignItems: 'center',
+    width: '100%',
+    paddingVertical: 20,
+  },
+  joinQueueTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  joinQueueSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  nameInput: {
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#fff',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  joinQueueButton: {
+    width: '100%',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  joinQueueButtonDisabled: {
+    opacity: 0.6,
+  },
+  joinQueueButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    gap: 10,
+  },
+  joinQueueButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  queuePositionCard: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#10B981',
+    width: '100%',
+  },
+  queuePositionLabel: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 4,
+  },
+  queuePositionNumber: {
+    fontSize: 48,
+    fontWeight: '900',
+    color: '#10B981',
+    marginBottom: 4,
+  },
+  queuePositionTotal: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.6)',
+  },
+  currentFanCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 8,
+    marginBottom: 16,
+  },
+  currentFanText: {
+    fontSize: 13,
+    color: '#10B981',
   },
 });
