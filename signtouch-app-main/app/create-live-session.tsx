@@ -141,7 +141,8 @@ export default function CreateLiveSessionScreen() {
           celebrityName.trim(),
           totalDuration,
           calculatedMaxFans,
-          price
+          price,
+          durationPerFan
         );
         if (!session) {
           console.log('Supabase returned null, creating local session');

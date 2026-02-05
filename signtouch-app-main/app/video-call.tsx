@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
 import { WebView } from 'react-native-webview';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, PhoneOff } from 'lucide-react-native';
+import { ArrowLeft, PhoneOff, Clock } from 'lucide-react-native';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function VideoCallScreen() {
@@ -24,10 +24,31 @@ export default function VideoCallScreen() {
     isHost: string;
     sessionId: string;
     userName: string;
+    durationPerFan: string;
   }>();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fanTimeRemaining, setFanTimeRemaining] = useState<string>('--:--');
+  const callStartTime = useRef<number>(Date.now());
+
+  useEffect(() => {
+    const durationMinutes = parseInt(params.durationPerFan || '5', 10);
+    if (!durationMinutes) return;
+
+    const interval = setInterval(() => {
+      const durationMs = durationMinutes * 60 * 1000;
+      const endTime = callStartTime.current + durationMs;
+      const now = Date.now();
+      const diff = Math.max(0, endTime - now);
+
+      const minutes = Math.floor(diff / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+      setFanTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [params.durationPerFan]);
 
   const isHost = params.isHost === 'true';
   const userName = params.userName || (isHost ? 'Host' : 'Guest');
@@ -115,9 +136,18 @@ export default function VideoCallScreen() {
         <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {isHost ? t('host') : t('startVideoCall')}
-        </Text>
+        
+        {isHost && params.durationPerFan ? (
+          <View style={styles.timerContainer}>
+            <Clock size={18} color="#fff" />
+            <Text style={styles.timerText}>{fanTimeRemaining}</Text>
+          </View>
+        ) : (
+          <Text style={styles.headerTitle}>
+            {isHost ? t('host') : t('startVideoCall')}
+          </Text>
+        )}
+        
         <TouchableOpacity style={styles.endCallHeaderButton} onPress={leaveCall}>
           <PhoneOff size={20} color="#fff" />
         </TouchableOpacity>
@@ -188,6 +218,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+  },
+  timerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#10B981',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 8,
+  },
+  timerText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
   },
   endCallHeaderButton: {
     width: 40,

@@ -6,6 +6,7 @@ export interface LiveSession {
   celebrity_id: string;
   celebrity_name: string;
   duration_minutes: number;
+  duration_per_fan_minutes: number;
   max_slots: number;
   price_cents: number;
   currency: string;
@@ -16,6 +17,7 @@ export interface LiveSession {
   created_at: string;
   slots_used: number;
   room_url?: string | null;
+  fan_call_started_at?: string | null;
 }
 
 export interface QueueEntry {
@@ -48,7 +50,8 @@ export const createLiveSession = async (
   celebrityName: string,
   durationMinutes: number,
   maxSlots: number,
-  priceCents: number = 0
+  priceCents: number = 0,
+  durationPerFanMinutes: number = 5
 ): Promise<LiveSession | null> => {
   try {
     const code = generateSessionCode();
@@ -60,6 +63,7 @@ export const createLiveSession = async (
         celebrity_id: celebrityId,
         celebrity_name: celebrityName,
         duration_minutes: durationMinutes,
+        duration_per_fan_minutes: durationPerFanMinutes,
         max_slots: maxSlots,
         price_cents: priceCents,
         status: 'waiting',
@@ -76,6 +80,24 @@ export const createLiveSession = async (
   } catch (error) {
     console.error('Error creating live session:', error);
     return null;
+  }
+};
+
+export const startFanCall = async (sessionId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('live_sessions')
+      .update({ fan_call_started_at: new Date().toISOString() })
+      .eq('id', sessionId);
+
+    if (error) {
+      console.error('Error starting fan call timer:', error);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Error starting fan call timer:', error);
+    return false;
   }
 };
 

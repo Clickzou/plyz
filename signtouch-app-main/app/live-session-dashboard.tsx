@@ -45,6 +45,7 @@ import {
   broadcastSignatureStroke,
   updateSignatureSvg,
   updateSessionRoomUrl,
+  startFanCall,
 } from '@/utils/liveSessionStorage';
 import QRCode from 'react-native-qrcode-svg';
 import * as Clipboard from 'expo-clipboard';
@@ -63,9 +64,11 @@ export default function LiveSessionDashboardScreen() {
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [currentFan, setCurrentFan] = useState<QueueEntry | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>('--:--');
+  const [fanTimeRemaining, setFanTimeRemaining] = useState<string>('--:--');
   const [showQR, setShowQR] = useState(true);
   const [copied, setCopied] = useState(false);
   const [isCreatingVideoRoom, setIsCreatingVideoRoom] = useState(false);
+  const [isInVideoCall, setIsInVideoCall] = useState(false);
 
   const [paths, setPaths] = useState<string[]>([]);
   const [currentPath, setCurrentPath] = useState<string>('');
@@ -136,6 +139,31 @@ export default function LiveSessionDashboardScreen() {
 
     return () => clearInterval(interval);
   }, [session?.ends_at, session?.status, sessionId]);
+
+  useEffect(() => {
+    if (!session?.fan_call_started_at || !session?.duration_per_fan_minutes || !isInVideoCall) {
+      setFanTimeRemaining('--:--');
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const startTime = new Date(session.fan_call_started_at!).getTime();
+      const durationMs = session.duration_per_fan_minutes * 60 * 1000;
+      const endTime = startTime + durationMs;
+      const now = new Date().getTime();
+      const diff = Math.max(0, endTime - now);
+
+      const minutes = Math.floor(diff / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+      setFanTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+
+      if (diff <= 0) {
+        setFanTimeRemaining('0:00');
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [session?.fan_call_started_at, session?.duration_per_fan_minutes, isInVideoCall]);
 
   const handleStart = async () => {
     if (!sessionId) return;
@@ -218,6 +246,10 @@ export default function LiveSessionDashboardScreen() {
 
       // Save room URL to database so fans can join
       await updateSessionRoomUrl(session.id, roomResult.roomUrl);
+      
+      // Start fan call timer
+      await startFanCall(session.id);
+      setIsInVideoCall(true);
 
       const token = await createMeetingToken({
         roomName: roomResult.roomName,
@@ -235,6 +267,7 @@ export default function LiveSessionDashboardScreen() {
           isHost: 'true',
           sessionId: session.id,
           userName: session.celebrity_name,
+          durationPerFan: String(session.duration_per_fan_minutes || 5),
         }
       });
     } catch (error) {
