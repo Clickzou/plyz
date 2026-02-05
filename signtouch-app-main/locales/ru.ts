@@ -536,7 +536,7 @@ export default {
   createLiveSession: 'Создать живую сессию',
   liveSessionCoverPhoto: 'Фото обложки',
   liveSessionCoverPhotoHint: 'Будет показано фанатам',
-  tapToTakeSelfie: 'Нажмите, чтобы сделать селфи',
+  tapToTakeSelfie: 'Сделать селфи',
   liveSessionYourName: 'Ваше имя / Сценическое имя',
   liveSessionNamePlaceholder: 'Введите ваше имя...',
   liveSessionNameRequired: 'Пожалуйста, введите ваше имя',

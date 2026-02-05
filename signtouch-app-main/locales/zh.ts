@@ -536,7 +536,7 @@ export default {
   createLiveSession: '创建直播会话',
   liveSessionCoverPhoto: '封面照片',
   liveSessionCoverPhotoHint: '将显示给粉丝',
-  tapToTakeSelfie: '点击拍摄自拍',
+  tapToTakeSelfie: '拍摄自拍',
   liveSessionYourName: '您的姓名/艺名',
   liveSessionNamePlaceholder: '输入您的姓名...',
   liveSessionNameRequired: '请输入您的姓名',

@@ -536,7 +536,7 @@ export default {
   createLiveSession: 'লাইভ সেশন তৈরি করুন',
   liveSessionCoverPhoto: 'কভার ফটো',
   liveSessionCoverPhotoHint: 'এটি ফ্যানদের কাছে দেখানো হবে',
-  tapToTakeSelfie: 'সেলফি নিতে ট্যাপ করুন',
+  tapToTakeSelfie: 'সেলফি নিন',
   liveSessionYourName: 'আপনার নাম / স্টেজ নাম',
   liveSessionNamePlaceholder: 'আপনার নাম লিখুন...',
   liveSessionNameRequired: 'অনুগ্রহ করে আপনার নাম লিখুন',

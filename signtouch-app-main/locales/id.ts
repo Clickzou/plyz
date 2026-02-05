@@ -536,7 +536,7 @@ export default {
   createLiveSession: 'Buat Sesi Langsung',
   liveSessionCoverPhoto: 'Foto Sampul',
   liveSessionCoverPhotoHint: 'Akan ditampilkan kepada penggemar',
-  tapToTakeSelfie: 'Ketuk untuk mengambil selfie',
+  tapToTakeSelfie: 'Ambil selfie',
   liveSessionYourName: 'Nama Anda / Nama Panggung',
   liveSessionNamePlaceholder: 'Masukkan nama Anda...',
   liveSessionNameRequired: 'Silakan masukkan nama Anda',

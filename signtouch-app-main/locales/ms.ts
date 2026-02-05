@@ -536,7 +536,7 @@ export default {
   createLiveSession: 'Cipta Sesi Langsung',
   liveSessionCoverPhoto: 'Foto Muka Depan',
   liveSessionCoverPhotoHint: 'Akan dipaparkan kepada peminat',
-  tapToTakeSelfie: 'Ketik untuk ambil swafoto',
+  tapToTakeSelfie: 'Ambil swafoto',
   liveSessionYourName: 'Nama Anda / Nama Pentas',
   liveSessionNamePlaceholder: 'Masukkan nama anda...',
   liveSessionNameRequired: 'Sila masukkan nama anda',

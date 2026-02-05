@@ -536,7 +536,7 @@ export default {
   createLiveSession: 'ライブセッションを作成',
   liveSessionCoverPhoto: 'カバー写真',
   liveSessionCoverPhotoHint: 'ファンに表示されます',
-  tapToTakeSelfie: 'タップして自撮り',
+  tapToTakeSelfie: '自撮りする',
   liveSessionYourName: 'あなたの名前 / 芸名',
   liveSessionNamePlaceholder: '名前を入力...',
   liveSessionNameRequired: '名前を入力してください',

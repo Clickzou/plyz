@@ -536,7 +536,7 @@ export default {
   createLiveSession: 'लाइव सत्र बनाएं',
   liveSessionCoverPhoto: 'कवर फोटो',
   liveSessionCoverPhotoHint: 'यह प्रशंसकों को दिखाई जाएगी',
-  tapToTakeSelfie: 'सेल्फी लेने के लिए टैप करें',
+  tapToTakeSelfie: 'सेल्फी लें',
   liveSessionYourName: 'आपका नाम / स्टेज नाम',
   liveSessionNamePlaceholder: 'अपना नाम दर्ज करें...',
   liveSessionNameRequired: 'कृपया अपना नाम दर्ज करें',

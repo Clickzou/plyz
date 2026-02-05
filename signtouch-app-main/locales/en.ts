@@ -536,7 +536,7 @@ export default {
   createLiveSession: 'Create Live Session',
   liveSessionCoverPhoto: 'Cover Photo',
   liveSessionCoverPhotoHint: 'It will be displayed to fans',
-  tapToTakeSelfie: 'Tap to take a selfie',
+  tapToTakeSelfie: 'Take a selfie',
   liveSessionYourName: 'Your Name / Stage Name',
   liveSessionNamePlaceholder: 'Enter your name...',
   liveSessionNameRequired: 'Please enter your name',
