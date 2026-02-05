@@ -550,15 +550,6 @@ export default function JoinEventScreen() {
               </Text>
             </View>
 
-            <View style={styles.priceContainer}>
-              <Text style={styles.priceLabelText}>{t('sessionPrice') || 'Session price'}</Text>
-              <Text style={styles.priceValueText}>
-                {foundLiveSession.price_cents > 0 
-                  ? `${(foundLiveSession.price_cents / 100).toFixed(2)} €` 
-                  : t('free') || 'Free'}
-              </Text>
-            </View>
-
             {queueEntry && (queueEntry.status === 'called' || queueEntry.status === 'in_call') && foundLiveSession.room_url ? (
               <View style={styles.readyToJoinContainer}>
                 <View style={styles.readyBadge}>
@@ -635,24 +626,30 @@ export default function JoinEventScreen() {
                 </TouchableOpacity>
               </View>
             ) : (
-              <View style={styles.waitingSection}>
-                <View style={styles.queuePositionCard}>
-                  <Text style={styles.queuePositionLabel}>{t('yourPosition') || 'Your position'}</Text>
-                  <Text style={styles.queuePositionNumber}>#{queueStats?.currentPosition || 1}</Text>
-                  <Text style={styles.queuePositionTotal}>
-                    {t('outOf') || 'out of'} {queueStats?.totalInQueue || 1} {t('inQueue') || 'in queue'}
-                  </Text>
-                </View>
-
-                <View style={styles.waitTimeCard}>
-                  <Clock size={16} color="#f59e0b" />
-                  <Text style={styles.waitTimeText}>
-                    ~{queueStats?.estimatedWaitMinutes || 0} min
-                  </Text>
+              <View style={styles.waitingSectionCompact}>
+                <View style={styles.infoRow}>
+                  <View style={styles.infoCard}>
+                    <Text style={styles.infoLabel}>{t('sessionPrice') || 'Price'}</Text>
+                    <Text style={styles.infoValuePrice}>
+                      {foundLiveSession.price_cents > 0 
+                        ? `${(foundLiveSession.price_cents / 100).toFixed(2)} €` 
+                        : t('free') || 'Free'}
+                    </Text>
+                  </View>
+                  <View style={[styles.infoCard, styles.infoCardHighlight]}>
+                    <Text style={styles.infoLabel}>{t('yourPosition') || 'Position'}</Text>
+                    <Text style={styles.infoValuePosition}>#{queueStats?.currentPosition || 1}</Text>
+                    <Text style={styles.infoSubtext}>{t('outOf') || 'of'} {queueStats?.totalInQueue || 1}</Text>
+                  </View>
+                  <View style={styles.infoCard}>
+                    <Text style={styles.infoLabel}>{t('estimatedWait') || 'Wait'}</Text>
+                    <Text style={styles.infoValueWait}>~{queueStats?.estimatedWaitMinutes || 0}</Text>
+                    <Text style={styles.infoSubtext}>min</Text>
+                  </View>
                 </View>
 
                 <Text style={styles.waitingHintCompact}>
-                  {t('stayOnPage') || 'Stay on this page'}
+                  {t('stayOnPage') || 'Stay on this page - the call will start soon!'}
                 </Text>
 
                 <View style={styles.actionButtonsRow}>
@@ -1325,6 +1322,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     paddingVertical: 8,
+  },
+  waitingSectionCompact: {
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 16,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 8,
+    marginBottom: 12,
+  },
+  infoCard: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+  },
+  infoCardHighlight: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: '#10B981',
+  },
+  infoLabel: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.6)',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  infoValuePrice: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#fff',
+  },
+  infoValuePosition: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#10B981',
+  },
+  infoValueWait: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#f59e0b',
+  },
+  infoSubtext: {
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.5)',
   },
   pulseContainer: {
     width: 56,
