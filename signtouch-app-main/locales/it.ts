@@ -724,7 +724,7 @@ export default {
   promoCodeActive: 'Codice promozionale attivo',
   premiumUntil: 'Premium fino a',
   yourEarnings: 'I tuoi guadagni',
-  earningsExplanation: 'Importo stimato se tutti i fan completano la sessione',
+  earningsExplanation: 'Netto dopo commissioni store (30%), SignTouch (15%) e Stripe (2.9% + 0.30€)',
   grossRevenue: 'Ricavi lordi',
   storeFees: 'Commissioni store (30%)',
   signTouchFees: 'Commissione SignTouch (15%)',

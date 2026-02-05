@@ -724,7 +724,7 @@ export default {
   promoCodeActive: 'প্রোমো কোড সক্রিয়',
   premiumUntil: 'প্রিমিয়াম পর্যন্ত',
   yourEarnings: 'আপনার উপার্জন',
-  earningsExplanation: 'সমস্ত ফ্যান সেশন সম্পূর্ণ করলে আনুমানিক পরিমাণ',
+  earningsExplanation: 'স্টোর ফি (30%), SignTouch (15%) এবং Stripe (2.9% + €0.30) এর পরে নিট',
   grossRevenue: 'মোট আয়',
   storeFees: 'স্টোর ফি (30%)',
   signTouchFees: 'SignTouch ফি (15%)',

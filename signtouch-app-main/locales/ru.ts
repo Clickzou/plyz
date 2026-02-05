@@ -724,7 +724,7 @@ export default {
   promoCodeActive: 'Промокод активен',
   premiumUntil: 'Премиум до',
   yourEarnings: 'Ваш заработок',
-  earningsExplanation: 'Ориентировочная сумма, если все фанаты завершат сессию',
+  earningsExplanation: 'Нетто после комиссий магазинов (30%), SignTouch (15%) и Stripe (2.9% + 0.30€)',
   grossRevenue: 'Валовой доход',
   storeFees: 'Комиссия магазинов (30%)',
   signTouchFees: 'Комиссия SignTouch (15%)',

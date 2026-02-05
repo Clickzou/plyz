@@ -724,7 +724,7 @@ export default {
   promoCodeActive: 'Promo-Code aktiv',
   premiumUntil: 'Premium bis',
   yourEarnings: 'Deine Einnahmen',
-  earningsExplanation: 'Geschätzter Betrag, wenn alle Fans die Sitzung abschließen',
+  earningsExplanation: 'Netto nach Store-Gebühren (30%), SignTouch (15%) und Stripe (2.9% + 0.30€)',
   grossRevenue: 'Bruttoeinnahmen',
   storeFees: 'Store-Gebühren (30%)',
   signTouchFees: 'SignTouch-Gebühren (15%)',

@@ -724,7 +724,7 @@ export default {
   promoCodeActive: 'Kod promo aktif',
   premiumUntil: 'Premium sehingga',
   yourEarnings: 'Pendapatan anda',
-  earningsExplanation: 'Anggaran jumlah jika semua peminat melengkapkan sesi',
+  earningsExplanation: 'Bersih selepas yuran kedai (30%), SignTouch (15%) dan Stripe (2.9% + €0.30)',
   grossRevenue: 'Pendapatan kasar',
   storeFees: 'Yuran kedai (30%)',
   signTouchFees: 'Yuran SignTouch (15%)',

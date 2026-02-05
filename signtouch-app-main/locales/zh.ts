@@ -724,7 +724,7 @@ export default {
   promoCodeActive: '促销代码已激活',
   premiumUntil: '高级会员至',
   yourEarnings: '您的收益',
-  earningsExplanation: '如果所有粉丝完成会话的预估金额',
+  earningsExplanation: '扣除商店费用(30%)、SignTouch(15%)和Stripe(2.9% + €0.30)后的净额',
   grossRevenue: '总收入',
   storeFees: '商店费用 (30%)',
   signTouchFees: 'SignTouch费用 (15%)',

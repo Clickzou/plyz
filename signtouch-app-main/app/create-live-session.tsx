@@ -451,33 +451,9 @@ export default function CreateLiveSessionScreen() {
             const netCents = beforeStripeCents - stripeTotalCents;
             
             return (
-              <>
-                <Text style={styles.revenueAmount}>
-                  {(netCents / 100).toFixed(0)}€
-                </Text>
-                <View style={styles.feesBreakdown}>
-                  <View style={styles.feeRow}>
-                    <Text style={styles.feeLabel}>{t('grossRevenue') || 'Revenus bruts'}</Text>
-                    <Text style={styles.feeValue}>{(grossCents / 100).toFixed(0)}€</Text>
-                  </View>
-                  <View style={styles.feeRow}>
-                    <Text style={styles.feeLabel}>{t('storeFees') || 'Frais stores (30%)'}</Text>
-                    <Text style={styles.feeValueNegative}>-{(storeFeesCents / 100).toFixed(0)}€</Text>
-                  </View>
-                  <View style={styles.feeRow}>
-                    <Text style={styles.feeLabel}>{t('signTouchFees') || 'Frais SignTouch (15%)'}</Text>
-                    <Text style={styles.feeValueNegative}>-{(signTouchFeesCents / 100).toFixed(0)}€</Text>
-                  </View>
-                  <View style={styles.feeRow}>
-                    <Text style={styles.feeLabel}>{t('stripeFees') || 'Frais Stripe (2.9% + 0.30€)'}</Text>
-                    <Text style={styles.feeValueNegative}>-{(stripeTotalCents / 100).toFixed(0)}€</Text>
-                  </View>
-                  <View style={styles.feeRowTotal}>
-                    <Text style={styles.feeLabelTotal}>{t('netRevenue') || 'Net reçu'}</Text>
-                    <Text style={styles.feeValueTotal}>{(netCents / 100).toFixed(0)}€</Text>
-                  </View>
-                </View>
-              </>
+              <Text style={styles.revenueAmount}>
+                {(netCents / 100).toFixed(0)}€
+              </Text>
             );
           })()}
           <Text style={styles.revenueExplanation}>

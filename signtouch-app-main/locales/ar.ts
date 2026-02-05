@@ -724,7 +724,7 @@ export default {
   promoCodeActive: 'رمز ترويجي نشط',
   premiumUntil: 'بريميوم حتى',
   yourEarnings: 'أرباحك',
-  earningsExplanation: 'المبلغ المقدر إذا أكمل جميع المعجبين الجلسة',
+  earningsExplanation: 'صافي بعد رسوم المتاجر (30%)، SignTouch (15%) و Stripe (2.9% + 0.30€)',
   grossRevenue: 'الإيرادات الإجمالية',
   storeFees: 'رسوم المتاجر (30%)',
   signTouchFees: 'رسوم SignTouch (15%)',
