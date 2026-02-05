@@ -195,8 +195,8 @@ export const createSessionVideoRoom = async (sessionId: string, celebrityName: s
   const room = await createDailyRoom({
     name: roomName,
     expiryMinutes: 180,
-    maxParticipants: 100,
-    isPrivate: true,
+    maxParticipants: 4,
+    isPrivate: false,
   });
 
   if (!room) {
