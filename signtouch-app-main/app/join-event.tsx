@@ -15,7 +15,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, QrCode, Search, Check, Download, Camera, Users, Clock, Calendar, Bell, X } from 'lucide-react-native';
+import { ArrowLeft, QrCode, Search, Check, Download, Camera, Users, Clock, Calendar, Bell, X, AlertTriangle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 let Notifications: any = null;
 try {
@@ -670,6 +670,18 @@ export default function JoinEventScreen() {
                 <Text style={styles.waitingHint}>
                   {t('stayOnPage') || 'Stay on this page - the call will start soon!'}
                 </Text>
+
+                <View style={styles.behaviorWarningCard}>
+                  <AlertTriangle size={20} color="#f59e0b" />
+                  <View style={styles.behaviorWarningContent}>
+                    <Text style={styles.behaviorWarningTitle}>
+                      {t('behaviorWarningTitle') || 'Behavior Guidelines'}
+                    </Text>
+                    <Text style={styles.behaviorWarningText}>
+                      {t('behaviorWarningFan') || 'Be respectful during the call. Inappropriate behavior will result in low ratings and possible ban from future sessions.'}
+                    </Text>
+                  </View>
+                </View>
                 
                 <TouchableOpacity
                   style={styles.refreshButtonLarge}
@@ -1322,6 +1334,32 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 12,
     fontStyle: 'italic',
+  },
+  behaviorWarningCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+  },
+  behaviorWarningContent: {
+    flex: 1,
+  },
+  behaviorWarningTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fbbf24',
+    marginBottom: 4,
+  },
+  behaviorWarningText: {
+    fontSize: 12,
+    color: 'rgba(251, 191, 36, 0.9)',
+    lineHeight: 18,
   },
   refreshButtonLarge: {
     flexDirection: 'row',

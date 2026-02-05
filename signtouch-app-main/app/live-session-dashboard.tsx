@@ -23,6 +23,7 @@ import {
   Copy,
   Check,
   Video,
+  AlertTriangle,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -603,6 +604,18 @@ export default function LiveSessionDashboardScreen() {
                   </>
                 )}
 
+                <View style={styles.behaviorWarningCard}>
+                  <AlertTriangle size={20} color="#f59e0b" />
+                  <View style={styles.behaviorWarningContent}>
+                    <Text style={styles.behaviorWarningTitle}>
+                      {t('behaviorWarningTitle') || 'Behavior Guidelines'}
+                    </Text>
+                    <Text style={styles.behaviorWarningText}>
+                      {t('behaviorWarningCelebrity') || 'Rate fans after each call. Fans with low ratings may be banned. Report any inappropriate behavior.'}
+                    </Text>
+                  </View>
+                </View>
+
                 {sessionQueue.length > 0 && (
                   <View style={styles.queueListSection}>
                     <Text style={styles.queueListTitle}>{t('waitingQueue') || 'Waiting Queue'}</Text>
@@ -874,6 +887,34 @@ const styles = StyleSheet.create({
   waitingSection: {
     alignItems: 'center',
     paddingVertical: 40,
+  },
+  behaviorWarningCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    marginTop: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    width: '100%',
+  },
+  behaviorWarningContent: {
+    flex: 1,
+  },
+  behaviorWarningTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fbbf24',
+    marginBottom: 4,
+  },
+  behaviorWarningText: {
+    fontSize: 12,
+    color: 'rgba(251, 191, 36, 0.9)',
+    lineHeight: 18,
   },
   waitingTitle: {
     fontSize: 18,
