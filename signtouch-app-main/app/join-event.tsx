@@ -645,70 +645,39 @@ export default function JoinEventScreen() {
                 </View>
 
                 <View style={styles.waitTimeCard}>
-                  <Clock size={18} color="#f59e0b" />
+                  <Clock size={16} color="#f59e0b" />
                   <Text style={styles.waitTimeText}>
-                    {t('estimatedWait') || 'Estimated wait'}: ~{queueStats?.estimatedWaitMinutes || 0} min
+                    ~{queueStats?.estimatedWaitMinutes || 0} min
                   </Text>
                 </View>
 
-                {queueStats?.currentFanName && (
-                  <View style={styles.currentFanCard}>
-                    <Camera size={16} color="#10B981" />
-                    <Text style={styles.currentFanText}>
-                      {t('currentlyWith') || 'Currently with'}: {queueStats.currentFanName}
-                    </Text>
-                  </View>
-                )}
-
-                <View style={styles.pulseContainer}>
-                  <View style={styles.pulseOuter} />
-                  <View style={styles.pulseInner}>
-                    <Clock size={22} color="#fff" />
-                  </View>
-                </View>
-
-                <Text style={styles.waitingHint}>
-                  {t('stayOnPage') || 'Stay on this page - the call will start soon!'}
+                <Text style={styles.waitingHintCompact}>
+                  {t('stayOnPage') || 'Stay on this page'}
                 </Text>
 
-                <View style={styles.behaviorWarningCard}>
-                  <AlertTriangle size={20} color="#f59e0b" />
-                  <View style={styles.behaviorWarningContent}>
-                    <Text style={styles.behaviorWarningTitle}>
-                      {t('behaviorWarningTitle') || 'Behavior Guidelines'}
-                    </Text>
-                    <Text style={styles.behaviorWarningText}>
-                      {t('behaviorWarningFan') || 'Be respectful during the call. Inappropriate behavior will result in low ratings and possible ban from future sessions.'}
-                    </Text>
-                  </View>
-                </View>
-                
-                <TouchableOpacity
-                  style={styles.refreshButtonLarge}
-                  onPress={() => handleSearch(foundLiveSession.code)}
-                >
-                  <Search size={20} color="#10B981" />
-                  <Text style={styles.refreshButtonLargeText}>{t('refreshPosition') || 'Refresh position'}</Text>
-                </TouchableOpacity>
-
-                {!notificationSet ? (
+                <View style={styles.actionButtonsRow}>
                   <TouchableOpacity
-                    style={styles.leaveNotifyButton}
-                    onPress={handleSetLiveSessionNotification}
+                    style={styles.actionButtonCompact}
+                    onPress={() => handleSearch(foundLiveSession.code)}
                   >
-                    <Bell size={18} color="#3b82f6" />
-                    <Text style={styles.leaveNotifyText}>
-                      {t('leaveAndNotify') || 'Leave app & get notified 2 min before'}
-                    </Text>
+                    <Search size={16} color="#10B981" />
                   </TouchableOpacity>
-                ) : (
-                  <View style={styles.notificationConfirmedCard}>
-                    <Check size={18} color="#10B981" />
-                    <Text style={styles.notificationConfirmedText}>
-                      {t('notificationConfirmed') || 'Notification scheduled! You can leave the app.'}
-                    </Text>
-                  </View>
-                )}
+
+                  {!notificationSet ? (
+                    <TouchableOpacity
+                      style={styles.notifyButtonCompact}
+                      onPress={handleSetLiveSessionNotification}
+                    >
+                      <Bell size={16} color="#3b82f6" />
+                      <Text style={styles.notifyButtonText}>{t('notifyMe') || 'Notify me'}</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={styles.notifiedBadge}>
+                      <Check size={14} color="#10B981" />
+                      <Text style={styles.notifiedText}>{t('notificationSet') || 'Notified'}</Text>
+                    </View>
+                  )}
+                </View>
               </View>
             )}
             
@@ -1398,6 +1367,59 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 8,
     fontStyle: 'italic',
+  },
+  waitingHintCompact: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'center',
+    marginBottom: 12,
+    fontStyle: 'italic',
+  },
+  actionButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  actionButtonCompact: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  notifyButtonCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+  },
+  notifyButtonText: {
+    fontSize: 13,
+    color: '#3b82f6',
+    fontWeight: '600',
+  },
+  notifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+  },
+  notifiedText: {
+    fontSize: 12,
+    color: '#10B981',
+    fontWeight: '600',
   },
   behaviorWarningCard: {
     flexDirection: 'row',
