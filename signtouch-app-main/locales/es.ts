@@ -740,4 +740,9 @@ export default {
   rating5Star: '5 = Excelente',
   submitRating: 'Enviar calificación',
   skipRating: 'Omitir',
+  howItWorksTitle: '¿Cómo funciona?',
+  howItWorksStep1: 'Ingresa el código compartido por la celebridad',
+  howItWorksStep2: 'Únete a la cola y espera tu turno',
+  howItWorksStep3: 'Videollamada con la celebridad cuando seas llamado',
+  howItWorksStep4: 'Califíquense mutuamente después de la llamada',
 };

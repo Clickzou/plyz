@@ -741,4 +741,9 @@ export default {
   rating5Star: '5 = उत्कृष्ट',
   submitRating: 'रेटिंग भेजें',
   skipRating: 'छोड़ें',
+  howItWorksTitle: 'यह कैसे काम करता है?',
+  howItWorksStep1: 'सेलिब्रिटी द्वारा साझा किया गया कोड दर्ज करें',
+  howItWorksStep2: 'कतार में शामिल हों और अपनी बारी का इंतजार करें',
+  howItWorksStep3: 'बुलाए जाने पर सेलिब्रिटी के साथ वीडियो कॉल',
+  howItWorksStep4: 'कॉल के बाद एक-दूसरे को रेट करें',
 };

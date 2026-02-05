@@ -741,4 +741,9 @@ export default {
   rating5Star: '5 = بہترین',
   submitRating: 'ریٹنگ بھیجیں',
   skipRating: 'چھوڑیں',
+  howItWorksTitle: 'یہ کیسے کام کرتا ہے؟',
+  howItWorksStep1: 'مشہور شخصیت کی طرف سے شیئر کیا گیا کوڈ درج کریں',
+  howItWorksStep2: 'قطار میں شامل ہوں اور اپنی باری کا انتظار کریں',
+  howItWorksStep3: 'بلائے جانے پر مشہور شخصیت کے ساتھ ویڈیو کال',
+  howItWorksStep4: 'کال کے بعد ایک دوسرے کی درجہ بندی کریں',
 };

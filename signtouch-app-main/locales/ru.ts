@@ -741,4 +741,9 @@ export default {
   rating5Star: '5 = Отлично',
   submitRating: 'Отправить оценку',
   skipRating: 'Пропустить',
+  howItWorksTitle: 'Как это работает?',
+  howItWorksStep1: 'Введите код, которым поделилась знаменитость',
+  howItWorksStep2: 'Присоединитесь к очереди и ждите своей очереди',
+  howItWorksStep3: 'Видеозвонок со знаменитостью, когда вас вызовут',
+  howItWorksStep4: 'Оцените друг друга после звонка',
 };

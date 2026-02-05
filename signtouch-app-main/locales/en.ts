@@ -751,4 +751,9 @@ export default {
   rating5Star: '5 = Excellent',
   submitRating: 'Submit Rating',
   skipRating: 'Skip',
+  howItWorksTitle: 'How does it work?',
+  howItWorksStep1: 'Enter the code shared by the celebrity',
+  howItWorksStep2: 'Join the queue and wait for your turn',
+  howItWorksStep3: 'Video call with the celebrity when called',
+  howItWorksStep4: 'Rate each other after the call',
 };

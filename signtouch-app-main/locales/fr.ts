@@ -753,4 +753,9 @@ export default {
   rating5Star: '5 = Excellent',
   submitRating: 'Envoyer la note',
   skipRating: 'Passer',
+  howItWorksTitle: 'Comment ça marche ?',
+  howItWorksStep1: 'Entrez le code partagé par la célébrité',
+  howItWorksStep2: 'Rejoignez la file d\'attente et attendez votre tour',
+  howItWorksStep3: 'Appel vidéo avec la célébrité quand vous êtes appelé',
+  howItWorksStep4: 'Notez-vous mutuellement après l\'appel',
 };

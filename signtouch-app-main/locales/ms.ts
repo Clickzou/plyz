@@ -741,4 +741,9 @@ export default {
   rating5Star: '5 = Cemerlang',
   submitRating: 'Hantar penilaian',
   skipRating: 'Langkau',
+  howItWorksTitle: 'Bagaimana ia berfungsi?',
+  howItWorksStep1: 'Masukkan kod yang dikongsi oleh selebriti',
+  howItWorksStep2: 'Sertai barisan dan tunggu giliran anda',
+  howItWorksStep3: 'Panggilan video dengan selebriti apabila dipanggil',
+  howItWorksStep4: 'Beri penilaian antara satu sama lain selepas panggilan',
 };

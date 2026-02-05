@@ -741,4 +741,9 @@ export default {
   rating5Star: '5 = Ausgezeichnet',
   submitRating: 'Bewertung senden',
   skipRating: 'Überspringen',
+  howItWorksTitle: 'Wie funktioniert es?',
+  howItWorksStep1: 'Gib den von der Berühmtheit geteilten Code ein',
+  howItWorksStep2: 'Tritt der Warteschlange bei und warte auf deinen Turn',
+  howItWorksStep3: 'Videoanruf mit der Berühmtheit, wenn du aufgerufen wirst',
+  howItWorksStep4: 'Bewertet euch gegenseitig nach dem Anruf',
 };

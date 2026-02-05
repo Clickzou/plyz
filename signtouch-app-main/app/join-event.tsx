@@ -715,6 +715,28 @@ export default function JoinEventScreen() {
           </View>
         ) : !foundEvent && !foundSession && !eventFull ? (
           <>
+            <View style={styles.howItWorksSection}>
+              <Text style={styles.howItWorksTitle}>{t('howItWorksTitle') || 'How does it work?'}</Text>
+              <View style={styles.howItWorksSteps}>
+                <View style={styles.howItWorksStep}>
+                  <View style={styles.stepNumber}><Text style={styles.stepNumberText}>1</Text></View>
+                  <Text style={styles.stepText}>{t('howItWorksStep1') || 'Enter the code shared by the celebrity'}</Text>
+                </View>
+                <View style={styles.howItWorksStep}>
+                  <View style={styles.stepNumber}><Text style={styles.stepNumberText}>2</Text></View>
+                  <Text style={styles.stepText}>{t('howItWorksStep2') || 'Join the queue and wait for your turn'}</Text>
+                </View>
+                <View style={styles.howItWorksStep}>
+                  <View style={styles.stepNumber}><Text style={styles.stepNumberText}>3</Text></View>
+                  <Text style={styles.stepText}>{t('howItWorksStep3') || 'Video call with the celebrity when called'}</Text>
+                </View>
+                <View style={styles.howItWorksStep}>
+                  <View style={styles.stepNumber}><Text style={styles.stepNumberText}>4</Text></View>
+                  <Text style={styles.stepText}>{t('howItWorksStep4') || 'Rate each other after the call'}</Text>
+                </View>
+              </View>
+            </View>
+
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>{t('enterEventCode') || 'Enter the event code'}</Text>
               <TextInput
@@ -937,6 +959,48 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '600', color: '#fff' },
   content: { flex: 1 },
   contentContainer: { padding: 20 },
+  howItWorksSection: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  howItWorksTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#10B981',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  howItWorksSteps: {
+    gap: 12,
+  },
+  howItWorksStep: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  stepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#10B981',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepNumberText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  stepText: {
+    flex: 1,
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    lineHeight: 20,
+  },
   inputSection: { marginBottom: 24 },
   inputLabel: { fontSize: 16, color: 'rgba(255,255,255,0.8)', marginBottom: 12, textAlign: 'center' },
   inputRow: { flexDirection: 'row', gap: 12 },

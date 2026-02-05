@@ -741,4 +741,9 @@ export default {
   rating5Star: '5 = 优秀',
   submitRating: '提交评分',
   skipRating: '跳过',
+  howItWorksTitle: '如何使用？',
+  howItWorksStep1: '输入名人分享的代码',
+  howItWorksStep2: '加入排队等待您的回合',
+  howItWorksStep3: '被叫到时与名人进行视频通话',
+  howItWorksStep4: '通话后互相评分',
 };

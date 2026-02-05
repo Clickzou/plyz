@@ -741,4 +741,9 @@ export default {
   rating5Star: '5 = Sangat baik',
   submitRating: 'Kirim peringkat',
   skipRating: 'Lewati',
+  howItWorksTitle: 'Bagaimana cara kerjanya?',
+  howItWorksStep1: 'Masukkan kode yang dibagikan selebriti',
+  howItWorksStep2: 'Bergabung dalam antrean dan tunggu giliran Anda',
+  howItWorksStep3: 'Panggilan video dengan selebriti saat dipanggil',
+  howItWorksStep4: 'Saling beri peringkat setelah panggilan',
 };

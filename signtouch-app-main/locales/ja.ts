@@ -741,4 +741,9 @@ export default {
   rating5Star: '5 = 優秀',
   submitRating: '評価を送信',
   skipRating: 'スキップ',
+  howItWorksTitle: '使い方',
+  howItWorksStep1: 'セレブリティが共有したコードを入力',
+  howItWorksStep2: '順番待ちの列に参加して待つ',
+  howItWorksStep3: '呼ばれたらセレブリティとビデオ通話',
+  howItWorksStep4: '通話後にお互いを評価',
 };

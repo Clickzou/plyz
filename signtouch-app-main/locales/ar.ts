@@ -741,4 +741,9 @@ export default {
   rating5Star: '5 = ممتاز',
   submitRating: 'إرسال التقييم',
   skipRating: 'تخطي',
+  howItWorksTitle: 'كيف يعمل؟',
+  howItWorksStep1: 'أدخل الكود الذي شاركه المشهور',
+  howItWorksStep2: 'انضم إلى قائمة الانتظار وانتظر دورك',
+  howItWorksStep3: 'مكالمة فيديو مع المشهور عند استدعائك',
+  howItWorksStep4: 'قيّموا بعضكم البعض بعد المكالمة',
 };

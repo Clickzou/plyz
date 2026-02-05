@@ -741,4 +741,9 @@ export default {
   rating5Star: '৫ = চমৎকার',
   submitRating: 'রেটিং পাঠান',
   skipRating: 'এড়িয়ে যান',
+  howItWorksTitle: 'এটি কীভাবে কাজ করে?',
+  howItWorksStep1: 'সেলিব্রিটি শেয়ার করা কোড লিখুন',
+  howItWorksStep2: 'সারিতে যোগ দিন এবং আপনার পালার জন্য অপেক্ষা করুন',
+  howItWorksStep3: 'ডাকা হলে সেলিব্রিটির সাথে ভিডিও কল',
+  howItWorksStep4: 'কলের পরে একে অপরকে রেট করুন',
 };
