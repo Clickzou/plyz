@@ -315,6 +315,59 @@ export default function JoinEventScreen() {
     }
   };
 
+  const handleSetLiveSessionNotification = async () => {
+    if (!foundLiveSession) return;
+    
+    if (!Notifications) {
+      Alert.alert(
+        t('notAvailable') || 'Not Available',
+        t('notificationsNotSupported') || 'Notifications are not supported in this environment. Please keep the app open.'
+      );
+      return;
+    }
+
+    try {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          t('permissionRequired') || 'Permission Required',
+          t('notificationPermissionMessage') || 'Please enable notifications to receive reminders'
+        );
+        return;
+      }
+
+      const waitMinutes = foundLiveSession.duration_per_fan_minutes || 5;
+      const notifyInMs = Math.max((waitMinutes - 2) * 60 * 1000, 30 * 1000);
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: `${foundLiveSession.celebrity_name} - SignTouch`,
+          body: t('yourTurnIn2Min') || 'Your turn is coming up in about 2 minutes! Open the app now.',
+          data: { sessionCode: foundLiveSession.code, sessionId: foundLiveSession.id },
+          sound: true,
+          priority: Notifications.AndroidNotificationPriority?.MAX,
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: Math.floor(notifyInMs / 1000),
+        },
+      });
+
+      setNotificationSet(true);
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      
+      Alert.alert(
+        t('notificationScheduled') || 'Notification Scheduled',
+        t('notificationScheduledMessage') || `You will be notified approximately 2 minutes before your turn. You can now leave the app.`
+      );
+    } catch (error) {
+      console.error('Error setting live session notification:', error);
+      Alert.alert(t('error') || 'Error', t('notificationFailed') || 'Failed to set notification');
+    }
+  };
+
   if (showScanner) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -477,15 +530,24 @@ export default function JoinEventScreen() {
                   <Text style={styles.refreshButtonLargeText}>{t('checkAgain') || 'Check again'}</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.leaveNotifyButton}
-                  onPress={handleSetNotification}
-                >
-                  <Bell size={18} color="#3b82f6" />
-                  <Text style={styles.leaveNotifyText}>
-                    {t('leaveAndNotify') || 'Leave app & get notified 2 min before'}
-                  </Text>
-                </TouchableOpacity>
+                {!notificationSet ? (
+                  <TouchableOpacity
+                    style={styles.leaveNotifyButton}
+                    onPress={handleSetLiveSessionNotification}
+                  >
+                    <Bell size={18} color="#3b82f6" />
+                    <Text style={styles.leaveNotifyText}>
+                      {t('leaveAndNotify') || 'Leave app & get notified 2 min before'}
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={styles.notificationConfirmedCard}>
+                    <Check size={18} color="#10B981" />
+                    <Text style={styles.notificationConfirmedText}>
+                      {t('notificationConfirmed') || 'Notification scheduled! You can leave the app.'}
+                    </Text>
+                  </View>
+                )}
               </View>
             )}
             
@@ -1168,5 +1230,24 @@ const styles = StyleSheet.create({
     color: '#3b82f6',
     fontWeight: '600',
     textAlign: 'center',
+  },
+  notificationConfirmedCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 10,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  notificationConfirmedText: {
+    fontSize: 14,
+    color: '#10B981',
+    fontWeight: '600',
+    textAlign: 'center',
+    flex: 1,
   },
 });
