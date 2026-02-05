@@ -542,7 +542,7 @@ export default {
   liveSessionCalculatedFans: 'ファン数',
   liveSessionMaxSlots: '最大ファン数',
   liveSessionPrice: '署名ごとの価格',
-  liveSessionPriceHint: '90%があなたに（Stripe近日公開）',
+  liveSessionPriceHint: 'Stripe Connect経由で30日以内に安全にお支払い',
   liveSessionFree: '無料',
   liveSessionCustomPrice: 'カスタム',
   liveSessionEnterPrice: '金額を€で入力',

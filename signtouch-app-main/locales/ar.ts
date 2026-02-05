@@ -542,7 +542,7 @@ export default {
   liveSessionCalculatedFans: 'عدد المعجبين',
   liveSessionMaxSlots: 'الحد الأقصى للمعجبين',
   liveSessionPrice: 'سعر التوقيع',
-  liveSessionPriceHint: '90% تذهب إليك (Stripe قريباً)',
+  liveSessionPriceHint: 'دفع آمن عبر Stripe Connect خلال 30 يوماً',
   liveSessionFree: 'مجاني',
   liveSessionCustomPrice: 'مخصص',
   liveSessionEnterPrice: 'أدخل المبلغ بالـ €',

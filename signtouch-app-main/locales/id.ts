@@ -542,7 +542,7 @@ export default {
   liveSessionCalculatedFans: 'Jumlah penggemar',
   liveSessionMaxSlots: 'Maks Penggemar',
   liveSessionPrice: 'Harga per Tanda Tangan',
-  liveSessionPriceHint: '90% untuk Anda (Stripe segera hadir)',
+  liveSessionPriceHint: 'Pembayaran aman melalui Stripe Connect dalam 30 hari',
   liveSessionFree: 'Gratis',
   liveSessionCustomPrice: 'Kustom',
   liveSessionEnterPrice: 'Masukkan jumlah dalam €',

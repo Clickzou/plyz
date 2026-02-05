@@ -542,7 +542,7 @@ export default {
   liveSessionCalculatedFans: '粉丝数量',
   liveSessionMaxSlots: '最大粉丝数',
   liveSessionPrice: '每个签名价格',
-  liveSessionPriceHint: '90%归您所有（Stripe即将推出）',
+  liveSessionPriceHint: '通过Stripe Connect在30天内安全支付',
   liveSessionFree: '免费',
   liveSessionCustomPrice: '自定义',
   liveSessionEnterPrice: '输入金额（欧元）',

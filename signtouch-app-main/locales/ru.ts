@@ -542,7 +542,7 @@ export default {
   liveSessionCalculatedFans: 'Количество фанатов',
   liveSessionMaxSlots: 'Макс. фанатов',
   liveSessionPrice: 'Цена за подпись',
-  liveSessionPriceHint: '90% идут вам (Stripe скоро)',
+  liveSessionPriceHint: 'Безопасная оплата через Stripe Connect в течение 30 дней',
   liveSessionFree: 'Бесплатно',
   liveSessionCustomPrice: 'Своя цена',
   liveSessionEnterPrice: 'Введите сумму в €',

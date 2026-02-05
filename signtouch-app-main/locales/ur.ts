@@ -542,7 +542,7 @@ export default {
   liveSessionCalculatedFans: 'مداحوں کی تعداد',
   liveSessionMaxSlots: 'زیادہ سے زیادہ مداح',
   liveSessionPrice: 'فی دستخط قیمت',
-  liveSessionPriceHint: '90% آپ کو ملتا ہے (Stripe جلد آرہا ہے)',
+  liveSessionPriceHint: 'Stripe Connect کے ذریعے 30 دنوں میں محفوظ ادائیگی',
   liveSessionFree: 'مفت',
   liveSessionCustomPrice: 'حسب ضرورت',
   liveSessionEnterPrice: 'یورو میں رقم درج کریں',

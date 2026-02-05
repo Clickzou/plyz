@@ -542,7 +542,7 @@ export default {
   liveSessionCalculatedFans: 'Número de fãs',
   liveSessionMaxSlots: 'Máximo de Fãs',
   liveSessionPrice: 'Preço por Assinatura',
-  liveSessionPriceHint: '90% vai para você (Stripe em breve)',
+  liveSessionPriceHint: 'Pagamento seguro via Stripe Connect em até 30 dias',
   liveSessionFree: 'Grátis',
   liveSessionCustomPrice: 'Personalizado',
   liveSessionEnterPrice: 'Digite o valor em €',
