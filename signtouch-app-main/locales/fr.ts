@@ -724,4 +724,21 @@ export default {
   storageWarningMessage: 'Certaines anciennes photos ont été supprimées pour libérer de l\'espace. Connectez-vous pour sauvegarder vos photos dans le cloud.',
   storageFull: 'Stockage plein',
   storageFullMessage: 'Le stockage local est plein. Seule votre dernière photo a été conservée. Connectez-vous pour sauvegarder dans le cloud.',
+  
+  // Video Call
+  videoNotSupportedWeb: 'Les appels vidéo ne sont pas disponibles sur le web',
+  videoWebHint: 'Utilisez l\'application mobile pour les appels vidéo en direct',
+  videoCallError: 'Erreur de connexion à l\'appel vidéo',
+  connectingToCall: 'Connexion en cours...',
+  leaveCall: 'Quitter l\'appel',
+  leaveCallConfirm: 'Êtes-vous sûr de vouloir quitter cet appel ?',
+  leave: 'Quitter',
+  goBack: 'Retour',
+  host: 'HÔTE',
+  anonymous: 'Anonyme',
+  you: 'vous',
+  startVideoCall: 'Démarrer l\'appel vidéo',
+  joinVideoCall: 'Rejoindre l\'appel vidéo',
+  videoCallActive: 'Appel vidéo en cours',
+  noVideoRoom: 'Aucune salle vidéo disponible',
 };

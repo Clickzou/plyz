@@ -711,4 +711,22 @@ export default {
   storageWarningMessage: 'Einige ältere Fotos wurden entfernt, um Platz zu schaffen. Melden Sie sich an, um Ihre Fotos in der Cloud zu speichern.',
   storageFull: 'Speicher voll',
   storageFullMessage: 'Der lokale Speicher ist voll. Nur Ihr neuestes Foto wurde gespeichert. Melden Sie sich an, um in der Cloud zu speichern.',
+
+  
+  // Video Call
+  videoNotSupportedWeb: 'Videoanrufe sind im Web nicht verfügbar',
+  videoWebHint: 'Verwenden Sie die mobile App für Live-Videoanrufe',
+  videoCallError: 'Fehler beim Verbinden mit dem Videoanruf',
+  connectingToCall: 'Verbinde...',
+  leaveCall: 'Anruf verlassen',
+  leaveCallConfirm: 'Sind Sie sicher, dass Sie diesen Anruf verlassen möchten?',
+  leave: 'Verlassen',
+  goBack: 'Zurück',
+  host: 'GASTGEBER',
+  anonymous: 'Anonym',
+  you: 'Sie',
+  startVideoCall: 'Videoanruf starten',
+  joinVideoCall: 'Videoanruf beitreten',
+  videoCallActive: 'Videoanruf aktiv',
+  noVideoRoom: 'Kein Videoraum verfügbar',
 };

@@ -711,4 +711,22 @@ export default {
   storageWarningMessage: '古い写真の一部がスペースを空けるために削除されました。写真をクラウドに保存するにはサインインしてください。',
   storageFull: 'ストレージがいっぱい',
   storageFullMessage: 'ローカルストレージがいっぱいです。最新の写真のみが保存されました。クラウドに保存するにはサインインしてください。',
+
+  
+  // Video Call
+  videoNotSupportedWeb: 'ビデオ通話はWebで利用できません',
+  videoWebHint: 'ライブビデオ通話にはモバイルアプリをご利用ください',
+  videoCallError: 'ビデオ通話への接続エラー',
+  connectingToCall: '接続中...',
+  leaveCall: '通話を終了',
+  leaveCallConfirm: 'この通話を終了してもよろしいですか？',
+  leave: '終了',
+  goBack: '戻る',
+  host: 'ホスト',
+  anonymous: '匿名',
+  you: 'あなた',
+  startVideoCall: 'ビデオ通話を開始',
+  joinVideoCall: 'ビデオ通話に参加',
+  videoCallActive: 'ビデオ通話中',
+  noVideoRoom: 'ビデオルームがありません',
 };

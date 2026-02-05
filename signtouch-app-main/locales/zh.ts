@@ -711,4 +711,22 @@ export default {
   storageWarningMessage: '一些旧照片已被删除以释放空间。登录以将照片保存到云端。',
   storageFull: '存储空间已满',
   storageFullMessage: '本地存储已满。只保存了您的最新照片。登录以保存到云端。',
+
+  
+  // Video Call
+  videoNotSupportedWeb: '网页版不支持视频通话',
+  videoWebHint: '请使用移动应用进行视频通话',
+  videoCallError: '视频通话连接错误',
+  connectingToCall: '连接中...',
+  leaveCall: '离开通话',
+  leaveCallConfirm: '确定要离开此通话吗？',
+  leave: '离开',
+  goBack: '返回',
+  host: '主持人',
+  anonymous: '匿名',
+  you: '你',
+  startVideoCall: '开始视频通话',
+  joinVideoCall: '加入视频通话',
+  videoCallActive: '视频通话中',
+  noVideoRoom: '没有可用的视频室',
 };

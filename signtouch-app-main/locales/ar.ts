@@ -711,4 +711,22 @@ export default {
   storageWarningMessage: 'تمت إزالة بعض الصور القديمة لتوفير المساحة. سجّل الدخول لحفظ صورك في السحابة.',
   storageFull: 'المساحة التخزينية ممتلئة',
   storageFullMessage: 'المساحة التخزينية المحلية ممتلئة. تم حفظ آخر صورة فقط. سجّل الدخول للحفظ في السحابة.',
+
+  
+  // Video Call
+  videoNotSupportedWeb: 'مكالمات الفيديو غير متاحة على الويب',
+  videoWebHint: 'استخدم التطبيق المحمول لمكالمات الفيديو المباشرة',
+  videoCallError: 'خطأ في الاتصال بمكالمة الفيديو',
+  connectingToCall: 'جاري الاتصال...',
+  leaveCall: 'مغادرة المكالمة',
+  leaveCallConfirm: 'هل أنت متأكد من مغادرة هذه المكالمة؟',
+  leave: 'مغادرة',
+  goBack: 'رجوع',
+  host: 'المضيف',
+  anonymous: 'مجهول',
+  you: 'أنت',
+  startVideoCall: 'بدء مكالمة فيديو',
+  joinVideoCall: 'انضم لمكالمة الفيديو',
+  videoCallActive: 'مكالمة فيديو نشطة',
+  noVideoRoom: 'لا توجد غرفة فيديو متاحة',
 };

@@ -711,4 +711,22 @@ export default {
   storageWarningMessage: 'Beberapa foto lama telah dibuang untuk mengosongkan ruang. Log masuk untuk menyimpan foto anda ke awan.',
   storageFull: 'Storan penuh',
   storageFullMessage: 'Storan tempatan penuh. Hanya foto terkini anda yang disimpan. Log masuk untuk menyimpan ke awan.',
+
+  
+  // Video Call
+  videoNotSupportedWeb: 'Panggilan video tidak tersedia di web',
+  videoWebHint: 'Gunakan aplikasi mudah alih untuk panggilan video langsung',
+  videoCallError: 'Ralat menyambung ke panggilan video',
+  connectingToCall: 'Menyambung...',
+  leaveCall: 'Tinggalkan panggilan',
+  leaveCallConfirm: 'Adakah anda pasti mahu meninggalkan panggilan ini?',
+  leave: 'Tinggalkan',
+  goBack: 'Kembali',
+  host: 'HOS',
+  anonymous: 'Tanpa nama',
+  you: 'anda',
+  startVideoCall: 'Mulakan panggilan video',
+  joinVideoCall: 'Sertai panggilan video',
+  videoCallActive: 'Panggilan video aktif',
+  noVideoRoom: 'Tiada bilik video tersedia',
 };

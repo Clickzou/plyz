@@ -711,4 +711,22 @@ export default {
   storageWarningMessage: 'جگہ خالی کرنے کے لیے کچھ پرانی تصاویر ہٹا دی گئیں۔ اپنی تصاویر کلاؤڈ میں محفوظ کرنے کے لیے سائن ان کریں۔',
   storageFull: 'اسٹوریج بھر گئی',
   storageFullMessage: 'مقامی اسٹوریج بھر گئی ہے۔ صرف آپ کی تازہ ترین تصویر محفوظ ہوئی۔ کلاؤڈ میں محفوظ کرنے کے لیے سائن ان کریں۔',
+
+  
+  // Video Call
+  videoNotSupportedWeb: 'ویب پر ویڈیو کالز دستیاب نہیں ہیں',
+  videoWebHint: 'براہ راست ویڈیو کالز کے لیے موبائل ایپ استعمال کریں',
+  videoCallError: 'ویڈیو کال سے منسلک ہونے میں خرابی',
+  connectingToCall: 'منسلک ہو رہا ہے...',
+  leaveCall: 'کال چھوڑیں',
+  leaveCallConfirm: 'کیا آپ واقعی یہ کال چھوڑنا چاہتے ہیں؟',
+  leave: 'چھوڑیں',
+  goBack: 'واپس جائیں',
+  host: 'میزبان',
+  anonymous: 'گمنام',
+  you: 'آپ',
+  startVideoCall: 'ویڈیو کال شروع کریں',
+  joinVideoCall: 'ویڈیو کال میں شامل ہوں',
+  videoCallActive: 'ویڈیو کال فعال',
+  noVideoRoom: 'کوئی ویڈیو روم دستیاب نہیں',
 };

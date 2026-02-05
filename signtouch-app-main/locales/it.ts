@@ -711,4 +711,22 @@ export default {
   storageWarningMessage: 'Alcune foto più vecchie sono state rimosse per liberare spazio. Accedi per salvare le tue foto nel cloud.',
   storageFull: 'Spazio pieno',
   storageFullMessage: 'Lo spazio locale è pieno. Solo la tua ultima foto è stata salvata. Accedi per salvare nel cloud.',
+
+  
+  // Video Call
+  videoNotSupportedWeb: 'Le videochiamate non sono disponibili sul web',
+  videoWebHint: 'Usa l\'app mobile per le videochiamate in diretta',
+  videoCallError: 'Errore di connessione alla videochiamata',
+  connectingToCall: 'Connessione...',
+  leaveCall: 'Lascia la chiamata',
+  leaveCallConfirm: 'Sei sicuro di voler lasciare questa chiamata?',
+  leave: 'Lascia',
+  goBack: 'Indietro',
+  host: 'HOST',
+  anonymous: 'Anonimo',
+  you: 'tu',
+  startVideoCall: 'Inizia videochiamata',
+  joinVideoCall: 'Partecipa alla videochiamata',
+  videoCallActive: 'Videochiamata attiva',
+  noVideoRoom: 'Nessuna stanza video disponibile',
 };

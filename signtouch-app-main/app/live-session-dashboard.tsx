@@ -21,6 +21,7 @@ import {
   QrCode,
   Copy,
   Check,
+  Video,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -383,6 +384,22 @@ export default function LiveSessionDashboardScreen() {
                   <QrCode size={20} color="#fff" />
                   <Text style={styles.showQRButtonText}>{t('liveSessionShowQR')}</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.videoCallButton}
+                  onPress={() => router.push({
+                    pathname: '/video-call',
+                    params: {
+                      roomUrl: `signtouch-${session.code}`,
+                      token: '',
+                      isHost: 'true',
+                      sessionId: session.id,
+                    }
+                  })}
+                >
+                  <Video size={20} color="#fff" />
+                  <Text style={styles.videoCallButtonText}>{t('startVideoCall')}</Text>
+                </TouchableOpacity>
               </View>
             )}
 
@@ -641,6 +658,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '500',
+  },
+  videoCallButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: '#3b82f6',
+    borderRadius: 25,
+  },
+  videoCallButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   endedSection: {
     alignItems: 'center',

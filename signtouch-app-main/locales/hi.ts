@@ -711,4 +711,22 @@ export default {
   storageWarningMessage: 'जगह खाली करने के लिए कुछ पुरानी फोटो हटा दी गईं। अपनी फोटो क्लाउड में सहेजने के लिए साइन इन करें।',
   storageFull: 'स्टोरेज भरा हुआ',
   storageFullMessage: 'स्थानीय स्टोरेज भरा हुआ है। केवल आपकी नवीनतम फोटो सहेजी गई। क्लाउड में सहेजने के लिए साइन इन करें।',
+
+  
+  // Video Call
+  videoNotSupportedWeb: 'वीडियो कॉल वेब पर उपलब्ध नहीं हैं',
+  videoWebHint: 'लाइव वीडियो कॉल के लिए मोबाइल ऐप का उपयोग करें',
+  videoCallError: 'वीडियो कॉल से कनेक्ट करने में त्रुटि',
+  connectingToCall: 'कनेक्ट हो रहा है...',
+  leaveCall: 'कॉल छोड़ें',
+  leaveCallConfirm: 'क्या आप सुनिश्चित हैं कि आप इस कॉल को छोड़ना चाहते हैं?',
+  leave: 'छोड़ें',
+  goBack: 'वापस जाएं',
+  host: 'होस्ट',
+  anonymous: 'अनाम',
+  you: 'आप',
+  startVideoCall: 'वीडियो कॉल शुरू करें',
+  joinVideoCall: 'वीडियो कॉल में शामिल हों',
+  videoCallActive: 'वीडियो कॉल सक्रिय',
+  noVideoRoom: 'कोई वीडियो रूम उपलब्ध नहीं',
 };

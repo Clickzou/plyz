@@ -113,6 +113,21 @@ Preferred communication style: Simple, everyday language.
 - **Utility**: `promoCodeStorage.ts` for code validation and premium status tracking
 - **i18n**: Translation keys: promoCode, enterPromoCode, promoCodeSuccess, promoCodeInvalid, promoCodeAlreadyUsed
 
+### Video Calls System (February 2026)
+- **Daily.co Integration**: Native SDK for live video calls between celebrities and fans
+- **SDK Package**: `@daily-co/react-native-daily-js` with Expo config plugin
+- **Features**: 
+  - Real-time video/audio calls
+  - Camera toggle, mute controls, camera switch
+  - Host/participant roles
+  - Multi-participant grid view
+- **Screens**: `video-call.tsx` for video call interface
+- **Service**: `dailyService.ts` for room creation and token management
+- **API Key Storage**: Stored in Supabase `app_settings` table (key: `daily_api_key`)
+- **Permissions**: Camera, microphone, VoIP background mode configured in app.json
+- **i18n**: 17 new translation keys for video call UI (all 15 languages)
+- **Note**: Requires native build (EAS) - does not work in Expo Go or web
+
 ### Legal Documents System (February 2026)
 - **Multi-Language Legal Documents**: All 4 legal documents translated into 15 languages
   - CGV (Conditions Générales de Vente / Terms of Sale)

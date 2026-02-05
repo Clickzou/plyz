@@ -711,4 +711,21 @@ export default {
   storageWarningMessage: 'Algunas fotos antiguas fueron eliminadas para liberar espacio. Inicia sesión para guardar tus fotos en la nube.',
   storageFull: 'Almacenamiento lleno',
   storageFullMessage: 'El almacenamiento local está lleno. Solo se guardó tu foto más reciente. Inicia sesión para guardar en la nube.',
+  
+  // Video Call
+  videoNotSupportedWeb: 'Las videollamadas no están disponibles en la web',
+  videoWebHint: 'Usa la aplicación móvil para videollamadas en vivo',
+  videoCallError: 'Error al conectar a la videollamada',
+  connectingToCall: 'Conectando...',
+  leaveCall: 'Salir de la llamada',
+  leaveCallConfirm: '¿Estás seguro de que quieres salir de esta llamada?',
+  leave: 'Salir',
+  goBack: 'Volver',
+  host: 'ANFITRIÓN',
+  anonymous: 'Anónimo',
+  you: 'tú',
+  startVideoCall: 'Iniciar videollamada',
+  joinVideoCall: 'Unirse a videollamada',
+  videoCallActive: 'Videollamada activa',
+  noVideoRoom: 'No hay sala de video disponible',
 };

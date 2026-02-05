@@ -711,4 +711,22 @@ export default {
   storageWarningMessage: 'জায়গা খালি করতে কিছু পুরানো ফটো সরানো হয়েছে। ক্লাউডে সংরক্ষণ করতে সাইন ইন করুন।',
   storageFull: 'স্টোরেজ পূর্ণ',
   storageFullMessage: 'স্থানীয় স্টোরেজ পূর্ণ। শুধুমাত্র আপনার সর্বশেষ ফটো সংরক্ষিত হয়েছে। ক্লাউডে সংরক্ষণ করতে সাইন ইন করুন।',
+
+  
+  // Video Call
+  videoNotSupportedWeb: 'ওয়েবে ভিডিও কল উপলব্ধ নেই',
+  videoWebHint: 'লাইভ ভিডিও কলের জন্য মোবাইল অ্যাপ ব্যবহার করুন',
+  videoCallError: 'ভিডিও কলে সংযোগে ত্রুটি',
+  connectingToCall: 'সংযোগ হচ্ছে...',
+  leaveCall: 'কল ছেড়ে দিন',
+  leaveCallConfirm: 'আপনি কি নিশ্চিত যে আপনি এই কল ছেড়ে দিতে চান?',
+  leave: 'ছেড়ে দিন',
+  goBack: 'ফিরে যান',
+  host: 'হোস্ট',
+  anonymous: 'বেনামী',
+  you: 'আপনি',
+  startVideoCall: 'ভিডিও কল শুরু করুন',
+  joinVideoCall: 'ভিডিও কলে যোগ দিন',
+  videoCallActive: 'ভিডিও কল সক্রিয়',
+  noVideoRoom: 'কোনো ভিডিও রুম উপলব্ধ নেই',
 };

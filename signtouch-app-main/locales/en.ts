@@ -722,4 +722,21 @@ export default {
   storageWarningMessage: 'Some older photos were removed to free space. Sign in to save your photos to the cloud.',
   storageFull: 'Storage full',
   storageFullMessage: 'Local storage is full. Only your latest photo was saved. Sign in to save to the cloud.',
+  
+  // Video Call
+  videoNotSupportedWeb: 'Video calls are not available on the web',
+  videoWebHint: 'Use the mobile app for live video calls',
+  videoCallError: 'Error connecting to video call',
+  connectingToCall: 'Connecting...',
+  leaveCall: 'Leave call',
+  leaveCallConfirm: 'Are you sure you want to leave this call?',
+  leave: 'Leave',
+  goBack: 'Go back',
+  host: 'HOST',
+  anonymous: 'Anonymous',
+  you: 'you',
+  startVideoCall: 'Start video call',
+  joinVideoCall: 'Join video call',
+  videoCallActive: 'Video call active',
+  noVideoRoom: 'No video room available',
 };
