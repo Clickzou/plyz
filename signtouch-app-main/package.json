@@ -9,9 +9,6 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit"
   },
-  "overrides": {
-    "react-native-worklets": "0.5.1"
-  },
   "dependencies": {
     "@expo-google-fonts/alex-brush": "^0.4.1",
     "@expo-google-fonts/alfa-slab-one": "^0.4.1",
