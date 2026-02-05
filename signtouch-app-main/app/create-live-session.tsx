@@ -189,6 +189,7 @@ export default function CreateLiveSessionScreen() {
           celebrity_id: celebrityId,
           celebrity_name: celebrityName.trim(),
           duration_minutes: totalDuration,
+          duration_per_fan_minutes: durationPerFan,
           max_slots: calculatedMaxFans,
           price_cents: price,
           status: 'active',

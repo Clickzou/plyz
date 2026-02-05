@@ -364,7 +364,11 @@ export default function JoinEventScreen() {
 
       <ScrollView 
         style={styles.content}
-        contentContainerStyle={[styles.contentContainer, { paddingBottom: BOTTOM_NAV_HEIGHT + 20 }]}
+        contentContainerStyle={[
+          styles.contentContainer, 
+          { paddingBottom: BOTTOM_NAV_HEIGHT + 20 },
+          foundLiveSession && styles.contentContainerCompact
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {foundLiveSession ? (
@@ -695,6 +699,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
+  contentContainerCompact: {
+    paddingTop: 0,
+    paddingHorizontal: 12,
+  },
   backButton: {
     width: 44,
     height: 44,
@@ -925,12 +933,12 @@ const styles = StyleSheet.create({
   },
   liveSessionContainer: {
     alignItems: 'center',
-    paddingTop: 20,
-    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingHorizontal: 16,
   },
   liveSessionHeader: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   liveBadge: {
     flexDirection: 'row',
@@ -955,10 +963,10 @@ const styles = StyleSheet.create({
   },
   celebritySection: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 16,
   },
   celebrityAvatarContainer: {
-    marginBottom: 20,
+    marginBottom: 12,
   },
   celebrityAvatarGradient: {
     width: 100,
@@ -1060,48 +1068,48 @@ const styles = StyleSheet.create({
   waitingSection: {
     alignItems: 'center',
     width: '100%',
-    paddingVertical: 20,
+    paddingVertical: 8,
   },
   pulseContainer: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   pulseOuter: {
     position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: 'rgba(16, 185, 129, 0.2)',
   },
   pulseInner: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: 'rgba(16, 185, 129, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   waitingTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '800',
     color: '#fff',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   waitingSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#fff',
     textAlign: 'center',
-    marginBottom: 8,
-    paddingHorizontal: 20,
+    marginBottom: 4,
+    paddingHorizontal: 16,
   },
   waitingHint: {
-    fontSize: 14,
+    fontSize: 12,
     color: 'rgba(255, 255, 255, 0.6)',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 12,
     fontStyle: 'italic',
   },
   refreshButtonLarge: {
