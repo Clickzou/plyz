@@ -352,7 +352,7 @@ export default {
   // Subscription Offer Modal
   designYourTrial: 'Concevez votre essai',
   enjoyFirst7Days: 'Profitez de vos 7 premiers jours, c\'est gratuit',
-  cancelFromApp: 'Annuler à partir de l\'application ou de votre compte Google Play',
+  cancelFromApp: 'Annuler votre abonnement à partir de votre compte Google Play ou Apple Store',
   unlimitedAccessFeatures: 'Accès illimité à toutes les fonctionnalités',
   noIntrusiveAds: 'Pas de publicité intrusive',
   free7Days: 'gratuits',

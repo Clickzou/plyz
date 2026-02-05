@@ -351,7 +351,7 @@ export default {
   // Subscription Offer Modal
   designYourTrial: 'আপনার ট্রায়াল ডিজাইন করুন',
   enjoyFirst7Days: 'আপনার প্রথম ৭ দিন উপভোগ করুন, এটি বিনামূল্যে',
-  cancelFromApp: 'অ্যাপ বা আপনার Google Play অ্যাকাউন্ট থেকে বাতিল করুন',
+  cancelFromApp: 'আপনার Google Play বা Apple Store অ্যাকাউন্ট থেকে সাবস্ক্রিপশন বাতিল করুন',
   unlimitedAccessFeatures: 'সমস্ত বৈশিষ্ট্যে সীমাহীন অ্যাক্সেস',
   noIntrusiveAds: 'কোন অনুপ্রবেশকারী বিজ্ঞাপন নেই',
   free7Days: 'বিনামূল্যে',

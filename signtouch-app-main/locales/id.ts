@@ -351,7 +351,7 @@ export default {
   // Subscription Offer Modal
   designYourTrial: 'Rancang percobaan Anda',
   enjoyFirst7Days: 'Nikmati 7 hari pertama Anda, gratis',
-  cancelFromApp: 'Batalkan dari aplikasi atau akun Google Play Anda',
+  cancelFromApp: 'Batalkan langganan dari akun Google Play atau Apple Store Anda',
   unlimitedAccessFeatures: 'Akses tak terbatas ke semua fitur',
   noIntrusiveAds: 'Tidak ada iklan yang mengganggu',
   free7Days: 'gratis',

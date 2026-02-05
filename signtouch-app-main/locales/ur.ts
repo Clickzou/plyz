@@ -351,7 +351,7 @@ export default {
   // Subscription Offer Modal
   designYourTrial: 'اپنی آزمائش ڈیزائن کریں',
   enjoyFirst7Days: 'اپنے پہلے 7 دنوں سے لطف اندوز ہوں، یہ مفت ہے',
-  cancelFromApp: 'ایپ یا اپنے Google Play اکاؤنٹ سے منسوخ کریں',
+  cancelFromApp: 'اپنے Google Play یا Apple Store اکاؤنٹ سے سبسکرپشن منسوخ کریں',
   unlimitedAccessFeatures: 'تمام خصوصیات تک لامحدود رسائی',
   noIntrusiveAds: 'کوئی مداخلت کرنے والے اشتہارات نہیں',
   free7Days: 'مفت',
