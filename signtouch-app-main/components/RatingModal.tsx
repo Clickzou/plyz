@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star, AlertTriangle, X } from 'lucide-react-native';
+import { Star, X, Shield, Heart } from 'lucide-react-native';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface RatingModalProps {
@@ -50,24 +50,21 @@ export default function RatingModal({
     onClose();
   };
 
-  const renderStars = () => {
-    return (
-      <View style={styles.starsContainer}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <TouchableOpacity
-            key={star}
-            onPress={() => setSelectedRating(star)}
-            style={styles.starButton}
-          >
-            <Star
-              size={32}
-              color={star <= selectedRating ? '#fbbf24' : 'rgba(255,255,255,0.3)'}
-              fill={star <= selectedRating ? '#fbbf24' : 'transparent'}
-            />
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
+  const getRatingEmoji = () => {
+    if (selectedRating === 0) return '';
+    if (selectedRating <= 2) return '😕';
+    if (selectedRating === 3) return '😊';
+    if (selectedRating === 4) return '😄';
+    return '🤩';
+  };
+
+  const getRatingLabel = () => {
+    if (selectedRating === 0) return '';
+    if (selectedRating === 1) return t('rating1Star') || 'Very poor';
+    if (selectedRating === 2) return t('rating2Star') || 'Poor';
+    if (selectedRating === 3) return t('rating3Star') || 'Average';
+    if (selectedRating === 4) return t('rating4Star') || 'Good';
+    return t('rating5Star') || 'Excellent';
   };
 
   const getTitle = () => {
@@ -80,7 +77,7 @@ export default function RatingModal({
   const getExplanation = () => {
     if (isCelebrity) {
       return t('rateFanExplanation') || 
-        'Your rating helps maintain a respectful community. Fans with an average rating below 3 stars may be banned from future sessions.';
+        'Your rating helps maintain a respectful community. Fans with low ratings may be restricted from future sessions.';
     }
     return t('rateCelebrityExplanation') || 
       'Your feedback helps improve the experience. Celebrities with low ratings will be reviewed by our team.';
@@ -101,30 +98,55 @@ export default function RatingModal({
           />
           
           <TouchableOpacity style={styles.closeButton} onPress={handleSkip}>
-            <X size={24} color="rgba(255,255,255,0.5)" />
+            <X size={20} color="rgba(255,255,255,0.4)" />
           </TouchableOpacity>
 
           <View style={styles.content}>
+            <View style={styles.iconCircle}>
+              {isCelebrity ? (
+                <Shield size={28} color="#818cf8" />
+              ) : (
+                <Heart size={28} color="#f472b6" />
+              )}
+            </View>
+
             <Text style={styles.title}>{getTitle()}</Text>
             <Text style={styles.userName}>{userName}</Text>
 
-            {renderStars()}
-
-            <View style={styles.explanationCard}>
-              <AlertTriangle size={20} color="#f59e0b" />
-              <Text style={styles.explanationText}>{getExplanation()}</Text>
+            <View style={styles.starsContainer}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity
+                  key={star}
+                  onPress={() => setSelectedRating(star)}
+                  style={styles.starButton}
+                  activeOpacity={0.7}
+                >
+                  <Star
+                    size={40}
+                    color={star <= selectedRating ? '#fbbf24' : 'rgba(255,255,255,0.15)'}
+                    fill={star <= selectedRating ? '#fbbf24' : 'transparent'}
+                  />
+                </TouchableOpacity>
+              ))}
             </View>
 
-            <View style={styles.ratingLabels}>
-              <Text style={styles.ratingLabel}>
-                {t('rating1Star') || '1 = Very bad behavior'}
+            {selectedRating > 0 && (
+              <View style={styles.ratingFeedback}>
+                <Text style={styles.ratingEmoji}>{getRatingEmoji()}</Text>
+                <Text style={styles.ratingLabelText}>{getRatingLabel()}</Text>
+              </View>
+            )}
+
+            {selectedRating === 0 && (
+              <Text style={styles.tapHint}>
+                {t('tapToRate') || 'Tap a star to rate'}
               </Text>
-              <Text style={styles.ratingLabel}>
-                {t('rating3Star') || '3 = Average'}
-              </Text>
-              <Text style={styles.ratingLabel}>
-                {t('rating5Star') || '5 = Excellent'}
-              </Text>
+            )}
+
+            <View style={styles.divider} />
+
+            <View style={styles.explanationCard}>
+              <Text style={styles.explanationText}>{getExplanation()}</Text>
             </View>
 
             <TouchableOpacity
@@ -134,9 +156,10 @@ export default function RatingModal({
               ]}
               onPress={handleSubmit}
               disabled={selectedRating === 0 || isSubmitting}
+              activeOpacity={0.8}
             >
               <LinearGradient
-                colors={selectedRating > 0 ? ['#10B981', '#059669'] : ['#4b5563', '#374151']}
+                colors={selectedRating > 0 ? ['#8b5cf6', '#6d28d9'] : ['#4b5563', '#374151']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.submitButtonGradient}
@@ -145,7 +168,7 @@ export default function RatingModal({
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
                   <Text style={styles.submitButtonText}>
-                    {t('submitRating') || 'Submit Rating'}
+                    {t('submitRating') || 'Submit'}
                   </Text>
                 )}
               </LinearGradient>
@@ -166,89 +189,122 @@ export default function RatingModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 24,
   },
   modalContainer: {
     width: '100%',
-    maxWidth: 400,
-    borderRadius: 24,
+    maxWidth: 380,
+    borderRadius: 28,
     overflow: 'hidden',
     position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   gradientBackground: {
     ...StyleSheet.absoluteFillObject,
   },
   closeButton: {
     position: 'absolute',
-    top: 16,
-    right: 16,
+    top: 14,
+    right: 14,
     zIndex: 10,
     padding: 8,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 20,
   },
   content: {
-    padding: 32,
+    padding: 28,
+    paddingTop: 32,
     alignItems: 'center',
   },
+  iconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     color: '#fff',
-    marginBottom: 8,
+    marginBottom: 6,
     textAlign: 'center',
+    letterSpacing: -0.3,
   },
   userName: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#10B981',
-    marginBottom: 24,
+    color: '#a78bfa',
+    marginBottom: 28,
     textAlign: 'center',
   },
   starsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 12,
-    marginBottom: 24,
+    gap: 8,
+    marginBottom: 12,
   },
   starButton: {
-    padding: 4,
+    padding: 6,
+  },
+  ratingFeedback: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+    minHeight: 32,
+  },
+  ratingEmoji: {
+    fontSize: 22,
+  },
+  ratingLabelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fbbf24',
+  },
+  tapHint: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.35)',
+    marginBottom: 4,
+    minHeight: 32,
+    textAlignVertical: 'center',
+    lineHeight: 32,
+  },
+  divider: {
+    width: 48,
+    height: 2,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 1,
+    marginVertical: 16,
   },
   explanationCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    marginBottom: 24,
+    width: '100%',
   },
   explanationText: {
-    flex: 1,
     fontSize: 13,
-    color: '#fbbf24',
-    lineHeight: 20,
-  },
-  ratingLabels: {
-    alignItems: 'center',
-    marginBottom: 24,
-    gap: 6,
-  },
-  ratingLabel: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: 'rgba(255, 255, 255, 0.5)',
+    lineHeight: 19,
+    textAlign: 'center',
   },
   submitButton: {
     width: '100%',
     borderRadius: 16,
     overflow: 'hidden',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   submitButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
   submitButtonGradient: {
     paddingVertical: 16,
@@ -256,15 +312,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   submitButtonText: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
     color: '#fff',
+    letterSpacing: 0.3,
   },
   skipButton: {
-    paddingVertical: 12,
+    paddingVertical: 10,
   },
   skipButtonText: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: 'rgba(255, 255, 255, 0.4)',
   },
 });

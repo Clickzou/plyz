@@ -802,9 +802,17 @@ export default {
   rateCelebrity: 'اپنے تجربے کی درجہ بندی کریں',
   rateFanExplanation: 'آپ کی ریٹنگ ایک با عزت کمیونٹی کو برقرار رکھنے میں مدد کرتی ہے۔ 3 ستاروں سے کم اوسط ریٹنگ والے مداحوں پر مستقبل کے سیشنز سے پابندی لگائی جا سکتی ہے۔',
   rateCelebrityExplanation: 'آپ کا فیڈ بیک تجربے کو بہتر بنانے میں مدد کرتا ہے۔ کم ریٹنگ والے مشہور شخصیات کا ہماری ٹیم جائزہ لے گی۔',
-  rating1Star: '1 = بہت برا رویہ',
-  rating3Star: '3 = اوسط',
-  rating5Star: '5 = بہترین',
+  rating1Star: 'بہت خراب',
+
+  rating2Star: 'خراب',
+
+  rating3Star: 'اوسط',
+
+  rating4Star: 'اچھا',
+
+  rating5Star: 'بہترین',
+
+  tapToRate: 'درجہ بندی کے لیے ایک ستارے پر ٹیپ کریں',
   submitRating: 'ریٹنگ بھیجیں',
   skipRating: 'چھوڑیں',
   howItWorksTitle: 'یہ کیسے کام کرتا ہے؟',

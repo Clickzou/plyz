@@ -802,9 +802,17 @@ export default {
   rateCelebrity: 'Beri peringkat pengalaman Anda',
   rateFanExplanation: 'Peringkat Anda membantu menjaga komunitas yang saling menghormati. Penggemar dengan peringkat rata-rata di bawah 3 bintang dapat dilarang dari sesi mendatang.',
   rateCelebrityExplanation: 'Umpan balik Anda membantu meningkatkan pengalaman. Selebriti dengan peringkat rendah akan ditinjau oleh tim kami.',
-  rating1Star: '1 = Perilaku sangat buruk',
-  rating3Star: '3 = Rata-rata',
-  rating5Star: '5 = Sangat baik',
+  rating1Star: 'Sangat buruk',
+
+  rating2Star: 'Buruk',
+
+  rating3Star: 'Rata-rata',
+
+  rating4Star: 'Bagus',
+
+  rating5Star: 'Luar biasa',
+
+  tapToRate: 'Ketuk bintang untuk menilai',
   submitRating: 'Kirim peringkat',
   skipRating: 'Lewati',
   howItWorksTitle: 'Bagaimana cara kerjanya?',
