@@ -155,6 +155,30 @@ Preferred communication style: Simple, everyday language.
   - position, status (waiting/called/in_call/missed/completed/left)
   - estimated_call_time, called_at, completed_at, missed_count
 
+### Personalized Dedication System (February 2026)
+- **Hybrid Intelligent System**: One photo + one signature generates unique dedications for each fan
+  - Celebrity takes ONE selfie and draws ONE signature before starting video calls
+  - After each fan's video call + rating, fan automatically receives personalized dedication
+  - Dedication includes: celebrity photo, "Pour [fan name]", date, celebrity's signature, LIVE badge
+- **Celebrity Setup**: 2-step flow in `live-session-dashboard.tsx`
+  - Step 1: Take selfie (camera) or choose from gallery
+  - Step 2: Draw handwritten signature on canvas
+  - Setup gates the "Start Video Call" button (must complete before calling fans)
+  - Can reset and redo at any time
+- **Fan Dedication Screen**: `dedication-result.tsx` with interactive overlays
+  - Gesture-based signature manipulation: pan (move), pinch (scale), rotation (two-finger)
+  - Color picker: 10 preset colors for signature
+  - Localized "Pour/For/Para [name]" text based on user's language
+  - Localized date formatting per language
+  - LIVE badge with celebrity name
+  - SignTouch watermark
+  - Save to gallery via `react-native-view-shot` + `expo-media-library`
+  - Share via native sharing API
+- **Flow**: Celebrity setup → Video call → Rating modal → Dedication result (fan only)
+- **Database**: `live_sessions` columns: `dedication_photo_url`, `dedication_signature_svg`
+- **Storage Functions**: `uploadDedicationPhoto()`, `updateDedicationSignature()`, `getDedicationAssets()`
+- **i18n**: 14 new translation keys across all 15 languages (dedicationSetupTitle, dedicationDrawSignature, etc.)
+
 ### Legal Documents System (February 2026)
 - **Multi-Language Legal Documents**: All 4 legal documents translated into 15 languages
   - CGV (Conditions Générales de Vente / Terms of Sale)

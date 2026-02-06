@@ -185,7 +185,18 @@ export default function VideoCallScreen() {
 
   const handleRatingModalClose = () => {
     setShowRatingModal(false);
-    router.back();
+    if (!isHost && params.sessionId) {
+      router.replace({
+        pathname: '/dedication-result',
+        params: {
+          sessionId: params.sessionId,
+          fanName: params.userName || '',
+          celebrityName: params.otherUserName || '',
+        },
+      });
+    } else {
+      router.back();
+    }
   };
 
   const dailyUrl = getDailyPrebuiltUrl();

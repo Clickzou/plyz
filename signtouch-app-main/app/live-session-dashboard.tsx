@@ -26,6 +26,10 @@ import {
   Check,
   Video,
   AlertTriangle,
+  Camera,
+  Pen,
+  Trash,
+  ChevronRight,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -50,9 +54,12 @@ import {
   updateSessionRoomUrl,
   startFanCall,
   updateCelebrityPushToken,
+  uploadDedicationPhoto,
+  updateDedicationSignature,
 } from '@/utils/liveSessionStorage';
 import QRCode from 'react-native-qrcode-svg';
 import * as Clipboard from 'expo-clipboard';
+import * as ImagePicker from 'expo-image-picker';
 import { createSessionVideoRoom, createMeetingToken } from '@/utils/dailyService';
 import { 
   callNextFan as callNextQueueFan, 
@@ -90,6 +97,13 @@ export default function LiveSessionDashboardScreen() {
   const [copied, setCopied] = useState(false);
   const [isCreatingVideoRoom, setIsCreatingVideoRoom] = useState(false);
   const [isInVideoCall, setIsInVideoCall] = useState(false);
+
+  const [dedicationPhotoUri, setDedicationPhotoUri] = useState<string | null>(null);
+  const [dedicationStep, setDedicationStep] = useState<'photo' | 'signature' | 'done'>('photo');
+  const [dedicationPaths, setDedicationPaths] = useState<string[]>([]);
+  const [dedicationCurrentPath, setDedicationCurrentPath] = useState<string>('');
+  const dedicationPathRef = useRef<string>('');
+  const [isUploadingDedication, setIsUploadingDedication] = useState(false);
 
   const [paths, setPaths] = useState<string[]>([]);
   const [currentPath, setCurrentPath] = useState<string>('');
@@ -153,6 +167,17 @@ export default function LiveSessionDashboardScreen() {
       queueChannel.unsubscribe();
     };
   }, [sessionId]);
+
+  useEffect(() => {
+    if (session?.dedication_photo_url && session?.dedication_signature_svg) {
+      setDedicationPhotoUri(session.dedication_photo_url);
+      setDedicationPaths(session.dedication_signature_svg.split('|||'));
+      setDedicationStep('done');
+    } else if (session?.dedication_photo_url) {
+      setDedicationPhotoUri(session.dedication_photo_url);
+      setDedicationStep('signature');
+    }
+  }, [session?.dedication_photo_url, session?.dedication_signature_svg]);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -476,6 +501,110 @@ export default function LiveSessionDashboardScreen() {
     }
   };
 
+  const handleTakeDedicationPhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        showAlert(t('error'), t('cameraPermissionDenied'));
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: 'images' as any,
+        quality: 0.8,
+        allowsEditing: true,
+        aspect: [3, 4],
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const uri = result.assets[0].uri;
+        setDedicationPhotoUri(uri);
+        setIsUploadingDedication(true);
+
+        if (sessionId) {
+          await uploadDedicationPhoto(sessionId, uri);
+        }
+        setIsUploadingDedication(false);
+        setDedicationStep('signature');
+      }
+    } catch (error) {
+      console.error('Error taking dedication photo:', error);
+      setIsUploadingDedication(false);
+    }
+  };
+
+  const handlePickDedicationPhoto = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: 'images' as any,
+        quality: 0.8,
+        allowsEditing: true,
+        aspect: [3, 4],
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const uri = result.assets[0].uri;
+        setDedicationPhotoUri(uri);
+        setIsUploadingDedication(true);
+
+        if (sessionId) {
+          await uploadDedicationPhoto(sessionId, uri);
+        }
+        setIsUploadingDedication(false);
+        setDedicationStep('signature');
+      }
+    } catch (error) {
+      console.error('Error picking dedication photo:', error);
+      setIsUploadingDedication(false);
+    }
+  };
+
+  const dedicationPanGesture = Gesture.Pan()
+    .onStart((e) => {
+      dedicationPathRef.current = `M${e.x.toFixed(1)},${e.y.toFixed(1)}`;
+      setDedicationCurrentPath(dedicationPathRef.current);
+    })
+    .onUpdate((e) => {
+      dedicationPathRef.current += ` L${e.x.toFixed(1)},${e.y.toFixed(1)}`;
+      setDedicationCurrentPath(dedicationPathRef.current);
+    })
+    .onEnd(() => {
+      if (dedicationPathRef.current) {
+        setDedicationPaths((prev) => [...prev, dedicationPathRef.current]);
+      }
+      dedicationPathRef.current = '';
+      setDedicationCurrentPath('');
+    });
+
+  const handleSaveDedicationSignature = async () => {
+    if (dedicationPaths.length === 0 || !sessionId) return;
+    setIsUploadingDedication(true);
+    const svgData = dedicationPaths.join('|||');
+    await updateDedicationSignature(sessionId, svgData);
+    setIsUploadingDedication(false);
+    setDedicationStep('done');
+  };
+
+  const handleResetDedication = async () => {
+    setDedicationPhotoUri(null);
+    setDedicationPaths([]);
+    setDedicationCurrentPath('');
+    setDedicationStep('photo');
+    if (sessionId) {
+      try {
+        const { supabase } = require('@/utils/supabase');
+        await supabase
+          .from('live_sessions')
+          .update({ dedication_photo_url: null, dedication_signature_svg: null })
+          .eq('id', sessionId);
+      } catch (e) {
+        console.error('Error clearing dedication in DB:', e);
+      }
+    }
+  };
+
+  const DEDICATION_CANVAS_SIZE = SCREEN_WIDTH - 100;
+
   const handleStartVideoCall = async () => {
     if (!session) return;
     
@@ -639,11 +768,106 @@ export default function LiveSessionDashboardScreen() {
               )}
             </TouchableOpacity>
             <Text style={styles.qrHint}>{t('liveSessionShareHint')}</Text>
+
+            <View style={styles.dedicationSetupSection}>
+              <Text style={styles.dedicationSetupTitle}>{t('dedicationSetupTitle')}</Text>
+              <Text style={styles.dedicationSetupHint}>{t('dedicationSetupHint')}</Text>
+
+              {dedicationStep === 'photo' && (
+                <View style={styles.dedicationPhotoStep}>
+                  <View style={styles.dedicationStepBadge}>
+                    <Text style={styles.dedicationStepBadgeText}>1/2</Text>
+                  </View>
+                  <Text style={styles.dedicationStepLabel}>{t('dedicationTakePhoto')}</Text>
+                  <View style={styles.dedicationPhotoButtons}>
+                    <TouchableOpacity
+                      style={styles.dedicationPhotoButton}
+                      onPress={handleTakeDedicationPhoto}
+                      disabled={isUploadingDedication}
+                    >
+                      {isUploadingDedication ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Camera size={24} color="#fff" />
+                      )}
+                      <Text style={styles.dedicationPhotoButtonText}>{t('takeSelfie')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.dedicationPhotoButton, styles.dedicationPhotoButtonAlt]}
+                      onPress={handlePickDedicationPhoto}
+                      disabled={isUploadingDedication}
+                    >
+                      <Text style={styles.dedicationPhotoButtonTextAlt}>{t('choosePhoto')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {dedicationStep === 'signature' && (
+                <View style={styles.dedicationSignatureStep}>
+                  <View style={styles.dedicationStepBadge}>
+                    <Text style={styles.dedicationStepBadgeText}>2/2</Text>
+                  </View>
+                  {dedicationPhotoUri && (
+                    <Image source={{ uri: dedicationPhotoUri }} style={styles.dedicationPhotoPreview} resizeMode="cover" />
+                  )}
+                  <Text style={styles.dedicationStepLabel}>{t('dedicationDrawSignature')}</Text>
+                  <GestureDetector gesture={dedicationPanGesture}>
+                    <View style={[styles.canvas, { width: DEDICATION_CANVAS_SIZE, height: DEDICATION_CANVAS_SIZE * 0.5 }]}>
+                      <Svg width={DEDICATION_CANVAS_SIZE} height={DEDICATION_CANVAS_SIZE * 0.5}>
+                        {dedicationPaths.map((p, i) => (
+                          <Path key={i} d={p} stroke="#000" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                        ))}
+                        {dedicationCurrentPath && (
+                          <Path d={dedicationCurrentPath} stroke="#000" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                        )}
+                      </Svg>
+                    </View>
+                  </GestureDetector>
+                  <View style={styles.dedicationSignatureActions}>
+                    <TouchableOpacity
+                      style={styles.dedicationClearButton}
+                      onPress={() => { setDedicationPaths([]); setDedicationCurrentPath(''); }}
+                    >
+                      <Trash size={16} color="#fff" />
+                      <Text style={styles.dedicationClearButtonText}>{t('clear')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.dedicationSaveButton, dedicationPaths.length === 0 && { opacity: 0.5 }]}
+                      onPress={handleSaveDedicationSignature}
+                      disabled={dedicationPaths.length === 0 || isUploadingDedication}
+                    >
+                      {isUploadingDedication ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Check size={18} color="#fff" />
+                      )}
+                      <Text style={styles.dedicationSaveButtonText}>{t('validate')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {dedicationStep === 'done' && (
+                <View style={styles.dedicationDoneStep}>
+                  <View style={styles.dedicationDoneCheck}>
+                    <Check size={24} color="#4ade80" />
+                  </View>
+                  <Text style={styles.dedicationDoneText}>{t('dedicationReady')}</Text>
+                  {dedicationPhotoUri && (
+                    <Image source={{ uri: dedicationPhotoUri }} style={styles.dedicationPhotoPreviewSmall} resizeMode="cover" />
+                  )}
+                  <TouchableOpacity style={styles.dedicationResetButton} onPress={handleResetDedication}>
+                    <Text style={styles.dedicationResetText}>{t('dedicationReset')}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
             
             <TouchableOpacity
-              style={[styles.startVideoCallButton, isCreatingVideoRoom && styles.videoCallButtonDisabled]}
+              style={[styles.startVideoCallButton, (isCreatingVideoRoom || dedicationStep !== 'done') && styles.videoCallButtonDisabled]}
               onPress={handleStartVideoCall}
-              disabled={isCreatingVideoRoom}
+              disabled={isCreatingVideoRoom || dedicationStep !== 'done'}
             >
               {isCreatingVideoRoom ? (
                 <ActivityIndicator size="small" color="#fff" />
@@ -1264,5 +1488,158 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.5)',
     textAlign: 'center',
     marginTop: 10,
+  },
+  dedicationSetupSection: {
+    marginTop: 24,
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.3)',
+    width: '100%',
+  },
+  dedicationSetupTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  dedicationSetupHint: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: 18,
+  },
+  dedicationPhotoStep: {
+    alignItems: 'center',
+  },
+  dedicationStepBadge: {
+    backgroundColor: '#8b5cf6',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  dedicationStepBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  dedicationStepLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  dedicationPhotoButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  dedicationPhotoButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#8b5cf6',
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  dedicationPhotoButtonAlt: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  dedicationPhotoButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  dedicationPhotoButtonTextAlt: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  dedicationSignatureStep: {
+    alignItems: 'center',
+  },
+  dedicationPhotoPreview: {
+    width: 120,
+    height: 160,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  dedicationSignatureActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 12,
+    width: '100%',
+  },
+  dedicationClearButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  dedicationClearButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  dedicationSaveButton: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#10B981',
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  dedicationSaveButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  dedicationDoneStep: {
+    alignItems: 'center',
+  },
+  dedicationDoneCheck: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(74, 222, 128, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  dedicationDoneText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#4ade80',
+    marginBottom: 12,
+  },
+  dedicationPhotoPreviewSmall: {
+    width: 80,
+    height: 107,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  dedicationResetButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  dedicationResetText: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 13,
+    textDecorationLine: 'underline',
   },
 });

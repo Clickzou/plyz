@@ -20,6 +20,8 @@ export interface LiveSession {
   fan_call_started_at?: string | null;
   cover_photo_url?: string | null;
   celebrity_push_token?: string | null;
+  dedication_photo_url?: string | null;
+  dedication_signature_svg?: string | null;
 }
 
 export interface QueueEntry {
@@ -73,6 +75,89 @@ export const uploadCoverPhoto = async (
     return publicUrl;
   } catch (error) {
     console.error('Error uploading cover photo:', error);
+    return null;
+  }
+};
+
+export const uploadDedicationPhoto = async (
+  sessionId: string,
+  photoUri: string
+): Promise<string | null> => {
+  try {
+    const response = await fetch(photoUri);
+    const blob = await response.blob();
+    const fileName = `dedication_${sessionId}_${Date.now()}.jpg`;
+    const filePath = `live-sessions/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('memories')
+      .upload(filePath, blob, { contentType: 'image/jpeg', upsert: true });
+
+    if (uploadError) {
+      console.error('Error uploading dedication photo:', uploadError);
+      return null;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('memories')
+      .getPublicUrl(filePath);
+
+    const { error: updateError } = await supabase
+      .from('live_sessions')
+      .update({ dedication_photo_url: publicUrl })
+      .eq('id', sessionId);
+
+    if (updateError) {
+      console.error('Error updating session dedication photo:', updateError);
+    }
+
+    return publicUrl;
+  } catch (error) {
+    console.error('Error uploading dedication photo:', error);
+    return null;
+  }
+};
+
+export const updateDedicationSignature = async (
+  sessionId: string,
+  signatureSvg: string
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('live_sessions')
+      .update({ dedication_signature_svg: signatureSvg })
+      .eq('id', sessionId);
+
+    if (error) {
+      console.error('Error updating dedication signature:', error);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Error updating dedication signature:', error);
+    return false;
+  }
+};
+
+export const getDedicationAssets = async (
+  sessionId: string
+): Promise<{ photoUrl: string | null; signatureSvg: string | null; celebrityName: string } | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('live_sessions')
+      .select('dedication_photo_url, dedication_signature_svg, celebrity_name')
+      .eq('id', sessionId)
+      .single();
+
+    if (error || !data) return null;
+
+    return {
+      photoUrl: data.dedication_photo_url,
+      signatureSvg: data.dedication_signature_svg,
+      celebrityName: data.celebrity_name,
+    };
+  } catch (error) {
+    console.error('Error getting dedication assets:', error);
     return null;
   }
 };
