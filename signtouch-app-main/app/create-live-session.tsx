@@ -168,6 +168,7 @@ export default function CreateLiveSessionScreen() {
   };
 
   const handleCreateSession = async () => {
+    console.log('[CreateSession] Button pressed, name:', celebrityName, 'photo:', coverPhotoUri ? 'YES' : 'NO');
     let hasError = false;
     
     if (!celebrityName.trim()) {
@@ -181,7 +182,12 @@ export default function CreateLiveSessionScreen() {
     }
     
     if (hasError) {
-      Alert.alert(t('error') || 'Erreur', t('liveSessionFieldsRequired') || 'Please fill in all required fields');
+      console.log('[CreateSession] Validation failed - name:', !celebrityName.trim(), 'photo:', !coverPhotoUri);
+      if (typeof window !== 'undefined') {
+        window.alert(t('liveSessionFieldsRequired') || 'Veuillez remplir le nom et prendre une photo');
+      } else {
+        Alert.alert(t('error') || 'Erreur', t('liveSessionFieldsRequired') || 'Veuillez remplir le nom et prendre une photo');
+      }
       return;
     }
     setNameError(false);
@@ -189,7 +195,7 @@ export default function CreateLiveSessionScreen() {
     setIsCreating(true);
     setNameError(false);
     setPhotoError(false);
-    console.log('Starting session creation...');
+    console.log('[CreateSession] Starting session creation...');
     try {
       const celebrityId = `celebrity_${Date.now()}`;
       let session;
