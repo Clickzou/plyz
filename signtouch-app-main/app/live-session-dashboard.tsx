@@ -517,6 +517,8 @@ export default function LiveSessionDashboardScreen() {
         expiryMinutes: 180,
       });
 
+      const waitingCount = sessionQueue.filter((e) => e.status === 'waiting').length;
+
       router.push({
         pathname: '/video-call',
         params: {
@@ -526,6 +528,7 @@ export default function LiveSessionDashboardScreen() {
           sessionId: session.id,
           userName: session.celebrity_name,
           durationPerFan: String(session.duration_per_fan_minutes || 5),
+          fansRemaining: String(waitingCount),
           otherUserName: nextFan?.fan_name || 'Fan',
           otherUserId: nextFan?.fan_id || '',
         }

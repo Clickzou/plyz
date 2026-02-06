@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, PhoneOff, Clock, Video } from 'lucide-react-native';
+import { ArrowLeft, PhoneOff, Clock, Video, Users } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
@@ -50,6 +50,7 @@ export default function VideoCallScreen() {
     sessionId: string;
     userName: string;
     durationPerFan: string;
+    fansRemaining: string;
     queueEntryId: string;
     otherUserId: string;
     otherUserName: string;
@@ -58,10 +59,12 @@ export default function VideoCallScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fanTimeRemaining, setFanTimeRemaining] = useState<string>('--:--');
+  const [timeProgress, setTimeProgress] = useState(1);
   const [timeWarning, setTimeWarning] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hasLeftCall, setHasLeftCall] = useState(false);
   const callStartTime = useRef<number>(Date.now());
+  const autoEndTriggered = useRef(false);
 
   useEffect(() => {
     if (ScreenOrientation) {
@@ -87,8 +90,9 @@ export default function VideoCallScreen() {
     const durationMinutes = parseInt(params.durationPerFan || '5', 10);
     if (!durationMinutes) return;
 
+    const durationMs = durationMinutes * 60 * 1000;
+
     const interval = setInterval(() => {
-      const durationMs = durationMinutes * 60 * 1000;
       const endTime = callStartTime.current + durationMs;
       const now = Date.now();
       const diff = Math.max(0, endTime - now);
@@ -96,7 +100,13 @@ export default function VideoCallScreen() {
       const minutes = Math.floor(diff / 60000);
       const seconds = Math.floor((diff % 60000) / 1000);
       setFanTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      setTimeProgress(diff / durationMs);
       setTimeWarning(diff < 60000 && diff > 0);
+
+      if (diff <= 0 && !autoEndTriggered.current) {
+        autoEndTriggered.current = true;
+        handleCallEnded();
+      }
     }, 1000);
 
     return () => clearInterval(interval);
@@ -374,17 +384,28 @@ export default function VideoCallScreen() {
           <ArrowLeft size={20} color="#fff" />
         </TouchableOpacity>
         
-        {isHost && params.durationPerFan ? (
-          <View style={[styles.timerContainer, timeWarning && styles.timerWarning]}>
-            <Clock size={14} color="#fff" />
-            <Text style={styles.timerText}>{fanTimeRemaining}</Text>
-          </View>
-        ) : (
-          <View style={styles.liveIndicator}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveText}>LIVE</Text>
-          </View>
-        )}
+        <View style={styles.headerCenter}>
+          {isHost && params.fansRemaining ? (
+            <View style={styles.fansRemainingBadge}>
+              <Users size={12} color="#a78bfa" />
+              <Text style={styles.fansRemainingText}>
+                {params.fansRemaining}
+              </Text>
+            </View>
+          ) : null}
+
+          {params.durationPerFan ? (
+            <View style={[styles.timerContainer, timeWarning && styles.timerWarning]}>
+              <Clock size={isHost ? 14 : 12} color="#fff" />
+              <Text style={[styles.timerText, !isHost && styles.timerTextFan]}>{fanTimeRemaining}</Text>
+            </View>
+          ) : (
+            <View style={styles.liveIndicator}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveText}>LIVE</Text>
+            </View>
+          )}
+        </View>
         
         <TouchableOpacity style={styles.endCallButton} onPress={leaveCall}>
           <PhoneOff size={16} color="#fff" />
@@ -460,6 +481,28 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 1,
   },
+  headerCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  fansRemainingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(167, 139, 250, 0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    gap: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.3)',
+  },
+  fansRemainingText: {
+    color: '#a78bfa',
+    fontSize: 13,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+  },
   timerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -477,6 +520,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
+  },
+  timerTextFan: {
+    fontSize: 13,
   },
   endCallButton: {
     flexDirection: 'row',

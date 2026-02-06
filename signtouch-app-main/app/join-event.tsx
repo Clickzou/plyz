@@ -661,6 +661,8 @@ export default function JoinEventScreen() {
                           isHost: 'false',
                           userName: fanName || 'Fan',
                           queueEntryId: queueEntry.id,
+                          durationPerFan: String(foundLiveSession.duration_per_fan_minutes || 5),
+                          otherUserName: foundLiveSession.celebrity_name || '',
                         }
                       });
                     }}
