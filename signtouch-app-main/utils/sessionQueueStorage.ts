@@ -400,6 +400,34 @@ export const sendQueueNotification = async (
   }
 };
 
+export const sendDedicationNotification = async (
+  sessionId: string,
+  queueEntryId: string | null,
+  celebrityName: string
+): Promise<boolean> => {
+  try {
+    if (!queueEntryId) return false;
+
+    const { data: entry } = await supabase
+      .from('session_queue')
+      .select('push_token, fan_name')
+      .eq('id', queueEntryId)
+      .single();
+
+    if (!entry?.push_token) return false;
+
+    return await sendQueueNotification(
+      entry.push_token,
+      `${celebrityName} - SignTouch`,
+      `🎁 ${entry.fan_name}, votre dédicace personnalisée est prête ! Ouvrez l'app pour la voir.`,
+      { sessionId, action: 'dedication_ready' }
+    );
+  } catch (error) {
+    console.error('Error sending dedication notification:', error);
+    return false;
+  }
+};
+
 export const notifyUpcomingFans = async (
   sessionId: string,
   celebrityName: string,

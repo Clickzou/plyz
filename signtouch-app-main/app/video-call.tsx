@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
+import { sendDedicationNotification } from '@/utils/sessionQueueStorage';
 
 let WebView: any = null;
 if (Platform.OS !== 'web') {
@@ -186,6 +187,12 @@ export default function VideoCallScreen() {
   const handleRatingModalClose = () => {
     setShowRatingModal(false);
     if (!isHost && params.sessionId) {
+      sendDedicationNotification(
+        params.sessionId,
+        params.queueEntryId || null,
+        params.otherUserName || 'Celebrity'
+      ).catch(() => {});
+
       router.replace({
         pathname: '/dedication-result',
         params: {
