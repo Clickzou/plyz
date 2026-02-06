@@ -19,6 +19,13 @@ if (Platform.OS !== 'web') {
   WebView = require('react-native-webview').WebView;
 }
 
+let ScreenOrientation: any = null;
+if (Platform.OS !== 'web') {
+  try {
+    ScreenOrientation = require('expo-screen-orientation');
+  } catch (e) {}
+}
+
 const DAILY_SUPPORTED_LANGS: Record<string, string> = {
   en: 'en',
   fr: 'fr',
@@ -54,6 +61,17 @@ export default function VideoCallScreen() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hasLeftCall, setHasLeftCall] = useState(false);
   const callStartTime = useRef<number>(Date.now());
+
+  useEffect(() => {
+    if (ScreenOrientation) {
+      ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.PORTRAIT_UP
+      ).catch(() => {});
+      return () => {
+        ScreenOrientation.unlockAsync().catch(() => {});
+      };
+    }
+  }, []);
 
   useEffect(() => {
     if (Platform.OS === 'web') {
@@ -179,19 +197,28 @@ export default function VideoCallScreen() {
 
   const injectedJavaScript = `
     (function() {
+      var style = document.createElement('style');
+      style.textContent = '* { box-sizing: border-box; } html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; } video { object-fit: cover !important; width: 100% !important; height: 100% !important; }';
+      document.head.appendChild(style);
+
       window.addEventListener('message', function(event) {
         if (event.data && event.data.action) {
           window.ReactNativeWebView.postMessage(JSON.stringify(event.data));
         }
       });
       
-      const observer = new MutationObserver(function(mutations) {
-        const leaveBtn = document.querySelector('[data-testid="leave-meeting"]');
+      var observer = new MutationObserver(function(mutations) {
+        var leaveBtn = document.querySelector('[data-testid="leave-meeting"]');
         if (leaveBtn) {
           leaveBtn.addEventListener('click', function() {
             window.ReactNativeWebView.postMessage(JSON.stringify({action: 'left-meeting'}));
           });
         }
+        var videos = document.querySelectorAll('video');
+        videos.forEach(function(v) {
+          v.setAttribute('playsinline', '');
+          v.style.objectFit = 'cover';
+        });
       });
       observer.observe(document.body, { childList: true, subtree: true });
     })();
@@ -221,7 +248,11 @@ export default function VideoCallScreen() {
             ref={iframeRef as any}
             src={dailyUrl}
             allow="camera; microphone; autoplay; display-capture; fullscreen"
+            allowFullScreen
             style={{
+              position: 'absolute' as any,
+              top: 0,
+              left: 0,
               width: '100%',
               height: '100%',
               border: 'none',
@@ -332,7 +363,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#111',
+    backgroundColor: '#000',
   },
   headerBackButton: {
     width: 36,
@@ -398,6 +429,7 @@ const styles = StyleSheet.create({
   videoArea: {
     flex: 1,
     backgroundColor: '#000',
+    overflow: 'hidden',
   },
   loadingOverlay: {
     position: 'absolute',
