@@ -253,24 +253,60 @@ export default function VideoCallScreen() {
     if (Platform.OS === 'web') {
       return (
         <View style={styles.videoArea}>
-          <iframe
-            ref={iframeRef as any}
-            src={dailyUrl}
-            allow="camera; microphone; autoplay; display-capture; fullscreen"
-            allowFullScreen
+          <div
+            ref={(el: any) => {
+              if (el && !el._dailyInitialized) {
+                el._dailyInitialized = true;
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/@daily-co/daily-js';
+                script.onload = () => {
+                  try {
+                    const callFrame = (window as any).DailyIframe.createFrame(el, {
+                      showLeaveButton: false,
+                      showFullscreenButton: false,
+                      showLocalVideo: true,
+                      showParticipantsBar: false,
+                      iframeStyle: {
+                        width: '100%',
+                        height: '100%',
+                        border: '0',
+                        borderRadius: '0',
+                      },
+                    });
+                    const joinUrl = params.roomUrl || '';
+                    const joinOptions: any = { url: joinUrl, userName };
+                    if (params.token) {
+                      joinOptions.token = params.token;
+                    }
+                    callFrame.join(joinOptions).then(() => {
+                      setIsLoading(false);
+                    }).catch(() => {
+                      setError(t('videoCallError'));
+                      setIsLoading(false);
+                    });
+                    callFrame.on('left-meeting', () => {
+                      handleCallEnded();
+                    });
+                    (el as any)._dailyCallFrame = callFrame;
+                  } catch (e) {
+                    setError(t('videoCallError'));
+                    setIsLoading(false);
+                  }
+                };
+                script.onerror = () => {
+                  setError(t('videoCallError'));
+                  setIsLoading(false);
+                };
+                document.head.appendChild(script);
+              }
+            }}
             style={{
               position: 'absolute' as any,
               top: 0,
               left: 0,
               width: '100%',
               height: '100%',
-              border: 'none',
               backgroundColor: '#000',
-            }}
-            onLoad={() => setIsLoading(false)}
-            onError={() => {
-              setError(t('videoCallError'));
-              setIsLoading(false);
             }}
           />
         </View>
