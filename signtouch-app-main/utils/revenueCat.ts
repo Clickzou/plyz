@@ -1,148 +1,127 @@
 import { Platform } from 'react-native';
 
-type PurchasesOfferings = any;
-type CustomerInfo = any;
-
 let Purchases: any = null;
-
-if (Platform.OS !== 'web') {
-  try {
-    Purchases = require('react-native-purchases').default;
-  } catch (error) {
-    console.warn('RevenueCat not installed. Install with: npm install react-native-purchases');
-  }
-}
-
-const REVENUECAT_IOS_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || '';
-const REVENUECAT_ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || '';
+let isRevenueCatAvailable = false;
 
 export const initRevenueCat = async () => {
-  if (Platform.OS === 'web' || !Purchases) {
-    console.log('RevenueCat not available on web or not installed');
+  if (Platform.OS === 'web') {
+    console.log('[RevenueCat] Not available on web');
     return;
   }
 
   try {
-    const apiKey = Platform.OS === 'ios' ? REVENUECAT_IOS_KEY : REVENUECAT_ANDROID_KEY;
+    const module = require('react-native-purchases');
+    Purchases = module.default || module;
+
+    const apiKey = Platform.OS === 'ios'
+      ? process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY
+      : process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY;
 
     if (!apiKey) {
-      console.error('RevenueCat API key not found. Please add EXPO_PUBLIC_REVENUECAT_IOS_KEY and EXPO_PUBLIC_REVENUECAT_ANDROID_KEY to your .env file');
+      console.warn('[RevenueCat] No API key configured for', Platform.OS);
       return;
     }
 
     await Purchases.configure({ apiKey });
-
-    if (__DEV__) {
-      await Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
-    }
-
-    console.log('RevenueCat initialized successfully');
+    isRevenueCatAvailable = true;
+    console.log('[RevenueCat] Initialized successfully');
   } catch (error) {
-    console.error('Error initializing RevenueCat:', error);
+    console.warn('[RevenueCat] Not available (requires native build):', error);
+    isRevenueCatAvailable = false;
   }
 };
 
-export const getOfferings = async (): Promise<PurchasesOfferings | null> => {
-  if (Platform.OS === 'web' || !Purchases) {
-    console.log('RevenueCat not available on web or not installed');
-    return null;
+export const setRevenueCatUserId = async (userId: string) => {
+  if (!isRevenueCatAvailable || !Purchases) return;
+  try {
+    await Purchases.logIn(userId);
+    console.log('[RevenueCat] User identified:', userId);
+  } catch (error) {
+    console.error('[RevenueCat] Error setting user:', error);
+  }
+};
+
+export interface SessionProduct {
+  identifier: string;
+  title: string;
+  description: string;
+  priceString: string;
+  price: number;
+  currencyCode: string;
+  rcPackage: any;
+}
+
+export const getAvailableProducts = async (): Promise<SessionProduct[]> => {
+  if (!isRevenueCatAvailable || !Purchases) {
+    console.warn('[RevenueCat] Not available, returning empty products');
+    return [];
   }
 
   try {
     const offerings = await Purchases.getOfferings();
-    return offerings;
+    if (!offerings.current || !offerings.current.availablePackages) {
+      console.log('[RevenueCat] No offerings available');
+      return [];
+    }
+
+    return offerings.current.availablePackages.map((pkg: any) => ({
+      identifier: pkg.product.identifier,
+      title: pkg.product.title,
+      description: pkg.product.description,
+      priceString: pkg.product.priceString,
+      price: pkg.product.price,
+      currencyCode: pkg.product.currencyCode || 'EUR',
+      rcPackage: pkg,
+    }));
   } catch (error) {
-    console.error('Error getting offerings:', error);
-    return null;
+    console.error('[RevenueCat] Error fetching products:', error);
+    return [];
   }
 };
 
-export const purchasePackage = async (packageToPurchase: any): Promise<CustomerInfo> => {
-  if (Platform.OS === 'web' || !Purchases) {
-    throw new Error('RevenueCat not available on web or not installed');
+export interface PurchaseResult {
+  success: boolean;
+  transactionId?: string;
+  productId?: string;
+  purchaseToken?: string;
+  error?: string;
+  cancelled?: boolean;
+}
+
+export const purchaseSession = async (rcPackage: any): Promise<PurchaseResult> => {
+  if (!isRevenueCatAvailable || !Purchases) {
+    return { success: false, error: 'RevenueCat not available. Native build required.' };
   }
 
   try {
-    const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
-    return customerInfo;
+    const purchaseResult = await Purchases.purchasePackage(rcPackage);
+
+    const transaction = purchaseResult.transaction || purchaseResult.productTransaction;
+    if (!transaction) {
+      return { success: false, error: 'No transaction returned' };
+    }
+
+    const result: PurchaseResult = {
+      success: true,
+      productId: transaction.productIdentifier || transaction.productId,
+      transactionId: transaction.transactionIdentifier || transaction.orderId,
+    };
+
+    if (Platform.OS === 'android') {
+      result.purchaseToken = transaction.purchaseToken;
+    }
+
+    console.log('[RevenueCat] Purchase successful:', result);
+    return result;
   } catch (error: any) {
-    if (!error.userCancelled) {
-      console.error('Error purchasing package:', error);
-    }
-    throw error;
-  }
-};
-
-export const restorePurchases = async (): Promise<CustomerInfo> => {
-  if (Platform.OS === 'web' || !Purchases) {
-    throw new Error('RevenueCat not available on web or not installed');
-  }
-
-  try {
-    const customerInfo = await Purchases.restorePurchases();
-    return customerInfo;
-  } catch (error) {
-    console.error('Error restoring purchases:', error);
-    throw error;
-  }
-};
-
-export const getCustomerInfo = async (): Promise<CustomerInfo | null> => {
-  if (Platform.OS === 'web' || !Purchases) {
-    console.log('RevenueCat not available on web or not installed');
-    return null;
-  }
-
-  try {
-    const customerInfo = await Purchases.getCustomerInfo();
-    return customerInfo;
-  } catch (error) {
-    console.error('Error getting customer info:', error);
-    return null;
-  }
-};
-
-export const checkSubscriptionStatus = async (): Promise<boolean> => {
-  if (Platform.OS === 'web' || !Purchases) {
-    return false;
-  }
-
-  try {
-    const customerInfo = await Purchases.getCustomerInfo();
-
-    if (customerInfo.entitlements.active['premium']) {
-      return true;
+    if (error.userCancelled) {
+      return { success: false, cancelled: true, error: 'Purchase cancelled' };
     }
 
-    return false;
-  } catch (error) {
-    console.error('Error checking subscription:', error);
-    return false;
+    const errorMessage = error.message || error.readableErrorCode || 'Unknown purchase error';
+    console.error('[RevenueCat] Purchase error:', errorMessage);
+    return { success: false, error: errorMessage };
   }
 };
 
-export const setUserId = async (userId: string) => {
-  if (Platform.OS === 'web' || !Purchases) {
-    return;
-  }
-
-  try {
-    await Purchases.logIn(userId);
-    console.log('RevenueCat user ID set:', userId);
-  } catch (error) {
-    console.error('Error setting user ID:', error);
-  }
-};
-
-export const logout = async () => {
-  if (Platform.OS === 'web' || !Purchases) {
-    return;
-  }
-
-  try {
-    await Purchases.logOut();
-    console.log('RevenueCat user logged out');
-  } catch (error) {
-    console.error('Error logging out:', error);
-  }
-};
+export const isAvailable = () => isRevenueCatAvailable;

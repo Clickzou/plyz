@@ -26,6 +26,7 @@ import PostPurchaseAccountModal from '@/components/PostPurchaseAccountModal';
 import { setSubscriptionOfferCallback } from '@/utils/subscriptionOffer';
 import { setPostPurchaseAccountCallback, setManualAccountModalCallback, maybeShowPostPurchaseAccountModal } from '@/utils/postPurchaseAccount';
 import { setAccountPromptSnooze } from '@/utils/postPurchaseAccountStorage';
+import { initRevenueCat } from '@/utils/revenueCat';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -114,6 +115,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     SplashScreen.hideAsync();
+    initRevenueCat().catch(console.warn);
   }, [fontsLoaded, fontError]);
 
   return (
