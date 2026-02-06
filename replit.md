@@ -37,9 +37,16 @@ Preferred communication style: Simple, everyday language.
 - **Supabase**: Primary backend for PostgreSQL database (e.g., `memories`, `live_events`, `session_queue` tables), user authentication, and file storage (`memories` bucket, `events` bucket).
 - **Daily.co**: For video call functionality, integrated via `@daily-co/react-native-daily-js` SDK.
 
-### Payment Processing
+### Payment Processing (Stratégie B)
 - **RevenueCat**: Handles in-app purchases and subscription management for iOS and Android (requires native build).
-- **Stripe**: Implicitly used for transaction processing related to fan payments and celebrity payouts, with fees calculated in the transaction tracking system.
+- **Payment Tracking**: Comprehensive Supabase-based system (SQL in `signtouch-app-main/sql/payment_system_strategy_b.sql`):
+  - `fan_transactions`: Records each fan purchase with status lifecycle (created → store_confirmed → settled → included_in_payout → paid_out)
+  - `store_settlements`: Imports Apple/Google financial reports with net proceeds
+  - `celebrity_earnings`: Computes celebrity share from net proceeds (configurable revshare via `celebrity_revshare_bps`, default 52%)
+  - `payout_batches` / `payout_batch_items`: Groups earnings into periodic payouts
+  - SQL functions: `apply_settlement()`, `compute_celebrity_earnings()`, `create_payout_batch()`, `mark_payout_paid()`
+  - Admin view: `admin_payment_dashboard` (SQL view in Supabase, not in-app)
+- **Admin Access**: Payment management is done exclusively via Supabase Dashboard (Table Editor / SQL Editor), not exposed in the app.
 
 ### Build & Deployment
 - **EAS (Expo Application Services)**: Used for building and submitting the application to app stores.
