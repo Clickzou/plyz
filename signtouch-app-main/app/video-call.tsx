@@ -1,13 +1,11 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   ActivityIndicator,
   Platform,
-  Animated,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -55,47 +53,7 @@ export default function VideoCallScreen() {
   const [timeWarning, setTimeWarning] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hasLeftCall, setHasLeftCall] = useState(false);
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const headerOpacity = useRef(new Animated.Value(1)).current;
-  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callStartTime = useRef<number>(Date.now());
-
-  const showHeader = useCallback(() => {
-    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    setHeaderVisible(true);
-    Animated.timing(headerOpacity, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-    hideTimerRef.current = setTimeout(() => {
-      Animated.timing(headerOpacity, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => setHeaderVisible(false));
-    }, 4000);
-  }, [headerOpacity]);
-
-  const toggleHeader = useCallback(() => {
-    if (headerVisible) {
-      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-      Animated.timing(headerOpacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start(() => setHeaderVisible(false));
-    } else {
-      showHeader();
-    }
-  }, [headerVisible, headerOpacity, showHeader]);
-
-  useEffect(() => {
-    showHeader();
-    return () => {
-      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    };
-  }, []);
 
   useEffect(() => {
     if (Platform.OS === 'web') {
@@ -258,15 +216,12 @@ export default function VideoCallScreen() {
 
     if (Platform.OS === 'web') {
       return (
-        <View style={styles.fullscreenVideo}>
+        <View style={styles.videoArea}>
           <iframe
             ref={iframeRef as any}
             src={dailyUrl}
             allow="camera; microphone; autoplay; display-capture; fullscreen"
             style={{
-              position: 'absolute' as any,
-              top: 0,
-              left: 0,
               width: '100%',
               height: '100%',
               border: 'none',
@@ -287,7 +242,7 @@ export default function VideoCallScreen() {
         <WebView
           ref={webViewRef}
           source={{ uri: dailyUrl }}
-          style={styles.fullscreenVideo}
+          style={styles.videoArea}
           onLoadEnd={handleLoadEnd}
           onError={handleWebViewError}
           onMessage={handleWebViewMessage}
@@ -318,20 +273,9 @@ export default function VideoCallScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" hidden />
+      <StatusBar style="light" />
       
-      {renderVideoContent()}
-
-      {Platform.OS === 'web' && !error && (
-        <TouchableWithoutFeedback onPress={toggleHeader}>
-          <View style={styles.touchOverlay} pointerEvents="box-only" />
-        </TouchableWithoutFeedback>
-      )}
-
-      <Animated.View
-        style={[styles.floatingHeader, { opacity: headerOpacity }]}
-        pointerEvents={headerVisible ? 'auto' : 'none'}
-      >
+      <View style={styles.header}>
         <TouchableOpacity style={styles.headerBackButton} onPress={() => router.back()}>
           <ArrowLeft size={20} color="#fff" />
         </TouchableOpacity>
@@ -352,7 +296,9 @@ export default function VideoCallScreen() {
           <PhoneOff size={16} color="#fff" />
           <Text style={styles.endCallText}>{t('endCall')}</Text>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
+
+      {renderVideoContent()}
 
       {isLoading && (
         <View style={styles.loadingOverlay}>
@@ -380,48 +326,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  fullscreenVideo: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#000',
-  },
-  touchOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 80,
-    zIndex: 5,
-  },
-  floatingHeader: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
-    paddingTop: Platform.OS === 'web' ? 12 : 50,
-    paddingBottom: 12,
-    zIndex: 10,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingVertical: 8,
+    backgroundColor: '#111',
   },
   headerBackButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   liveIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(239, 68, 68, 0.8)',
+    backgroundColor: '#dc2626',
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 14,
@@ -442,14 +366,14 @@ const styles = StyleSheet.create({
   timerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.85)',
+    backgroundColor: '#10B981',
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 14,
     gap: 5,
   },
   timerWarning: {
-    backgroundColor: 'rgba(239, 68, 68, 0.85)',
+    backgroundColor: '#dc2626',
   },
   timerText: {
     color: '#fff',
@@ -470,6 +394,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: '700',
+  },
+  videoArea: {
+    flex: 1,
+    backgroundColor: '#000',
   },
   loadingOverlay: {
     position: 'absolute',
