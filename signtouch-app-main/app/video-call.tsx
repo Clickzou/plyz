@@ -4,10 +4,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
+  TouchableWithoutFeedback,
   ActivityIndicator,
   Platform,
-  Dimensions,
+  Animated,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -55,7 +55,47 @@ export default function VideoCallScreen() {
   const [timeWarning, setTimeWarning] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hasLeftCall, setHasLeftCall] = useState(false);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const headerOpacity = useRef(new Animated.Value(1)).current;
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callStartTime = useRef<number>(Date.now());
+
+  const showHeader = useCallback(() => {
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    setHeaderVisible(true);
+    Animated.timing(headerOpacity, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+    hideTimerRef.current = setTimeout(() => {
+      Animated.timing(headerOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => setHeaderVisible(false));
+    }, 4000);
+  }, [headerOpacity]);
+
+  const toggleHeader = useCallback(() => {
+    if (headerVisible) {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      Animated.timing(headerOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => setHeaderVisible(false));
+    } else {
+      showHeader();
+    }
+  }, [headerVisible, headerOpacity, showHeader]);
+
+  useEffect(() => {
+    showHeader();
+    return () => {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (Platform.OS === 'web') {
@@ -163,7 +203,7 @@ export default function VideoCallScreen() {
 
   if (!dailyUrl) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <StatusBar style="light" />
         <View style={styles.errorContainer}>
           <View style={styles.errorIconCircle}>
@@ -175,7 +215,7 @@ export default function VideoCallScreen() {
             <Text style={styles.backButtonText}>{t('goBack')}</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -218,17 +258,19 @@ export default function VideoCallScreen() {
 
     if (Platform.OS === 'web') {
       return (
-        <View style={styles.webIframeContainer}>
+        <View style={styles.fullscreenVideo}>
           <iframe
             ref={iframeRef as any}
             src={dailyUrl}
             allow="camera; microphone; autoplay; display-capture; fullscreen"
             style={{
+              position: 'absolute' as any,
+              top: 0,
+              left: 0,
               width: '100%',
               height: '100%',
               border: 'none',
-              backgroundColor: '#1a1a2e',
-              borderRadius: 0,
+              backgroundColor: '#000',
             }}
             onLoad={() => setIsLoading(false)}
             onError={() => {
@@ -245,7 +287,7 @@ export default function VideoCallScreen() {
         <WebView
           ref={webViewRef}
           source={{ uri: dailyUrl }}
-          style={styles.webview}
+          style={styles.fullscreenVideo}
           onLoadEnd={handleLoadEnd}
           onError={handleWebViewError}
           onMessage={handleWebViewMessage}
@@ -275,33 +317,42 @@ export default function VideoCallScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
+    <View style={styles.container}>
+      <StatusBar style="light" hidden />
       
-      <View style={styles.header}>
+      {renderVideoContent()}
+
+      {Platform.OS === 'web' && !error && (
+        <TouchableWithoutFeedback onPress={toggleHeader}>
+          <View style={styles.touchOverlay} pointerEvents="box-only" />
+        </TouchableWithoutFeedback>
+      )}
+
+      <Animated.View
+        style={[styles.floatingHeader, { opacity: headerOpacity }]}
+        pointerEvents={headerVisible ? 'auto' : 'none'}
+      >
         <TouchableOpacity style={styles.headerBackButton} onPress={() => router.back()}>
-          <ArrowLeft size={22} color="#fff" />
+          <ArrowLeft size={20} color="#fff" />
         </TouchableOpacity>
         
         {isHost && params.durationPerFan ? (
           <View style={[styles.timerContainer, timeWarning && styles.timerWarning]}>
-            <Clock size={16} color="#fff" />
+            <Clock size={14} color="#fff" />
             <Text style={styles.timerText}>{fanTimeRemaining}</Text>
           </View>
         ) : (
-          <View style={styles.headerTitleContainer}>
-            <View style={styles.liveIndicator}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveText}>LIVE</Text>
-            </View>
+          <View style={styles.liveIndicator}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>LIVE</Text>
           </View>
         )}
         
         <TouchableOpacity style={styles.endCallButton} onPress={leaveCall}>
-          <PhoneOff size={18} color="#fff" />
+          <PhoneOff size={16} color="#fff" />
           <Text style={styles.endCallText}>{t('endCall')}</Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
       {isLoading && (
         <View style={styles.loadingOverlay}>
@@ -313,8 +364,6 @@ export default function VideoCallScreen() {
         </View>
       )}
 
-      {renderVideoContent()}
-
       <RatingModal
         visible={showRatingModal}
         onClose={handleRatingModalClose}
@@ -322,74 +371,89 @@ export default function VideoCallScreen() {
         userName={params.otherUserName || (isHost ? 'Fan' : params.userName || 'Celebrity')}
         isCelebrity={isHost}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#000',
   },
-  header: {
+  fullscreenVideo: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#000',
+  },
+  touchOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+    zIndex: 5,
+  },
+  floatingHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#16213e',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.08)',
+    paddingTop: Platform.OS === 'web' ? 12 : 50,
+    paddingBottom: 12,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   headerBackButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  headerTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
   },
   liveIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    backgroundColor: 'rgba(239, 68, 68, 0.8)',
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingVertical: 5,
+    borderRadius: 14,
     gap: 6,
   },
   liveDot: {
-    width: 8,
-    height: 8,
+    width: 7,
+    height: 7,
     borderRadius: 4,
-    backgroundColor: '#ef4444',
+    backgroundColor: '#fff',
   },
   liveText: {
-    color: '#ef4444',
-    fontSize: 12,
+    color: '#fff',
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1,
   },
   timerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10B981',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-    gap: 6,
+    backgroundColor: 'rgba(16, 185, 129, 0.85)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 14,
+    gap: 5,
   },
   timerWarning: {
-    backgroundColor: '#ef4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.85)',
   },
   timerText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
@@ -399,21 +463,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#dc2626',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
+    borderRadius: 18,
+    gap: 5,
   },
   endCallText: {
     color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  webview: {
-    flex: 1,
-    backgroundColor: '#1a1a2e',
-  },
-  webIframeContainer: {
-    flex: 1,
-    backgroundColor: '#1a1a2e',
+    fontSize: 12,
+    fontWeight: '700',
   },
   loadingOverlay: {
     position: 'absolute',
@@ -421,20 +477,20 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(26, 26, 46, 0.95)',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 10,
+    zIndex: 20,
   },
   loadingCard: {
-    backgroundColor: '#16213e',
+    backgroundColor: '#1a1a2e',
     borderRadius: 20,
     padding: 32,
     alignItems: 'center',
     gap: 16,
     marginHorizontal: 40,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.2)',
+    borderColor: 'rgba(16, 185, 129, 0.3)',
   },
   loadingTitle: {
     color: '#fff',
