@@ -12,7 +12,7 @@ import {
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye, Info, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
@@ -36,7 +36,6 @@ export default function CelebrityMenuScreen() {
   const [copied, setCopied] = useState(false);
   const [eventViews, setEventViews] = useState<Record<string, number>>({});
   const [eventFilter, setEventFilter] = useState<FilterType>('live');
-  const [showPaymentInfo, setShowPaymentInfo] = useState(false);
 
   const loadMyEvents = useCallback(async () => {
     try {
@@ -430,45 +429,6 @@ export default function CelebrityMenuScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={styles.paymentInfoToggle}
-              onPress={() => setShowPaymentInfo(!showPaymentInfo)}
-            >
-              <View style={styles.paymentInfoToggleLeft}>
-                <Info size={18} color="#fbbf24" />
-                <Text style={styles.paymentInfoToggleText}>{t('paymentDelaysTitle')}</Text>
-              </View>
-              {showPaymentInfo ? <ChevronUp size={18} color="rgba(255,255,255,0.6)" /> : <ChevronDown size={18} color="rgba(255,255,255,0.6)" />}
-            </TouchableOpacity>
-
-            {showPaymentInfo && (
-              <View style={styles.paymentInfoCard}>
-                <Text style={styles.paymentInfoIntro}>{t('paymentDelaysIntro')}</Text>
-
-                <View style={styles.paymentPlatformCard}>
-                  <Text style={styles.paymentPlatformTitle}>🍎 {t('paymentAppleTitle')}</Text>
-                  <View style={styles.paymentDelayBadge}>
-                    <Clock size={14} color="#fbbf24" />
-                    <Text style={styles.paymentDelayText}>{t('paymentAppleDelay')}</Text>
-                  </View>
-                  <Text style={styles.paymentExampleText}>{t('paymentAppleExample')}</Text>
-                </View>
-
-                <View style={styles.paymentPlatformCard}>
-                  <Text style={styles.paymentPlatformTitle}>🤖 {t('paymentGoogleTitle')}</Text>
-                  <View style={styles.paymentDelayBadge}>
-                    <Clock size={14} color="#4ade80" />
-                    <Text style={styles.paymentDelayText}>{t('paymentGoogleDelay')}</Text>
-                  </View>
-                  <Text style={styles.paymentExampleText}>{t('paymentGoogleExample')}</Text>
-                </View>
-
-                <View style={styles.paymentNoteCard}>
-                  <Info size={14} color="rgba(255,255,255,0.5)" />
-                  <Text style={styles.paymentNoteText}>{t('paymentDelaysNote')}</Text>
-                </View>
-              </View>
-            )}
           </>
         )}
       </ScrollView>
@@ -956,89 +916,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#fff',
-  },
-  paymentInfoToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.2)',
-  },
-  paymentInfoToggleLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  paymentInfoToggleText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#fbbf24',
-  },
-  paymentInfoCard: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-  },
-  paymentInfoIntro: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.7)',
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  paymentPlatformCard: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
-  },
-  paymentPlatformTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  paymentDelayBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  paymentDelayText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  paymentExampleText: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.55)',
-    lineHeight: 18,
-  },
-  paymentNoteCard: {
-    flexDirection: 'row',
-    gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 4,
-  },
-  paymentNoteText: {
-    flex: 1,
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
-    lineHeight: 18,
-    fontStyle: 'italic',
   },
 });
