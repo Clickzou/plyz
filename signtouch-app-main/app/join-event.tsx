@@ -663,6 +663,8 @@ export default function JoinEventScreen() {
                           queueEntryId: queueEntry.id,
                           durationPerFan: String(foundLiveSession.duration_per_fan_minutes || 5),
                           otherUserName: foundLiveSession.celebrity_name || '',
+                          priceCents: String(foundLiveSession.price_cents || 0),
+                          celebrityId: foundLiveSession.celebrity_id || '',
                         }
                       });
                     }}

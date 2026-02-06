@@ -2,7 +2,7 @@
 
 ## Overview
 
-SignTouch is a mobile-first photo memory application built with Expo and React Native. Users can capture photos, add personalized signatures and text overlays, apply visual adjustments (brightness, contrast, saturation), and organize their memories with metadata like event type, location, and date. The app supports a freemium subscription model with premium features and includes multi-language support for 15 languages.
+SignTouch is a mobile-first photo memory application that enables users to capture photos, add personalized signatures and text overlays, apply visual adjustments (brightness, contrast, saturation), and organize memories with rich metadata. It supports a freemium subscription model with multi-language capabilities across 15 languages. The project aims to provide a unique way for users to personalize and share their visual memories, and for celebrities to interact with fans through live events, video calls, and personalized dedications.
 
 ## User Preferences
 
@@ -10,219 +10,50 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend Framework
-- **Expo SDK with React Native**: Cross-platform mobile development targeting iOS, Android, and Web
-- **Expo Router**: File-based routing system for navigation between screens
-- **React Native Gesture Handler + Reanimated**: For signature drawing, overlay manipulation, and smooth animations
+### Core Technologies
+- **Frontend**: Expo SDK with React Native for cross-platform development (iOS, Android, Web).
+- **Navigation**: Expo Router for file-based routing.
+- **State Management**: React Context API manages global state for authentication, subscriptions, and internationalization.
+- **UI/UX**: React Native Gesture Handler and Reanimated for smooth animations and interactive elements.
 
-### State Management
-- **React Context API**: Three primary contexts manage global state:
-  - `AuthContext`: Supabase authentication with magic link email login
-  - `SubscriptionContext`: Freemium/premium subscription status
-  - `LanguageContext`: Multi-language internationalization (15 languages)
-
-### Photo Editing Pipeline
-- **Overlay System**: Unified `OverlayElement` type combines text and signature overlays into a single manageable structure
-- **Image Adjustments**: Brightness, contrast, and saturation sliders using CSS filters (web) and SVG filters (mobile)
-- **Signature Drawing**: SVG-based path drawing with gesture recognition
-- **Compositing**: Uses `react-native-view-shot` to capture the final edited image
-
-### Storage Architecture
-- **Local Storage**: AsyncStorage for preferences, subscription status, and temporary data
-- **Cloud Storage**: Supabase for user authentication and cloud-synced memories
-- **Dual Mode**: App works offline with local storage and syncs to Supabase when user is authenticated
-
-### Authentication Flow
-- **Magic Link Authentication**: Passwordless login via email using Supabase Auth
-- **Deep Linking**: Custom URL scheme (`signtouch://`) handles auth callbacks
-- **Post-Purchase Account Creation**: Modal prompts users to create accounts after subscription purchase
-
-### Subscription Model
-- **RevenueCat Integration** (prepared but requires native build): Handles in-app purchases for iOS and Android
-- **Freemium Tiers**: Free tier with ads, premium tier with full features
-- **Trial System**: 7-day free trial starting from first photo save
-  - Trial countdown stored in AsyncStorage (`trialStorage.ts`)
-  - After first photo: AccountModal (if not logged in) or TrialModal (if logged in but free)
-  - After 7 days: App blocked with mandatory subscription modal on home screen
-  - Components: `TrialModal.tsx`, `AccountModal.tsx`
-  - i18n: trialExpired, chooseSubscription, freeAppRemaining, trialDay, trialDays, subscribeToAccess
-
-### Story Mode (January 2026)
-- **Animation System**: 3 animation types replacing previous category/style system
-  - **Ken Burns**: 15s zoom progression with subtle breathing effect
-  - **Sequential Zoom (Reveal)**: 8s signature zoom then full photo reveal
-  - **Parallax**: 7s 3D depth effect with glow overlay
-- **Animation Preview**: Play button to preview selected animation before export
-- **Interactive Overlay Customization**: Touch gestures for direct manipulation of elements on the preview
-  - **Signature**: Pan to move, pinch to resize, two-finger rotate
-  - **Text**: Pan to move vertically, pinch to resize
-  - **Color Pickers**: 10 preset colors for signature and text
-- **Export**: Static image export in 9:16 format with SignTouch watermark
-- **Social Sharing**: Share to Instagram, TikTok via native sharing API
-- **Access**: Available from result.tsx via Film icon button
-- **i18n**: Fully internationalized (storyAnimation, animKenBurns, animSequentialZoom, animParallax)
-- **Gallery Integration**: Stories saved to `storiesStorage.ts` and displayed in gallery "Stories" tab
-
-### Gallery Tabs System (January 2026)
-- **Photos Tab**: Displays all memories (photos with overlays) organized by timeline
-- **Stories Tab**: Displays all exported stories in a grid layout (9:16 aspect ratio cards)
-- **Separate Storage**: Stories are stored separately from memories using `storiesStorage.ts` (max 20 stories)
-- **Story Actions**: View fullscreen, share via social modal, delete
-- **i18n**: Translation keys: galleryPhotos, galleryStories, noStories, noStoriesHint
-
-### Live Events System (January 2026)
-- **Star Mode**: Celebrities/stars can create events with their signature
-  - Draw signature directly on screen
-  - Generates 6-character unique event code (e.g., ABC123)
-  - QR code generation for easy sharing
-  - Events expire after 24 hours
-- **Fan Mode**: Fans can join events to get celebrity signatures
-  - Scan QR code (mobile only) or enter manual code
-  - Preview signature before saving
-  - Save to local collection or use immediately
-- **Storage**: Uses `live_events` table in Supabase and `events` bucket for signature SVG files
-- **Screens**: `create-event.tsx` (star), `join-event.tsx` (fan)
-- **Utility**: `liveEventStorage.ts` for event CRUD operations and signature upload
-- **i18n**: Fully internationalized with 35+ new translation keys across all 15 languages
-- **Dependencies**: `react-native-qrcode-svg` for QR generation, `expo-barcode-scanner` for scanning
-
-### Event Sessions System (January 2026)
-- **Multi-Celebrity Sessions**: Advanced event system supporting multiple celebrities at once
-  - Configurable duration (10 min to 24h)
-  - Collect signatures from multiple celebrities before publishing
-  - Soft viewer limit (5000 concurrent viewers) with graceful handling
-- **Fan Gallery**: Real-time polling-based gallery for fans
-  - 20-second polling interval for new assets
-  - Tabs: All / Official (photos) / Signed (photos with signatures)
-  - Pull-to-refresh and auto-download functionality
-  - Viewer heartbeat tracking (60s interval)
-- **Celebrity Publish Interface**: Celebrities can publish during event
-  - Upload photos with or without signatures
-  - Signature-only uploads
-  - Asset management
-- **Database Tables**: `event_sessions`, `event_signers`, `event_assets`, `event_viewers`
-- **Screens**: `create-event.tsx` (multi-step), `event-gallery.tsx` (fan), `event-publish.tsx` (celebrity)
-- **Utility**: `eventSessionStorage.ts` for session CRUD, asset upload, heartbeat
-- **Dual Mode**: join-event.tsx supports both legacy events and new session system
-
-### Promotional Code System (January 2026)
-- **Influencer Free Trials**: Promotional codes for 30-day free premium access
-- **Database Tables**: `promo_codes`, `promo_code_uses`
-- **Device-based Validation**: Codes can only be used once per device (device ID stored in AsyncStorage)
-- **UI**: Modal on account screen for code entry with validation feedback
-- **Utility**: `promoCodeStorage.ts` for code validation and premium status tracking
-- **i18n**: Translation keys: promoCode, enterPromoCode, promoCodeSuccess, promoCodeInvalid, promoCodeAlreadyUsed
-
-### Video Calls System (February 2026)
-- **Daily.co Integration**: Native SDK for live video calls between celebrities and fans
-- **SDK Package**: `@daily-co/react-native-daily-js` with Expo config plugin
-- **Features**: 
-  - Real-time video/audio calls
-  - Camera toggle, mute controls, camera switch
-  - Host/participant roles
-  - Multi-participant grid view
-- **Screens**: `video-call.tsx` for video call interface
-- **Service**: `dailyService.ts` for room creation and token management
-- **API Key Storage**: Stored in Supabase `app_settings` table (key: `daily_api_key`)
-- **Permissions**: Camera, microphone, VoIP background mode configured in app.json
-- **i18n**: 17 new translation keys for video call UI (all 15 languages)
-- **Note**: Requires native build (EAS) - does not work in Expo Go or web
-
-### Dynamic Queue System (February 2026)
-- **Session Queue Management**: Real-time queue system for live video sessions
-  - Fans join queue by entering their name on `join-event.tsx`
-  - Push token registration for Expo Push Notifications
-  - 5-second polling interval for real-time position updates
-- **Celebrity Dashboard**: Queue management UI in `live-session-dashboard.tsx`
-  - "Call next fan" button with automatic notification
-  - Visual queue list showing waiting fans
-  - 30-second timeout for fans to respond
-  - Automatic skip and re-queue for missed fans
-- **Push Notifications**: Via Expo Push API
-  - "Your turn" notification when fan is called
-  - "Missed turn" notification if fan doesn't respond
-  - Advance notifications for fans 2-5 minutes out
-- **Missed Fan Handling**: Automatic recalculation
-  - Fan moved to end of queue with incremented missed_count
-  - Other fans' positions automatically adjusted
-  - New estimated wait times calculated
-- **Storage**: `sessionQueueStorage.ts` with functions:
-  - `joinQueue`, `getQueuePosition`, `getMyQueueEntry`
-  - `callNextFan`, `markFanAsMissed`, `getFullQueue`
-  - `sendQueueNotification`, `notifyUpcomingFans`
-- **Database Table**: `session_queue` with columns:
-  - session_id, fan_id, fan_name, push_token
-  - position, status (waiting/called/in_call/missed/completed/left)
-  - estimated_call_time, called_at, completed_at, missed_count
-
-### Personalized Dedication System (February 2026)
-- **Hybrid Intelligent System**: One photo + one signature generates unique dedications for each fan
-  - Celebrity takes ONE selfie and draws ONE signature before starting video calls
-  - After each fan's video call + rating, fan automatically receives personalized dedication
-  - Dedication includes: celebrity photo, "Pour [fan name]", date, celebrity's signature, LIVE badge
-- **Celebrity Setup**: 2-step flow in `live-session-dashboard.tsx`
-  - Step 1: Take selfie (camera) or choose from gallery
-  - Step 2: Draw handwritten signature on canvas
-  - Setup gates the "Start Video Call" button (must complete before calling fans)
-  - Can reset and redo at any time
-- **Fan Dedication Screen**: `dedication-result.tsx` with interactive overlays
-  - Gesture-based signature manipulation: pan (move), pinch (scale), rotation (two-finger)
-  - Color picker: 10 preset colors for signature
-  - Localized "Pour/For/Para [name]" text based on user's language
-  - Localized date formatting per language
-  - LIVE badge with celebrity name
-  - SignTouch watermark
-  - Save to gallery via `react-native-view-shot` + `expo-media-library`
-  - Share via native sharing API
-- **Flow**: Celebrity setup → Video call → Rating modal → Dedication result (fan only)
-- **Database**: `live_sessions` columns: `dedication_photo_url`, `dedication_signature_svg`
-- **Storage Functions**: `uploadDedicationPhoto()`, `updateDedicationSignature()`, `getDedicationAssets()`
-- **i18n**: 14 new translation keys across all 15 languages (dedicationSetupTitle, dedicationDrawSignature, etc.)
-
-### Legal Documents System (February 2026)
-- **Multi-Language Legal Documents**: All 4 legal documents translated into 15 languages
-  - CGV (Conditions Générales de Vente / Terms of Sale)
-  - CGU (Conditions Générales d'Utilisation / Terms of Use)
-  - Privacy Policy (Politique de Confidentialité)
-  - Legal Notices (Mentions Légales)
-- **Languages Supported**: fr, en, es, de, it, pt, ru, ja, zh, ar, hi, bn, ur, ms, id
-- **Dynamic Language Display**: Legal screen automatically displays documents in user's current language
-- **Fallback System**: Falls back to French if translation not available
-- **File Structure**: `assets/legal/cgv.ts`, `cgu.ts`, `privacy.ts`, `mentions.ts` - each exports language-keyed object
-- **Company Info**: Clickzou SASU, capital €1,000, SIRET 950 814 426 00025, RCS Toulouse
+### Key Features
+- **Photo Editing**: A unified `OverlayElement` system for text and signature overlays, image adjustments via sliders, and SVG-based signature drawing. Final image compositing is handled by `react-native-view-shot`.
+- **Storage**: Dual-mode storage with AsyncStorage for local data and Supabase for cloud-synced memories and user authentication.
+- **Authentication**: Passwordless magic link authentication via Supabase Auth, supporting deep linking for callbacks. Post-purchase account creation is also integrated.
+- **Subscription Model**: Freemium tiers with a 7-day free trial, managed through RevenueCat integration (for native builds).
+- **Story Mode**: Allows users to create animated stories from their photos using Ken Burns, Sequential Zoom, and Parallax effects. Features interactive overlay customization (pan, pinch, rotate) and export with social sharing.
+- **Gallery System**: Organizes user content into "Photos" (memories) and "Stories" tabs, with separate storage for each.
+- **Live Events System**: Enables "Star Mode" for celebrities to create events with their signature (generating unique codes and QR codes) and "Fan Mode" for fans to join events, scan QR codes, and receive celebrity signatures.
+- **Event Sessions System**: Extends live events to support multi-celebrity sessions with configurable durations, real-time polling-based fan galleries, and a celebrity interface for publishing assets during an event.
+- **Promotional Code System**: Allows for influencer-based free trial access via promotional codes, validated per device.
+- **Video Calls System**: Integrates Daily.co for live video calls between celebrities and fans, featuring real-time audio/video, host/participant roles, and multi-participant views.
+- **Dynamic Queue System**: Manages real-time queues for live video sessions, including fan queuing, push notifications for turn alerts, and celebrity dashboards for queue management with automatic fan skipping and re-queueing.
+- **Personalized Dedication System**: A hybrid system where celebrities provide a selfie and signature, which are then used to generate unique, personalized dedications for fans after video calls, featuring interactive signature manipulation and localization.
+- **Legal Documents**: Multi-language support for CGV, CGU, Privacy Policy, and Legal Notices, dynamically displayed based on user's language with a French fallback.
 
 ## External Dependencies
 
 ### Backend Services
-- **Supabase**: PostgreSQL database, authentication, and file storage
-  - Project ID: `wwuxaoggbvgmyzcjlgfx`
-  - Tables: `memories` with RLS policies
-  - Storage: `memories` bucket for images
-  - Auth: Magic link email authentication
+- **Supabase**: Primary backend for PostgreSQL database (e.g., `memories`, `live_events`, `session_queue` tables), user authentication, and file storage (`memories` bucket, `events` bucket).
+- **Daily.co**: For video call functionality, integrated via `@daily-co/react-native-daily-js` SDK.
 
 ### Payment Processing
-- **RevenueCat** (integration ready, requires native build): In-app purchase management for App Store and Google Play
-  - Requires `react-native-purchases` package
-  - Environment variables: `EXPO_PUBLIC_REVENUECAT_IOS_KEY`, `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`
+- **RevenueCat**: Handles in-app purchases and subscription management for iOS and Android (requires native build).
+- **Stripe**: Implicitly used for transaction processing related to fan payments and celebrity payouts, with fees calculated in the transaction tracking system.
 
 ### Build & Deployment
-- **EAS (Expo Application Services)**: Build and submit to app stores
-  - Development, preview, and production build profiles configured in `eas.json`
+- **EAS (Expo Application Services)**: Used for building and submitting the application to app stores.
 
 ### Key NPM Packages
-- `expo-camera`: Photo capture
-- `expo-image-picker`: Gallery access
-- `expo-image-manipulator`: Image processing
-- `react-native-view-shot`: Canvas capture for compositing
-- `react-native-svg`: Signature and overlay rendering
-- `@react-native-community/slider`: Adjustment controls
-- `expo-font` + Google Fonts packages: Custom typography for signatures
-- `fabric` (web only): Advanced photo editing canvas
+- `expo-camera`, `expo-image-picker`, `expo-image-manipulator`: For camera, gallery, and image processing.
+- `react-native-view-shot`, `react-native-svg`: For compositing and rendering graphics.
+- `@react-native-community/slider`: UI controls.
+- `expo-font` + Google Fonts: Custom typography.
+- `react-native-qrcode-svg`, `expo-barcode-scanner`: For QR code generation and scanning in live events.
+- `@daily-co/react-native-daily-js`: For video calls.
 
-### Environment Variables Required
-```
-EXPO_PUBLIC_SUPABASE_URL=your-supabase-url
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-EXPO_PUBLIC_REVENUECAT_IOS_KEY=your-revenuecat-ios-key
-EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=your-revenuecat-android-key
-```
+### Environment Variables
+- `EXPO_PUBLIC_SUPABASE_URL`
+- `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+- `EXPO_PUBLIC_REVENUECAT_IOS_KEY`
+- `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`

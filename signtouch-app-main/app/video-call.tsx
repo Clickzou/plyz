@@ -15,6 +15,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
 import { sendDedicationNotification } from '@/utils/sessionQueueStorage';
+import { recordTransaction } from '@/utils/transactionStorage';
 
 let WebView: any = null;
 if (Platform.OS !== 'web') {
@@ -55,6 +56,8 @@ export default function VideoCallScreen() {
     queueEntryId: string;
     otherUserId: string;
     otherUserName: string;
+    priceCents: string;
+    celebrityId: string;
   }>();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -185,9 +188,25 @@ export default function VideoCallScreen() {
     }
   };
 
-  const handleRatingModalClose = () => {
+  const handleRatingModalClose = async () => {
     setShowRatingModal(false);
     if (!isHost && params.sessionId) {
+      const priceCents = parseInt(params.priceCents || '0', 10);
+      if (priceCents > 0) {
+        const fanDeviceId = await getOrCreateDeviceId();
+        recordTransaction({
+          sessionId: params.sessionId,
+          queueEntryId: params.queueEntryId || undefined,
+          fanId: fanDeviceId,
+          fanName: params.userName || undefined,
+          celebrityId: params.celebrityId || params.otherUserId || '',
+          celebrityName: params.otherUserName || 'Celebrity',
+          amountCents: priceCents,
+          currency: 'EUR',
+          storePlatform: Platform.OS === 'ios' ? 'apple' : Platform.OS === 'android' ? 'google' : 'web',
+        }).catch((err) => console.error('Error recording transaction:', err));
+      }
+
       sendDedicationNotification(
         params.sessionId,
         params.queueEntryId || null,

@@ -12,7 +12,7 @@ import {
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye } from 'lucide-react-native';
+import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye, BarChart3 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
@@ -426,6 +426,17 @@ export default function CelebrityMenuScreen() {
                 </View>
                 <Text style={styles.optionTitle}>{t('celebrityLiveSession')}</Text>
                 <Text style={styles.optionDescription}>{t('celebrityLiveSessionDesc')}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.optionCard}
+                onPress={() => router.push('/admin-dashboard')}
+              >
+                <View style={[styles.optionIcon, { backgroundColor: 'rgba(139, 92, 246, 0.15)' }]}>
+                  <BarChart3 size={32} color="#8b5cf6" />
+                </View>
+                <Text style={styles.optionTitle}>{t('adminDashboard')}</Text>
+                <Text style={styles.optionDescription}>{t('adminPaymentTracking')}</Text>
               </TouchableOpacity>
             </View>
 
