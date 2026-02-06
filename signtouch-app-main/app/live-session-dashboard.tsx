@@ -303,6 +303,7 @@ export default function LiveSessionDashboardScreen() {
             t('queueFullTitle') || 'File d\'attente complète !',
             t('queueFullMessage') || 'Tous les fans ont rejoint. Vous pouvez lancer le live !'
           );
+          notifyCelebrityQueueFull(sessionId).catch(() => {});
         }
       }
     };
