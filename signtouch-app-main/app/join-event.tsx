@@ -100,12 +100,16 @@ export default function JoinEventScreen() {
           const refreshedSession = await getSessionByCode(foundLiveSession.code);
           if (refreshedSession) {
             setFoundLiveSession(refreshedSession);
-          }
-          
-          if (stats.currentPosition === 1 && (stats.sessionStatus === 'active' || stats.sessionStatus === 'live')) {
-            const entry = await getMyQueueEntry(foundLiveSession.id);
-            if (entry && (entry.status === 'called' || entry.status === 'in_call')) {
-              setQueueEntry(entry);
+            
+            if (refreshedSession.room_url && refreshedSession.status === 'active') {
+              const entry = await getMyQueueEntry(foundLiveSession.id);
+              if (entry) {
+                if (entry.status === 'called' || entry.status === 'in_call') {
+                  setQueueEntry(entry);
+                } else if (entry.status === 'waiting' && stats.currentPosition <= 1) {
+                  setQueueEntry({ ...entry, status: 'called' as any });
+                }
+              }
             }
           }
         }
@@ -114,7 +118,7 @@ export default function JoinEventScreen() {
 
     if (foundLiveSession && hasJoinedQueue) {
       pollQueuePosition();
-      pollInterval = setInterval(pollQueuePosition, 5000);
+      pollInterval = setInterval(pollQueuePosition, 3000);
     }
 
     return () => {
