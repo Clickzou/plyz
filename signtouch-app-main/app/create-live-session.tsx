@@ -56,7 +56,7 @@ export default function CreateLiveSessionScreen() {
 
   const [celebrityName, setCelebrityName] = useState('');
   const [durationPerFan, setDurationPerFan] = useState(5);
-  const [totalDuration, setTotalDuration] = useState(30);
+  const [totalDuration, setTotalDuration] = useState(10);
   const [price, setPrice] = useState(200); // Prix minimum 2€
   const [isCustomPrice, setIsCustomPrice] = useState(false);
   const [customPriceText, setCustomPriceText] = useState('');
@@ -137,7 +137,10 @@ export default function CreateLiveSessionScreen() {
     setDurationPerFan(value);
     const minTotalDuration = value * 2;
     if (totalDuration < minTotalDuration) {
-      setTotalDuration(Math.min(minTotalDuration, 300));
+      setTotalDuration(Math.min(minTotalDuration, 60));
+    }
+    if (totalDuration > 60) {
+      setTotalDuration(60);
     }
   };
 
@@ -149,7 +152,7 @@ export default function CreateLiveSessionScreen() {
     }
   };
   
-  const minTotalDuration = Math.max(10, durationPerFan);
+  const minTotalDuration = Math.max(1, durationPerFan);
   
   const handlePriceSelect = (value: number) => {
     setPrice(value);
@@ -363,8 +366,8 @@ export default function CreateLiveSessionScreen() {
           <Slider
             style={styles.slider}
             minimumValue={minTotalDuration}
-            maximumValue={300}
-            step={5}
+            maximumValue={60}
+            step={1}
             value={totalDuration}
             onValueChange={handleTotalDurationChange}
             minimumTrackTintColor="#10B981"
@@ -373,7 +376,7 @@ export default function CreateLiveSessionScreen() {
           />
           <View style={styles.sliderLabels}>
             <Text style={styles.sliderLabel}>{formatDuration(minTotalDuration)}</Text>
-            <Text style={styles.sliderLabel}>5h</Text>
+            <Text style={styles.sliderLabel}>1h</Text>
           </View>
         </View>
 
