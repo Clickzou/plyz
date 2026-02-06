@@ -28,9 +28,10 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { getDedicationAssets } from '@/utils/liveSessionStorage';
+import { saveMemory } from '@/utils/storageService';
 import ViewShot from 'react-native-view-shot';
-import * as MediaLibrary from 'expo-media-library';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const PHOTO_WIDTH = SCREEN_WIDTH - 40;
@@ -45,6 +46,7 @@ export default function DedicationResultScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
+  const { user } = useAuth();
   const viewShotRef = useRef<any>(null);
 
   const params = useLocalSearchParams<{
@@ -177,15 +179,6 @@ export default function DedicationResultScreen() {
     try {
       setIsSaving(true);
 
-      if (Platform.OS !== 'web') {
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        if (status !== 'granted') {
-          showAlert(t('error'), t('cameraPermissionDenied'));
-          setIsSaving(false);
-          return;
-        }
-      }
-
       if (!viewShotRef.current?.capture) {
         showAlert(t('error'), t('dedicationSaveError'));
         setIsSaving(false);
@@ -194,14 +187,7 @@ export default function DedicationResultScreen() {
 
       const uri = await viewShotRef.current.capture();
 
-      if (Platform.OS === 'web') {
-        const link = document.createElement('a');
-        link.href = uri;
-        link.download = `dedication_${params.fanName || 'fan'}_${Date.now()}.png`;
-        link.click();
-      } else {
-        await MediaLibrary.saveToLibraryAsync(uri);
-      }
+      await saveMemory(uri, user?.id || null);
 
       showAlert(t('success'), t('dedicationSaved'));
       setIsSaving(false);
