@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,15 @@ import {
   ScrollView,
   Modal,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  withRepeat,
+  withSequence,
+  Easing,
+} from 'react-native-reanimated';
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -49,6 +58,37 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SAVED_SIGNATURES_KEY = '@signtouch_event_signatures';
 
+const playNotificationChime = () => {
+  if (Platform.OS === 'web' && typeof window !== 'undefined' && window.AudioContext) {
+    try {
+      const ctx = new AudioContext();
+      const notes = [
+        { freq: 523.25, start: 0, dur: 0.15 },
+        { freq: 659.25, start: 0.15, dur: 0.15 },
+        { freq: 783.99, start: 0.3, dur: 0.15 },
+        { freq: 1046.5, start: 0.45, dur: 0.3 },
+      ];
+      notes.forEach(({ freq, start, dur }) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.3, ctx.currentTime + start);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + start + dur);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + start);
+        osc.stop(ctx.currentTime + start + dur + 0.05);
+      });
+    } catch (e) {}
+  }
+  if (Platform.OS !== 'web') {
+    try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (e) {}
+  }
+};
+
 export default function JoinEventScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -80,6 +120,41 @@ export default function JoinEventScreen() {
   const [fanName, setFanName] = useState('');
   const [hasJoinedQueue, setHasJoinedQueue] = useState(false);
   const [isJoiningQueue, setIsJoiningQueue] = useState(false);
+  const hasPlayedChime = useRef(false);
+  const signatureClipWidth = useSharedValue(0);
+  const signatureOpacity = useSharedValue(0);
+  const buttonPulse = useSharedValue(1);
+
+  useEffect(() => {
+    if (queueEntry && (queueEntry.status === 'called' || queueEntry.status === 'in_call') && !hasPlayedChime.current) {
+      hasPlayedChime.current = true;
+      playNotificationChime();
+      signatureOpacity.value = withTiming(1, { duration: 400 });
+      signatureClipWidth.value = withDelay(200, withTiming(300, { duration: 2500, easing: Easing.out(Easing.ease) }));
+      buttonPulse.value = withRepeat(
+        withSequence(
+          withTiming(1.05, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.95, { duration: 800, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+    }
+  }, [queueEntry]);
+
+  const signatureContainerStyle = useAnimatedStyle(() => ({
+    opacity: signatureOpacity.value,
+  }));
+
+  const signatureMaskStyle = useAnimatedStyle(() => ({
+    width: signatureClipWidth.value,
+    overflow: 'hidden' as const,
+    alignItems: 'center' as const,
+  }));
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonPulse.value }],
+  }));
 
   useEffect(() => {
     if (params.code) {
@@ -561,35 +636,46 @@ export default function JoinEventScreen() {
 
             {queueEntry && (queueEntry.status === 'called' || queueEntry.status === 'in_call') && foundLiveSession.room_url ? (
               <View style={styles.readyToJoinContainer}>
+                <Animated.View style={[styles.signatureRevealContainer, signatureContainerStyle]}>
+                  <Animated.View style={signatureMaskStyle}>
+                    <Image 
+                      source={require('@/assets/images/signature.png')} 
+                      style={styles.signatureImageWhite}
+                      resizeMode="contain"
+                    />
+                  </Animated.View>
+                </Animated.View>
                 <View style={styles.readyBadge}>
                   <Check size={20} color="#10B981" />
                   <Text style={styles.readyBadgeText}>{t('itsYourTurn') || "It's your turn!"}</Text>
                 </View>
-                <TouchableOpacity
-                  style={styles.joinCallButton}
-                  onPress={() => {
-                    router.push({
-                      pathname: '/video-call',
-                      params: {
-                        roomUrl: foundLiveSession.room_url || '',
-                        sessionId: foundLiveSession.id,
-                        isHost: 'false',
-                        userName: fanName || 'Fan',
-                        queueEntryId: queueEntry.id,
-                      }
-                    });
-                  }}
-                >
-                  <LinearGradient
-                    colors={['#10B981', '#059669']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.joinCallButtonGradient}
+                <Animated.View style={pulseStyle}>
+                  <TouchableOpacity
+                    style={styles.joinCallButton}
+                    onPress={() => {
+                      router.push({
+                        pathname: '/video-call',
+                        params: {
+                          roomUrl: foundLiveSession.room_url || '',
+                          sessionId: foundLiveSession.id,
+                          isHost: 'false',
+                          userName: fanName || 'Fan',
+                          queueEntryId: queueEntry.id,
+                        }
+                      });
+                    }}
                   >
-                    <Camera size={24} color="#fff" />
-                    <Text style={styles.joinCallButtonText}>{t('joinVideoCall') || 'Join Video Call'}</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
+                    <LinearGradient
+                      colors={['#10B981', '#059669']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.joinCallButtonGradient}
+                    >
+                      <Camera size={24} color="#fff" />
+                      <Text style={styles.joinCallButtonText}>{t('joinVideoCall') || 'Join Video Call'}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </Animated.View>
                 <Text style={styles.joinNowHint}>
                   {t('joinNowHint') || 'Join now before you miss your turn!'}
                 </Text>
@@ -1292,6 +1378,16 @@ const styles = StyleSheet.create({
   readyToJoinContainer: {
     alignItems: 'center',
     width: '100%',
+  },
+  signatureRevealContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+    height: 50,
+  },
+  signatureImageWhite: {
+    width: 280,
+    height: 50,
+    tintColor: '#fff',
   },
   readyBadge: {
     flexDirection: 'row',
