@@ -104,6 +104,8 @@ export default function LiveSessionDashboardScreen() {
   const [dedicationCurrentPath, setDedicationCurrentPath] = useState<string>('');
   const dedicationPathRef = useRef<string>('');
   const [isUploadingDedication, setIsUploadingDedication] = useState(false);
+  const [isDrawingDedication, setIsDrawingDedication] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
 
   const [paths, setPaths] = useState<string[]>([]);
   const [currentPath, setCurrentPath] = useState<string>('');
@@ -560,7 +562,9 @@ export default function LiveSessionDashboardScreen() {
   };
 
   const dedicationPanGesture = Gesture.Pan()
+    .minDistance(0)
     .onStart((e) => {
+      setIsDrawingDedication(true);
       dedicationPathRef.current = `M${e.x.toFixed(1)},${e.y.toFixed(1)}`;
       setDedicationCurrentPath(dedicationPathRef.current);
     })
@@ -574,6 +578,10 @@ export default function LiveSessionDashboardScreen() {
       }
       dedicationPathRef.current = '';
       setDedicationCurrentPath('');
+      setIsDrawingDedication(false);
+    })
+    .onFinalize(() => {
+      setIsDrawingDedication(false);
     });
 
   const handleSaveDedicationSignature = async () => {
@@ -595,7 +603,7 @@ export default function LiveSessionDashboardScreen() {
         const { supabase } = require('@/utils/supabase');
         await supabase
           .from('live_sessions')
-          .update({ dedication_photo_url: null, dedication_signature_svg: null })
+          .update({ dedication_photo_url: null, dedication_signature_svg: null } as any)
           .eq('id', sessionId);
       } catch (e) {
         console.error('Error clearing dedication in DB:', e);
@@ -752,7 +760,7 @@ export default function LiveSessionDashboardScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+      <ScrollView ref={scrollRef} style={styles.content} contentContainerStyle={styles.contentContainer} scrollEnabled={!isDrawingDedication}>
         {showQR && session.status === 'waiting' && (
           <View style={styles.qrSection}>
             <Text style={styles.qrTitle}>{t('liveSessionShareCode')}</Text>
@@ -812,8 +820,42 @@ export default function LiveSessionDashboardScreen() {
                     <Image source={{ uri: dedicationPhotoUri }} style={styles.dedicationPhotoPreview} resizeMode="cover" />
                   )}
                   <Text style={styles.dedicationStepLabel}>{t('dedicationDrawSignature')}</Text>
-                  <GestureDetector gesture={dedicationPanGesture}>
-                    <View style={[styles.canvas, { width: DEDICATION_CANVAS_SIZE, height: DEDICATION_CANVAS_SIZE * 0.5 }]}>
+                  {Platform.OS === 'web' ? (
+                    <View
+                      style={[styles.canvas, { width: DEDICATION_CANVAS_SIZE, height: DEDICATION_CANVAS_SIZE * 0.5, touchAction: 'none' } as any]}
+                      onPointerDown={(e: any) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        dedicationPathRef.current = `M${x.toFixed(1)},${y.toFixed(1)}`;
+                        setDedicationCurrentPath(dedicationPathRef.current);
+                        setIsDrawingDedication(true);
+                      }}
+                      onPointerMove={(e: any) => {
+                        if (!isDrawingDedication) return;
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        dedicationPathRef.current += ` L${x.toFixed(1)},${y.toFixed(1)}`;
+                        setDedicationCurrentPath(dedicationPathRef.current);
+                      }}
+                      onPointerUp={() => {
+                        if (dedicationPathRef.current) {
+                          setDedicationPaths((prev) => [...prev, dedicationPathRef.current]);
+                        }
+                        dedicationPathRef.current = '';
+                        setDedicationCurrentPath('');
+                        setIsDrawingDedication(false);
+                      }}
+                      onPointerLeave={() => {
+                        if (isDrawingDedication && dedicationPathRef.current) {
+                          setDedicationPaths((prev) => [...prev, dedicationPathRef.current]);
+                        }
+                        dedicationPathRef.current = '';
+                        setDedicationCurrentPath('');
+                        setIsDrawingDedication(false);
+                      }}
+                    >
                       <Svg width={DEDICATION_CANVAS_SIZE} height={DEDICATION_CANVAS_SIZE * 0.5}>
                         {dedicationPaths.map((p, i) => (
                           <Path key={i} d={p} stroke="#000" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -823,7 +865,20 @@ export default function LiveSessionDashboardScreen() {
                         )}
                       </Svg>
                     </View>
-                  </GestureDetector>
+                  ) : (
+                    <GestureDetector gesture={dedicationPanGesture}>
+                      <View style={[styles.canvas, { width: DEDICATION_CANVAS_SIZE, height: DEDICATION_CANVAS_SIZE * 0.5 }]}>
+                        <Svg width={DEDICATION_CANVAS_SIZE} height={DEDICATION_CANVAS_SIZE * 0.5}>
+                          {dedicationPaths.map((p, i) => (
+                            <Path key={i} d={p} stroke="#000" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                          ))}
+                          {dedicationCurrentPath && (
+                            <Path d={dedicationCurrentPath} stroke="#000" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                          )}
+                        </Svg>
+                      </View>
+                    </GestureDetector>
+                  )}
                   <View style={styles.dedicationSignatureActions}>
                     <TouchableOpacity
                       style={styles.dedicationClearButton}

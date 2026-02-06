@@ -104,7 +104,7 @@ export const uploadDedicationPhoto = async (
 
     const { error: updateError } = await supabase
       .from('live_sessions')
-      .update({ dedication_photo_url: publicUrl })
+      .update({ dedication_photo_url: publicUrl } as any)
       .eq('id', sessionId);
 
     if (updateError) {
@@ -125,7 +125,7 @@ export const updateDedicationSignature = async (
   try {
     const { error } = await supabase
       .from('live_sessions')
-      .update({ dedication_signature_svg: signatureSvg })
+      .update({ dedication_signature_svg: signatureSvg } as any)
       .eq('id', sessionId);
 
     if (error) {
@@ -152,9 +152,9 @@ export const getDedicationAssets = async (
     if (error || !data) return null;
 
     return {
-      photoUrl: data.dedication_photo_url,
-      signatureSvg: data.dedication_signature_svg,
-      celebrityName: data.celebrity_name,
+      photoUrl: (data as any).dedication_photo_url || null,
+      signatureSvg: (data as any).dedication_signature_svg || null,
+      celebrityName: (data as any).celebrity_name || '',
     };
   } catch (error) {
     console.error('Error getting dedication assets:', error);
