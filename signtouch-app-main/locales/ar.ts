@@ -656,7 +656,7 @@ export default {
   celebrityLiveSessionDesc: 'امنح معجبيك لحظة فيديو مباشرة فريدة واترك لهم توقيعاً مخصصاً',
 
   paymentDelaysTitle: 'مواعيد الدفع',
-  paymentDelaysIntro: 'لماذا لا يتم الدفع فورياً؟ تفرض Apple وGoogle مهلاً خاصة بها قبل تحويل أرباحك.',
+  paymentDelaysIntro: 'لماذا لا يتم الدفع فورياً؟ يتم خصم المبلغ من المعجبين مباشرة عبر Apple وGoogle، اللتين تفرضان مهلاً خاصة بهما قبل تحويل أرباحك.',
   paymentAppleTitle: 'Apple (App Store)',
   paymentAppleDelay: '30 إلى 45 يوماً بعد نهاية شهر البيع',
   paymentAppleExample: 'مثال: تبيع إهداءً في 10 مارس → تغلق Apple الشهر في 31 مارس → الدفع نهاية أبريل / بداية مايو. Apple تدفع مرة واحدة شهرياً.',

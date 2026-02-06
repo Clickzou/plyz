@@ -656,7 +656,7 @@ export default {
   celebrityLiveSessionDesc: 'Give your fans a unique live video moment and leave them a personalized autograph',
 
   paymentDelaysTitle: 'Payment Timelines',
-  paymentDelaysIntro: 'Why isn\'t the payment instant? Apple and Google impose their own processing delays before transferring your earnings.',
+  paymentDelaysIntro: 'Why isn\'t the payment instant? Fans are charged directly by Apple and Google, which impose their own processing delays before transferring your earnings.',
   paymentAppleTitle: 'Apple (App Store)',
   paymentAppleDelay: '30 to 45 days after the end of the sales month',
   paymentAppleExample: 'Example: you sell a dedication on March 10 → Apple closes the month on March 31 → Payment by late April / early May. Apple pays once per month.',

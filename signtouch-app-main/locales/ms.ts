@@ -656,7 +656,7 @@ export default {
   celebrityLiveSessionDesc: 'Berikan peminat anda detik video langsung yang unik dan tinggalkan autograf yang diperibadikan',
 
   paymentDelaysTitle: 'Jadual Pembayaran',
-  paymentDelaysIntro: 'Mengapa pembayaran tidak serta-merta? Apple dan Google mengenakan tempoh pemprosesan mereka sendiri sebelum memindahkan pendapatan anda.',
+  paymentDelaysIntro: 'Mengapa pembayaran tidak serta-merta? Peminat dicaj terus oleh Apple dan Google, yang mengenakan tempoh pemprosesan mereka sendiri sebelum memindahkan pendapatan anda.',
   paymentAppleTitle: 'Apple (App Store)',
   paymentAppleDelay: '30 hingga 45 hari selepas akhir bulan jualan',
   paymentAppleExample: 'Contoh: anda menjual autograf pada 10 Mac → Apple menutup bulan pada 31 Mac → Pembayaran pada akhir April / awal Mei. Apple membayar 1 kali sebulan.',

@@ -656,7 +656,7 @@ export default {
   celebrityLiveSessionDesc: 'Dê aos seus fãs um momento único de vídeo ao vivo e deixe um autógrafo personalizado',
 
   paymentDelaysTitle: 'Prazos de pagamento',
-  paymentDelaysIntro: 'Por que o pagamento não é instantâneo? Apple e Google impõem seus próprios prazos de processamento antes de transferir seus ganhos.',
+  paymentDelaysIntro: 'Por que o pagamento não é instantâneo? Os fãs são cobrados diretamente pela Apple e Google, que impõem seus próprios prazos de processamento antes de transferir seus ganhos.',
   paymentAppleTitle: 'Apple (App Store)',
   paymentAppleDelay: '30 a 45 dias após o final do mês de venda',
   paymentAppleExample: 'Exemplo: você vende uma dedicatória em 10 de março → Apple fecha o mês em 31 de março → Pagamento no final de abril / início de maio. Apple paga 1 vez por mês.',

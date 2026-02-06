@@ -656,7 +656,7 @@ export default {
   celebrityLiveSessionDesc: 'Geben Sie Ihren Fans einen einzigartigen Live-Video-Moment und hinterlassen Sie ein personalisiertes Autogramm',
 
   paymentDelaysTitle: 'Zahlungsfristen',
-  paymentDelaysIntro: 'Warum ist die Zahlung nicht sofort? Apple und Google haben eigene Bearbeitungszeiten, bevor sie Ihre Einnahmen überweisen.',
+  paymentDelaysIntro: 'Warum ist die Zahlung nicht sofort? Fans werden direkt von Apple und Google belastet, die eigene Bearbeitungszeiten haben, bevor sie Ihre Einnahmen überweisen.',
   paymentAppleTitle: 'Apple (App Store)',
   paymentAppleDelay: '30 bis 45 Tage nach Monatsende',
   paymentAppleExample: 'Beispiel: Sie verkaufen eine Widmung am 10. März → Apple schließt den Monat am 31. März → Zahlung Ende April / Anfang Mai. Apple zahlt 1 Mal pro Monat.',

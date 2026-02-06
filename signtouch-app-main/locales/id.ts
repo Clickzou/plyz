@@ -656,7 +656,7 @@ export default {
   celebrityLiveSessionDesc: 'Berikan penggemar Anda momen video langsung yang unik dan tinggalkan tanda tangan yang dipersonalisasi',
 
   paymentDelaysTitle: 'Jadwal Pembayaran',
-  paymentDelaysIntro: 'Mengapa pembayaran tidak instan? Apple dan Google menerapkan waktu pemrosesan mereka sendiri sebelum mentransfer penghasilan Anda.',
+  paymentDelaysIntro: 'Mengapa pembayaran tidak instan? Penggemar langsung ditagih oleh Apple dan Google, yang menerapkan waktu pemrosesan mereka sendiri sebelum mentransfer penghasilan Anda.',
   paymentAppleTitle: 'Apple (App Store)',
   paymentAppleDelay: '30 hingga 45 hari setelah akhir bulan penjualan',
   paymentAppleExample: 'Contoh: Anda menjual tanda tangan pada 10 Maret → Apple menutup bulan pada 31 Maret → Pembayaran pada akhir April / awal Mei. Apple membayar 1 kali per bulan.',

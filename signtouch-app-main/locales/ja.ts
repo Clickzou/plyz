@@ -656,7 +656,7 @@ export default {
   celebrityLiveSessionDesc: 'ファンにユニークなライブビデオ体験を提供し、パーソナライズされたサインを残す',
 
   paymentDelaysTitle: '支払いスケジュール',
-  paymentDelaysIntro: 'なぜ即時支払いではないのですか？AppleとGoogleは収益を送金する前に独自の処理期間を設けています。',
+  paymentDelaysIntro: 'なぜ即時支払いではないのですか？ファンはAppleとGoogleから直接課金され、これらのプラットフォームは収益を送金する前に独自の処理期間を設けています。',
   paymentAppleTitle: 'Apple (App Store)',
   paymentAppleDelay: '販売月の終了後30〜45日',
   paymentAppleExample: '例：3月10日にサイン入り写真を販売 → Appleが3月31日に月を締め → 4月末/5月初旬に支払い。Appleは月1回の支払いです。',

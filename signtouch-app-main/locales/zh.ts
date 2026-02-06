@@ -656,7 +656,7 @@ export default {
   celebrityLiveSessionDesc: '为粉丝提供独特的视频直播时刻，并留下个性化签名',
 
   paymentDelaysTitle: '付款时间表',
-  paymentDelaysIntro: '为什么付款不是即时的？Apple和Google在转移您的收入之前有自己的处理时间。',
+  paymentDelaysIntro: '为什么付款不是即时的？粉丝由Apple和Google直接扣款，这些平台在转移您的收入之前有自己的处理时间。',
   paymentAppleTitle: 'Apple (App Store)',
   paymentAppleDelay: '销售月结束后30至45天',
   paymentAppleExample: '举例：您在3月10日卖出签名照 → Apple在3月31日结算 → 4月底/5月初付款。Apple每月支付一次。',
