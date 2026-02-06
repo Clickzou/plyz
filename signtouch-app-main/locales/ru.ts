@@ -831,4 +831,6 @@ export default {
   endCall: 'Завершить',
   videoCallPreparing: 'Подготовка видеозвонка...',
   videoCallConnectionFailed: 'Не удалось подключиться к видеозвонку. Попробуйте ещё раз.',
+  queueFullTitle: 'Очередь заполнена!',
+  queueFullMessage: 'Все фанаты присоединились к сессии. Вы можете начать прямой эфир!',
 };

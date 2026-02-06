@@ -830,4 +830,6 @@ export default {
   endCall: 'End call',
   videoCallPreparing: 'Preparing your video call...',
   videoCallConnectionFailed: 'Video call connection failed. Please try again.',
+  queueFullTitle: 'Queue is full!',
+  queueFullMessage: 'All fans have joined the session. You can start the live now!',
 };

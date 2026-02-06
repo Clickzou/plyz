@@ -831,4 +831,6 @@ export default {
   endCall: 'کال ختم کریں',
   videoCallPreparing: 'ویڈیو کال تیار ہو رہی ہے...',
   videoCallConnectionFailed: 'ویڈیو کال کنکشن ناکام ہو گیا۔ دوبارہ کوشش کریں۔',
+  queueFullTitle: 'قطار بھر گئی!',
+  queueFullMessage: 'تمام مداح سیشن میں شامل ہو گئے ہیں۔ آپ اب لائیو شروع کر سکتے ہیں!',
 };

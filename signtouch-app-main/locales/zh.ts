@@ -831,4 +831,6 @@ export default {
   endCall: '挂断',
   videoCallPreparing: '正在准备视频通话...',
   videoCallConnectionFailed: '视频通话连接失败。请重试。',
+  queueFullTitle: '队列已满！',
+  queueFullMessage: '所有粉丝已加入会话。您可以开始直播了！',
 };

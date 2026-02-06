@@ -831,4 +831,6 @@ export default {
   endCall: 'إنهاء المكالمة',
   videoCallPreparing: 'جاري تحضير مكالمة الفيديو...',
   videoCallConnectionFailed: 'فشل الاتصال بمكالمة الفيديو. يرجى المحاولة مرة أخرى.',
+  queueFullTitle: 'قائمة الانتظار ممتلئة!',
+  queueFullMessage: 'انضم جميع المعجبين إلى الجلسة. يمكنك بدء البث المباشر الآن!',
 };

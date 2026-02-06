@@ -831,4 +831,6 @@ export default {
   endCall: 'Tamatkan panggilan',
   videoCallPreparing: 'Menyediakan panggilan video anda...',
   videoCallConnectionFailed: 'Sambungan panggilan video gagal. Sila cuba lagi.',
+  queueFullTitle: 'Barisan penuh!',
+  queueFullMessage: 'Semua peminat telah menyertai sesi. Anda boleh memulakan siaran langsung sekarang!',
 };

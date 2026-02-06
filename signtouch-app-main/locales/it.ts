@@ -831,4 +831,6 @@ export default {
   endCall: 'Riattacca',
   videoCallPreparing: 'Preparazione della videochiamata...',
   videoCallConnectionFailed: 'Connessione alla videochiamata fallita. Riprova.',
+  queueFullTitle: 'Coda completa!',
+  queueFullMessage: 'Tutti i fan si sono uniti alla sessione. Puoi avviare il live ora!',
 };

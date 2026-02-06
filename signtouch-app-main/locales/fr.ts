@@ -832,4 +832,6 @@ export default {
   endCall: 'Raccrocher',
   videoCallPreparing: 'Préparation de votre appel vidéo...',
   videoCallConnectionFailed: 'La connexion à l\'appel vidéo a échoué. Veuillez réessayer.',
+  queueFullTitle: 'File d\'attente complète !',
+  queueFullMessage: 'Tous les fans ont rejoint la session. Vous pouvez lancer le live !',
 };

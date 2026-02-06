@@ -831,4 +831,6 @@ export default {
   endCall: 'Desligar',
   videoCallPreparing: 'Preparando sua videochamada...',
   videoCallConnectionFailed: 'Falha na conexão da videochamada. Tente novamente.',
+  queueFullTitle: 'Fila completa!',
+  queueFullMessage: 'Todos os fãs entraram na sessão. Você pode iniciar o live agora!',
 };

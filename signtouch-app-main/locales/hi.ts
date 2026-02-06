@@ -831,4 +831,6 @@ export default {
   endCall: 'कॉल समाप्त करें',
   videoCallPreparing: 'वीडियो कॉल तैयार हो रही है...',
   videoCallConnectionFailed: 'वीडियो कॉल कनेक्शन विफल। कृपया पुनः प्रयास करें।',
+  queueFullTitle: 'कतार भर गई!',
+  queueFullMessage: 'सभी प्रशंसक सत्र में शामिल हो गए हैं। आप अब लाइव शुरू कर सकते हैं!',
 };

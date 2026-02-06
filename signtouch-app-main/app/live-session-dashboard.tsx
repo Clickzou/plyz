@@ -8,10 +8,12 @@ import {
   Image,
   Dimensions,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import {
   Play,
   Pause,
@@ -86,7 +88,9 @@ export default function LiveSessionDashboardScreen() {
   const [sessionQueue, setSessionQueue] = useState<SessionQueueEntry[]>([]);
   const [calledFan, setCalledFan] = useState<SessionQueueEntry | null>(null);
   const [fanCallTimeout, setFanCallTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
-  const FAN_RESPONSE_TIMEOUT_MS = 30000; // 30 seconds to respond
+  const FAN_RESPONSE_TIMEOUT_MS = 30000;
+  const hasPlayedQueueFullChime = useRef(false);
+  const [queueFull, setQueueFull] = useState(false);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -189,6 +193,47 @@ export default function LiveSessionDashboardScreen() {
     const loadSessionQueue = async () => {
       const fullQueue = await getFullQueue(sessionId);
       setSessionQueue(fullQueue);
+
+      if (session && !hasPlayedQueueFullChime.current) {
+        const waitingInQueue = fullQueue.filter((e) => e.status === 'waiting' || e.status === 'called' || e.status === 'in_call').length;
+        if (waitingInQueue >= session.max_slots) {
+          hasPlayedQueueFullChime.current = true;
+          setQueueFull(true);
+          if (Platform.OS === 'web' && typeof window !== 'undefined' && window.AudioContext) {
+            try {
+              const ctx = new AudioContext();
+              const notes = [
+                { freq: 523.25, start: 0, dur: 0.12 },
+                { freq: 659.25, start: 0.12, dur: 0.12 },
+                { freq: 783.99, start: 0.24, dur: 0.12 },
+                { freq: 1046.5, start: 0.36, dur: 0.25 },
+                { freq: 1318.5, start: 0.55, dur: 0.3 },
+              ];
+              notes.forEach(({ freq, start, dur }) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.35, ctx.currentTime + start);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + start + dur);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(ctx.currentTime + start);
+                osc.stop(ctx.currentTime + start + dur + 0.05);
+              });
+            } catch (e) {}
+          }
+          if (Platform.OS !== 'web') {
+            try {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            } catch (e) {}
+          }
+          showAlert(
+            t('queueFullTitle') || 'File d\'attente complète !',
+            t('queueFullMessage') || 'Tous les fans ont rejoint. Vous pouvez lancer le live !'
+          );
+        }
+      }
     };
 
     loadSessionQueue();
