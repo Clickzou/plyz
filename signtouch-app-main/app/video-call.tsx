@@ -194,16 +194,16 @@ export default function VideoCallScreen() {
       const priceCents = parseInt(params.priceCents || '0', 10);
       if (priceCents > 0) {
         const fanDeviceId = await getOrCreateDeviceId();
+        const storePlatform = Platform.OS === 'ios' ? 'apple' : 'google';
         recordTransaction({
           sessionId: params.sessionId,
-          queueEntryId: params.queueEntryId || undefined,
           fanId: fanDeviceId,
           fanName: params.userName || undefined,
           celebrityId: params.celebrityId || params.otherUserId || '',
           celebrityName: params.otherUserName || 'Celebrity',
-          amountCents: priceCents,
+          grossAmountCents: priceCents,
           currency: 'EUR',
-          storePlatform: Platform.OS === 'ios' ? 'apple' : Platform.OS === 'android' ? 'google' : 'web',
+          platform: storePlatform,
         }).catch((err) => console.error('Error recording transaction:', err));
       }
 
