@@ -115,6 +115,7 @@ serve(async (req: Request) => {
       );
     }
 
+    let rcVerified = false;
     if (REVENUECAT_SECRET_API_KEY) {
       const verification = await verifyRevenueCatTransaction(user.id, rc_transaction_id);
       if (!verification.valid) {
@@ -123,7 +124,10 @@ serve(async (req: Request) => {
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+      rcVerified = true;
     }
+
+    const txStatus = rcVerified ? 'store_confirmed' : 'created';
 
     const { data: session, error: sessionError } = await supabase
       .from('live_sessions')
@@ -155,7 +159,8 @@ serve(async (req: Request) => {
         gross_amount_cents,
         currency,
         rc_transaction_id,
-        status: 'created',
+        status: txStatus,
+        ...(rcVerified ? { store_confirmed_at: new Date().toISOString() } : {}),
         celebrity_revshare_bps: 5200,
       })
       .select('id')
