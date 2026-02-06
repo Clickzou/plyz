@@ -399,10 +399,6 @@ export default function CelebrityMenuScreen() {
           </>
         ) : (
           <>
-            <View style={styles.iconContainer}>
-              <Star size={48} color="#fff" fill="#fff" />
-            </View>
-
             <Text style={styles.title}>{t('celebrityMenuTitle')}</Text>
             <Text style={styles.subtitle}>{t('celebrityMenuSubtitle')}</Text>
 
