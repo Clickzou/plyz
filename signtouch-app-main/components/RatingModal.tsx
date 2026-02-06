@@ -60,7 +60,7 @@ export default function RatingModal({
             style={styles.starButton}
           >
             <Star
-              size={48}
+              size={32}
               color={star <= selectedRating ? '#fbbf24' : 'rgba(255,255,255,0.3)'}
               fill={star <= selectedRating ? '#fbbf24' : 'transparent'}
             />
