@@ -117,6 +117,8 @@ export default function VideoCallScreen() {
     urlParams.append('userName', userName);
     urlParams.append('showLeaveButton', 'false');
     urlParams.append('showFullscreenButton', 'false');
+    urlParams.append('showParticipantsBar', 'false');
+    urlParams.append('activeSpeakerMode', 'false');
     urlParams.append('lang', dailyLang);
     
     return `${baseUrl}?${urlParams.toString()}`;
@@ -278,7 +280,21 @@ export default function VideoCallScreen() {
                     if (params.token) {
                       joinOptions.token = params.token;
                     }
-                    callFrame.join(joinOptions).then(() => {
+                    callFrame.setTheme({
+                      colors: {
+                        accent: '#8b5cf6',
+                        accentText: '#FFFFFF',
+                        background: '#000000',
+                        backgroundAccent: '#1a1a2e',
+                        baseText: '#FFFFFF',
+                        border: '#2e2e4a',
+                        mainAreaBg: '#000000',
+                        mainAreaBgAccent: '#1a1a2e',
+                        mainAreaText: '#FFFFFF',
+                        supportiveText: '#aaaaaa',
+                      },
+                    });
+                    callFrame.join({ ...joinOptions, startVideoOff: false, startAudioOff: false }).then(() => {
                       setIsLoading(false);
                     }).catch(() => {
                       setError(t('videoCallError'));
