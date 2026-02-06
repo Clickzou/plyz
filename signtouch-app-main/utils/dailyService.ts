@@ -197,6 +197,15 @@ export const getDailyRoom = async (roomName: string): Promise<DailyRoom | null> 
 export const createSessionVideoRoom = async (sessionId: string, celebrityName: string): Promise<{ roomUrl: string; roomName: string } | null> => {
   const roomName = `session-${sessionId}`;
   
+  const existingRoom = await getDailyRoom(roomName);
+  if (existingRoom) {
+    console.log('[Daily] Room already exists, reusing:', existingRoom.url);
+    return {
+      roomUrl: existingRoom.url,
+      roomName: existingRoom.name,
+    };
+  }
+
   const room = await createDailyRoom({
     name: roomName,
     expiryMinutes: 180,
