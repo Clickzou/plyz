@@ -199,7 +199,13 @@ export default function VideoCallScreen() {
   const injectedJavaScript = `
     (function() {
       var style = document.createElement('style');
-      style.textContent = '* { box-sizing: border-box; } html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; } video { object-fit: cover !important; width: 100% !important; height: 100% !important; }';
+      style.textContent = [
+        '* { box-sizing: border-box; }',
+        'html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #000; }',
+        'video { object-fit: cover !important; }',
+        '[class*="tile"], [class*="Tile"] { border-radius: 0 !important; }',
+        '[class*="grid"], [class*="Grid"], [class*="call-container"], [class*="videogrid"] { gap: 0 !important; padding: 0 !important; margin: 0 !important; }',
+      ].join(' ');
       document.head.appendChild(style);
 
       window.addEventListener('message', function(event) {
@@ -305,10 +311,11 @@ export default function VideoCallScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />
       <StatusBar style="light" />
       
-      <View style={styles.header}>
+      {renderVideoContent()}
+
+      <View style={styles.headerOverlay}>
         <TouchableOpacity style={styles.headerBackButton} onPress={() => router.back()}>
           <ArrowLeft size={20} color="#fff" />
         </TouchableOpacity>
@@ -330,8 +337,6 @@ export default function VideoCallScreen() {
           <Text style={styles.endCallText}>{t('endCall')}</Text>
         </TouchableOpacity>
       </View>
-
-      {renderVideoContent()}
 
       {isLoading && (
         <View style={styles.loadingOverlay}>
@@ -359,13 +364,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  header: {
+  headerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: 'transparent',
+    paddingTop: Platform.OS === 'web' ? 8 : 48,
+    paddingBottom: 8,
+    zIndex: 10,
   },
   headerBackButton: {
     width: 36,
