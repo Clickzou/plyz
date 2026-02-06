@@ -372,12 +372,25 @@ export default function LiveSessionDashboardScreen() {
         return;
       }
 
-      // Save room URL to database so fans can join
       await updateSessionRoomUrl(session.id, roomResult.roomUrl);
       
-      // Start fan call timer
       await startFanCall(session.id);
       setIsInVideoCall(true);
+
+      const nextFan = await callNextQueueFan(session.id);
+      if (nextFan) {
+        setCalledFan(nextFan);
+        calledFanIdRef.current = nextFan.id;
+
+        if (nextFan.push_token) {
+          await sendQueueNotification(
+            nextFan.push_token,
+            `${session.celebrity_name} - SignTouch`,
+            "C'est votre tour ! Rejoignez l'appel maintenant.",
+            { sessionId: session.id, action: 'your_turn' }
+          );
+        }
+      }
 
       const token = await createMeetingToken({
         roomName: roomResult.roomName,
@@ -396,6 +409,8 @@ export default function LiveSessionDashboardScreen() {
           sessionId: session.id,
           userName: session.celebrity_name,
           durationPerFan: String(session.duration_per_fan_minutes || 5),
+          otherUserName: nextFan?.fan_name || 'Fan',
+          otherUserId: nextFan?.fan_id || '',
         }
       });
     } catch (error) {

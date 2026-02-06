@@ -97,6 +97,11 @@ export default function JoinEventScreen() {
         if (stats) {
           setQueueStats(stats);
           
+          const refreshedSession = await getSessionByCode(foundLiveSession.code);
+          if (refreshedSession) {
+            setFoundLiveSession(refreshedSession);
+          }
+          
           if (stats.currentPosition === 1 && (stats.sessionStatus === 'active' || stats.sessionStatus === 'live')) {
             const entry = await getMyQueueEntry(foundLiveSession.id);
             if (entry && (entry.status === 'called' || entry.status === 'in_call')) {
