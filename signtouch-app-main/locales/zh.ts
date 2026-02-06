@@ -828,4 +828,7 @@ export default {
   cannotCreateSignature: '无法创建签名',
   unsavedChanges: '未保存的更改',
   unsavedChangesMessage: '是否不保存就退出？',
+  endCall: '挂断',
+  videoCallPreparing: '正在准备视频通话...',
+  videoCallConnectionFailed: '视频通话连接失败。请重试。',
 };

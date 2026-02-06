@@ -828,4 +828,7 @@ export default {
   cannotCreateSignature: 'تعذر إنشاء التوقيع',
   unsavedChanges: 'تغييرات غير محفوظة',
   unsavedChangesMessage: 'هل تريد المغادرة بدون حفظ؟',
+  endCall: 'إنهاء المكالمة',
+  videoCallPreparing: 'جاري تحضير مكالمة الفيديو...',
+  videoCallConnectionFailed: 'فشل الاتصال بمكالمة الفيديو. يرجى المحاولة مرة أخرى.',
 };

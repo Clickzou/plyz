@@ -7,10 +7,11 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, PhoneOff, Clock } from 'lucide-react-native';
+import { ArrowLeft, PhoneOff, Clock, Video } from 'lucide-react-native';
 import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
@@ -20,9 +21,20 @@ if (Platform.OS !== 'web') {
   WebView = require('react-native-webview').WebView;
 }
 
+const DAILY_SUPPORTED_LANGS: Record<string, string> = {
+  en: 'en',
+  fr: 'fr',
+  es: 'es',
+  de: 'de',
+  it: 'it',
+  pt: 'pt',
+  ja: 'ja',
+  nl: 'nl',
+};
+
 export default function VideoCallScreen() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const webViewRef = useRef<any>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const params = useLocalSearchParams<{
@@ -40,6 +52,7 @@ export default function VideoCallScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fanTimeRemaining, setFanTimeRemaining] = useState<string>('--:--');
+  const [timeWarning, setTimeWarning] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hasLeftCall, setHasLeftCall] = useState(false);
   const callStartTime = useRef<number>(Date.now());
@@ -66,6 +79,7 @@ export default function VideoCallScreen() {
       const minutes = Math.floor(diff / 60000);
       const seconds = Math.floor((diff % 60000) / 1000);
       setFanTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      setTimeWarning(diff < 60000 && diff > 0);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -73,6 +87,7 @@ export default function VideoCallScreen() {
 
   const isHost = params.isHost === 'true';
   const userName = params.userName || (isHost ? 'Host' : 'Guest');
+  const dailyLang = DAILY_SUPPORTED_LANGS[language] || 'en';
 
   const getDailyPrebuiltUrl = () => {
     const baseUrl = params.roomUrl;
@@ -85,6 +100,7 @@ export default function VideoCallScreen() {
     urlParams.append('userName', userName);
     urlParams.append('showLeaveButton', 'true');
     urlParams.append('showFullscreenButton', 'true');
+    urlParams.append('lang', dailyLang);
     
     return `${baseUrl}?${urlParams.toString()}`;
   };
@@ -150,7 +166,11 @@ export default function VideoCallScreen() {
       <SafeAreaView style={styles.container}>
         <StatusBar style="light" />
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{t('videoCallError')}</Text>
+          <View style={styles.errorIconCircle}>
+            <Video size={40} color="#ef4444" />
+          </View>
+          <Text style={styles.errorTitle}>{t('videoCallError')}</Text>
+          <Text style={styles.errorSubtext}>{t('videoCallConnectionFailed')}</Text>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Text style={styles.backButtonText}>{t('goBack')}</Text>
           </TouchableOpacity>
@@ -184,7 +204,11 @@ export default function VideoCallScreen() {
     if (error) {
       return (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
+          <View style={styles.errorIconCircle}>
+            <Video size={40} color="#ef4444" />
+          </View>
+          <Text style={styles.errorTitle}>{error}</Text>
+          <Text style={styles.errorSubtext}>{t('videoCallConnectionFailed')}</Text>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Text style={styles.backButtonText}>{t('goBack')}</Text>
           </TouchableOpacity>
@@ -203,7 +227,8 @@ export default function VideoCallScreen() {
               width: '100%',
               height: '100%',
               border: 'none',
-              backgroundColor: '#0f0f0f',
+              backgroundColor: '#1a1a2e',
+              borderRadius: 0,
             }}
             onLoad={() => setIsLoading(false)}
             onError={() => {
@@ -244,7 +269,7 @@ export default function VideoCallScreen() {
 
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{t('videoCallError')}</Text>
+        <Text style={styles.errorTitle}>{t('videoCallError')}</Text>
       </View>
     );
   };
@@ -254,30 +279,37 @@ export default function VideoCallScreen() {
       <StatusBar style="light" />
       
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
-          <ArrowLeft size={24} color="#fff" />
+        <TouchableOpacity style={styles.headerBackButton} onPress={() => router.back()}>
+          <ArrowLeft size={22} color="#fff" />
         </TouchableOpacity>
         
         {isHost && params.durationPerFan ? (
-          <View style={styles.timerContainer}>
-            <Clock size={18} color="#fff" />
+          <View style={[styles.timerContainer, timeWarning && styles.timerWarning]}>
+            <Clock size={16} color="#fff" />
             <Text style={styles.timerText}>{fanTimeRemaining}</Text>
           </View>
         ) : (
-          <Text style={styles.headerTitle}>
-            {isHost ? t('host') : t('startVideoCall')}
-          </Text>
+          <View style={styles.headerTitleContainer}>
+            <View style={styles.liveIndicator}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveText}>LIVE</Text>
+            </View>
+          </View>
         )}
         
-        <TouchableOpacity style={styles.endCallHeaderButton} onPress={leaveCall}>
-          <PhoneOff size={20} color="#fff" />
+        <TouchableOpacity style={styles.endCallButton} onPress={leaveCall}>
+          <PhoneOff size={18} color="#fff" />
+          <Text style={styles.endCallText}>{t('endCall')}</Text>
         </TouchableOpacity>
       </View>
 
       {isLoading && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#10B981" />
-          <Text style={styles.loadingText}>{t('connectingToCall')}</Text>
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color="#10B981" />
+            <Text style={styles.loadingTitle}>{t('connectingToCall')}</Text>
+            <Text style={styles.loadingSubtext}>{t('videoCallPreparing')}</Text>
+          </View>
         </View>
       )}
 
@@ -297,57 +329,91 @@ export default function VideoCallScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f0f0f',
+    backgroundColor: '#1a1a2e',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#1f1f1f',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#16213e',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
-  headerButton: {
-    width: 40,
-    height: 40,
+  headerBackButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  liveIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 6,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ef4444',
+  },
+  liveText: {
+    color: '#ef4444',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
   timerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#10B981',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 6,
+  },
+  timerWarning: {
+    backgroundColor: '#ef4444',
   },
   timerText: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
-  endCallHeaderButton: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#dc2626',
-    borderRadius: 20,
-    justifyContent: 'center',
+  endCallButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  endCallText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
   },
   webview: {
     flex: 1,
-    backgroundColor: '#0f0f0f',
+    backgroundColor: '#1a1a2e',
   },
   webIframeContainer: {
     flex: 1,
-    backgroundColor: '#0f0f0f',
+    backgroundColor: '#1a1a2e',
   },
   loadingOverlay: {
     position: 'absolute',
@@ -355,15 +421,30 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#0f0f0f',
+    backgroundColor: 'rgba(26, 26, 46, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
-    gap: 16,
   },
-  loadingText: {
+  loadingCard: {
+    backgroundColor: '#16213e',
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    gap: 16,
+    marginHorizontal: 40,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  loadingTitle: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  loadingSubtext: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 14,
+    textAlign: 'center',
   },
   errorContainer: {
     flex: 1,
@@ -372,23 +453,35 @@ const styles = StyleSheet.create({
     padding: 32,
     gap: 16,
   },
-  errorText: {
+  errorIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  errorTitle: {
     color: '#ef4444',
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     textAlign: 'center',
   },
   errorSubtext: {
-    color: '#9ca3af',
+    color: 'rgba(255,255,255,0.5)',
     fontSize: 14,
     textAlign: 'center',
+    lineHeight: 20,
   },
   backButton: {
-    marginTop: 16,
-    paddingHorizontal: 24,
+    marginTop: 8,
+    paddingHorizontal: 28,
     paddingVertical: 12,
-    backgroundColor: '#374151',
-    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   backButtonText: {
     color: '#fff',

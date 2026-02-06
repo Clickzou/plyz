@@ -828,4 +828,7 @@ export default {
   cannotCreateSignature: 'Unterschrift kann nicht erstellt werden',
   unsavedChanges: 'Nicht gespeicherte Änderungen',
   unsavedChangesMessage: 'Möchten Sie ohne Speichern verlassen?',
+  endCall: 'Auflegen',
+  videoCallPreparing: 'Videoanruf wird vorbereitet...',
+  videoCallConnectionFailed: 'Videoanruf-Verbindung fehlgeschlagen. Bitte versuchen Sie es erneut.',
 };

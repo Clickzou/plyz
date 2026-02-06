@@ -828,4 +828,7 @@ export default {
   cannotCreateSignature: 'Tidak dapat mencipta tandatangan',
   unsavedChanges: 'Perubahan tidak disimpan',
   unsavedChangesMessage: 'Adakah anda mahu keluar tanpa menyimpan?',
+  endCall: 'Tamatkan panggilan',
+  videoCallPreparing: 'Menyediakan panggilan video anda...',
+  videoCallConnectionFailed: 'Sambungan panggilan video gagal. Sila cuba lagi.',
 };

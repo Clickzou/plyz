@@ -827,4 +827,7 @@ export default {
   cannotCreateSignature: 'Unable to create signature',
   unsavedChanges: 'Unsaved changes',
   unsavedChangesMessage: 'Do you want to leave without saving?',
+  endCall: 'End call',
+  videoCallPreparing: 'Preparing your video call...',
+  videoCallConnectionFailed: 'Video call connection failed. Please try again.',
 };

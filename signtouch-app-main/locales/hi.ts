@@ -828,4 +828,7 @@ export default {
   cannotCreateSignature: 'हस्ताक्षर बनाने में असमर्थ',
   unsavedChanges: 'असहेजे परिवर्तन',
   unsavedChangesMessage: 'क्या आप बिना सहेजे बाहर निकलना चाहते हैं?',
+  endCall: 'कॉल समाप्त करें',
+  videoCallPreparing: 'वीडियो कॉल तैयार हो रही है...',
+  videoCallConnectionFailed: 'वीडियो कॉल कनेक्शन विफल। कृपया पुनः प्रयास करें।',
 };

@@ -828,4 +828,7 @@ export default {
   cannotCreateSignature: 'Não é possível criar a assinatura',
   unsavedChanges: 'Alterações não salvas',
   unsavedChangesMessage: 'Deseja sair sem salvar?',
+  endCall: 'Desligar',
+  videoCallPreparing: 'Preparando sua videochamada...',
+  videoCallConnectionFailed: 'Falha na conexão da videochamada. Tente novamente.',
 };

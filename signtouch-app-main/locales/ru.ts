@@ -828,4 +828,7 @@ export default {
   cannotCreateSignature: 'Невозможно создать подпись',
   unsavedChanges: 'Несохранённые изменения',
   unsavedChangesMessage: 'Вы хотите выйти без сохранения?',
+  endCall: 'Завершить',
+  videoCallPreparing: 'Подготовка видеозвонка...',
+  videoCallConnectionFailed: 'Не удалось подключиться к видеозвонку. Попробуйте ещё раз.',
 };

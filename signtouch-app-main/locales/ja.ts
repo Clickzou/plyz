@@ -828,4 +828,7 @@ export default {
   cannotCreateSignature: '署名を作成できません',
   unsavedChanges: '未保存の変更',
   unsavedChangesMessage: '保存せずに終了しますか？',
+  endCall: '通話終了',
+  videoCallPreparing: 'ビデオ通話を準備中...',
+  videoCallConnectionFailed: 'ビデオ通話の接続に失敗しました。もう一度お試しください。',
 };

@@ -828,4 +828,7 @@ export default {
   cannotCreateSignature: 'স্বাক্ষর তৈরি করা যাচ্ছে না',
   unsavedChanges: 'অসংরক্ষিত পরিবর্তন',
   unsavedChangesMessage: 'সংরক্ষণ না করে প্রস্থান করতে চান?',
+  endCall: 'কল শেষ করুন',
+  videoCallPreparing: 'ভিডিও কল প্রস্তুত হচ্ছে...',
+  videoCallConnectionFailed: 'ভিডিও কল সংযোগ ব্যর্থ। আবার চেষ্টা করুন।',
 };

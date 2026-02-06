@@ -827,4 +827,7 @@ export default {
   cannotCreateSignature: 'No se puede crear la firma',
   unsavedChanges: 'Cambios no guardados',
   unsavedChangesMessage: '¿Desea salir sin guardar?',
+  endCall: 'Colgar',
+  videoCallPreparing: 'Preparando tu videollamada...',
+  videoCallConnectionFailed: 'La conexión de videollamada falló. Inténtalo de nuevo.',
 };

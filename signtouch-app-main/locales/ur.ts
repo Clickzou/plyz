@@ -828,4 +828,7 @@ export default {
   cannotCreateSignature: 'دستخط بنانے سے قاصر',
   unsavedChanges: 'غیر محفوظ تبدیلیاں',
   unsavedChangesMessage: 'کیا آپ محفوظ کیے بغیر باہر نکلنا چاہتے ہیں؟',
+  endCall: 'کال ختم کریں',
+  videoCallPreparing: 'ویڈیو کال تیار ہو رہی ہے...',
+  videoCallConnectionFailed: 'ویڈیو کال کنکشن ناکام ہو گیا۔ دوبارہ کوشش کریں۔',
 };

@@ -829,4 +829,7 @@ export default {
   cannotCreateSignature: 'Impossible de créer la signature',
   unsavedChanges: 'Modifications non enregistrées',
   unsavedChangesMessage: 'Voulez-vous quitter sans enregistrer ?',
+  endCall: 'Raccrocher',
+  videoCallPreparing: 'Préparation de votre appel vidéo...',
+  videoCallConnectionFailed: 'La connexion à l\'appel vidéo a échoué. Veuillez réessayer.',
 };
