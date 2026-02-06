@@ -655,6 +655,16 @@ export default {
   celebrityLiveSession: 'पेड वीडियो लाइव सत्र',
   celebrityLiveSessionDesc: 'अपने प्रशंसकों को एक अनूठा लाइव वीडियो मोमेंट दें और उन्हें एक व्यक्तिगत ऑटोग्राफ छोड़ें',
 
+  paymentDelaysTitle: 'भुगतान समयसीमा',
+  paymentDelaysIntro: 'भुगतान तुरंत क्यों नहीं होता? Apple और Google आपकी कमाई ट्रांसफर करने से पहले अपनी प्रोसेसिंग अवधि लगाते हैं।',
+  paymentAppleTitle: 'Apple (App Store)',
+  paymentAppleDelay: 'बिक्री माह समाप्त होने के 30 से 45 दिन बाद',
+  paymentAppleExample: 'उदाहरण: आप 10 मार्च को ऑटोग्राफ बेचते हैं → Apple 31 मार्च को महीना बंद करता है → अप्रैल के अंत / मई की शुरुआत में भुगतान। Apple महीने में 1 बार भुगतान करता है।',
+  paymentGoogleTitle: 'Google (Google Play)',
+  paymentGoogleDelay: 'लेनदेन के 15 से 30 दिन बाद',
+  paymentGoogleExample: 'उदाहरण: आप 10 मार्च को ऑटोग्राफ बेचते हैं → Google मार्च के अंत / अप्रैल की शुरुआत में भुगतान कर सकता है। Google Apple से तेज़ है।',
+  paymentDelaysNote: 'ये समयसीमाएँ Apple और Google द्वारा निर्धारित हैं, SignTouch द्वारा नहीं। दुर्भाग्य से, हम इन प्रक्रियाओं को तेज़ नहीं कर सकते।',
+
   // Event Sessions
   addSignatures: 'हस्ताक्षर जोड़ें',
   eventDuration: 'इवेंट अवधि',

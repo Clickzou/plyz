@@ -655,6 +655,16 @@ export default {
   celebrityLiveSession: 'Платная видео живая сессия',
   celebrityLiveSessionDesc: 'Подарите фанатам уникальный живой видео момент и оставьте персональный автограф',
 
+  paymentDelaysTitle: 'Сроки выплат',
+  paymentDelaysIntro: 'Почему оплата не мгновенная? Apple и Google устанавливают собственные сроки обработки перед переводом ваших доходов.',
+  paymentAppleTitle: 'Apple (App Store)',
+  paymentAppleDelay: 'От 30 до 45 дней после окончания месяца продаж',
+  paymentAppleExample: 'Пример: вы продали автограф 10 марта → Apple закрывает месяц 31 марта → Оплата в конце апреля / начале мая. Apple платит 1 раз в месяц.',
+  paymentGoogleTitle: 'Google (Google Play)',
+  paymentGoogleDelay: 'От 15 до 30 дней после транзакции',
+  paymentGoogleExample: 'Пример: вы продали автограф 10 марта → Google может заплатить в конце марта / начале апреля. Google быстрее Apple.',
+  paymentDelaysNote: 'Эти сроки устанавливаются Apple и Google, а не SignTouch. К сожалению, мы не можем ускорить эти процессы.',
+
   // Event Sessions
   addSignatures: 'Добавить подписи',
   eventDuration: 'Продолжительность события',

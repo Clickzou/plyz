@@ -655,6 +655,16 @@ export default {
   celebrityLiveSession: 'ادا شدہ ویڈیو لائیو سیشن',
   celebrityLiveSessionDesc: 'اپنے مداحوں کو منفرد لائیو ویڈیو لمحہ دیں اور انہیں ذاتی آٹوگراف چھوڑیں',
 
+  paymentDelaysTitle: 'ادائیگی کی مدت',
+  paymentDelaysIntro: 'ادائیگی فوری کیوں نہیں ہوتی؟ Apple اور Google آپ کی آمدنی منتقل کرنے سے پہلے اپنی پروسیسنگ مدت لگاتے ہیں۔',
+  paymentAppleTitle: 'Apple (App Store)',
+  paymentAppleDelay: 'فروخت کے مہینے کے اختتام کے 30 سے 45 دن بعد',
+  paymentAppleExample: 'مثال: آپ 10 مارچ کو آٹوگراف بیچتے ہیں → Apple 31 مارچ کو مہینہ بند کرتا ہے → اپریل کے آخر / مئی کے شروع میں ادائیگی۔ Apple مہینے میں 1 بار ادائیگی کرتا ہے۔',
+  paymentGoogleTitle: 'Google (Google Play)',
+  paymentGoogleDelay: 'لین دین کے 15 سے 30 دن بعد',
+  paymentGoogleExample: 'مثال: آپ 10 مارچ کو آٹوگراف بیچتے ہیں → Google مارچ کے آخر / اپریل کے شروع میں ادائیگی کر سکتا ہے۔ Google Apple سے تیز ہے۔',
+  paymentDelaysNote: 'یہ مدتیں Apple اور Google کی طرف سے مقرر کی گئی ہیں، SignTouch کی طرف سے نہیں۔ بدقسمتی سے، ہم ان عملوں کو تیز نہیں کر سکتے۔',
+
   // Event Sessions
   addSignatures: 'دستخط شامل کریں',
   eventDuration: 'ایونٹ کا دورانیہ',

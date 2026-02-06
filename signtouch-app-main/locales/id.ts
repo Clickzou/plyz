@@ -655,6 +655,16 @@ export default {
   celebrityLiveSession: 'Sesi Video Langsung Berbayar',
   celebrityLiveSessionDesc: 'Berikan penggemar Anda momen video langsung yang unik dan tinggalkan tanda tangan yang dipersonalisasi',
 
+  paymentDelaysTitle: 'Jadwal Pembayaran',
+  paymentDelaysIntro: 'Mengapa pembayaran tidak instan? Apple dan Google menerapkan waktu pemrosesan mereka sendiri sebelum mentransfer penghasilan Anda.',
+  paymentAppleTitle: 'Apple (App Store)',
+  paymentAppleDelay: '30 hingga 45 hari setelah akhir bulan penjualan',
+  paymentAppleExample: 'Contoh: Anda menjual tanda tangan pada 10 Maret → Apple menutup bulan pada 31 Maret → Pembayaran pada akhir April / awal Mei. Apple membayar 1 kali per bulan.',
+  paymentGoogleTitle: 'Google (Google Play)',
+  paymentGoogleDelay: '15 hingga 30 hari setelah transaksi',
+  paymentGoogleExample: 'Contoh: Anda menjual tanda tangan pada 10 Maret → Google dapat membayar pada akhir Maret / awal April. Google lebih cepat dari Apple.',
+  paymentDelaysNote: 'Jangka waktu ini ditetapkan oleh Apple dan Google, bukan oleh SignTouch. Sayangnya, kami tidak dapat mempercepat proses ini.',
+
   // Event Sessions
   addSignatures: 'Tambah Tanda Tangan',
   eventDuration: 'Durasi Acara',

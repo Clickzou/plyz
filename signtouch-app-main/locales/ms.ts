@@ -655,6 +655,16 @@ export default {
   celebrityLiveSession: 'Sesi Video Langsung Berbayar',
   celebrityLiveSessionDesc: 'Berikan peminat anda detik video langsung yang unik dan tinggalkan autograf yang diperibadikan',
 
+  paymentDelaysTitle: 'Jadual Pembayaran',
+  paymentDelaysIntro: 'Mengapa pembayaran tidak serta-merta? Apple dan Google mengenakan tempoh pemprosesan mereka sendiri sebelum memindahkan pendapatan anda.',
+  paymentAppleTitle: 'Apple (App Store)',
+  paymentAppleDelay: '30 hingga 45 hari selepas akhir bulan jualan',
+  paymentAppleExample: 'Contoh: anda menjual autograf pada 10 Mac → Apple menutup bulan pada 31 Mac → Pembayaran pada akhir April / awal Mei. Apple membayar 1 kali sebulan.',
+  paymentGoogleTitle: 'Google (Google Play)',
+  paymentGoogleDelay: '15 hingga 30 hari selepas transaksi',
+  paymentGoogleExample: 'Contoh: anda menjual autograf pada 10 Mac → Google boleh membayar pada akhir Mac / awal April. Google lebih pantas daripada Apple.',
+  paymentDelaysNote: 'Tempoh ini ditetapkan oleh Apple dan Google, bukan oleh SignTouch. Malangnya, kami tidak dapat mempercepatkan proses ini.',
+
   // Event Sessions
   addSignatures: 'Tambah Tandatangan',
   eventDuration: 'Tempoh Acara',

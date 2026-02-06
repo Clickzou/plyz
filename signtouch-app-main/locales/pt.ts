@@ -655,6 +655,16 @@ export default {
   celebrityLiveSession: 'Sessão de Vídeo Paga Ao Vivo',
   celebrityLiveSessionDesc: 'Dê aos seus fãs um momento único de vídeo ao vivo e deixe um autógrafo personalizado',
 
+  paymentDelaysTitle: 'Prazos de pagamento',
+  paymentDelaysIntro: 'Por que o pagamento não é instantâneo? Apple e Google impõem seus próprios prazos de processamento antes de transferir seus ganhos.',
+  paymentAppleTitle: 'Apple (App Store)',
+  paymentAppleDelay: '30 a 45 dias após o final do mês de venda',
+  paymentAppleExample: 'Exemplo: você vende uma dedicatória em 10 de março → Apple fecha o mês em 31 de março → Pagamento no final de abril / início de maio. Apple paga 1 vez por mês.',
+  paymentGoogleTitle: 'Google (Google Play)',
+  paymentGoogleDelay: '15 a 30 dias após a transação',
+  paymentGoogleExample: 'Exemplo: você vende uma dedicatória em 10 de março → Google pode pagar no final de março / início de abril. Google é mais rápido que Apple.',
+  paymentDelaysNote: 'Esses prazos são impostos pela Apple e Google, não pelo SignTouch. Infelizmente, não podemos acelerar esses processos.',
+
   // Event Sessions
   addSignatures: 'Adicionar Assinaturas',
   eventDuration: 'Duração do Evento',

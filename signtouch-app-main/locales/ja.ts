@@ -655,6 +655,16 @@ export default {
   celebrityLiveSession: '有料ビデオライブセッション',
   celebrityLiveSessionDesc: 'ファンにユニークなライブビデオ体験を提供し、パーソナライズされたサインを残す',
 
+  paymentDelaysTitle: '支払いスケジュール',
+  paymentDelaysIntro: 'なぜ即時支払いではないのですか？AppleとGoogleは収益を送金する前に独自の処理期間を設けています。',
+  paymentAppleTitle: 'Apple (App Store)',
+  paymentAppleDelay: '販売月の終了後30〜45日',
+  paymentAppleExample: '例：3月10日にサイン入り写真を販売 → Appleが3月31日に月を締め → 4月末/5月初旬に支払い。Appleは月1回の支払いです。',
+  paymentGoogleTitle: 'Google (Google Play)',
+  paymentGoogleDelay: '取引後15〜30日',
+  paymentGoogleExample: '例：3月10日にサイン入り写真を販売 → Googleは3月末/4月初旬に支払い可能。GoogleはAppleより早いです。',
+  paymentDelaysNote: 'これらの期間はAppleとGoogleによって設定されており、SignTouchによるものではありません。残念ながら、これらのプロセスを加速することはできません。',
+
   // Event Sessions
   addSignatures: '署名を追加',
   eventDuration: 'イベント時間',

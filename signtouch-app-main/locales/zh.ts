@@ -655,6 +655,16 @@ export default {
   celebrityLiveSession: '付费视频直播会话',
   celebrityLiveSessionDesc: '为粉丝提供独特的视频直播时刻，并留下个性化签名',
 
+  paymentDelaysTitle: '付款时间表',
+  paymentDelaysIntro: '为什么付款不是即时的？Apple和Google在转移您的收入之前有自己的处理时间。',
+  paymentAppleTitle: 'Apple (App Store)',
+  paymentAppleDelay: '销售月结束后30至45天',
+  paymentAppleExample: '举例：您在3月10日卖出签名照 → Apple在3月31日结算 → 4月底/5月初付款。Apple每月支付一次。',
+  paymentGoogleTitle: 'Google (Google Play)',
+  paymentGoogleDelay: '交易后15至30天',
+  paymentGoogleExample: '举例：您在3月10日卖出签名照 → Google可能在3月底/4月初付款。Google比Apple更快。',
+  paymentDelaysNote: '这些时间由Apple和Google决定，与SignTouch无关。很遗憾，我们无法加快这些流程。',
+
   // Event Sessions
   addSignatures: '添加签名',
   eventDuration: '活动时长',

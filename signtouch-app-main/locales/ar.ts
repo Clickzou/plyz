@@ -655,6 +655,16 @@ export default {
   celebrityLiveSession: 'جلسة فيديو مباشرة مدفوعة',
   celebrityLiveSessionDesc: 'امنح معجبيك لحظة فيديو مباشرة فريدة واترك لهم توقيعاً مخصصاً',
 
+  paymentDelaysTitle: 'مواعيد الدفع',
+  paymentDelaysIntro: 'لماذا لا يتم الدفع فورياً؟ تفرض Apple وGoogle مهلاً خاصة بها قبل تحويل أرباحك.',
+  paymentAppleTitle: 'Apple (App Store)',
+  paymentAppleDelay: '30 إلى 45 يوماً بعد نهاية شهر البيع',
+  paymentAppleExample: 'مثال: تبيع إهداءً في 10 مارس → تغلق Apple الشهر في 31 مارس → الدفع نهاية أبريل / بداية مايو. Apple تدفع مرة واحدة شهرياً.',
+  paymentGoogleTitle: 'Google (Google Play)',
+  paymentGoogleDelay: '15 إلى 30 يوماً بعد المعاملة',
+  paymentGoogleExample: 'مثال: تبيع إهداءً في 10 مارس → قد تدفع Google نهاية مارس / بداية أبريل. Google أسرع من Apple.',
+  paymentDelaysNote: 'هذه المواعيد تفرضها Apple وGoogle وليس SignTouch. للأسف لا يمكننا تسريع هذه العمليات.',
+
   // Event Sessions
   addSignatures: 'إضافة توقيعات',
   eventDuration: 'مدة الحدث',
