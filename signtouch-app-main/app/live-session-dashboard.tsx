@@ -49,6 +49,7 @@ import {
   updateSignatureSvg,
   updateSessionRoomUrl,
   startFanCall,
+  updateCelebrityPushToken,
 } from '@/utils/liveSessionStorage';
 import QRCode from 'react-native-qrcode-svg';
 import * as Clipboard from 'expo-clipboard';
@@ -59,8 +60,17 @@ import {
   getFullQueue, 
   notifyUpcomingFans,
   sendQueueNotification,
+  notifyCelebrityFanJoined,
+  notifyCelebrityQueueFull,
   QueueEntry as SessionQueueEntry,
 } from '@/utils/sessionQueueStorage';
+
+let Notifications: any = null;
+try {
+  if (Platform.OS !== 'web') {
+    Notifications = require('expo-notifications');
+  }
+} catch (e) {}
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CANVAS_SIZE = SCREEN_WIDTH - 80;
@@ -142,6 +152,26 @@ export default function LiveSessionDashboardScreen() {
       sessionChannel.unsubscribe();
       queueChannel.unsubscribe();
     };
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    const registerPushToken = async () => {
+      if (Notifications && Platform.OS !== 'web') {
+        try {
+          const { status } = await Notifications.requestPermissionsAsync();
+          if (status === 'granted') {
+            const tokenData = await Notifications.getExpoPushTokenAsync();
+            if (tokenData?.data) {
+              await updateCelebrityPushToken(sessionId, tokenData.data);
+            }
+          }
+        } catch (e) {
+          console.log('Could not register celebrity push token:', e);
+        }
+      }
+    };
+    registerPushToken();
   }, [sessionId]);
 
   useEffect(() => {

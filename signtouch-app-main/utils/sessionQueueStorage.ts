@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getCelebrityPushToken } from './liveSessionStorage';
 
 export interface QueueEntry {
   id: string;
@@ -94,7 +95,14 @@ export const joinQueue = async (
       return null;
     }
 
-    return data as QueueEntry;
+    const entry = data as QueueEntry;
+
+    try {
+      const isFirstFan = newPosition === 1;
+      notifyCelebrityFanJoined(sessionId, fanName, isFirstFan);
+    } catch (e) {}
+
+    return entry;
   } catch (error) {
     console.error('Error joining queue:', error);
     return null;
@@ -222,7 +230,20 @@ export const callNextFan = async (sessionId: string): Promise<QueueEntry | null>
       return null;
     }
 
-    return updatedFan as QueueEntry;
+    const fan = updatedFan as QueueEntry;
+
+    if (fan.push_token) {
+      try {
+        await sendQueueNotification(
+          fan.push_token,
+          'SignTouch',
+          "C'est votre tour ! Rejoignez l'appel vidéo maintenant.",
+          { sessionId, action: 'your_turn' }
+        );
+      } catch (e) {}
+    }
+
+    return fan;
   } catch (error) {
     console.error('Error calling next fan:', error);
     return null;
@@ -272,6 +293,17 @@ export const markFanAsMissed = async (queueEntryId: string): Promise<boolean> =>
         called_at: null,
       })
       .eq('id', queueEntryId);
+
+    if (!error && entry.push_token) {
+      try {
+        await sendQueueNotification(
+          entry.push_token,
+          'SignTouch',
+          "Vous avez manqué votre tour. Vous avez été replacé dans la file d'attente.",
+          { sessionId: entry.session_id, action: 'missed_turn' }
+        );
+      } catch (e) {}
+    }
 
     return !error;
   } catch (error) {
@@ -408,5 +440,50 @@ export const notifyUpcomingFans = async (
     }
   } catch (error) {
     console.error('Error notifying upcoming fans:', error);
+  }
+};
+
+export const notifyCelebrityFanJoined = async (
+  sessionId: string,
+  fanName: string,
+  isFirstFan: boolean
+): Promise<void> => {
+  try {
+    const celebrityToken = await getCelebrityPushToken(sessionId);
+    if (!celebrityToken) return;
+
+    const title = isFirstFan
+      ? 'SignTouch'
+      : 'SignTouch';
+    const body = isFirstFan
+      ? `${fanName} a rejoint votre session !`
+      : `${fanName} a rejoint la file d'attente.`;
+
+    await sendQueueNotification(
+      celebrityToken,
+      title,
+      body,
+      { sessionId, action: isFirstFan ? 'first_fan_joined' : 'fan_joined', fanName }
+    );
+  } catch (error) {
+    console.error('Error notifying celebrity:', error);
+  }
+};
+
+export const notifyCelebrityQueueFull = async (
+  sessionId: string
+): Promise<void> => {
+  try {
+    const celebrityToken = await getCelebrityPushToken(sessionId);
+    if (!celebrityToken) return;
+
+    await sendQueueNotification(
+      celebrityToken,
+      'SignTouch',
+      'Tous les fans ont rejoint ! Vous pouvez lancer le live.',
+      { sessionId, action: 'queue_full' }
+    );
+  } catch (error) {
+    console.error('Error notifying celebrity queue full:', error);
   }
 };

@@ -19,6 +19,7 @@ export interface LiveSession {
   room_url?: string | null;
   fan_call_started_at?: string | null;
   cover_photo_url?: string | null;
+  celebrity_push_token?: string | null;
 }
 
 export interface QueueEntry {
@@ -112,6 +113,44 @@ export const createLiveSession = async (
     return data as LiveSession;
   } catch (error) {
     console.error('Error creating live session:', error);
+    return null;
+  }
+};
+
+export const updateCelebrityPushToken = async (
+  sessionId: string,
+  pushToken: string
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('live_sessions')
+      .update({ celebrity_push_token: pushToken })
+      .eq('id', sessionId);
+
+    if (error) {
+      console.error('Error updating celebrity push token:', error);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Error updating celebrity push token:', error);
+    return false;
+  }
+};
+
+export const getCelebrityPushToken = async (
+  sessionId: string
+): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('live_sessions')
+      .select('celebrity_push_token')
+      .eq('id', sessionId)
+      .single();
+
+    if (error || !data) return null;
+    return data.celebrity_push_token || null;
+  } catch (error) {
     return null;
   }
 };
