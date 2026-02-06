@@ -131,6 +131,7 @@ export default function VideoCallScreen() {
     urlParams.append('showParticipantsBar', 'false');
     urlParams.append('activeSpeakerMode', 'false');
     urlParams.append('lang', dailyLang);
+    urlParams.append('controlBarPosition', 'hidden');
     
     return `${baseUrl}?${urlParams.toString()}`;
   };
@@ -237,6 +238,7 @@ export default function VideoCallScreen() {
         '[class*="grid"], [class*="Grid"], [class*="call-container"], [class*="videogrid"] { gap: 0 !important; padding: 0 !important; margin: 0 !important; }',
         '[class*="topbar"], [class*="Topbar"], [class*="top-bar"], [class*="TopBar"], [class*="header-actions"], [class*="HeaderActions"] { display: none !important; }',
         '[class*="leave"], [class*="Leave"] { display: none !important; }',
+        '[class*="tray"], [class*="Tray"], [class*="controls-bar"], [class*="ControlsBar"], [class*="control-bar"], [class*="toolbar"], [class*="Toolbar"], [class*="bottom-bar"], [class*="BottomBar"] { display: none !important; }',
       ].join(' ');
       document.head.appendChild(style);
 
@@ -296,6 +298,7 @@ export default function VideoCallScreen() {
                       showFullscreenButton: false,
                       showLocalVideo: true,
                       showParticipantsBar: false,
+                      customTrayButtons: {},
                       iframeStyle: {
                         width: '100%',
                         height: '100%',
@@ -324,6 +327,14 @@ export default function VideoCallScreen() {
                     });
                     callFrame.join({ ...joinOptions, startVideoOff: false, startAudioOff: false }).then(() => {
                       setIsLoading(false);
+                      try {
+                        const iframe = el.querySelector('iframe');
+                        if (iframe && iframe.contentDocument) {
+                          const hideStyle = iframe.contentDocument.createElement('style');
+                          hideStyle.textContent = '[class*="tray"], [class*="Tray"], [class*="controls-bar"], [class*="ControlsBar"], [class*="toolbar"], [class*="Toolbar"], [class*="bottom-bar"], [class*="BottomBar"] { display: none !important; }';
+                          iframe.contentDocument.head.appendChild(hideStyle);
+                        }
+                      } catch(cssErr) {}
                     }).catch(() => {
                       setError(t('videoCallError'));
                       setIsLoading(false);
