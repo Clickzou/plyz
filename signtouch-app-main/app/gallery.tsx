@@ -8,9 +8,9 @@ import {
   Platform,
   ActivityIndicator,
   Modal,
-  Alert,
   ScrollView,
 } from 'react-native';
+import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Download, Trash2, Camera, X, Pencil, Share2, BookOpen, Filter, Star, User, MapPin, Calendar, Music, Trophy, Palette, Users, CheckCircle2, Circle, Film, Play } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -253,7 +253,7 @@ export default function GalleryScreen() {
       } else {
         const { status } = await MediaLibrary.requestPermissionsAsync(true);
         if (status !== 'granted') {
-          Alert.alert(t('permissionRequired'), t('galleryPermissionMessage'));
+          showAlert(t('permissionRequired'), t('galleryPermissionMessage'));
           return;
         }
 
@@ -261,14 +261,14 @@ export default function GalleryScreen() {
         await MediaLibrary.createAssetAsync(selectedMemory.uri);
         console.log('✅ Enregistré dans la galerie');
 
-        Alert.alert(
+        showAlert(
           t('saved'),
           t('downloadedMessage')
         );
       }
     } catch (error) {
       console.error('❌ Erreur:', error);
-      Alert.alert(t('error'), t('saveError') + ': ' + (error as Error).message);
+      showAlert(t('error'), t('saveError') + ': ' + (error as Error).message);
     }
   };
 
@@ -277,27 +277,21 @@ export default function GalleryScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
-    if (Platform.OS === 'web') {
-      if (window.confirm(t('confirmDeleteMessage'))) {
-        handleDelete();
-      }
-    } else {
-      Alert.alert(
-        t('confirmDelete'),
-        t('confirmDeleteMessage'),
-        [
-          {
-            text: t('cancel'),
-            style: 'cancel',
-          },
-          {
-            text: t('delete'),
-            style: 'destructive',
-            onPress: handleDelete,
-          },
-        ]
-      );
-    }
+    showConfirm(
+      t('confirmDelete'),
+      t('confirmDeleteMessage'),
+      [
+        {
+          text: t('cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('delete'),
+          style: 'destructive',
+          onPress: handleDelete,
+        },
+      ]
+    );
   };
 
   const handleDelete = async () => {
@@ -325,7 +319,7 @@ export default function GalleryScreen() {
       console.log('✅ Liste rechargée');
     } catch (error) {
       console.error('❌ Erreur lors de la suppression:', error);
-      Alert.alert(t('error'), t('saveError'));
+      showAlert(t('error'), t('saveError'));
     } finally {
       setIsDeleting(false);
     }
@@ -346,7 +340,7 @@ export default function GalleryScreen() {
       await loadStoriesData();
     } catch (error) {
       console.error('Error deleting story:', error);
-      Alert.alert(t('error'), t('saveError'));
+      showAlert(t('error'), t('saveError'));
     } finally {
       setIsDeleting(false);
     }
@@ -357,20 +351,14 @@ export default function GalleryScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
-    if (Platform.OS === 'web') {
-      if (window.confirm(t('confirmDeleteMessage'))) {
-        handleDeleteStory();
-      }
-    } else {
-      Alert.alert(
-        t('confirmDelete'),
-        t('confirmDeleteMessage'),
-        [
-          { text: t('cancel'), style: 'cancel' },
-          { text: t('delete'), style: 'destructive', onPress: handleDeleteStory },
-        ]
-      );
-    }
+    showConfirm(
+      t('confirmDelete'),
+      t('confirmDeleteMessage'),
+      [
+        { text: t('cancel'), style: 'cancel' },
+        { text: t('delete'), style: 'destructive', onPress: handleDeleteStory },
+      ]
+    );
   };
 
   const goToCamera = () => {
@@ -473,27 +461,21 @@ export default function GalleryScreen() {
     const message = t('confirmDeleteMultiple', { count: selectedMemories.size }) || 
       `Voulez-vous vraiment supprimer ${selectedMemories.size} souvenir(s) ?`;
 
-    if (Platform.OS === 'web') {
-      if (window.confirm(message)) {
-        handleDeleteSelected();
-      }
-    } else {
-      Alert.alert(
-        t('confirmDelete'),
-        message,
-        [
-          {
-            text: t('cancel'),
-            style: 'cancel',
-          },
-          {
-            text: t('delete'),
-            style: 'destructive',
-            onPress: handleDeleteSelected,
-          },
-        ]
-      );
-    }
+    showConfirm(
+      t('confirmDelete'),
+      message,
+      [
+        {
+          text: t('cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('delete'),
+          style: 'destructive',
+          onPress: handleDeleteSelected,
+        },
+      ]
+    );
   };
 
   const handleDeleteSelected = async () => {
@@ -520,7 +502,7 @@ export default function GalleryScreen() {
       console.log(`✅ ${selectedMemories.size} souvenirs supprimés`);
     } catch (error) {
       console.error('❌ Erreur lors de la suppression:', error);
-      Alert.alert(t('error'), t('saveError'));
+      showAlert(t('error'), t('saveError'));
     } finally {
       setIsDeleting(false);
     }

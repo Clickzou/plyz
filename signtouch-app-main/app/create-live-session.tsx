@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
-  Alert,
   ActivityIndicator,
   Image,
   Platform,
 } from 'react-native';
+import { showAlert } from '@/utils/alertHelper';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Clock, Users, DollarSign, Play, Star, Camera, RotateCcw } from 'lucide-react-native';
@@ -98,7 +98,7 @@ export default function CreateLiveSessionScreen() {
       if (!permissionResult.granted) {
         const libraryResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (!libraryResult.granted) {
-          Alert.alert(t('error'), t('cameraPermissionRequired') || 'Camera permission required');
+          showAlert(t('error'), t('cameraPermissionRequired') || 'Camera permission required');
           return;
         }
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -127,7 +127,7 @@ export default function CreateLiveSessionScreen() {
       }
     } catch (error) {
       console.error('Error taking selfie:', error);
-      Alert.alert(t('error'), t('cameraError') || 'Could not access camera');
+      showAlert(t('error'), t('cameraError') || 'Could not access camera');
     }
   };
 
@@ -183,11 +183,7 @@ export default function CreateLiveSessionScreen() {
     
     if (hasError) {
       console.log('[CreateSession] Validation failed - name:', !celebrityName.trim(), 'photo:', !coverPhotoUri);
-      if (typeof window !== 'undefined') {
-        window.alert(t('liveSessionFieldsRequired') || 'Veuillez remplir le nom et prendre une photo');
-      } else {
-        Alert.alert(t('error') || 'Erreur', t('liveSessionFieldsRequired') || 'Veuillez remplir le nom et prendre une photo');
-      }
+      showAlert(t('error') || 'Erreur', t('liveSessionFieldsRequired') || 'Veuillez remplir le nom et prendre une photo');
       return;
     }
     setNameError(false);
@@ -262,7 +258,7 @@ export default function CreateLiveSessionScreen() {
       });
     } catch (error) {
       console.error('Error creating session:', error);
-      Alert.alert(t('error'), t('liveSessionCreateError'));
+      showAlert(t('error'), t('liveSessionCreateError'));
     } finally {
       setIsCreating(false);
     }

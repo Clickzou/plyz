@@ -5,13 +5,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  Alert,
   Platform,
   ActivityIndicator,
   Image,
   ScrollView,
   Modal,
 } from 'react-native';
+import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -123,7 +123,7 @@ export default function JoinEventScreen() {
     const codeToSearch = (searchCode || code).trim().toUpperCase();
     
     if (codeToSearch.length < 4) {
-      Alert.alert(t('error') || 'Error', t('invalidCode') || 'Please enter a valid code');
+      showAlert(t('error') || 'Error', t('invalidCode') || 'Please enter a valid code');
       return;
     }
 
@@ -182,13 +182,13 @@ export default function JoinEventScreen() {
         return;
       }
 
-      Alert.alert(
+      showAlert(
         t('eventNotFound') || 'Event Not Found',
         t('eventNotFoundMessage') || 'This event does not exist or has expired'
       );
     } catch (error) {
       console.error('Error searching event:', error);
-      Alert.alert(t('error') || 'Error', t('searchFailed') || 'Failed to search for event');
+      showAlert(t('error') || 'Error', t('searchFailed') || 'Failed to search for event');
     } finally {
       setIsSearching(false);
     }
@@ -196,7 +196,7 @@ export default function JoinEventScreen() {
 
   const requestCameraPermission = async () => {
     if (!isBarCodeScannerAvailable()) {
-      Alert.alert(
+      showAlert(
         t('notAvailable') || 'Not Available',
         t('scannerNotOnWeb') || 'QR scanner is not available on web. Please enter the code manually.'
       );
@@ -208,7 +208,7 @@ export default function JoinEventScreen() {
     if (granted) {
       setShowScanner(true);
     } else {
-      Alert.alert(
+      showAlert(
         t('permissionRequired') || 'Permission Required',
         t('cameraPermissionMessage') || 'Camera permission is required to scan QR codes'
       );
@@ -224,7 +224,7 @@ export default function JoinEventScreen() {
       setCode(scannedCode);
       handleSearch(scannedCode);
     } else {
-      Alert.alert(
+      showAlert(
         t('invalidQR') || 'Invalid QR',
         t('invalidQRMessage') || 'This QR code is not valid'
       );
@@ -271,7 +271,7 @@ export default function JoinEventScreen() {
       }
     } catch (error) {
       console.error('Error saving signature:', error);
-      Alert.alert(t('error') || 'Error', t('saveFailed') || 'Failed to save signature');
+      showAlert(t('error') || 'Error', t('saveFailed') || 'Failed to save signature');
     } finally {
       setIsSaving(false);
     }
@@ -311,7 +311,7 @@ export default function JoinEventScreen() {
 
   const handleJoinQueue = async () => {
     if (!foundLiveSession || !fanName.trim()) {
-      Alert.alert(t('error') || 'Error', t('enterYourName') || 'Please enter your name');
+      showAlert(t('error') || 'Error', t('enterYourName') || 'Please enter your name');
       return;
     }
 
@@ -343,11 +343,11 @@ export default function JoinEventScreen() {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
       } else {
-        Alert.alert(t('error') || 'Error', t('failedToJoinQueue') || 'Failed to join the queue');
+        showAlert(t('error') || 'Error', t('failedToJoinQueue') || 'Failed to join the queue');
       }
     } catch (error) {
       console.error('Error joining queue:', error);
-      Alert.alert(t('error') || 'Error', t('failedToJoinQueue') || 'Failed to join the queue');
+      showAlert(t('error') || 'Error', t('failedToJoinQueue') || 'Failed to join the queue');
     } finally {
       setIsJoiningQueue(false);
     }
@@ -357,7 +357,7 @@ export default function JoinEventScreen() {
     if (!scheduledSession) return;
     
     if (!Notifications) {
-      Alert.alert(
+      showAlert(
         t('notAvailable') || 'Not Available',
         t('notificationsNotSupported') || 'Notifications are not supported in this environment'
       );
@@ -367,7 +367,7 @@ export default function JoinEventScreen() {
     try {
       const { status } = await Notifications.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert(
+        showAlert(
           t('permissionRequired') || 'Permission Required',
           t('notificationPermissionMessage') || 'Please enable notifications to receive reminders'
         );
@@ -379,7 +379,7 @@ export default function JoinEventScreen() {
       const now = Date.now();
 
       if (notifyTime <= now) {
-        Alert.alert(
+        showAlert(
           t('eventStartingSoon') || 'Event Starting Soon',
           t('eventStartsSoon') || 'The event starts in less than 2 minutes!'
         );
@@ -404,7 +404,7 @@ export default function JoinEventScreen() {
       }
     } catch (error) {
       console.error('Error setting notification:', error);
-      Alert.alert(t('error') || 'Error', t('notificationFailed') || 'Failed to set notification');
+      showAlert(t('error') || 'Error', t('notificationFailed') || 'Failed to set notification');
     }
   };
 
@@ -412,7 +412,7 @@ export default function JoinEventScreen() {
     if (!foundLiveSession) return;
     
     if (!Notifications) {
-      Alert.alert(
+      showAlert(
         t('notAvailable') || 'Not Available',
         t('notificationsNotSupported') || 'Notifications are not supported in this environment. Please keep the app open.'
       );
@@ -422,7 +422,7 @@ export default function JoinEventScreen() {
     try {
       const { status } = await Notifications.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert(
+        showAlert(
           t('permissionRequired') || 'Permission Required',
           t('notificationPermissionMessage') || 'Please enable notifications to receive reminders'
         );
@@ -451,13 +451,13 @@ export default function JoinEventScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
       
-      Alert.alert(
+      showAlert(
         t('notificationScheduled') || 'Notification Scheduled',
         t('notificationScheduledMessage') || `You will be notified approximately 2 minutes before your turn. You can now leave the app.`
       );
     } catch (error) {
       console.error('Error setting live session notification:', error);
-      Alert.alert(t('error') || 'Error', t('notificationFailed') || 'Failed to set notification');
+      showAlert(t('error') || 'Error', t('notificationFailed') || 'Failed to set notification');
     }
   };
 

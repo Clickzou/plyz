@@ -7,10 +7,10 @@ import {
   Image,
   Dimensions,
   Platform,
-  Alert,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import { showAlert } from '@/utils/alertHelper';
 import { markFirstPhotoSaved } from '@/utils/trialStorage';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
@@ -970,14 +970,14 @@ export default function ComposeScreen() {
             try {
               localStorage.setItem('memories', JSON.stringify(reducedMemories));
               // Avertir l'utilisateur
-              Alert.alert(
+              showAlert(
                 t('storageWarning') || 'Stockage limité',
                 t('storageWarningMessage') || 'Certaines anciennes photos ont été supprimées pour libérer de l\'espace. Connectez-vous pour sauvegarder vos photos dans le cloud.'
               );
             } catch (e) {
               // En dernier recours, ne garder que la nouvelle photo
               localStorage.setItem('memories', JSON.stringify([newMemory]));
-              Alert.alert(
+              showAlert(
                 t('storageFull') || 'Stockage plein',
                 t('storageFullMessage') || 'Le stockage local est plein. Seule votre dernière photo a été conservée. Connectez-vous pour sauvegarder dans le cloud.'
               );
@@ -1024,17 +1024,9 @@ export default function ComposeScreen() {
       setIsSaved(false);
 
       if (errorMessage.includes('quota') || errorMessage.includes('Quota')) {
-        if (Platform.OS === 'web') {
-          alert('Espace de stockage saturé. Supprimez des souvenirs depuis la galerie.');
-        } else {
-          Alert.alert('Erreur', 'Espace de stockage saturé. Supprimez des souvenirs depuis la galerie.');
-        }
+        showAlert(t('error'), t('storageSaturated'));
       } else {
-        if (Platform.OS === 'web') {
-          alert('Erreur: ' + errorMessage);
-        } else {
-          Alert.alert('Erreur', errorMessage);
-        }
+        showAlert(t('error'), errorMessage);
       }
     }
   };

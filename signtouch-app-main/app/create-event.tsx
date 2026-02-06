@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
-  Alert,
   Platform,
   ActivityIndicator,
   Share,
@@ -16,6 +15,7 @@ import {
   Pressable,
   Animated,
 } from 'react-native';
+import { showAlert } from '@/utils/alertHelper';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -244,7 +244,7 @@ export default function CreateEventScreen() {
       }
     } catch (error) {
       console.error('Error creating session:', error);
-      Alert.alert(t('error') || 'Error', t('eventCreationFailed') || 'Failed to create event');
+      showAlert(t('error') || 'Error', t('eventCreationFailed') || 'Failed to create event');
     } finally {
       setIsCreating(false);
     }
@@ -408,7 +408,7 @@ export default function CreateEventScreen() {
   const addSigner = () => {
     const currentSigner = signers[activeSignerIndex];
     if (!currentSigner.name.trim()) {
-      Alert.alert(
+      showAlert(
         t('warning') || 'Warning',
         t('enterNameFirst') || 'Please enter a celebrity name before adding a new one'
       );
@@ -445,7 +445,7 @@ export default function CreateEventScreen() {
 
   const handleNext = () => {
     if (!eventName.trim()) {
-      Alert.alert(t('error') || 'Error', t('eventNameRequired') || 'Please enter an event name');
+      showAlert(t('error') || 'Error', t('eventNameRequired') || 'Please enter an event name');
       return;
     }
     setStep('signers');
@@ -484,7 +484,7 @@ export default function CreateEventScreen() {
     
     const validSigners = signers.filter(s => s.name.trim() && s.paths.length > 0);
     if (validSigners.length === 0) {
-      Alert.alert(t('error') || 'Error', t('atLeastOneSigner') || 'Add at least one signature');
+      showAlert(t('error') || 'Error', t('atLeastOneSigner') || 'Add at least one signature');
       return;
     }
 
@@ -514,7 +514,7 @@ export default function CreateEventScreen() {
       }
     } catch (error) {
       console.error('Error creating session:', error);
-      Alert.alert(t('error') || 'Error', t('eventCreationFailed') || 'Failed to create event');
+      showAlert(t('error') || 'Error', t('eventCreationFailed') || 'Failed to create event');
     } finally {
       setIsCreating(false);
     }

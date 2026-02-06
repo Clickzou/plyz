@@ -6,10 +6,10 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Alert,
   Platform,
   Share,
 } from 'react-native';
+import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye } from 'lucide-react-native';
@@ -130,43 +130,29 @@ export default function CelebrityMenuScreen() {
   const handleDeleteEvent = async (event: EventSession) => {
     const confirmMessage = t('deleteEventConfirm') || `Êtes-vous sûr de vouloir supprimer "${event.title}" ?`;
     
-    if (Platform.OS === 'web') {
-      const confirmed = window.confirm(confirmMessage);
-      console.log('[Delete] Confirmed:', confirmed, 'Event ID:', event.id);
-      if (confirmed) {
-        try {
-          console.log('[Delete] Deleting event:', event.id);
-          await deleteEventSession(event.id);
-          console.log('[Delete] Success, reloading events');
-          loadMyEvents();
-        } catch (error) {
-          console.error('[Delete] Failed:', error);
-          window.alert(t('deleteFailed') || 'Échec de la suppression');
-        }
-      }
-    } else {
-      Alert.alert(
-        t('deleteEvent') || 'Supprimer l\'événement',
-        confirmMessage,
-        [
-          { text: t('cancel') || 'Annuler', style: 'cancel' },
-          {
-            text: t('delete') || 'Supprimer',
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                await deleteEventSession(event.id);
+    showConfirm(
+      t('deleteEvent') || 'Supprimer l\'événement',
+      confirmMessage,
+      [
+        { text: t('cancel') || 'Annuler', style: 'cancel' },
+        {
+          text: t('delete') || 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteEventSession(event.id);
+              if (Platform.OS !== 'web') {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                loadMyEvents();
-              } catch (error) {
-                console.error('Delete failed:', error);
-                Alert.alert(t('error') || 'Erreur', t('deleteFailed') || 'Échec de la suppression');
               }
-            },
+              loadMyEvents();
+            } catch (error) {
+              console.error('Delete failed:', error);
+              showAlert(t('error') || 'Erreur', t('deleteFailed') || 'Échec de la suppression');
+            }
           },
-        ]
-      );
-    }
+        },
+      ]
+    );
   };
 
   const getStatusLabel = (status: string) => {

@@ -5,13 +5,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  Alert,
   Image,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
+import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -80,7 +80,7 @@ export default function JoinLiveSessionScreen() {
 
   const handleJoinWithCode = async (inputCode: string) => {
     if (inputCode.length !== 6) {
-      Alert.alert(t('error'), t('liveSessionInvalidCode'));
+      showAlert(t('error'), t('liveSessionInvalidCode'));
       return;
     }
 
@@ -88,19 +88,19 @@ export default function JoinLiveSessionScreen() {
     try {
       const s = await getSessionByCode(inputCode.toUpperCase());
       if (!s) {
-        Alert.alert(t('error'), t('liveSessionNotFound'));
+        showAlert(t('error'), t('liveSessionNotFound'));
         setIsLoading(false);
         return;
       }
 
       if (s.status === 'ended') {
-        Alert.alert(t('error'), t('liveSessionHasEnded'));
+        showAlert(t('error'), t('liveSessionHasEnded'));
         setIsLoading(false);
         return;
       }
 
       if (s.slots_used >= s.max_slots) {
-        Alert.alert(t('error'), t('liveSessionFull'));
+        showAlert(t('error'), t('liveSessionFull'));
         setIsLoading(false);
         return;
       }
@@ -111,12 +111,12 @@ export default function JoinLiveSessionScreen() {
       sessionChannelRef.current = subscribeToSession(s.id, (updated) => {
         setSession(updated);
         if (updated.status === 'ended') {
-          Alert.alert(t('info'), t('liveSessionHasEnded'));
+          showAlert(t('info'), t('liveSessionHasEnded'));
         }
       });
     } catch (error) {
       console.error('Error joining session:', error);
-      Alert.alert(t('error'), t('liveSessionJoinError'));
+      showAlert(t('error'), t('liveSessionJoinError'));
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +124,7 @@ export default function JoinLiveSessionScreen() {
 
   const requestCameraPermission = async () => {
     if (Platform.OS === 'web' || !isBarCodeScannerAvailable()) {
-      Alert.alert(
+      showAlert(
         'Info', 
         'Le scan QR n\'est pas disponible sur le navigateur web. Entrez le code manuellement ci-dessus.'
       );
@@ -136,7 +136,7 @@ export default function JoinLiveSessionScreen() {
     if (granted) {
       setShowScanner(true);
     } else {
-      Alert.alert(t('permissionDenied') || 'Permission Denied', t('cameraPermissionNeeded') || 'Camera permission is needed to scan QR codes.');
+      showAlert(t('permissionDenied') || 'Permission Denied', t('cameraPermissionNeeded') || 'Camera permission is needed to scan QR codes.');
     }
   };
 
@@ -156,7 +156,7 @@ export default function JoinLiveSessionScreen() {
       setCode(scannedCode);
       handleJoinWithCode(scannedCode);
     } else {
-      Alert.alert(t('error') || 'Error', t('invalidQRCode') || 'Invalid QR code');
+      showAlert(t('error') || 'Error', t('invalidQRCode') || 'Invalid QR code');
     }
   };
 
@@ -175,7 +175,7 @@ export default function JoinLiveSessionScreen() {
   const handleTakePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(t('error'), t('cameraPermissionDenied'));
+      showAlert(t('error'), t('cameraPermissionDenied'));
       return;
     }
 
@@ -208,7 +208,7 @@ export default function JoinLiveSessionScreen() {
       );
 
       if (!entry) {
-        Alert.alert(t('error'), t('liveSessionJoinError'));
+        showAlert(t('error'), t('liveSessionJoinError'));
         setIsLoading(false);
         return;
       }
@@ -230,7 +230,7 @@ export default function JoinLiveSessionScreen() {
       });
     } catch (error) {
       console.error('Error joining queue:', error);
-      Alert.alert(t('error'), t('liveSessionJoinError'));
+      showAlert(t('error'), t('liveSessionJoinError'));
     } finally {
       setIsLoading(false);
     }

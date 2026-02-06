@@ -6,13 +6,13 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  Alert,
   Platform,
   ActivityIndicator,
   TextInput,
   Dimensions,
   PanResponder,
 } from 'react-native';
+import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -346,9 +346,9 @@ export default function EventPublishScreen() {
       await navigator.share?.({
         title: sessionTitle,
         text: `Rejoignez mon événement SignTouch avec le code: ${joinCode}`,
-      }) || Alert.alert('Partager', `Code: ${joinCode}`);
+      }) || showAlert(t('share'), `Code: ${joinCode}`);
     } catch (e) {
-      Alert.alert('Partager', `Code: ${joinCode}`);
+      showAlert(t('share'), `Code: ${joinCode}`);
     }
   };
 
@@ -429,17 +429,13 @@ export default function EventPublishScreen() {
     if (Platform.OS === 'web') {
       const message = (t('cameraNotAvailable') || 'Camera not available') + '\n\n' + 
         (t('useMobileOrGallery') || 'Camera is not available on web. Please use the gallery or try on a mobile device.');
-      if (typeof window !== 'undefined') {
-        window.alert(message);
-      } else {
-        Alert.alert(t('cameraNotAvailable') || 'Camera not available', t('useMobileOrGallery') || 'Camera is not available on web.');
-      }
+      showAlert(t('cameraNotAvailable') || 'Camera not available', t('useMobileOrGallery') || 'Camera is not available on web.');
       return;
     }
     
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(t('error') || 'Error', t('cameraPermissionNeeded') || 'Camera permission needed');
+      showAlert(t('error') || 'Error', t('cameraPermissionNeeded') || 'Camera permission needed');
       return;
     }
 
@@ -455,7 +451,7 @@ export default function EventPublishScreen() {
 
   const handlePublish = async (type: 'photo' | 'photo_signed') => {
     if (!selectedImage) {
-      Alert.alert(t('error') || 'Error', t('selectImageFirst') || 'Select an image first');
+      showAlert(t('error') || 'Error', t('selectImageFirst') || 'Select an image first');
       return;
     }
 
@@ -488,7 +484,7 @@ export default function EventPublishScreen() {
       setShowSuccessModal(true);
     } catch (error) {
       console.error('Publish error:', error);
-      Alert.alert(t('error') || 'Error', t('publishFailed') || 'Failed to publish');
+      showAlert(t('error') || 'Error', t('publishFailed') || 'Failed to publish');
     } finally {
       setIsPublishing(false);
     }

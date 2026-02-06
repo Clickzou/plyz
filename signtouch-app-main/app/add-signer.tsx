@@ -5,10 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  Alert,
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -155,12 +155,12 @@ export default function AddSignerScreen() {
 
   const handleSave = async () => {
     if (!displayName.trim()) {
-      Alert.alert('Erreur', 'Veuillez entrer un nom');
+      showAlert(t('error'), t('pleaseEnterName'));
       return;
     }
 
     if (paths.length === 0) {
-      Alert.alert('Erreur', 'Veuillez dessiner une signature');
+      showAlert(t('error'), t('pleaseDrawSignature'));
       return;
     }
 
@@ -193,7 +193,7 @@ export default function AddSignerScreen() {
       router.back();
     } catch (error: any) {
       console.error('Error adding signer:', error?.message || error);
-      Alert.alert('Erreur', error?.message || 'Impossible d\'ajouter le signataire');
+      showAlert(t('error'), error?.message || t('cannotAddSigner'));
     } finally {
       setIsSaving(false);
     }

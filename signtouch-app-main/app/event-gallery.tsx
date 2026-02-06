@@ -9,9 +9,9 @@ import {
   RefreshControl,
   ActivityIndicator,
   AppState,
-  Alert,
   Platform,
 } from 'react-native';
+import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -238,13 +238,13 @@ export default function EventGalleryScreen() {
       await saveMemory(imageUri, user?.id || null, {
         isEdited: true,
       });
-      Alert.alert(
+      showAlert(
         t('done') || 'Done', 
         (t as any)('savedToGallery') || 'Photo saved to your SignTouch gallery!'
       );
     } catch (error) {
       console.error('Download error:', error);
-      Alert.alert(t('error') || 'Error', t('downloadFailed') || 'Download failed');
+      showAlert(t('error') || 'Error', t('downloadFailed') || 'Download failed');
     }
   };
 

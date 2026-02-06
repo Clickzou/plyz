@@ -7,10 +7,10 @@ import {
   ScrollView,
   Platform,
   Modal,
-  Alert,
   TextInput,
   ActivityIndicator,
 } from 'react-native';
+import { showAlert } from '@/utils/alertHelper';
 import { router } from 'expo-router';
 import { Crown, Info, Heart, Share2, Globe, Check, FileText, LogOut, Gift, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -139,10 +139,9 @@ export default function AccountScreen() {
     const url = Linking.createURL('auth-callback');
     console.log('URL de redirection:', url);
     await Clipboard.setStringAsync(url);
-    Alert.alert(
+    showAlert(
       'URL copiée!',
-      `Cette URL a été copiée dans le presse-papiers:\n\n${url}\n\nAjoute-la dans Supabase Dashboard:\nAuthentication → URL Configuration → Redirect URLs`,
-      [{ text: 'OK' }]
+      `Cette URL a été copiée dans le presse-papiers:\n\n${url}\n\nAjoute-la dans Supabase Dashboard:\nAuthentication → URL Configuration → Redirect URLs`
     );
   };
 
@@ -167,10 +166,9 @@ export default function AccountScreen() {
       alert('Compte déconnecté et données réinitialisées! Rafraîchissez la page pour tester comme nouvel utilisateur.');
     } else {
       await AsyncStorage.removeItem('subscription_status');
-      Alert.alert(
+      showAlert(
         'Réinitialisation complète',
-        'Compte déconnecté et données effacées. Redémarrez l\'app pour tester le flux nouvel utilisateur.',
-        [{ text: 'OK' }]
+        'Compte déconnecté et données effacées. Redémarrez l\'app pour tester le flux nouvel utilisateur.'
       );
     }
   };

@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   Image,
   Platform,
-  Alert,
   ActivityIndicator,
   Text,
   ScrollView,
@@ -13,6 +12,7 @@ import {
   TextInput,
   Modal,
 } from 'react-native';
+import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Download, Trash2, Share2, Palette, Pencil, Plus, Sparkles, X, RotateCw, Check, Save, Eraser, Type, BookOpen, Film } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -1514,11 +1514,7 @@ export default function ResultScreen() {
     } catch (error) {
       console.error('❌ Erreur lors de la sauvegarde:', error);
       setSaving(false);
-      if (Platform.OS === 'web') {
-        alert("Cette action n'est pas disponible dans la prévisualisation web. Teste sur ton appareil iOS/Android.");
-      } else {
-        Alert.alert('Erreur', `Impossible d'enregistrer: ${(error as Error).message}`);
-      }
+      showAlert(t('error'), `${(error as Error).message}`);
     }
   };
 
@@ -1669,17 +1665,9 @@ export default function ResultScreen() {
       const errorMessage = (error as Error).message;
 
       if (errorMessage.includes('quota') || errorMessage.includes('Quota')) {
-        if (Platform.OS === 'web') {
-          alert('Espace de stockage saturé. Supprimez des souvenirs depuis la galerie.');
-        } else {
-          Alert.alert('Erreur', 'Espace de stockage saturé. Supprimez des souvenirs depuis la galerie.');
-        }
+        showAlert(t('error'), t('storageSaturated'));
       } else {
-        if (Platform.OS === 'web') {
-          alert('Erreur: ' + errorMessage);
-        } else {
-          Alert.alert('Erreur', errorMessage);
-        }
+        showAlert(t('error'), errorMessage);
       }
 
       setSaving(false);
@@ -1726,17 +1714,9 @@ export default function ResultScreen() {
       const errorMessage = (error as Error).message;
 
       if (errorMessage.includes('quota') || errorMessage.includes('Quota')) {
-        if (Platform.OS === 'web') {
-          alert('Espace de stockage saturé. Supprimez des souvenirs depuis la galerie.');
-        } else {
-          Alert.alert('Erreur', 'Espace de stockage saturé. Supprimez des souvenirs depuis la galerie.');
-        }
+        showAlert(t('error'), t('storageSaturated'));
       } else {
-        if (Platform.OS === 'web') {
-          alert('Erreur: ' + errorMessage);
-        } else {
-          Alert.alert('Erreur', errorMessage);
-        }
+        showAlert(t('error'), errorMessage);
       }
 
       setIsSaving(false);
@@ -1785,7 +1765,7 @@ export default function ResultScreen() {
       } else {
         const { status } = await MediaLibrary.requestPermissionsAsync(true);
         if (status !== 'granted') {
-          Alert.alert('Permission requise', 'L\'accès à la galerie est nécessaire pour enregistrer.');
+          showAlert(t('permissionRequired'), t('galleryAccessRequired'));
           setIsSaving(false);
           return;
         }
@@ -1793,9 +1773,9 @@ export default function ResultScreen() {
         await MediaLibrary.createAssetAsync(uri);
         console.log('✅ Enregistré dans la galerie du téléphone');
 
-        Alert.alert(
-          'Téléchargé',
-          'L\'image a été enregistrée dans votre galerie.'
+        showAlert(
+          t('downloaded'),
+          t('imageSavedToGallery')
         );
       }
 
@@ -1808,11 +1788,7 @@ export default function ResultScreen() {
       console.error('❌ Erreur lors du téléchargement:', error);
       const errorMessage = (error as Error).message;
 
-      if (Platform.OS === 'web') {
-        alert("Téléchargement non disponible dans la prévisualisation web. Teste sur l'app mobile.");
-      } else {
-        Alert.alert('Erreur', 'Impossible de télécharger l\'image.');
-      }
+      showAlert(t('error'), t('cannotDownloadImage'));
 
       setIsSaving(false);
     }
@@ -1832,27 +1808,21 @@ export default function ResultScreen() {
       ? 'Supprimer ce souvenir ? Cette action est irréversible.'
       : 'Supprimer ce souvenir sans l\'enregistrer ?';
 
-    if (Platform.OS === 'web') {
-      if (window.confirm(message)) {
-        handleDelete();
-      }
-    } else {
-      Alert.alert(
-        'Supprimer ce souvenir ?',
-        message,
-        [
-          {
-            text: 'Annuler',
-            style: 'cancel',
-          },
-          {
-            text: 'Supprimer',
-            style: 'destructive',
-            onPress: handleDelete,
-          },
-        ]
-      );
-    }
+    showConfirm(
+      'Supprimer ce souvenir ?',
+      message,
+      [
+        {
+          text: 'Annuler',
+          style: 'cancel',
+        },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: handleDelete,
+        },
+      ]
+    );
   };
 
   const handleDelete = async () => {
@@ -1872,7 +1842,7 @@ export default function ResultScreen() {
         router.push('/gallery');
       } catch (error) {
         console.error('❌ Erreur lors de la suppression:', error);
-        Alert.alert('Erreur', 'Impossible de supprimer ce souvenir.');
+        showAlert(t('error'), t('cannotDeleteMemory'));
         setIsDeleting(false);
       }
     } else {

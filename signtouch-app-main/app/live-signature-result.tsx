@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   Image,
   Share,
-  Alert,
   Dimensions,
 } from 'react-native';
+import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -60,7 +60,7 @@ export default function LiveSignatureResultScreen() {
   };
 
   const handleSave = async () => {
-    Alert.alert(t('success'), t('liveSessionSignatureSaved'));
+    showAlert(t('success'), t('liveSessionSignatureSaved'));
   };
 
   if (!entry) {

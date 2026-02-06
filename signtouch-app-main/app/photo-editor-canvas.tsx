@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Platform, Alert, View, ActivityIndicator, StyleSheet } from 'react-native';
+import { Platform, View, ActivityIndicator, StyleSheet } from 'react-native';
+import { showAlert } from '@/utils/alertHelper';
 import * as Haptics from 'expo-haptics';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Memory } from '@/utils/memoriesStorage';
 import * as StorageService from '@/utils/storageService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from '@/contexts/LanguageContext';
 import { WebView } from 'react-native-webview';
 import { PHOTO_EDITOR_HTML } from '@/utils/photoEditorHtml';
 
@@ -25,6 +27,7 @@ export default function PhotoEditorCanvas() {
   }>();
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
@@ -86,7 +89,7 @@ export default function PhotoEditorCanvas() {
 
       if (!uri || typeof uri !== 'string') {
         console.error('❌ Aucune URI d\'image disponible!');
-        Alert.alert('Erreur', 'Aucune image à charger');
+        showAlert(t('error'), t('noImageToLoad'));
         return;
       }
 
@@ -104,7 +107,7 @@ export default function PhotoEditorCanvas() {
           // Validation finale : l'URI DOIT être data: ou http(s):
           if (!uri.startsWith('data:image/') && !uri.startsWith('http://') && !uri.startsWith('https://')) {
             console.error('❌ URI invalide après conversion:', uri.substring(0, 100));
-            Alert.alert('Erreur', 'Format d\'image non supporté. L\'URI doit être data:image/ ou http(s)://');
+            showAlert(t('error'), t('unsupportedImageFormat'));
             return;
           }
 
@@ -119,7 +122,7 @@ export default function PhotoEditorCanvas() {
           console.log('✅ Message loadImage envoyé à la WebView');
         } catch (error) {
           console.error('❌ Erreur conversion base64:', error);
-          Alert.alert('Erreur', 'Impossible de charger l\'image: ' + error);
+          showAlert(t('error'), t('cannotLoadImage'));
         }
       })();
     }
@@ -427,12 +430,8 @@ export default function PhotoEditorCanvas() {
     } catch (error) {
       console.error('❌ Erreur sauvegarde:', error);
 
-      const errorMsg = 'Erreur lors de la sauvegarde de l\'image';
-      if (Platform.OS === 'web') {
-        alert(errorMsg);
-      } else {
-        Alert.alert('Erreur', errorMsg);
-      }
+      const errorMsg = t('imageSaveError');
+      showAlert(t('error'), errorMsg);
     } finally {
       setSaving(false);
     }
@@ -507,7 +506,7 @@ export default function PhotoEditorCanvas() {
               }
             } catch (error) {
               console.error('❌ Erreur sauvegarde:', error);
-              Alert.alert('Erreur', 'Erreur lors de la sauvegarde de l\'image');
+              showAlert(t('error'), t('imageSaveError'));
             }
             break;
         }
@@ -529,7 +528,7 @@ export default function PhotoEditorCanvas() {
           onMessage={handleWebViewMessage}
           onError={(error) => {
             console.error('❌ Erreur WebView:', error);
-            Alert.alert('Erreur', 'Impossible de charger l\'éditeur photo');
+            showAlert(t('error'), t('cannotLoadPhotoEditor'));
           }}
           onLoadEnd={() => console.log('✅ WebView HTML chargé (onLoadEnd)')}
           style={{ flex: 1, backgroundColor: '#000' }}

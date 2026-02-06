@@ -4,12 +4,12 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ScrollView,
   Image,
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
+import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -277,7 +277,7 @@ export default function LiveSessionDashboardScreen() {
       const fullQueue = await getFullQueue(sessionId);
       setSessionQueue(fullQueue);
     } else {
-      Alert.alert(
+      showAlert(
         t('queueEmpty') || 'Queue Empty', 
         t('noFansWaiting') || 'No fans are waiting in the queue.'
       );
@@ -310,7 +310,7 @@ export default function LiveSessionDashboardScreen() {
   };
 
   const handleEnd = async () => {
-    Alert.alert(t('liveSessionEndConfirmTitle'), t('liveSessionEndConfirmMessage'), [
+    showConfirm(t('liveSessionEndConfirmTitle'), t('liveSessionEndConfirmMessage'), [
       { text: t('cancel'), style: 'cancel' },
       {
         text: t('liveSessionEnd'),
@@ -367,7 +367,7 @@ export default function LiveSessionDashboardScreen() {
       const roomResult = await createSessionVideoRoom(session.id, session.celebrity_name);
       
       if (!roomResult) {
-        Alert.alert(t('error'), t('videoCallError'));
+        showAlert(t('error'), t('videoCallError'));
         setIsCreatingVideoRoom(false);
         return;
       }
@@ -400,7 +400,7 @@ export default function LiveSessionDashboardScreen() {
       });
     } catch (error) {
       console.error('Error starting video call:', error);
-      Alert.alert(t('error'), t('videoCallError'));
+      showAlert(t('error'), t('videoCallError'));
     } finally {
       setIsCreatingVideoRoom(false);
     }

@@ -9,8 +9,8 @@ import {
   ActivityIndicator,
   Dimensions,
   ScrollView,
-  Alert,
 } from 'react-native';
+import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { X, FileSliders as Sliders, Check, Save, Move, Pencil, RotateCw, ChevronLeft, ChevronRight, Palette, Trash2, Sparkles, Eraser, Plus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -615,7 +615,7 @@ export default function EditScreen() {
 
   const validateSignature = async () => {
     if (signaturePaths.length === 0) {
-      Alert.alert('Erreur', 'Veuillez dessiner une signature');
+      showAlert(t('error'), t('pleaseDrawSignature'));
       return;
     }
 
@@ -642,7 +642,7 @@ export default function EditScreen() {
       setCurrentPath('');
     } catch (error) {
       console.error('Erreur lors de la création de la signature:', error);
-      Alert.alert('Erreur', 'Impossible de créer la signature');
+      showAlert(t('error'), t('cannotCreateSignature'));
     }
   };
 
@@ -973,11 +973,7 @@ export default function EditScreen() {
     } catch (error) {
       console.error('❌ Erreur lors de la sauvegarde:', error);
       setSaving(false);
-      if (Platform.OS === 'web') {
-        alert(`Erreur: ${(error as Error).message}`);
-      } else {
-        Alert.alert('Erreur', `Impossible d\'enregistrer: ${(error as Error).message}`);
-      }
+      showAlert(t('error'), `${(error as Error).message}`);
     }
   };
 
@@ -987,9 +983,9 @@ export default function EditScreen() {
     }
 
     if (overlays.length > 0) {
-      Alert.alert(
-        'Modifications non enregistrées',
-        'Voulez-vous quitter sans enregistrer ?',
+      showConfirm(
+        t('unsavedChanges'),
+        t('unsavedChangesMessage'),
         [
           { text: 'Annuler', style: 'cancel' },
           { text: 'Quitter', style: 'destructive', onPress: () => router.back() },
