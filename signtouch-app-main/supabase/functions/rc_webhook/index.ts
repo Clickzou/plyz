@@ -63,21 +63,28 @@ serve(async (req: Request) => {
       });
     }
 
+    const rcAppUserId = event.app_user_id || null;
+    const rcOriginalTransactionId = event.original_transaction_id || null;
+
     if (['INITIAL_PURCHASE', 'NON_RENEWING_PURCHASE'].includes(eventType)) {
-      const { error } = await supabase
+      const { data: updated, error } = await supabase
         .from('fan_transactions')
         .update({
           status: 'store_confirmed',
           store_confirmed_at: new Date().toISOString(),
+          store_transaction_id: storeTransactionId,
           rc_event_id: eventId,
         })
-        .or(`store_transaction_id.eq.${storeTransactionId},rc_transaction_id.eq.${storeTransactionId}`)
-        .eq('status', 'created');
+        .or(`rc_transaction_id.eq.${storeTransactionId},store_transaction_id.eq.${storeTransactionId}`)
+        .eq('status', 'created')
+        .select('id');
 
       if (error) {
         console.error('[Webhook] Error confirming transaction:', error);
+      } else if (updated && updated.length > 0) {
+        console.log(`[Webhook] Transaction confirmed: ${storeTransactionId} (${updated.length} rows)`);
       } else {
-        console.log(`[Webhook] Transaction confirmed: ${storeTransactionId}`);
+        console.log(`[Webhook] No matching 'created' transaction for: ${storeTransactionId} (may already be confirmed)`);
       }
     }
 
@@ -89,7 +96,7 @@ serve(async (req: Request) => {
           refunded_at: new Date().toISOString(),
           rc_event_id: eventId,
         })
-        .or(`store_transaction_id.eq.${storeTransactionId},rc_transaction_id.eq.${storeTransactionId}`);
+        .or(`rc_transaction_id.eq.${storeTransactionId},store_transaction_id.eq.${storeTransactionId}`);
 
       if (error) {
         console.error('[Webhook] Error processing refund:', error);

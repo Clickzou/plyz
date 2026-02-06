@@ -38,15 +38,19 @@ Preferred communication style: Simple, everyday language.
 - **Daily.co**: For video call functionality, integrated via `@daily-co/react-native-daily-js` SDK.
 
 ### Payment Processing (Stratégie B)
-- **RevenueCat**: Handles in-app purchases and subscription management for iOS and Android (requires native build).
-- **Payment Tracking**: Comprehensive Supabase-based system (SQL in `signtouch-app-main/sql/payment_system_strategy_b.sql`):
-  - `fan_transactions`: Records each fan purchase with status lifecycle (created → store_confirmed → settled → included_in_payout → paid_out)
+- **RevenueCat**: Handles in-app purchases and subscription management for iOS and Android (requires native build). SDK initialized in `_layout.tsx`, user ID synced via `AuthContext` on login.
+- **Purchase Flow**: Fan → `purchase-session.tsx` → RevenueCat purchase → Edge Function `create_paid_session_intent` (creates transaction as 'created') → RevenueCat webhook `rc_webhook` (confirms to 'store_confirmed') → Fan enters video call.
+- **Edge Functions** (Supabase Deno): `create_paid_session_intent` (validates auth, verifies RC transaction, creates session + transaction), `rc_webhook` (processes INITIAL_PURCHASE, NON_RENEWING_PURCHASE, CANCELLATION, REFUND events).
+- **Payment Tracking**: Comprehensive Supabase-based system (SQL in `signtouch-app-main/sql/payment_system_strategy_b.sql` + `revenuecat_additions.sql`):
+  - `fan_transactions`: Records each fan purchase with status lifecycle (created → store_confirmed → settled → included_in_payout → paid_out), includes `rc_transaction_id`, `store_transaction_id`, `rc_event_id` columns
+  - `webhook_events`: Stores RevenueCat webhook payloads with idempotency (unique event_id), RLS restricted to service_role only
   - `store_settlements`: Imports Apple/Google financial reports with net proceeds
   - `celebrity_earnings`: Computes celebrity share from net proceeds (configurable revshare via `celebrity_revshare_bps`, default 52%)
   - `payout_batches` / `payout_batch_items`: Groups earnings into periodic payouts
   - SQL functions: `apply_settlement()`, `compute_celebrity_earnings()`, `create_payout_batch()`, `mark_payout_paid()`
   - Admin view: `admin_payment_dashboard` (SQL view in Supabase, not in-app)
 - **Admin Access**: Payment management is done exclusively via Supabase Dashboard (Table Editor / SQL Editor), not exposed in the app.
+- **Edge Function Secrets** (set in Supabase Dashboard > Edge Functions > Secrets): `REVENUECAT_SECRET_API_KEY`, `REVENUECAT_WEBHOOK_SECRET`
 
 ### Build & Deployment
 - **EAS (Expo Application Services)**: Used for building and submitting the application to app stores.

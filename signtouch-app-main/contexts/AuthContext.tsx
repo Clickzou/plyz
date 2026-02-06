@@ -4,6 +4,7 @@ import { supabase } from '@/utils/supabase';
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import { setRevenueCatUserId } from '@/utils/revenueCat';
 
 const POST_AUTH_REDIRECT_KEY = '@post_auth_redirect';
 
@@ -50,6 +51,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       (async () => {
         setSession(session);
         setUser(session?.user ?? null);
+        if (session?.user?.id) {
+          setRevenueCatUserId(session.user.id).catch(console.warn);
+        }
       })();
     });
 

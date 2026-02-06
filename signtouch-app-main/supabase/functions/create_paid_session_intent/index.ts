@@ -155,8 +155,7 @@ serve(async (req: Request) => {
         gross_amount_cents,
         currency,
         rc_transaction_id,
-        status: 'store_confirmed',
-        store_confirmed_at: new Date().toISOString(),
+        status: 'created',
         celebrity_revshare_bps: 5200,
       })
       .select('id')
