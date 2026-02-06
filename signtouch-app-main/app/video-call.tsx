@@ -10,6 +10,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, PhoneOff, Clock, Video } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
@@ -304,6 +305,7 @@ export default function VideoCallScreen() {
 
   return (
     <View style={styles.container}>
+      <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />
       <StatusBar style="light" />
       
       <View style={styles.header}>
@@ -363,7 +365,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#000',
+    backgroundColor: 'transparent',
   },
   headerBackButton: {
     width: 36,
@@ -437,7 +439,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    backgroundColor: 'rgba(15, 15, 40, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 20,
