@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { WebView } from 'react-native-webview';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, PhoneOff, Clock } from 'lucide-react-native';
@@ -16,10 +15,16 @@ import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
 
+let WebView: any = null;
+if (Platform.OS !== 'web') {
+  WebView = require('react-native-webview').WebView;
+}
+
 export default function VideoCallScreen() {
   const router = useRouter();
   const { t } = useLanguage();
-  const webViewRef = useRef<WebView>(null);
+  const webViewRef = useRef<any>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const params = useLocalSearchParams<{
     roomUrl: string;
     token: string;
@@ -38,6 +43,15 @@ export default function VideoCallScreen() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hasLeftCall, setHasLeftCall] = useState(false);
   const callStartTime = useRef<number>(Date.now());
+
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   useEffect(() => {
     const durationMinutes = parseInt(params.durationPerFan || '5', 10);
@@ -166,6 +180,75 @@ export default function VideoCallScreen() {
     true;
   `;
 
+  const renderVideoContent = () => {
+    if (error) {
+      return (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Text style={styles.backButtonText}>{t('goBack')}</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (Platform.OS === 'web') {
+      return (
+        <View style={styles.webIframeContainer}>
+          <iframe
+            ref={iframeRef as any}
+            src={dailyUrl}
+            allow="camera; microphone; autoplay; display-capture; fullscreen"
+            style={{
+              width: '100%',
+              height: '100%',
+              border: 'none',
+              backgroundColor: '#0f0f0f',
+            }}
+            onLoad={() => setIsLoading(false)}
+            onError={() => {
+              setError(t('videoCallError'));
+              setIsLoading(false);
+            }}
+          />
+        </View>
+      );
+    }
+
+    if (WebView) {
+      return (
+        <WebView
+          ref={webViewRef}
+          source={{ uri: dailyUrl }}
+          style={styles.webview}
+          onLoadEnd={handleLoadEnd}
+          onError={handleWebViewError}
+          onMessage={handleWebViewMessage}
+          injectedJavaScript={injectedJavaScript}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          mediaPlaybackRequiresUserAction={false}
+          allowsInlineMediaPlayback={true}
+          mediaCapturePermissionGrantType="grant"
+          startInLoadingState={false}
+          originWhitelist={['*']}
+          allowsFullscreenVideo={true}
+          userAgent={Platform.select({
+            ios: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1',
+            android: 'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
+            default: undefined,
+          })}
+        />
+      );
+    }
+
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{t('videoCallError')}</Text>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
@@ -198,37 +281,7 @@ export default function VideoCallScreen() {
         </View>
       )}
 
-      {error ? (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>{t('goBack')}</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <WebView
-          ref={webViewRef}
-          source={{ uri: dailyUrl }}
-          style={styles.webview}
-          onLoadEnd={handleLoadEnd}
-          onError={handleWebViewError}
-          onMessage={handleWebViewMessage}
-          injectedJavaScript={injectedJavaScript}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          mediaPlaybackRequiresUserAction={false}
-          allowsInlineMediaPlayback={true}
-          mediaCapturePermissionGrantType="grant"
-          startInLoadingState={false}
-          originWhitelist={['*']}
-          allowsFullscreenVideo={true}
-          userAgent={Platform.select({
-            ios: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1',
-            android: 'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
-            default: undefined,
-          })}
-        />
-      )}
+      {renderVideoContent()}
 
       <RatingModal
         visible={showRatingModal}
@@ -292,8 +345,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0f0f0f',
   },
+  webIframeContainer: {
+    flex: 1,
+    backgroundColor: '#0f0f0f',
+  },
   loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: '#0f0f0f',
     justifyContent: 'center',
     alignItems: 'center',
