@@ -115,8 +115,8 @@ export default function VideoCallScreen() {
       urlParams.append('t', params.token);
     }
     urlParams.append('userName', userName);
-    urlParams.append('showLeaveButton', 'true');
-    urlParams.append('showFullscreenButton', 'true');
+    urlParams.append('showLeaveButton', 'false');
+    urlParams.append('showFullscreenButton', 'false');
     urlParams.append('lang', dailyLang);
     
     return `${baseUrl}?${urlParams.toString()}`;
@@ -205,6 +205,8 @@ export default function VideoCallScreen() {
         'video { object-fit: cover !important; }',
         '[class*="tile"], [class*="Tile"] { border-radius: 0 !important; }',
         '[class*="grid"], [class*="Grid"], [class*="call-container"], [class*="videogrid"] { gap: 0 !important; padding: 0 !important; margin: 0 !important; }',
+        '[class*="topbar"], [class*="Topbar"], [class*="top-bar"], [class*="TopBar"], [class*="header-actions"], [class*="HeaderActions"] { display: none !important; }',
+        '[class*="leave"], [class*="Leave"] { display: none !important; }',
       ].join(' ');
       document.head.appendChild(style);
 
