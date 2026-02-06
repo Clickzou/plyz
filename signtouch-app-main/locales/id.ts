@@ -833,4 +833,6 @@ export default {
   videoCallConnectionFailed: 'Koneksi panggilan video gagal. Silakan coba lagi.',
   queueFullTitle: 'Antrean penuh!',
   queueFullMessage: 'Semua penggemar telah bergabung dengan sesi. Anda bisa memulai siaran langsung sekarang!',
+  firstFanJoinedTitle: 'Penggemar pertama terhubung!',
+  firstFanJoinedMessage: '{name} telah bergabung dengan antrean!',
 };

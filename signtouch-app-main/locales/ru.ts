@@ -833,4 +833,6 @@ export default {
   videoCallConnectionFailed: 'Не удалось подключиться к видеозвонку. Попробуйте ещё раз.',
   queueFullTitle: 'Очередь заполнена!',
   queueFullMessage: 'Все фанаты присоединились к сессии. Вы можете начать прямой эфир!',
+  firstFanJoinedTitle: 'Первый фанат подключился!',
+  firstFanJoinedMessage: '{name} присоединился к очереди!',
 };

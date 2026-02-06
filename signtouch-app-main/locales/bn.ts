@@ -833,4 +833,6 @@ export default {
   videoCallConnectionFailed: 'ভিডিও কল সংযোগ ব্যর্থ। আবার চেষ্টা করুন।',
   queueFullTitle: 'সারি পূর্ণ!',
   queueFullMessage: 'সমস্ত ভক্ত সেশনে যোগ দিয়েছেন। আপনি এখন লাইভ শুরু করতে পারেন!',
+  firstFanJoinedTitle: 'প্রথম ভক্ত সংযুক্ত!',
+  firstFanJoinedMessage: '{name} সারিতে যোগ দিয়েছেন!',
 };

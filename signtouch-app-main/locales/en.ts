@@ -832,4 +832,6 @@ export default {
   videoCallConnectionFailed: 'Video call connection failed. Please try again.',
   queueFullTitle: 'Queue is full!',
   queueFullMessage: 'All fans have joined the session. You can start the live now!',
+  firstFanJoinedTitle: 'First fan connected!',
+  firstFanJoinedMessage: '{name} has joined the queue!',
 };

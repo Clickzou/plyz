@@ -833,4 +833,6 @@ export default {
   videoCallConnectionFailed: 'ویڈیو کال کنکشن ناکام ہو گیا۔ دوبارہ کوشش کریں۔',
   queueFullTitle: 'قطار بھر گئی!',
   queueFullMessage: 'تمام مداح سیشن میں شامل ہو گئے ہیں۔ آپ اب لائیو شروع کر سکتے ہیں!',
+  firstFanJoinedTitle: 'پہلا مداح جڑ گیا!',
+  firstFanJoinedMessage: '{name} قطار میں شامل ہو گیا!',
 };

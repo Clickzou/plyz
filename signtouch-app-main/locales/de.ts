@@ -833,4 +833,6 @@ export default {
   videoCallConnectionFailed: 'Videoanruf-Verbindung fehlgeschlagen. Bitte versuchen Sie es erneut.',
   queueFullTitle: 'Warteschlange voll!',
   queueFullMessage: 'Alle Fans sind der Sitzung beigetreten. Du kannst den Livestream jetzt starten!',
+  firstFanJoinedTitle: 'Erster Fan verbunden!',
+  firstFanJoinedMessage: '{name} ist der Warteschlange beigetreten!',
 };

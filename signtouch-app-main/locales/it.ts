@@ -833,4 +833,6 @@ export default {
   videoCallConnectionFailed: 'Connessione alla videochiamata fallita. Riprova.',
   queueFullTitle: 'Coda completa!',
   queueFullMessage: 'Tutti i fan si sono uniti alla sessione. Puoi avviare il live ora!',
+  firstFanJoinedTitle: 'Primo fan connesso!',
+  firstFanJoinedMessage: '{name} si è unito alla coda!',
 };

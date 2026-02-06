@@ -90,7 +90,9 @@ export default function LiveSessionDashboardScreen() {
   const [fanCallTimeout, setFanCallTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const FAN_RESPONSE_TIMEOUT_MS = 30000;
   const hasPlayedQueueFullChime = useRef(false);
+  const hasPlayedFirstFanChime = useRef(false);
   const [queueFull, setQueueFull] = useState(false);
+  const [firstFanJoined, setFirstFanJoined] = useState(false);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -194,8 +196,47 @@ export default function LiveSessionDashboardScreen() {
       const fullQueue = await getFullQueue(sessionId);
       setSessionQueue(fullQueue);
 
+      const waitingInQueue = fullQueue.filter((e) => e.status === 'waiting' || e.status === 'called' || e.status === 'in_call').length;
+
+      if (waitingInQueue >= 1 && !hasPlayedFirstFanChime.current) {
+        hasPlayedFirstFanChime.current = true;
+        setFirstFanJoined(true);
+        if (Platform.OS === 'web' && typeof window !== 'undefined' && window.AudioContext) {
+          try {
+            const ctx = new AudioContext();
+            const notes = [
+              { freq: 440, start: 0, dur: 0.15 },
+              { freq: 554.37, start: 0.15, dur: 0.15 },
+              { freq: 659.25, start: 0.3, dur: 0.2 },
+            ];
+            notes.forEach(({ freq, start, dur }) => {
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.type = 'sine';
+              osc.frequency.value = freq;
+              gain.gain.setValueAtTime(0.3, ctx.currentTime + start);
+              gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + start + dur);
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.start(ctx.currentTime + start);
+              osc.stop(ctx.currentTime + start + dur + 0.05);
+            });
+          } catch (e) {}
+        }
+        if (Platform.OS !== 'web') {
+          try {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          } catch (e) {}
+        }
+        const fanName = fullQueue.find((e) => e.status === 'waiting' || e.status === 'called' || e.status === 'in_call')?.fan_name || '';
+        showAlert(
+          t('firstFanJoinedTitle') || 'Premier fan connecté !',
+          (t('firstFanJoinedMessage') || '{name} a rejoint la file d\'attente !').replace('{name}', fanName)
+        );
+        setTimeout(() => setFirstFanJoined(false), 4000);
+      }
+
       if (session && !hasPlayedQueueFullChime.current) {
-        const waitingInQueue = fullQueue.filter((e) => e.status === 'waiting' || e.status === 'called' || e.status === 'in_call').length;
         if (waitingInQueue >= session.max_slots) {
           hasPlayedQueueFullChime.current = true;
           setQueueFull(true);

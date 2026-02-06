@@ -834,4 +834,6 @@ export default {
   videoCallConnectionFailed: 'La connexion à l\'appel vidéo a échoué. Veuillez réessayer.',
   queueFullTitle: 'File d\'attente complète !',
   queueFullMessage: 'Tous les fans ont rejoint la session. Vous pouvez lancer le live !',
+  firstFanJoinedTitle: 'Premier fan connecté !',
+  firstFanJoinedMessage: '{name} a rejoint la file d\'attente !',
 };

@@ -833,4 +833,6 @@ export default {
   videoCallConnectionFailed: 'ビデオ通話の接続に失敗しました。もう一度お試しください。',
   queueFullTitle: 'キューが満員です！',
   queueFullMessage: 'すべてのファンがセッションに参加しました。ライブを開始できます！',
+  firstFanJoinedTitle: '最初のファンが接続しました！',
+  firstFanJoinedMessage: '{name}がキューに参加しました！',
 };

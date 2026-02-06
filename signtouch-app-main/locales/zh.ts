@@ -833,4 +833,6 @@ export default {
   videoCallConnectionFailed: '视频通话连接失败。请重试。',
   queueFullTitle: '队列已满！',
   queueFullMessage: '所有粉丝已加入会话。您可以开始直播了！',
+  firstFanJoinedTitle: '第一位粉丝已连接！',
+  firstFanJoinedMessage: '{name}已加入队列！',
 };

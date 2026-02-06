@@ -833,4 +833,6 @@ export default {
   videoCallConnectionFailed: 'فشل الاتصال بمكالمة الفيديو. يرجى المحاولة مرة أخرى.',
   queueFullTitle: 'قائمة الانتظار ممتلئة!',
   queueFullMessage: 'انضم جميع المعجبين إلى الجلسة. يمكنك بدء البث المباشر الآن!',
+  firstFanJoinedTitle: 'أول معجب متصل!',
+  firstFanJoinedMessage: 'انضم {name} إلى قائمة الانتظار!',
 };

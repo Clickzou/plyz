@@ -832,4 +832,6 @@ export default {
   videoCallConnectionFailed: 'La conexión de videollamada falló. Inténtalo de nuevo.',
   queueFullTitle: '¡Cola completa!',
   queueFullMessage: '¡Todos los fans se han unido a la sesión. Puedes iniciar el live ahora!',
+  firstFanJoinedTitle: '¡Primer fan conectado!',
+  firstFanJoinedMessage: '¡{name} se ha unido a la cola!',
 };

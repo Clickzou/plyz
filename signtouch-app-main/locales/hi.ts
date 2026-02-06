@@ -833,4 +833,6 @@ export default {
   videoCallConnectionFailed: 'वीडियो कॉल कनेक्शन विफल। कृपया पुनः प्रयास करें।',
   queueFullTitle: 'कतार भर गई!',
   queueFullMessage: 'सभी प्रशंसक सत्र में शामिल हो गए हैं। आप अब लाइव शुरू कर सकते हैं!',
+  firstFanJoinedTitle: 'पहला प्रशंसक जुड़ गया!',
+  firstFanJoinedMessage: '{name} कतार में शामिल हो गया!',
 };
