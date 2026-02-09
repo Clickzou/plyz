@@ -3,6 +3,7 @@ import { getSubscriptionStatus, setSubscriptionStatus as saveSubscriptionStatus,
 
 interface SubscriptionContextType {
   status: SubscriptionStatus;
+  isPremium: boolean;
   setStatus: (status: SubscriptionStatus) => Promise<void>;
   loading: boolean;
 }
@@ -37,8 +38,10 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const isPremium = status === 'paid' || status === 'trial';
+
   return (
-    <SubscriptionContext.Provider value={{ status, setStatus, loading }}>
+    <SubscriptionContext.Provider value={{ status, isPremium, setStatus, loading }}>
       {children}
     </SubscriptionContext.Provider>
   );
