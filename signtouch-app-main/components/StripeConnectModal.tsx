@@ -251,20 +251,15 @@ export default function StripeConnectModal({
                 </View>
               ) : step === 'email' ? (
                 <>
-                  <View style={styles.featuresContainer}>
-                    {features.map((feature, index) => (
-                      <View key={index} style={styles.featureCard}>
-                        <View style={styles.featureIconContainer}>
+                  <View style={styles.featuresRow}>
+                    {features.slice(0, 3).map((feature, index) => (
+                      <View key={index} style={styles.featureChip}>
+                        <View style={styles.featureChipIcon}>
                           {feature.icon}
                         </View>
-                        <View style={styles.featureTextContainer}>
-                          <Text style={styles.featureTitle}>
-                            {t(feature.titleKey as any) || feature.fallbackTitle}
-                          </Text>
-                          <Text style={styles.featureDesc}>
-                            {t(feature.descKey as any) || feature.fallbackDesc}
-                          </Text>
-                        </View>
+                        <Text style={styles.featureChipText} numberOfLines={2}>
+                          {t(feature.titleKey as any) || feature.fallbackTitle}
+                        </Text>
                       </View>
                     ))}
                   </View>
@@ -297,13 +292,6 @@ export default function StripeConnectModal({
                     )}
                   </View>
 
-                  <View style={styles.infoBox}>
-                    <Shield size={16} color="#10B981" />
-                    <Text style={styles.infoText}>
-                      {t('stripeConnectInfoBox') || 'SignTouch ne stocke jamais vos données bancaires. Tout est géré par Stripe, certifié PCI DSS niveau 1.'}
-                    </Text>
-                  </View>
-
                   {error && (
                     <Text style={styles.errorBanner}>{error}</Text>
                   )}
@@ -324,6 +312,13 @@ export default function StripeConnectModal({
                       </>
                     )}
                   </TouchableOpacity>
+
+                  <View style={styles.infoBox}>
+                    <Shield size={14} color="#10B981" />
+                    <Text style={styles.infoText}>
+                      {t('stripeConnectInfoBox') || 'SignTouch ne stocke jamais vos données bancaires. Tout est géré par Stripe, certifié PCI DSS niveau 1.'}
+                    </Text>
+                  </View>
                 </>
               ) : (
                 <>
@@ -429,12 +424,12 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 28,
+    marginBottom: 16,
   },
   stripeLogoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 12,
     gap: 8,
   },
   stripeLogo: {
@@ -467,41 +462,36 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  featuresContainer: {
-    marginBottom: 20,
-    gap: 16,
-  },
-  featureCard: {
+  featuresRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    marginBottom: 20,
+    gap: 8,
+  },
+  featureChip: {
+    flex: 1,
+    alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 16,
-    padding: 16,
-    gap: 14,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+    gap: 8,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
   },
-  featureIconContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+  featureChipIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  featureTextContainer: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: 15,
+  featureChipText: {
+    fontSize: 11,
     fontWeight: '600',
-    color: '#ffffff',
-    marginBottom: 4,
-  },
-  featureDesc: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
-    lineHeight: 19,
+    color: 'rgba(255,255,255,0.8)',
+    textAlign: 'center',
+    lineHeight: 14,
   },
   emailSection: {
     marginBottom: 16,
