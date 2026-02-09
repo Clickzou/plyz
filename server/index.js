@@ -126,7 +126,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
       return res.status(400).json({ error: 'Missing session or celebrity ID' });
     }
 
-    const signTouchFeeCents = Math.round(priceCents * 0.15);
+    const signTouchFeeCents = Math.round(priceCents * 0.30);
 
     const sessionParams = {
       payment_method_types: ['card'],

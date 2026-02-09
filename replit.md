@@ -45,10 +45,10 @@ Preferred communication style: Simple, everyday language.
     - `POST /api/stripe-webhook`: Handles Stripe webhook events for payment confirmation.
     - `GET /api/verify-payment`: Verifies Checkout Session payment status.
     - `GET /api/health`: Health check endpoint.
-  - **Stripe Connect**: Celebrities onboard via `StripeConnectModal` component. Connect account ID stored in AsyncStorage (to be migrated to Supabase user profile). Payments are split: SignTouch fee (15%) via application_fee_amount, rest goes to celebrity's Stripe Connect account.
-  - **Fee Structure**: SignTouch 15% + Stripe 2.9% + 0.30€ per transaction. No Apple/Google store fees (30%).
+  - **Stripe Connect**: Celebrities onboard via `StripeConnectModal` component. Connect account ID stored in AsyncStorage (to be migrated to Supabase user profile). Payments are split: SignTouch fee (30%) via application_fee_amount, rest goes to celebrity's Stripe Connect account.
+  - **Fee Structure**: SignTouch 30% + Stripe 2.9% + 0.30€ per transaction. No Apple/Google store fees.
 - **Subscriptions (RevenueCat)**: In-app purchases and subscription management for iOS and Android (requires native build). SDK initialized in `_layout.tsx`, user ID synced via `AuthContext` on login.
-- **Revenue Calculation**: Displayed in `create-live-session.tsx` — gross revenue minus SignTouch 15% minus Stripe fees.
+- **Revenue Calculation**: Displayed in `create-live-session.tsx` — gross revenue minus SignTouch 30% minus Stripe fees.
 - **Admin Access**: Payment management is done exclusively via Supabase Dashboard (Table Editor / SQL Editor), not exposed in the app.
 
 ### Build & Deployment
