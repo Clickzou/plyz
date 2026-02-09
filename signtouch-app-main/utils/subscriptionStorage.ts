@@ -60,7 +60,6 @@ export async function setLastSubscriptionOfferDate(timestamp: number): Promise<v
   }
 }
 
-// Fonction utilitaire pour réinitialiser le stockage (pour les tests)
 export async function resetSubscriptionData(): Promise<void> {
   try {
     if (Platform.OS === 'web') {

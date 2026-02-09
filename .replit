@@ -45,3 +45,5 @@ externalPort = 3001
 [userenv]
 
 [userenv.shared]
+EXPO_PUBLIC_REVENUECAT_IOS_KEY = "test_JGyfvYsrLrSPDCwPGZMpYZHBhKH"
+EXPO_PUBLIC_REVENUECAT_ANDROID_KEY = "test_JGyfvYsrLrSPDCwPGZMpYZHBhKH"

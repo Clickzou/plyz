@@ -24,7 +24,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import SubscriptionOfferModal from '@/components/SubscriptionOfferModal';
 import PostPurchaseAccountModal from '@/components/PostPurchaseAccountModal';
 import { setSubscriptionOfferCallback } from '@/utils/subscriptionOffer';
-import { setPostPurchaseAccountCallback, setManualAccountModalCallback, maybeShowPostPurchaseAccountModal } from '@/utils/postPurchaseAccount';
+import {
+  setPostPurchaseAccountCallback,
+  setManualAccountModalCallback,
+  maybeShowPostPurchaseAccountModal,
+} from '@/utils/postPurchaseAccount';
 import { setAccountPromptSnooze } from '@/utils/postPurchaseAccountStorage';
 import { initRevenueCat } from '@/utils/revenueCat';
 
@@ -67,11 +71,13 @@ function AppContent() {
 
   return (
     <>
-      <Stack screenOptions={{ 
-        headerShown: false,
-        animation: 'fade',
-        animationDuration: 200,
-      }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'fade',
+          animationDuration: 200,
+        }}
+      >
         <Stack.Screen name="+not-found" />
         <Stack.Screen name="index" options={{ animation: 'none' }} />
         <Stack.Screen name="gallery" options={{ animation: 'none' }} />
@@ -79,12 +85,15 @@ function AppContent() {
         <Stack.Screen name="celebrity-menu" options={{ animation: 'none' }} />
         <Stack.Screen name="join-event" options={{ animation: 'none' }} />
       </Stack>
+
       <StatusBar style="auto" />
+
       <SubscriptionOfferModal
         visible={showSubscriptionOffer}
         onClose={() => setShowSubscriptionOffer(false)}
         onPurchaseSuccess={handlePurchaseSuccess}
       />
+
       <PostPurchaseAccountModal
         visible={showPostPurchaseAccount}
         onClose={handleClosePostPurchaseAccount}
@@ -99,24 +108,29 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     'Shadows Into Light': ShadowsIntoLight_400Regular,
     'Alex Brush': AlexBrush_400Regular,
-    'Pacifico': Pacifico_400Regular,
+    Pacifico: Pacifico_400Regular,
     'Covered By Your Grace': CoveredByYourGrace_400Regular,
-    'Caveat': Caveat_400Regular,
+    Caveat: Caveat_400Regular,
     'Indie Flower': IndieFlower_400Regular,
     'Dancing Script': DancingScript_400Regular,
     'Great Vibes': GreatVibes_400Regular,
-    'Bangers': Bangers_400Regular,
-    'Fraunces': Fraunces_400Regular,
+    Bangers: Bangers_400Regular,
+    Fraunces: Fraunces_400Regular,
     'Shantell Sans': ShantellSans_400Regular,
-    'Manrope': Manrope_400Regular,
+    Manrope: Manrope_400Regular,
     'Montserrat-Bold': Montserrat_700Bold,
     'Montserrat-ExtraBold': Montserrat_800ExtraBold,
   });
 
+  // SplashScreen: lié aux fonts
   useEffect(() => {
     SplashScreen.hideAsync();
-    initRevenueCat().catch(console.warn);
   }, [fontsLoaded, fontError]);
+
+  // RevenueCat: init une seule fois
+  useEffect(() => {
+    initRevenueCat().catch(console.warn);
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
