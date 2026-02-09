@@ -17,6 +17,7 @@
     "expo-notifications": "^0.32.16",
     "express": "^5.2.1",
     "html2canvas": "^1.4.1",
+    "http-proxy-middleware": "^3.0.5",
     "nodemailer": "^7.0.13",
     "react-native-qrcode-svg": "^6.3.21"
   }

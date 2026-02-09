@@ -50,7 +50,7 @@ export default function StripeConnectModal({
   const checkExistingAccount = async () => {
     try {
       const savedAccountId = await AsyncStorage.getItem('stripe_connect_account_id');
-      if (savedAccountId && STRIPE_SERVER_URL) {
+      if (savedAccountId) {
         setStep('checking');
         const response = await fetch(
           `${STRIPE_SERVER_URL}/api/connect-account-status?account_id=${savedAccountId}`
@@ -76,10 +76,6 @@ export default function StripeConnectModal({
   };
 
   const handleCreateAccount = async () => {
-    if (!STRIPE_SERVER_URL) {
-      setError(t('paymentServerUnavailable') || 'Le serveur de paiement n\'est pas disponible.');
-      return;
-    }
     if (!validateEmail(email)) {
       setEmailError(true);
       return;

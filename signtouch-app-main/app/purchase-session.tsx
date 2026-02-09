@@ -64,14 +64,6 @@ export default function PurchaseSessionScreen() {
   };
 
   const handleStripeCheckout = async () => {
-    if (!STRIPE_SERVER_URL) {
-      showAlert(
-        t('error') || 'Erreur',
-        t('paymentServerUnavailable') || 'Le serveur de paiement n\'est pas disponible.'
-      );
-      return;
-    }
-
     setPurchasing(true);
     try {
       const currentOrigin = Platform.OS === 'web'

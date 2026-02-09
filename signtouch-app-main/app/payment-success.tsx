@@ -30,8 +30,8 @@ export default function PaymentSuccessScreen() {
     try {
       let paymentVerified = false;
 
-      if (!STRIPE_SERVER_URL || !params.checkout_session_id) {
-        console.error('[PaymentSuccess] Missing server URL or checkout session ID');
+      if (!params.checkout_session_id) {
+        console.error('[PaymentSuccess] Missing checkout session ID');
         setError(true);
         return;
       }

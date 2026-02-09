@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const Stripe = require('stripe');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const app = express();
 
@@ -287,11 +288,22 @@ app.get('/api/verify-payment', async (req, res) => {
   }
 });
 
-const PORT = process.env.STRIPE_SERVER_PORT || 3001;
+const EXPO_PORT = 19006;
+const PORT = 5000;
+
+app.use(
+  '/',
+  createProxyMiddleware({
+    target: `http://127.0.0.1:${EXPO_PORT}`,
+    changeOrigin: true,
+    ws: true,
+    logLevel: 'warn',
+  })
+);
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[Stripe Server] Running on port ${PORT}`);
+  console.log(`[Server] Running on port ${PORT} (API + proxy to Expo on ${EXPO_PORT})`);
   getStripe()
-    .then(() => console.log('[Stripe Server] Stripe credentials loaded successfully'))
-    .catch((err) => console.warn('[Stripe Server] Warning: Stripe credentials will be loaded on first request:', err.message));
+    .then(() => console.log('[Server] Stripe credentials loaded successfully'))
+    .catch((err) => console.warn('[Server] Warning: Stripe credentials will be loaded on first request:', err.message));
 });

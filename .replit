@@ -28,24 +28,23 @@ name = "Start Expo Web"
 author = "agent"
 
 [workflows.workflow.metadata]
-outputType = "webview"
+outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd signtouch-app-main && npx expo start --clear --web --port 5000"
-waitForPort = 5000
+args = "cd signtouch-app-main && npx expo start --clear --web --port 19006"
 
 [[workflows.workflow]]
 name = "Stripe Server"
 author = "agent"
 
 [workflows.workflow.metadata]
-outputType = "console"
+outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd server && node index.js"
-waitForPort = 3001
+waitForPort = 5000
 
 [[ports]]
 localPort = 3000
@@ -56,8 +55,16 @@ localPort = 3001
 externalPort = 3001
 
 [[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
 localPort = 5001
 externalPort = 3001
+
+[[ports]]
+localPort = 19006
+externalPort = 3002
 
 [userenv]
 
@@ -65,4 +72,4 @@ externalPort = 3001
 EXPO_PUBLIC_REVENUECAT_IOS_KEY = "test_JGyfvYsrLrSPDCwPGZMpYZHBhKH"
 EXPO_PUBLIC_REVENUECAT_ANDROID_KEY = "test_JGyfvYsrLrSPDCwPGZMpYZHBhKH"
 STRIPE_SERVER_PORT = "3001"
-EXPO_PUBLIC_STRIPE_SERVER_URL = "https://3aa55d0d-178c-4720-bdee-f8cea294f71b-00-3sqzk84ygwh7z.picard.replit.dev"
+EXPO_PUBLIC_STRIPE_SERVER_URL = ""
