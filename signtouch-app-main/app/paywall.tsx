@@ -224,9 +224,13 @@ export default function PaywallScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <ArrowLeft size={24} color="#fff" />
           </TouchableOpacity>
-        ) : null}
+        ) : (
+          <View style={{ width: 40 }} />
+        )}
         <Text style={styles.headerTitleCentered}>{t('subscriptionTitle')}</Text>
-        {fromAccount ? <View style={{ width: 40 }} /> : null}
+        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+          <X size={22} color="#888" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
@@ -504,6 +508,14 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
