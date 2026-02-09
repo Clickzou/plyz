@@ -159,6 +159,9 @@ export default function AccountScreen() {
     await AsyncStorage.removeItem('@create_event_form_data');
     await AsyncStorage.removeItem('@create_event_pending');
     await AsyncStorage.removeItem('@post_auth_redirect');
+    await AsyncStorage.removeItem('@signtouch_promo_premium');
+    
+    setPromoPremiumExpires(null);
     
     if (Platform.OS === 'web') {
       localStorage.removeItem('subscription_status');
