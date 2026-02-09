@@ -930,4 +930,13 @@ export default {
   stripeConnectButton: 'Подключить мой аккаунт Stripe',
   stripeConnectLearnMore: 'Узнать больше о Stripe Connect',
   stripeConnectConfirm: 'Я подключил свой аккаунт',
+  paymentServerUnavailable: 'Сервер платежей недоступен.',
+  totalAmount: 'Итого',
+  liveSessionSignatureDesc: 'Персональный автограф в прямом эфире',
+  stripeSecurePayment: '100% безопасный платёж',
+  encryptedData: 'Данные зашифрованы SSL',
+  cbVisa: 'Visa, Mastercard, Apple Pay',
+  payAmount: 'Оплатить',
+  poweredByStripe: 'Безопасный платёж через Stripe',
+  paymentVerificationFailed: 'Проверка платежа не удалась. Обратитесь в поддержку.',
 };

@@ -930,4 +930,13 @@ export default {
   stripeConnectButton: 'Mein Stripe-Konto verbinden',
   stripeConnectLearnMore: 'Mehr über Stripe Connect erfahren',
   stripeConnectConfirm: 'Ich habe mein Konto verbunden',
+  paymentServerUnavailable: 'Der Zahlungsserver ist nicht verfügbar.',
+  totalAmount: 'Gesamtbetrag',
+  liveSessionSignatureDesc: 'Personalisiertes Live-Autogramm',
+  stripeSecurePayment: '100% sichere Zahlung',
+  encryptedData: 'SSL-verschlüsselte Daten',
+  cbVisa: 'Visa, Mastercard, Apple Pay',
+  payAmount: 'Bezahlen',
+  poweredByStripe: 'Sichere Zahlung über Stripe',
+  paymentVerificationFailed: 'Zahlungsüberprüfung fehlgeschlagen. Bitte kontaktieren Sie den Support.',
 };

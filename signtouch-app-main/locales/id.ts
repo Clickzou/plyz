@@ -935,4 +935,13 @@ export default {
   stripeConnectButton: 'Hubungkan akun Stripe saya',
   stripeConnectLearnMore: 'Pelajari lebih lanjut tentang Stripe Connect',
   stripeConnectConfirm: 'Saya sudah menghubungkan akun saya',
+  paymentServerUnavailable: 'Server pembayaran tidak tersedia.',
+  totalAmount: 'Jumlah total',
+  liveSessionSignatureDesc: 'Tanda tangan langsung yang dipersonalisasi',
+  stripeSecurePayment: 'Pembayaran 100% aman',
+  encryptedData: 'Data terenkripsi SSL',
+  cbVisa: 'Visa, Mastercard, Apple Pay',
+  payAmount: 'Bayar',
+  poweredByStripe: 'Pembayaran aman oleh Stripe',
+  paymentVerificationFailed: 'Verifikasi pembayaran gagal. Silakan hubungi dukungan.',
 };

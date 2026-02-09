@@ -930,4 +930,13 @@ export default {
   stripeConnectButton: 'Collegare il mio account Stripe',
   stripeConnectLearnMore: 'Scopri di più su Stripe Connect',
   stripeConnectConfirm: 'Ho collegato il mio account',
+  paymentServerUnavailable: 'Il server di pagamento non è disponibile.',
+  totalAmount: 'Importo totale',
+  liveSessionSignatureDesc: 'Firma personalizzata in diretta',
+  stripeSecurePayment: 'Pagamento 100% sicuro',
+  encryptedData: 'Dati crittografati SSL',
+  cbVisa: 'Visa, Mastercard, Apple Pay',
+  payAmount: 'Paga',
+  poweredByStripe: 'Pagamento sicuro con Stripe',
+  paymentVerificationFailed: 'Verifica del pagamento fallita. Contattare il supporto.',
 };

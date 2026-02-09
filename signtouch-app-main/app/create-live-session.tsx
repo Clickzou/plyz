@@ -46,7 +46,6 @@ const PRICE_OPTIONS = [
   { label: '100€', value: 10000 },
 ];
 
-const STORE_FEES = 0.30; // 30% Apple/Google
 const SIGNTOUCH_FEES = 0.15; // 15% SignTouch
 const STRIPE_PERCENT = 0.029; // 2.9% Stripe
 const STRIPE_FIXED = 30; // 0.30€ par transaction (en centimes)
@@ -483,13 +482,12 @@ export default function CreateLiveSessionScreen() {
           <Text style={styles.summaryTitle}>{t('yourEarnings') || 'Vos revenus'}</Text>
           {(() => {
             const grossCents = price * calculatedMaxFans;
-            const storeFeesCents = grossCents * STORE_FEES;
             const signTouchFeesCents = grossCents * SIGNTOUCH_FEES;
-            const beforeStripeCents = grossCents - storeFeesCents - signTouchFeesCents;
-            const stripePercentCents = beforeStripeCents * STRIPE_PERCENT;
+            const afterSignTouchCents = grossCents - signTouchFeesCents;
+            const stripePercentCents = afterSignTouchCents * STRIPE_PERCENT;
             const stripeFixedCents = STRIPE_FIXED * calculatedMaxFans;
             const stripeTotalCents = stripePercentCents + stripeFixedCents;
-            const netCents = beforeStripeCents - stripeTotalCents;
+            const netCents = afterSignTouchCents - stripeTotalCents;
             
             return (
               <Text style={styles.revenueAmount}>

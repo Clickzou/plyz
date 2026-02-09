@@ -930,4 +930,13 @@ export default {
   stripeConnectButton: 'ربط حساب Stripe الخاص بي',
   stripeConnectLearnMore: 'اعرف المزيد عن Stripe Connect',
   stripeConnectConfirm: 'لقد ربطت حسابي',
+  paymentServerUnavailable: 'خادم الدفع غير متاح.',
+  totalAmount: 'المبلغ الإجمالي',
+  liveSessionSignatureDesc: 'توقيع شخصي مباشر',
+  stripeSecurePayment: 'دفع آمن 100%',
+  encryptedData: 'بيانات مشفرة SSL',
+  cbVisa: 'Visa, Mastercard, Apple Pay',
+  payAmount: 'ادفع',
+  poweredByStripe: 'دفع آمن عبر Stripe',
+  paymentVerificationFailed: 'فشل التحقق من الدفع. يرجى الاتصال بالدعم.',
 };

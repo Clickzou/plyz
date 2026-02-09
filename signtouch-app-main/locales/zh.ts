@@ -930,4 +930,13 @@ export default {
   stripeConnectButton: '连接我的Stripe账户',
   stripeConnectLearnMore: '了解更多关于Stripe Connect',
   stripeConnectConfirm: '我已连接我的账户',
+  paymentServerUnavailable: '支付服务器不可用。',
+  totalAmount: '总金额',
+  liveSessionSignatureDesc: '现场个性化签名',
+  stripeSecurePayment: '100%安全支付',
+  encryptedData: 'SSL加密数据',
+  cbVisa: 'Visa, Mastercard, Apple Pay',
+  payAmount: '支付',
+  poweredByStripe: '由Stripe提供安全支付',
+  paymentVerificationFailed: '支付验证失败。请联系客服。',
 };

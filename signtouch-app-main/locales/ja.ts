@@ -930,4 +930,13 @@ export default {
   stripeConnectButton: 'Stripeアカウントを接続',
   stripeConnectLearnMore: 'Stripe Connectについて詳しく',
   stripeConnectConfirm: 'アカウントを接続しました',
+  paymentServerUnavailable: '決済サーバーが利用できません。',
+  totalAmount: '合計金額',
+  liveSessionSignatureDesc: 'ライブパーソナルサイン',
+  stripeSecurePayment: '100%安全な決済',
+  encryptedData: 'SSL暗号化データ',
+  cbVisa: 'Visa, Mastercard, Apple Pay',
+  payAmount: '支払う',
+  poweredByStripe: 'Stripeによる安全な決済',
+  paymentVerificationFailed: '決済の確認に失敗しました。サポートにお問い合わせください。',
 };

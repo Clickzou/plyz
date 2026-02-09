@@ -935,4 +935,13 @@ export default {
   stripeConnectButton: 'আমার Stripe অ্যাকাউন্ট সংযুক্ত করুন',
   stripeConnectLearnMore: 'Stripe Connect সম্পর্কে আরও জানুন',
   stripeConnectConfirm: 'আমি আমার অ্যাকাউন্ট সংযুক্ত করেছি',
+  paymentServerUnavailable: 'পেমেন্ট সার্ভার উপলব্ধ নেই।',
+  totalAmount: 'মোট পরিমাণ',
+  liveSessionSignatureDesc: 'লাইভ ব্যক্তিগত স্বাক্ষর',
+  stripeSecurePayment: '100% নিরাপদ পেমেন্ট',
+  encryptedData: 'SSL এনক্রিপ্টেড ডেটা',
+  cbVisa: 'Visa, Mastercard, Apple Pay',
+  payAmount: 'পেমেন্ট করুন',
+  poweredByStripe: 'Stripe দ্বারা নিরাপদ পেমেন্ট',
+  paymentVerificationFailed: 'পেমেন্ট যাচাই ব্যর্থ হয়েছে। অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।',
 };

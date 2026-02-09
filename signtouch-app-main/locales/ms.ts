@@ -935,4 +935,13 @@ export default {
   stripeConnectButton: 'Sambung akaun Stripe saya',
   stripeConnectLearnMore: 'Ketahui lebih lanjut tentang Stripe Connect',
   stripeConnectConfirm: 'Saya telah menyambung akaun saya',
+  paymentServerUnavailable: 'Pelayan pembayaran tidak tersedia.',
+  totalAmount: 'Jumlah keseluruhan',
+  liveSessionSignatureDesc: 'Tandatangan peribadi secara langsung',
+  stripeSecurePayment: 'Pembayaran 100% selamat',
+  encryptedData: 'Data disulitkan SSL',
+  cbVisa: 'Visa, Mastercard, Apple Pay',
+  payAmount: 'Bayar',
+  poweredByStripe: 'Pembayaran selamat oleh Stripe',
+  paymentVerificationFailed: 'Pengesahan pembayaran gagal. Sila hubungi sokongan.',
 };

@@ -935,4 +935,13 @@ export default {
   stripeConnectButton: 'میرا Stripe اکاؤنٹ منسلک کریں',
   stripeConnectLearnMore: 'Stripe Connect کے بارے میں مزید جانیں',
   stripeConnectConfirm: 'میں نے اپنا اکاؤنٹ منسلک کر دیا',
+  paymentServerUnavailable: 'ادائیگی سرور دستیاب نہیں ہے۔',
+  totalAmount: 'کل رقم',
+  liveSessionSignatureDesc: 'لائیو ذاتی دستخط',
+  stripeSecurePayment: '100% محفوظ ادائیگی',
+  encryptedData: 'SSL خفیہ کردہ ڈیٹا',
+  cbVisa: 'Visa, Mastercard, Apple Pay',
+  payAmount: 'ادائیگی کریں',
+  poweredByStripe: 'Stripe کے ذریعے محفوظ ادائیگی',
+  paymentVerificationFailed: 'ادائیگی کی تصدیق ناکام ہوئی۔ براہ کرم سپورٹ سے رابطہ کریں۔',
 };

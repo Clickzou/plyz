@@ -930,4 +930,13 @@ export default {
   stripeConnectButton: 'मेरा Stripe खाता कनेक्ट करें',
   stripeConnectLearnMore: 'Stripe Connect के बारे में अधिक जानें',
   stripeConnectConfirm: 'मैंने अपना खाता कनेक्ट कर दिया',
+  paymentServerUnavailable: 'भुगतान सर्वर उपलब्ध नहीं है।',
+  totalAmount: 'कुल राशि',
+  liveSessionSignatureDesc: 'लाइव व्यक्तिगत हस्ताक्षर',
+  stripeSecurePayment: '100% सुरक्षित भुगतान',
+  encryptedData: 'SSL एन्क्रिप्टेड डेटा',
+  cbVisa: 'Visa, Mastercard, Apple Pay',
+  payAmount: 'भुगतान करें',
+  poweredByStripe: 'Stripe द्वारा सुरक्षित भुगतान',
+  paymentVerificationFailed: 'भुगतान सत्यापन विफल। कृपया सहायता से संपर्क करें।',
 };

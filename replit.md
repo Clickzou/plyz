@@ -37,22 +37,18 @@ Preferred communication style: Simple, everyday language.
 - **Supabase**: Primary backend for PostgreSQL database (e.g., `memories`, `live_events`, `session_queue` tables), user authentication, and file storage (`memories` bucket, `events` bucket).
 - **Daily.co**: For video call functionality, integrated via `@daily-co/react-native-daily-js` SDK.
 
-### Payment Processing (Stratégie B)
-- **RevenueCat**: Handles in-app purchases and subscription management for iOS and Android (requires native build). SDK initialized in `_layout.tsx`, user ID synced via `AuthContext` on login.
-- **Purchase Flow**: Fan → `purchase-session.tsx` → RevenueCat purchase → Edge Function `create_paid_session_intent` (creates transaction as 'created') → RevenueCat webhook `rc_webhook` (confirms to 'store_confirmed') → Fan enters video call.
-- **Edge Functions** (Supabase Deno, deployed):
-  - `create_paid_session_intent`: validates auth, verifies RC transaction, creates session + transaction. Verify JWT: ON (requires user auth token).
-  - `rc_webhook`: processes INITIAL_PURCHASE, NON_RENEWING_PURCHASE, CANCELLATION, REFUND events. Verify JWT: OFF (public webhook endpoint).
-- **Webhook URL** (configured in RevenueCat Dashboard, working 200): `https://qoitixdpcqlzgyusbgdx.functions.supabase.co/rc_webhook?token=rc_wh_9f83c7a2_signtouch` — NOT `/functions/v1/` (avoids JWT/header issues).
-- **Edge Function Secrets** (configured in Supabase Dashboard > Edge Functions > Secrets): `REVENUECAT_SECRET_API_KEY` ✅, `REVENUECAT_WEBHOOK_SECRET` ✅
-- **Payment Tracking**: Comprehensive Supabase-based system (SQL in `signtouch-app-main/sql/payment_system_strategy_b.sql` + `revenuecat_additions.sql`):
-  - `fan_transactions`: Records each fan purchase with status lifecycle (created → store_confirmed → settled → included_in_payout → paid_out), includes `rc_transaction_id`, `store_transaction_id`, `rc_event_id` columns
-  - `webhook_events`: Stores RevenueCat webhook payloads with idempotency (unique event_id), RLS restricted to service_role only
-  - `store_settlements`: Imports Apple/Google financial reports with net proceeds
-  - `celebrity_earnings`: Computes celebrity share from net proceeds (configurable revshare via `celebrity_revshare_bps`, default 52%)
-  - `payout_batches` / `payout_batch_items`: Groups earnings into periodic payouts
-  - SQL functions: `apply_settlement()`, `compute_celebrity_earnings()`, `create_payout_batch()`, `mark_payout_paid()`
-  - Admin view: `admin_payment_dashboard` (SQL view in Supabase, not in-app)
+### Payment Processing
+- **Live Sessions (Stripe Checkout - Option A)**: Direct CB payment via Stripe Checkout, no Apple/Google commission (like Betclic model).
+  - **Purchase Flow**: Fan → `purchase-session.tsx` → Express backend creates Stripe Checkout Session → Fan redirected to Stripe payment page → Payment completed → `payment-success.tsx` verifies payment → Fan enters video call queue.
+  - **Express Backend** (`server/index.js`, port 3001):
+    - `POST /api/create-checkout-session`: Creates Stripe Checkout Session with Connect support (application_fee_amount for SignTouch, transfer_data for celebrity).
+    - `POST /api/stripe-webhook`: Handles Stripe webhook events for payment confirmation.
+    - `GET /api/verify-payment`: Verifies Checkout Session payment status.
+    - `GET /api/health`: Health check endpoint.
+  - **Stripe Connect**: Celebrities onboard via `StripeConnectModal` component. Connect account ID stored in AsyncStorage (to be migrated to Supabase user profile). Payments are split: SignTouch fee (15%) via application_fee_amount, rest goes to celebrity's Stripe Connect account.
+  - **Fee Structure**: SignTouch 15% + Stripe 2.9% + 0.30€ per transaction. No Apple/Google store fees (30%).
+- **Subscriptions (RevenueCat)**: In-app purchases and subscription management for iOS and Android (requires native build). SDK initialized in `_layout.tsx`, user ID synced via `AuthContext` on login.
+- **Revenue Calculation**: Displayed in `create-live-session.tsx` — gross revenue minus SignTouch 15% minus Stripe fees.
 - **Admin Access**: Payment management is done exclusively via Supabase Dashboard (Table Editor / SQL Editor), not exposed in the app.
 
 ### Build & Deployment
@@ -71,3 +67,7 @@ Preferred communication style: Simple, everyday language.
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 - `EXPO_PUBLIC_REVENUECAT_IOS_KEY`
 - `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`
+- `EXPO_PUBLIC_STRIPE_SERVER_URL` — URL of the Stripe backend API
+- `STRIPE_SECRET_KEY` — Stripe secret API key (server-side only)
+- `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret (server-side only)
+- `STRIPE_SERVER_PORT` — Port for Stripe Express server (default: 3001)
