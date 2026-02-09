@@ -919,7 +919,7 @@ export default {
   processingPurchase: 'Processing purchase...',
 
   stripeConnectTitle: 'Terima pembayaran Anda',
-  stripeConnectSubtitle: 'Untuk menerima uang dari sesi langsung Anda, hubungkan akun Stripe Anda. Cepat, gratis, dan 100% aman.',
+  stripeConnectSubtitle: 'Untuk menerima uang dari sesi langsung Anda, buat atau hubungkan akun Stripe Anda. Cepat, gratis, dan 100% aman.',
   stripeConnectFeature1Title: 'Pembayaran aman',
   stripeConnectFeature1Desc: 'Stripe adalah pemimpin dunia dalam pembayaran online, digunakan oleh jutaan bisnis.',
   stripeConnectFeature2Title: 'Pembayaran otomatis',

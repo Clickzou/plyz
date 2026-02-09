@@ -914,7 +914,7 @@ export default {
   processingPurchase: 'Processing purchase...',
 
   stripeConnectTitle: 'अपना भुगतान प्राप्त करें',
-  stripeConnectSubtitle: 'अपने लाइव सत्रों से पैसा प्राप्त करने के लिए, अपना Stripe खाता कनेक्ट करें। यह तेज़, मुफ़्त और 100% सुरक्षित है।',
+  stripeConnectSubtitle: 'अपने लाइव सत्रों से पैसा प्राप्त करने के लिए, अपना Stripe खाता बनाएं या कनेक्ट करें। यह तेज़, मुफ़्त और 100% सुरक्षित है।',
   stripeConnectFeature1Title: 'सुरक्षित भुगतान',
   stripeConnectFeature1Desc: 'Stripe ऑनलाइन भुगतान में विश्व अग्रणी है, लाखों व्यवसायों द्वारा उपयोग किया जाता है।',
   stripeConnectFeature2Title: 'स्वचालित भुगतान',

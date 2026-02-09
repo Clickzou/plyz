@@ -914,7 +914,7 @@ export default {
   processingPurchase: 'Processing purchase...',
 
   stripeConnectTitle: 'お支払いを受け取る',
-  stripeConnectSubtitle: 'ライブセッションの収益を受け取るために、Stripeアカウントを接続してください。迅速、無料、100%安全です。',
+  stripeConnectSubtitle: 'ライブセッションの収益を受け取るために、Stripeアカウントを作成または接続してください。迅速、無料、100%安全です。',
   stripeConnectFeature1Title: '安全な決済',
   stripeConnectFeature1Desc: 'Stripeはオンライン決済の世界的リーダーで、数百万の企業に利用されています。',
   stripeConnectFeature2Title: '自動振込',

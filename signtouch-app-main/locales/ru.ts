@@ -914,7 +914,7 @@ export default {
   processingPurchase: 'Processing purchase...',
 
   stripeConnectTitle: 'Получайте свои платежи',
-  stripeConnectSubtitle: 'Чтобы получать деньги за живые сессии, подключите свой аккаунт Stripe. Это быстро, бесплатно и на 100% безопасно.',
+  stripeConnectSubtitle: 'Чтобы получать деньги за живые сессии, создайте или подключите свой аккаунт Stripe. Это быстро, бесплатно и на 100% безопасно.',
   stripeConnectFeature1Title: 'Безопасные платежи',
   stripeConnectFeature1Desc: 'Stripe — мировой лидер в онлайн-платежах, используемый миллионами компаний.',
   stripeConnectFeature2Title: 'Автоматические выплаты',

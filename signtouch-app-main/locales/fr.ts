@@ -915,7 +915,7 @@ export default {
   processingPurchase: 'Traitement de l\'achat...',
 
   stripeConnectTitle: 'Recevez vos paiements',
-  stripeConnectSubtitle: 'Pour recevoir l\'argent de vos sessions live, connectez votre compte Stripe. C\'est rapide, gratuit et 100% sécurisé.',
+  stripeConnectSubtitle: 'Pour recevoir l\'argent de vos sessions live, créez ou connectez votre compte Stripe. C\'est rapide, gratuit et 100% sécurisé.',
   stripeConnectFeature1Title: 'Paiements sécurisés',
   stripeConnectFeature1Desc: 'Stripe est le leader mondial du paiement en ligne, utilisé par des millions d\'entreprises.',
   stripeConnectFeature2Title: 'Versements automatiques',
