@@ -15,7 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import BottomNav from '@/components/BottomNav';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useSubscription, SUBSCRIPTION_ENABLED } from '@/contexts/SubscriptionContext';
 import TrialModal from '@/components/TrialModal';
 import { getTrialStatus, hasFirstPhotoBeenSaved } from '@/utils/trialStorage';
 
@@ -193,6 +193,8 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
+    if (!SUBSCRIPTION_ENABLED) return;
+
     const checkTrialExpired = async () => {
       if (status === 'paid') return;
       
@@ -289,15 +291,17 @@ export default function HomeScreen() {
       </LinearGradient>
       <BottomNav />
       
-      <TrialModal
-        visible={showTrialExpiredModal}
-        daysRemaining={0}
-        isExpired={true}
-        onSubscribe={() => {
-          setShowTrialExpiredModal(false);
-          router.push('/paywall');
-        }}
-      />
+      {SUBSCRIPTION_ENABLED && (
+        <TrialModal
+          visible={showTrialExpiredModal}
+          daysRemaining={0}
+          isExpired={true}
+          onSubscribe={() => {
+            setShowTrialExpiredModal(false);
+            router.push('/paywall');
+          }}
+        />
+      )}
     </View>
   );
 }

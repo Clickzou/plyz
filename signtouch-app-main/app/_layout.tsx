@@ -24,6 +24,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import SubscriptionOfferModal from '@/components/SubscriptionOfferModal';
 import PostPurchaseAccountModal from '@/components/PostPurchaseAccountModal';
 import { setSubscriptionOfferCallback } from '@/utils/subscriptionOffer';
+import { SUBSCRIPTION_ENABLED } from '@/contexts/SubscriptionContext';
 import {
   setPostPurchaseAccountCallback,
   setManualAccountModalCallback,
@@ -88,11 +89,13 @@ function AppContent() {
 
       <StatusBar style="auto" />
 
-      <SubscriptionOfferModal
-        visible={showSubscriptionOffer}
-        onClose={() => setShowSubscriptionOffer(false)}
-        onPurchaseSuccess={handlePurchaseSuccess}
-      />
+      {SUBSCRIPTION_ENABLED && (
+        <SubscriptionOfferModal
+          visible={showSubscriptionOffer}
+          onClose={() => setShowSubscriptionOffer(false)}
+          onPurchaseSuccess={handlePurchaseSuccess}
+        />
+      )}
 
       <PostPurchaseAccountModal
         visible={showPostPurchaseAccount}

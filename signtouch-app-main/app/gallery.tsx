@@ -21,7 +21,7 @@ import { Memory, MemoryMetadata, EventType } from '@/utils/memoriesStorage';
 import { Story, getStories, deleteStory } from '@/utils/storiesStorage';
 import MetadataModal from '@/components/MetadataModal';
 import * as StorageService from '@/utils/storageService';
-import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useSubscription, SUBSCRIPTION_ENABLED } from '@/contexts/SubscriptionContext';
 import { useTranslation } from '@/contexts/LanguageContext';
 
 type GalleryTab = 'photos' | 'stories';
@@ -926,16 +926,18 @@ export default function GalleryScreen() {
         initialMetadata={selectionMode ? undefined : selectedMemory?.metadata}
       />
 
-      <TrialModal
-        visible={showTrialModal}
-        daysRemaining={trialDaysRemaining}
-        isExpired={false}
-        onSubscribe={() => {
-          setShowTrialModal(false);
-          router.push('/paywall');
-        }}
-        onLater={() => setShowTrialModal(false)}
-      />
+      {SUBSCRIPTION_ENABLED && (
+        <TrialModal
+          visible={showTrialModal}
+          daysRemaining={trialDaysRemaining}
+          isExpired={false}
+          onSubscribe={() => {
+            setShowTrialModal(false);
+            router.push('/paywall');
+          }}
+          onLater={() => setShowTrialModal(false)}
+        />
+      )}
 
       <AccountModal
         visible={showAccountModal}

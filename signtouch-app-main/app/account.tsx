@@ -13,6 +13,7 @@ import {
 import { showAlert } from '@/utils/alertHelper';
 import { router } from 'expo-router';
 import { Crown, Info, Heart, Share2, Globe, Check, FileText, LogOut, Gift, X } from 'lucide-react-native';
+import { SUBSCRIPTION_ENABLED } from '@/contexts/SubscriptionContext';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import * as Clipboard from 'expo-clipboard';
@@ -238,34 +239,38 @@ export default function AccountScreen() {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>{t('application')}</Text>
 
-          <TouchableOpacity
-            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
-            onPress={() => handlePress('subscription')}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
-              <Crown size={24} color="#10b981" strokeWidth={2} />
-            </View>
-            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('mySubscription')}</Text>
-          </TouchableOpacity>
+          {SUBSCRIPTION_ENABLED && (
+            <TouchableOpacity
+              style={[styles.menuItem, isRTL && styles.menuItemRTL]}
+              onPress={() => handlePress('subscription')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
+                <Crown size={24} color="#10b981" strokeWidth={2} />
+              </View>
+              <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('mySubscription')}</Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity
-            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
-            onPress={() => setShowPromoModal(true)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
-              <Gift size={24} color="#f59e0b" strokeWidth={2} />
-            </View>
-            <View style={styles.menuTextContainer}>
-              <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('promoCode') || 'Code promo'}</Text>
-              {promoPremiumExpires && (
-                <Text style={[styles.menuSubtextGreen, isRTL && styles.menuSubtextRTL]}>
-                  Premium jusqu'au {new Date(promoPremiumExpires).toLocaleDateString()}
-                </Text>
-              )}
-            </View>
-          </TouchableOpacity>
+          {SUBSCRIPTION_ENABLED && (
+            <TouchableOpacity
+              style={[styles.menuItem, isRTL && styles.menuItemRTL]}
+              onPress={() => setShowPromoModal(true)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
+                <Gift size={24} color="#f59e0b" strokeWidth={2} />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('promoCode') || 'Code promo'}</Text>
+                {promoPremiumExpires && (
+                  <Text style={[styles.menuSubtextGreen, isRTL && styles.menuSubtextRTL]}>
+                    Premium jusqu'au {new Date(promoPremiumExpires).toLocaleDateString()}
+                  </Text>
+                )}
+              </View>
+            </TouchableOpacity>
+          )}
 
           {user && (
             <TouchableOpacity
