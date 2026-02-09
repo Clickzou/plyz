@@ -360,7 +360,7 @@ export default {
   cancelFromApp: 'Отмените подписку через Google Play или Apple Store',
   unlimitedAccessFeatures: 'Неограниченный доступ ко всем функциям',
   noIntrusiveAds: 'Без навязчивой рекламы',
-  free7Days: 'бесплатно',
+  free7Days: 'Бесплатно 7 дней',
   sevenDays: '7 дней',
   oneYear: '1 год',
   oneMonth: '1 месяц',

@@ -360,7 +360,7 @@ export default {
   cancelFromApp: 'Google PlayまたはApple Storeアカウントからサブスクリプションをキャンセル',
   unlimitedAccessFeatures: 'すべての機能への無制限アクセス',
   noIntrusiveAds: '煩わしい広告なし',
-  free7Days: '無料',
+  free7Days: '無料 7日間',
   sevenDays: '7日間',
   oneYear: '1年',
   oneMonth: '1ヶ月',

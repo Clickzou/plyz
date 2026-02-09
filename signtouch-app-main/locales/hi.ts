@@ -360,7 +360,7 @@ export default {
   cancelFromApp: 'अपने Google Play या Apple Store खाते से सदस्यता रद्द करें',
   unlimitedAccessFeatures: 'सभी सुविधाओं तक असीमित पहुंच',
   noIntrusiveAds: 'कोई दखलंदाजी विज्ञापन नहीं',
-  free7Days: 'मुफ्त',
+  free7Days: 'मुफ्त 7 दिन',
   sevenDays: '7 दिन',
   oneYear: '1 वर्ष',
   oneMonth: '1 महीना',

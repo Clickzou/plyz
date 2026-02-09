@@ -360,7 +360,7 @@ export default {
   cancelFromApp: '从您的Google Play或Apple Store账户取消订阅',
   unlimitedAccessFeatures: '无限访问所有功能',
   noIntrusiveAds: '没有侵扰性广告',
-  free7Days: '免费',
+  free7Days: '免费 7 天',
   sevenDays: '7天',
   oneYear: '1年',
   oneMonth: '1个月',

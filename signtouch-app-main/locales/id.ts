@@ -360,7 +360,7 @@ export default {
   cancelFromApp: 'Batalkan langganan dari akun Google Play atau Apple Store Anda',
   unlimitedAccessFeatures: 'Akses tak terbatas ke semua fitur',
   noIntrusiveAds: 'Tidak ada iklan yang mengganggu',
-  free7Days: 'gratis',
+  free7Days: 'Gratis 7 hari',
   sevenDays: '7 hari',
   oneYear: '1 tahun',
   oneMonth: '1 bulan',

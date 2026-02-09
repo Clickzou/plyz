@@ -297,7 +297,6 @@ export default function PaywallScreen() {
             <View style={styles.planHeader}>
               <View style={styles.planLeft}>
                 <Text style={styles.planName}>{t('free7Days')}</Text>
-                <Text style={styles.planPrice}>{t('sevenDays')}</Text>
               </View>
               {selectedPlan === 'trial' && (
                 <View style={styles.selectedBadge}>

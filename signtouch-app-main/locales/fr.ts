@@ -360,7 +360,7 @@ export default {
   cancelFromApp: 'Annuler votre abonnement à partir de votre compte Google Play ou Apple Store',
   unlimitedAccessFeatures: 'Accès illimité à toutes les fonctionnalités',
   noIntrusiveAds: 'Pas de publicité intrusive',
-  free7Days: 'gratuits',
+  free7Days: 'Gratuit 7 jours',
   sevenDays: '7 jours',
   oneYear: '1 an',
   oneMonth: '1 mois',
