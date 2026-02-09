@@ -367,6 +367,8 @@ export default {
   alertBeforeTrialEnd: 'Ingatkan saya sebelum tempoh percubaan tamat',
   processing: 'Memproses...',
   tryForFree: 'Cuba percuma',
+  trialActivated: 'Percubaan percuma 7 hari anda telah diaktifkan!',
+  subscriptionActivated: 'Langganan anda telah diaktifkan!',
   subscribeNow: 'Langgan sekarang',
   trialThenYearly: '7 hari percuma, kemudian €19.99/tahun (~€1.66/bulan)',
   yearlyPrice19: '€19.99/tahun (~€1.66/bulan)',

@@ -367,6 +367,8 @@ export default {
   alertBeforeTrialEnd: 'परीक्षण अवधि समाप्त होने से पहले मुझे सचेत करें',
   processing: 'प्रोसेसिंग...',
   tryForFree: 'मुफ्त में आज़माएं',
+  trialActivated: 'आपका 7 दिन का मुफ्त परीक्षण सक्रिय हो गया!',
+  subscriptionActivated: 'आपकी सदस्यता सक्रिय हो गई!',
   subscribeNow: 'अभी सदस्यता लें',
   trialThenYearly: '7 दिन मुफ्त, फिर €19.99/वर्ष (~€1.66/महीना)',
   yearlyPrice19: '€19.99/वर्ष (~€1.66/महीना)',

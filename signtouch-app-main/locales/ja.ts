@@ -367,6 +367,8 @@ export default {
   alertBeforeTrialEnd: 'トライアル期間終了前に通知',
   processing: '処理中...',
   tryForFree: '無料で試す',
+  trialActivated: '7日間の無料トライアルが有効になりました！',
+  subscriptionActivated: 'サブスクリプションが有効になりました！',
   subscribeNow: '今すぐ登録',
   trialThenYearly: '7日間無料、その後€19.99/年（~€1.66/月）',
   yearlyPrice19: '€19.99/年（~€1.66/月）',

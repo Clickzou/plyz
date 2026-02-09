@@ -367,6 +367,8 @@ export default {
   alertBeforeTrialEnd: 'آزمائشی مدت ختم ہونے سے پہلے مجھے متنبہ کریں',
   processing: 'پروسیسنگ...',
   tryForFree: 'مفت آزمائیں',
+  trialActivated: 'آپ کا 7 دن کا مفت ٹرائل فعال ہو گیا!',
+  subscriptionActivated: 'آپ کی رکنیت فعال ہو گئی!',
   subscribeNow: 'ابھی سبسکرائب کریں',
   trialThenYearly: '7 دن مفت، پھر €19.99/سال (~€1.66/مہینہ)',
   yearlyPrice19: '€19.99/سال (~€1.66/مہینہ)',

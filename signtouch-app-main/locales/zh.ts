@@ -367,6 +367,8 @@ export default {
   alertBeforeTrialEnd: '在试用期结束前提醒我',
   processing: '处理中...',
   tryForFree: '免费试用',
+  trialActivated: '您的7天免费试用已激活！',
+  subscriptionActivated: '您的订阅已激活！',
   subscribeNow: '立即订阅',
   trialThenYearly: '7天免费，然后€19.99/年（~€1.66/月）',
   yearlyPrice19: '€19.99/年（~€1.66/月）',

@@ -367,6 +367,8 @@ export default {
   alertBeforeTrialEnd: 'Alertarme antes del final del período de prueba',
   processing: 'Procesando...',
   tryForFree: 'Probar gratis',
+  trialActivated: '¡Su prueba gratuita de 7 días ha sido activada!',
+  subscriptionActivated: '¡Su suscripción ha sido activada!',
   subscribeNow: 'Suscribirse ahora',
   trialThenYearly: '7 días gratis, luego €19.99/año (~€1.66/mes)',
   yearlyPrice19: '€19.99/año (~€1.66/mes)',

@@ -367,6 +367,8 @@ export default {
   alertBeforeTrialEnd: 'تنبيهي قبل انتهاء الفترة التجريبية',
   processing: 'جاري المعالجة...',
   tryForFree: 'جرب مجانًا',
+  trialActivated: 'تم تفعيل فترة التجربة المجانية لمدة 7 أيام!',
+  subscriptionActivated: 'تم تفعيل اشتراكك!',
   subscribeNow: 'اشترك الآن',
   trialThenYearly: '7 أيام مجانًا، ثم €19.99/سنة (~€1.66/شهر)',
   yearlyPrice19: '€19.99/سنة (~€1.66/شهر)',

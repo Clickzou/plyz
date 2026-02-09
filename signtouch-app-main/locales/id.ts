@@ -367,6 +367,8 @@ export default {
   alertBeforeTrialEnd: 'Ingatkan saya sebelum periode percobaan berakhir',
   processing: 'Memproses...',
   tryForFree: 'Coba gratis',
+  trialActivated: 'Uji coba gratis 7 hari Anda telah diaktifkan!',
+  subscriptionActivated: 'Langganan Anda telah diaktifkan!',
   subscribeNow: 'Berlangganan sekarang',
   trialThenYearly: '7 hari gratis, kemudian €19.99/tahun (~€1.66/bulan)',
   yearlyPrice19: '€19.99/tahun (~€1.66/bulan)',

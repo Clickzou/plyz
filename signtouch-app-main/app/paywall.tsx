@@ -160,7 +160,14 @@ export default function PaywallScreen() {
     if (!isRCAvailable() || offerings.length === 0) {
       console.log('[Paywall] RevenueCat not available, activating locally for plan:', plan);
       await setStatus('paid');
-      navigateAfterPurchase();
+      const trialMsg = plan === 'trial' 
+        ? (t('trialActivated') || 'Votre essai gratuit de 7 jours a été activé !')
+        : (t('subscriptionActivated') || 'Votre abonnement a été activé !');
+      Alert.alert(
+        t('success') || 'Succès',
+        trialMsg,
+        [{ text: 'OK', onPress: () => navigateAfterPurchase() }]
+      );
       return;
     }
 

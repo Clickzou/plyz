@@ -367,6 +367,8 @@ export default {
   alertBeforeTrialEnd: 'ট্রায়াল সময়কাল শেষ হওয়ার আগে আমাকে সতর্ক করুন',
   processing: 'প্রসেসিং...',
   tryForFree: 'বিনামূল্যে চেষ্টা করুন',
+  trialActivated: 'আপনার ৭ দিনের বিনামূল্যে ট্রায়াল সক্রিয় হয়েছে!',
+  subscriptionActivated: 'আপনার সদস্যতা সক্রিয় হয়েছে!',
   subscribeNow: 'এখনই সাবস্ক্রাইব করুন',
   trialThenYearly: '৭ দিন বিনামূল্যে, তারপর €19.99/বছর (~€1.66/মাস)',
   yearlyPrice19: '€19.99/বছর (~€1.66/মাস)',
