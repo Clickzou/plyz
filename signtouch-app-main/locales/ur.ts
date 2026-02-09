@@ -662,7 +662,7 @@ export default {
   paymentStripeTitle: 'Stripe (کارڈ ادائیگی)',
   paymentStripeDelay: 'لین دین کے 2 سے 7 کاروباری دن بعد',
   paymentStripeExample: 'مثال: ایک مداح پیر کو ایک سیشن خریدتا ہے → ادائیگی فوری طور پر پروسیس ہوتی ہے → آپ کی آمدنی 2 سے 7 کاروباری دنوں میں آپ کے بینک اکاؤنٹ میں منتقل ہو جاتی ہے۔',
-  paymentDelaysNote: 'منتقلی کی مدت Stripe کے زیر انتظام ہے۔ SignTouch ہر لین دین پر 30% کمیشن لیتا ہے، اور Stripe فیس (2.9% + €0.30) بھی کاٹی جاتی ہے۔',
+  paymentDelaysNote: 'منتقلی کی مدت Stripe کے زیر انتظام ہے۔ SignTouch ہر لین دین پر 15% کمیشن لیتا ہے، اور Stripe فیس (2.9% + €0.30) بھی کاٹی جاتی ہے۔',
 
   // Event Sessions
   addSignatures: 'دستخط شامل کریں',
@@ -777,7 +777,7 @@ export default {
   yourEarnings: 'آپ کی کمائی',
   earningsExplanation: 'Stripe فیس (2.9% + €0.30) کے بعد خالص',
   grossRevenue: 'مجموعی آمدنی',
-  storeFees: 'اسٹور فیس (30%)',
+  storeFees: 'پلیٹ فارم فیس (15%)',
   signTouchFees: 'SignTouch فیس (15%)',
   stripeFees: 'Stripe فیس (2.9% + €0.30)',
   netRevenue: 'خالص وصول',

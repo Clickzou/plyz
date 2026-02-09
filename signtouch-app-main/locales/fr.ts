@@ -662,7 +662,7 @@ export default {
   paymentStripeTitle: 'Stripe (Paiement par carte)',
   paymentStripeDelay: '2 à 7 jours ouvrés après la transaction',
   paymentStripeExample: 'Exemple : un fan achète une session le lundi → le paiement est traité immédiatement → vos gains sont reversés sur votre compte bancaire sous 2 à 7 jours ouvrés.',
-  paymentDelaysNote: 'Les délais de reversement sont gérés par Stripe. SignTouch prélève une commission de 30% sur chaque transaction, et les frais Stripe (2.9% + 0.30€) sont également déduits.',
+  paymentDelaysNote: 'Les délais de reversement sont gérés par Stripe. SignTouch prélève une commission de 15% sur chaque transaction, et les frais Stripe (2.9% + 0.30€) sont également déduits.',
 
   // Event Sessions
   addSignatures: 'Ajouter les Signatures',
@@ -779,7 +779,7 @@ export default {
   yourEarnings: 'Vos revenus',
   earningsExplanation: 'Net après frais Stripe (2.9% + 0.30€) et SignTouch (15%)',
   grossRevenue: 'Revenus bruts',
-  storeFees: 'Frais stores (30%)',
+  storeFees: 'Frais de plateforme (15%)',
   signTouchFees: 'Frais SignTouch (15%)',
   stripeFees: 'Frais Stripe (2.9% + 0.30€)',
   netRevenue: 'Net reçu',
@@ -915,7 +915,7 @@ export default {
   processingPurchase: 'Traitement de l\'achat...',
 
   stripeConnectTitle: 'Recevez vos paiements',
-  stripeConnectExisting: 'J'ai déjà un compte Stripe',
+  stripeConnectExisting: 'J\'ai déjà un compte Stripe',
   stripeConnectSubtitle: 'Pour recevoir l\'argent de vos sessions live, créez ou connectez votre compte Stripe. C\'est rapide, gratuit et 100% sécurisé.',
   stripeConnectFeature1Title: 'Paiements sécurisés',
   stripeConnectFeature1Desc: 'Stripe est le leader mondial du paiement en ligne, utilisé par des millions d\'entreprises.',

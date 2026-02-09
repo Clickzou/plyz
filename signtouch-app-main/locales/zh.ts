@@ -662,7 +662,7 @@ export default {
   paymentStripeTitle: 'Stripe（卡支付）',
   paymentStripeDelay: '交易后2至7个工作日',
   paymentStripeExample: '举例：粉丝在周一购买一个会话 → 付款立即处理 → 您的收入在2至7个工作日内转入您的银行账户。',
-  paymentDelaysNote: '转账时间由Stripe管理。SignTouch对每笔交易收取30%的佣金，Stripe费用（2.9% + €0.30）也会被扣除。',
+  paymentDelaysNote: '转账时间由Stripe管理。SignTouch对每笔交易收取15%的佣金，Stripe费用（2.9% + €0.30）也会被扣除。',
 
   // Event Sessions
   addSignatures: '添加签名',
@@ -777,7 +777,7 @@ export default {
   yourEarnings: '您的收益',
   earningsExplanation: '扣除Stripe费用(2.9% + €0.30)后的净额',
   grossRevenue: '总收入',
-  storeFees: '商店费用 (30%)',
+  storeFees: '平台费用 (15%)',
   signTouchFees: 'SignTouch费用 (15%)',
   stripeFees: 'Stripe费用 (2.9% + €0.30)',
   netRevenue: '实收净额',

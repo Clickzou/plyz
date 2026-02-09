@@ -777,7 +777,7 @@ export default {
   yourEarnings: 'আপনার উপার্জন',
   earningsExplanation: 'Stripe ফি (2.9% + €0.30) এর পরে নিট',
   grossRevenue: 'মোট আয়',
-  storeFees: 'স্টোর ফি (30%)',
+  storeFees: 'প্ল্যাটফর্ম ফি (15%)',
   signTouchFees: 'SignTouch ফি (15%)',
   stripeFees: 'Stripe ফি (2.9% + €0.30)',
   netRevenue: 'প্রাপ্ত নিট',

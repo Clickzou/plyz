@@ -46,7 +46,7 @@ const PRICE_OPTIONS = [
   { label: '100€', value: 10000 },
 ];
 
-const SIGNTOUCH_FEES = 0.30; // 30% SignTouch
+const SIGNTOUCH_FEES = 0.15; // 15% SignTouch
 const STRIPE_PERCENT = 0.029; // 2.9% Stripe
 const STRIPE_FIXED = 30; // 0.30€ par transaction (en centimes)
 

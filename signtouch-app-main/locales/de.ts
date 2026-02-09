@@ -662,7 +662,7 @@ export default {
   paymentStripeTitle: 'Stripe (Kartenzahlung)',
   paymentStripeDelay: '2 bis 7 Werktage nach der Transaktion',
   paymentStripeExample: 'Beispiel: Ein Fan kauft eine Sitzung am Montag → die Zahlung wird sofort verarbeitet → Ihre Einnahmen werden innerhalb von 2 bis 7 Werktagen auf Ihr Bankkonto überwiesen.',
-  paymentDelaysNote: 'Überweisungsfristen werden von Stripe verwaltet. SignTouch erhebt eine Provision von 30% auf jede Transaktion, und die Stripe-Gebühren (2,9% + 0,30€) werden ebenfalls abgezogen.',
+  paymentDelaysNote: 'Überweisungsfristen werden von Stripe verwaltet. SignTouch erhebt eine Provision von 15% auf jede Transaktion, und die Stripe-Gebühren (2,9% + 0,30€) werden ebenfalls abgezogen.',
 
   // Event Sessions
   addSignatures: 'Signaturen hinzufügen',
@@ -777,7 +777,7 @@ export default {
   yourEarnings: 'Deine Einnahmen',
   earningsExplanation: 'Netto nach Stripe-Gebühren (2.9% + 0.30€)',
   grossRevenue: 'Bruttoeinnahmen',
-  storeFees: 'Store-Gebühren (30%)',
+  storeFees: 'Plattformgebühren (15%)',
   signTouchFees: 'SignTouch-Gebühren (15%)',
   stripeFees: 'Stripe-Gebühren (2.9% + 0.30€)',
   netRevenue: 'Netto erhalten',

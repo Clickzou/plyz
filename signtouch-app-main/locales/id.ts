@@ -662,7 +662,7 @@ export default {
   paymentStripeTitle: 'Stripe (Pembayaran Kartu)',
   paymentStripeDelay: '2 hingga 7 hari kerja setelah transaksi',
   paymentStripeExample: 'Contoh: seorang penggemar membeli sesi pada hari Senin → pembayaran diproses segera → penghasilan Anda ditransfer ke rekening bank Anda dalam 2 hingga 7 hari kerja.',
-  paymentDelaysNote: 'Waktu transfer dikelola oleh Stripe. SignTouch mengambil komisi 30% pada setiap transaksi, dan biaya Stripe (2,9% + €0,30) juga dipotong.',
+  paymentDelaysNote: 'Waktu transfer dikelola oleh Stripe. SignTouch mengambil komisi 15% pada setiap transaksi, dan biaya Stripe (2,9% + €0,30) juga dipotong.',
 
   // Event Sessions
   addSignatures: 'Tambah Tanda Tangan',
@@ -777,7 +777,7 @@ export default {
   yourEarnings: 'Penghasilan Anda',
   earningsExplanation: 'Bersih setelah biaya Stripe (2.9% + €0.30)',
   grossRevenue: 'Pendapatan kotor',
-  storeFees: 'Biaya toko (30%)',
+  storeFees: 'Biaya platform (15%)',
   signTouchFees: 'Biaya SignTouch (15%)',
   stripeFees: 'Biaya Stripe (2.9% + €0.30)',
   netRevenue: 'Bersih diterima',

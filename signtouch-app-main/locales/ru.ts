@@ -662,7 +662,7 @@ export default {
   paymentStripeTitle: 'Stripe (Оплата картой)',
   paymentStripeDelay: 'От 2 до 7 рабочих дней после транзакции',
   paymentStripeExample: 'Пример: фанат покупает сессию в понедельник → платёж обрабатывается мгновенно → ваши доходы переводятся на банковский счёт в течение 2-7 рабочих дней.',
-  paymentDelaysNote: 'Сроки перевода управляются Stripe. SignTouch взимает комиссию 30% с каждой транзакции, а комиссия Stripe (2,9% + €0,30) также вычитается.',
+  paymentDelaysNote: 'Сроки перевода управляются Stripe. SignTouch взимает комиссию 15% с каждой транзакции, а комиссия Stripe (2,9% + €0,30) также вычитается.',
 
   // Event Sessions
   addSignatures: 'Добавить подписи',
@@ -777,7 +777,7 @@ export default {
   yourEarnings: 'Ваш заработок',
   earningsExplanation: 'Нетто после комиссии Stripe (2.9% + 0.30€)',
   grossRevenue: 'Валовой доход',
-  storeFees: 'Комиссия магазинов (30%)',
+  storeFees: 'Комиссия платформы (15%)',
   signTouchFees: 'Комиссия SignTouch (15%)',
   stripeFees: 'Комиссия Stripe (2.9% + 0.30€)',
   netRevenue: 'Получено нетто',

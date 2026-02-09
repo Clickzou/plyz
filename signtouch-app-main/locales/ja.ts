@@ -662,7 +662,7 @@ export default {
   paymentStripeTitle: 'Stripe（カード決済）',
   paymentStripeDelay: '取引後2〜7営業日',
   paymentStripeExample: '例：ファンが月曜日にセッションを購入 → 支払いは即座に処理 → 収益は2〜7営業日以内に銀行口座に振り込まれます。',
-  paymentDelaysNote: '振込スケジュールはStripeが管理しています。SignTouchは各取引に30%の手数料を徴収し、Stripe手数料（2.9% + €0.30）も差し引かれます。',
+  paymentDelaysNote: '振込スケジュールはStripeが管理しています。SignTouchは各取引に15%の手数料を徴収し、Stripe手数料（2.9% + €0.30）も差し引かれます。',
 
   // Event Sessions
   addSignatures: '署名を追加',
@@ -777,7 +777,7 @@ export default {
   yourEarnings: 'あなたの収益',
   earningsExplanation: 'Stripe手数料(2.9% + €0.30)控除後の純額',
   grossRevenue: '総収益',
-  storeFees: 'ストア手数料 (30%)',
+  storeFees: 'プラットフォーム手数料 (15%)',
   signTouchFees: 'SignTouch手数料 (15%)',
   stripeFees: 'Stripe手数料 (2.9% + €0.30)',
   netRevenue: '受取純額',

@@ -662,7 +662,7 @@ export default {
   paymentStripeTitle: 'Stripe (कार्ड भुगतान)',
   paymentStripeDelay: 'लेनदेन के 2 से 7 कार्यदिवसों बाद',
   paymentStripeExample: 'उदाहरण: एक प्रशंसक सोमवार को एक सत्र खरीदता है → भुगतान तुरंत संसाधित होता है → आपकी कमाई 2 से 7 कार्यदिवसों में आपके बैंक खाते में ट्रांसफर हो जाती है।',
-  paymentDelaysNote: 'ट्रांसफर की समयसीमा Stripe द्वारा प्रबंधित की जाती है। SignTouch प्रत्येक लेनदेन पर 30% कमीशन लेता है, और Stripe शुल्क (2.9% + €0.30) भी काटा जाता है।',
+  paymentDelaysNote: 'ट्रांसफर की समयसीमा Stripe द्वारा प्रबंधित की जाती है। SignTouch प्रत्येक लेनदेन पर 15% कमीशन लेता है, और Stripe शुल्क (2.9% + €0.30) भी काटा जाता है।',
 
   // Event Sessions
   addSignatures: 'हस्ताक्षर जोड़ें',
@@ -777,7 +777,7 @@ export default {
   yourEarnings: 'आपकी कमाई',
   earningsExplanation: 'Stripe शुल्क (2.9% + €0.30) के बाद नेट',
   grossRevenue: 'सकल राजस्व',
-  storeFees: 'स्टोर शुल्क (30%)',
+  storeFees: 'प्लेटવार्म शुल्क (15%)',
   signTouchFees: 'SignTouch शुल्क (15%)',
   stripeFees: 'Stripe शुल्क (2.9% + €0.30)',
   netRevenue: 'प्राप्त नेट',

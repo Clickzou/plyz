@@ -662,7 +662,7 @@ export default {
   paymentStripeTitle: 'Stripe (Card Payment)',
   paymentStripeDelay: '2 to 7 business days after the transaction',
   paymentStripeExample: 'Example: a fan purchases a session on Monday → payment is processed immediately → your earnings are transferred to your bank account within 2 to 7 business days.',
-  paymentDelaysNote: 'Transfer delays are managed by Stripe. SignTouch takes a 30% commission on each transaction, and Stripe fees (2.9% + €0.30) are also deducted.',
+  paymentDelaysNote: 'Transfer delays are managed by Stripe. SignTouch takes a 15% commission on each transaction, and Stripe fees (2.9% + €0.30) are also deducted.',
 
   // Event Sessions
   addSignatures: 'Add Signatures',
@@ -777,7 +777,7 @@ export default {
   yourEarnings: 'Your earnings',
   earningsExplanation: 'Net after Stripe fees (2.9% + €0.30)',
   grossRevenue: 'Gross revenue',
-  storeFees: 'Store fees (30%)',
+  storeFees: 'Platform fees (15%)',
   signTouchFees: 'SignTouch fees (15%)',
   stripeFees: 'Stripe fees (2.9% + €0.30)',
   netRevenue: 'Net received',
