@@ -88,7 +88,7 @@ export default function CreateEventScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user, setPostAuthRedirect } = useAuth();
-  const { status } = useSubscription();
+  const { status, isPremium } = useSubscription();
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const [step, setStep] = useState<'config' | 'signers' | 'success'>('config');
@@ -460,27 +460,25 @@ export default function CreateEventScreen() {
   };
 
   const handleCreateEvent = async () => {
-    console.log('[handleCreateEvent] Called, user:', user?.id, 'status:', status);
+    console.log('[handleCreateEvent] Called, user:', user?.id, 'isPremium:', isPremium);
     
-    // Vérifier si l'utilisateur est connecté et abonné
-    if (!user) {
-      console.log('[handleCreateEvent] No user, showing AccountModal');
-      // Sauvegarder les données du formulaire avant de rediriger
-      await saveFormData();
-      setShowAccountModal(true);
-      return;
-    }
-    
-    if (status !== 'paid' && status !== 'trial') {
-      console.log('[handleCreateEvent] User not subscribed, redirecting to subscription');
-      // Sauvegarder les données du formulaire avant de rediriger
+    if (!isPremium) {
       await saveFormData();
       await setPostAuthRedirect('/create-event');
       router.push('/paywall');
       return;
     }
     
-    console.log('[handleCreateEvent] User is subscribed, creating event');
+    if (!user) {
+      await saveFormData();
+      setShowAccountModal(true);
+      return;
+    }
+    
+    await performCreateEvent();
+  };
+
+  const performCreateEvent = async () => {
     
     const validSigners = signers.filter(s => s.name.trim() && s.paths.length > 0);
     if (validSigners.length === 0) {
@@ -1198,7 +1196,10 @@ export default function CreateEventScreen() {
         <AccountModal
           visible={showAccountModal}
           onClose={() => setShowAccountModal(false)}
-          onSkip={() => setShowAccountModal(false)}
+          onSkip={() => {
+            setShowAccountModal(false);
+            performCreateEvent();
+          }}
           returnPath="/create-event"
         />
       </LinearGradient>

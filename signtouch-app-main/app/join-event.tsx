@@ -95,7 +95,7 @@ export default function JoinEventScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user, setPostAuthRedirect } = useAuth();
-  const { status } = useSubscription();
+  const { status, isPremium } = useSubscription();
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const [code, setCode] = useState('');
@@ -316,18 +316,21 @@ export default function JoinEventScreen() {
   };
 
   const handleSaveSignature = async () => {
-    // Vérifier si l'utilisateur est connecté et abonné
-    if (!user) {
-      setShowAccountModal(true);
-      return;
-    }
-    
-    if (status !== 'paid') {
+    if (!isPremium) {
       await setPostAuthRedirect('/join-event');
       router.push('/paywall');
       return;
     }
     
+    if (!user) {
+      setShowAccountModal(true);
+      return;
+    }
+    
+    await performSaveSignature();
+  };
+
+  const performSaveSignature = async () => {
     if (!foundEvent?.signature_url) return;
     
     setIsSaving(true);
@@ -991,7 +994,10 @@ export default function JoinEventScreen() {
       <AccountModal
         visible={showAccountModal}
         onClose={() => setShowAccountModal(false)}
-        onSkip={() => setShowAccountModal(false)}
+        onSkip={() => {
+          setShowAccountModal(false);
+          performSaveSignature();
+        }}
         returnPath="/join-event"
       />
       

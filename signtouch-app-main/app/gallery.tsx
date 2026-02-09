@@ -75,7 +75,7 @@ export default function GalleryScreen() {
   const [hasCheckedFirstPhoto, setHasCheckedFirstPhoto] = useState(false);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { status } = useSubscription();
+  const { status, isPremium } = useSubscription();
   const { t } = useTranslation();
   const { user, setPostAuthRedirect } = useAuth();
 
@@ -375,18 +375,17 @@ export default function GalleryScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     
-    // Vérifier si l'utilisateur est connecté et abonné
-    if (!user) {
-      setShowAccountModal(true);
-      return;
-    }
-    
-    if (status !== 'paid') {
+    if (!isPremium) {
       await setPostAuthRedirect('/gallery');
       router.push('/paywall');
       return;
     }
     
+    performEditMemory();
+  };
+
+  const performEditMemory = () => {
+    if (!selectedMemory) return;
     setSelectedMemory(null);
     router.push({
       pathname: '/result',
@@ -941,7 +940,10 @@ export default function GalleryScreen() {
       <AccountModal
         visible={showAccountModal}
         onClose={() => setShowAccountModal(false)}
-        onSkip={() => setShowAccountModal(false)}
+        onSkip={() => {
+          setShowAccountModal(false);
+          performEditMemory();
+        }}
         returnPath="/gallery"
       />
 
