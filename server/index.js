@@ -1,8 +1,62 @@
 const express = require('express');
 const cors = require('cors');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const Stripe = require('stripe');
 
 const app = express();
+
+let stripeClient = null;
+
+async function getStripeCredentials() {
+  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
+  const xReplitToken = process.env.REPL_IDENTITY
+    ? 'repl ' + process.env.REPL_IDENTITY
+    : process.env.WEB_REPL_RENEWAL
+      ? 'depl ' + process.env.WEB_REPL_RENEWAL
+      : null;
+
+  if (!xReplitToken || !hostname) {
+    if (process.env.STRIPE_SECRET_KEY) {
+      console.log('[Stripe] Using STRIPE_SECRET_KEY from env');
+      return { secretKey: process.env.STRIPE_SECRET_KEY };
+    }
+    throw new Error('No Stripe credentials available');
+  }
+
+  const isProduction = process.env.REPLIT_DEPLOYMENT === '1';
+  const targetEnvironment = isProduction ? 'production' : 'development';
+
+  const url = new URL(`https://${hostname}/api/v2/connection`);
+  url.searchParams.set('include_secrets', 'true');
+  url.searchParams.set('connector_names', 'stripe');
+  url.searchParams.set('environment', targetEnvironment);
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      'Accept': 'application/json',
+      'X_REPLIT_TOKEN': xReplitToken
+    }
+  });
+
+  const data = await response.json();
+  const connectionSettings = data.items?.[0];
+
+  if (!connectionSettings?.settings?.secret) {
+    throw new Error(`Stripe ${targetEnvironment} connection not found`);
+  }
+
+  return {
+    secretKey: connectionSettings.settings.secret,
+    publishableKey: connectionSettings.settings.publishable,
+  };
+}
+
+async function getStripe() {
+  if (!stripeClient) {
+    const { secretKey } = await getStripeCredentials();
+    stripeClient = new Stripe(secretKey);
+  }
+  return stripeClient;
+}
 
 app.use(cors({
   origin: '*',
@@ -15,6 +69,7 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
 
   let event;
   try {
+    const stripe = await getStripe();
     if (webhookSecret && sig) {
       event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
     } else {
@@ -39,12 +94,18 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
 
 app.use(express.json());
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', stripe: !!process.env.STRIPE_SECRET_KEY });
+app.get('/api/health', async (req, res) => {
+  try {
+    await getStripe();
+    res.json({ status: 'ok', stripe: true });
+  } catch (e) {
+    res.json({ status: 'ok', stripe: false, error: e.message });
+  }
 });
 
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
+    const stripe = await getStripe();
     const {
       sessionId,
       celebrityId,
@@ -119,6 +180,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
 
 app.get('/api/verify-payment', async (req, res) => {
   try {
+    const stripe = await getStripe();
     const { checkout_session_id } = req.query;
 
     if (!checkout_session_id) {
@@ -139,7 +201,19 @@ app.get('/api/verify-payment', async (req, res) => {
 });
 
 const PORT = process.env.STRIPE_SERVER_PORT || 3001;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[Stripe Server] Running on port ${PORT}`);
-  console.log(`[Stripe Server] Stripe key configured: ${!!process.env.STRIPE_SECRET_KEY}`);
-});
+
+async function startServer() {
+  try {
+    await getStripe();
+    console.log('[Stripe Server] Stripe credentials loaded successfully');
+  } catch (err) {
+    console.warn('[Stripe Server] Warning: Could not load Stripe credentials on startup:', err.message);
+    console.warn('[Stripe Server] Credentials will be loaded on first request');
+  }
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[Stripe Server] Running on port ${PORT}`);
+  });
+}
+
+startServer();

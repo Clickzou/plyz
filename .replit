@@ -1,10 +1,11 @@
 modules = ["nodejs-20", "python-3.11", "postgresql-16"]
 [nix]
 channel = "stable-25_05"
-packages = ["unzip", "nano", "supabase-cli"]
+packages = ["nano", "supabase-cli", "unzip"]
 
 [agent]
 expertMode = true
+integrations = ["stripe:2.0.0"]
 
 [workflows]
 runButton = "Project"
