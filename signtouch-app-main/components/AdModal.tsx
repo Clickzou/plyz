@@ -27,7 +27,7 @@ export default function AdModal({ visible, onClose, onAdWatched }: AdModalProps)
   const handleUpgrade = () => {
     onClose();
     setTimeout(() => {
-      router.push('/subscription');
+      router.push('/paywall');
     }, 200);
   };
 

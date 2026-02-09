@@ -1252,7 +1252,7 @@ export default function EditScreen() {
         onClose={() => setShowPremiumModal(false)}
         onUpgrade={() => {
           setShowPremiumModal(false);
-          router.push('/subscription');
+          router.push('/paywall');
         }}
         title={t('premiumSubscription')}
         message={t('signatureLimitEditMessage')}

@@ -1352,7 +1352,7 @@ export default function ComposeScreen() {
         onClose={() => setShowPremiumModal(false)}
         onUpgrade={() => {
           setShowPremiumModal(false);
-          router.push('/subscription');
+          router.push('/paywall');
         }}
         title={t('limitReached')}
         message={t('limitReachedSignatureMessage')}

@@ -1435,7 +1435,7 @@ export default function ResultScreen() {
     
     if (status !== 'paid') {
       await setPostAuthRedirect('/gallery');
-      router.push('/subscription');
+      router.push('/paywall');
       return;
     }
 
@@ -1531,7 +1531,7 @@ export default function ResultScreen() {
     
     if (status !== 'paid') {
       await setPostAuthRedirect('/gallery');
-      router.push('/subscription');
+      router.push('/paywall');
       return;
     }
 
@@ -2338,7 +2338,7 @@ export default function ResultScreen() {
           onUpgrade={async () => {
             setShowPremiumModal(false);
             await setPostAuthRedirect('/gallery');
-            router.push('/subscription');
+            router.push('/paywall');
           }}
           title={t('limitReached')}
           message={

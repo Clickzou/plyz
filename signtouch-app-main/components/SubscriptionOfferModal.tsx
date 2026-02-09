@@ -13,10 +13,8 @@ interface SubscriptionOfferModalProps {
 }
 
 export default function SubscriptionOfferModal({ visible, onClose, onPurchaseSuccess }: SubscriptionOfferModalProps) {
-  const [selectedPlan, setSelectedPlan] = useState<'trial' | 'yearly' | 'monthly'>('trial');
-  const [isSubscribing, setIsSubscribing] = useState(false);
   const [alertBeforeEnd, setAlertBeforeEnd] = useState(true);
-  const { setStatus } = useSubscription();
+  const { status } = useSubscription();
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -26,51 +24,17 @@ export default function SubscriptionOfferModal({ visible, onClose, onPurchaseSuc
     }
   }, [visible]);
 
-  const handleSubscribe = async () => {
-    setIsSubscribing(true);
-
-    // ⚠️ SIMULATION - Pour un vrai système de paiement :
-    // 1. Installer react-native-purchases (RevenueCat)
-    // 2. Configurer les produits dans App Store Connect et Google Play Console
-    // 3. Remplacer ce code par l'appel RevenueCat
-    // Voir le fichier REVENUECAT_SETUP.md pour les instructions complètes
-
-    // TODO: Remplacer par le vrai code RevenueCat
-    // const offerings = await Purchases.getOfferings();
-    // const purchaseResult = await Purchases.purchasePackage(packageToPurchase);
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    await setStatus('paid');
-    setIsSubscribing(false);
+  const handleGoToPaywall = async () => {
+    await setLastSubscriptionOfferDate(Date.now());
     onClose();
-
-    console.log('✅ Abonnement activé (simulation)');
-
-    if (onPurchaseSuccess) {
-      setTimeout(() => {
-        onPurchaseSuccess();
-      }, 500);
-    }
+    setTimeout(() => {
+      router.push('/paywall');
+    }, 300);
   };
 
   const handleContinueFree = async () => {
     await setLastSubscriptionOfferDate(Date.now());
     onClose();
-  };
-
-  const openTerms = () => {
-    onClose();
-    setTimeout(() => {
-      router.push('/terms');
-    }, 300);
-  };
-
-  const openPrivacy = () => {
-    onClose();
-    setTimeout(() => {
-      router.push('/privacy');
-    }, 300);
   };
 
   return (
@@ -130,54 +94,19 @@ export default function SubscriptionOfferModal({ visible, onClose, onPurchaseSuc
                 </View>
               </View>
 
-              <View style={styles.plansContainer}>
-                <TouchableOpacity
-                  style={[styles.planCardNew, selectedPlan === 'trial' && styles.planCardSelectedNew]}
-                  onPress={() => setSelectedPlan('trial')}
-                  activeOpacity={0.9}
-                >
-                  <View style={styles.planLeft}>
-                    <Text style={styles.planTitleNew}>{t('free7Days')}</Text>
-                    <Text style={styles.planSubtextNew}>{t('sevenDays')}</Text>
-                  </View>
-                  {selectedPlan === 'trial' && (
-                    <View style={styles.checkBadge}>
-                      <Check size={20} color="#ffffff" strokeWidth={3} />
-                    </View>
-                  )}
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.planCardNew, selectedPlan === 'yearly' && styles.planCardSelectedNew]}
-                  onPress={() => setSelectedPlan('yearly')}
-                  activeOpacity={0.9}
-                >
-                  <View style={styles.planLeft}>
-                    <Text style={styles.planTitleNew}>{t('oneYear')}</Text>
-                    <Text style={styles.planSubtextNew}>€29.99 <Text style={styles.savingText}>(-50%)</Text></Text>
-                  </View>
-                  {selectedPlan === 'yearly' && (
-                    <View style={styles.checkBadge}>
-                      <Check size={20} color="#ffffff" strokeWidth={3} />
-                    </View>
-                  )}
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.planCardNew, selectedPlan === 'monthly' && styles.planCardSelectedNew]}
-                  onPress={() => setSelectedPlan('monthly')}
-                  activeOpacity={0.9}
-                >
-                  <View style={styles.planLeft}>
-                    <Text style={styles.planTitleNew}>{t('oneMonth')}</Text>
-                    <Text style={styles.planSubtextNew}>€4.99</Text>
-                  </View>
-                  {selectedPlan === 'monthly' && (
-                    <View style={styles.checkBadge}>
-                      <Check size={20} color="#ffffff" strokeWidth={3} />
-                    </View>
-                  )}
-                </TouchableOpacity>
+              <View style={styles.plansPreview}>
+                <View style={styles.planPreviewItem}>
+                  <Text style={styles.planPreviewTitle}>{t('free7Days')}</Text>
+                  <Text style={styles.planPreviewSubtext}>{t('sevenDays')}</Text>
+                </View>
+                <View style={styles.planPreviewItem}>
+                  <Text style={styles.planPreviewTitle}>{t('oneYear')}</Text>
+                  <Text style={styles.planPreviewSubtext}>€29.99 <Text style={styles.savingText}>(-50%)</Text></Text>
+                </View>
+                <View style={styles.planPreviewItem}>
+                  <Text style={styles.planPreviewTitle}>{t('oneMonth')}</Text>
+                  <Text style={styles.planPreviewSubtext}>€4.99</Text>
+                </View>
               </View>
 
               <View style={styles.alertContainer}>
@@ -191,43 +120,23 @@ export default function SubscriptionOfferModal({ visible, onClose, onPurchaseSuc
               </View>
 
               <TouchableOpacity
-                style={[styles.subscribeButtonNew, isSubscribing && styles.subscribeButtonDisabled]}
-                onPress={handleSubscribe}
-                disabled={isSubscribing}
+                style={styles.subscribeButtonNew}
+                onPress={handleGoToPaywall}
                 activeOpacity={0.8}
               >
                 <Text style={styles.subscribeButtonTextNew}>
-                  {isSubscribing ? t('processing') : selectedPlan === 'trial' ? t('tryForFree') : t('subscribeNow')}
+                  {t('tryForFree') || 'Essayer gratuitement'}
                 </Text>
               </TouchableOpacity>
 
               <Text style={styles.trialInfoText}>
-                {selectedPlan === 'trial'
-                  ? t('trialThenYearly')
-                  : selectedPlan === 'yearly'
-                  ? t('yearlyPrice19')
-                  : t('monthlyPrice2')
-                }
+                {t('trialThenYearly')}
               </Text>
 
               <View style={styles.legalContainer}>
                 <Text style={styles.legalText}>
                   {t('paymentLegalText')}
                 </Text>
-
-                <View style={styles.legalLinks}>
-                  <Text style={styles.legalLinkText}>
-                    {t('moreInfoConsult')}{' '}
-                    <Text style={styles.legalLink} onPress={openTerms}>
-                      {t('termsOfUse')}
-                    </Text>
-                    {' '}{t('andOur')}{' '}
-                    <Text style={styles.legalLink} onPress={openPrivacy}>
-                      {t('privacyPolicy')}
-                    </Text>
-                    .
-                  </Text>
-                </View>
               </View>
             </View>
           </ScrollView>
@@ -309,10 +218,10 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     lineHeight: 22,
   },
-  plansContainer: {
+  plansPreview: {
     marginBottom: 24,
   },
-  planCardNew: {
+  planPreviewItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -324,34 +233,18 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#2a2a2a',
   },
-  planCardSelectedNew: {
-    borderColor: '#00C853',
-    backgroundColor: 'rgba(0, 200, 83, 0.15)',
-  },
-  planLeft: {
-    flex: 1,
-  },
-  planTitleNew: {
-    fontSize: 20,
+  planPreviewTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#ffffff',
-    marginBottom: 2,
   },
-  planSubtextNew: {
+  planPreviewSubtext: {
     fontSize: 14,
     color: '#999999',
   },
   savingText: {
     color: '#4ade80',
     fontWeight: '700',
-  },
-  checkBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#00C853',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   alertContainer: {
     flexDirection: 'row',
@@ -376,14 +269,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: '#00C853',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  subscribeButtonDisabled: {
-    opacity: 0.6,
   },
   subscribeButtonTextNew: {
     color: '#ffffff',
@@ -405,18 +290,5 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     textAlign: 'left',
     marginBottom: 16,
-  },
-  legalLinks: {
-    alignItems: 'flex-start',
-  },
-  legalLinkText: {
-    fontSize: 11,
-    color: '#666666',
-    lineHeight: 17,
-    textAlign: 'left',
-  },
-  legalLink: {
-    color: '#00C853',
-    textDecorationLine: 'underline',
   },
 });

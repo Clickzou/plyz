@@ -324,7 +324,7 @@ export default function JoinEventScreen() {
     
     if (status !== 'paid') {
       await setPostAuthRedirect('/join-event');
-      router.push('/subscription');
+      router.push('/paywall');
       return;
     }
     

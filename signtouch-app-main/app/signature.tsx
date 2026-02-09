@@ -583,7 +583,7 @@ export default function SignatureScreen() {
         }}
         onUpgrade={() => {
           setShowPremiumModal(false);
-          router.push('/subscription');
+          router.push('/paywall');
         }}
         title={t('limitReached')}
         message={t('signatureLimitMessage')}

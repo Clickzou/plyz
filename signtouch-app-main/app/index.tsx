@@ -295,7 +295,7 @@ export default function HomeScreen() {
         isExpired={true}
         onSubscribe={() => {
           setShowTrialExpiredModal(false);
-          router.push('/subscription');
+          router.push('/paywall');
         }}
       />
     </View>

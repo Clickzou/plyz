@@ -9,6 +9,7 @@ import {
   Modal,
   TextInput,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
@@ -18,6 +19,7 @@ import {
   X,
   ArrowLeft,
   Ticket,
+  RotateCcw,
 } from 'lucide-react-native';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -25,22 +27,45 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { validatePromoCode, getPromoPremiumStatus } from '@/utils/promoCodeStorage';
+import {
+  isAvailable as isRCAvailable,
+  getSubscriptionOfferings,
+  purchaseSubscription,
+  restorePurchases,
+  SubscriptionOffering,
+} from '@/utils/revenueCat';
 
-export default function SubscriptionScreen() {
+type PlanType = 'trial' | 'yearly' | 'monthly';
+
+const FALLBACK_PLANS: { type: PlanType; priceString: string; saving?: string }[] = [
+  { type: 'trial', priceString: '' },
+  { type: 'yearly', priceString: '€29.99', saving: '-50%' },
+  { type: 'monthly', priceString: '€4.99' },
+];
+
+export default function PaywallScreen() {
   const insets = useSafeAreaInsets();
   const { setStatus } = useSubscription();
   const { t } = useLanguage();
   const { getPostAuthRedirect, clearPostAuthRedirect } = useAuth();
   const params = useLocalSearchParams();
   const fromAccount = params.fromAccount === 'true';
+
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoMessage, setPromoMessage] = useState<{ text: string; success: boolean } | null>(null);
   const [promoPremiumExpires, setPromoPremiumExpires] = useState<string | null>(null);
 
+  const [offerings, setOfferings] = useState<SubscriptionOffering[]>([]);
+  const [loadingOfferings, setLoadingOfferings] = useState(true);
+  const [purchasing, setPurchasing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>('trial');
+
   useEffect(() => {
     checkPromoPremium();
+    loadOfferings();
   }, []);
 
   const checkPromoPremium = async () => {
@@ -50,40 +75,145 @@ export default function SubscriptionScreen() {
     }
   };
 
+  const loadOfferings = async () => {
+    setLoadingOfferings(true);
+    try {
+      const products = await getSubscriptionOfferings();
+      setOfferings(products);
+    } catch (error) {
+      console.error('[Paywall] Error loading offerings:', error);
+    } finally {
+      setLoadingOfferings(false);
+    }
+  };
+
+  const findPackageForPlan = (plan: PlanType): SubscriptionOffering | undefined => {
+    if (plan === 'trial') {
+      return offerings.find(
+        (o) =>
+          o.identifier.includes('trial') ||
+          o.packageType === 'ANNUAL' ||
+          o.identifier.includes('yearly') ||
+          o.identifier.includes('annual')
+      );
+    }
+    if (plan === 'yearly') {
+      return offerings.find(
+        (o) =>
+          o.packageType === 'ANNUAL' ||
+          o.identifier.includes('yearly') ||
+          o.identifier.includes('annual')
+      );
+    }
+    if (plan === 'monthly') {
+      return offerings.find(
+        (o) =>
+          o.packageType === 'MONTHLY' ||
+          o.identifier.includes('monthly')
+      );
+    }
+    return undefined;
+  };
+
+  const getPriceForPlan = (plan: PlanType): string => {
+    const offering = findPackageForPlan(plan);
+    if (offering) return offering.priceString;
+    const fallback = FALLBACK_PLANS.find((p) => p.type === plan);
+    return fallback?.priceString || '';
+  };
+
   const handlePromoSubmit = async () => {
     if (!promoCode.trim()) return;
-    
+
     setPromoLoading(true);
     setPromoMessage(null);
-    
+
     const result = await validatePromoCode(promoCode);
-    
+
     setPromoMessage({ text: result.message, success: result.success });
     setPromoLoading(false);
-    
+
     if (result.success) {
       await setStatus('paid');
       setTimeout(() => {
         setShowPromoModal(false);
-        router.back();
+        navigateAfterPurchase();
       }, 1500);
     }
   };
 
-  const handleSubscribe = async (plan: string) => {
-    if (Platform.OS !== 'web') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-    console.log('Subscribe to:', plan);
-    await setStatus('paid');
-
-    // Vérifier s'il y a une redirection post-auth
+  const navigateAfterPurchase = async () => {
     const returnPath = await getPostAuthRedirect();
     if (returnPath) {
       await clearPostAuthRedirect();
       router.replace(returnPath as any);
     } else {
       router.replace('/');
+    }
+  };
+
+  const handleSubscribe = async (plan: PlanType) => {
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+
+    if (!isRCAvailable() || offerings.length === 0) {
+      console.log('[Paywall] RevenueCat not available, activating locally for plan:', plan);
+      await setStatus('paid');
+      navigateAfterPurchase();
+      return;
+    }
+
+    const offering = findPackageForPlan(plan);
+    if (!offering) {
+      console.error('[Paywall] No matching offering for plan:', plan);
+      Alert.alert('Error', 'This product is not available right now.');
+      return;
+    }
+
+    setPurchasing(true);
+    try {
+      const result = await purchaseSubscription(offering.rcPackage);
+
+      if (result.success) {
+        await setStatus('paid');
+        navigateAfterPurchase();
+      } else if (result.cancelled) {
+        console.log('[Paywall] Purchase cancelled by user');
+      } else {
+        Alert.alert('Error', result.error || 'An error occurred during purchase.');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'An error occurred during purchase.');
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!isRCAvailable()) {
+      Alert.alert('Info', 'Restore is only available on the mobile app.');
+      return;
+    }
+
+    setRestoring(true);
+    try {
+      const result = await restorePurchases();
+
+      if (result.success && result.isPremium) {
+        await setStatus('paid');
+        Alert.alert('Success', 'Your purchases have been restored!', [
+          { text: 'OK', onPress: () => navigateAfterPurchase() },
+        ]);
+      } else if (result.success && !result.isPremium) {
+        Alert.alert('Info', 'No previous purchases found.');
+      } else {
+        Alert.alert('Error', result.error || 'Failed to restore purchases.');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to restore purchases.');
+    } finally {
+      setRestoring(false);
     }
   };
 
@@ -156,8 +286,12 @@ export default function SubscriptionScreen() {
 
         <View style={styles.plansSection}>
           <TouchableOpacity
-            style={[styles.planCard, styles.planCardFeatured]}
-            onPress={() => handleSubscribe('trial')}
+            style={[
+              styles.planCard,
+              styles.planCardFeatured,
+              selectedPlan === 'trial' && styles.planCardSelected,
+            ]}
+            onPress={() => setSelectedPlan('trial')}
             activeOpacity={0.8}
           >
             <View style={styles.planHeader}>
@@ -165,6 +299,11 @@ export default function SubscriptionScreen() {
                 <Text style={styles.planName}>{t('free7Days')}</Text>
                 <Text style={styles.planPrice}>{t('sevenDays')}</Text>
               </View>
+              {selectedPlan === 'trial' && (
+                <View style={styles.selectedBadge}>
+                  <Check size={18} color="#fff" strokeWidth={3} />
+                </View>
+              )}
             </View>
             <Text style={styles.planDescription}>
               {t('trialThenYearly')}
@@ -172,17 +311,27 @@ export default function SubscriptionScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.planCard}
-            onPress={() => handleSubscribe('yearly')}
+            style={[
+              styles.planCard,
+              selectedPlan === 'yearly' && styles.planCardSelected,
+            ]}
+            onPress={() => setSelectedPlan('yearly')}
             activeOpacity={0.8}
           >
             <View style={styles.planHeader}>
               <View style={styles.planLeft}>
                 <Text style={styles.planName}>{t('oneYear')}</Text>
-                <Text style={styles.planPrice}>€29.99</Text>
+                <Text style={styles.planPrice}>{getPriceForPlan('yearly')}</Text>
               </View>
-              <View style={styles.saveBadge}>
-                <Text style={styles.saveBadgeText}>-50%</Text>
+              <View style={styles.planRight}>
+                <View style={styles.saveBadge}>
+                  <Text style={styles.saveBadgeText}>-50%</Text>
+                </View>
+                {selectedPlan === 'yearly' && (
+                  <View style={styles.selectedBadge}>
+                    <Check size={18} color="#fff" strokeWidth={3} />
+                  </View>
+                )}
               </View>
             </View>
             <Text style={styles.planDescription}>
@@ -191,15 +340,23 @@ export default function SubscriptionScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.planCard}
-            onPress={() => handleSubscribe('monthly')}
+            style={[
+              styles.planCard,
+              selectedPlan === 'monthly' && styles.planCardSelected,
+            ]}
+            onPress={() => setSelectedPlan('monthly')}
             activeOpacity={0.8}
           >
             <View style={styles.planHeader}>
               <View style={styles.planLeft}>
                 <Text style={styles.planName}>{t('oneMonth')}</Text>
-                <Text style={styles.planPrice}>€4.99</Text>
+                <Text style={styles.planPrice}>{getPriceForPlan('monthly')}</Text>
               </View>
+              {selectedPlan === 'monthly' && (
+                <View style={styles.selectedBadge}>
+                  <Check size={18} color="#fff" strokeWidth={3} />
+                </View>
+              )}
             </View>
             <Text style={styles.planDescription}>
               {t('monthlyPrice4')}
@@ -208,12 +365,43 @@ export default function SubscriptionScreen() {
         </View>
 
         <TouchableOpacity
+          style={[styles.subscribeButton, (purchasing || restoring) && styles.buttonDisabled]}
+          onPress={() => handleSubscribe(selectedPlan)}
+          disabled={purchasing || restoring}
+          activeOpacity={0.8}
+        >
+          {purchasing ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.subscribeButtonText}>
+              {selectedPlan === 'trial' ? (t('tryForFree') || 'Essayer gratuitement') : (t('subscribeNow') || 'S\'abonner')}
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={styles.promoButton}
           onPress={() => setShowPromoModal(true)}
           activeOpacity={0.7}
         >
           <Gift size={20} color="#f59e0b" />
           <Text style={styles.promoButtonText}>{t('havePromoCode') || 'Vous avez un code promo ?'}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.restoreButton, restoring && styles.buttonDisabled]}
+          onPress={handleRestore}
+          disabled={restoring}
+          activeOpacity={0.7}
+        >
+          {restoring ? (
+            <ActivityIndicator color="#10b981" size="small" />
+          ) : (
+            <>
+              <RotateCcw size={16} color="#10b981" />
+              <Text style={styles.restoreButtonText}>{t('restorePurchases')}</Text>
+            </>
+          )}
         </TouchableOpacity>
 
         <View style={styles.footer}>
@@ -259,13 +447,13 @@ export default function SubscriptionScreen() {
             >
               <X size={24} color="#6b7280" />
             </TouchableOpacity>
-            
+
             <Gift size={48} color="#f59e0b" style={{ marginBottom: 16 }} />
             <Text style={styles.promoTitle}>{t('promoCode') || 'Code promo'}</Text>
             <Text style={styles.promoSubtitle}>
               {t('enterPromoCode') || 'Entrez votre code promotionnel'}
             </Text>
-            
+
             <TextInput
               style={styles.promoInput}
               placeholder="XXXXXX"
@@ -275,7 +463,7 @@ export default function SubscriptionScreen() {
               autoCapitalize="characters"
               maxLength={20}
             />
-            
+
             {promoMessage && (
               <Text style={[
                 styles.promoMessageText,
@@ -284,9 +472,9 @@ export default function SubscriptionScreen() {
                 {promoMessage.text}
               </Text>
             )}
-            
+
             <TouchableOpacity
-              style={[styles.promoSubmitButton, promoLoading && styles.promoButtonDisabled]}
+              style={[styles.promoSubmitButton, promoLoading && styles.buttonDisabled]}
               onPress={handlePromoSubmit}
               disabled={promoLoading}
             >
@@ -323,12 +511,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#ffffff',
-    marginLeft: 15,
   },
   headerTitleCentered: {
     fontSize: 20,
@@ -436,11 +618,23 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
     borderColor: '#10b981',
   },
+  planCardSelected: {
+    borderColor: '#10b981',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+  },
   planHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 8,
   },
   planLeft: {
     flex: 1,
+  },
+  planRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   planName: {
     fontSize: 20,
@@ -463,10 +657,66 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
+  selectedBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#10b981',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   planDescription: {
     fontSize: 13,
     color: '#999999',
     lineHeight: 18,
+  },
+  subscribeButton: {
+    backgroundColor: '#10b981',
+    marginHorizontal: 20,
+    paddingVertical: 18,
+    borderRadius: 30,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  subscribeButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  promoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginTop: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+  },
+  promoButtonText: {
+    fontSize: 15,
+    color: '#f59e0b',
+    fontWeight: '500',
+  },
+  restoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginHorizontal: 20,
+    marginTop: 12,
+    paddingVertical: 12,
+  },
+  restoreButtonText: {
+    fontSize: 14,
+    color: '#10b981',
+    fontWeight: '500',
   },
   footer: {
     paddingHorizontal: 20,
@@ -512,24 +762,6 @@ const styles = StyleSheet.create({
   legalSeparator: {
     fontSize: 11,
     color: '#666',
-  },
-  promoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginHorizontal: 20,
-    marginTop: 16,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.3)',
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-  },
-  promoButtonText: {
-    fontSize: 15,
-    color: '#f59e0b',
-    fontWeight: '500',
   },
   modalOverlay: {
     flex: 1,
@@ -601,9 +833,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center' as const,
-  },
-  promoButtonDisabled: {
-    opacity: 0.6,
   },
   promoSubmitButtonText: {
     fontSize: 16,

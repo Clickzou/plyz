@@ -476,7 +476,7 @@ export default function CreateEventScreen() {
       // Sauvegarder les données du formulaire avant de rediriger
       await saveFormData();
       await setPostAuthRedirect('/create-event');
-      router.push('/subscription');
+      router.push('/paywall');
       return;
     }
     

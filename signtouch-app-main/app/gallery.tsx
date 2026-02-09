@@ -383,7 +383,7 @@ export default function GalleryScreen() {
     
     if (status !== 'paid') {
       await setPostAuthRedirect('/gallery');
-      router.push('/subscription');
+      router.push('/paywall');
       return;
     }
     
@@ -933,7 +933,7 @@ export default function GalleryScreen() {
         isExpired={false}
         onSubscribe={() => {
           setShowTrialModal(false);
-          router.push('/subscription');
+          router.push('/paywall');
         }}
         onLater={() => setShowTrialModal(false)}
       />

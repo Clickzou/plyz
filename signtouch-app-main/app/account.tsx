@@ -113,7 +113,7 @@ export default function AccountScreen() {
       router.push('/about');
     } else if (action === 'subscription') {
       if (user) {
-        router.push('/subscription?fromAccount=true');
+        router.push('/paywall?fromAccount=true');
       } else {
         showAccountModal();
       }

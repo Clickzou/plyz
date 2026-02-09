@@ -58,7 +58,7 @@ export default function AuthCallbackScreen() {
     }
     
     console.log('[AuthCallback] Session set successfully!');
-    router.replace('/subscription');
+    router.replace('/paywall');
     return true;
   };
 
@@ -77,7 +77,7 @@ export default function AuthCallbackScreen() {
     }
 
     console.log('[AuthCallback] OTP verified!');
-    router.replace('/subscription');
+    router.replace('/paywall');
     return true;
   };
 
@@ -88,14 +88,14 @@ export default function AuthCallbackScreen() {
     if (!url) {
       if (user) {
         console.log('[AuthCallback] User already logged in');
-        router.replace('/subscription');
+        router.replace('/paywall');
         return;
       }
       
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         console.log('[AuthCallback] Existing session found');
-        router.replace('/subscription');
+        router.replace('/paywall');
         return;
       }
 
@@ -120,13 +120,13 @@ export default function AuthCallbackScreen() {
     }
 
     if (user) {
-      router.replace('/subscription');
+      router.replace('/paywall');
       return;
     }
 
     const { data } = await supabase.auth.getSession();
     if (data.session) {
-      router.replace('/subscription');
+      router.replace('/paywall');
       return;
     }
 
@@ -163,13 +163,13 @@ export default function AuthCallbackScreen() {
         console.log('[AuthCallback] Current URL check:', currentUrl);
         
         if (user) {
-          router.replace('/subscription');
+          router.replace('/paywall');
           return;
         }
         
         const { data } = await supabase.auth.getSession();
         if (data.session) {
-          router.replace('/subscription');
+          router.replace('/paywall');
           return;
         }
         

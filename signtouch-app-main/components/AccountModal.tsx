@@ -70,7 +70,7 @@ export default function AccountModal({
         setStep('success');
         setTimeout(() => {
           handleClose();
-          router.replace('/subscription');
+          router.replace('/paywall');
         }, 1500);
       }
     } catch (err: any) {
