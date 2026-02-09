@@ -1520,18 +1520,16 @@ export default function ResultScreen() {
 
   // Save and return to gallery
   const saveAndReturn = async () => {
-    console.log('🔒 saveAndReturn appelé, user:', user?.id, 'status:', status);
+    console.log('saveAndReturn appelé, user:', user?.id, 'status:', status, 'isPremium:', isPremium);
     
-    // Vérifier si l'utilisateur est connecté et abonné
-    if (!user) {
-      console.log('🔒 Pas de user, affichage du modal de compte');
-      setShowAccountModal(true);
+    if (!isPremium) {
+      await setPostAuthRedirect('/gallery');
+      router.push('/paywall');
       return;
     }
     
-    if (status !== 'paid') {
-      await setPostAuthRedirect('/gallery');
-      router.push('/paywall');
+    if (!user) {
+      setShowAccountModal(true);
       return;
     }
 
