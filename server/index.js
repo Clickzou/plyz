@@ -103,6 +103,89 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+app.post('/api/create-connect-account', async (req, res) => {
+  try {
+    const stripe = await getStripe();
+    const { celebrityName, celebrityEmail, celebrityId } = req.body;
+
+    if (!celebrityEmail) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const account = await stripe.accounts.create({
+      type: 'express',
+      country: 'FR',
+      email: celebrityEmail,
+      capabilities: {
+        card_payments: { requested: true },
+        transfers: { requested: true },
+      },
+      business_type: 'individual',
+      metadata: {
+        celebrity_id: celebrityId || '',
+        celebrity_name: celebrityName || '',
+        platform: 'signtouch',
+      },
+    });
+
+    console.log('[Connect] Account created:', account.id, 'for:', celebrityEmail);
+
+    res.json({ accountId: account.id });
+  } catch (error) {
+    console.error('[Connect] Error creating account:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/create-account-link', async (req, res) => {
+  try {
+    const stripe = await getStripe();
+    const { accountId, returnUrl, refreshUrl } = req.body;
+
+    if (!accountId) {
+      return res.status(400).json({ error: 'Account ID is required' });
+    }
+
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: refreshUrl || returnUrl || 'https://signtouch.app/stripe-refresh',
+      return_url: returnUrl || 'https://signtouch.app/stripe-return',
+      type: 'account_onboarding',
+    });
+
+    console.log('[Connect] Account link created for:', accountId);
+
+    res.json({ url: accountLink.url });
+  } catch (error) {
+    console.error('[Connect] Error creating account link:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/connect-account-status', async (req, res) => {
+  try {
+    const stripe = await getStripe();
+    const { account_id } = req.query;
+
+    if (!account_id) {
+      return res.status(400).json({ error: 'Account ID is required' });
+    }
+
+    const account = await stripe.accounts.retrieve(account_id);
+
+    res.json({
+      id: account.id,
+      charges_enabled: account.charges_enabled,
+      payouts_enabled: account.payouts_enabled,
+      details_submitted: account.details_submitted,
+      onboarding_complete: account.charges_enabled && account.payouts_enabled,
+    });
+  } catch (error) {
+    console.error('[Connect] Error checking account status:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
     const stripe = await getStripe();
@@ -124,6 +207,10 @@ app.post('/api/create-checkout-session', async (req, res) => {
 
     if (!sessionId || !celebrityId) {
       return res.status(400).json({ error: 'Missing session or celebrity ID' });
+    }
+
+    if (!celebrityStripeAccountId) {
+      return res.status(400).json({ error: 'Celebrity Stripe account is required for paid sessions' });
     }
 
     const signTouchFeeCents = Math.round(priceCents * 0.30);
@@ -202,18 +289,9 @@ app.get('/api/verify-payment', async (req, res) => {
 
 const PORT = process.env.STRIPE_SERVER_PORT || 3001;
 
-async function startServer() {
-  try {
-    await getStripe();
-    console.log('[Stripe Server] Stripe credentials loaded successfully');
-  } catch (err) {
-    console.warn('[Stripe Server] Warning: Could not load Stripe credentials on startup:', err.message);
-    console.warn('[Stripe Server] Credentials will be loaded on first request');
-  }
-
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Stripe Server] Running on port ${PORT}`);
-  });
-}
-
-startServer();
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[Stripe Server] Running on port ${PORT}`);
+  getStripe()
+    .then(() => console.log('[Stripe Server] Stripe credentials loaded successfully'))
+    .catch((err) => console.warn('[Stripe Server] Warning: Stripe credentials will be loaded on first request:', err.message));
+});

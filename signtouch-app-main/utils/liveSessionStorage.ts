@@ -22,6 +22,7 @@ export interface LiveSession {
   celebrity_push_token?: string | null;
   dedication_photo_url?: string | null;
   dedication_signature_svg?: string | null;
+  celebrity_stripe_account_id?: string | null;
 }
 
 export interface QueueEntry {
@@ -169,24 +170,31 @@ export const createLiveSession = async (
   maxSlots: number,
   priceCents: number = 0,
   durationPerFanMinutes: number = 5,
-  coverPhotoUrl: string | null = null
+  coverPhotoUrl: string | null = null,
+  celebrityStripeAccountId: string | null = null
 ): Promise<LiveSession | null> => {
   try {
     const code = generateSessionCode();
     
+    const insertData: any = {
+      code,
+      celebrity_id: celebrityId,
+      celebrity_name: celebrityName,
+      duration_minutes: durationMinutes,
+      duration_per_fan_minutes: durationPerFanMinutes,
+      max_slots: maxSlots,
+      price_cents: priceCents,
+      status: 'waiting',
+      cover_photo_url: coverPhotoUrl,
+    };
+
+    if (celebrityStripeAccountId) {
+      insertData.celebrity_stripe_account_id = celebrityStripeAccountId;
+    }
+
     const { data, error } = await supabase
       .from('live_sessions')
-      .insert({
-        code,
-        celebrity_id: celebrityId,
-        celebrity_name: celebrityName,
-        duration_minutes: durationMinutes,
-        duration_per_fan_minutes: durationPerFanMinutes,
-        max_slots: maxSlots,
-        price_cents: priceCents,
-        status: 'waiting',
-        cover_photo_url: coverPhotoUrl,
-      })
+      .insert(insertData)
       .select()
       .single();
 

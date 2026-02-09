@@ -30,16 +30,18 @@ export default function PaymentSuccessScreen() {
     try {
       let paymentVerified = false;
 
-      if (STRIPE_SERVER_URL && params.checkout_session_id) {
-        const response = await fetch(
-          `${STRIPE_SERVER_URL}/api/verify-payment?checkout_session_id=${params.checkout_session_id}`
-        );
-        const data = await response.json();
-        console.log('[PaymentSuccess] Verification:', data);
-        paymentVerified = data.paid === true;
-      } else {
-        paymentVerified = true;
+      if (!STRIPE_SERVER_URL || !params.checkout_session_id) {
+        console.error('[PaymentSuccess] Missing server URL or checkout session ID');
+        setError(true);
+        return;
       }
+
+      const response = await fetch(
+        `${STRIPE_SERVER_URL}/api/verify-payment?checkout_session_id=${params.checkout_session_id}`
+      );
+      const data = await response.json();
+      console.log('[PaymentSuccess] Verification:', data);
+      paymentVerified = data.paid === true;
 
       if (paymentVerified) {
         setVerified(true);

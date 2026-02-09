@@ -28,6 +28,7 @@ export default function PurchaseSessionScreen() {
     sessionId: string;
     priceCents: string;
     durationMinutes: string;
+    celebrityStripeAccountId: string;
   }>();
 
   const [purchasing, setPurchasing] = useState(false);
@@ -86,8 +87,9 @@ export default function PurchaseSessionScreen() {
           celebrityName: params.celebrityName,
           priceCents: priceCents,
           currency: 'eur',
+          celebrityStripeAccountId: params.celebrityStripeAccountId || '',
           successUrl: `${currentOrigin}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&live_session_id=${params.sessionId}&celebrity_id=${params.celebrityId}&celebrity_name=${encodeURIComponent(params.celebrityName || '')}&duration_minutes=${params.durationMinutes || '5'}&price_cents=${params.priceCents || '0'}`,
-          cancelUrl: `${currentOrigin}/purchase-session?sessionId=${params.sessionId}&celebrityId=${params.celebrityId}&celebrityName=${params.celebrityName}&priceCents=${params.priceCents}&durationMinutes=${params.durationMinutes}`,
+          cancelUrl: `${currentOrigin}/purchase-session?sessionId=${params.sessionId}&celebrityId=${params.celebrityId}&celebrityName=${params.celebrityName}&priceCents=${params.priceCents}&durationMinutes=${params.durationMinutes}&celebrityStripeAccountId=${params.celebrityStripeAccountId || ''}`,
         }),
       });
 

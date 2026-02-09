@@ -68,6 +68,7 @@ export default function CreateLiveSessionScreen() {
   const [photoError, setPhotoError] = useState(false);
   const [showStripeConnect, setShowStripeConnect] = useState(false);
   const [stripeConnected, setStripeConnected] = useState(false);
+  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
 
   const handleWebFileChange = useCallback((event: Event) => {
     const input = event.target as HTMLInputElement;
@@ -174,21 +175,22 @@ export default function CreateLiveSessionScreen() {
     }
   };
 
-  const checkStripeConnectStatus = async (): Promise<boolean> => {
+  const checkStripeConnectStatus = async (): Promise<string | null> => {
     try {
-      const status = await AsyncStorage.getItem('stripe_connect_account_id');
-      return !!status;
+      const savedId = await AsyncStorage.getItem('stripe_connect_account_id');
+      return savedId;
     } catch {
-      return false;
+      return null;
     }
   };
 
-  const handleStripeConnected = async () => {
+  const handleStripeConnected = async (accountId: string) => {
     try {
-      await AsyncStorage.setItem('stripe_connect_account_id', `acct_${Date.now()}`);
+      await AsyncStorage.setItem('stripe_connect_account_id', accountId);
+      setStripeAccountId(accountId);
       setStripeConnected(true);
       setShowStripeConnect(false);
-      proceedToCreateSession();
+      proceedToCreateSession(accountId);
     } catch (error) {
       console.error('[CreateSession] Error saving Stripe status:', error);
     }
@@ -215,16 +217,18 @@ export default function CreateLiveSessionScreen() {
     }
     setNameError(false);
 
-    const isStripeConnected = stripeConnected || await checkStripeConnectStatus();
-    if (!isStripeConnected) {
+    const existingAccountId = stripeAccountId || await checkStripeConnectStatus();
+    if (!existingAccountId) {
       setShowStripeConnect(true);
       return;
     }
 
-    proceedToCreateSession();
+    setStripeAccountId(existingAccountId);
+    proceedToCreateSession(existingAccountId);
   };
 
-  const proceedToCreateSession = async () => {
+  const proceedToCreateSession = async (accountId?: string) => {
+    const finalStripeAccountId = accountId || stripeAccountId;
 
     setIsCreating(true);
     setNameError(false);
@@ -267,6 +271,7 @@ export default function CreateLiveSessionScreen() {
           created_at: now.toISOString(),
           expires_at: expiresAt.toISOString(),
           cover_photo_url: uploadedPhotoUrl,
+          celebrity_stripe_account_id: finalStripeAccountId,
         };
       };
       
@@ -278,7 +283,8 @@ export default function CreateLiveSessionScreen() {
           calculatedMaxFans,
           price,
           durationPerFan,
-          uploadedPhotoUrl
+          uploadedPhotoUrl,
+          finalStripeAccountId
         );
         if (!session) {
           console.log('Supabase returned null, creating local session');
@@ -551,6 +557,7 @@ export default function CreateLiveSessionScreen() {
         visible={showStripeConnect}
         onClose={() => setShowStripeConnect(false)}
         onConnected={handleStripeConnected}
+        celebrityName={celebrityName}
       />
     </View>
   );

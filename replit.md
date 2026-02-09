@@ -41,11 +41,14 @@ Preferred communication style: Simple, everyday language.
 - **Live Sessions (Stripe Checkout - Option A)**: Direct CB payment via Stripe Checkout, no Apple/Google commission (like Betclic model).
   - **Purchase Flow**: Fan → `purchase-session.tsx` → Express backend creates Stripe Checkout Session → Fan redirected to Stripe payment page → Payment completed → `payment-success.tsx` verifies payment → Fan enters video call queue.
   - **Express Backend** (`server/index.js`, port 3001):
+    - `POST /api/create-connect-account`: Creates Stripe Connect Express account for celebrity onboarding.
+    - `POST /api/create-account-link`: Generates Stripe Connect onboarding link for celebrity.
+    - `GET /api/connect-account-status`: Checks celebrity's Stripe Connect account status (charges_enabled, payouts_enabled).
     - `POST /api/create-checkout-session`: Creates Stripe Checkout Session with Connect support (application_fee_amount for SignTouch, transfer_data for celebrity).
     - `POST /api/stripe-webhook`: Handles Stripe webhook events for payment confirmation.
     - `GET /api/verify-payment`: Verifies Checkout Session payment status.
     - `GET /api/health`: Health check endpoint.
-  - **Stripe Connect**: Celebrities onboard via `StripeConnectModal` component. Connect account ID stored in AsyncStorage (to be migrated to Supabase user profile). Payments are split: SignTouch fee (30%) via application_fee_amount, rest goes to celebrity's Stripe Connect account.
+  - **Stripe Connect**: Full automated onboarding via `StripeConnectModal` component. Server creates Express accounts, generates onboarding links, and verifies status. Celebrity's Stripe Connect account ID stored in AsyncStorage and in live session data (`celebrity_stripe_account_id`). Payments are automatically split: SignTouch fee (30%) via application_fee_amount, rest goes to celebrity's Stripe Connect account.
   - **Fee Structure**: SignTouch 30% + Stripe 2.9% + 0.30€ per transaction. No Apple/Google store fees.
 - **Subscriptions (RevenueCat)**: In-app purchases and subscription management for iOS and Android (requires native build). SDK initialized in `_layout.tsx`, user ID synced via `AuthContext` on login.
 - **Revenue Calculation**: Displayed in `create-live-session.tsx` — gross revenue minus SignTouch 30% minus Stripe fees.

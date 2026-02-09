@@ -656,20 +656,34 @@ export default function JoinEventScreen() {
                   <TouchableOpacity
                     style={styles.joinCallButton}
                     onPress={() => {
-                      router.push({
-                        pathname: '/video-call',
-                        params: {
-                          roomUrl: foundLiveSession.room_url || '',
-                          sessionId: foundLiveSession.id,
-                          isHost: 'false',
-                          userName: fanName || 'Fan',
-                          queueEntryId: queueEntry.id,
-                          durationPerFan: String(foundLiveSession.duration_per_fan_minutes || 5),
-                          otherUserName: foundLiveSession.celebrity_name || '',
-                          priceCents: String(foundLiveSession.price_cents || 0),
-                          celebrityId: foundLiveSession.celebrity_id || '',
-                        }
-                      });
+                      if (foundLiveSession.price_cents > 0) {
+                        router.push({
+                          pathname: '/purchase-session',
+                          params: {
+                            sessionId: foundLiveSession.id,
+                            celebrityId: foundLiveSession.celebrity_id || '',
+                            celebrityName: foundLiveSession.celebrity_name || '',
+                            priceCents: String(foundLiveSession.price_cents),
+                            durationMinutes: String(foundLiveSession.duration_per_fan_minutes || 5),
+                            celebrityStripeAccountId: foundLiveSession.celebrity_stripe_account_id || '',
+                          }
+                        });
+                      } else {
+                        router.push({
+                          pathname: '/video-call',
+                          params: {
+                            roomUrl: foundLiveSession.room_url || '',
+                            sessionId: foundLiveSession.id,
+                            isHost: 'false',
+                            userName: fanName || 'Fan',
+                            queueEntryId: queueEntry.id,
+                            durationPerFan: String(foundLiveSession.duration_per_fan_minutes || 5),
+                            otherUserName: foundLiveSession.celebrity_name || '',
+                            priceCents: String(foundLiveSession.price_cents || 0),
+                            celebrityId: foundLiveSession.celebrity_id || '',
+                          }
+                        });
+                      }
                     }}
                   >
                     <LinearGradient
