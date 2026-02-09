@@ -772,7 +772,7 @@ export default function ResultScreen() {
   const [showAdModal, setShowAdModal] = useState(false);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { status } = useSubscription();
+  const { status, isPremium } = useSubscription();
   const { t } = useTranslation();
   const { user, setPostAuthRedirect } = useAuth();
 
@@ -1853,6 +1853,10 @@ export default function ResultScreen() {
   const openShareModal = () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    if (!isPremium) {
+      router.push('/paywall');
+      return;
     }
     setShowShareModal(true);
   };
