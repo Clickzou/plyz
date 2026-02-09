@@ -1533,6 +1533,10 @@ export default function ResultScreen() {
       return;
     }
 
+    await performSave();
+  };
+
+  const performSave = async () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -2353,7 +2357,10 @@ export default function ResultScreen() {
         <AccountModal
           visible={showAccountModal}
           onClose={() => setShowAccountModal(false)}
-          onSkip={() => setShowAccountModal(false)}
+          onSkip={() => {
+            setShowAccountModal(false);
+            performSave();
+          }}
           returnPath="/gallery"
         />
 
