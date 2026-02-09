@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
-import { Mail, CheckCircle, KeyRound } from 'lucide-react-native';
+import { Mail, CheckCircle, KeyRound, X } from 'lucide-react-native';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
@@ -258,12 +258,19 @@ export default function AccountModal({
       visible={visible}
       transparent={true}
       animationType="fade"
-      onRequestClose={() => {
-        // Modal non-fermable - l'utilisateur doit se connecter
-      }}
+      onRequestClose={onSkip}
     >
       <View style={styles.overlay}>
         <View style={styles.container}>
+          {step !== 'success' && (
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={onSkip}
+              activeOpacity={0.7}
+            >
+              <X size={22} color="#9ca3af" />
+            </TouchableOpacity>
+          )}
           {step === 'email' && renderEmailForm()}
           {step === 'code' && renderCodeForm()}
           {step === 'success' && renderSuccess()}
@@ -288,6 +295,19 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 28,
     alignItems: 'center',
+    position: 'relative' as const,
+  },
+  closeButton: {
+    position: 'absolute' as const,
+    top: 12,
+    right: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    zIndex: 10,
   },
   iconContainer: {
     width: 80,
