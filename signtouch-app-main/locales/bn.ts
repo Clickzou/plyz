@@ -919,6 +919,7 @@ export default {
   processingPurchase: 'Processing purchase...',
 
   stripeConnectTitle: 'আপনার পেমেন্ট গ্রহণ করুন',
+  stripeConnectExisting: 'আমার ইতিমধ্যে একটি Stripe অ্যাকাউন্ট আছে',
   stripeConnectSubtitle: 'আপনার লাইভ সেশন থেকে টাকা পেতে, আপনার Stripe অ্যাকাউন্ট তৈরি বা সংযুক্ত করুন। এটি দ্রুত, বিনামূল্যে এবং 100% সুরক্ষিত।',
   stripeConnectFeature1Title: 'নিরাপদ পেমেন্ট',
   stripeConnectFeature1Desc: 'Stripe অনলাইন পেমেন্টে বিশ্ব নেতা, লক্ষ লক্ষ ব্যবসা দ্বারা ব্যবহৃত।',

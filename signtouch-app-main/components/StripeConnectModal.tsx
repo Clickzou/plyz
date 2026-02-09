@@ -309,6 +309,17 @@ export default function StripeConnectModal({
                     )}
                   </TouchableOpacity>
 
+                  <TouchableOpacity
+                    style={[styles.existingAccountButton, isConnecting && styles.connectButtonDisabled]}
+                    onPress={handleCreateAccount}
+                    disabled={isConnecting}
+                  >
+                    <ExternalLink size={16} color="#635BFF" />
+                    <Text style={styles.existingAccountText}>
+                      {t('stripeConnectExisting') || 'J\'ai déjà un compte Stripe'}
+                    </Text>
+                  </TouchableOpacity>
+
                   <View style={styles.infoBox}>
                     <Shield size={14} color="#10B981" />
                     <Text style={styles.infoText}>
@@ -561,6 +572,23 @@ const styles = StyleSheet.create({
   },
   connectButtonDisabled: {
     opacity: 0.6,
+  },
+  existingAccountButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(99, 91, 255, 0.1)',
+    borderRadius: 12,
+    paddingVertical: 14,
+    gap: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 91, 255, 0.25)',
+  },
+  existingAccountText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#635BFF',
   },
   confirmButton: {
     flexDirection: 'row',

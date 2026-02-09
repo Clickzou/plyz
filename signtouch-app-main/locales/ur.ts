@@ -919,6 +919,7 @@ export default {
   processingPurchase: 'Processing purchase...',
 
   stripeConnectTitle: 'اپنی ادائیگیاں وصول کریں',
+  stripeConnectExisting: 'میرے پاس پہلے سے Stripe اکاؤنٹ ہے',
   stripeConnectSubtitle: 'اپنے لائیو سیشنز سے پیسے وصول کرنے کے لیے، اپنا Stripe اکاؤنٹ بنائیں یا منسلک کریں۔ یہ تیز، مفت اور 100% محفوظ ہے۔',
   stripeConnectFeature1Title: 'محفوظ ادائیگیاں',
   stripeConnectFeature1Desc: 'Stripe آن لائن ادائیگیوں میں عالمی رہنما ہے، لاکھوں کاروباروں کی طرف سے استعمال ہوتا ہے۔',

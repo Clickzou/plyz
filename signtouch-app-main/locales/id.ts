@@ -919,6 +919,7 @@ export default {
   processingPurchase: 'Processing purchase...',
 
   stripeConnectTitle: 'Terima pembayaran Anda',
+  stripeConnectExisting: 'Saya sudah punya akun Stripe',
   stripeConnectSubtitle: 'Untuk menerima uang dari sesi langsung Anda, buat atau hubungkan akun Stripe Anda. Cepat, gratis, dan 100% aman.',
   stripeConnectFeature1Title: 'Pembayaran aman',
   stripeConnectFeature1Desc: 'Stripe adalah pemimpin dunia dalam pembayaran online, digunakan oleh jutaan bisnis.',

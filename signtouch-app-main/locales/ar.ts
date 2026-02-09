@@ -914,6 +914,7 @@ export default {
   processingPurchase: 'Processing purchase...',
 
   stripeConnectTitle: 'استلم مدفوعاتك',
+  stripeConnectExisting: 'لدي حساب Stripe بالفعل',
   stripeConnectSubtitle: 'لاستلام أموال جلساتك المباشرة، قم بإنشاء أو ربط حساب Stripe الخاص بك. إنه سريع ومجاني وآمن 100%.',
   stripeConnectFeature1Title: 'مدفوعات آمنة',
   stripeConnectFeature1Desc: 'Stripe هو الرائد العالمي في المدفوعات عبر الإنترنت، يستخدمه ملايين الشركات.',

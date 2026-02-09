@@ -914,6 +914,7 @@ export default {
   processingPurchase: 'Processing purchase...',
 
   stripeConnectTitle: '接收您的付款',
+  stripeConnectExisting: '我已有Stripe账户',
   stripeConnectSubtitle: '要接收直播会话的收入，请创建或连接您的Stripe账户。快速、免费且100%安全。',
   stripeConnectFeature1Title: '安全支付',
   stripeConnectFeature1Desc: 'Stripe是在线支付的全球领导者，被数百万企业使用。',
