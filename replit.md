@@ -20,7 +20,7 @@ Preferred communication style: Simple, everyday language.
 - **Photo Editing**: A unified `OverlayElement` system for text and signature overlays, image adjustments via sliders, and SVG-based signature drawing. Final image compositing is handled by `react-native-view-shot`.
 - **Storage**: Dual-mode storage with AsyncStorage for local data and Supabase for cloud-synced memories and user authentication.
 - **Authentication**: Passwordless magic link authentication via Supabase Auth, supporting deep linking for callbacks. Post-purchase account creation is also integrated.
-- **Subscription Model**: Freemium tiers with a 7-day free trial, managed through RevenueCat integration (for native builds). Paywall screen at `app/paywall.tsx` with real RevenueCat connection, restore purchases, and promo codes.
+- **Subscription Model**: Currently disabled (app is 100% free except live sessions). Controlled by `SUBSCRIPTION_ENABLED` flag in `contexts/SubscriptionContext.tsx` — set to `true` to re-enable freemium tiers, 7-day free trial, paywall, and promo codes. RevenueCat integration preserved for native builds.
 - **Story Mode**: Allows users to create animated stories from their photos using Ken Burns, Sequential Zoom, and Parallax effects. Features interactive overlay customization (pan, pinch, rotate) and export with social sharing.
 - **Gallery System**: Organizes user content into "Photos" (memories) and "Stories" tabs, with separate storage for each.
 - **Live Events System**: Enables "Star Mode" for celebrities to create events with their signature (generating unique codes and QR codes) and "Fan Mode" for fans to join events, scan QR codes, and receive celebrity signatures.
