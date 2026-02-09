@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-export type SubscriptionStatus = 'free' | 'paid';
+export type SubscriptionStatus = 'free' | 'paid' | 'trial';
 
 const SUBSCRIPTION_STATUS_KEY = 'subscription_status';
 const LAST_SUBSCRIPTION_OFFER_KEY = 'last_subscription_offer';
