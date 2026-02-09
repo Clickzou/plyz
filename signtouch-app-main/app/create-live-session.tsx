@@ -19,6 +19,8 @@ import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { createLiveSession, uploadCoverPhoto } from '@/utils/liveSessionStorage';
+import StripeConnectModal from '@/components/StripeConnectModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const formatDuration = (minutes: number): string => {
   if (minutes < 1) {
@@ -65,6 +67,8 @@ export default function CreateLiveSessionScreen() {
   const [nameError, setNameError] = useState(false);
   const [coverPhotoUri, setCoverPhotoUri] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState(false);
+  const [showStripeConnect, setShowStripeConnect] = useState(false);
+  const [stripeConnected, setStripeConnected] = useState(false);
 
   const handleWebFileChange = useCallback((event: Event) => {
     const input = event.target as HTMLInputElement;
@@ -171,6 +175,26 @@ export default function CreateLiveSessionScreen() {
     }
   };
 
+  const checkStripeConnectStatus = async (): Promise<boolean> => {
+    try {
+      const status = await AsyncStorage.getItem('stripe_connect_account_id');
+      return !!status;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleStripeConnected = async () => {
+    try {
+      await AsyncStorage.setItem('stripe_connect_account_id', `acct_${Date.now()}`);
+      setStripeConnected(true);
+      setShowStripeConnect(false);
+      proceedToCreateSession();
+    } catch (error) {
+      console.error('[CreateSession] Error saving Stripe status:', error);
+    }
+  };
+
   const handleCreateSession = async () => {
     console.log('[CreateSession] Button pressed, name:', celebrityName, 'photo:', coverPhotoUri ? 'YES' : 'NO');
     let hasError = false;
@@ -191,6 +215,17 @@ export default function CreateLiveSessionScreen() {
       return;
     }
     setNameError(false);
+
+    const isStripeConnected = stripeConnected || await checkStripeConnectStatus();
+    if (!isStripeConnected) {
+      setShowStripeConnect(true);
+      return;
+    }
+
+    proceedToCreateSession();
+  };
+
+  const proceedToCreateSession = async () => {
 
     setIsCreating(true);
     setNameError(false);
@@ -522,6 +557,12 @@ export default function CreateLiveSessionScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      <StripeConnectModal
+        visible={showStripeConnect}
+        onClose={() => setShowStripeConnect(false)}
+        onConnected={handleStripeConnected}
+      />
     </View>
   );
 }
