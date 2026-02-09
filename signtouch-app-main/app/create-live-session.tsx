@@ -516,21 +516,12 @@ export default function CreateLiveSessionScreen() {
             <Text style={styles.paymentInfoIntro}>{t('paymentDelaysIntro')}</Text>
 
             <View style={styles.paymentPlatformCard}>
-              <Text style={styles.paymentPlatformTitle}>🍎 {t('paymentAppleTitle')}</Text>
+              <Text style={styles.paymentPlatformTitle}>💳 {t('paymentStripeTitle')}</Text>
               <View style={styles.paymentDelayBadge}>
-                <Clock size={14} color="#fbbf24" />
-                <Text style={styles.paymentDelayText}>{t('paymentAppleDelay')}</Text>
+                <Clock size={14} color="#635bff" />
+                <Text style={styles.paymentDelayText}>{t('paymentStripeDelay')}</Text>
               </View>
-              <Text style={styles.paymentExampleText}>{t('paymentAppleExample')}</Text>
-            </View>
-
-            <View style={styles.paymentPlatformCard}>
-              <Text style={styles.paymentPlatformTitle}>🤖 {t('paymentGoogleTitle')}</Text>
-              <View style={styles.paymentDelayBadge}>
-                <Clock size={14} color="#4ade80" />
-                <Text style={styles.paymentDelayText}>{t('paymentGoogleDelay')}</Text>
-              </View>
-              <Text style={styles.paymentExampleText}>{t('paymentGoogleExample')}</Text>
+              <Text style={styles.paymentExampleText}>{t('paymentStripeExample')}</Text>
             </View>
 
             <View style={styles.paymentNoteCard}>

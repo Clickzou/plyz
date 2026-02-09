@@ -658,14 +658,11 @@ export default {
   celebrityLiveSessionDesc: 'ファンにユニークなライブビデオ体験を提供し、パーソナライズされたサインを残す',
 
   paymentDelaysTitle: '支払いスケジュール',
-  paymentDelaysIntro: 'なぜ即時支払いではないのですか？ファンはAppleとGoogleから直接課金され、これらのプラットフォームは収益を送金する前に独自の処理期間を設けています。',
-  paymentAppleTitle: 'Apple (App Store)',
-  paymentAppleDelay: '販売月の終了後30〜45日',
-  paymentAppleExample: '例：3月10日にサイン入り写真を販売 → Appleが3月31日に月を締め → 4月末/5月初旬に支払い。Appleは月1回の支払いです。',
-  paymentGoogleTitle: 'Google (Google Play)',
-  paymentGoogleDelay: '取引後15〜30日',
-  paymentGoogleExample: '例：3月10日にサイン入り写真を販売 → Googleは3月末/4月初旬に支払い可能。GoogleはAppleより早いです。',
-  paymentDelaysNote: 'これらの期間はAppleとGoogleによって設定されており、SignTouchによるものではありません。残念ながら、これらのプロセスを加速することはできません。',
+  paymentDelaysIntro: '支払いはオンライン決済の世界的リーダーであるStripeによって処理されます。収益はStripeのスケジュールに従って、直接銀行口座に振り込まれます。',
+  paymentStripeTitle: 'Stripe（カード決済）',
+  paymentStripeDelay: '取引後2〜7営業日',
+  paymentStripeExample: '例：ファンが月曜日にセッションを購入 → 支払いは即座に処理 → 収益は2〜7営業日以内に銀行口座に振り込まれます。',
+  paymentDelaysNote: '振込スケジュールはStripeが管理しています。SignTouchは各取引に30%の手数料を徴収し、Stripe手数料（2.9% + €0.30）も差し引かれます。',
 
   // Event Sessions
   addSignatures: '署名を追加',

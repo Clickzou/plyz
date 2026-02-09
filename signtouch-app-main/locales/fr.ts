@@ -658,14 +658,11 @@ export default {
   celebrityLiveSessionDesc: 'Offrez à vos fans un moment unique en vidéo live et laissez-leur une dédicace personnalisée',
 
   paymentDelaysTitle: 'Délais de reversement',
-  paymentDelaysIntro: 'Pourquoi le paiement n\'est pas instantané ? Les fans sont directement débités par les plateformes Apple et Google, qui imposent leurs propres délais de traitement avant de reverser vos gains.',
-  paymentAppleTitle: 'Apple (App Store)',
-  paymentAppleDelay: '30 à 45 jours après la fin du mois de vente',
-  paymentAppleExample: 'Exemple : vous vendez une dédicace le 10 mars → Apple clôture le mois le 31 mars → Paiement vers fin avril / début mai. Apple paie 1 fois par mois.',
-  paymentGoogleTitle: 'Google (Google Play)',
-  paymentGoogleDelay: '15 à 30 jours après la transaction',
-  paymentGoogleExample: 'Exemple : vous vendez une dédicace le 10 mars → Google peut vous payer fin mars / début avril. Google est plus rapide qu\'Apple.',
-  paymentDelaysNote: 'Ces délais sont imposés par Apple et Google, et non par SignTouch. Nous ne pouvons malheureusement pas accélérer ces processus.',
+  paymentDelaysIntro: 'Les paiements sont traités par Stripe, un leader mondial du paiement en ligne. Vos gains sont reversés directement sur votre compte bancaire selon le calendrier Stripe.',
+  paymentStripeTitle: 'Stripe (Paiement par carte)',
+  paymentStripeDelay: '2 à 7 jours ouvrés après la transaction',
+  paymentStripeExample: 'Exemple : un fan achète une session le lundi → le paiement est traité immédiatement → vos gains sont reversés sur votre compte bancaire sous 2 à 7 jours ouvrés.',
+  paymentDelaysNote: 'Les délais de reversement sont gérés par Stripe. SignTouch prélève une commission de 30% sur chaque transaction, et les frais Stripe (2.9% + 0.30€) sont également déduits.',
 
   // Event Sessions
   addSignatures: 'Ajouter les Signatures',

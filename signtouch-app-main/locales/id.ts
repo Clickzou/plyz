@@ -658,14 +658,11 @@ export default {
   celebrityLiveSessionDesc: 'Berikan penggemar Anda momen video langsung yang unik dan tinggalkan tanda tangan yang dipersonalisasi',
 
   paymentDelaysTitle: 'Jadwal Pembayaran',
-  paymentDelaysIntro: 'Mengapa pembayaran tidak instan? Penggemar langsung ditagih oleh Apple dan Google, yang menerapkan waktu pemrosesan mereka sendiri sebelum mentransfer penghasilan Anda.',
-  paymentAppleTitle: 'Apple (App Store)',
-  paymentAppleDelay: '30 hingga 45 hari setelah akhir bulan penjualan',
-  paymentAppleExample: 'Contoh: Anda menjual tanda tangan pada 10 Maret → Apple menutup bulan pada 31 Maret → Pembayaran pada akhir April / awal Mei. Apple membayar 1 kali per bulan.',
-  paymentGoogleTitle: 'Google (Google Play)',
-  paymentGoogleDelay: '15 hingga 30 hari setelah transaksi',
-  paymentGoogleExample: 'Contoh: Anda menjual tanda tangan pada 10 Maret → Google dapat membayar pada akhir Maret / awal April. Google lebih cepat dari Apple.',
-  paymentDelaysNote: 'Jangka waktu ini ditetapkan oleh Apple dan Google, bukan oleh SignTouch. Sayangnya, kami tidak dapat mempercepat proses ini.',
+  paymentDelaysIntro: 'Pembayaran diproses oleh Stripe, pemimpin global dalam pembayaran online. Penghasilan Anda ditransfer langsung ke rekening bank Anda sesuai jadwal Stripe.',
+  paymentStripeTitle: 'Stripe (Pembayaran Kartu)',
+  paymentStripeDelay: '2 hingga 7 hari kerja setelah transaksi',
+  paymentStripeExample: 'Contoh: seorang penggemar membeli sesi pada hari Senin → pembayaran diproses segera → penghasilan Anda ditransfer ke rekening bank Anda dalam 2 hingga 7 hari kerja.',
+  paymentDelaysNote: 'Waktu transfer dikelola oleh Stripe. SignTouch mengambil komisi 30% pada setiap transaksi, dan biaya Stripe (2,9% + €0,30) juga dipotong.',
 
   // Event Sessions
   addSignatures: 'Tambah Tanda Tangan',

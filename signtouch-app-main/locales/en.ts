@@ -658,14 +658,11 @@ export default {
   celebrityLiveSessionDesc: 'Give your fans a unique live video moment and leave them a personalized autograph',
 
   paymentDelaysTitle: 'Payment Timelines',
-  paymentDelaysIntro: 'Why isn\'t the payment instant? Fans are charged directly by Apple and Google, which impose their own processing delays before transferring your earnings.',
-  paymentAppleTitle: 'Apple (App Store)',
-  paymentAppleDelay: '30 to 45 days after the end of the sales month',
-  paymentAppleExample: 'Example: you sell a dedication on March 10 → Apple closes the month on March 31 → Payment by late April / early May. Apple pays once per month.',
-  paymentGoogleTitle: 'Google (Google Play)',
-  paymentGoogleDelay: '15 to 30 days after the transaction',
-  paymentGoogleExample: 'Example: you sell a dedication on March 10 → Google may pay you by late March / early April. Google is faster than Apple.',
-  paymentDelaysNote: 'These delays are imposed by Apple and Google, not by SignTouch. Unfortunately, we cannot speed up these processes.',
+  paymentDelaysIntro: 'Payments are processed by Stripe, a global leader in online payments. Your earnings are transferred directly to your bank account according to Stripe\'s schedule.',
+  paymentStripeTitle: 'Stripe (Card Payment)',
+  paymentStripeDelay: '2 to 7 business days after the transaction',
+  paymentStripeExample: 'Example: a fan purchases a session on Monday → payment is processed immediately → your earnings are transferred to your bank account within 2 to 7 business days.',
+  paymentDelaysNote: 'Transfer delays are managed by Stripe. SignTouch takes a 30% commission on each transaction, and Stripe fees (2.9% + €0.30) are also deducted.',
 
   // Event Sessions
   addSignatures: 'Add Signatures',

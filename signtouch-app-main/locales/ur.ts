@@ -658,14 +658,11 @@ export default {
   celebrityLiveSessionDesc: 'اپنے مداحوں کو منفرد لائیو ویڈیو لمحہ دیں اور انہیں ذاتی آٹوگراف چھوڑیں',
 
   paymentDelaysTitle: 'ادائیگی کی مدت',
-  paymentDelaysIntro: 'ادائیگی فوری کیوں نہیں ہوتی؟ مداحوں سے براہ راست Apple اور Google کے ذریعے چارج کیا جاتا ہے، جو آپ کی آمدنی منتقل کرنے سے پہلے اپنی پروسیسنگ مدت لگاتے ہیں۔',
-  paymentAppleTitle: 'Apple (App Store)',
-  paymentAppleDelay: 'فروخت کے مہینے کے اختتام کے 30 سے 45 دن بعد',
-  paymentAppleExample: 'مثال: آپ 10 مارچ کو آٹوگراف بیچتے ہیں → Apple 31 مارچ کو مہینہ بند کرتا ہے → اپریل کے آخر / مئی کے شروع میں ادائیگی۔ Apple مہینے میں 1 بار ادائیگی کرتا ہے۔',
-  paymentGoogleTitle: 'Google (Google Play)',
-  paymentGoogleDelay: 'لین دین کے 15 سے 30 دن بعد',
-  paymentGoogleExample: 'مثال: آپ 10 مارچ کو آٹوگراف بیچتے ہیں → Google مارچ کے آخر / اپریل کے شروع میں ادائیگی کر سکتا ہے۔ Google Apple سے تیز ہے۔',
-  paymentDelaysNote: 'یہ مدتیں Apple اور Google کی طرف سے مقرر کی گئی ہیں، SignTouch کی طرف سے نہیں۔ بدقسمتی سے، ہم ان عملوں کو تیز نہیں کر سکتے۔',
+  paymentDelaysIntro: 'ادائیگیاں Stripe کے ذریعے پروسیس کی جاتی ہیں، جو آن لائن ادائیگیوں میں عالمی رہنما ہے۔ آپ کی آمدنی Stripe کے شیڈول کے مطابق براہ راست آپ کے بینک اکاؤنٹ میں منتقل ہوتی ہے۔',
+  paymentStripeTitle: 'Stripe (کارڈ ادائیگی)',
+  paymentStripeDelay: 'لین دین کے 2 سے 7 کاروباری دن بعد',
+  paymentStripeExample: 'مثال: ایک مداح پیر کو ایک سیشن خریدتا ہے → ادائیگی فوری طور پر پروسیس ہوتی ہے → آپ کی آمدنی 2 سے 7 کاروباری دنوں میں آپ کے بینک اکاؤنٹ میں منتقل ہو جاتی ہے۔',
+  paymentDelaysNote: 'منتقلی کی مدت Stripe کے زیر انتظام ہے۔ SignTouch ہر لین دین پر 30% کمیشن لیتا ہے، اور Stripe فیس (2.9% + €0.30) بھی کاٹی جاتی ہے۔',
 
   // Event Sessions
   addSignatures: 'دستخط شامل کریں',

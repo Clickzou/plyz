@@ -658,14 +658,11 @@ export default {
   celebrityLiveSessionDesc: 'امنح معجبيك لحظة فيديو مباشرة فريدة واترك لهم توقيعاً مخصصاً',
 
   paymentDelaysTitle: 'مواعيد الدفع',
-  paymentDelaysIntro: 'لماذا لا يتم الدفع فورياً؟ يتم خصم المبلغ من المعجبين مباشرة عبر Apple وGoogle، اللتين تفرضان مهلاً خاصة بهما قبل تحويل أرباحك.',
-  paymentAppleTitle: 'Apple (App Store)',
-  paymentAppleDelay: '30 إلى 45 يوماً بعد نهاية شهر البيع',
-  paymentAppleExample: 'مثال: تبيع إهداءً في 10 مارس → تغلق Apple الشهر في 31 مارس → الدفع نهاية أبريل / بداية مايو. Apple تدفع مرة واحدة شهرياً.',
-  paymentGoogleTitle: 'Google (Google Play)',
-  paymentGoogleDelay: '15 إلى 30 يوماً بعد المعاملة',
-  paymentGoogleExample: 'مثال: تبيع إهداءً في 10 مارس → قد تدفع Google نهاية مارس / بداية أبريل. Google أسرع من Apple.',
-  paymentDelaysNote: 'هذه المواعيد تفرضها Apple وGoogle وليس SignTouch. للأسف لا يمكننا تسريع هذه العمليات.',
+  paymentDelaysIntro: 'تتم معالجة المدفوعات بواسطة Stripe، الرائد العالمي في المدفوعات عبر الإنترنت. يتم تحويل أرباحك مباشرة إلى حسابك البنكي وفقاً لجدول Stripe.',
+  paymentStripeTitle: 'Stripe (الدفع بالبطاقة)',
+  paymentStripeDelay: 'من 2 إلى 7 أيام عمل بعد المعاملة',
+  paymentStripeExample: 'مثال: يشتري معجب جلسة يوم الاثنين → تتم معالجة الدفع فوراً → يتم تحويل أرباحك إلى حسابك البنكي خلال 2 إلى 7 أيام عمل.',
+  paymentDelaysNote: 'مواعيد التحويل تديرها Stripe. يأخذ SignTouch عمولة 30% على كل معاملة، ورسوم Stripe (2.9% + 0.30€) يتم خصمها أيضاً.',
 
   // Event Sessions
   addSignatures: 'إضافة توقيعات',
