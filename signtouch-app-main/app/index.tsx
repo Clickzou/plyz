@@ -262,7 +262,7 @@ export default function HomeScreen() {
             <Animated.Image 
               source={require('@/assets/logo-signtouch.png')}
               style={[
-                { width: isTablet ? 400 : 280, height: isTablet ? 140 : 100 },
+                { width: isTablet ? 500 : 350, height: isTablet ? 180 : 130 },
                 titleStyle,
               ]}
               resizeMode="contain"
