@@ -662,7 +662,7 @@ export default {
   paymentStripeTitle: 'Stripe (Pembayaran Kad)',
   paymentStripeDelay: '2 hingga 7 hari bekerja selepas transaksi',
   paymentStripeExample: 'Contoh: seorang peminat membeli sesi pada hari Isnin → pembayaran diproses serta-merta → pendapatan anda dipindahkan ke akaun bank anda dalam 2 hingga 7 hari bekerja.',
-  paymentDelaysNote: 'Tempoh pemindahan diuruskan oleh Stripe. SignTouch mengambil komisen 15% pada setiap transaksi, dan yuran Stripe (2.9% + €0.30) juga ditolak.',
+  paymentDelaysNote: 'Tempoh pemindahan diuruskan oleh Stripe. SignTouch mengambil komisen 15% pada setiap transaksi, dan yuran Stripe (2.9% + €0.30) juga ditolak. Jumlah yang dipaparkan dalam "pendapatan anda" ialah jumlah bersih yang akan anda terima.',
 
   // Event Sessions
   addSignatures: 'Tambah Tandatangan',

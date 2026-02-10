@@ -662,7 +662,7 @@ export default {
   paymentStripeTitle: 'Stripe (الدفع بالبطاقة)',
   paymentStripeDelay: 'من 2 إلى 7 أيام عمل بعد المعاملة',
   paymentStripeExample: 'مثال: يشتري معجب جلسة يوم الاثنين → تتم معالجة الدفع فوراً → يتم تحويل أرباحك إلى حسابك البنكي خلال 2 إلى 7 أيام عمل.',
-  paymentDelaysNote: 'مواعيد التحويل تديرها Stripe. يأخذ SignTouch عمولة 15% على كل معاملة، ورسوم Stripe (2.9% + 0.30€) يتم خصمها أيضاً.',
+  paymentDelaysNote: 'مواعيد التحويل تديرها Stripe. يأخذ SignTouch عمولة 15% على كل معاملة، ورسوم Stripe (2.9% + 0.30€) يتم خصمها أيضاً. المبلغ المعروض في "أرباحك" هو المبلغ الصافي الذي ستحصل عليه.',
 
   // Event Sessions
   addSignatures: 'إضافة توقيعات',

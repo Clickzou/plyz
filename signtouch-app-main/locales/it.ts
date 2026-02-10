@@ -662,7 +662,7 @@ export default {
   paymentStripeTitle: 'Stripe (Pagamento con carta)',
   paymentStripeDelay: 'Da 2 a 7 giorni lavorativi dopo la transazione',
   paymentStripeExample: 'Esempio: un fan acquista una sessione il lunedì → il pagamento viene elaborato immediatamente → i tuoi guadagni vengono trasferiti sul tuo conto bancario entro 2-7 giorni lavorativi.',
-  paymentDelaysNote: 'I tempi di trasferimento sono gestiti da Stripe. SignTouch trattiene una commissione del 15% su ogni transazione, e le commissioni Stripe (2,9% + 0,30€) vengono anch\'esse detratte.',
+  paymentDelaysNote: 'I tempi di trasferimento sono gestiti da Stripe. SignTouch trattiene una commissione del 15% su ogni transazione, e le commissioni Stripe (2,9% + 0,30€) vengono anch\'esse detratte. L\'importo mostrato in "i tuoi guadagni" è l\'importo netto che riceverai.',
 
   // Event Sessions
   addSignatures: 'Aggiungi firme',

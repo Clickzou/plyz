@@ -501,9 +501,6 @@ export default function CreateLiveSessionScreen() {
               </Text>
             );
           })()}
-          <Text style={styles.revenueExplanation}>
-            {t('earningsExplanation') || 'Montant estimé si tous les fans complètent la session'}
-          </Text>
         </View>
 
         <TouchableOpacity

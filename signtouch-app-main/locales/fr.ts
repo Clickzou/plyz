@@ -662,7 +662,7 @@ export default {
   paymentStripeTitle: 'Stripe (Paiement par carte)',
   paymentStripeDelay: '2 à 7 jours ouvrés après la transaction',
   paymentStripeExample: 'Exemple : un fan achète une session le lundi → le paiement est traité immédiatement → vos gains sont reversés sur votre compte bancaire sous 2 à 7 jours ouvrés.',
-  paymentDelaysNote: 'Les délais de reversement sont gérés par Stripe. SignTouch prélève une commission de 15% sur chaque transaction, et les frais Stripe (2.9% + 0.30€) sont également déduits.',
+  paymentDelaysNote: 'Les délais de reversement sont gérés par Stripe. SignTouch prélève une commission de 15% sur chaque transaction, et les frais Stripe (2.9% + 0.30€) sont également déduits. Le montant affiché dans "vos revenus" est le montant net que vous allez percevoir.',
 
   // Event Sessions
   addSignatures: 'Ajouter les Signatures',
