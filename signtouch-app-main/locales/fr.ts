@@ -851,7 +851,7 @@ export default {
   dedicationSetupTitle: 'Dédicace personnalisée',
   dedicationSetupHint: 'Prenez un selfie et dessinez votre signature. Chaque fan recevra une dédicace unique personnalisée.',
   dedicationTakePhoto: 'Prenez votre photo',
-  takeSelfie: 'Prendre un selfie',
+  takeSelfie: 'Selfie',
   choosePhoto: 'Galerie',
   dedicationDrawSignature: 'Dessinez votre signature',
   dedicationReady: 'Dédicace prête !',

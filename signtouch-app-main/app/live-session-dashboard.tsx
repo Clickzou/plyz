@@ -27,6 +27,7 @@ import {
   Video,
   AlertTriangle,
   Camera,
+  Image as ImageIcon,
   Pen,
   Trash,
   ChevronRight,
@@ -796,7 +797,7 @@ export default function LiveSessionDashboardScreen() {
                       {isUploadingDedication ? (
                         <ActivityIndicator size="small" color="#fff" />
                       ) : (
-                        <Camera size={24} color="#fff" />
+                        <Camera size={20} color="#fff" />
                       )}
                       <Text style={styles.dedicationPhotoButtonText}>{t('takeSelfie')}</Text>
                     </TouchableOpacity>
@@ -805,6 +806,7 @@ export default function LiveSessionDashboardScreen() {
                       onPress={handlePickDedicationPhoto}
                       disabled={isUploadingDedication}
                     >
+                      <ImageIcon size={20} color="#fff" />
                       <Text style={styles.dedicationPhotoButtonTextAlt}>{t('choosePhoto')}</Text>
                     </TouchableOpacity>
                   </View>
@@ -1599,24 +1601,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 10,
     backgroundColor: '#8b5cf6',
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    minHeight: 52,
   },
   dedicationPhotoButtonAlt: {
     backgroundColor: 'transparent',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.3)',
   },
   dedicationPhotoButtonText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
   },
   dedicationPhotoButtonTextAlt: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
   },
   dedicationSignatureStep: {
