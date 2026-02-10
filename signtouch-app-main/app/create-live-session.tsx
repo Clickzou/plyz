@@ -331,8 +331,8 @@ export default function CreateLiveSessionScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.sectionTitle}>{t('liveSessionCoverPhoto') || 'Your Cover Photo'}</Text>
-        <Text style={styles.sectionHint}>{t('liveSessionCoverPhotoHint') || 'Take a selfie to show fans who is hosting'}</Text>
+        <Text style={[styles.sectionTitle, { textAlign: 'center' }]}>{t('liveSessionCoverPhoto') || 'Your Cover Photo'}</Text>
+        <Text style={[styles.sectionHint, { textAlign: 'center' }]}>{t('liveSessionCoverPhotoHint') || 'Take a selfie to show fans who is hosting'}</Text>
         
         <TouchableOpacity 
           style={[styles.selfieContainer, photoError && styles.selfieContainerError]} 
