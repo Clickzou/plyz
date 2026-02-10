@@ -35,9 +35,9 @@ export default function StripeConnectModal({
 }: StripeConnectModalProps) {
   const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = React.useState(false);
-  const [email, setEmail] = React.useState('');
-  const [emailError, setEmailError] = React.useState(false);
-  const [step, setStep] = React.useState<'email' | 'onboarding' | 'checking'>('email');
+  const [accountIdInput, setAccountIdInput] = React.useState('');
+  const [inputError, setInputError] = React.useState(false);
+  const [step, setStep] = React.useState<'main' | 'enterAccountId' | 'onboarding' | 'checking'>('main');
   const [accountId, setAccountId] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -52,6 +52,7 @@ export default function StripeConnectModal({
       const savedAccountId = await AsyncStorage.getItem('stripe_connect_account_id');
       if (savedAccountId) {
         setStep('checking');
+        setAccountId(savedAccountId);
         const response = await fetch(
           `${STRIPE_SERVER_URL}/api/connect-account-status?account_id=${savedAccountId}`
         );
@@ -59,106 +60,30 @@ export default function StripeConnectModal({
         if (data.onboarding_complete) {
           onConnected(savedAccountId);
           return;
-        } else if (data.details_submitted) {
-          setAccountId(savedAccountId);
+        } else {
           setStep('onboarding');
           return;
         }
       }
-      setStep('email');
+      setStep('main');
     } catch {
-      setStep('email');
+      setStep('main');
     }
   };
 
-  const validateEmail = (value: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  };
-
-  const handleExistingAccount = async () => {
+  const openExpressOnboarding = async (acctId: string) => {
+    setIsConnecting(true);
     setError(null);
-    setIsConnecting(true);
 
     try {
-      const response = await fetch(`${STRIPE_SERVER_URL}/api/create-connect-account`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          celebrityName: celebrityName || '',
-          celebrityId: celebrityId || '',
-        }),
-      });
+      const response = await fetch(
+        `${STRIPE_SERVER_URL}/api/stripe/express/account-link?account_id=${acctId}`
+      );
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to create account');
+      if (!response.ok) throw new Error(data.error || 'Failed to create onboarding link');
 
-      const newAccountId = data.accountId;
-      setAccountId(newAccountId);
-      await AsyncStorage.setItem('stripe_connect_account_id', newAccountId);
-
-      await openOnboardingLink(newAccountId);
-    } catch (err: any) {
-      console.error('[StripeConnect] Existing account error:', err);
-      setError(err.message || 'An error occurred');
-      setIsConnecting(false);
-    }
-  };
-
-  const handleCreateAccount = async () => {
-    if (!validateEmail(email)) {
-      setEmailError(true);
-      return;
-    }
-    setEmailError(false);
-    setError(null);
-    setIsConnecting(true);
-
-    try {
-      const response = await fetch(`${STRIPE_SERVER_URL}/api/create-connect-account`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          celebrityEmail: email,
-          celebrityName: celebrityName || '',
-          celebrityId: celebrityId || '',
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to create account');
-
-      const newAccountId = data.accountId;
-      setAccountId(newAccountId);
-      await AsyncStorage.setItem('stripe_connect_account_id', newAccountId);
-
-      await openOnboardingLink(newAccountId);
-    } catch (err: any) {
-      console.error('[StripeConnect] Error:', err);
-      setError(err.message || 'An error occurred');
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-
-  const openOnboardingLink = async (acctId: string) => {
-    setIsConnecting(true);
-    try {
-      const currentOrigin = Platform.OS === 'web'
-        ? window.location.origin
-        : 'https://signtouch.app';
-
-      const response = await fetch(`${STRIPE_SERVER_URL}/api/create-account-link`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          accountId: acctId,
-          returnUrl: `${currentOrigin}/stripe-return`,
-          refreshUrl: `${currentOrigin}/stripe-refresh`,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to create link');
+      console.log('[StripeConnect] Opening Express onboarding:', data.url);
 
       if (Platform.OS === 'web') {
         window.open(data.url, '_blank');
@@ -166,11 +91,51 @@ export default function StripeConnectModal({
         await Linking.openURL(data.url);
       }
 
+      setAccountId(acctId);
+      await AsyncStorage.setItem('stripe_connect_account_id', acctId);
       setStep('onboarding');
     } catch (err: any) {
-      console.error('[StripeConnect] Error opening link:', err);
+      console.error('[StripeConnect] Error opening Express onboarding:', err);
       setError(err.message || 'An error occurred');
     } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const handleConnectExistingAccount = async () => {
+    const trimmed = accountIdInput.trim();
+    if (!trimmed.startsWith('acct_')) {
+      setInputError(true);
+      return;
+    }
+    setInputError(false);
+    await openExpressOnboarding(trimmed);
+  };
+
+  const handleCreateNewAccount = async () => {
+    setIsConnecting(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${STRIPE_SERVER_URL}/api/create-connect-account`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          celebrityName: celebrityName || '',
+          celebrityId: celebrityId || '',
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to create account');
+
+      const newAccountId = data.accountId;
+      console.log('[StripeConnect] New Express account created:', newAccountId);
+
+      await openExpressOnboarding(newAccountId);
+    } catch (err: any) {
+      console.error('[StripeConnect] Error creating account:', err);
+      setError(err.message || 'An error occurred');
       setIsConnecting(false);
     }
   };
@@ -205,30 +170,17 @@ export default function StripeConnectModal({
     {
       icon: <Shield size={22} color="#10B981" />,
       titleKey: 'stripeConnectFeature1Title',
-      descKey: 'stripeConnectFeature1Desc',
-      fallbackTitle: 'Paiements sécurisés',
-      fallbackDesc: 'Stripe est le leader mondial du paiement en ligne, utilisé par des millions d\'entreprises.',
+      fallbackTitle: 'Paiements s\u00e9curis\u00e9s',
     },
     {
       icon: <Clock size={22} color="#10B981" />,
       titleKey: 'stripeConnectFeature2Title',
-      descKey: 'stripeConnectFeature2Desc',
       fallbackTitle: 'Versements automatiques',
-      fallbackDesc: 'Recevez vos revenus directement sur votre compte bancaire sous 2 à 7 jours ouvrés.',
     },
     {
       icon: <CreditCard size={22} color="#10B981" />,
       titleKey: 'stripeConnectFeature3Title',
-      descKey: 'stripeConnectFeature3Desc',
       fallbackTitle: 'Transparent et simple',
-      fallbackDesc: 'Suivez vos revenus en temps réel. Aucun frais caché.',
-    },
-    {
-      icon: <CheckCircle size={22} color="#10B981" />,
-      titleKey: 'stripeConnectFeature4Title',
-      descKey: 'stripeConnectFeature4Desc',
-      fallbackTitle: 'Inscription en 5 minutes',
-      fallbackDesc: 'Il vous suffit d\'une pièce d\'identité et de vos coordonnées bancaires.',
     },
   ];
 
@@ -263,7 +215,7 @@ export default function StripeConnectModal({
                   {t('stripeConnectTitle') || 'Recevez vos paiements'}
                 </Text>
                 <Text style={styles.subtitle}>
-                  {t('stripeConnectSubtitle') || 'Pour recevoir l\'argent de vos sessions live, connectez votre compte Stripe. C\'est rapide, gratuit et 100% sécurisé.'}
+                  {t('stripeConnectSubtitle') || 'Pour recevoir l\'argent de vos sessions live, cr\u00e9ez ou connectez votre compte Stripe. C\'est rapide, gratuit et 100% s\u00e9curis\u00e9.'}
                 </Text>
               </View>
 
@@ -271,13 +223,13 @@ export default function StripeConnectModal({
                 <View style={styles.centeredContent}>
                   <ActivityIndicator size="large" color="#10B981" />
                   <Text style={styles.checkingText}>
-                    {t('checkingStripeStatus') || 'Vérification de votre compte...'}
+                    {t('checkingStripeStatus') || 'V\u00e9rification de votre compte...'}
                   </Text>
                 </View>
-              ) : step === 'email' ? (
+              ) : step === 'main' ? (
                 <>
                   <View style={styles.featuresRow}>
-                    {features.slice(0, 3).map((feature, index) => (
+                    {features.map((feature, index) => (
                       <View key={index} style={styles.featureChip}>
                         <View style={styles.featureChipIcon}>
                           {feature.icon}
@@ -289,41 +241,13 @@ export default function StripeConnectModal({
                     ))}
                   </View>
 
-                  <View style={styles.emailSection}>
-                    <Text style={styles.emailLabel}>
-                      {t('stripeConnectEmailLabel') || 'Votre adresse email'}
-                    </Text>
-                    <View style={[styles.emailInputContainer, emailError && styles.emailInputError]}>
-                      <Mail size={18} color="rgba(255,255,255,0.4)" />
-                      <TextInput
-                        style={styles.emailInput}
-                        placeholder={t('stripeConnectEmailPlaceholder') || 'votre@email.com'}
-                        placeholderTextColor="rgba(255,255,255,0.3)"
-                        value={email}
-                        onChangeText={(text) => {
-                          setEmail(text);
-                          setEmailError(false);
-                          setError(null);
-                        }}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                      />
-                    </View>
-                    {emailError && (
-                      <Text style={styles.errorText}>
-                        {t('invalidEmail') || 'Veuillez entrer une adresse email valide'}
-                      </Text>
-                    )}
-                  </View>
-
                   {error && (
                     <Text style={styles.errorBanner}>{error}</Text>
                   )}
 
                   <TouchableOpacity
                     style={[styles.connectButton, isConnecting && styles.connectButtonDisabled]}
-                    onPress={handleCreateAccount}
+                    onPress={handleCreateNewAccount}
                     disabled={isConnecting}
                   >
                     {isConnecting ? (
@@ -331,7 +255,7 @@ export default function StripeConnectModal({
                     ) : (
                       <>
                         <Text style={styles.connectButtonText}>
-                          {t('stripeConnectButton') || 'Créer mon compte Stripe'}
+                          {t('stripeConnectButton') || 'Configurer mes paiements'}
                         </Text>
                         <ArrowRight size={20} color="#ffffff" />
                       </>
@@ -340,34 +264,97 @@ export default function StripeConnectModal({
 
                   <TouchableOpacity
                     style={[styles.existingAccountButton, isConnecting && styles.connectButtonDisabled]}
-                    onPress={handleExistingAccount}
+                    onPress={() => {
+                      setStep('enterAccountId');
+                      setError(null);
+                    }}
                     disabled={isConnecting}
                   >
-                    {isConnecting ? (
-                      <ActivityIndicator color="#635BFF" size="small" />
-                    ) : (
-                      <>
-                        <ExternalLink size={16} color="#635BFF" />
-                        <Text style={styles.existingAccountText}>
-                          {t('stripeConnectExisting') || 'J\'ai déjà un compte Stripe'}
-                        </Text>
-                      </>
-                    )}
+                    <ExternalLink size={16} color="#635BFF" />
+                    <Text style={styles.existingAccountText}>
+                      {t('stripeConnectExisting') || 'J\'ai d\u00e9j\u00e0 un compte Stripe'}
+                    </Text>
                   </TouchableOpacity>
 
                   <View style={styles.infoBox}>
                     <Shield size={14} color="#10B981" />
                     <Text style={styles.infoText}>
-                      {t('stripeConnectInfoBox') || 'SignTouch ne stocke jamais vos données bancaires. Tout est géré par Stripe, certifié PCI DSS niveau 1.'}
+                      {t('stripeConnectInfoBox') || 'SignTouch ne stocke jamais vos donn\u00e9es bancaires. Tout est g\u00e9r\u00e9 par Stripe, certifi\u00e9 PCI DSS niveau 1.'}
                     </Text>
                   </View>
+                </>
+              ) : step === 'enterAccountId' ? (
+                <>
+                  <View style={styles.emailSection}>
+                    <Text style={styles.emailLabel}>
+                      Votre identifiant Stripe Connect (acct_...)
+                    </Text>
+                    <View style={[styles.emailInputContainer, inputError && styles.emailInputError]}>
+                      <CreditCard size={18} color="rgba(255,255,255,0.4)" />
+                      <TextInput
+                        style={styles.emailInput}
+                        placeholder="acct_xxxxxxxxxxxxxx"
+                        placeholderTextColor="rgba(255,255,255,0.3)"
+                        value={accountIdInput}
+                        onChangeText={(text) => {
+                          setAccountIdInput(text);
+                          setInputError(false);
+                          setError(null);
+                        }}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                    </View>
+                    {inputError && (
+                      <Text style={styles.errorText}>
+                        L'identifiant doit commencer par "acct_"
+                      </Text>
+                    )}
+                    <Text style={styles.accountIdHint}>
+                      Vous trouverez cet identifiant dans votre tableau de bord Stripe &gt; Param\u00e8tres &gt; Informations du compte
+                    </Text>
+                  </View>
+
+                  {error && (
+                    <Text style={styles.errorBanner}>{error}</Text>
+                  )}
+
+                  <TouchableOpacity
+                    style={[styles.connectButton, isConnecting && styles.connectButtonDisabled]}
+                    onPress={handleConnectExistingAccount}
+                    disabled={isConnecting}
+                  >
+                    {isConnecting ? (
+                      <ActivityIndicator color="#ffffff" />
+                    ) : (
+                      <>
+                        <Text style={styles.connectButtonText}>
+                          Connecter mon compte
+                        </Text>
+                        <ArrowRight size={20} color="#ffffff" />
+                      </>
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => {
+                      setStep('main');
+                      setError(null);
+                      setInputError(false);
+                    }}
+                  >
+                    <Text style={styles.backButtonText}>
+                      ← Retour
+                    </Text>
+                  </TouchableOpacity>
                 </>
               ) : (
                 <>
                   <View style={styles.onboardingInfo}>
                     <CheckCircle size={32} color="#10B981" />
                     <Text style={styles.onboardingTitle}>
-                      {t('stripeConnectOnboardingTitle') || 'Complétez votre inscription'}
+                      {t('stripeConnectOnboardingTitle') || 'Compl\u00e9tez votre inscription'}
                     </Text>
                     <Text style={styles.onboardingDesc}>
                       {t('stripeConnectOnboardingDesc') || 'Finalisez votre inscription sur Stripe, puis revenez ici pour confirmer.'}
@@ -380,13 +367,19 @@ export default function StripeConnectModal({
 
                   <TouchableOpacity
                     style={styles.reopenButton}
-                    onPress={() => accountId && openOnboardingLink(accountId)}
+                    onPress={() => accountId && openExpressOnboarding(accountId)}
                     disabled={isConnecting}
                   >
-                    <ExternalLink size={18} color="#635BFF" />
-                    <Text style={styles.reopenButtonText}>
-                      {t('stripeConnectReopen') || 'Rouvrir le formulaire Stripe'}
-                    </Text>
+                    {isConnecting ? (
+                      <ActivityIndicator color="#635BFF" size="small" />
+                    ) : (
+                      <>
+                        <ExternalLink size={18} color="#635BFF" />
+                        <Text style={styles.reopenButtonText}>
+                          {t('stripeConnectReopen') || 'Rouvrir le formulaire Stripe'}
+                        </Text>
+                      </>
+                    )}
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -400,7 +393,7 @@ export default function StripeConnectModal({
                       <>
                         <CheckCircle size={20} color="#ffffff" />
                         <Text style={styles.connectButtonText}>
-                          {t('stripeConnectConfirm') || 'J\'ai terminé mon inscription'}
+                          {t('stripeConnectConfirm') || 'J\'ai termin\u00e9 mon inscription'}
                         </Text>
                       </>
                     )}
@@ -568,6 +561,12 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     marginTop: 6,
   },
+  accountIdHint: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.4)',
+    marginTop: 8,
+    lineHeight: 17,
+  },
   errorBanner: {
     fontSize: 13,
     color: '#fbbf24',
@@ -624,6 +623,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#635BFF',
+  },
+  backButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  backButtonText: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.6)',
   },
   confirmButton: {
     flexDirection: 'row',

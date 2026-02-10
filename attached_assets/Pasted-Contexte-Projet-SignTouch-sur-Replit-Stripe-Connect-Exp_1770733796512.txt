@@ -1,0 +1,67 @@
+Contexte :
+- Projet SignTouch sur Replit
+- Stripe Connect Express est déjà utilisé (comptes connectés acct_..., webhooks account.updated OK)
+- Mais dans l’app, quand on clique sur "Recevez vos paiements" / "J’ai déjà un compte Stripe", Stripe affiche :
+  "You can only create new accounts if you've signed up for Connect…"
+=> Cela signifie que l’app ouvre le mauvais flux (standard/OAuth) au lieu de l’onboarding Express.
+
+OBJECTIF UNIQUE :
+Remplacer ce flux par le flux correct Stripe Connect Express :
+- Générer un "Account Link" côté backend (stripe.accountLinks.create)
+- Ouvrir ce lien dans l’app
+- Ne plus afficher l’écran Stripe "Créer mon compte / J’ai déjà un compte Stripe" (qui est le mauvais flux).
+
+INSTRUCTIONS PRÉCISES :
+
+A) BACKEND (dans /server)
+1) Ouvre `server/index.js` (ou le fichier qui gère Stripe).
+2) Ajoute un endpoint qui génère un accountLink Express :
+
+   GET /api/stripe/express/account-link?account_id=acct_xxx
+
+   Ce endpoint doit :
+   - vérifier que account_id est présent
+   - créer un lien via stripe.accountLinks.create({
+       account: account_id,
+       type: "account_onboarding",
+       refresh_url: <une URL de retour>,
+       return_url: <une URL de retour>
+     })
+   - renvoyer JSON : { url: link.url }
+
+3) Utilise les URLs suivantes (simples, côté web) :
+   refresh_url = "https://3aa55d0d-178c-4720-bdee-f8cea294f71b-00-3sqzk84ygwh7z.picard.replit.dev/stripe/refresh"
+   return_url  = "https://3aa55d0d-178c-4720-bdee-f8cea294f71b-00-3sqzk84ygwh7z.picard.replit.dev/stripe/return"
+
+4) Ajoute aussi 2 routes de debug (très simples) pour éviter 404 :
+   GET /stripe/refresh -> renvoie "refresh"
+   GET /stripe/return  -> renvoie "return"
+
+B) FRONT (dans /signtouch-app-main)
+1) Trouve le composant qui affiche le modal Stripe "Recevez vos paiements" et les boutons "Créer mon compte Stripe" / "J’ai déjà un compte Stripe".
+2) Remplace le comportement du bouton principal par :
+   - récupérer le compte connecté de la célébrité (account_id acct_...) depuis l’état/profil
+   - appeler l’endpoint backend :
+     `${EXPO_PUBLIC_STRIPE_SERVER_URL}/api/stripe/express/account-link?account_id=${accountId}`
+   - ouvrir l’URL renvoyée (`url`) via Linking.openURL(url) (Expo)
+
+3) Supprime/ignore totalement l’ancien flux (OAuth/standard) qui ouvre la page Stripe avec "Créer mon compte" / "J’ai déjà un compte".
+
+C) VALIDATION (obligatoire)
+1) Redémarre Expo Web + Stripe Server.
+2) Clique sur "Recevez vos paiements" dans l’app.
+3) Vérifie que l’URL ouverte commence par :
+   https://connect.stripe.com/express/
+4) Termine l’onboarding : retour vers /stripe/return.
+5) Confirme que Stripe met à jour le compte (account.updated webhook 200).
+
+IMPORTANT :
+- Ne touche pas au webhook Stripe (il est déjà OK)
+- Ne change pas la logique 85/15 des paiements
+- Objectif unique : corriger l’onboarding Express en utilisant accountLinks.create()
+
+RÉPONSE ATTENDUE :
+- fichier(s) modifié(s)
+- endpoint ajouté
+- où tu as remplacé l’ancien flux
+- confirmation que l’URL ouverte est bien https://connect.stripe.com/express/...

@@ -338,6 +338,41 @@ app.get('/api/verify-payment', async (req, res) => {
   }
 });
 
+app.get('/api/stripe/express/account-link', async (req, res) => {
+  try {
+    const stripe = await getStripe();
+    const { account_id } = req.query;
+
+    if (!account_id) {
+      return res.status(400).json({ error: 'account_id is required' });
+    }
+
+    const baseUrl = `https://${req.headers.host || '3aa55d0d-178c-4720-bdee-f8cea294f71b-00-3sqzk84ygwh7z.picard.replit.dev'}`;
+
+    const accountLink = await stripe.accountLinks.create({
+      account: account_id,
+      type: 'account_onboarding',
+      refresh_url: `${baseUrl}/stripe/refresh`,
+      return_url: `${baseUrl}/stripe/return`,
+    });
+
+    console.log('[Connect Express] Account link created for:', account_id, '→', accountLink.url);
+
+    res.json({ url: accountLink.url });
+  } catch (error) {
+    console.error('[Connect Express] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/stripe/refresh', (req, res) => {
+  res.send('<html><body style="background:#0a1628;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div style="text-align:center"><h2>Session expir\u00e9e</h2><p>Veuillez retourner dans l\'app et r\u00e9essayer.</p></div></body></html>');
+});
+
+app.get('/stripe/return', (req, res) => {
+  res.send('<html><body style="background:#0a1628;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div style="text-align:center"><h2>\u2705 Inscription termin\u00e9e !</h2><p>Vous pouvez fermer cette page et retourner dans l\'app SignTouch.</p></div></body></html>');
+});
+
 const EXPO_PORT = 19006;
 const PORT = 5000;
 
