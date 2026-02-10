@@ -12,7 +12,7 @@ import {
   TextInput,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { X, Shield, CreditCard, Clock, CheckCircle, ExternalLink, ArrowRight } from 'lucide-react-native';
+import { X, Shield, CreditCard, Clock, CheckCircle, ExternalLink, ArrowRight, Home, Mail, RefreshCw } from 'lucide-react-native';
 import { useTranslation } from '@/contexts/LanguageContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -35,7 +35,7 @@ export default function StripeConnectModal({
 }: StripeConnectModalProps) {
   const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = React.useState(false);
-  const [step, setStep] = React.useState<'main' | 'onboarding' | 'checking' | 'noAccount'>('main');
+  const [step, setStep] = React.useState<'main' | 'onboarding' | 'checking' | 'noAccount' | 'pendingVerification'>('main');
   const [accountId, setAccountId] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [showAdminInput, setShowAdminInput] = React.useState(false);
@@ -233,7 +233,8 @@ export default function StripeConnectModal({
           onConnected(accountId);
         }, 2000);
       } else if (data.details_submitted) {
-        setError(t('stripeConnectPending') || 'Votre compte est en cours de vérification par Stripe. Cela prend généralement quelques minutes.');
+        setStep('pendingVerification');
+        setError(null);
       } else {
         setError(t('stripeConnectIncomplete') || 'Veuillez d\'abord compléter toutes les étapes sur Stripe, puis revenez ici.');
       }
@@ -463,6 +464,78 @@ export default function StripeConnectModal({
                       </TouchableOpacity>
                     </View>
                   )}
+                </>
+              ) : step === 'pendingVerification' ? (
+                <>
+                  <View style={styles.pendingContainer}>
+                    <View style={styles.pendingIconWrapper}>
+                      <Clock size={48} color="#fbbf24" />
+                    </View>
+                    <Text style={styles.pendingTitle}>
+                      {t('stripeConnectPendingTitle') || 'Inscription envoyée !'}
+                    </Text>
+                    <Text style={styles.pendingDesc}>
+                      {t('stripeConnectPendingDesc') || 'Votre inscription Stripe a bien été soumise. Stripe doit maintenant vérifier vos informations. Ce processus peut prendre de quelques minutes à 24-48 heures.'}
+                    </Text>
+                  </View>
+
+                  <View style={styles.pendingInfoBox}>
+                    <Mail size={18} color="#635BFF" />
+                    <Text style={styles.pendingInfoText}>
+                      {t('stripeConnectPendingEmail') || 'Vous recevrez un e-mail de Stripe dès que votre compte sera vérifié et activé.'}
+                    </Text>
+                  </View>
+
+                  <View style={styles.pendingStepsBox}>
+                    <Text style={styles.pendingStepsTitle}>
+                      {t('stripeConnectPendingNextSteps') || 'Que faire maintenant ?'}
+                    </Text>
+                    <View style={styles.pendingStep}>
+                      <Text style={styles.pendingStepNumber}>1</Text>
+                      <Text style={styles.pendingStepText}>
+                        {t('stripeConnectPendingStep1') || 'Attendez l\'e-mail de confirmation de Stripe'}
+                      </Text>
+                    </View>
+                    <View style={styles.pendingStep}>
+                      <Text style={styles.pendingStepNumber}>2</Text>
+                      <Text style={styles.pendingStepText}>
+                        {t('stripeConnectPendingStep2') || 'Revenez ici et cliquez sur « Vérifier mon compte » pour confirmer l\'activation'}
+                      </Text>
+                    </View>
+                    <View style={styles.pendingStep}>
+                      <Text style={styles.pendingStepNumber}>3</Text>
+                      <Text style={styles.pendingStepText}>
+                        {t('stripeConnectPendingStep3') || 'Créez votre première session live et commencez à recevoir des paiements !'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.recheckButton, isConnecting && styles.connectButtonDisabled]}
+                    onPress={handleCheckStatus}
+                    disabled={isConnecting}
+                  >
+                    {isConnecting ? (
+                      <ActivityIndicator color="#635BFF" size="small" />
+                    ) : (
+                      <>
+                        <RefreshCw size={18} color="#635BFF" />
+                        <Text style={styles.recheckButtonText}>
+                          {t('stripeConnectRecheck') || 'Vérifier mon compte'}
+                        </Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.goHomeButton}
+                    onPress={onClose}
+                  >
+                    <Home size={18} color="#ffffff" />
+                    <Text style={styles.goHomeButtonText}>
+                      {t('stripeConnectGoHome') || 'Retour à l\'accueil'}
+                    </Text>
+                  </TouchableOpacity>
                 </>
               ) : isVerified ? (
                 <View style={styles.successContainer}>
@@ -843,6 +916,120 @@ const styles = StyleSheet.create({
   },
   adminConnectButtonText: {
     fontSize: 14,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  pendingContainer: {
+    alignItems: 'center',
+    paddingVertical: 16,
+    gap: 10,
+  },
+  pendingIconWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(251, 191, 36, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  pendingTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#fbbf24',
+    textAlign: 'center',
+  },
+  pendingDesc: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+    lineHeight: 21,
+    paddingHorizontal: 6,
+  },
+  pendingInfoBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: 'rgba(99, 91, 255, 0.1)',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 91, 255, 0.2)',
+  },
+  pendingInfoText: {
+    flex: 1,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    lineHeight: 19,
+  },
+  pendingStepsBox: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    gap: 12,
+  },
+  pendingStepsTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  pendingStep: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  pendingStepNumber: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(99, 91, 255, 0.2)',
+    color: '#635BFF',
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+    lineHeight: 24,
+    overflow: 'hidden',
+  },
+  pendingStepText: {
+    flex: 1,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
+    lineHeight: 19,
+  },
+  recheckButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(99, 91, 255, 0.1)',
+    borderRadius: 14,
+    paddingVertical: 14,
+    gap: 8,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 91, 255, 0.3)',
+  },
+  recheckButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#635BFF',
+  },
+  goHomeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#635BFF',
+    borderRadius: 14,
+    paddingVertical: 14,
+    gap: 8,
+    marginBottom: 16,
+  },
+  goHomeButtonText: {
+    fontSize: 15,
     fontWeight: '600',
     color: '#ffffff',
   },
