@@ -58,7 +58,7 @@ export default function CreateLiveSessionScreen() {
   const [celebrityName, setCelebrityName] = useState('');
   const [durationPerFan, setDurationPerFan] = useState(0.5);
   const [totalDuration, setTotalDuration] = useState(30);
-  const [price, setPrice] = useState(200); // Prix minimum 2€
+  const [price, setPrice] = useState(5000); // Prix par défaut 50€
   const [isCustomPrice, setIsCustomPrice] = useState(false);
   const [customPriceText, setCustomPriceText] = useState('');
   const [isCreating, setIsCreating] = useState(false);
