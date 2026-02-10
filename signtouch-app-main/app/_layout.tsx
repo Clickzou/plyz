@@ -137,12 +137,10 @@ export default function RootLayout() {
 
   const [fontsLoaded, fontError] = useFonts(fontMap);
 
-  // SplashScreen: lié aux fonts
   useEffect(() => {
     SplashScreen.hideAsync();
   }, [fontsLoaded, fontError]);
 
-  // RevenueCat: init une seule fois
   useEffect(() => {
     initRevenueCat().catch(console.warn);
   }, []);
