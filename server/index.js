@@ -86,10 +86,42 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
 
   console.log('✅ Webhook Stripe sécurisé reçu :', event.type);
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const { session_id, fan_id, celebrity_id } = session.metadata || {};
-    console.log('[Webhook] Payment completed for session:', session_id, 'fan:', fan_id);
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object;
+      const { session_id, fan_id, celebrity_id, price_cents, signtouch_fee_cents } = session.metadata || {};
+      console.log('[Webhook] ✅ checkout.session.completed');
+      console.log('[Webhook]   Session live:', session_id);
+      console.log('[Webhook]   Fan:', fan_id, '| Célébrité:', celebrity_id);
+      console.log('[Webhook]   Montant:', price_cents, 'cents | Commission SignTouch:', signtouch_fee_cents, 'cents');
+      console.log('[Webhook]   Payment status:', session.payment_status);
+      console.log('[Webhook]   Stripe Checkout ID:', session.id);
+      break;
+    }
+
+    case 'payment_intent.succeeded': {
+      const paymentIntent = event.data.object;
+      console.log('[Webhook] ✅ payment_intent.succeeded');
+      console.log('[Webhook]   PaymentIntent ID:', paymentIntent.id);
+      console.log('[Webhook]   Montant:', paymentIntent.amount, paymentIntent.currency);
+      console.log('[Webhook]   Destination:', paymentIntent.transfer_data?.destination || 'N/A');
+      if (paymentIntent.application_fee_amount) {
+        console.log('[Webhook]   Commission SignTouch:', paymentIntent.application_fee_amount, 'cents');
+      }
+      break;
+    }
+
+    case 'account.updated': {
+      const account = event.data.object;
+      console.log('[Webhook] 📋 account.updated:', account.id);
+      console.log('[Webhook]   charges_enabled:', account.charges_enabled);
+      console.log('[Webhook]   payouts_enabled:', account.payouts_enabled);
+      console.log('[Webhook]   details_submitted:', account.details_submitted);
+      break;
+    }
+
+    default:
+      console.log('[Webhook] Event non géré:', event.type);
   }
 
   res.status(200).json({ received: true });
@@ -216,6 +248,24 @@ app.post('/api/create-checkout-session', async (req, res) => {
       return res.status(400).json({ error: 'Celebrity Stripe account is required for paid sessions' });
     }
 
+    const account = await stripe.accounts.retrieve(celebrityStripeAccountId);
+
+    if (!account.charges_enabled) {
+      console.error('[Checkout] Blocked: charges_enabled=false for', celebrityStripeAccountId);
+      return res.status(403).json({
+        error: 'Celebrity account cannot accept payments yet. Onboarding must be completed.',
+        code: 'CHARGES_NOT_ENABLED',
+      });
+    }
+
+    if (!account.payouts_enabled) {
+      console.error('[Checkout] Blocked: payouts_enabled=false for', celebrityStripeAccountId);
+      return res.status(403).json({
+        error: 'Celebrity account cannot receive payouts yet. Onboarding must be completed.',
+        code: 'PAYOUTS_NOT_ENABLED',
+      });
+    }
+
     const signTouchFeeCents = Math.round(priceCents * 0.15);
 
     const sessionParams = {
@@ -241,22 +291,19 @@ app.post('/api/create-checkout-session', async (req, res) => {
         price_cents: String(priceCents),
         signtouch_fee_cents: String(signTouchFeeCents),
       },
-      success_url: successUrl || `${req.headers.origin || 'https://signtouch.app'}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&live_session_id=${sessionId}&celebrity_id=${celebrityId}`,
-      cancel_url: cancelUrl || `${req.headers.origin || 'https://signtouch.app'}/payment-cancel`,
-    };
-
-    if (celebrityStripeAccountId) {
-      sessionParams.payment_intent_data = {
+      payment_intent_data: {
         application_fee_amount: signTouchFeeCents,
         transfer_data: {
           destination: celebrityStripeAccountId,
         },
-      };
-    }
+      },
+      success_url: successUrl || `${req.headers.origin || 'https://signtouch.app'}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&live_session_id=${sessionId}&celebrity_id=${celebrityId}`,
+      cancel_url: cancelUrl || `${req.headers.origin || 'https://signtouch.app'}/payment-cancel`,
+    };
 
     const checkoutSession = await stripe.checkout.sessions.create(sessionParams);
 
-    console.log('[Checkout] Session created:', checkoutSession.id, 'for live session:', sessionId);
+    console.log('[Checkout] Session created:', checkoutSession.id, 'for live session:', sessionId, '| Fee:', signTouchFeeCents, 'cents | Destination:', celebrityStripeAccountId);
 
     res.json({
       sessionId: checkoutSession.id,
