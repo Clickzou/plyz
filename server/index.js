@@ -391,7 +391,27 @@ app.get('/stripe/refresh', (req, res) => {
 });
 
 app.get('/stripe/return', (req, res) => {
-  res.send('<html><body style="background:#0a1628;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div style="text-align:center"><h2>\u2705 Inscription termin\u00e9e !</h2><p>Vous pouvez fermer cette page et retourner dans l\'app SignTouch.</p></div></body></html>');
+  const appUrl = `https://${req.headers.host || req.hostname}/create-live-session`;
+  res.send(`<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SignTouch - Inscription terminée</title>
+<style>
+  body{background:#0a1628;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+  .container{text-align:center;padding:20px}
+  .spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,0.2);border-top:4px solid #4CAF50;border-radius:50%;animation:spin 1s linear infinite;margin:20px auto}
+  @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+  .btn{display:inline-block;margin-top:20px;padding:14px 28px;background:#4CAF50;color:white;text-decoration:none;border-radius:25px;font-size:16px;font-weight:bold}
+</style>
+</head><body>
+<div class="container">
+  <h2>✅ Inscription terminée !</h2>
+  <p>Redirection vers SignTouch...</p>
+  <div class="spinner"></div>
+  <p style="margin-top:30px;font-size:14px;opacity:0.7">Si la redirection ne fonctionne pas :</p>
+  <a class="btn" href="${appUrl}">Retourner dans l'app</a>
+</div>
+<script>setTimeout(function(){window.location.href="${appUrl}";},2000);</script>
+</body></html>`);
 });
 
 const EXPO_PORT = 19006;
