@@ -497,7 +497,7 @@ export default function CreateLiveSessionScreen() {
             
             return (
               <Text style={styles.revenueAmount}>
-                ~{(netCents / 100).toFixed(0)}€
+                {(netCents / 100).toFixed(0)}€
               </Text>
             );
           })()}
