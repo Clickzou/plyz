@@ -656,7 +656,7 @@ export default {
   celebrityEventSimpleDesc: 'Cipta acara QR langsung semasa acara. Anda boleh menghantar foto dan dedikasi peribadi secara masa nyata kepada peminat anda',
   celebrityLiveSession: 'Sesi Video Langsung Berbayar',
   celebrityLiveSessionDesc: 'Berikan peminat anda detik unik melalui video langsung. Setiap peminat akan mendapat keistimewaan untuk bercakap dengan anda secara langsung. Tiada nombor telefon dikongsi, semuanya melalui aplikasi SignTouch',
-  celebrityMenuDisclaimer: 'Sambungan internet diperlukan. Pengendali mudah alih anda mungkin mengenakan caj data.',
+  celebrityMenuDisclaimer: 'Memerlukan sambungan internet (Wi-Fi atau data mudah alih).',
 
   paymentDelaysTitle: 'Jadual Pembayaran',
   paymentDelaysIntro: 'Pembayaran diproses oleh Stripe, peneraju global dalam pembayaran dalam talian. Pendapatan anda dipindahkan terus ke akaun bank anda mengikut jadual Stripe.',

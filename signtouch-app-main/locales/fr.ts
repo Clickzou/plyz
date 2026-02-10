@@ -656,7 +656,7 @@ export default {
   celebrityEventSimpleDesc: 'Générez un événement QR live lors d\'un événement. Vous pourrez envoyer vos photos et dédicaces personnalisées en temps réel à vos fans',
   celebrityLiveSession: 'Session Live Vidéo',
   celebrityLiveSessionDesc: 'Offrez à vos fans un moment unique en vidéo Live. Chaque fan aura le privilège de vous parler en direct. Aucun numéro de téléphone n\'est communiqué, tout passe par l\'application SignTouch',
-  celebrityMenuDisclaimer: 'Une connexion internet est nécessaire. Des frais de données peuvent être facturés par votre opérateur mobile.',
+  celebrityMenuDisclaimer: 'Nécessite une connexion internet (Wi-Fi ou données mobiles).',
 
   paymentDelaysTitle: 'Délais de reversement',
   paymentDelaysIntro: 'Les paiements sont traités par Stripe, un leader mondial du paiement en ligne. Vos gains sont reversés directement sur votre compte bancaire selon le calendrier Stripe.',

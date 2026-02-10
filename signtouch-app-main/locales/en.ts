@@ -656,7 +656,7 @@ export default {
   celebrityEventSimpleDesc: 'Generate a live QR event during an event. You can send your personalized photos and dedications in real time to your fans',
   celebrityLiveSession: 'Paid Video Live Session',
   celebrityLiveSessionDesc: 'Give your fans a unique moment in live video. Each fan will have the privilege of speaking with you live. No phone number is shared, everything goes through the SignTouch app',
-  celebrityMenuDisclaimer: 'An internet connection is required. Data charges may apply from your mobile carrier.',
+  celebrityMenuDisclaimer: 'Requires an internet connection (Wi-Fi or mobile data).',
 
   paymentDelaysTitle: 'Payment Timelines',
   paymentDelaysIntro: 'Payments are processed by Stripe, a global leader in online payments. Your earnings are transferred directly to your bank account according to Stripe\'s schedule.',
