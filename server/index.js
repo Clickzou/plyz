@@ -64,6 +64,10 @@ app.use(cors({
   methods: ['GET', 'POST'],
 }));
 
+app.get('/api/ping', (req, res) => res.status(200).send('ok'));
+
+app.get('/api/stripe-webhook', (req, res) => res.status(200).send('webhook route exists'));
+
 app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
