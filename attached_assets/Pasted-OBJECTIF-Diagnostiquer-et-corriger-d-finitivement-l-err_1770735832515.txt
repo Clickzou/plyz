@@ -1,0 +1,59 @@
+OBJECTIF
+Diagnostiquer et corriger définitivement l’erreur Stripe Connect :
+"You can only create new accounts if you've signed up for Connect"
+
+CONTEXTE
+- Backend Node.js (Express) dans /server/index.js
+- Endpoint en erreur :
+  POST /api/stripe/express/create-and-onboard
+- Stripe Connect Express DOIT fonctionner
+- Le code frontend est correct
+- L’erreur vient soit :
+  1) d’une mauvaise clé Stripe utilisée
+  2) d’un mauvais mode (test/live)
+  3) d’une initialisation Stripe incorrecte
+  4) d’un appel Stripe qui n’est PAS accounts.create(type=express)
+
+MISSION (OBLIGATOIRE)
+1️⃣ Vérifier quelle clé Stripe est réellement utilisée par le serveur
+   - Logger explicitement :
+     - process.env.STRIPE_TEST_SECRET_KEY
+     - process.env.STRIPE_SECRET_KEY
+   - Afficher laquelle est passée à `new Stripe(...)`
+
+2️⃣ Vérifier que l’appel utilisé est EXACTEMENT :
+   stripe.accounts.create({ type: "express" })
+   - AUCUN OAuth
+   - AUCUN account.standard
+   - AUCUN stripe-connect onboarding classique
+
+3️⃣ Vérifier que :
+   - la clé utilisée correspond bien au MODE TEST
+   - le compte Stripe associé A BIEN Stripe Connect activé
+   - le message d’erreur Stripe ne vient PAS d’un appel legacy
+
+4️⃣ Si Stripe Connect n’est pas activé :
+   - STOPPER la création
+   - Retourner une erreur explicite :
+     "Stripe Connect is not enabled on the platform account"
+
+5️⃣ Fournir en sortie :
+   - la CAUSE EXACTE du message Stripe
+   - la LIGNE DE CODE RESPONSABLE
+   - la CORRECTION PRÉCISE à appliquer
+
+INTERDICTIONS
+❌ Ne pas dire "le code est correct"
+❌ Ne pas dire "c’est normal côté Stripe" sans preuve
+❌ Ne pas modifier le frontend
+❌ Ne pas contourner Stripe Connect
+
+OBJECTIF FINAL
+Quand j’appelle :
+POST /api/stripe/express/create-and-onboard
+
+➡️ Stripe DOIT créer un compte Express
+➡️ Stripe DOIT retourner une URL connect.stripe.com/express/...
+➡️ AUCUN message "You can only create new accounts..."
+
+Commence par analyser server/index.js ligne par ligne.

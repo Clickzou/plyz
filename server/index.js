@@ -7,53 +7,23 @@ const app = express();
 
 let stripeClient = null;
 
-async function getStripeCredentials() {
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-  const xReplitToken = process.env.REPL_IDENTITY
-    ? 'repl ' + process.env.REPL_IDENTITY
-    : process.env.WEB_REPL_RENEWAL
-      ? 'depl ' + process.env.WEB_REPL_RENEWAL
-      : null;
+function getStripeCredentials() {
+  const userKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
 
-  if (!xReplitToken || !hostname) {
-    if (process.env.STRIPE_SECRET_KEY) {
-      console.log('[Stripe] Using STRIPE_SECRET_KEY from env');
-      return { secretKey: process.env.STRIPE_SECRET_KEY };
-    }
-    throw new Error('No Stripe credentials available');
+  if (!userKey) {
+    throw new Error('No Stripe credentials available. Set STRIPE_TEST_SECRET_KEY or STRIPE_SECRET_KEY.');
   }
 
-  const isProduction = process.env.REPLIT_DEPLOYMENT === '1';
-  const targetEnvironment = isProduction ? 'production' : 'development';
+  const keyPrefix = userKey.substring(0, 8);
+  const isTestKey = userKey.startsWith('sk_test_');
+  console.log(`[Stripe] Using key: ${keyPrefix}... (test mode: ${isTestKey})`);
 
-  const url = new URL(`https://${hostname}/api/v2/connection`);
-  url.searchParams.set('include_secrets', 'true');
-  url.searchParams.set('connector_names', 'stripe');
-  url.searchParams.set('environment', targetEnvironment);
-
-  const response = await fetch(url.toString(), {
-    headers: {
-      'Accept': 'application/json',
-      'X_REPLIT_TOKEN': xReplitToken
-    }
-  });
-
-  const data = await response.json();
-  const connectionSettings = data.items?.[0];
-
-  if (!connectionSettings?.settings?.secret) {
-    throw new Error(`Stripe ${targetEnvironment} connection not found`);
-  }
-
-  return {
-    secretKey: connectionSettings.settings.secret,
-    publishableKey: connectionSettings.settings.publishable,
-  };
+  return { secretKey: userKey };
 }
 
 async function getStripe() {
   if (!stripeClient) {
-    const { secretKey } = await getStripeCredentials();
+    const { secretKey } = getStripeCredentials();
     stripeClient = new Stripe(secretKey);
   }
   return stripeClient;
@@ -344,6 +314,8 @@ app.post('/api/stripe/express/create-and-onboard', async (req, res) => {
     const { celebrityName, celebrityId } = req.body;
     const baseUrl = `https://${req.headers.host || req.hostname}`;
 
+    console.log('[Connect Express] Creating account with key prefix:', (process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '').substring(0, 12) + '...');
+
     const account = await stripe.accounts.create({
       type: 'express',
       country: 'FR',
@@ -373,6 +345,16 @@ app.post('/api/stripe/express/create-and-onboard', async (req, res) => {
     res.json({ account_id: account.id, url: accountLink.url });
   } catch (error) {
     console.error('[Connect Express] Error create-and-onboard:', error.message);
+    console.error('[Connect Express] Full error type:', error.type, '| code:', error.code);
+
+    if (error.message.includes('signed up for Connect')) {
+      return res.status(403).json({
+        error: 'Stripe Connect is not enabled on the platform account. Please enable Stripe Connect at https://dashboard.stripe.com/test/connect/overview',
+        code: 'CONNECT_NOT_ENABLED',
+        help: 'Go to https://dashboard.stripe.com/test/connect/overview and click "Get started" to enable Connect on your Stripe account.',
+      });
+    }
+
     res.status(500).json({ error: error.message });
   }
 });
