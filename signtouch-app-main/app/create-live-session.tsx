@@ -527,10 +527,6 @@ export default function CreateLiveSessionScreen() {
               <Text style={styles.paymentExampleText}>{t('paymentStripeExample')}</Text>
             </View>
 
-            <View style={styles.paymentNoteCard}>
-              <Info size={14} color="rgba(255,255,255,0.5)" />
-              <Text style={styles.paymentNoteText}>{t('paymentDelaysNote')}</Text>
-            </View>
           </View>
         )}
 
