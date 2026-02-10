@@ -161,6 +161,7 @@ export default function AccountScreen() {
     await AsyncStorage.removeItem('@create_event_pending');
     await AsyncStorage.removeItem('@post_auth_redirect');
     await AsyncStorage.removeItem('@signtouch_promo_premium');
+    await AsyncStorage.removeItem('stripe_connect_account_id');
     
     setPromoPremiumExpires(null);
     
