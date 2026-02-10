@@ -38,12 +38,12 @@ const formatDuration = (minutes: number): string => {
 };
 
 const PRICE_OPTIONS = [
-  { label: '~2€', value: 200 },
-  { label: '~5€', value: 500 },
-  { label: '~10€', value: 1000 },
-  { label: '~20€', value: 2000 },
-  { label: '~50€', value: 5000 },
-  { label: '~100€', value: 10000 },
+  { label: '2€', value: 200 },
+  { label: '5€', value: 500 },
+  { label: '10€', value: 1000 },
+  { label: '20€', value: 2000 },
+  { label: '50€', value: 5000 },
+  { label: '100€', value: 10000 },
 ];
 
 const SIGNTOUCH_FEES = 0.15; // 15% SignTouch
@@ -497,7 +497,7 @@ export default function CreateLiveSessionScreen() {
             
             return (
               <Text style={styles.revenueAmount}>
-                {(netCents / 100).toFixed(0)}€
+                ~{(netCents / 100).toFixed(0)}€
               </Text>
             );
           })()}
