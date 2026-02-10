@@ -338,6 +338,45 @@ app.get('/api/verify-payment', async (req, res) => {
   }
 });
 
+app.post('/api/stripe/express/create-and-onboard', async (req, res) => {
+  try {
+    const stripe = await getStripe();
+    const { celebrityName, celebrityId } = req.body;
+    const baseUrl = `https://${req.headers.host || req.hostname}`;
+
+    const account = await stripe.accounts.create({
+      type: 'express',
+      country: 'FR',
+      capabilities: {
+        card_payments: { requested: true },
+        transfers: { requested: true },
+      },
+      business_type: 'individual',
+      metadata: {
+        celebrity_id: celebrityId || '',
+        celebrity_name: celebrityName || '',
+        platform: 'signtouch',
+      },
+    });
+
+    console.log('[Connect Express] Account created:', account.id);
+
+    const accountLink = await stripe.accountLinks.create({
+      account: account.id,
+      type: 'account_onboarding',
+      refresh_url: `${baseUrl}/stripe/refresh`,
+      return_url: `${baseUrl}/stripe/return`,
+    });
+
+    console.log('[Connect Express] Onboarding link created:', accountLink.url);
+
+    res.json({ account_id: account.id, url: accountLink.url });
+  } catch (error) {
+    console.error('[Connect Express] Error create-and-onboard:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/stripe/express/account-link', async (req, res) => {
   try {
     const stripe = await getStripe();
