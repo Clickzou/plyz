@@ -143,14 +143,9 @@ app.post('/api/create-connect-account', async (req, res) => {
     const stripe = await getStripe();
     const { celebrityName, celebrityEmail, celebrityId } = req.body;
 
-    if (!celebrityEmail) {
-      return res.status(400).json({ error: 'Email is required' });
-    }
-
-    const account = await stripe.accounts.create({
+    const accountParams = {
       type: 'express',
       country: 'FR',
-      email: celebrityEmail,
       capabilities: {
         card_payments: { requested: true },
         transfers: { requested: true },
@@ -161,9 +156,15 @@ app.post('/api/create-connect-account', async (req, res) => {
         celebrity_name: celebrityName || '',
         platform: 'signtouch',
       },
-    });
+    };
 
-    console.log('[Connect] Account created:', account.id, 'for:', celebrityEmail);
+    if (celebrityEmail) {
+      accountParams.email = celebrityEmail;
+    }
+
+    const account = await stripe.accounts.create(accountParams);
+
+    console.log('[Connect] Account created:', account.id, 'for:', celebrityEmail || '(existing account)');
 
     res.json({ accountId: account.id });
   } catch (error) {

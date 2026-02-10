@@ -75,6 +75,35 @@ export default function StripeConnectModal({
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   };
 
+  const handleExistingAccount = async () => {
+    setError(null);
+    setIsConnecting(true);
+
+    try {
+      const response = await fetch(`${STRIPE_SERVER_URL}/api/create-connect-account`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          celebrityName: celebrityName || '',
+          celebrityId: celebrityId || '',
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to create account');
+
+      const newAccountId = data.accountId;
+      setAccountId(newAccountId);
+      await AsyncStorage.setItem('stripe_connect_account_id', newAccountId);
+
+      await openOnboardingLink(newAccountId);
+    } catch (err: any) {
+      console.error('[StripeConnect] Existing account error:', err);
+      setError(err.message || 'An error occurred');
+      setIsConnecting(false);
+    }
+  };
+
   const handleCreateAccount = async () => {
     if (!validateEmail(email)) {
       setEmailError(true);
@@ -311,13 +340,19 @@ export default function StripeConnectModal({
 
                   <TouchableOpacity
                     style={[styles.existingAccountButton, isConnecting && styles.connectButtonDisabled]}
-                    onPress={handleCreateAccount}
+                    onPress={handleExistingAccount}
                     disabled={isConnecting}
                   >
-                    <ExternalLink size={16} color="#635BFF" />
-                    <Text style={styles.existingAccountText}>
-                      {t('stripeConnectExisting') || 'J\'ai déjà un compte Stripe'}
-                    </Text>
+                    {isConnecting ? (
+                      <ActivityIndicator color="#635BFF" size="small" />
+                    ) : (
+                      <>
+                        <ExternalLink size={16} color="#635BFF" />
+                        <Text style={styles.existingAccountText}>
+                          {t('stripeConnectExisting') || 'J\'ai déjà un compte Stripe'}
+                        </Text>
+                      </>
+                    )}
                   </TouchableOpacity>
 
                   <View style={styles.infoBox}>
