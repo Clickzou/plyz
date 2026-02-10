@@ -108,7 +108,11 @@ function AppContent() {
 export default function RootLayout() {
   useFrameworkReady();
 
-  const [fontsLoaded, fontError] = useFonts({
+  const pumpkindFont = (() => {
+    try { return require('@/assets/fonts/PumpkindCustard.ttf'); } catch { return null; }
+  })();
+
+  const fontMap: Record<string, any> = {
     'Shadows Into Light': ShadowsIntoLight_400Regular,
     'Alex Brush': AlexBrush_400Regular,
     Pacifico: Pacifico_400Regular,
@@ -123,7 +127,13 @@ export default function RootLayout() {
     Manrope: Manrope_400Regular,
     'Montserrat-Bold': Montserrat_700Bold,
     'Montserrat-ExtraBold': Montserrat_800ExtraBold,
-  });
+  };
+
+  if (pumpkindFont) {
+    fontMap['PumpkindCustard'] = pumpkindFont;
+  }
+
+  const [fontsLoaded, fontError] = useFonts(fontMap);
 
   // SplashScreen: lié aux fonts
   useEffect(() => {
