@@ -79,14 +79,20 @@ export default function StripeConnectModal({
   };
 
   const openUrl = (url: string) => {
-    if (url.startsWith('https://connect.stripe.com/express/')) {
-      console.log('[StripeConnect] URL validée : connect.stripe.com/express/ ✅', url);
+    if (url.startsWith('https://connect.stripe.com/')) {
+      console.log('[StripeConnect] URL validée : connect.stripe.com ✅', url);
     } else {
-      console.warn('[StripeConnect] ⚠️ URL inattendue (pas connect.stripe.com/express/) :', url);
+      console.warn('[StripeConnect] ⚠️ URL inattendue (pas connect.stripe.com) :', url);
     }
 
+    console.log('[StripeConnect] Opening URL in browser...', url);
+
     if (Platform.OS === 'web') {
-      window.open(url, '_blank');
+      const w = window.open(url, '_blank');
+      if (!w) {
+        console.warn('[StripeConnect] window.open blocked by popup blocker, trying location.href');
+        window.location.href = url;
+      }
     } else {
       Linking.openURL(url);
     }
