@@ -430,6 +430,7 @@ export default function CelebrityMenuScreen() {
 
             </View>
 
+            <Text style={styles.disclaimer}>{t('celebrityMenuDisclaimer')}</Text>
           </>
         )}
       </ScrollView>
@@ -842,6 +843,14 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     textAlign: 'center',
     lineHeight: 18,
+  },
+  disclaimer: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.4)',
+    textAlign: 'center',
+    lineHeight: 16,
+    marginTop: 16,
+    paddingHorizontal: 20,
   },
   modalOverlay: {
     position: 'absolute',
