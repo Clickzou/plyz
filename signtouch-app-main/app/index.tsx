@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   logoText: {
-    fontFamily: 'Pacifico',
+    fontFamily: 'Satisfy',
     color: '#FFFFFF',
     textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',

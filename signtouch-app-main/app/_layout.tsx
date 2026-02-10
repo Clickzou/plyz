@@ -20,6 +20,7 @@ import { Fraunces_400Regular } from '@expo-google-fonts/fraunces';
 import { ShantellSans_400Regular } from '@expo-google-fonts/shantell-sans';
 import { Manrope_400Regular } from '@expo-google-fonts/manrope';
 import { Montserrat_700Bold, Montserrat_800ExtraBold } from '@expo-google-fonts/montserrat';
+import { Satisfy_400Regular } from '@expo-google-fonts/satisfy';
 import * as SplashScreen from 'expo-splash-screen';
 import SubscriptionOfferModal from '@/components/SubscriptionOfferModal';
 import PostPurchaseAccountModal from '@/components/PostPurchaseAccountModal';
@@ -127,6 +128,7 @@ export default function RootLayout() {
     Manrope: Manrope_400Regular,
     'Montserrat-Bold': Montserrat_700Bold,
     'Montserrat-ExtraBold': Montserrat_800ExtraBold,
+    Satisfy: Satisfy_400Regular,
   };
 
   if (pumpkindFont) {
