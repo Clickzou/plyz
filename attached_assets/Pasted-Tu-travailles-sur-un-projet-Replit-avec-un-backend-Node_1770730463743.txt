@@ -1,0 +1,66 @@
+Tu travailles sur un projet Replit avec :
+- un backend Node.js / Express dans le dossier /server
+- un serveur lancé via : `cd server && node index.js`
+- un webhook Stripe fonctionnel (HTTP 200 confirmé)
+
+OBJECTIF UNIQUE (ÉTAPE C — SÉCURITÉ) :
+Sécuriser le webhook Stripe en vérifiant la signature avec STRIPE_WEBHOOK_SECRET,
+en utilisant le body brut (raw body) UNIQUEMENT pour la route webhook.
+
+INSTRUCTIONS STRICTES :
+
+1) Ouvre le fichier `server/index.js`.
+
+2) Repère la route existante :
+   app.post("/api/stripe-webhook", ...)
+
+3) Remplace ENTIÈREMENT cette route par le code suivant :
+
+-------------------------------------------------
+const Stripe = require("stripe");
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+app.post(
+  "/api/stripe-webhook",
+  require("express").raw({ type: "application/json" }),
+  (req, res) => {
+    const sig = req.headers["stripe-signature"];
+
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
+    } catch (err) {
+      console.error("❌ Webhook signature invalide :", err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    console.log("✅ Webhook Stripe sécurisé reçu :", event.type);
+    return res.status(200).json({ received: true });
+  }
+);
+-------------------------------------------------
+
+4) Vérifie que `app.use(express.json())` :
+   - N’EST PAS placé avant cette route
+   - EST placé APRÈS la route webhook
+
+5) Ne touche à RIEN d’autre :
+   - pas de front
+   - pas de Stripe Connect
+   - pas de paiement
+   - pas de commission
+
+6) Redémarre uniquement le workflow **Stripe Server**.
+
+7) Vérifie dans Stripe → Webhooks → Événements envoyés :
+   - qu’un `account.updated` renvoyé retourne HTTP 200
+   - que la console affiche : "Webhook Stripe sécurisé reçu"
+
+RÉPONSE ATTENDUE :
+- confirmation que la route utilise express.raw
+- confirmation que la signature est vérifiée
+- confirmation que HTTP 200 est toujours retourné

@@ -70,31 +70,29 @@ app.get('/api/stripe-webhook', (req, res) => res.status(200).send('webhook route
 
 app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   let event;
   try {
     const stripe = await getStripe();
-    if (webhookSecret && sig) {
-      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    } else {
-      event = JSON.parse(req.body.toString());
-    }
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
   } catch (err) {
-    console.error('[Webhook] Signature verification failed:', err.message);
+    console.error('❌ Webhook signature invalide :', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  console.log('[Webhook] Event received:', event.type);
+  console.log('✅ Webhook Stripe sécurisé reçu :', event.type);
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const { session_id, fan_id, celebrity_id } = session.metadata || {};
-
     console.log('[Webhook] Payment completed for session:', session_id, 'fan:', fan_id);
   }
 
-  res.json({ received: true });
+  res.status(200).json({ received: true });
 });
 
 app.use(express.json());
