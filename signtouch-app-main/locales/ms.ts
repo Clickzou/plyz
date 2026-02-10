@@ -653,9 +653,9 @@ export default {
   celebrityMenuTitle: 'Tandatangan Langsung',
   celebrityMenuSubtitle: 'Kongsi tandatangan dan foto anda secara langsung dengan peminat di acara secara bersemuka atau melalui video',
   celebrityEventSimple: 'Acara QR Langsung',
-  celebrityEventSimpleDesc: 'Jana kod QR di acara untuk berkongsi foto bertandatangan anda dengan peminat',
+  celebrityEventSimpleDesc: 'Cipta acara QR langsung semasa acara. Anda boleh menghantar foto dan dedikasi peribadi secara masa nyata kepada peminat anda',
   celebrityLiveSession: 'Sesi Video Langsung Berbayar',
-  celebrityLiveSessionDesc: 'Berikan peminat anda detik video langsung yang unik dan tinggalkan autograf yang diperibadikan',
+  celebrityLiveSessionDesc: 'Berikan peminat anda detik unik melalui video langsung. Setiap peminat akan mendapat keistimewaan untuk bercakap dengan anda secara langsung. Tiada nombor telefon dikongsi, semuanya melalui aplikasi SignTouch',
 
   paymentDelaysTitle: 'Jadual Pembayaran',
   paymentDelaysIntro: 'Pembayaran diproses oleh Stripe, peneraju global dalam pembayaran dalam talian. Pendapatan anda dipindahkan terus ke akaun bank anda mengikut jadual Stripe.',

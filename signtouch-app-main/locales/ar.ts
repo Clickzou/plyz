@@ -653,9 +653,9 @@ export default {
   celebrityMenuTitle: 'وقع مباشرة',
   celebrityMenuSubtitle: 'شارك توقيعك وصورك مباشرة مع المعجبين في الأحداث الشخصية أو عبر الفيديو',
   celebrityEventSimple: 'حدث QR مباشر',
-  celebrityEventSimpleDesc: 'أنشئ رمز QR في الأحداث لمشاركة صورتك الموقعة مع المعجبين',
+  celebrityEventSimpleDesc: 'أنشئ حدث QR مباشر خلال فعالية. يمكنك إرسال صورك وإهداءاتك الشخصية في الوقت الفعلي لمعجبيك',
   celebrityLiveSession: 'جلسة فيديو مباشرة مدفوعة',
-  celebrityLiveSessionDesc: 'امنح معجبيك لحظة فيديو مباشرة فريدة واترك لهم توقيعاً مخصصاً',
+  celebrityLiveSessionDesc: 'امنح معجبيك لحظة فريدة عبر الفيديو المباشر. سيحظى كل معجب بامتياز التحدث معك مباشرة. لا يتم مشاركة أي رقم هاتف، كل شيء يمر عبر تطبيق SignTouch',
 
   paymentDelaysTitle: 'مواعيد الدفع',
   paymentDelaysIntro: 'تتم معالجة المدفوعات بواسطة Stripe، الرائد العالمي في المدفوعات عبر الإنترنت. يتم تحويل أرباحك مباشرة إلى حسابك البنكي وفقاً لجدول Stripe.',

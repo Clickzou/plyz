@@ -653,9 +653,9 @@ export default {
   celebrityMenuTitle: 'Firma dal vivo',
   celebrityMenuSubtitle: 'Condividi la tua firma e le foto dal vivo con i fan durante eventi dal vivo o via video',
   celebrityEventSimple: 'Evento QR Live',
-  celebrityEventSimpleDesc: 'Genera un codice QR agli eventi per condividere la tua foto firmata con i fan',
+  celebrityEventSimpleDesc: 'Genera un evento QR live durante un evento. Potrai inviare le tue foto e dediche personalizzate in tempo reale ai tuoi fan',
   celebrityLiveSession: 'Sessione video live a pagamento',
-  celebrityLiveSessionDesc: 'Regala ai tuoi fan un momento video live unico e lascia loro un autografo personalizzato',
+  celebrityLiveSessionDesc: 'Offri ai tuoi fan un momento unico in video Live. Ogni fan avrà il privilegio di parlarti in diretta. Nessun numero di telefono viene condiviso, tutto passa dall\'app SignTouch',
 
   paymentDelaysTitle: 'Tempi di pagamento',
   paymentDelaysIntro: 'I pagamenti sono elaborati da Stripe, un leader mondiale nei pagamenti online. I tuoi guadagni vengono trasferiti direttamente sul tuo conto bancario secondo il calendario di Stripe.',

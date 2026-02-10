@@ -653,9 +653,9 @@ export default {
   celebrityMenuTitle: 'Sign Live',
   celebrityMenuSubtitle: 'Share your signature and photos live with fans at in-person events or via video',
   celebrityEventSimple: 'Live QR Event',
-  celebrityEventSimpleDesc: 'Generate a QR code at events to share your signed photo with fans',
+  celebrityEventSimpleDesc: 'Generate a live QR event during an event. You can send your personalized photos and dedications in real time to your fans',
   celebrityLiveSession: 'Paid Video Live Session',
-  celebrityLiveSessionDesc: 'Give your fans a unique live video moment and leave them a personalized autograph',
+  celebrityLiveSessionDesc: 'Give your fans a unique moment in live video. Each fan will have the privilege of speaking with you live. No phone number is shared, everything goes through the SignTouch app',
 
   paymentDelaysTitle: 'Payment Timelines',
   paymentDelaysIntro: 'Payments are processed by Stripe, a global leader in online payments. Your earnings are transferred directly to your bank account according to Stripe\'s schedule.',

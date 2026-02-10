@@ -653,9 +653,9 @@ export default {
   celebrityMenuTitle: 'Signez en Direct',
   celebrityMenuSubtitle: 'Partagez votre signature et vos photos en direct avec vos fans lors d\'un événement en présentiel ou en vidéo',
   celebrityEventSimple: 'Événement QR Live',
-  celebrityEventSimpleDesc: 'Générez un QR code lors d\'un événement pour offrir votre photo personnalisée en live dédicacée à vos fans',
+  celebrityEventSimpleDesc: 'Générez un événement QR live lors d\'un événement. Vous pourrez envoyer vos photos et dédicaces personnalisées en temps réel à vos fans',
   celebrityLiveSession: 'Session Live Vidéo',
-  celebrityLiveSessionDesc: 'Offrez à vos fans un moment unique en vidéo live et laissez-leur une dédicace personnalisée',
+  celebrityLiveSessionDesc: 'Offrez à vos fans un moment unique en vidéo Live. Chaque fan aura le privilège de vous parler en direct. Aucun numéro de téléphone n\'est communiqué, tout passe par l\'application SignTouch',
 
   paymentDelaysTitle: 'Délais de reversement',
   paymentDelaysIntro: 'Les paiements sont traités par Stripe, un leader mondial du paiement en ligne. Vos gains sont reversés directement sur votre compte bancaire selon le calendrier Stripe.',

@@ -653,9 +653,9 @@ export default {
   celebrityMenuTitle: '实时签名',
   celebrityMenuSubtitle: '在现场活动或通过视频与粉丝实时分享您的签名和照片',
   celebrityEventSimple: '现场二维码活动',
-  celebrityEventSimpleDesc: '在活动中生成二维码，与粉丝分享您的签名照片',
+  celebrityEventSimpleDesc: '在活动期间创建一个现场QR活动。您可以实时向粉丝发送个性化照片和签名',
   celebrityLiveSession: '付费视频直播会话',
-  celebrityLiveSessionDesc: '为粉丝提供独特的视频直播时刻，并留下个性化签名',
+  celebrityLiveSessionDesc: '为粉丝提供独特的直播视频时刻。每位粉丝都将有幸与您现场交流。不会分享任何电话号码，一切通过SignTouch应用进行',
 
   paymentDelaysTitle: '付款时间表',
   paymentDelaysIntro: '付款由Stripe处理，Stripe是在线支付的全球领导者。您的收入将根据Stripe的时间表直接转入您的银行账户。',

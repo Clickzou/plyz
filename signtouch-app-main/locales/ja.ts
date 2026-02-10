@@ -653,9 +653,9 @@ export default {
   celebrityMenuTitle: 'ライブサイン',
   celebrityMenuSubtitle: '対面イベントやビデオでファンと署名や写真をライブで共有',
   celebrityEventSimple: 'ライブQRイベント',
-  celebrityEventSimpleDesc: 'イベントでQRコードを生成してファンとサイン入り写真を共有',
+  celebrityEventSimpleDesc: 'イベント中にライブQRイベントを作成します。パーソナライズされた写真とサインをリアルタイムでファンに送ることができます',
   celebrityLiveSession: '有料ビデオライブセッション',
-  celebrityLiveSessionDesc: 'ファンにユニークなライブビデオ体験を提供し、パーソナライズされたサインを残す',
+  celebrityLiveSessionDesc: 'ファンにライブビデオでユニークな瞬間を提供しましょう。各ファンにはあなたとライブで話す特権があります。電話番号は共有されません。すべてSignTouchアプリを通じて行われます',
 
   paymentDelaysTitle: '支払いスケジュール',
   paymentDelaysIntro: '支払いはオンライン決済の世界的リーダーであるStripeによって処理されます。収益はStripeのスケジュールに従って、直接銀行口座に振り込まれます。',

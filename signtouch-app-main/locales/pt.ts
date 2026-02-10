@@ -653,9 +653,9 @@ export default {
   celebrityMenuTitle: 'Assinar Ao Vivo',
   celebrityMenuSubtitle: 'Compartilhe sua assinatura e fotos ao vivo com fãs em eventos presenciais ou por vídeo',
   celebrityEventSimple: 'Evento QR Ao Vivo',
-  celebrityEventSimpleDesc: 'Gere um código QR em eventos para compartilhar sua foto autografada com os fãs',
+  celebrityEventSimpleDesc: 'Gere um evento QR ao vivo durante um evento. Poderá enviar as suas fotos e dedicatórias personalizadas em tempo real aos seus fãs',
   celebrityLiveSession: 'Sessão de Vídeo Paga Ao Vivo',
-  celebrityLiveSessionDesc: 'Dê aos seus fãs um momento único de vídeo ao vivo e deixe um autógrafo personalizado',
+  celebrityLiveSessionDesc: 'Ofereça aos seus fãs um momento único em vídeo ao vivo. Cada fã terá o privilégio de falar consigo ao vivo. Nenhum número de telefone é partilhado, tudo passa pela aplicação SignTouch',
 
   paymentDelaysTitle: 'Prazos de pagamento',
   paymentDelaysIntro: 'Os pagamentos são processados pelo Stripe, líder mundial em pagamentos online. Seus ganhos são transferidos diretamente para sua conta bancária de acordo com o cronograma do Stripe.',
