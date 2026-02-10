@@ -291,9 +291,10 @@ export default function StripeConnectModal({
                 </Text>
                 <Text style={styles.subtitle}>
                   {t('stripeConnectSubtitle') || 'Pour recevoir l\'argent de vos sessions live, créez ou connectez votre compte Stripe Connect.'}
-                </Text>
-                <Text style={styles.subtitleBold}>
-                  C'est rapide, gratuit et 100% sécurisé.
+                  {'\n'}
+                  <Text style={styles.subtitleBold}>
+                    C'est rapide, gratuit et 100% sécurisé.
+                  </Text>
                 </Text>
               </View>
 
