@@ -179,12 +179,16 @@ app.get('/api/connect-account-status', async (req, res) => {
 
     const account = await stripe.accounts.retrieve(account_id);
 
+    const fullyActive = account.charges_enabled && account.payouts_enabled;
+    const canAcceptPayments = fullyActive || account.details_submitted;
+
     res.json({
       id: account.id,
       charges_enabled: account.charges_enabled,
       payouts_enabled: account.payouts_enabled,
       details_submitted: account.details_submitted,
-      onboarding_complete: account.charges_enabled && account.payouts_enabled,
+      onboarding_complete: canAcceptPayments,
+      fully_active: fullyActive,
     });
   } catch (error) {
     console.error('[Connect] Error checking account status:', error.message);

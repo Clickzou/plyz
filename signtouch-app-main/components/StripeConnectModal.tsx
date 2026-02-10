@@ -41,6 +41,17 @@ export default function StripeConnectModal({
   const [showAdminInput, setShowAdminInput] = React.useState(false);
   const [adminAccountIdInput, setAdminAccountIdInput] = React.useState('');
   const [adminInputError, setAdminInputError] = React.useState(false);
+  const [isVerified, setIsVerified] = React.useState(false);
+  const [isPolling, setIsPolling] = React.useState(false);
+  const pollingRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopPolling = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+    setIsPolling(false);
+  };
 
   React.useEffect(() => {
     if (visible) {
@@ -48,8 +59,12 @@ export default function StripeConnectModal({
       setShowAdminInput(false);
       setAdminAccountIdInput('');
       setAdminInputError(false);
+      setIsVerified(false);
       checkExistingAccount();
+    } else {
+      stopPolling();
     }
+    return () => stopPolling();
   }, [visible]);
 
   const checkExistingAccount = async () => {
@@ -210,8 +225,13 @@ export default function StripeConnectModal({
       const data = await response.json();
 
       if (data.onboarding_complete) {
+        stopPolling();
+        setIsVerified(true);
+        setError(null);
         await AsyncStorage.setItem('stripe_connect_account_id', accountId);
-        onConnected(accountId);
+        setTimeout(() => {
+          onConnected(accountId);
+        }, 2000);
       } else if (data.details_submitted) {
         setError(t('stripeConnectPending') || 'Votre compte est en cours de vérification par Stripe. Cela prend généralement quelques minutes.');
       } else {
@@ -444,6 +464,24 @@ export default function StripeConnectModal({
                     </View>
                   )}
                 </>
+              ) : isVerified ? (
+                <View style={styles.successContainer}>
+                  <View style={styles.successIconWrapper}>
+                    <CheckCircle size={48} color="#10B981" />
+                  </View>
+                  <Text style={styles.successTitle}>
+                    {t('stripeConnectVerifiedTitle') || 'Compte Stripe activé !'}
+                  </Text>
+                  <Text style={styles.successDesc}>
+                    {t('stripeConnectVerifiedDesc') || 'Votre compte est vérifié et opérationnel. Vous pouvez maintenant recevoir des paiements.'}
+                  </Text>
+                  <View style={styles.successBadge}>
+                    <CheckCircle size={16} color="#10B981" />
+                    <Text style={styles.successBadgeText}>
+                      {t('stripeConnectActive') || 'Compte actif'}
+                    </Text>
+                  </View>
+                </View>
               ) : (
                 <>
                   <View style={styles.onboardingInfo}>
@@ -807,6 +845,50 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#ffffff',
+  },
+  successContainer: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    gap: 12,
+  },
+  successIconWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  successTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#10B981',
+    textAlign: 'center',
+  },
+  successDesc: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+    lineHeight: 22,
+    paddingHorizontal: 10,
+  },
+  successBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    marginTop: 4,
+  },
+  successBadgeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#10B981',
   },
   learnMoreButton: {
     flexDirection: 'row',
