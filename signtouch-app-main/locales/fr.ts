@@ -552,7 +552,7 @@ export default {
   liveSessionTotalDuration: 'Durée Totale',
   liveSessionCalculatedFans: 'Nombre de fans',
   liveSessionMaxSlots: 'Fans Maximum',
-  liveSessionPrice: 'Prix par Signature',
+  liveSessionPrice: 'Prix par fan (pour une session Live vidéo avec dédicace personnalisée)',
   liveSessionPriceHint: 'Paiement sécurisé via Stripe Connect sous 30 jours',
   liveSessionFree: 'Gratuit',
   liveSessionCustomPrice: 'Autre',

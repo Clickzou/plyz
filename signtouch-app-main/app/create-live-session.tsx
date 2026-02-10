@@ -38,12 +38,12 @@ const formatDuration = (minutes: number): string => {
 };
 
 const PRICE_OPTIONS = [
-  { label: '2€', value: 200 },
-  { label: '5€', value: 500 },
-  { label: '10€', value: 1000 },
-  { label: '20€', value: 2000 },
-  { label: '50€', value: 5000 },
-  { label: '100€', value: 10000 },
+  { label: '~2€', value: 200 },
+  { label: '~5€', value: 500 },
+  { label: '~10€', value: 1000 },
+  { label: '~20€', value: 2000 },
+  { label: '~50€', value: 5000 },
+  { label: '~100€', value: 10000 },
 ];
 
 const SIGNTOUCH_FEES = 0.15; // 15% SignTouch
@@ -56,8 +56,8 @@ export default function CreateLiveSessionScreen() {
   const { t } = useLanguage();
 
   const [celebrityName, setCelebrityName] = useState('');
-  const [durationPerFan, setDurationPerFan] = useState(5);
-  const [totalDuration, setTotalDuration] = useState(10);
+  const [durationPerFan, setDurationPerFan] = useState(0.5);
+  const [totalDuration, setTotalDuration] = useState(30);
   const [price, setPrice] = useState(200); // Prix minimum 2€
   const [isCustomPrice, setIsCustomPrice] = useState(false);
   const [customPriceText, setCustomPriceText] = useState('');
