@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   logoText: {
-    fontFamily: 'PumpkindCustard',
+    fontFamily: 'Pacifico',
     color: '#FFFFFF',
     textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
