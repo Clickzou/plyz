@@ -215,7 +215,10 @@ export default function StripeConnectModal({
                   {t('stripeConnectTitle') || 'Recevez vos paiements'}
                 </Text>
                 <Text style={styles.subtitle}>
-                  {t('stripeConnectSubtitle') || 'Pour recevoir l\'argent de vos sessions live, cr\u00e9ez ou connectez votre compte Stripe. C\'est rapide, gratuit et 100% s\u00e9curis\u00e9.'}
+                  {t('stripeConnectSubtitle') || 'Pour recevoir l\'argent de vos sessions live, créez ou connectez votre compte Stripe Connect.'}
+                </Text>
+                <Text style={styles.subtitleBold}>
+                  C'est rapide, gratuit et 100% sécurisé.
                 </Text>
               </View>
 
@@ -255,7 +258,7 @@ export default function StripeConnectModal({
                     ) : (
                       <>
                         <Text style={styles.connectButtonText}>
-                          {t('stripeConnectButton') || 'Configurer mes paiements'}
+                          {t('stripeConnectButton') || 'Créer mon compte Stripe Connect'}
                         </Text>
                         <ArrowRight size={20} color="#ffffff" />
                       </>
@@ -272,7 +275,7 @@ export default function StripeConnectModal({
                   >
                     <ExternalLink size={16} color="#635BFF" />
                     <Text style={styles.existingAccountText}>
-                      {t('stripeConnectExisting') || 'J\'ai d\u00e9j\u00e0 un compte Stripe'}
+                      {t('stripeConnectExisting') || 'J\'ai déjà un compte Stripe Connect'}
                     </Text>
                   </TouchableOpacity>
 
@@ -496,6 +499,14 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     textAlign: 'center',
     lineHeight: 22,
+  },
+  subtitleBold: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.85)',
+    textAlign: 'center',
+    lineHeight: 22,
+    fontWeight: '700',
+    marginTop: 4,
   },
   featuresRow: {
     flexDirection: 'row',
