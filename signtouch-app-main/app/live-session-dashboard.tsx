@@ -1033,7 +1033,7 @@ export default function LiveSessionDashboardScreen() {
                   </View>
                   {Platform.OS === 'web' ? (
                     <View
-                      style={[styles.canvas, { width: DEDICATION_CANVAS_SIZE, height: DEDICATION_CANVAS_SIZE * 0.6, touchAction: 'none', userSelect: 'none' } as any]}
+                      style={[styles.canvas, { width: '100%', height: DEDICATION_CANVAS_SIZE * 0.6, touchAction: 'none', userSelect: 'none' } as any]}
                       onPointerDown={(e: any) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1074,7 +1074,7 @@ export default function LiveSessionDashboardScreen() {
                         setTimeout(() => setIsDrawingDedication(false), 100);
                       }}
                     >
-                      <Svg width={DEDICATION_CANVAS_SIZE} height={DEDICATION_CANVAS_SIZE * 0.6}>
+                      <Svg width="100%" height={DEDICATION_CANVAS_SIZE * 0.6}>
                         {dedicationPaths.map((p, i) => (
                           <Path key={i} d={p} stroke="#000" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                         ))}
@@ -1085,8 +1085,8 @@ export default function LiveSessionDashboardScreen() {
                     </View>
                   ) : (
                     <GestureDetector gesture={dedicationPanGesture}>
-                      <View style={[styles.canvas, { width: DEDICATION_CANVAS_SIZE, height: DEDICATION_CANVAS_SIZE * 0.6 }]}>
-                        <Svg width={DEDICATION_CANVAS_SIZE} height={DEDICATION_CANVAS_SIZE * 0.6}>
+                      <View style={[styles.canvas, { width: '100%', height: DEDICATION_CANVAS_SIZE * 0.6 }]}>
+                        <Svg width="100%" height={DEDICATION_CANVAS_SIZE * 0.6}>
                           {dedicationPaths.map((p, i) => (
                             <Path key={i} d={p} stroke="#000" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                           ))}
