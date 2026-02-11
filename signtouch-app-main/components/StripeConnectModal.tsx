@@ -800,11 +800,11 @@ const styles = StyleSheet.create({
   connectButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     backgroundColor: '#635BFF',
     borderRadius: 16,
-    paddingVertical: 16,
-    gap: 10,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
     marginBottom: 16,
   },
   connectButtonDisabled: {
@@ -838,9 +838,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   connectButtonText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
     color: '#ffffff',
+    flex: 1,
   },
   centeredContent: {
     alignItems: 'center',
