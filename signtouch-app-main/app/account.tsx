@@ -72,13 +72,26 @@ export default function AccountScreen() {
   }, []);
 
   useEffect(() => {
+    checkLocalStripeConnect();
     if (user?.id) {
       syncStripeOnLogin();
-    } else {
-      setStripeLinked(false);
-      setStripeAccountId(null);
     }
   }, [user?.id]);
+
+  const checkLocalStripeConnect = async () => {
+    setStripeLoading(true);
+    try {
+      const localStripeId = await AsyncStorage.getItem('stripe_connect_account_id');
+      setStripeLinked(!!localStripeId);
+      setStripeAccountId(localStripeId);
+    } catch (error) {
+      console.error('[Account] Error checking local Stripe:', error);
+      setStripeLinked(false);
+      setStripeAccountId(null);
+    } finally {
+      setStripeLoading(false);
+    }
+  };
 
   const syncStripeOnLogin = async () => {
     if (!user?.id) return;
@@ -303,31 +316,80 @@ export default function AccountScreen() {
             </View>
           ) : loginStep === 'idle' ? (
             <View style={styles.accountCard}>
-              <View style={styles.accountCardHeader}>
-                <View style={[styles.accountAvatar, { backgroundColor: 'rgba(255,255,255,0.08)' }]}>
-                  <User size={28} color="#888" />
-                </View>
-                <View style={styles.accountCardInfo}>
-                  <Text style={styles.accountCardTitle}>
-                    {t('createAccountToSave') || 'Creez un compte gratuitement'}
-                  </Text>
-                  <Text style={styles.accountCardSubtitle}>
-                    {t('createAccountSubtitle') || 'Sauvegardez vos photos et accedez-y depuis n\'importe quel appareil'}
-                  </Text>
-                </View>
-              </View>
+              {stripeLinked ? (
+                <>
+                  <View style={styles.accountCardHeader}>
+                    <View style={styles.accountAvatar}>
+                      <CreditCard size={28} color="#635BFF" />
+                    </View>
+                    <View style={styles.accountCardInfo}>
+                      <Text style={styles.accountCardName}>
+                        Stripe Connect
+                      </Text>
+                      <View style={styles.accountBadge}>
+                        <Shield size={12} color="#10b981" />
+                        <Text style={styles.accountBadgeText}>
+                          {t('stripeConnected') || 'Connecté'}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
 
-              <TouchableOpacity
-                style={styles.createAccountButton}
-                onPress={() => setLoginStep('email')}
-                activeOpacity={0.7}
-              >
-                <Mail size={18} color="#ffffff" />
-                <Text style={styles.createAccountButtonText}>
-                  {t('continueWithEmail') || 'Continuer avec mon email'}
-                </Text>
-                <ArrowRight size={18} color="#ffffff" />
-              </TouchableOpacity>
+                  {stripeAccountId && (
+                    <View style={styles.stripeAccountIdBox}>
+                      <Text style={styles.stripeAccountIdLabel}>ID</Text>
+                      <Text style={styles.stripeAccountIdValue} numberOfLines={1}>
+                        {stripeAccountId}
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={{ marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' }}>
+                    <Text style={[styles.accountCardSubtitle, { marginBottom: 12 }]}>
+                      {t('linkEmailToStripe') || 'Associez un email pour sécuriser votre compte et retrouver vos données.'}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.createAccountButton}
+                      onPress={() => setLoginStep('email')}
+                      activeOpacity={0.7}
+                    >
+                      <Mail size={18} color="#ffffff" />
+                      <Text style={styles.createAccountButtonText}>
+                        {t('receiveEmail') || 'Recevoir un mail'}
+                      </Text>
+                      <ArrowRight size={18} color="#ffffff" />
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <View style={styles.accountCardHeader}>
+                    <View style={[styles.accountAvatar, { backgroundColor: 'rgba(255,255,255,0.08)' }]}>
+                      <User size={28} color="#888" />
+                    </View>
+                    <View style={styles.accountCardInfo}>
+                      <Text style={styles.accountCardTitle}>
+                        {t('createAccountToSave') || 'Creez un compte gratuitement'}
+                      </Text>
+                      <Text style={styles.accountCardSubtitle}>
+                        {t('createAccountSubtitle') || 'Sauvegardez vos photos et accedez-y depuis n\'importe quel appareil'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.createAccountButton}
+                    onPress={() => setLoginStep('email')}
+                    activeOpacity={0.7}
+                  >
+                    <Mail size={18} color="#ffffff" />
+                    <Text style={styles.createAccountButtonText}>
+                      {t('continueWithEmail') || 'Continuer avec mon email'}
+                    </Text>
+                    <ArrowRight size={18} color="#ffffff" />
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           ) : loginStep === 'email' || loginStep === 'sending' ? (
             <View style={styles.accountCard}>
@@ -430,7 +492,7 @@ export default function AccountScreen() {
           )}
         </View>
 
-        {user && (
+        {(user || stripeLinked) && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>
               STRIPE CONNECT

@@ -956,6 +956,8 @@ export default {
   stripeConnected: 'Connecté',
   stripeNotConnected: 'Non connecté',
   stripeConnectedDesc: 'Votre compte Stripe Connect est actif. Vous pouvez recevoir des paiements pour vos sessions live.',
+  linkEmailToStripe: 'Associez un email pour sécuriser votre compte et retrouver vos données depuis n\'importe quel appareil.',
+  receiveEmail: 'Recevoir un mail',
   stripeNotConnectedDesc: 'Connectez votre compte Stripe pour recevoir des paiements de vos sessions live avec les fans.',
   stripeManage: 'Gérer mon compte Stripe',
   stripeConnect: 'Connecter Stripe Connect',
