@@ -162,12 +162,18 @@ export default function CelebrityMenuScreen() {
     );
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabel = (status: string, event?: EventSession) => {
     switch (status) {
       case 'live':
       case 'active':
         return 'EN COURS';
       case 'scheduled':
+        if (event && event.starts_at) {
+          const scheduledTime = new Date(event.starts_at);
+          if (scheduledTime <= new Date()) {
+            return 'PRÊT';
+          }
+        }
         return 'À VENIR';
       case 'ended':
         return 'TERMINÉ';
@@ -334,7 +340,7 @@ export default function CelebrityMenuScreen() {
                             ) : (
                               <Calendar size={10} color="#fff" />
                             )}
-                            <Text style={styles.eventStatusText}>{getStatusLabel(currentStatus)}</Text>
+                            <Text style={styles.eventStatusText}>{getStatusLabel(currentStatus, event)}</Text>
                           </View>
                         </View>
                         <TouchableOpacity
