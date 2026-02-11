@@ -179,48 +179,29 @@ app.post('/api/create-session', async (req, res) => {
     }
 
     if (scheduled_at) {
-      const { error: rpcErr } = await supabase.rpc('set_session_scheduled_at', {
-        session_id: data.id,
-        scheduled_time: new Date(scheduled_at).toISOString()
-      });
-      if (rpcErr) {
-        console.warn('[create-session] RPC set_session_scheduled_at failed:', rpcErr.message);
-      } else {
-        console.log('[create-session] scheduled_at set for session:', data.id);
-      }
-    }
-
-    console.log('[create-session] Session created successfully:', data.id, data.code);
-
-    if (scheduled_at) {
       try {
         const scheduledDate = new Date(scheduled_at);
         const endsAt = new Date(scheduledDate.getTime() + (duration_minutes || 30) * 60000);
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(celebrity_id);
-        const eventInsert = {
-          title: celebrity_name,
-          starts_at: scheduledDate.toISOString(),
-          ends_at: endsAt.toISOString(),
-          status: 'scheduled',
-          join_code: code,
-          event_type: 'live_video',
-          live_session_id: data.id,
-        };
-        if (isUUID) {
-          eventInsert.created_by = celebrity_id;
-        }
-        const { error: eventError } = await supabase
-          .from('event_sessions')
-          .insert(eventInsert);
-        if (eventError) {
-          console.error('[create-session] Failed to create event_sessions entry:', eventError.message);
+        const { data: eventId, error: rpcErr } = await supabase.rpc('create_scheduled_event', {
+          p_title: celebrity_name,
+          p_starts_at: scheduledDate.toISOString(),
+          p_ends_at: endsAt.toISOString(),
+          p_join_code: code,
+          p_event_type: 'live_video',
+          p_live_session_id: data.id,
+          p_session_scheduled_at: scheduledDate.toISOString()
+        });
+        if (rpcErr) {
+          console.error('[create-session] RPC create_scheduled_event failed:', rpcErr.message);
         } else {
-          console.log('[create-session] Event session entry created for scheduled live session');
+          console.log('[create-session] Scheduled event created, event_id:', eventId);
         }
       } catch (eventErr) {
         console.error('[create-session] Event session creation failed:', eventErr.message);
       }
     }
+
+    console.log('[create-session] Session created successfully:', data.id, data.code);
 
     res.json({ session: data });
   } catch (e) {

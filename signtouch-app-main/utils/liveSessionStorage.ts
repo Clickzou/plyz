@@ -217,15 +217,6 @@ export const createLiveSession = async (
       }
 
       console.log('[createLiveSession] Session created successfully:', data?.id, data?.code);
-      if (scheduledAt && data?.id) {
-        const { error: rpcErr } = await supabase.rpc('set_session_scheduled_at', {
-          session_id: data.id,
-          scheduled_time: new Date(scheduledAt).toISOString()
-        });
-        if (rpcErr) {
-          console.warn('[createLiveSession] RPC set_session_scheduled_at failed:', rpcErr.message);
-        }
-      }
       return data as LiveSession;
     } catch (error) {
       console.error(`[createLiveSession] Attempt ${attempt}/3 exception:`, error);

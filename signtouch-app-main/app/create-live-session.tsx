@@ -381,24 +381,22 @@ export default function CreateLiveSessionScreen() {
             const { supabase } = await import('@/utils/supabase');
             const scheduledDate = new Date(scheduledAt);
             const endsAt = new Date(scheduledDate.getTime() + totalDuration * 60 * 1000);
-            const { error: esError } = await supabase
-              .from('event_sessions')
-              .insert({
-                title: celebrityName.trim(),
-                starts_at: scheduledDate.toISOString(),
-                ends_at: endsAt.toISOString(),
-                status: 'scheduled',
-                join_code: session.code,
-                event_type: 'live_video',
-                live_session_id: session.id,
-              });
-            if (esError) {
-              console.warn('[CreateSession] Fallback: event_sessions insert error:', esError);
+            const { error: rpcErr } = await supabase.rpc('create_scheduled_event', {
+              p_title: celebrityName.trim(),
+              p_starts_at: scheduledDate.toISOString(),
+              p_ends_at: endsAt.toISOString(),
+              p_join_code: session.code,
+              p_event_type: 'live_video',
+              p_live_session_id: session.id,
+              p_session_scheduled_at: scheduledDate.toISOString()
+            });
+            if (rpcErr) {
+              console.warn('[CreateSession] Fallback: RPC create_scheduled_event error:', rpcErr);
             } else {
-              console.log('[CreateSession] Fallback: event_sessions entry created');
+              console.log('[CreateSession] Fallback: scheduled event created via RPC');
             }
           } catch (e) {
-            console.warn('[CreateSession] Fallback: event_sessions creation failed:', e);
+            console.warn('[CreateSession] Fallback: event creation failed:', e);
           }
         }
       }

@@ -246,12 +246,7 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
   }
 
   const { data: liveVideoEvents, error: lvError } = await supabase
-    .from('event_sessions')
-    .select('*')
-    .eq('event_type', 'live_video')
-    .not('live_session_id', 'is', null)
-    .in('status', ['scheduled', 'active', 'live', 'ended'])
-    .order('starts_at', { ascending: true });
+    .rpc('get_live_video_events');
 
   if (!lvError && liveVideoEvents) {
     const existingIds = new Set(allEvents.map(e => e.id));
@@ -260,6 +255,8 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
         allEvents.push(ev);
       }
     }
+  } else if (lvError) {
+    console.warn('[getMyScheduledEvents] RPC get_live_video_events failed:', lvError.message);
   }
 
   const locallyDeleted = getLocallyDeletedEvents();
