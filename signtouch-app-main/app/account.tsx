@@ -348,6 +348,22 @@ export default function AccountScreen() {
                     </View>
                   )}
 
+                  <Text style={[styles.stripeDesc, { marginTop: 12 }]}>
+                    {t('stripeConnectedDesc') || 'Votre compte Stripe Connect est actif. Vous pouvez recevoir des paiements pour vos sessions live.'}
+                  </Text>
+
+                  <TouchableOpacity
+                    style={[styles.stripeActionButton, styles.stripeActionButtonConnected]}
+                    onPress={() => setShowStripeModal(true)}
+                    activeOpacity={0.7}
+                  >
+                    <CreditCard size={18} color="#635BFF" />
+                    <Text style={[styles.stripeActionButtonText, styles.stripeActionButtonTextConnected]}>
+                      {t('stripeManage') || 'Gérer mon compte Stripe'}
+                    </Text>
+                    <ArrowRight size={16} color="#635BFF" />
+                  </TouchableOpacity>
+
                   <View style={{ marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' }}>
                     <Text style={[styles.accountCardSubtitle, { marginBottom: 12 }]}>
                       {t('linkEmailToStripe') || 'Associez un email pour sécuriser votre compte et retrouver vos données.'}
@@ -495,78 +511,6 @@ export default function AccountScreen() {
             </View>
           )}
         </View>
-
-        {(user || stripeLinked) && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>
-              STRIPE CONNECT
-            </Text>
-
-            <View style={styles.stripeCard}>
-              <View style={styles.stripeCardHeader}>
-                <View style={styles.stripeIconContainer}>
-                  <CreditCard size={24} color="#635BFF" />
-                </View>
-                <View style={styles.stripeCardInfo}>
-                  <Text style={styles.stripeCardTitle}>
-                    {t('stripeConnectPayments') || 'Paiements Stripe'}
-                  </Text>
-                  {stripeLoading ? (
-                    <ActivityIndicator size="small" color="#635BFF" style={{ alignSelf: 'flex-start', marginTop: 4 }} />
-                  ) : stripeLinked ? (
-                    <View style={styles.stripeStatusBadge}>
-                      <View style={styles.stripeStatusDot} />
-                      <Text style={styles.stripeStatusText}>
-                        {t('stripeConnected') || 'Connecté'}
-                      </Text>
-                    </View>
-                  ) : (
-                    <Text style={styles.stripeNotConnectedText}>
-                      {t('stripeNotConnected') || 'Non connecté'}
-                    </Text>
-                  )}
-                </View>
-              </View>
-
-              {stripeLinked && stripeAccountId && (
-                <View style={styles.stripeAccountIdBox}>
-                  <Text style={styles.stripeAccountIdLabel}>ID</Text>
-                  <Text style={styles.stripeAccountIdValue} numberOfLines={1}>
-                    {maskedStripeId}
-                  </Text>
-                </View>
-              )}
-
-              <Text style={styles.stripeDesc}>
-                {stripeLinked
-                  ? (t('stripeConnectedDesc') || 'Votre compte Stripe Connect est actif. Vous pouvez recevoir des paiements pour vos sessions live.')
-                  : (t('stripeNotConnectedDesc') || 'Connectez votre compte Stripe pour recevoir des paiements de vos sessions live avec les fans.')
-                }
-              </Text>
-
-              <TouchableOpacity
-                style={[
-                  styles.stripeActionButton,
-                  stripeLinked && styles.stripeActionButtonConnected,
-                ]}
-                onPress={() => setShowStripeModal(true)}
-                activeOpacity={0.7}
-              >
-                <CreditCard size={18} color={stripeLinked ? '#635BFF' : '#ffffff'} />
-                <Text style={[
-                  styles.stripeActionButtonText,
-                  stripeLinked && styles.stripeActionButtonTextConnected,
-                ]}>
-                  {stripeLinked
-                    ? (t('stripeManage') || 'Gérer mon compte Stripe')
-                    : (t('stripeConnect') || 'Connecter Stripe Connect')
-                  }
-                </Text>
-                <ArrowRight size={16} color={stripeLinked ? '#635BFF' : '#ffffff'} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
 
         {__DEV__ && (
           <View style={styles.debugSection}>
