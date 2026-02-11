@@ -164,9 +164,6 @@ app.post('/api/create-session', async (req, res) => {
     if (celebrity_stripe_account_id) {
       insertData.celebrity_stripe_account_id = celebrity_stripe_account_id;
     }
-    if (scheduled_at) {
-      insertData.scheduled_at = scheduled_at;
-    }
 
     console.log('[create-session] Inserting session with code:', code);
 
@@ -179,6 +176,18 @@ app.post('/api/create-session', async (req, res) => {
     if (error) {
       console.error('[create-session] Supabase error:', JSON.stringify(error));
       return res.status(500).json({ error: error.message, details: error });
+    }
+
+    if (scheduled_at) {
+      const { error: rpcErr } = await supabase.rpc('set_session_scheduled_at', {
+        session_id: data.id,
+        scheduled_time: new Date(scheduled_at).toISOString()
+      });
+      if (rpcErr) {
+        console.warn('[create-session] RPC set_session_scheduled_at failed:', rpcErr.message);
+      } else {
+        console.log('[create-session] scheduled_at set for session:', data.id);
+      }
     }
 
     console.log('[create-session] Session created successfully:', data.id, data.code);
