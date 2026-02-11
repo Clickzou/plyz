@@ -202,22 +202,6 @@ export default function MyEarningsScreen() {
             </View>
           )}
 
-          <View style={styles.feeBreakdownCard}>
-            <Text style={styles.feeTitle}>{t('feeBreakdown') || 'Répartition des frais'}</Text>
-            <View style={styles.feeRow}>
-              <Text style={styles.feeLabel}>{t('yourShare') || 'Votre part'}</Text>
-              <Text style={styles.feeValue}>85%</Text>
-            </View>
-            <View style={styles.feeRow}>
-              <Text style={styles.feeLabel}>{t('signTouchFee') || 'Commission SignTouch'}</Text>
-              <Text style={styles.feeValue}>15%</Text>
-            </View>
-            <View style={[styles.feeRow, styles.feeRowLast]}>
-              <Text style={styles.feeLabel}>{t('stripeFee') || 'Frais Stripe'}</Text>
-              <Text style={styles.feeValue}>2.9% + 0.30€</Text>
-            </View>
-          </View>
-
           <Text style={styles.sectionTitle}>{t('sessionHistory') || 'Historique des sessions'}</Text>
 
           {paidSessions.length === 0 ? (
