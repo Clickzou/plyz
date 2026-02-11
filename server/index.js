@@ -108,6 +108,52 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+app.get('/api/test-supabase-insert', async (req, res) => {
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      return res.json({ error: 'Missing Supabase credentials', url: !!supabaseUrl, key: !!supabaseKey });
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    const { data: readTest, error: readError } = await supabase
+      .from('live_sessions')
+      .select('id')
+      .limit(1);
+    
+    const { data, error } = await supabase
+      .from('live_sessions')
+      .insert({
+        code: 'TEST99',
+        celebrity_id: 'test_debug',
+        celebrity_name: 'Test Debug',
+        duration_minutes: 5,
+        duration_per_fan_minutes: 5,
+        max_slots: 1,
+        price_cents: 0,
+        status: 'waiting',
+      })
+      .select()
+      .single();
+    
+    if (data) {
+      await supabase.from('live_sessions').delete().eq('id', data.id);
+    }
+    
+    res.json({ 
+      readTest: { data: readTest, error: readError },
+      insertTest: { data: data ? { id: data.id, code: data.code } : null, error },
+      cleaned: !!data
+    });
+  } catch (e) {
+    res.json({ error: e.message, stack: e.stack });
+  }
+});
+
 app.post('/api/create-connect-account', async (req, res) => {
   try {
     const stripe = await getStripe();
