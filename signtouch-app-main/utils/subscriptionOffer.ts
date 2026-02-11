@@ -1,4 +1,5 @@
 import { getSubscriptionStatus, getLastSubscriptionOfferDate } from './subscriptionStorage';
+import { SUBSCRIPTION_ENABLED } from '@/contexts/SubscriptionContext';
 
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -10,6 +11,7 @@ export function setSubscriptionOfferCallback(callback: () => void) {
 }
 
 export async function maybeShowSubscriptionOffer(): Promise<boolean> {
+  if (!SUBSCRIPTION_ENABLED) return false;
   try {
     console.log('[Subscription] Checking if should show offer...');
     console.log('[Subscription] Callback exists:', !!subscriptionOfferCallback);

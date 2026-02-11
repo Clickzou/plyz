@@ -21,7 +21,7 @@ import {
   Ticket,
   RotateCcw,
 } from 'lucide-react-native';
-import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useSubscription, SUBSCRIPTION_ENABLED } from '@/contexts/SubscriptionContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -50,6 +50,12 @@ export default function PaywallScreen() {
   const { getPostAuthRedirect, clearPostAuthRedirect } = useAuth();
   const params = useLocalSearchParams();
   const fromAccount = params.fromAccount === 'true';
+
+  useEffect(() => {
+    if (!SUBSCRIPTION_ENABLED) {
+      router.replace('/(tabs)');
+    }
+  }, []);
 
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [promoCode, setPromoCode] = useState('');
