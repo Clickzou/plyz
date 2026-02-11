@@ -857,6 +857,7 @@ export default {
   choosePhoto: 'المعرض',
   dedicationDrawSignature: 'ارسم توقيعك',
   dedicationReady: 'الإهداء جاهز!',
+  dedicationNotificationBody: '🎁 {name}، إهداؤك الشخصي جاهز! افتح التطبيق لمشاهدته.',
   dedicationReset: 'إعادة تعيين',
   dedicationTitle: 'إهداؤك',
   noPhoto: 'لا توجد صورة',

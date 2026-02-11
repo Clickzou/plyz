@@ -403,7 +403,8 @@ export const sendQueueNotification = async (
 export const sendDedicationNotification = async (
   sessionId: string,
   queueEntryId: string | null,
-  celebrityName: string
+  celebrityName: string,
+  translatedMessage?: string
 ): Promise<boolean> => {
   try {
     if (!queueEntryId) return false;
@@ -416,10 +417,14 @@ export const sendDedicationNotification = async (
 
     if (!entry?.push_token) return false;
 
+    const body = translatedMessage
+      ? translatedMessage.replace('{name}', entry.fan_name || 'Fan')
+      : `🎁 ${entry.fan_name || 'Fan'}, your personalized dedication is ready! Open the app to see it.`;
+
     return await sendQueueNotification(
       entry.push_token,
       `${celebrityName} - SignTouch`,
-      `🎁 ${entry.fan_name}, votre dédicace personnalisée est prête ! Ouvrez l'app pour la voir.`,
+      body,
       { sessionId, action: 'dedication_ready' }
     );
   } catch (error) {

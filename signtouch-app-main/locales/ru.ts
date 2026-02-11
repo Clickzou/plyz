@@ -857,6 +857,7 @@ export default {
   choosePhoto: 'Галерея',
   dedicationDrawSignature: 'Нарисуйте подпись',
   dedicationReady: 'Автограф готов!',
+  dedicationNotificationBody: '🎁 {name}, ваше персональное посвящение готово! Откройте приложение, чтобы увидеть.',
   dedicationReset: 'Сбросить',
   dedicationTitle: 'Ваш Автограф',
   noPhoto: 'Нет фото',

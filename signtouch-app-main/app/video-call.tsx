@@ -317,7 +317,8 @@ export default function VideoCallScreen() {
       sendDedicationNotification(
         params.sessionId,
         params.queueEntryId || null,
-        params.otherUserName || 'Celebrity'
+        params.otherUserName || 'Celebrity',
+        t('dedicationNotificationBody')
       ).catch(() => {});
 
       router.replace({

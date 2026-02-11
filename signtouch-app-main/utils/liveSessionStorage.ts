@@ -81,9 +81,52 @@ export const uploadCoverPhoto = async (
   }
 };
 
+const saveDedicationMetadata = async (sessionId: string, metadata: Record<string, any>) => {
+  try {
+    const metaPath = `live-sessions/dedication_meta_${sessionId}.json`;
+    let existing: Record<string, any> = {};
+
+    try {
+      const { data: existingData } = await supabase.storage
+        .from('memories')
+        .download(metaPath);
+      if (existingData) {
+        const text = await existingData.text();
+        existing = JSON.parse(text);
+      }
+    } catch (e) {}
+
+    const merged = { ...existing, ...metadata, updatedAt: Date.now() };
+    const blob = new Blob([JSON.stringify(merged)], { type: 'application/json' });
+
+    await supabase.storage
+      .from('memories')
+      .upload(metaPath, blob, { contentType: 'application/json', upsert: true });
+  } catch (e) {
+    console.error('Error saving dedication metadata to storage:', e);
+  }
+};
+
+const loadDedicationMetadata = async (sessionId: string): Promise<Record<string, any> | null> => {
+  try {
+    const metaPath = `live-sessions/dedication_meta_${sessionId}.json`;
+    const { data, error } = await supabase.storage
+      .from('memories')
+      .download(metaPath);
+
+    if (error || !data) return null;
+
+    const text = await data.text();
+    return JSON.parse(text);
+  } catch (e) {
+    return null;
+  }
+};
+
 export const uploadDedicationPhoto = async (
   sessionId: string,
-  photoUri: string
+  photoUri: string,
+  celebrityName?: string
 ): Promise<string | null> => {
   try {
     const response = await fetch(photoUri);
@@ -104,14 +147,18 @@ export const uploadDedicationPhoto = async (
       .from('memories')
       .getPublicUrl(filePath);
 
-    const { error: updateError } = await supabase
-      .from('live_sessions')
-      .update({ dedication_photo_url: publicUrl } as any)
-      .eq('id', sessionId);
-
-    if (updateError) {
-      console.error('Error updating session dedication photo:', updateError);
+    try {
+      await supabase
+        .from('live_sessions')
+        .update({ dedication_photo_url: publicUrl } as any)
+        .eq('id', sessionId);
+    } catch (updateErr) {
+      console.error('Error updating session dedication photo in DB:', updateErr);
     }
+
+    const meta: Record<string, any> = { photoUrl: publicUrl };
+    if (celebrityName) meta.celebrityName = celebrityName;
+    await saveDedicationMetadata(sessionId, meta);
 
     return publicUrl;
   } catch (error) {
@@ -122,7 +169,8 @@ export const uploadDedicationPhoto = async (
 
 export const updateDedicationSignature = async (
   sessionId: string,
-  signatureSvg: string
+  signatureSvg: string,
+  celebrityName?: string
 ): Promise<boolean> => {
   try {
     const { error } = await supabase
@@ -131,9 +179,13 @@ export const updateDedicationSignature = async (
       .eq('id', sessionId);
 
     if (error) {
-      console.error('Error updating dedication signature:', error);
-      return false;
+      console.error('Error updating dedication signature in DB:', error);
     }
+
+    const meta: Record<string, any> = { signatureSvg };
+    if (celebrityName) meta.celebrityName = celebrityName;
+    await saveDedicationMetadata(sessionId, meta);
+
     return true;
   } catch (error) {
     console.error('Error updating dedication signature:', error);
@@ -144,24 +196,37 @@ export const updateDedicationSignature = async (
 export const getDedicationAssets = async (
   sessionId: string
 ): Promise<{ photoUrl: string | null; signatureSvg: string | null; celebrityName: string } | null> => {
+  let celebrityName = '';
   try {
     const { data, error } = await supabase
       .from('live_sessions')
-      .select('dedication_photo_url, dedication_signature_svg, celebrity_name')
+      .select('*')
       .eq('id', sessionId)
       .single();
 
-    if (error || !data) return null;
+    if (!error && data) {
+      celebrityName = (data as any).celebrity_name || '';
+      const photoUrl = (data as any).dedication_photo_url || null;
+      const signatureSvg = (data as any).dedication_signature_svg || null;
 
-    return {
-      photoUrl: (data as any).dedication_photo_url || null,
-      signatureSvg: (data as any).dedication_signature_svg || null,
-      celebrityName: (data as any).celebrity_name || '',
-    };
-  } catch (error) {
-    console.error('Error getting dedication assets:', error);
-    return null;
+      if (photoUrl || signatureSvg) {
+        return { photoUrl, signatureSvg, celebrityName };
+      }
+    }
+  } catch (e) {
+    console.error('Error fetching dedication from DB:', e);
   }
+
+  const storageMeta = await loadDedicationMetadata(sessionId);
+  if (storageMeta && (storageMeta.photoUrl || storageMeta.signatureSvg)) {
+    return {
+      photoUrl: storageMeta.photoUrl || null,
+      signatureSvg: storageMeta.signatureSvg || null,
+      celebrityName: storageMeta.celebrityName || celebrityName || '',
+    };
+  }
+
+  return null;
 };
 
 export const createLiveSession = async (

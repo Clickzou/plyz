@@ -857,6 +857,7 @@ export default {
   choosePhoto: 'Galeria',
   dedicationDrawSignature: 'Desenhe sua assinatura',
   dedicationReady: 'Dedicatória pronta!',
+  dedicationNotificationBody: '🎁 {name}, sua dedicatória personalizada está pronta! Abra o app para vê-la.',
   dedicationReset: 'Redefinir',
   dedicationTitle: 'Sua Dedicatória',
   noPhoto: 'Sem foto',

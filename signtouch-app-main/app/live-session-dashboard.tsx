@@ -604,7 +604,7 @@ export default function LiveSessionDashboardScreen() {
         setIsUploadingDedication(true);
 
         if (sessionId) {
-          const uploadedUrl = await uploadDedicationPhoto(sessionId, uri);
+          const uploadedUrl = await uploadDedicationPhoto(sessionId, uri, session?.celebrity_name || '');
           if (uploadedUrl) {
             await AsyncStorage.setItem(`dedication_photo_${sessionId}`, uploadedUrl);
           } else {
@@ -635,7 +635,7 @@ export default function LiveSessionDashboardScreen() {
         setIsUploadingDedication(true);
 
         if (sessionId) {
-          const uploadedUrl = await uploadDedicationPhoto(sessionId, uri);
+          const uploadedUrl = await uploadDedicationPhoto(sessionId, uri, session?.celebrity_name || '');
           if (uploadedUrl) {
             await AsyncStorage.setItem(`dedication_photo_${sessionId}`, uploadedUrl);
           } else {
@@ -686,7 +686,7 @@ export default function LiveSessionDashboardScreen() {
     } catch (e) {
       console.error('Error saving dedication signature locally:', e);
     }
-    await updateDedicationSignature(sessionId, svgData);
+    await updateDedicationSignature(sessionId, svgData, session?.celebrity_name || '');
     setIsUploadingDedication(false);
     setDedicationStep('done');
   };

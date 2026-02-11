@@ -867,6 +867,7 @@ export default {
   choosePhoto: 'Gallery',
   dedicationDrawSignature: 'Draw your signature',
   dedicationReady: 'Dedication ready!',
+  dedicationNotificationBody: '🎁 {name}, your personalized dedication is ready! Open the app to see it.',
   dedicationReset: 'Reset',
   dedicationTitle: 'Your Dedication',
   noPhoto: 'No photo',

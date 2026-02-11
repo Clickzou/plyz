@@ -862,6 +862,7 @@ export default {
   choosePhoto: 'গ্যালারি',
   dedicationDrawSignature: 'আপনার স্বাক্ষর আঁকুন',
   dedicationReady: 'উৎসর্গ প্রস্তুত!',
+  dedicationNotificationBody: '🎁 {name}, আপনার ব্যক্তিগত উৎসর্গ প্রস্তুত! দেখতে অ্যাপ খুলুন।',
   dedicationReset: 'রিসেট',
   dedicationTitle: 'আপনার উৎসর্গ',
   noPhoto: 'কোনো ছবি নেই',

@@ -862,6 +862,7 @@ export default {
   choosePhoto: 'Galeri',
   dedicationDrawSignature: 'Lukis tandatangan anda',
   dedicationReady: 'Dedikasi sedia!',
+  dedicationNotificationBody: '🎁 {name}, dedikasi peribadi anda sudah siap! Buka aplikasi untuk melihatnya.',
   dedicationReset: 'Set semula',
   dedicationTitle: 'Dedikasi Anda',
   noPhoto: 'Tiada foto',

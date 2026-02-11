@@ -857,6 +857,7 @@ export default {
   choosePhoto: '相册',
   dedicationDrawSignature: '画签名',
   dedicationReady: '题词已准备好！',
+  dedicationNotificationBody: '🎁 {name}，您的个性化题词已准备就绪！打开应用查看。',
   dedicationReset: '重置',
   dedicationTitle: '你的题词',
   noPhoto: '无照片',

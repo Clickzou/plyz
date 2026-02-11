@@ -862,6 +862,7 @@ export default {
   choosePhoto: 'گیلری',
   dedicationDrawSignature: 'اپنا دستخط بنائیں',
   dedicationReady: 'وقف نامہ تیار!',
+  dedicationNotificationBody: '🎁 {name}، آپ کا ذاتی وقف تیار ہے! دیکھنے کے لیے ایپ کھولیں۔',
   dedicationReset: 'ری سیٹ',
   dedicationTitle: 'آپ کا وقف نامہ',
   noPhoto: 'کوئی تصویر نہیں',
