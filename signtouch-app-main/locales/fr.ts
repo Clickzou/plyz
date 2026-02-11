@@ -1008,4 +1008,6 @@ export default {
   perFan: 'par fan',
   estimatedTotal: 'total estimé',
   totalDuration: 'durée totale',
+  paymentConfirmed: 'Paiement confirmé',
+  paymentCapturedMessage: '{amount}€ ont été débités suite à votre appel vidéo réussi.',
 };

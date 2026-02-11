@@ -973,4 +973,6 @@ export default {
   perFan: 'за фаната',
   estimatedTotal: 'примерный итог',
   totalDuration: 'общая длительность',
+  paymentConfirmed: 'Оплата подтверждена',
+  paymentCapturedMessage: '{amount}€ списано за успешный видеозвонок.',
 };

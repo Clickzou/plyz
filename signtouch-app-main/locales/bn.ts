@@ -978,4 +978,6 @@ export default {
   perFan: 'প্রতি ভক্ত',
   estimatedTotal: 'আনুমানিক মোট',
   totalDuration: 'মোট সময়কাল',
+  paymentConfirmed: 'পেমেন্ট নিশ্চিত',
+  paymentCapturedMessage: 'আপনার সফল ভিডিও কলের জন্য {amount}€ চার্জ করা হয়েছে।',
 };

@@ -978,4 +978,6 @@ export default {
   perFan: 'per penggemar',
   estimatedTotal: 'total perkiraan',
   totalDuration: 'durasi total',
+  paymentConfirmed: 'Pembayaran dikonfirmasi',
+  paymentCapturedMessage: '{amount}€ telah ditagihkan untuk panggilan video Anda yang berhasil.',
 };

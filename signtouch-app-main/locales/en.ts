@@ -1006,4 +1006,6 @@ export default {
   perFan: 'per fan',
   estimatedTotal: 'estimated total',
   totalDuration: 'total duration',
+  paymentConfirmed: 'Payment Confirmed',
+  paymentCapturedMessage: '{amount}€ has been charged for your successful video call.',
 };

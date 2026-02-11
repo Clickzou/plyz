@@ -16,7 +16,7 @@ import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
 import { sendDedicationNotification } from '@/utils/sessionQueueStorage';
 import { recordTransaction } from '@/utils/transactionStorage';
-import { showAlert } from '@/utils/alertHelper';
+import { showAlert, showConfirm } from '@/utils/alertHelper';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -217,9 +217,10 @@ export default function VideoCallScreen() {
       if (data.captured) {
         const amountEuros = data.amount ? (data.amount / 100).toFixed(2) : (parseInt(params.priceCents || '0', 10) / 100).toFixed(2);
         console.log('[VideoCall] Payment captured successfully:', amountEuros, '€');
-        showAlert(
-          t('paymentConfirmed') || 'Paiement confirmé',
-          (t('paymentCapturedMessage') || `${amountEuros}€ ont été débités suite à votre appel vidéo réussi.`).replace('{amount}', amountEuros)
+        showConfirm(
+          t('paymentConfirmed'),
+          t('paymentCapturedMessage').replace('{amount}', amountEuros),
+          [{ text: 'OK', style: 'default', onPress: () => router.replace('/') }]
         );
       } else {
         console.error('[VideoCall] Payment capture failed:', data);

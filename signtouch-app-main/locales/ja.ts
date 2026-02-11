@@ -973,4 +973,6 @@ export default {
   perFan: 'ファンごと',
   estimatedTotal: '推定合計',
   totalDuration: '合計時間',
+  paymentConfirmed: 'お支払い確認済み',
+  paymentCapturedMessage: 'ビデオ通話が成功し、{amount}€が請求されました。',
 };

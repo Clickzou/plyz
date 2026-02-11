@@ -978,4 +978,6 @@ export default {
   perFan: 'فی مداح',
   estimatedTotal: 'تخمینی کل',
   totalDuration: 'کل دورانیہ',
+  paymentConfirmed: 'ادائیگی کی تصدیق',
+  paymentCapturedMessage: 'آپ کی کامیاب ویڈیو کال کے لیے {amount}€ چارج کیا گیا۔',
 };

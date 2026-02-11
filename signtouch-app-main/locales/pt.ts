@@ -973,4 +973,6 @@ export default {
   perFan: 'por fã',
   estimatedTotal: 'total estimado',
   totalDuration: 'duração total',
+  paymentConfirmed: 'Pagamento confirmado',
+  paymentCapturedMessage: '{amount}€ foram cobrados pela sua videochamada bem-sucedida.',
 };

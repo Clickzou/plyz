@@ -973,4 +973,6 @@ export default {
   perFan: 'لكل معجب',
   estimatedTotal: 'الإجمالي المقدر',
   totalDuration: 'المدة الكلية',
+  paymentConfirmed: 'تم تأكيد الدفع',
+  paymentCapturedMessage: 'تم خصم {amount}€ بعد مكالمة الفيديو الناجحة.',
 };

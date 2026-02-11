@@ -973,4 +973,6 @@ export default {
   perFan: 'प्रति प्रशंसक',
   estimatedTotal: 'अनुमानित कुल',
   totalDuration: 'कुल अवधि',
+  paymentConfirmed: 'भुगतान की पुष्टि',
+  paymentCapturedMessage: 'आपकी सफल वीडियो कॉल के लिए {amount}€ चार्ज किया गया।',
 };

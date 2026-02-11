@@ -973,4 +973,6 @@ export default {
   perFan: '每位粉丝',
   estimatedTotal: '预估总额',
   totalDuration: '总时长',
+  paymentConfirmed: '付款已确认',
+  paymentCapturedMessage: '您的视频通话已成功，已扣款{amount}€。',
 };

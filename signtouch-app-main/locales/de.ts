@@ -973,4 +973,6 @@ export default {
   perFan: 'pro Fan',
   estimatedTotal: 'geschätzter Gesamtbetrag',
   totalDuration: 'Gesamtdauer',
+  paymentConfirmed: 'Zahlung bestätigt',
+  paymentCapturedMessage: '{amount}€ wurden für Ihren erfolgreichen Videoanruf abgebucht.',
 };
