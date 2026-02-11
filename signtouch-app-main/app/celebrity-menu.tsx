@@ -956,7 +956,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 16,
     borderWidth: 1,
-    borderColor: 'rgba(74, 222, 128, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
     gap: 12,
   },
   earningsCardIcon: {
