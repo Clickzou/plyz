@@ -232,11 +232,6 @@ export default function VideoCallScreen() {
       if (data.captured) {
         const amountEuros = data.amount ? (data.amount / 100).toFixed(2) : (parseInt(params.priceCents || '0', 10) / 100).toFixed(2);
         console.log('[VideoCall] Payment captured successfully:', amountEuros, '€');
-        showConfirm(
-          t('paymentConfirmed'),
-          t('paymentCapturedMessage').replace('{amount}', amountEuros),
-          [{ text: 'OK', style: 'default', onPress: () => router.replace('/') }]
-        );
       } else {
         console.error('[VideoCall] Payment capture failed:', data);
         setPaymentCaptured(false);
