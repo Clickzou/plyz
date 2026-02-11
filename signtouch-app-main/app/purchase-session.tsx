@@ -14,7 +14,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, CreditCard, Shield, CheckCircle, Lock } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { showAlert } from '@/utils/alertHelper';
+import AccountModal from '@/components/AccountModal';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -22,6 +24,7 @@ export default function PurchaseSessionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const params = useLocalSearchParams<{
     celebrityId: string;
     celebrityName: string;
@@ -33,6 +36,7 @@ export default function PurchaseSessionScreen() {
 
   const [purchasing, setPurchasing] = useState(false);
   const [purchaseComplete, setPurchaseComplete] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
 
   const priceCents = parseInt(params.priceCents || '0', 10);
   const priceEuros = (priceCents / 100).toFixed(2);
@@ -64,6 +68,10 @@ export default function PurchaseSessionScreen() {
   };
 
   const handleStripeCheckout = async () => {
+    if (!user) {
+      setShowAccountModal(true);
+      return;
+    }
     setPurchasing(true);
     try {
       const currentOrigin = Platform.OS === 'web'
@@ -189,6 +197,12 @@ export default function PurchaseSessionScreen() {
           </View>
         )}
       </ScrollView>
+
+      <AccountModal
+        visible={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+        onSkip={() => setShowAccountModal(false)}
+      />
     </View>
   );
 }
