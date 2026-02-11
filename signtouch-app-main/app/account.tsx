@@ -114,6 +114,10 @@ export default function AccountScreen() {
     }
   };
 
+  const maskedStripeId = stripeAccountId
+    ? stripeAccountId.slice(0, 5) + '••••' + stripeAccountId.slice(-4)
+    : '';
+
   const handleSendOtp = async () => {
     if (!loginEmail.trim()) return;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -339,7 +343,7 @@ export default function AccountScreen() {
                     <View style={styles.stripeAccountIdBox}>
                       <Text style={styles.stripeAccountIdLabel}>ID</Text>
                       <Text style={styles.stripeAccountIdValue} numberOfLines={1}>
-                        {stripeAccountId}
+                        {maskedStripeId}
                       </Text>
                     </View>
                   )}
@@ -528,7 +532,7 @@ export default function AccountScreen() {
                 <View style={styles.stripeAccountIdBox}>
                   <Text style={styles.stripeAccountIdLabel}>ID</Text>
                   <Text style={styles.stripeAccountIdValue} numberOfLines={1}>
-                    {stripeAccountId}
+                    {maskedStripeId}
                   </Text>
                 </View>
               )}
