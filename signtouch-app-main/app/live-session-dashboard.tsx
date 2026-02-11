@@ -825,7 +825,7 @@ export default function LiveSessionDashboardScreen() {
         </View>
       </View>
 
-      <ScrollView ref={scrollRef} style={styles.content} contentContainerStyle={styles.contentContainer} scrollEnabled={!isDrawingDedication}>
+      <ScrollView ref={scrollRef} style={styles.content} contentContainerStyle={styles.contentContainer} scrollEnabled={dedicationStep !== 'signature'}>
         {showQR && session.status === 'waiting' && (
           <View style={styles.qrSection}>
             <Text style={styles.qrTitle}>{t('liveSessionShareCode')}</Text>
