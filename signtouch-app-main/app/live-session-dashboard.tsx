@@ -939,15 +939,35 @@ export default function LiveSessionDashboardScreen() {
                     {dedicationPhotoUri && (
                       <Image source={{ uri: dedicationPhotoUri }} style={styles.dedicationPhotoPreviewSmall} resizeMode="cover" />
                     )}
-                    {dedicationPaths.length > 0 && (
-                      <View style={styles.dedicationSignaturePreview}>
-                        <Svg width={100} height={50} viewBox={`0 0 ${DEDICATION_CANVAS_SIZE} ${DEDICATION_CANVAS_SIZE * 0.5}`}>
-                          {dedicationPaths.map((p, i) => (
-                            <Path key={i} d={p} stroke="#8b5cf6" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                          ))}
-                        </Svg>
-                      </View>
-                    )}
+                    {dedicationPaths.length > 0 && (() => {
+                      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                      dedicationPaths.forEach(p => {
+                        const nums = p.match(/[\d.]+/g);
+                        if (nums) {
+                          for (let i = 0; i < nums.length; i += 2) {
+                            const x = parseFloat(nums[i]);
+                            const y = parseFloat(nums[i + 1]);
+                            if (!isNaN(x) && !isNaN(y)) {
+                              minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+                              minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+                            }
+                          }
+                        }
+                      });
+                      const pad = 10;
+                      minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad);
+                      const vw = maxX - minX + pad * 2;
+                      const vh = maxY - minY + pad * 2;
+                      return (
+                        <View style={styles.dedicationSignaturePreview}>
+                          <Svg width={120} height={60} viewBox={`${minX} ${minY} ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet">
+                            {dedicationPaths.map((p, i) => (
+                              <Path key={i} d={p} stroke="#ffffff" strokeWidth={Math.max(2, vw / 40)} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                            ))}
+                          </Svg>
+                        </View>
+                      );
+                    })()}
                   </View>
                   <TouchableOpacity style={styles.dedicationResetButton} onPress={handleResetDedication}>
                     <Text style={styles.dedicationResetText}>{t('dedicationReset')}</Text>
