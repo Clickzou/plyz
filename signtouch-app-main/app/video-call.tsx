@@ -449,6 +449,8 @@ export default function VideoCallScreen() {
                       showFullscreenButton: false,
                       showLocalVideo: true,
                       showParticipantsBar: false,
+                      startVideoOff: false,
+                      startAudioOff: false,
                       customTrayButtons: {},
                       iframeStyle: {
                         width: '100%',
@@ -609,7 +611,7 @@ export default function VideoCallScreen() {
 
       {isHost && !otherParticipantJoined && !isLoading && !waitingForNextFan && !hasLeftCall && (
         <View style={styles.fanConnectingBanner}>
-          <ActivityIndicator size="small" color="#a78bfa" />
+          <ActivityIndicator size="small" color="#ffffff" />
           <Text style={styles.fanConnectingText}>
             {(t('fanConnecting') || '{name} est en train de se connecter...').replace('{name}', currentFanName)}
           </Text>
@@ -777,7 +779,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(139, 92, 246, 0.85)',
+    backgroundColor: 'rgba(34, 197, 94, 0.9)',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
