@@ -304,15 +304,13 @@ export default function CreateLiveSessionScreen() {
     setNameError(false);
 
     const existingAccountId = stripeAccountId || await checkStripeConnectStatus();
-    if (!existingAccountId && isLive) {
+    if (!existingAccountId) {
       setShowStripeConnect(true);
       return;
     }
 
-    if (existingAccountId) {
-      setStripeAccountId(existingAccountId);
-    }
-    proceedToCreateSession(existingAccountId || undefined);
+    setStripeAccountId(existingAccountId);
+    proceedToCreateSession(existingAccountId);
   };
 
   const proceedToCreateSession = async (accountId?: string) => {
