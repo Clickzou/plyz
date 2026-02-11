@@ -97,6 +97,7 @@ export default function JoinEventScreen() {
   const { user, setPostAuthRedirect } = useAuth();
   const { status, isPremium } = useSubscription();
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [pendingJoinQueue, setPendingJoinQueue] = useState(false);
 
   const [code, setCode] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -155,6 +156,14 @@ export default function JoinEventScreen() {
   const pulseStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonPulse.value }],
   }));
+
+  useEffect(() => {
+    if (user && pendingJoinQueue) {
+      setPendingJoinQueue(false);
+      setShowAccountModal(false);
+      handleJoinQueue();
+    }
+  }, [user, pendingJoinQueue]);
 
   useEffect(() => {
     if (params.code) {
@@ -403,6 +412,7 @@ export default function JoinEventScreen() {
     }
 
     if (!user) {
+      setPendingJoinQueue(true);
       setShowAccountModal(true);
       return;
     }
@@ -1012,10 +1022,13 @@ export default function JoinEventScreen() {
 
       <AccountModal
         visible={showAccountModal}
-        onClose={() => setShowAccountModal(false)}
+        onClose={() => {
+          setShowAccountModal(false);
+          setPendingJoinQueue(false);
+        }}
         onSkip={() => {
           setShowAccountModal(false);
-          performSaveSignature();
+          setPendingJoinQueue(false);
         }}
         returnPath="/join-event"
       />
