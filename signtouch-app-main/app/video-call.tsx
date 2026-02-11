@@ -264,16 +264,40 @@ export default function VideoCallScreen() {
         setFansRemainingCount(prev => Math.max(0, prev - 1));
       } else {
         setWaitingForNextFan(false);
+        if (dailyCallFrameRef.current) {
+          try {
+            dailyCallFrameRef.current.leave().catch(() => {});
+            dailyCallFrameRef.current.destroy().catch(() => {});
+          } catch (e) {}
+          dailyCallFrameRef.current = null;
+        }
+        setHasLeftCall(true);
         showConfirm(
           t('noMoreFansTitle'),
           t('noMoreFansMessage'),
-          [{ text: 'OK', style: 'default', onPress: () => router.back() }]
+          [{ text: 'OK', style: 'default', onPress: () => {
+            router.replace({
+              pathname: '/live-session-dashboard',
+              params: { sessionId: params.sessionId },
+            });
+          }}]
         );
       }
     } catch (error) {
       console.error('[VideoCall] Error calling next fan:', error);
       setWaitingForNextFan(false);
-      router.back();
+      if (dailyCallFrameRef.current) {
+        try {
+          dailyCallFrameRef.current.leave().catch(() => {});
+          dailyCallFrameRef.current.destroy().catch(() => {});
+        } catch (e) {}
+        dailyCallFrameRef.current = null;
+      }
+      setHasLeftCall(true);
+      router.replace({
+        pathname: '/live-session-dashboard',
+        params: { sessionId: params.sessionId },
+      });
     }
   };
 
@@ -288,10 +312,23 @@ export default function VideoCallScreen() {
     const timeout = setTimeout(() => {
       if (waitingForNextFan) {
         setWaitingForNextFan(false);
+        if (dailyCallFrameRef.current) {
+          try {
+            dailyCallFrameRef.current.leave().catch(() => {});
+            dailyCallFrameRef.current.destroy().catch(() => {});
+          } catch (e) {}
+          dailyCallFrameRef.current = null;
+        }
+        setHasLeftCall(true);
         showConfirm(
           t('noMoreFansTitle'),
           t('noMoreFansMessage'),
-          [{ text: 'OK', style: 'default', onPress: () => router.back() }]
+          [{ text: 'OK', style: 'default', onPress: () => {
+            router.replace({
+              pathname: '/live-session-dashboard',
+              params: { sessionId: params.sessionId },
+            });
+          }}]
         );
       }
     }, 120000);
