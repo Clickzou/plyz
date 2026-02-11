@@ -720,7 +720,9 @@ export default function LiveSessionDashboardScreen() {
       setCurrentPath('');
     });
 
-  const waitingCount = queue.filter((e) => e.status === 'waiting').length;
+  const realtimeCount = queue.filter((e) => e.status === 'waiting' || e.status === 'current' || e.status === 'signing').length;
+  const pollingCount = sessionQueue.filter((e) => e.status === 'waiting' || (e.status as string) === 'called' || (e.status as string) === 'in_call').length;
+  const waitingCount = Math.max(realtimeCount, pollingCount);
 
   if (!session) {
     return (
