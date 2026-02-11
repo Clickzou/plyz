@@ -857,6 +857,7 @@ export default {
   takeSelfie: 'Selfie',
   choosePhoto: 'ギャラリー',
   dedicationDrawSignature: '署名を描く',
+  dedicationLoading: '献辞を準備中...',
   dedicationReady: '献辞の準備完了！',
   dedicationNotificationBody: '🎁 {name}さん、あなただけの献辞が完成しました！アプリを開いてご覧ください。',
   dedicationReset: 'リセット',

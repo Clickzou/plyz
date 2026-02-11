@@ -862,6 +862,7 @@ export default {
   takeSelfie: 'Selfie',
   choosePhoto: 'گیلری',
   dedicationDrawSignature: 'اپنا دستخط بنائیں',
+  dedicationLoading: 'آپ کا وقف تیار ہو رہا ہے...',
   dedicationReady: 'وقف نامہ تیار!',
   dedicationNotificationBody: '🎁 {name}، آپ کا ذاتی وقف تیار ہے! دیکھنے کے لیے ایپ کھولیں۔',
   dedicationReset: 'ری سیٹ',

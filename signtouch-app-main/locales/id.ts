@@ -862,6 +862,7 @@ export default {
   takeSelfie: 'Selfie',
   choosePhoto: 'Galeri',
   dedicationDrawSignature: 'Gambar tanda tangan Anda',
+  dedicationLoading: 'Menyiapkan dedikasi Anda...',
   dedicationReady: 'Dedikasi siap!',
   dedicationNotificationBody: '🎁 {name}, dedikasi personalmu sudah siap! Buka aplikasi untuk melihatnya.',
   dedicationReset: 'Atur ulang',

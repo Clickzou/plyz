@@ -857,6 +857,7 @@ export default {
   takeSelfie: 'Selfie',
   choosePhoto: 'Galeria',
   dedicationDrawSignature: 'Desenhe sua assinatura',
+  dedicationLoading: 'Preparando sua dedicatória...',
   dedicationReady: 'Dedicatória pronta!',
   dedicationNotificationBody: '🎁 {name}, sua dedicatória personalizada está pronta! Abra o app para vê-la.',
   dedicationReset: 'Redefinir',

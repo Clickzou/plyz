@@ -326,12 +326,14 @@ export default function VideoCallScreen() {
         }).catch((err) => console.error('Error recording transaction:', err));
       }
 
+      console.log('[VideoCall] Fan call ended, navigating to dedication-result for session:', params.sessionId);
+
       sendDedicationNotification(
         params.sessionId,
         params.queueEntryId || null,
         params.otherUserName || 'Celebrity',
         t('dedicationNotificationBody')
-      ).catch(() => {});
+      ).catch((e) => console.error('[VideoCall] Dedication notification error:', e));
 
       router.replace({
         pathname: '/dedication-result',

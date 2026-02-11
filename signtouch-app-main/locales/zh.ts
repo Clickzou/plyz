@@ -857,6 +857,7 @@ export default {
   takeSelfie: 'Selfie',
   choosePhoto: '相册',
   dedicationDrawSignature: '画签名',
+  dedicationLoading: '正在准备您的题词...',
   dedicationReady: '题词已准备好！',
   dedicationNotificationBody: '🎁 {name}，您的个性化题词已准备就绪！打开应用查看。',
   dedicationReset: '重置',

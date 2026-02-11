@@ -196,7 +196,10 @@ export const updateDedicationSignature = async (
 export const getDedicationAssets = async (
   sessionId: string
 ): Promise<{ photoUrl: string | null; signatureSvg: string | null; celebrityName: string } | null> => {
-  let celebrityName = '';
+  let dbPhotoUrl: string | null = null;
+  let dbSignatureSvg: string | null = null;
+  let dbCelebrityName = '';
+
   try {
     const { data, error } = await supabase
       .from('live_sessions')
@@ -205,27 +208,31 @@ export const getDedicationAssets = async (
       .single();
 
     if (!error && data) {
-      celebrityName = (data as any).celebrity_name || '';
-      const photoUrl = (data as any).dedication_photo_url || null;
-      const signatureSvg = (data as any).dedication_signature_svg || null;
-
-      if (photoUrl || signatureSvg) {
-        return { photoUrl, signatureSvg, celebrityName };
-      }
+      dbCelebrityName = (data as any).celebrity_name || '';
+      dbPhotoUrl = (data as any).dedication_photo_url || null;
+      dbSignatureSvg = (data as any).dedication_signature_svg || null;
+      console.log('[Dedication] DB data - photo:', !!dbPhotoUrl, 'signature:', !!dbSignatureSvg);
+    } else {
+      console.log('[Dedication] DB error or no data:', error?.message);
     }
   } catch (e) {
-    console.error('Error fetching dedication from DB:', e);
+    console.error('[Dedication] Error fetching from DB:', e);
   }
 
   const storageMeta = await loadDedicationMetadata(sessionId);
-  if (storageMeta && (storageMeta.photoUrl || storageMeta.signatureSvg)) {
-    return {
-      photoUrl: storageMeta.photoUrl || null,
-      signatureSvg: storageMeta.signatureSvg || null,
-      celebrityName: storageMeta.celebrityName || celebrityName || '',
-    };
+  console.log('[Dedication] Storage metadata:', storageMeta ? 'found' : 'not found',
+    storageMeta ? `photo:${!!storageMeta.photoUrl} sig:${!!storageMeta.signatureSvg}` : '');
+
+  const photoUrl = dbPhotoUrl || storageMeta?.photoUrl || null;
+  const signatureSvg = dbSignatureSvg || storageMeta?.signatureSvg || null;
+  const celebrityName = dbCelebrityName || storageMeta?.celebrityName || '';
+
+  if (photoUrl || signatureSvg) {
+    console.log('[Dedication] Returning assets - photo:', !!photoUrl, 'signature:', !!signatureSvg);
+    return { photoUrl, signatureSvg, celebrityName };
   }
 
+  console.log('[Dedication] No assets found for session:', sessionId);
   return null;
 };
 

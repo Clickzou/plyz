@@ -857,6 +857,7 @@ export default {
   takeSelfie: 'Selfie',
   choosePhoto: 'المعرض',
   dedicationDrawSignature: 'ارسم توقيعك',
+  dedicationLoading: 'جارٍ إعداد إهدائك...',
   dedicationReady: 'الإهداء جاهز!',
   dedicationNotificationBody: '🎁 {name}، إهداؤك الشخصي جاهز! افتح التطبيق لمشاهدته.',
   dedicationReset: 'إعادة تعيين',

@@ -857,6 +857,7 @@ export default {
   takeSelfie: 'Selfie',
   choosePhoto: 'Галерея',
   dedicationDrawSignature: 'Нарисуйте подпись',
+  dedicationLoading: 'Подготовка вашего посвящения...',
   dedicationReady: 'Автограф готов!',
   dedicationNotificationBody: '🎁 {name}, ваше персональное посвящение готово! Откройте приложение, чтобы увидеть.',
   dedicationReset: 'Сбросить',

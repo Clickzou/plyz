@@ -857,6 +857,7 @@ export default {
   takeSelfie: 'Selfie',
   choosePhoto: 'Galerie',
   dedicationDrawSignature: 'Zeichnen Sie Ihre Unterschrift',
+  dedicationLoading: 'Deine Widmung wird vorbereitet...',
   dedicationReady: 'Widmung bereit!',
   dedicationNotificationBody: '🎁 {name}, deine persönliche Widmung ist fertig! Öffne die App, um sie zu sehen.',
   dedicationReset: 'Zurücksetzen',

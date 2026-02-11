@@ -857,6 +857,7 @@ export default {
   takeSelfie: 'Selfie',
   choosePhoto: 'गैलरी',
   dedicationDrawSignature: 'अपना हस्ताक्षर बनाएं',
+  dedicationLoading: 'आपका समर्पण तैयार हो रहा है...',
   dedicationReady: 'समर्पण तैयार!',
   dedicationNotificationBody: '🎁 {name}, आपका व्यक्तिगत समर्पण तैयार है! देखने के लिए ऐप खोलें।',
   dedicationReset: 'रीसेट',

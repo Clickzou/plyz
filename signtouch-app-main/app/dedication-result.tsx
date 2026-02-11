@@ -74,26 +74,39 @@ export default function DedicationResultScreen() {
   const savedRotation = useSharedValue(0);
 
   useEffect(() => {
-    const loadAssets = async () => {
+    let cancelled = false;
+    const loadAssets = async (attempt: number = 1) => {
       if (!params.sessionId) {
         setLoading(false);
         return;
       }
 
+      console.log(`[DedicationResult] Loading assets, attempt ${attempt}`);
       const assets = await getDedicationAssets(params.sessionId);
+      if (cancelled) return;
+
       if (assets && assets.photoUrl) {
+        console.log('[DedicationResult] Assets loaded successfully');
         setPhotoUrl(assets.photoUrl);
         setCelebrityName(assets.celebrityName || params.celebrityName || '');
         if (assets.signatureSvg) {
           setSignaturePaths(assets.signatureSvg.split('|||'));
         }
+        setLoading(false);
+      } else if (attempt < 5) {
+        console.log(`[DedicationResult] No assets yet, retrying in ${attempt * 2}s...`);
+        setTimeout(() => {
+          if (!cancelled) loadAssets(attempt + 1);
+        }, attempt * 2000);
       } else {
+        console.log('[DedicationResult] No assets after 5 attempts');
         setNoAssets(true);
         setCelebrityName(params.celebrityName || '');
+        setLoading(false);
       }
-      setLoading(false);
     };
     loadAssets();
+    return () => { cancelled = true; };
   }, [params.sessionId]);
 
   const panGesture = Gesture.Pan()
@@ -225,7 +238,7 @@ export default function DedicationResultScreen() {
       <View style={[styles.container, styles.centerContent]}>
         <LinearGradient colors={['#1a1a2e', '#16213e']} style={StyleSheet.absoluteFill} />
         <ActivityIndicator size="large" color="#8b5cf6" />
-        <Text style={styles.loadingText}>{t('loading')}...</Text>
+        <Text style={styles.loadingText}>{t('dedicationLoading') || 'Preparing your dedication...'}</Text>
       </View>
     );
   }

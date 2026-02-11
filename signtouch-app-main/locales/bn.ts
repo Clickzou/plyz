@@ -862,6 +862,7 @@ export default {
   takeSelfie: 'Selfie',
   choosePhoto: 'গ্যালারি',
   dedicationDrawSignature: 'আপনার স্বাক্ষর আঁকুন',
+  dedicationLoading: 'আপনার উৎসর্গ প্রস্তুত হচ্ছে...',
   dedicationReady: 'উৎসর্গ প্রস্তুত!',
   dedicationNotificationBody: '🎁 {name}, আপনার ব্যক্তিগত উৎসর্গ প্রস্তুত! দেখতে অ্যাপ খুলুন।',
   dedicationReset: 'রিসেট',
