@@ -27,6 +27,7 @@ Preferred communication style: Simple, everyday language.
 - **Event Sessions System**: Extends live events to support multi-celebrity sessions with configurable durations, real-time polling-based fan galleries, and a celebrity interface for publishing assets during an event.
 - **Promotional Code System**: Allows for influencer-based free trial access via promotional codes, validated per device.
 - **Video Calls System**: Integrates Daily.co for live video calls between celebrities and fans, featuring real-time audio/video, host/participant roles, and multi-participant views.
+- **Scheduled Sessions**: Live video sessions can be started immediately (LIVE mode) or scheduled for a future date and time, with calendar and time pickers. Scheduled sessions use `status: 'scheduled'` and store the planned start in `scheduled_at` column.
 - **Dynamic Queue System**: Manages real-time queues for live video sessions, including fan queuing, push notifications for turn alerts, and celebrity dashboards for queue management with automatic fan skipping and re-queueing.
 - **Personalized Dedication System**: A hybrid system where celebrities provide a selfie and signature, which are then used to generate unique, personalized dedications for fans after video calls, featuring interactive signature manipulation and localization.
 - **Legal Documents**: Multi-language support for CGV, CGU, Privacy Policy, and Legal Notices, dynamically displayed based on user's language with a French fallback.

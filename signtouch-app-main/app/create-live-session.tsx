@@ -9,11 +9,13 @@ import {
   ActivityIndicator,
   Image,
   Platform,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Clock, Users, DollarSign, Play, Star, Camera, RotateCcw, Info, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { ArrowLeft, Clock, Users, DollarSign, Play, Star, Camera, RotateCcw, Info, ChevronDown, ChevronUp, Calendar } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
@@ -55,7 +57,7 @@ const STRIPE_FIXED = 30; // 0.30€ par transaction (en centimes)
 export default function CreateLiveSessionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
 
   const [celebrityName, setCelebrityName] = useState('');
@@ -72,6 +74,63 @@ export default function CreateLiveSessionScreen() {
   const [showStripeConnect, setShowStripeConnect] = useState(false);
   const [stripeConnected, setStripeConnected] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  const [isLive, setIsLive] = useState(true);
+  const [sessionDate, setSessionDate] = useState(new Date().toISOString().split('T')[0]);
+  const [sessionTime, setSessionTime] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedHour, setSelectedHour] = useState(12);
+  const [selectedMinute, setSelectedMinute] = useState(0);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+
+  const WEEKDAYS_FR = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+  const WEEKDAYS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const WEEKDAYS = language === 'fr' ? WEEKDAYS_FR : WEEKDAYS_EN;
+
+  const getCalendarDays = () => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDayOfWeek = firstDay.getDay();
+    const days: (number | null)[] = [];
+    for (let i = 0; i < startDayOfWeek; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(i);
+    }
+    return days;
+  };
+
+  const formatDisplayDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const locale = language === 'fr' ? 'fr-FR' : 'en-US';
+    return date.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const handleSelectDate = (day: number) => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const newDate = new Date(year, month, day);
+    setSessionDate(newDate.toISOString().split('T')[0]);
+    setShowDatePicker(false);
+  };
+
+  const changeMonth = (direction: number) => {
+    const newMonth = new Date(calendarMonth);
+    newMonth.setMonth(newMonth.getMonth() + direction);
+    setCalendarMonth(newMonth);
+  };
+
+  const getScheduledStartDate = (): string | undefined => {
+    if (isLive || !sessionTime) return undefined;
+    const [hours, minutes] = sessionTime.split(':').map(Number);
+    const startDate = new Date(sessionDate);
+    startDate.setHours(hours, minutes, 0, 0);
+    return startDate.toISOString();
+  };
 
   const handleWebFileChange = useCallback((event: Event) => {
     const input = event.target as HTMLInputElement;
@@ -213,6 +272,22 @@ export default function CreateLiveSessionScreen() {
       setPhotoError(true);
       hasError = true;
     }
+
+    if (!isLive && !sessionTime) {
+      hasError = true;
+      showAlert(t('error') || 'Erreur', t('liveSessionTimeRequired') || 'Veuillez sélectionner une heure pour la session programmée');
+      return;
+    }
+
+    if (!isLive && sessionTime) {
+      const [h, m] = sessionTime.split(':').map(Number);
+      const scheduledDate = new Date(sessionDate);
+      scheduledDate.setHours(h, m, 0, 0);
+      if (scheduledDate <= new Date()) {
+        showAlert(t('error') || 'Erreur', t('liveSessionPastDate') || 'La date et heure doivent être dans le futur');
+        return;
+      }
+    }
     
     if (hasError) {
       console.log('[CreateSession] Validation failed - name:', !celebrityName.trim(), 'photo:', !coverPhotoUri);
@@ -251,6 +326,7 @@ export default function CreateLiveSessionScreen() {
       const SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
       console.log('[CreateSession] Calling server to create session, celebrityId:', celebrityId);
       
+      const scheduledAt = getScheduledStartDate();
       try {
         const response = await fetch(`${SERVER_URL}/api/create-session`, {
           method: 'POST',
@@ -264,6 +340,7 @@ export default function CreateLiveSessionScreen() {
             price_cents: price,
             cover_photo_url: uploadedPhotoUrl,
             celebrity_stripe_account_id: finalStripeAccountId,
+            scheduled_at: scheduledAt || null,
           }),
         });
         
@@ -380,6 +457,58 @@ export default function CreateLiveSessionScreen() {
         />
         {nameError && (
           <Text style={styles.errorText}>{t('liveSessionNameRequired') || 'Veuillez entrer votre nom'}</Text>
+        )}
+
+        <TouchableOpacity
+          style={[styles.liveToggle, isLive && styles.liveToggleActive]}
+          onPress={() => setIsLive(!isLive)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.liveToggleLeft}>
+            <View style={[styles.liveIndicator, isLive && styles.liveIndicatorActive]}>
+              <Text style={styles.liveIndicatorText}>LIVE</Text>
+            </View>
+            <Text style={[styles.liveToggleText, isLive && styles.liveToggleTextActive]}>
+              {t('liveSessionStartNow') || 'Démarrer immédiatement'}
+            </Text>
+          </View>
+          <View style={[styles.toggleSwitch, isLive && styles.toggleSwitchActive]}>
+            <View style={[styles.toggleKnob, isLive && styles.toggleKnobActive]} />
+          </View>
+        </TouchableOpacity>
+
+        {!isLive && (
+          <>
+            <View style={styles.scheduleSection}>
+              <View style={styles.sectionHeaderRow}>
+                <Calendar size={18} color="#22c55e" />
+                <Text style={styles.sectionTitle}>{t('eventDate') || 'Date'}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.datePickerButton}
+                onPress={() => setShowDatePicker(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.datePickerText}>{formatDisplayDate(sessionDate)}</Text>
+                <Calendar size={20} color="#10B981" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.scheduleSection}>
+              <View style={styles.sectionHeaderRow}>
+                <Clock size={18} color="#10B981" />
+                <Text style={styles.sectionTitle}>{t('eventTime') || 'Heure'}</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.timePickerButton}
+                onPress={() => setShowTimePicker(true)}
+              >
+                <Text style={[styles.timePickerButtonText, !sessionTime && styles.timePickerButtonPlaceholder]}>
+                  {sessionTime || 'HH:MM'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </>
         )}
 
         <Text style={styles.sectionTitle}>{t('liveSessionDurationPerFan') || 'Durée par Fan'}</Text>
@@ -546,12 +675,140 @@ export default function CreateLiveSessionScreen() {
             <ActivityIndicator color="#10B981" />
           ) : (
             <>
-              <Play size={24} color="#ffffff" fill="#ffffff" />
-              <Text style={styles.createButtonText}>{t('liveSessionStart')}</Text>
+              {isLive ? (
+                <Play size={24} color="#ffffff" fill="#ffffff" />
+              ) : (
+                <Calendar size={24} color="#ffffff" />
+              )}
+              <Text style={styles.createButtonText}>
+                {isLive ? (t('liveSessionStart') || 'Démarrer la Session') : (t('liveSessionSchedule') || 'Programmer la Session')}
+              </Text>
             </>
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal
+        visible={showDatePicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDatePicker(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowDatePicker(false)}>
+          <Pressable style={styles.calendarModal} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.calendarHeader}>
+              <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.calendarNavBtn}>
+                <Text style={styles.calendarNavText}>{'<'}</Text>
+              </TouchableOpacity>
+              <Text style={styles.calendarMonthText}>
+                {calendarMonth.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' })}
+              </Text>
+              <TouchableOpacity onPress={() => changeMonth(1)} style={styles.calendarNavBtn}>
+                <Text style={styles.calendarNavText}>{'>'}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.weekdaysRow}>
+              {WEEKDAYS.map((day) => (
+                <Text key={day} style={styles.weekdayText}>{day}</Text>
+              ))}
+            </View>
+
+            <View style={styles.daysGrid}>
+              {getCalendarDays().map((day, index) => {
+                const isSelected = day && sessionDate === 
+                  `${calendarMonth.getFullYear()}-${String(calendarMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const today = new Date();
+                const isToday = day && 
+                  today.getDate() === day && 
+                  today.getMonth() === calendarMonth.getMonth() && 
+                  today.getFullYear() === calendarMonth.getFullYear();
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.dayCell,
+                      isSelected && styles.dayCellSelected,
+                      isToday && !isSelected && styles.dayCellToday,
+                    ]}
+                    onPress={() => day && handleSelectDate(day)}
+                    disabled={!day}
+                  >
+                    <Text style={[
+                      styles.dayText,
+                      isSelected && styles.dayTextSelected,
+                      isToday && !isSelected && styles.dayTextToday,
+                    ]}>
+                      {day || ''}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <TouchableOpacity style={styles.calendarCloseBtn} onPress={() => setShowDatePicker(false)}>
+              <Text style={styles.calendarCloseBtnText}>Fermer</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal
+        visible={showTimePicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowTimePicker(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowTimePicker(false)}>
+          <Pressable style={styles.timePickerModal} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.timePickerTitle}>{t('eventTime') || 'Heure'}</Text>
+            <View style={styles.timePickerColumns}>
+              <View style={styles.timePickerColumn}>
+                <Text style={styles.timePickerLabel}>Heures</Text>
+                <ScrollView style={styles.timePickerScroll} showsVerticalScrollIndicator={false}>
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <TouchableOpacity
+                      key={i}
+                      style={[styles.timePickerItem, selectedHour === i && styles.timePickerItemSelected]}
+                      onPress={() => setSelectedHour(i)}
+                    >
+                      <Text style={[styles.timePickerItemText, selectedHour === i && styles.timePickerItemTextSelected]}>
+                        {String(i).padStart(2, '0')}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+              <Text style={styles.timePickerSeparator}>:</Text>
+              <View style={styles.timePickerColumn}>
+                <Text style={styles.timePickerLabel}>Minutes</Text>
+                <ScrollView style={styles.timePickerScroll} showsVerticalScrollIndicator={false}>
+                  {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => (
+                    <TouchableOpacity
+                      key={m}
+                      style={[styles.timePickerItem, selectedMinute === m && styles.timePickerItemSelected]}
+                      onPress={() => setSelectedMinute(m)}
+                    >
+                      <Text style={[styles.timePickerItemText, selectedMinute === m && styles.timePickerItemTextSelected]}>
+                        {String(m).padStart(2, '0')}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+            <TouchableOpacity 
+              style={styles.timePickerConfirmBtn}
+              onPress={() => {
+                setSessionTime(`${String(selectedHour).padStart(2, '0')}:${String(selectedMinute).padStart(2, '0')}`);
+                setShowTimePicker(false);
+              }}
+            >
+              <Text style={styles.timePickerConfirmText}>Valider</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <StripeConnectModal
         visible={showStripeConnect}
@@ -1012,5 +1269,273 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
     lineHeight: 18,
     fontStyle: 'italic',
+  },
+  liveToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 20,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  liveToggleActive: {
+    backgroundColor: 'rgba(239,68,68,0.15)',
+    borderColor: 'rgba(239,68,68,0.4)',
+  },
+  liveToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  liveIndicator: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  liveIndicatorActive: {
+    backgroundColor: '#ef4444',
+  },
+  liveIndicatorText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#ffffff',
+    letterSpacing: 1,
+  },
+  liveToggleText: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.6)',
+    fontWeight: '500',
+  },
+  liveToggleTextActive: {
+    color: '#ef4444',
+  },
+  toggleSwitch: {
+    width: 50,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    padding: 2,
+  },
+  toggleSwitchActive: {
+    backgroundColor: '#ef4444',
+  },
+  toggleKnob: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+  },
+  toggleKnobActive: {
+    alignSelf: 'flex-end',
+  },
+  scheduleSection: {
+    marginBottom: 8,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  datePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
+  },
+  datePickerText: {
+    fontSize: 16,
+    color: '#ffffff',
+    textTransform: 'capitalize',
+  },
+  timePickerButton: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  timePickerButtonText: {
+    fontSize: 18,
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  timePickerButtonPlaceholder: {
+    color: 'rgba(255,255,255,0.4)',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  calendarModal: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 20,
+    padding: 20,
+    width: '100%',
+    maxWidth: 360,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  calendarNavBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  calendarNavText: {
+    fontSize: 20,
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  calendarMonthText: {
+    fontSize: 18,
+    color: '#ffffff',
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  weekdaysRow: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  weekdayText: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '600',
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  dayCell: {
+    width: '14.28%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dayCellSelected: {
+    backgroundColor: '#10B981',
+    borderRadius: 20,
+  },
+  dayCellToday: {
+    borderWidth: 2,
+    borderColor: '#10B981',
+    borderRadius: 20,
+  },
+  dayText: {
+    fontSize: 16,
+    color: '#ffffff',
+  },
+  dayTextSelected: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  dayTextToday: {
+    color: '#10B981',
+    fontWeight: '600',
+  },
+  calendarCloseBtn: {
+    marginTop: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+  },
+  calendarCloseBtnText: {
+    fontSize: 16,
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  timePickerModal: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 20,
+    padding: 20,
+    width: '100%',
+    maxWidth: 320,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  timePickerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  timePickerColumns: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timePickerColumn: {
+    alignItems: 'center',
+    width: 80,
+  },
+  timePickerLabel: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 10,
+  },
+  timePickerScroll: {
+    height: 200,
+  },
+  timePickerItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginVertical: 2,
+  },
+  timePickerItemSelected: {
+    backgroundColor: '#10B981',
+  },
+  timePickerItemText: {
+    fontSize: 20,
+    color: 'rgba(255,255,255,0.6)',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  timePickerItemTextSelected: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  timePickerSeparator: {
+    fontSize: 32,
+    color: '#ffffff',
+    fontWeight: '700',
+    marginHorizontal: 10,
+  },
+  timePickerConfirmBtn: {
+    marginTop: 20,
+    backgroundColor: '#10B981',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+  },
+  timePickerConfirmText: {
+    fontSize: 16,
+    color: '#ffffff',
+    fontWeight: '700',
   },
 });

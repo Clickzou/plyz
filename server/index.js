@@ -131,7 +131,8 @@ app.post('/api/create-session', async (req, res) => {
       max_slots,
       price_cents = 0,
       cover_photo_url = null,
-      celebrity_stripe_account_id = null
+      celebrity_stripe_account_id = null,
+      scheduled_at = null
     } = req.body;
 
     if (!celebrity_id || !celebrity_name || !duration_minutes || !max_slots) {
@@ -157,11 +158,14 @@ app.post('/api/create-session', async (req, res) => {
       duration_per_fan_minutes: durationPerFanValue < 1 ? 1 : durationPerFanInt,
       max_slots,
       price_cents,
-      status: 'waiting',
+      status: scheduled_at ? 'scheduled' : 'waiting',
       cover_photo_url,
     };
     if (celebrity_stripe_account_id) {
       insertData.celebrity_stripe_account_id = celebrity_stripe_account_id;
+    }
+    if (scheduled_at) {
+      insertData.scheduled_at = scheduled_at;
     }
 
     console.log('[create-session] Inserting session with code:', code);
