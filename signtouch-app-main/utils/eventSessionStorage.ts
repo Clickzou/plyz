@@ -344,25 +344,35 @@ export const initDeletedEventsCache = async (): Promise<void> => {
 export const deleteEventSession = async (sessionId: string): Promise<void> => {
   console.log('[deleteEventSession] Deleting event:', sessionId);
   
-  // Get current user
+  const { data: liveSession } = await supabase
+    .from('live_sessions')
+    .select('id')
+    .eq('id', sessionId)
+    .maybeSingle();
+
+  if (liveSession) {
+    const { error: lsError } = await supabase
+      .from('live_sessions')
+      .update({ status: 'ended' })
+      .eq('id', sessionId);
+
+    if (!lsError) {
+      console.log('[deleteEventSession] Live session marked as ended');
+    } else {
+      console.warn('[deleteEventSession] Live session update failed:', lsError.message);
+    }
+    addLocallyDeletedEvent(sessionId);
+    return;
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
-    throw new Error('Not authenticated');
+    addLocallyDeletedEvent(sessionId);
+    console.log('[deleteEventSession] Not authenticated, stored locally');
+    return;
   }
   
-  // First, verify ownership
-  const { data: eventData } = await supabase
-    .from('event_sessions')
-    .select('created_by')
-    .eq('id', sessionId)
-    .single();
-  
-  if (!eventData || eventData.created_by !== user.id) {
-    throw new Error('You do not own this event');
-  }
-  
-  // Try to update in Supabase first
   const { data, error } = await supabase
     .from('event_sessions')
     .update({ status: 'deleted' })
@@ -374,10 +384,8 @@ export const deleteEventSession = async (sessionId: string): Promise<void> => {
     return;
   }
   
-  // If Supabase update failed due to RLS, store deletion locally
-  console.log('[deleteEventSession] RLS blocked update, storing deletion locally');
+  console.log('[deleteEventSession] Supabase update failed, storing deletion locally');
   addLocallyDeletedEvent(sessionId);
-  console.log('[deleteEventSession] Event marked as deleted locally');
 };
 
 export { getLocallyDeletedEvents };
