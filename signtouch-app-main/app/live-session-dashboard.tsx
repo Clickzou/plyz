@@ -107,6 +107,7 @@ export default function LiveSessionDashboardScreen() {
   const dedicationPathRef = useRef<string>('');
   const [isUploadingDedication, setIsUploadingDedication] = useState(false);
   const [isDrawingDedication, setIsDrawingDedication] = useState(false);
+  const isDrawingDedicationRef = useRef(false);
   const scrollRef = useRef<ScrollView>(null);
 
   const [paths, setPaths] = useState<string[]>([]);
@@ -578,6 +579,7 @@ export default function LiveSessionDashboardScreen() {
   const dedicationPanGesture = Gesture.Pan()
     .minDistance(0)
     .onStart((e) => {
+      isDrawingDedicationRef.current = true;
       setIsDrawingDedication(true);
       dedicationPathRef.current = `M${e.x.toFixed(1)},${e.y.toFixed(1)}`;
       setDedicationCurrentPath(dedicationPathRef.current);
@@ -592,9 +594,11 @@ export default function LiveSessionDashboardScreen() {
       }
       dedicationPathRef.current = '';
       setDedicationCurrentPath('');
+      isDrawingDedicationRef.current = false;
       setIsDrawingDedication(false);
     })
     .onFinalize(() => {
+      isDrawingDedicationRef.current = false;
       setIsDrawingDedication(false);
     });
 
@@ -848,10 +852,11 @@ export default function LiveSessionDashboardScreen() {
                         const y = e.clientY - rect.top;
                         dedicationPathRef.current = `M${x.toFixed(1)},${y.toFixed(1)}`;
                         setDedicationCurrentPath(dedicationPathRef.current);
+                        isDrawingDedicationRef.current = true;
                         setIsDrawingDedication(true);
                       }}
                       onPointerMove={(e: any) => {
-                        if (!isDrawingDedication) return;
+                        if (!isDrawingDedicationRef.current) return;
                         const rect = e.currentTarget.getBoundingClientRect();
                         const x = e.clientX - rect.left;
                         const y = e.clientY - rect.top;
@@ -864,14 +869,16 @@ export default function LiveSessionDashboardScreen() {
                         }
                         dedicationPathRef.current = '';
                         setDedicationCurrentPath('');
+                        isDrawingDedicationRef.current = false;
                         setIsDrawingDedication(false);
                       }}
                       onPointerLeave={() => {
-                        if (isDrawingDedication && dedicationPathRef.current) {
+                        if (isDrawingDedicationRef.current && dedicationPathRef.current) {
                           setDedicationPaths((prev) => [...prev, dedicationPathRef.current]);
                         }
                         dedicationPathRef.current = '';
                         setDedicationCurrentPath('');
+                        isDrawingDedicationRef.current = false;
                         setIsDrawingDedication(false);
                       }}
                     >
@@ -928,9 +935,20 @@ export default function LiveSessionDashboardScreen() {
                     <Check size={24} color="#4ade80" />
                   </View>
                   <Text style={styles.dedicationDoneText}>{t('dedicationReady')}</Text>
-                  {dedicationPhotoUri && (
-                    <Image source={{ uri: dedicationPhotoUri }} style={styles.dedicationPhotoPreviewSmall} resizeMode="cover" />
-                  )}
+                  <View style={styles.dedicationDonePreviewRow}>
+                    {dedicationPhotoUri && (
+                      <Image source={{ uri: dedicationPhotoUri }} style={styles.dedicationPhotoPreviewSmall} resizeMode="cover" />
+                    )}
+                    {dedicationPaths.length > 0 && (
+                      <View style={styles.dedicationSignaturePreview}>
+                        <Svg width={100} height={50} viewBox={`0 0 ${DEDICATION_CANVAS_SIZE} ${DEDICATION_CANVAS_SIZE * 0.5}`}>
+                          {dedicationPaths.map((p, i) => (
+                            <Path key={i} d={p} stroke="#8b5cf6" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                          ))}
+                        </Svg>
+                      </View>
+                    )}
+                  </View>
                   <TouchableOpacity style={styles.dedicationResetButton} onPress={handleResetDedication}>
                     <Text style={styles.dedicationResetText}>{t('dedicationReset')}</Text>
                   </TouchableOpacity>
@@ -1703,11 +1721,24 @@ const styles = StyleSheet.create({
     color: '#4ade80',
     marginBottom: 12,
   },
+  dedicationDonePreviewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    marginBottom: 12,
+  },
   dedicationPhotoPreviewSmall: {
     width: 80,
     height: 107,
     borderRadius: 8,
-    marginBottom: 12,
+  },
+  dedicationSignaturePreview: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.3)',
   },
   dedicationResetButton: {
     paddingHorizontal: 16,
