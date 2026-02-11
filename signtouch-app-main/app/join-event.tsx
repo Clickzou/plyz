@@ -402,6 +402,11 @@ export default function JoinEventScreen() {
       return;
     }
 
+    if (!user) {
+      setShowAccountModal(true);
+      return;
+    }
+
     setIsJoiningQueue(true);
 
     try {
