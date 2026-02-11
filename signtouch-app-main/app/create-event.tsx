@@ -41,6 +41,7 @@ const EVENT_TYPES: { type: EventType; icon: any; color: string; labelKey: string
   { type: 'autre', icon: Calendar, color: '#6b7280', labelKey: 'eventAutre' },
 ];
 import { useAuth } from '@/contexts/AuthContext';
+import { scheduleCelebrityReminders } from '@/utils/scheduleReminders';
 import BottomNav from '@/components/BottomNav';
 import { 
   createEventSession, 
@@ -238,6 +239,16 @@ export default function CreateEventScreen() {
       setCreatedSession(session);
       setCreatedSigners(addedSigners);
       setStep('success');
+
+      if (scheduledStart) {
+        await scheduleCelebrityReminders({
+          eventName: formData.eventName.trim(),
+          scheduledAt: scheduledStart.toISOString(),
+          eventCode: session.join_code,
+          eventId: session.id,
+          type: 'event',
+        });
+      }
       
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -506,6 +517,16 @@ export default function CreateEventScreen() {
       setCreatedSession(session);
       setCreatedSigners(addedSigners);
       setStep('success');
+
+      if (scheduledStart) {
+        await scheduleCelebrityReminders({
+          eventName: eventName.trim(),
+          scheduledAt: scheduledStart.toISOString(),
+          eventCode: session.join_code,
+          eventId: session.id,
+          type: 'event',
+        });
+      }
       
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

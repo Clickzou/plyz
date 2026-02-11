@@ -25,6 +25,7 @@ import StripeConnectModal from '@/components/StripeConnectModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { getStripeAccountId } from '@/utils/userProfile';
+import { scheduleCelebrityReminders } from '@/utils/scheduleReminders';
 
 const formatDuration = (minutes: number): string => {
   if (minutes < 1) {
@@ -378,6 +379,18 @@ export default function CreateLiveSessionScreen() {
       }
 
       console.log('Session created:', session);
+
+      if (scheduledAt && session) {
+        const notified = await scheduleCelebrityReminders({
+          eventName: celebrityName.trim(),
+          scheduledAt: scheduledAt,
+          eventCode: session.code,
+          eventId: session.id,
+          type: 'live_session',
+        });
+        console.log('[CreateSession] Notifications scheduled:', notified);
+      }
+
       router.replace({
         pathname: '/live-session-dashboard',
         params: { 
