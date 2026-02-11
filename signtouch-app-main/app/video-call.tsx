@@ -14,7 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
-import { sendDedicationNotification } from '@/utils/sessionQueueStorage';
+import { sendDedicationNotification, callNextFan } from '@/utils/sessionQueueStorage';
 import { recordTransaction } from '@/utils/transactionStorage';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 
@@ -75,6 +75,9 @@ export default function VideoCallScreen() {
   const callStartTime = useRef<number>(0);
   const autoEndTriggered = useRef(false);
   const [otherParticipantJoined, setOtherParticipantJoined] = useState(false);
+  const [waitingForNextFan, setWaitingForNextFan] = useState(false);
+  const [currentFanName, setCurrentFanName] = useState(params.otherUserName || 'Fan');
+  const [fansRemainingCount, setFansRemainingCount] = useState(parseInt(params.fansRemaining || '0', 10));
 
   useEffect(() => {
     if (ScreenOrientation) {
@@ -232,6 +235,62 @@ export default function VideoCallScreen() {
     }
   };
 
+  const handleCallNextFan = async () => {
+    if (!params.sessionId) {
+      router.back();
+      return;
+    }
+
+    setWaitingForNextFan(true);
+    setOtherParticipantJoined(false);
+    callStartTime.current = 0;
+    autoEndTriggered.current = false;
+    setHasLeftCall(false);
+    setFanTimeRemaining(`${params.durationPerFan || '5'}:00`);
+    setTimeProgress(1);
+    setTimeWarning(false);
+
+    try {
+      const nextFan = await callNextFan(params.sessionId);
+      if (nextFan) {
+        setCurrentFanName(nextFan.fan_name || 'Fan');
+        setFansRemainingCount(prev => Math.max(0, prev - 1));
+      } else {
+        setWaitingForNextFan(false);
+        showConfirm(
+          t('noMoreFansTitle'),
+          t('noMoreFansMessage'),
+          [{ text: 'OK', style: 'default', onPress: () => router.back() }]
+        );
+      }
+    } catch (error) {
+      console.error('[VideoCall] Error calling next fan:', error);
+      setWaitingForNextFan(false);
+      router.back();
+    }
+  };
+
+  useEffect(() => {
+    if (waitingForNextFan && otherParticipantJoined) {
+      setWaitingForNextFan(false);
+    }
+  }, [waitingForNextFan, otherParticipantJoined]);
+
+  useEffect(() => {
+    if (!waitingForNextFan) return;
+    const timeout = setTimeout(() => {
+      if (waitingForNextFan) {
+        setWaitingForNextFan(false);
+        showConfirm(
+          t('noMoreFansTitle'),
+          t('noMoreFansMessage'),
+          [{ text: 'OK', style: 'default', onPress: () => router.back() }]
+        );
+      }
+    }, 120000);
+    return () => clearTimeout(timeout);
+  }, [waitingForNextFan]);
+
   const handleRatingModalClose = async () => {
     setShowRatingModal(false);
     if (!isHost && params.sessionId) {
@@ -269,6 +328,8 @@ export default function VideoCallScreen() {
           celebrityName: params.otherUserName || '',
         },
       });
+    } else if (isHost) {
+      await handleCallNextFan();
     } else {
       router.back();
     }
@@ -499,11 +560,11 @@ export default function VideoCallScreen() {
         </TouchableOpacity>
         
         <View style={styles.headerCenter}>
-          {isHost && params.fansRemaining ? (
+          {isHost && fansRemainingCount > 0 ? (
             <View style={styles.fansRemainingBadge}>
               <Users size={12} color="#a78bfa" />
               <Text style={styles.fansRemainingText}>
-                {params.fansRemaining}
+                {fansRemainingCount}
               </Text>
             </View>
           ) : null}
@@ -539,11 +600,34 @@ export default function VideoCallScreen() {
         </View>
       )}
 
+      {waitingForNextFan && (
+        <View style={styles.waitingOverlay}>
+          <View style={styles.waitingCard}>
+            <ActivityIndicator size="large" color="#8b5cf6" />
+            <Text style={styles.waitingTitle}>{t('waitingNextFan')}</Text>
+            <Text style={styles.waitingSubtext}>
+              {fansRemainingCount > 0
+                ? t('waitingNextFanHint').replace('{count}', String(fansRemainingCount))
+                : t('waitingNextFanConnect')}
+            </Text>
+            <TouchableOpacity
+              style={styles.waitingEndButton}
+              onPress={() => {
+                setWaitingForNextFan(false);
+                router.back();
+              }}
+            >
+              <Text style={styles.waitingEndButtonText}>{t('endSession')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       <RatingModal
         visible={showRatingModal}
         onClose={handleRatingModalClose}
         onSubmit={handleSubmitRating}
-        userName={params.otherUserName || (isHost ? 'Fan' : params.userName || 'Celebrity')}
+        userName={currentFanName || (isHost ? 'Fan' : params.userName || 'Celebrity')}
         isCelebrity={isHost}
       />
     </View>
@@ -730,6 +814,50 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  waitingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 50,
+  },
+  waitingCard: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    gap: 16,
+    width: '85%',
+    maxWidth: 360,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.3)',
+  },
+  waitingTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  waitingSubtext: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  waitingEndButton: {
+    marginTop: 8,
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+  },
+  waitingEndButtonText: {
+    color: '#ef4444',
+    fontSize: 15,
     fontWeight: '600',
   },
 });
