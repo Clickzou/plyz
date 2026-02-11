@@ -976,7 +976,7 @@ export default function LiveSessionDashboardScreen() {
       </View>
 
       <ScrollView ref={scrollRef} style={styles.content} contentContainerStyle={styles.contentContainer} scrollEnabled={dedicationStep !== 'signature'}>
-        {showQR && session.status === 'waiting' && (
+        {showQR && session.status === 'waiting' && dedicationStep !== 'signature' && (
           <View style={styles.qrSection}>
             <Text style={styles.qrTitle}>{t('liveSessionShareCode')}</Text>
             <View style={[styles.qrContainer, { padding: 12 }]}>
@@ -991,7 +991,11 @@ export default function LiveSessionDashboardScreen() {
               )}
             </TouchableOpacity>
             <Text style={[styles.qrHint, { marginTop: 6, fontSize: 12 }]}>{t('liveSessionShareHint')}</Text>
+          </View>
+        )}
 
+        {session.status === 'waiting' && (
+          <View>
             <View style={[styles.dedicationSetupSection, { marginTop: 12, padding: 14 }]}>
               <Text style={[styles.dedicationSetupTitle, { fontSize: 15, marginBottom: 4 }]}>{t('dedicationSetupTitle')}</Text>
               <Text style={[styles.dedicationSetupHint, { fontSize: 11, marginBottom: 10 }]}>{t('dedicationSetupHint')}</Text>
@@ -1040,7 +1044,7 @@ export default function LiveSessionDashboardScreen() {
                   </View>
                   {Platform.OS === 'web' ? (
                     <View
-                      style={[styles.canvas, { width: '100%', height: DEDICATION_CANVAS_SIZE * 0.6, touchAction: 'none', userSelect: 'none' } as any]}
+                      style={[styles.canvas, { width: '100%', height: DEDICATION_CANVAS_SIZE * 0.6, touchAction: 'none', userSelect: 'none', cursor: 'crosshair', position: 'relative' } as any]}
                       onPointerDown={(e: any) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1055,6 +1059,7 @@ export default function LiveSessionDashboardScreen() {
                       onPointerMove={(e: any) => {
                         if (!isDrawingDedicationRef.current) return;
                         e.preventDefault();
+                        e.stopPropagation();
                         const rect = e.currentTarget.getBoundingClientRect();
                         const x = e.clientX - rect.left;
                         const y = e.clientY - rect.top;
@@ -1063,6 +1068,7 @@ export default function LiveSessionDashboardScreen() {
                       }}
                       onPointerUp={(e: any) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         if (dedicationPathRef.current) {
                           setDedicationPaths((prev) => [...prev, dedicationPathRef.current]);
                         }
@@ -1081,14 +1087,16 @@ export default function LiveSessionDashboardScreen() {
                         setTimeout(() => setIsDrawingDedication(false), 100);
                       }}
                     >
-                      <Svg width="100%" height={DEDICATION_CANVAS_SIZE * 0.6}>
-                        {dedicationPaths.map((p, i) => (
-                          <Path key={i} d={p} stroke="#000" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                        ))}
-                        {dedicationCurrentPath && (
-                          <Path d={dedicationCurrentPath} stroke="#000" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                        )}
-                      </Svg>
+                      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none' } as any}>
+                        <Svg width="100%" height={DEDICATION_CANVAS_SIZE * 0.6}>
+                          {dedicationPaths.map((p, i) => (
+                            <Path key={i} d={p} stroke="#000" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                          ))}
+                          {dedicationCurrentPath && (
+                            <Path d={dedicationCurrentPath} stroke="#000" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                          )}
+                        </Svg>
+                      </View>
                     </View>
                   ) : (
                     <GestureDetector gesture={dedicationPanGesture}>
