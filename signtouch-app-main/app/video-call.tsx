@@ -48,6 +48,7 @@ export default function VideoCallScreen() {
   const { t, language } = useLanguage();
   const webViewRef = useRef<any>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const dailyCallFrameRef = useRef<any>(null);
   const params = useLocalSearchParams<{
     roomUrl: string;
     token: string;
@@ -178,6 +179,15 @@ export default function VideoCallScreen() {
   const handleCallEnded = () => {
     if (!hasLeftCall) {
       setHasLeftCall(true);
+
+      if (dailyCallFrameRef.current) {
+        try {
+          dailyCallFrameRef.current.leave().catch(() => {});
+          dailyCallFrameRef.current.destroy().catch(() => {});
+        } catch (e) {}
+        dailyCallFrameRef.current = null;
+      }
+
       setShowRatingModal(true);
     }
   };
@@ -491,6 +501,7 @@ export default function VideoCallScreen() {
                         handleCallEnded();
                       }
                     });
+                    dailyCallFrameRef.current = callFrame;
                     (el as any)._dailyCallFrame = callFrame;
                   } catch (e) {
                     setError(t('videoCallError'));
@@ -555,7 +566,8 @@ export default function VideoCallScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
       
-      {renderVideoContent()}
+      {!hasLeftCall && renderVideoContent()}
+      {hasLeftCall && <View style={{ flex: 1, backgroundColor: '#000' }} />}
 
       <View style={styles.headerOverlay}>
         <TouchableOpacity style={styles.headerBackButton} onPress={() => router.back()}>
