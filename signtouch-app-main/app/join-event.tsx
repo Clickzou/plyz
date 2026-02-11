@@ -754,22 +754,29 @@ export default function JoinEventScreen() {
               <View style={styles.waitingSectionCompact}>
                 <View style={styles.infoRow}>
                   <View style={styles.infoCard}>
-                    <Text style={styles.infoLabel}>{t('sessionPrice') || 'Price'}</Text>
+                    <View style={styles.infoIconCircle}>
+                      <Text style={styles.infoIconText}>€</Text>
+                    </View>
                     <Text style={styles.infoValuePrice}>
                       {foundLiveSession.price_cents > 0 
-                        ? `${(foundLiveSession.price_cents / 100).toFixed(2)} €` 
+                        ? `${(foundLiveSession.price_cents / 100).toFixed(0)}€` 
                         : t('free') || 'Free'}
                     </Text>
+                    <Text style={styles.infoLabel}>{t('sessionPrice') || 'Price'}</Text>
                   </View>
                   <View style={[styles.infoCard, styles.infoCardHighlight]}>
-                    <Text style={styles.infoLabel}>{t('yourPosition') || 'Position'}</Text>
-                    <Text style={styles.infoValuePosition}>#{queueStats?.currentPosition || 1}</Text>
-                    <Text style={styles.infoSubtext}>{t('outOf') || 'of'} {queueStats?.totalInQueue || 1}</Text>
+                    <View style={[styles.infoIconCircle, styles.infoIconCircleHighlight]}>
+                      <Text style={[styles.infoIconText, { color: '#10B981' }]}>#</Text>
+                    </View>
+                    <Text style={styles.infoValuePosition}>{queueStats?.currentPosition || 1}</Text>
+                    <Text style={styles.infoLabel}>{t('outOf') || 'sur'} {queueStats?.totalInQueue || 1}</Text>
                   </View>
                   <View style={styles.infoCard}>
-                    <Text style={styles.infoLabel}>{t('estimatedWait') || 'Wait'}</Text>
+                    <View style={[styles.infoIconCircle, styles.infoIconCircleWait]}>
+                      <Text style={[styles.infoIconText, { color: '#f59e0b' }]}>⏱</Text>
+                    </View>
                     <Text style={styles.infoValueWait}>~{queueStats?.estimatedWaitMinutes || 0}</Text>
-                    <Text style={styles.infoSubtext}>min</Text>
+                    <Text style={styles.infoLabel}>min</Text>
                   </View>
                 </View>
 
@@ -1471,41 +1478,65 @@ const styles = StyleSheet.create({
   },
   infoRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     width: '100%',
-    gap: 8,
-    marginBottom: 12,
+    gap: 12,
+    marginBottom: 16,
   },
   infoCard: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 10,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   infoCardHighlight: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    borderWidth: 1,
-    borderColor: '#10B981',
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+  },
+  infoIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  infoIconCircleHighlight: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  infoIconCircleWait: {
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+  },
+  infoIconText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
   },
   infoLabel: {
     fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.6)',
-    marginBottom: 4,
+    color: 'rgba(255, 255, 255, 0.5)',
+    marginTop: 4,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    textAlign: 'center',
   },
   infoValuePrice: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '800',
     color: '#fff',
   },
   infoValuePosition: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '900',
     color: '#10B981',
   },
   infoValueWait: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '800',
     color: '#f59e0b',
   },
