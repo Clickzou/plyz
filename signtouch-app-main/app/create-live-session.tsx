@@ -248,46 +248,56 @@ export default function CreateLiveSessionScreen() {
         uploadedPhotoUrl = await uploadCoverPhoto(tempId, coverPhotoUri);
       }
       
-      console.log('[CreateSession] Calling createLiveSession with celebrityId:', celebrityId);
-      session = await createLiveSession(
-        celebrityId,
-        celebrityName.trim(),
-        totalDuration,
-        calculatedMaxFans,
-        price,
-        durationPerFan,
-        uploadedPhotoUrl,
-        finalStripeAccountId
-      );
+      const SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
+      console.log('[CreateSession] Calling server to create session, celebrityId:', celebrityId);
+      
+      try {
+        const response = await fetch(`${SERVER_URL}/api/create-session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            celebrity_id: celebrityId,
+            celebrity_name: celebrityName.trim(),
+            duration_minutes: totalDuration,
+            duration_per_fan_minutes: durationPerFan,
+            max_slots: calculatedMaxFans,
+            price_cents: price,
+            cover_photo_url: uploadedPhotoUrl,
+            celebrity_stripe_account_id: finalStripeAccountId,
+          }),
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.session) {
+          session = result.session;
+          console.log('[CreateSession] Server created session successfully:', session.id, session.code);
+        } else {
+          console.error('[CreateSession] Server error:', JSON.stringify(result));
+        }
+      } catch (serverError) {
+        console.error('[CreateSession] Server call failed:', serverError);
+      }
       
       if (!session) {
-        console.warn('[CreateSession] Supabase insert failed, creating local session as fallback');
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        let fallbackCode = '';
-        for (let i = 0; i < 6; i++) {
-          fallbackCode += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        const now = new Date();
-        const expiresAt = new Date(now.getTime() + totalDuration * 60 * 1000);
-        session = {
-          id: `local_session_${Date.now()}`,
-          code: fallbackCode,
-          celebrity_id: celebrityId,
-          celebrity_name: celebrityName.trim(),
-          duration_minutes: totalDuration,
-          duration_per_fan_minutes: durationPerFan,
-          max_slots: calculatedMaxFans,
-          price_cents: price,
-          currency: 'EUR',
-          status: 'waiting' as const,
-          current_fan_id: null,
-          started_at: null,
-          ends_at: expiresAt.toISOString(),
-          created_at: now.toISOString(),
-          slots_used: 0,
-          cover_photo_url: uploadedPhotoUrl,
-          celebrity_stripe_account_id: finalStripeAccountId,
-        };
+        console.log('[CreateSession] Server failed, trying direct Supabase insert...');
+        session = await createLiveSession(
+          celebrityId,
+          celebrityName.trim(),
+          totalDuration,
+          calculatedMaxFans,
+          price,
+          durationPerFan,
+          uploadedPhotoUrl,
+          finalStripeAccountId
+        );
+      }
+      
+      if (!session) {
+        console.error('[CreateSession] Both server and direct insert failed');
+        showAlert(t('error'), t('liveSessionCreateError'));
+        setIsCreating(false);
+        return;
       }
 
       console.log('Session created:', session);
@@ -295,7 +305,6 @@ export default function CreateLiveSessionScreen() {
         pathname: '/live-session-dashboard',
         params: { 
           sessionId: session.id,
-          sessionData: session.id.startsWith('local_session_') ? JSON.stringify(session) : undefined,
         },
       });
     } catch (error) {

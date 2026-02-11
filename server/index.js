@@ -2,8 +2,20 @@ const express = require('express');
 const cors = require('cors');
 const Stripe = require('stripe');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
+
+let supabaseClient = null;
+function getSupabase() {
+  if (!supabaseClient) {
+    const url = process.env.EXPO_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new Error('Missing Supabase credentials');
+    supabaseClient = createClient(url, key);
+  }
+  return supabaseClient;
+}
 
 let stripeClient = null;
 
@@ -108,49 +120,63 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-app.get('/api/test-supabase-insert', async (req, res) => {
+app.post('/api/create-session', async (req, res) => {
   try {
-    const { createClient } = require('@supabase/supabase-js');
-    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
-    if (!supabaseUrl || !supabaseKey) {
-      return res.json({ error: 'Missing Supabase credentials', url: !!supabaseUrl, key: !!supabaseKey });
+    const supabase = getSupabase();
+    const {
+      celebrity_id,
+      celebrity_name,
+      duration_minutes,
+      duration_per_fan_minutes = 5,
+      max_slots,
+      price_cents = 0,
+      cover_photo_url = null,
+      celebrity_stripe_account_id = null
+    } = req.body;
+
+    if (!celebrity_id || !celebrity_name || !duration_minutes || !max_slots) {
+      return res.status(400).json({ error: 'Missing required fields: celebrity_id, celebrity_name, duration_minutes, max_slots' });
     }
-    
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    
-    const { data: readTest, error: readError } = await supabase
-      .from('live_sessions')
-      .select('id')
-      .limit(1);
-    
+
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    const insertData = {
+      code,
+      celebrity_id,
+      celebrity_name,
+      duration_minutes,
+      duration_per_fan_minutes,
+      max_slots,
+      price_cents,
+      status: 'waiting',
+      cover_photo_url,
+    };
+    if (celebrity_stripe_account_id) {
+      insertData.celebrity_stripe_account_id = celebrity_stripe_account_id;
+    }
+
+    console.log('[create-session] Inserting session with code:', code);
+
     const { data, error } = await supabase
       .from('live_sessions')
-      .insert({
-        code: 'TEST99',
-        celebrity_id: 'test_debug',
-        celebrity_name: 'Test Debug',
-        duration_minutes: 5,
-        duration_per_fan_minutes: 5,
-        max_slots: 1,
-        price_cents: 0,
-        status: 'waiting',
-      })
+      .insert(insertData)
       .select()
       .single();
-    
-    if (data) {
-      await supabase.from('live_sessions').delete().eq('id', data.id);
+
+    if (error) {
+      console.error('[create-session] Supabase error:', JSON.stringify(error));
+      return res.status(500).json({ error: error.message, details: error });
     }
-    
-    res.json({ 
-      readTest: { data: readTest, error: readError },
-      insertTest: { data: data ? { id: data.id, code: data.code } : null, error },
-      cleaned: !!data
-    });
+
+    console.log('[create-session] Session created successfully:', data.id, data.code);
+    res.json({ session: data });
   } catch (e) {
-    res.json({ error: e.message, stack: e.stack });
+    console.error('[create-session] Exception:', e.message);
+    res.status(500).json({ error: e.message });
   }
 });
 
