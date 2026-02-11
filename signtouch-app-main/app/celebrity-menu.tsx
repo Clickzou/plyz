@@ -430,6 +430,20 @@ export default function CelebrityMenuScreen() {
 
             </View>
 
+            <TouchableOpacity
+              style={styles.earningsCard}
+              onPress={() => router.push('/my-earnings')}
+            >
+              <View style={styles.earningsCardIcon}>
+                <Star size={24} color="#4ade80" />
+              </View>
+              <View style={styles.earningsCardContent}>
+                <Text style={styles.earningsCardTitle}>{t('viewMyEarnings') || 'Mes revenus & historique'}</Text>
+                <Text style={styles.earningsCardSubtitle}>{t('earningsSubtitle') || 'Suivi des lives, revenus et versements'}</Text>
+              </View>
+              <Play size={16} color="rgba(255,255,255,0.4)" />
+            </TouchableOpacity>
+
             <Text style={styles.disclaimer}>{t('celebrityMenuDisclaimer')}</Text>
           </>
         )}
@@ -926,5 +940,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#fff',
+  },
+  earningsCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(74, 222, 128, 0.08)',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.2)',
+    gap: 12,
+  },
+  earningsCardIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(74, 222, 128, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  earningsCardContent: {
+    flex: 1,
+  },
+  earningsCardTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 2,
+  },
+  earningsCardSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
   },
 });

@@ -484,6 +484,149 @@ app.post('/api/cancel-payment', async (req, res) => {
   }
 });
 
+app.get('/api/session-earnings', async (req, res) => {
+  try {
+    const stripe = await getStripe();
+    const supabase = getSupabase();
+    const { session_id } = req.query;
+
+    if (!session_id) {
+      return res.status(400).json({ error: 'Missing session_id' });
+    }
+
+    const { data: session } = await supabase
+      .from('live_sessions')
+      .select('celebrity_id, price_cents')
+      .eq('id', session_id)
+      .single();
+
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const { data: completedEntries } = await supabase
+      .from('session_queue')
+      .select('id')
+      .eq('session_id', session_id)
+      .eq('status', 'completed');
+
+    const completedCount = (completedEntries || []).length;
+
+    let totalCapturedCents = 0;
+    if (session.price_cents > 0 && completedCount > 0) {
+      const signTouchFee = Math.round(session.price_cents * 0.15);
+      const celebrityPerFan = session.price_cents - signTouchFee;
+      totalCapturedCents = celebrityPerFan * completedCount;
+    }
+
+    res.json({
+      session_id,
+      total_captured_cents: totalCapturedCents,
+      captured_count: completedCount,
+    });
+  } catch (error) {
+    console.error('[SessionEarnings] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/celebrity-earnings', async (req, res) => {
+  try {
+    const stripe = await getStripe();
+    const supabase = getSupabase();
+    const { celebrity_id } = req.query;
+
+    if (!celebrity_id) {
+      return res.status(400).json({ error: 'Missing celebrity_id' });
+    }
+
+    const { data: sessions, error: sessionsError } = await supabase
+      .from('live_sessions')
+      .select('*')
+      .eq('celebrity_id', celebrity_id)
+      .order('created_at', { ascending: false });
+
+    if (sessionsError) {
+      console.error('[CelebrityEarnings] Supabase error:', sessionsError);
+      return res.status(500).json({ error: sessionsError.message });
+    }
+
+    const sessionStats = [];
+    let totalEarningsCents = 0;
+    let totalFans = 0;
+
+    for (const session of (sessions || [])) {
+      const { data: queueEntries } = await supabase
+        .from('session_queue')
+        .select('id, status, fan_name, created_at, called_at')
+        .eq('session_id', session.id);
+
+      const completedFans = (queueEntries || []).filter(
+        e => e.status === 'completed'
+      ).length;
+
+      const allFans = (queueEntries || []).length;
+      
+      let sessionEarningsCents = 0;
+      if (session.price_cents > 0 && completedFans > 0) {
+        const signTouchFee = Math.round(session.price_cents * 0.15);
+        const celebrityPerFan = session.price_cents - signTouchFee;
+        sessionEarningsCents = celebrityPerFan * completedFans;
+      }
+
+      totalEarningsCents += sessionEarningsCents;
+      totalFans += completedFans;
+
+      let durationMinutes = 0;
+      if (session.started_at && session.ends_at) {
+        const start = new Date(session.started_at).getTime();
+        const end = new Date(session.ends_at).getTime();
+        durationMinutes = Math.round((end - start) / 60000);
+      } else if (session.started_at) {
+        const start = new Date(session.started_at).getTime();
+        durationMinutes = Math.round((Date.now() - start) / 60000);
+      }
+
+      sessionStats.push({
+        id: session.id,
+        code: session.code,
+        celebrity_name: session.celebrity_name,
+        status: session.status,
+        price_cents: session.price_cents,
+        currency: session.currency || 'EUR',
+        max_slots: session.max_slots,
+        total_fans: allFans,
+        completed_fans: completedFans,
+        duration_minutes: durationMinutes,
+        duration_per_fan_minutes: session.duration_per_fan_minutes,
+        session_earnings_cents: sessionEarningsCents,
+        created_at: session.created_at,
+        started_at: session.started_at,
+        ended_at: session.ends_at,
+      });
+    }
+
+    const estimatedPayoutDate = new Date();
+    estimatedPayoutDate.setDate(estimatedPayoutDate.getDate() + 7);
+    const nextBusinessDay = estimatedPayoutDate;
+    while (nextBusinessDay.getDay() === 0 || nextBusinessDay.getDay() === 6) {
+      nextBusinessDay.setDate(nextBusinessDay.getDate() + 1);
+    }
+
+    res.json({
+      celebrity_id,
+      total_earnings_cents: totalEarningsCents,
+      total_fans: totalFans,
+      total_sessions: (sessions || []).length,
+      estimated_payout_date: nextBusinessDay.toISOString().split('T')[0],
+      sessions: sessionStats,
+    });
+  } catch (error) {
+    console.error('[CelebrityEarnings] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/stripe/express/create-and-onboard', async (req, res) => {
   try {
     const stripe = await getStripe();

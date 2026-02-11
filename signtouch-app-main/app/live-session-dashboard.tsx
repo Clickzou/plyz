@@ -31,6 +31,8 @@ import {
   Pen,
   Trash,
   ChevronRight,
+  DollarSign,
+  TrendingUp,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -118,6 +120,11 @@ export default function LiveSessionDashboardScreen() {
   const [calledFan, setCalledFan] = useState<SessionQueueEntry | null>(null);
   const [fanCallTimeout, setFanCallTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const FAN_RESPONSE_TIMEOUT_MS = 30000;
+  
+  const [sessionEarningsCents, setSessionEarningsCents] = useState(0);
+  const [completedCallsCount, setCompletedCallsCount] = useState(0);
+  const [earningsAnimating, setEarningsAnimating] = useState(false);
+  const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
   const hasPlayedQueueFullChime = useRef(false);
   const hasPlayedFirstFanChime = useRef(false);
   const [queueFull, setQueueFull] = useState(false);
@@ -355,6 +362,34 @@ export default function LiveSessionDashboardScreen() {
       }
     };
   }, [fanCallTimeout]);
+
+  const prevEarningsRef = useRef(0);
+
+  const fetchSessionEarnings = useCallback(async () => {
+    if (!sessionId || !session?.price_cents || session.price_cents <= 0 || !STRIPE_SERVER_URL) return;
+    try {
+      const response = await fetch(`${STRIPE_SERVER_URL}/api/session-earnings?session_id=${sessionId}`);
+      const data = await response.json();
+      if (data.total_captured_cents !== undefined) {
+        setSessionEarningsCents(data.total_captured_cents);
+        setCompletedCallsCount(data.captured_count);
+        if (data.captured_count > prevEarningsRef.current) {
+          setEarningsAnimating(true);
+          setTimeout(() => setEarningsAnimating(false), 2000);
+        }
+        prevEarningsRef.current = data.captured_count;
+      }
+    } catch (e) {
+      console.error('[Dashboard] Error fetching earnings:', e);
+    }
+  }, [sessionId, session?.price_cents, STRIPE_SERVER_URL]);
+
+  useEffect(() => {
+    if (!sessionId || !session?.price_cents || session.price_cents <= 0) return;
+    fetchSessionEarnings();
+    const earningsInterval = setInterval(fetchSessionEarnings, 15000);
+    return () => clearInterval(earningsInterval);
+  }, [sessionId, session?.price_cents]);
 
   const calledFanIdRef = useRef<string | null>(null);
 
@@ -754,6 +789,14 @@ export default function LiveSessionDashboardScreen() {
                 {waitingCount}/{session.max_slots}
               </Text>
             </View>
+            {session.price_cents > 0 && (
+              <View style={[styles.stat, styles.earningsStat, earningsAnimating && styles.earningsStatAnimating]}>
+                <TrendingUp size={16} color={earningsAnimating ? '#4ade80' : '#fff'} />
+                <Text style={[styles.statText, styles.earningsText, earningsAnimating && styles.earningsTextAnimating]}>
+                  {(sessionEarningsCents / 100).toFixed(2)}€
+                </Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -1174,6 +1217,23 @@ export default function LiveSessionDashboardScreen() {
             <Text style={styles.endedStats}>
               {t('liveSessionTotalSigned', { count: session.slots_used })}
             </Text>
+            {session.price_cents > 0 && (
+              <View style={styles.earningsSummaryCard}>
+                <View style={styles.earningsSummaryHeader}>
+                  <TrendingUp size={24} color="#4ade80" />
+                  <Text style={styles.earningsSummaryTitle}>{t('sessionRevenue') || 'Revenus de la session'}</Text>
+                </View>
+                <Text style={styles.earningsSummaryAmount}>
+                  {(sessionEarningsCents / 100).toFixed(2)}€
+                </Text>
+                <Text style={styles.earningsSummaryDetail}>
+                  {completedCallsCount} {t('completedCalls') || 'appels terminés'} × {((session.price_cents - Math.round(session.price_cents * 0.15)) / 100).toFixed(2)}€
+                </Text>
+                <Text style={styles.earningsSummaryPayout}>
+                  {t('estimatedPayout') || 'Versement estimé sous 7 jours ouvrés'}
+                </Text>
+              </View>
+            )}
             <TouchableOpacity
               style={styles.backHomeButton}
               onPress={() => router.replace('/')}
@@ -1768,5 +1828,60 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
     fontSize: 13,
     textDecorationLine: 'underline',
+  },
+  earningsStat: {
+    backgroundColor: 'rgba(74, 222, 128, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.3)',
+  },
+  earningsStatAnimating: {
+    backgroundColor: 'rgba(74, 222, 128, 0.3)',
+    borderColor: '#4ade80',
+  },
+  earningsText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  earningsTextAnimating: {
+    color: '#4ade80',
+  },
+  earningsSummaryCard: {
+    backgroundColor: 'rgba(74, 222, 128, 0.1)',
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.3)',
+    alignItems: 'center' as const,
+  },
+  earningsSummaryHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    marginBottom: 12,
+  },
+  earningsSummaryTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#4ade80',
+  },
+  earningsSummaryAmount: {
+    fontSize: 36,
+    fontWeight: '800' as const,
+    color: '#fff',
+    marginBottom: 4,
+  },
+  earningsSummaryDetail: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: 8,
+  },
+  earningsSummaryPayout: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.5)',
+    fontStyle: 'italic' as const,
   },
 });
