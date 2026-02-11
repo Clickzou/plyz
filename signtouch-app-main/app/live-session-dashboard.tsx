@@ -58,6 +58,7 @@ import {
   uploadDedicationPhoto,
   updateDedicationSignature,
 } from '@/utils/liveSessionStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRCode from 'react-native-qrcode-svg';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
@@ -164,15 +165,25 @@ export default function LiveSessionDashboardScreen() {
   }, [sessionId]);
 
   useEffect(() => {
-    if (session?.dedication_photo_url && session?.dedication_signature_svg) {
-      setDedicationPhotoUri(session.dedication_photo_url);
-      setDedicationPaths(session.dedication_signature_svg.split('|||'));
-      setDedicationStep('done');
-    } else if (session?.dedication_photo_url) {
-      setDedicationPhotoUri(session.dedication_photo_url);
-      setDedicationStep('signature');
-    }
-  }, [session?.dedication_photo_url, session?.dedication_signature_svg]);
+    if (!sessionId) return;
+    const loadDedicationFromLocal = async () => {
+      try {
+        const photoUrl = await AsyncStorage.getItem(`dedication_photo_${sessionId}`);
+        const signatureSvg = await AsyncStorage.getItem(`dedication_signature_${sessionId}`);
+        if (photoUrl && signatureSvg) {
+          setDedicationPhotoUri(photoUrl);
+          setDedicationPaths(signatureSvg.split('|||'));
+          setDedicationStep('done');
+        } else if (photoUrl) {
+          setDedicationPhotoUri(photoUrl);
+          setDedicationStep('signature');
+        }
+      } catch (e) {
+        console.error('Error loading dedication from local storage:', e);
+      }
+    };
+    loadDedicationFromLocal();
+  }, [sessionId]);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -517,7 +528,12 @@ export default function LiveSessionDashboardScreen() {
         setIsUploadingDedication(true);
 
         if (sessionId) {
-          await uploadDedicationPhoto(sessionId, uri);
+          const uploadedUrl = await uploadDedicationPhoto(sessionId, uri);
+          if (uploadedUrl) {
+            await AsyncStorage.setItem(`dedication_photo_${sessionId}`, uploadedUrl);
+          } else {
+            await AsyncStorage.setItem(`dedication_photo_${sessionId}`, uri);
+          }
         }
         setIsUploadingDedication(false);
         setDedicationStep('signature');
@@ -543,7 +559,12 @@ export default function LiveSessionDashboardScreen() {
         setIsUploadingDedication(true);
 
         if (sessionId) {
-          await uploadDedicationPhoto(sessionId, uri);
+          const uploadedUrl = await uploadDedicationPhoto(sessionId, uri);
+          if (uploadedUrl) {
+            await AsyncStorage.setItem(`dedication_photo_${sessionId}`, uploadedUrl);
+          } else {
+            await AsyncStorage.setItem(`dedication_photo_${sessionId}`, uri);
+          }
         }
         setIsUploadingDedication(false);
         setDedicationStep('signature');
@@ -581,6 +602,11 @@ export default function LiveSessionDashboardScreen() {
     if (dedicationPaths.length === 0 || !sessionId) return;
     setIsUploadingDedication(true);
     const svgData = dedicationPaths.join('|||');
+    try {
+      await AsyncStorage.setItem(`dedication_signature_${sessionId}`, svgData);
+    } catch (e) {
+      console.error('Error saving dedication signature locally:', e);
+    }
     await updateDedicationSignature(sessionId, svgData);
     setIsUploadingDedication(false);
     setDedicationStep('done');
@@ -593,13 +619,10 @@ export default function LiveSessionDashboardScreen() {
     setDedicationStep('photo');
     if (sessionId) {
       try {
-        const { supabase } = require('@/utils/supabase');
-        await supabase
-          .from('live_sessions')
-          .update({ dedication_photo_url: null, dedication_signature_svg: null } as any)
-          .eq('id', sessionId);
+        await AsyncStorage.removeItem(`dedication_photo_${sessionId}`);
+        await AsyncStorage.removeItem(`dedication_signature_${sessionId}`);
       } catch (e) {
-        console.error('Error clearing dedication in DB:', e);
+        console.error('Error clearing dedication locally:', e);
       }
     }
   };
