@@ -809,9 +809,16 @@ export default function LiveSessionDashboardScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: session.id }),
       });
+      const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        console.error('Launch failed:', err);
+        console.error('Launch failed:', result);
+        return;
+      }
+      if (result.session) {
+        setSession(result.session);
+      } else {
+        const refreshed = await getSessionById(session.id);
+        if (refreshed) setSession(refreshed);
       }
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

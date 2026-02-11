@@ -196,11 +196,25 @@ app.post('/api/launch-scheduled-session', async (req, res) => {
       return res.status(400).json({ error: 'Missing session_id' });
     }
 
+    const { data: currentSession } = await supabase
+      .from('live_sessions')
+      .select('*')
+      .eq('id', session_id)
+      .single();
+
+    if (!currentSession) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    if (currentSession.status === 'waiting' || currentSession.status === 'active') {
+      console.log('[launch-session] Session already launched:', session_id);
+      return res.json({ session: currentSession });
+    }
+
     const { data, error } = await supabase
       .from('live_sessions')
       .update({ status: 'waiting' })
       .eq('id', session_id)
-      .eq('status', 'scheduled')
       .select()
       .single();
 
