@@ -34,7 +34,8 @@ Preferred communication style: Simple, everyday language.
 ## External Dependencies
 
 ### Backend Services
-- **Supabase**: Primary backend for PostgreSQL database (e.g., `memories`, `live_events`, `session_queue` tables), user authentication, and file storage (`memories` bucket, `events` bucket).
+- **Supabase**: Primary backend for PostgreSQL database (e.g., `memories`, `live_events`, `session_queue`, `user_profiles` tables), user authentication, and file storage (`memories` bucket, `events` bucket).
+  - **User Profiles** (`user_profiles` table): Links Supabase auth user ID with Stripe Connect account ID. Utility functions in `utils/userProfile.ts` handle upsert with AsyncStorage fallback/cache.
 - **Daily.co**: For video call functionality, integrated via `@daily-co/react-native-daily-js` SDK.
 
 ### Payment Processing
