@@ -39,15 +39,17 @@ Preferred communication style: Simple, everyday language.
 - **Daily.co**: For video call functionality, integrated via `@daily-co/react-native-daily-js` SDK.
 
 ### Payment Processing
-- **Live Sessions (Stripe Checkout - Option A)**: Direct CB payment via Stripe Checkout, no Apple/Google commission (like Betclic model).
-  - **Purchase Flow**: Fan → `purchase-session.tsx` → Express backend creates Stripe Checkout Session → Fan redirected to Stripe payment page → Payment completed → `payment-success.tsx` verifies payment → Fan enters video call queue.
-  - **Express Backend** (`server/index.js`, port 3001):
+- **Live Sessions (Stripe Checkout - Pre-Authorization)**: Direct CB payment via Stripe Checkout with manual capture, no Apple/Google commission.
+  - **Pre-Authorization Flow**: Fan enters code → enters name → clicks "Join Queue" → redirected to `purchase-session.tsx` → Stripe Checkout (manual capture) → amount RESERVED on card → `payment-success.tsx` verifies authorization → fan auto-joins queue → video call happens → after call, `video-call.tsx` calls `/api/capture-payment` → amount actually charged → confirmation popup shown to fan. If call doesn't happen, authorization expires and fan is never charged.
+  - **Express Backend** (`server/index.js`, port 5000 with proxy to Expo on 19006):
     - `POST /api/create-connect-account`: Creates Stripe Connect Express account for celebrity onboarding.
     - `POST /api/create-account-link`: Generates Stripe Connect onboarding link for celebrity.
     - `GET /api/connect-account-status`: Checks celebrity's Stripe Connect account status (charges_enabled, payouts_enabled).
-    - `POST /api/create-checkout-session`: Creates Stripe Checkout Session with Connect support (application_fee_amount for SignTouch, transfer_data for celebrity).
+    - `POST /api/create-checkout-session`: Creates Stripe Checkout Session with `capture_method: 'manual'` for pre-authorization (Connect support with application_fee_amount for SignTouch, transfer_data for celebrity).
+    - `POST /api/capture-payment`: Captures a pre-authorized payment after successful video call (takes checkout_session_id, retrieves and captures the PaymentIntent).
+    - `POST /api/cancel-payment`: Cancels a pre-authorized payment if the call doesn't happen (takes checkout_session_id).
+    - `GET /api/verify-payment`: Verifies Checkout Session payment/authorization status (returns `authorized: true` when `requires_capture`).
     - `POST /api/stripe-webhook`: Handles Stripe webhook events for payment confirmation.
-    - `GET /api/verify-payment`: Verifies Checkout Session payment status.
     - `GET /api/health`: Health check endpoint.
   - **Stripe Connect**: Full automated onboarding via `StripeConnectModal` component. Server creates Express accounts, generates onboarding links, and verifies status. Celebrity's Stripe Connect account ID stored in AsyncStorage and in live session data (`celebrity_stripe_account_id`). Payments are automatically split: SignTouch fee (15%) via application_fee_amount, rest goes to celebrity's Stripe Connect account.
   - **Fee Structure**: SignTouch 15% + Stripe 2.9% + 0.30€ per transaction. No Apple/Google store fees.

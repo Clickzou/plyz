@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, CreditCard, Shield, CheckCircle, Lock } from 'lucide-react-native';
+import { ArrowLeft, CreditCard, Shield, CheckCircle, Lock, Info } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,6 +32,7 @@ export default function PurchaseSessionScreen() {
     priceCents: string;
     durationMinutes: string;
     celebrityStripeAccountId: string;
+    fanName: string;
   }>();
 
   const [purchasing, setPurchasing] = useState(false);
@@ -50,18 +51,25 @@ export default function PurchaseSessionScreen() {
 
   const handlePaymentReturn = async () => {
     setPurchaseComplete(true);
+
+    let checkoutSessionId = '';
+    if (Platform.OS === 'web') {
+      const urlParams = new URLSearchParams(window.location.search);
+      checkoutSessionId = urlParams.get('checkout_session_id') || '';
+    }
+
     setTimeout(() => {
       router.replace({
-        pathname: '/video-call',
+        pathname: '/payment-success',
         params: {
-          roomUrl: '',
-          sessionId: params.sessionId || '',
-          isHost: 'false',
-          userName: '',
-          durationPerFan: params.durationMinutes || '5',
-          otherUserName: params.celebrityName || '',
-          priceCents: params.priceCents || '0',
-          celebrityId: params.celebrityId || '',
+          checkout_session_id: checkoutSessionId,
+          live_session_id: params.sessionId || '',
+          celebrity_id: params.celebrityId || '',
+          celebrity_name: params.celebrityName || '',
+          duration_minutes: params.durationMinutes || '5',
+          price_cents: params.priceCents || '0',
+          fan_name: params.fanName || '',
+          celebrity_stripe_account_id: params.celebrityStripeAccountId || '',
         },
       });
     }, 1500);
@@ -88,8 +96,8 @@ export default function PurchaseSessionScreen() {
           priceCents: priceCents,
           currency: 'eur',
           celebrityStripeAccountId: params.celebrityStripeAccountId || '',
-          successUrl: `${currentOrigin}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&live_session_id=${params.sessionId}&celebrity_id=${params.celebrityId}&celebrity_name=${encodeURIComponent(params.celebrityName || '')}&duration_minutes=${params.durationMinutes || '5'}&price_cents=${params.priceCents || '0'}`,
-          cancelUrl: `${currentOrigin}/purchase-session?sessionId=${params.sessionId}&celebrityId=${params.celebrityId}&celebrityName=${params.celebrityName}&priceCents=${params.priceCents}&durationMinutes=${params.durationMinutes}&celebrityStripeAccountId=${params.celebrityStripeAccountId || ''}`,
+          successUrl: `${currentOrigin}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&live_session_id=${params.sessionId}&celebrity_id=${params.celebrityId}&celebrity_name=${encodeURIComponent(params.celebrityName || '')}&duration_minutes=${params.durationMinutes || '5'}&price_cents=${params.priceCents || '0'}&fan_name=${encodeURIComponent(params.fanName || '')}&celebrity_stripe_account_id=${params.celebrityStripeAccountId || ''}`,
+          cancelUrl: `${currentOrigin}/purchase-session?sessionId=${params.sessionId}&celebrityId=${params.celebrityId}&celebrityName=${params.celebrityName}&priceCents=${params.priceCents}&durationMinutes=${params.durationMinutes}&celebrityStripeAccountId=${params.celebrityStripeAccountId || ''}&fanName=${encodeURIComponent(params.fanName || '')}`,
         }),
       });
 
@@ -126,7 +134,7 @@ export default function PurchaseSessionScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('purchaseSession') || 'Paiement'}</Text>
+        <Text style={styles.headerTitle}>{t('preAuthorization') || 'Pré-autorisation'}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -134,9 +142,9 @@ export default function PurchaseSessionScreen() {
         {purchaseComplete ? (
           <View style={styles.centeredContent}>
             <CheckCircle size={64} color="#10B981" />
-            <Text style={styles.successTitle}>{t('purchaseSuccess') || 'Paiement réussi !'}</Text>
+            <Text style={styles.successTitle}>{t('authorizationSuccess') || 'Pré-autorisation réussie !'}</Text>
             <Text style={styles.successMessage}>
-              {t('redirectingToCall') || 'Redirection vers votre appel vidéo...'}
+              {t('redirectingToQueue') || 'Redirection vers la file d\'attente...'}
             </Text>
             <ActivityIndicator size="small" color="#10B981" style={{ marginTop: 16 }} />
           </View>
@@ -162,6 +170,13 @@ export default function PurchaseSessionScreen() {
               </Text>
             </View>
 
+            <View style={styles.preAuthInfo}>
+              <Info size={18} color="#3b82f6" />
+              <Text style={styles.preAuthText}>
+                {t('preAuthExplanation') || 'Le montant est réservé sur votre carte mais ne sera débité qu\'après un appel vidéo réussi. Si l\'appel n\'a pas lieu, aucun montant ne sera prélevé.'}
+              </Text>
+            </View>
+
             <View style={styles.securityFeatures}>
               <View style={styles.securityItem}>
                 <Shield size={18} color="#10B981" />
@@ -182,9 +197,9 @@ export default function PurchaseSessionScreen() {
               onPress={handleStripeCheckout}
               disabled={purchasing}
             >
-              <CreditCard size={22} color="#ffffff" />
+              <Shield size={22} color="#ffffff" />
               <Text style={styles.payButtonText}>
-                {t('payAmount') || `Payer ${priceEuros}€`}
+                {t('authorizePayment') || `Autoriser ${priceEuros}€`}
               </Text>
             </TouchableOpacity>
 
@@ -289,6 +304,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.5)',
     marginTop: 8,
+  },
+  preAuthInfo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+  },
+  preAuthText: {
+    flex: 1,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
+    lineHeight: 18,
   },
   securityFeatures: {
     gap: 12,

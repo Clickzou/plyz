@@ -16,6 +16,9 @@ import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
 import { sendDedicationNotification } from '@/utils/sessionQueueStorage';
 import { recordTransaction } from '@/utils/transactionStorage';
+import { showAlert } from '@/utils/alertHelper';
+
+const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 let WebView: any = null;
 if (Platform.OS !== 'web') {
@@ -58,6 +61,7 @@ export default function VideoCallScreen() {
     otherUserName: string;
     priceCents: string;
     celebrityId: string;
+    checkoutSessionId: string;
   }>();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -67,6 +71,7 @@ export default function VideoCallScreen() {
   const [timeWarning, setTimeWarning] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hasLeftCall, setHasLeftCall] = useState(false);
+  const [paymentCaptured, setPaymentCaptured] = useState(false);
   const callStartTime = useRef<number>(Date.now());
   const autoEndTriggered = useRef(false);
 
@@ -188,11 +193,46 @@ export default function VideoCallScreen() {
     }
   };
 
+  const capturePaymentAfterCall = async () => {
+    if (!params.checkoutSessionId || paymentCaptured) return;
+
+    setPaymentCaptured(true);
+
+    try {
+      console.log('[VideoCall] Capturing payment for checkout session:', params.checkoutSessionId);
+      const response = await fetch(`${STRIPE_SERVER_URL}/api/capture-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkout_session_id: params.checkoutSessionId }),
+      });
+      const data = await response.json();
+
+      if (data.captured) {
+        const amountEuros = data.amount ? (data.amount / 100).toFixed(2) : (parseInt(params.priceCents || '0', 10) / 100).toFixed(2);
+        console.log('[VideoCall] Payment captured successfully:', amountEuros, '€');
+        showAlert(
+          t('paymentConfirmed') || 'Paiement confirmé',
+          (t('paymentCapturedMessage') || `${amountEuros}€ ont été débités suite à votre appel vidéo réussi.`).replace('{amount}', amountEuros)
+        );
+      } else {
+        console.error('[VideoCall] Payment capture failed:', data);
+        setPaymentCaptured(false);
+      }
+    } catch (error) {
+      console.error('[VideoCall] Error capturing payment:', error);
+      setPaymentCaptured(false);
+    }
+  };
+
   const handleRatingModalClose = async () => {
     setShowRatingModal(false);
     if (!isHost && params.sessionId) {
       const priceCents = parseInt(params.priceCents || '0', 10);
       if (priceCents > 0) {
+        if (params.checkoutSessionId) {
+          await capturePaymentAfterCall();
+        }
+
         const fanDeviceId = await getOrCreateDeviceId();
         const storePlatform = Platform.OS === 'ios' ? 'apple' : 'google';
         recordTransaction({

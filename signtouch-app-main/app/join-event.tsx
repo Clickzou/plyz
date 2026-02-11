@@ -37,7 +37,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import AccountModal from '@/components/AccountModal';
 import { getEventByCode, LiveEvent } from '@/utils/liveEventStorage';
-import { getSessionByCode, LiveSession } from '@/utils/liveSessionStorage';
+import { getSessionByCode, getSessionById, LiveSession } from '@/utils/liveSessionStorage';
 import { 
   joinQueue, 
   getQueuePosition, 
@@ -57,6 +57,7 @@ import BarCodeScannerWrapper, { requestCameraPermissionAsync, isBarCodeScannerAv
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SAVED_SIGNATURES_KEY = '@signtouch_event_signatures';
+const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 const playNotificationChime = () => {
   if (Platform.OS === 'web' && typeof window !== 'undefined' && window.AudioContext) {
@@ -121,6 +122,8 @@ export default function JoinEventScreen() {
   const [fanName, setFanName] = useState('');
   const [hasJoinedQueue, setHasJoinedQueue] = useState(false);
   const [isJoiningQueue, setIsJoiningQueue] = useState(false);
+  const [checkoutSessionId, setCheckoutSessionId] = useState<string>('');
+  const [paymentAuthorized, setPaymentAuthorized] = useState(false);
   const hasPlayedChime = useRef(false);
   const signatureClipWidth = useSharedValue(0);
   const signatureOpacity = useSharedValue(0);
@@ -173,6 +176,85 @@ export default function JoinEventScreen() {
   }, [params.code]);
 
   useEffect(() => {
+    if (params.paymentAuthorized === 'true' && params.checkoutSessionId && params.sessionId) {
+      const csId = String(params.checkoutSessionId);
+      setCheckoutSessionId(csId);
+      setPaymentAuthorized(true);
+      AsyncStorage.setItem('@signtouch_pending_checkout', JSON.stringify({
+        checkoutSessionId: csId,
+        sessionId: String(params.sessionId),
+        fanName: String(params.fanName || ''),
+        timestamp: Date.now(),
+      })).catch(() => {});
+      if (params.fanName) {
+        setFanName(String(params.fanName));
+      }
+      const loadSessionAndJoin = async () => {
+        try {
+          const session = await getSessionById(String(params.sessionId));
+          if (session) {
+            setFoundLiveSession(session);
+          }
+        } catch (e) {
+          console.error('[JoinEvent] Error loading session after payment:', e);
+          setTimeout(async () => {
+            try {
+              const retrySession = await getSessionById(String(params.sessionId));
+              if (retrySession) setFoundLiveSession(retrySession);
+            } catch (e2) {
+              console.error('[JoinEvent] Retry failed:', e2);
+            }
+          }, 2000);
+        }
+      };
+      loadSessionAndJoin();
+    }
+  }, [params.paymentAuthorized, params.checkoutSessionId]);
+
+  useEffect(() => {
+    const checkPendingCheckout = async () => {
+      if (params.paymentAuthorized) return;
+      try {
+        const pending = await AsyncStorage.getItem('@signtouch_pending_checkout');
+        if (pending) {
+          const data = JSON.parse(pending);
+          const ageMs = Date.now() - (data.timestamp || 0);
+          if (ageMs > 7 * 24 * 60 * 60 * 1000) {
+            await AsyncStorage.removeItem('@signtouch_pending_checkout');
+            return;
+          }
+          if (data.checkoutSessionId && data.sessionId) {
+            try {
+              const response = await fetch(
+                `${STRIPE_SERVER_URL}/api/verify-payment?checkout_session_id=${data.checkoutSessionId}`
+              );
+              const verifyData = await response.json();
+              if (verifyData.authorized) {
+                setCheckoutSessionId(data.checkoutSessionId);
+                setPaymentAuthorized(true);
+                if (data.fanName) setFanName(data.fanName);
+                const session = await getSessionById(data.sessionId);
+                if (session) setFoundLiveSession(session);
+              } else {
+                await AsyncStorage.removeItem('@signtouch_pending_checkout');
+              }
+            } catch (e) {
+              console.error('[JoinEvent] Error checking pending checkout:', e);
+            }
+          }
+        }
+      } catch (e) {}
+    };
+    checkPendingCheckout();
+  }, []);
+
+  useEffect(() => {
+    if (paymentAuthorized && foundLiveSession && !hasJoinedQueue && fanName.trim() && user) {
+      handleJoinQueue();
+    }
+  }, [paymentAuthorized, foundLiveSession, hasJoinedQueue, user]);
+
+  useEffect(() => {
     let pollInterval: ReturnType<typeof setInterval> | null = null;
 
     const pollQueuePosition = async () => {
@@ -184,10 +266,19 @@ export default function JoinEventScreen() {
           const refreshedSession = await getSessionByCode(foundLiveSession.code);
           if (refreshedSession) {
             setFoundLiveSession(refreshedSession);
+
+            if (refreshedSession.status === 'ended' && checkoutSessionId) {
+              cancelPreAuthorization();
+              return;
+            }
             
             if (refreshedSession.room_url && refreshedSession.status === 'active') {
               const entry = await getMyQueueEntry(foundLiveSession.id);
               if (entry) {
+                if ((entry.status === 'missed' || entry.status === 'left') && checkoutSessionId) {
+                  cancelPreAuthorization();
+                  return;
+                }
                 if (entry.status === 'called' || entry.status === 'in_call') {
                   setQueueEntry(entry);
                 } else if (entry.status === 'waiting' && stats.currentPosition <= 1) {
@@ -399,6 +490,30 @@ export default function JoinEventScreen() {
     setFanName('');
   };
 
+  const cancelPreAuthorization = async () => {
+    if (!checkoutSessionId) return;
+    try {
+      console.log('[JoinEvent] Canceling pre-authorization:', checkoutSessionId);
+      const response = await fetch(`${STRIPE_SERVER_URL}/api/cancel-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkout_session_id: checkoutSessionId }),
+      });
+      const data = await response.json();
+      if (data.canceled) {
+        console.log('[JoinEvent] Pre-authorization canceled successfully');
+        AsyncStorage.removeItem('@signtouch_pending_checkout').catch(() => {});
+        setCheckoutSessionId('');
+        showAlert(
+          t('paymentCanceled') || 'Paiement annulé',
+          t('paymentCanceledMessage') || 'Le montant réservé a été libéré. Aucun montant n\'a été débité.'
+        );
+      }
+    } catch (error) {
+      console.error('[JoinEvent] Error canceling pre-authorization:', error);
+    }
+  };
+
   const handleJoinQueue = async () => {
     if (!foundLiveSession || !fanName.trim()) {
       showAlert(t('error') || 'Error', t('enterYourName') || 'Please enter your name');
@@ -408,6 +523,22 @@ export default function JoinEventScreen() {
     if (!user) {
       setPendingJoinQueue(true);
       setShowAccountModal(true);
+      return;
+    }
+
+    if (foundLiveSession.price_cents > 0 && !paymentAuthorized) {
+      router.push({
+        pathname: '/purchase-session',
+        params: {
+          sessionId: foundLiveSession.id,
+          celebrityId: foundLiveSession.celebrity_id || '',
+          celebrityName: foundLiveSession.celebrity_name || '',
+          priceCents: String(foundLiveSession.price_cents),
+          durationMinutes: String(foundLiveSession.duration_per_fan_minutes || 5),
+          celebrityStripeAccountId: foundLiveSession.celebrity_stripe_account_id || '',
+          fanName: fanName.trim(),
+        }
+      });
       return;
     }
 
@@ -429,6 +560,7 @@ export default function JoinEventScreen() {
       if (entry) {
         setQueueEntry(entry);
         setHasJoinedQueue(true);
+        AsyncStorage.removeItem('@signtouch_pending_checkout').catch(() => {});
         
         const stats = await getQueuePosition(foundLiveSession.id);
         if (stats) {
@@ -665,34 +797,21 @@ export default function JoinEventScreen() {
                   <TouchableOpacity
                     style={styles.joinCallButton}
                     onPress={() => {
-                      if (foundLiveSession.price_cents > 0) {
-                        router.push({
-                          pathname: '/purchase-session',
-                          params: {
-                            sessionId: foundLiveSession.id,
-                            celebrityId: foundLiveSession.celebrity_id || '',
-                            celebrityName: foundLiveSession.celebrity_name || '',
-                            priceCents: String(foundLiveSession.price_cents),
-                            durationMinutes: String(foundLiveSession.duration_per_fan_minutes || 5),
-                            celebrityStripeAccountId: foundLiveSession.celebrity_stripe_account_id || '',
-                          }
-                        });
-                      } else {
-                        router.push({
-                          pathname: '/video-call',
-                          params: {
-                            roomUrl: foundLiveSession.room_url || '',
-                            sessionId: foundLiveSession.id,
-                            isHost: 'false',
-                            userName: fanName || 'Fan',
-                            queueEntryId: queueEntry.id,
-                            durationPerFan: String(foundLiveSession.duration_per_fan_minutes || 5),
-                            otherUserName: foundLiveSession.celebrity_name || '',
-                            priceCents: String(foundLiveSession.price_cents || 0),
-                            celebrityId: foundLiveSession.celebrity_id || '',
-                          }
-                        });
-                      }
+                      router.push({
+                        pathname: '/video-call',
+                        params: {
+                          roomUrl: foundLiveSession.room_url || '',
+                          sessionId: foundLiveSession.id,
+                          isHost: 'false',
+                          userName: fanName || 'Fan',
+                          queueEntryId: queueEntry.id,
+                          durationPerFan: String(foundLiveSession.duration_per_fan_minutes || 5),
+                          otherUserName: foundLiveSession.celebrity_name || '',
+                          priceCents: String(foundLiveSession.price_cents || 0),
+                          celebrityId: foundLiveSession.celebrity_id || '',
+                          checkoutSessionId: checkoutSessionId || '',
+                        }
+                      });
                     }}
                   >
                     <LinearGradient

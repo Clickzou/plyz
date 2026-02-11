@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle, AlertCircle } from 'lucide-react-native';
+import { CheckCircle, AlertCircle, Shield } from 'lucide-react-native';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -17,6 +17,8 @@ export default function PaymentSuccessScreen() {
     celebrity_name: string;
     duration_minutes: string;
     price_cents: string;
+    fan_name: string;
+    celebrity_stripe_account_id: string;
   }>();
 
   const [verified, setVerified] = useState(false);
@@ -28,8 +30,6 @@ export default function PaymentSuccessScreen() {
 
   const verifyAndRedirect = async () => {
     try {
-      let paymentVerified = false;
-
       if (!params.checkout_session_id) {
         console.error('[PaymentSuccess] Missing checkout session ID');
         setError(true);
@@ -41,22 +41,24 @@ export default function PaymentSuccessScreen() {
       );
       const data = await response.json();
       console.log('[PaymentSuccess] Verification:', data);
-      paymentVerified = data.paid === true;
 
-      if (paymentVerified) {
+      const isAuthorized = data.authorized === true || data.paid === true;
+
+      if (isAuthorized) {
         setVerified(true);
         setTimeout(() => {
           router.replace({
-            pathname: '/video-call',
+            pathname: '/join-event',
             params: {
-              roomUrl: '',
+              checkoutSessionId: params.checkout_session_id,
               sessionId: params.live_session_id || '',
-              isHost: 'false',
-              userName: '',
-              durationPerFan: params.duration_minutes || '5',
-              otherUserName: params.celebrity_name ? decodeURIComponent(params.celebrity_name) : '',
-              priceCents: params.price_cents || '0',
               celebrityId: params.celebrity_id || '',
+              celebrityName: params.celebrity_name ? decodeURIComponent(params.celebrity_name) : '',
+              durationMinutes: params.duration_minutes || '5',
+              priceCents: params.price_cents || '0',
+              fanName: params.fan_name ? decodeURIComponent(params.fan_name) : '',
+              celebrityStripeAccountId: params.celebrity_stripe_account_id || '',
+              paymentAuthorized: 'true',
             },
           });
         }, 2000);
@@ -88,10 +90,10 @@ export default function PaymentSuccessScreen() {
     <View style={styles.container}>
       <LinearGradient colors={['#0a1628', '#0f2030', '#0a1628']} style={StyleSheet.absoluteFill} />
       <View style={styles.content}>
-        <CheckCircle size={80} color="#10B981" />
-        <Text style={styles.title}>{t('purchaseSuccess') || 'Paiement réussi !'}</Text>
+        <Shield size={80} color="#10B981" />
+        <Text style={styles.title}>{t('authorizationSuccess') || 'Pré-autorisation réussie !'}</Text>
         <Text style={styles.message}>
-          {t('redirectingToCall') || 'Redirection vers votre appel vidéo...'}
+          {t('joiningQueueNow') || 'Vous allez rejoindre la file d\'attente...'}
         </Text>
         <ActivityIndicator size="large" color="#10B981" style={{ marginTop: 24 }} />
       </View>
@@ -108,26 +110,26 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    padding: 32,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '800',
     color: '#10B981',
     marginTop: 24,
     textAlign: 'center',
   },
   errorTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '800',
     color: '#f59e0b',
     marginTop: 24,
-    textAlign: 'center',
   },
   message: {
     fontSize: 16,
     color: 'rgba(255,255,255,0.6)',
-    marginTop: 12,
     textAlign: 'center',
+    marginTop: 12,
+    lineHeight: 22,
   },
 });

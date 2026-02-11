@@ -344,6 +344,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
         signtouch_fee_cents: String(signTouchFeeCents),
       },
       payment_intent_data: {
+        capture_method: 'manual',
         application_fee_amount: signTouchFeeCents,
         transfer_data: {
           destination: celebrityStripeAccountId,
@@ -378,13 +379,107 @@ app.get('/api/verify-payment', async (req, res) => {
 
     const session = await stripe.checkout.sessions.retrieve(checkout_session_id);
 
+    let paymentIntentStatus = null;
+    let authorized = false;
+    if (session.payment_intent) {
+      const pi = await stripe.paymentIntents.retrieve(session.payment_intent);
+      paymentIntentStatus = pi.status;
+      authorized = pi.status === 'requires_capture';
+    }
+
     res.json({
       paid: session.payment_status === 'paid',
+      authorized: authorized,
       status: session.payment_status,
+      payment_intent_status: paymentIntentStatus,
+      payment_intent_id: session.payment_intent,
       metadata: session.metadata,
     });
   } catch (error) {
     console.error('[Verify] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/capture-payment', async (req, res) => {
+  try {
+    const stripe = await getStripe();
+    const { checkout_session_id } = req.body;
+
+    if (!checkout_session_id) {
+      return res.status(400).json({ error: 'Missing checkout_session_id' });
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(checkout_session_id);
+    const paymentIntentId = session.payment_intent;
+
+    if (!paymentIntentId) {
+      return res.status(400).json({ error: 'No payment intent found for this session' });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (paymentIntent.status === 'succeeded') {
+      console.log('[Capture] Payment already captured:', paymentIntentId);
+      return res.json({ captured: true, already_captured: true, paymentIntentId });
+    }
+
+    if (paymentIntent.status !== 'requires_capture') {
+      console.error('[Capture] Cannot capture - status:', paymentIntent.status);
+      return res.status(400).json({ error: `Cannot capture payment in status: ${paymentIntent.status}` });
+    }
+
+    const captured = await stripe.paymentIntents.capture(paymentIntentId);
+
+    console.log('[Capture] Payment captured:', paymentIntentId, '| Amount:', captured.amount, captured.currency);
+
+    res.json({
+      captured: true,
+      paymentIntentId: captured.id,
+      amount: captured.amount,
+      currency: captured.currency,
+    });
+  } catch (error) {
+    console.error('[Capture] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/cancel-payment', async (req, res) => {
+  try {
+    const stripe = await getStripe();
+    const { checkout_session_id } = req.body;
+
+    if (!checkout_session_id) {
+      return res.status(400).json({ error: 'Missing checkout_session_id' });
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(checkout_session_id);
+    const paymentIntentId = session.payment_intent;
+
+    if (!paymentIntentId) {
+      return res.status(400).json({ error: 'No payment intent found for this session' });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (paymentIntent.status === 'succeeded') {
+      console.log('[Cancel] Payment already captured, cannot cancel:', paymentIntentId);
+      return res.status(400).json({ error: 'Payment already captured, cannot cancel' });
+    }
+
+    if (paymentIntent.status === 'canceled') {
+      console.log('[Cancel] Payment already canceled:', paymentIntentId);
+      return res.json({ canceled: true, already_canceled: true });
+    }
+
+    const canceled = await stripe.paymentIntents.cancel(paymentIntentId);
+
+    console.log('[Cancel] Payment canceled:', paymentIntentId);
+
+    res.json({ canceled: true, paymentIntentId: canceled.id });
+  } catch (error) {
+    console.error('[Cancel] Error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
