@@ -972,4 +972,10 @@ export default {
   payAmount: 'পেমেন্ট করুন',
   poweredByStripe: 'Stripe দ্বারা নিরাপদ পেমেন্ট',
   paymentVerificationFailed: 'পেমেন্ট যাচাই ব্যর্থ হয়েছে। অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।',
+  shareEvent: 'ইভেন্ট শেয়ার করুন',
+  copy: 'কপি',
+  copied: 'কপি হয়েছে!',
+  perFan: 'প্রতি ভক্ত',
+  estimatedTotal: 'আনুমানিক মোট',
+  totalDuration: 'মোট সময়কাল',
 };

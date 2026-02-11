@@ -967,4 +967,10 @@ export default {
   payAmount: 'Оплатить',
   poweredByStripe: 'Безопасный платёж через Stripe',
   paymentVerificationFailed: 'Проверка платежа не удалась. Обратитесь в поддержку.',
+  shareEvent: 'Поделиться событием',
+  copy: 'Копировать',
+  copied: 'Скопировано!',
+  perFan: 'за фаната',
+  estimatedTotal: 'примерный итог',
+  totalDuration: 'общая длительность',
 };

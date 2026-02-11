@@ -1000,4 +1000,10 @@ export default {
   liveSessionActive: 'Active',
   liveSessionWaiting: 'Waiting',
   liveSessionPaused: 'Paused',
+  shareEvent: 'Share Event',
+  copy: 'Copy',
+  copied: 'Copied!',
+  perFan: 'per fan',
+  estimatedTotal: 'estimated total',
+  totalDuration: 'total duration',
 };

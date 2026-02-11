@@ -972,4 +972,10 @@ export default {
   payAmount: 'ادائیگی کریں',
   poweredByStripe: 'Stripe کے ذریعے محفوظ ادائیگی',
   paymentVerificationFailed: 'ادائیگی کی تصدیق ناکام ہوئی۔ براہ کرم سپورٹ سے رابطہ کریں۔',
+  shareEvent: 'ایونٹ شیئر کریں',
+  copy: 'کاپی',
+  copied: 'کاپی ہو گیا!',
+  perFan: 'فی مداح',
+  estimatedTotal: 'تخمینی کل',
+  totalDuration: 'کل دورانیہ',
 };

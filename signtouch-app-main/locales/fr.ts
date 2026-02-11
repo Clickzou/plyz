@@ -1002,4 +1002,10 @@ export default {
   liveSessionActive: 'En cours',
   liveSessionWaiting: 'En attente',
   liveSessionPaused: 'En pause',
+  shareEvent: 'Partager l\'événement',
+  copy: 'Copier',
+  copied: 'Copié !',
+  perFan: 'par fan',
+  estimatedTotal: 'total estimé',
+  totalDuration: 'durée totale',
 };

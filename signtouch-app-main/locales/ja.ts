@@ -967,4 +967,10 @@ export default {
   payAmount: '支払う',
   poweredByStripe: 'Stripeによる安全な決済',
   paymentVerificationFailed: '決済の確認に失敗しました。サポートにお問い合わせください。',
+  shareEvent: 'イベントを共有',
+  copy: 'コピー',
+  copied: 'コピーしました！',
+  perFan: 'ファンごと',
+  estimatedTotal: '推定合計',
+  totalDuration: '合計時間',
 };

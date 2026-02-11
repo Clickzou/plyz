@@ -967,4 +967,10 @@ export default {
   payAmount: 'Bezahlen',
   poweredByStripe: 'Sichere Zahlung über Stripe',
   paymentVerificationFailed: 'Zahlungsüberprüfung fehlgeschlagen. Bitte kontaktieren Sie den Support.',
+  shareEvent: 'Event teilen',
+  copy: 'Kopieren',
+  copied: 'Kopiert!',
+  perFan: 'pro Fan',
+  estimatedTotal: 'geschätzter Gesamtbetrag',
+  totalDuration: 'Gesamtdauer',
 };

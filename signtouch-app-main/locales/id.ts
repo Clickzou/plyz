@@ -972,4 +972,10 @@ export default {
   payAmount: 'Bayar',
   poweredByStripe: 'Pembayaran aman oleh Stripe',
   paymentVerificationFailed: 'Verifikasi pembayaran gagal. Silakan hubungi dukungan.',
+  shareEvent: 'Bagikan Acara',
+  copy: 'Salin',
+  copied: 'Disalin!',
+  perFan: 'per penggemar',
+  estimatedTotal: 'total perkiraan',
+  totalDuration: 'durasi total',
 };

@@ -967,4 +967,10 @@ export default {
   payAmount: 'भुगतान करें',
   poweredByStripe: 'Stripe द्वारा सुरक्षित भुगतान',
   paymentVerificationFailed: 'भुगतान सत्यापन विफल। कृपया सहायता से संपर्क करें।',
+  shareEvent: 'इवेंट शेयर करें',
+  copy: 'कॉपी',
+  copied: 'कॉपी हो गया!',
+  perFan: 'प्रति प्रशंसक',
+  estimatedTotal: 'अनुमानित कुल',
+  totalDuration: 'कुल अवधि',
 };

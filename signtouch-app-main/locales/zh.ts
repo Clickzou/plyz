@@ -967,4 +967,10 @@ export default {
   payAmount: '支付',
   poweredByStripe: '由Stripe提供安全支付',
   paymentVerificationFailed: '支付验证失败。请联系客服。',
+  shareEvent: '分享活动',
+  copy: '复制',
+  copied: '已复制！',
+  perFan: '每位粉丝',
+  estimatedTotal: '预估总额',
+  totalDuration: '总时长',
 };

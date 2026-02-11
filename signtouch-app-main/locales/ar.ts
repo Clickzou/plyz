@@ -967,4 +967,10 @@ export default {
   payAmount: 'ادفع',
   poweredByStripe: 'دفع آمن عبر Stripe',
   paymentVerificationFailed: 'فشل التحقق من الدفع. يرجى الاتصال بالدعم.',
+  shareEvent: 'مشاركة الحدث',
+  copy: 'نسخ',
+  copied: 'تم النسخ!',
+  perFan: 'لكل معجب',
+  estimatedTotal: 'الإجمالي المقدر',
+  totalDuration: 'المدة الكلية',
 };

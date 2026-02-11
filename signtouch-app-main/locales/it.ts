@@ -967,4 +967,10 @@ export default {
   payAmount: 'Paga',
   poweredByStripe: 'Pagamento sicuro con Stripe',
   paymentVerificationFailed: 'Verifica del pagamento fallita. Contattare il supporto.',
+  shareEvent: 'Condividi evento',
+  copy: 'Copia',
+  copied: 'Copiato!',
+  perFan: 'per fan',
+  estimatedTotal: 'totale stimato',
+  totalDuration: 'durata totale',
 };
