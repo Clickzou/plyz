@@ -377,27 +377,7 @@ export default function CreateLiveSessionScreen() {
           scheduledAt || null
         );
         if (session && scheduledAt) {
-          try {
-            const { supabase } = await import('@/utils/supabase');
-            const scheduledDate = new Date(scheduledAt);
-            const endsAt = new Date(scheduledDate.getTime() + totalDuration * 60 * 1000);
-            const { error: rpcErr } = await supabase.rpc('create_scheduled_event', {
-              p_title: celebrityName.trim(),
-              p_starts_at: scheduledDate.toISOString(),
-              p_ends_at: endsAt.toISOString(),
-              p_join_code: session.code,
-              p_event_type: 'live_video',
-              p_live_session_id: session.id,
-              p_session_scheduled_at: scheduledDate.toISOString()
-            });
-            if (rpcErr) {
-              console.warn('[CreateSession] Fallback: RPC create_scheduled_event error:', rpcErr);
-            } else {
-              console.log('[CreateSession] Fallback: scheduled event created via RPC');
-            }
-          } catch (e) {
-            console.warn('[CreateSession] Fallback: event creation failed:', e);
-          }
+          console.log('[CreateSession] Scheduled session created, will show in events via live_sessions query');
         }
       }
       

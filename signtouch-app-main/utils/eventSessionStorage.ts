@@ -245,18 +245,34 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
     }
   }
 
-  const { data: liveVideoEvents, error: lvError } = await supabase
-    .rpc('get_live_video_events');
+  const { data: liveVideoSessions, error: lvsError } = await supabase
+    .from('live_sessions')
+    .select('*')
+    .in('status', ['scheduled', 'waiting', 'active', 'ended'])
+    .order('created_at', { ascending: false });
 
-  if (!lvError && liveVideoEvents) {
+  if (!lvsError && liveVideoSessions) {
     const existingIds = new Set(allEvents.map(e => e.id));
-    for (const ev of liveVideoEvents) {
-      if (!existingIds.has(ev.id)) {
-        allEvents.push(ev);
+    for (const ls of liveVideoSessions) {
+      if (!existingIds.has(ls.id)) {
+        const converted: EventSession = {
+          id: ls.id,
+          title: ls.celebrity_name || 'Live Session',
+          starts_at: ls.started_at || ls.created_at,
+          ends_at: ls.ends_at || new Date(new Date(ls.created_at).getTime() + (ls.duration_minutes || 30) * 60000).toISOString(),
+          status: ls.status === 'waiting' ? 'live' : (ls.status === 'active' ? 'live' : ls.status),
+          join_code: ls.code,
+          viewer_soft_limit: ls.max_slots || 60,
+          created_by: null,
+          created_at: ls.created_at,
+          event_type: 'live_video',
+          live_session_id: ls.id,
+        };
+        allEvents.push(converted);
       }
     }
-  } else if (lvError) {
-    console.warn('[getMyScheduledEvents] RPC get_live_video_events failed:', lvError.message);
+  } else if (lvsError) {
+    console.warn('[getMyScheduledEvents] live_sessions query failed:', lvsError.message);
   }
 
   const locallyDeleted = getLocallyDeletedEvents();

@@ -178,29 +178,6 @@ app.post('/api/create-session', async (req, res) => {
       return res.status(500).json({ error: error.message, details: error });
     }
 
-    if (scheduled_at) {
-      try {
-        const scheduledDate = new Date(scheduled_at);
-        const endsAt = new Date(scheduledDate.getTime() + (duration_minutes || 30) * 60000);
-        const { data: eventId, error: rpcErr } = await supabase.rpc('create_scheduled_event', {
-          p_title: celebrity_name,
-          p_starts_at: scheduledDate.toISOString(),
-          p_ends_at: endsAt.toISOString(),
-          p_join_code: code,
-          p_event_type: 'live_video',
-          p_live_session_id: data.id,
-          p_session_scheduled_at: scheduledDate.toISOString()
-        });
-        if (rpcErr) {
-          console.error('[create-session] RPC create_scheduled_event failed:', rpcErr.message);
-        } else {
-          console.log('[create-session] Scheduled event created, event_id:', eventId);
-        }
-      } catch (eventErr) {
-        console.error('[create-session] Event session creation failed:', eventErr.message);
-      }
-    }
-
     console.log('[create-session] Session created successfully:', data.id, data.code);
 
     res.json({ session: data });
