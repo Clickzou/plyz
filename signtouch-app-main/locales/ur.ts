@@ -745,6 +745,8 @@ export default {
   trialDay: 'دن',
   trialDays: 'دن',
   subscribeToAccess: 'SignTouch استعمال جاری رکھنے کے لیے سبسکرائب کریں',
+  myAccount: 'میرا اکاؤنٹ',
+  accountActive: 'اکاؤنٹ فعال',
   createAccountToSave: 'مفت اکاؤنٹ بنائیں',
   createAccountSubtitle: 'اپنی تصاویر محفوظ طریقے سے محفوظ کریں اور کسی بھی ڈیوائس سے رسائی حاصل کریں',
   skipForNow: 'ابھی چھوڑیں',

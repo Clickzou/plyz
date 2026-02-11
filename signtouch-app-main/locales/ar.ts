@@ -745,6 +745,8 @@ export default {
   trialDay: 'يوم',
   trialDays: 'أيام',
   subscribeToAccess: 'اشترك لمواصلة استخدام SignTouch',
+  myAccount: 'حسابي',
+  accountActive: 'حساب نشط',
   createAccountToSave: 'أنشئ حساباً مجانياً',
   createAccountSubtitle: 'احفظ صورك بأمان وادخل إليها من أي جهاز',
   skipForNow: 'تخطي الآن',

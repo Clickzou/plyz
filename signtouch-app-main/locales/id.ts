@@ -745,6 +745,8 @@ export default {
   trialDay: 'hari',
   trialDays: 'hari',
   subscribeToAccess: 'Berlangganan untuk terus menggunakan SignTouch',
+  myAccount: 'Akun saya',
+  accountActive: 'Akun aktif',
   createAccountToSave: 'Buat akun gratis',
   createAccountSubtitle: 'Simpan foto Anda dengan aman dan akses dari perangkat mana saja',
   skipForNow: 'Lewati untuk sekarang',

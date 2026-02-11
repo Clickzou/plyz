@@ -745,6 +745,8 @@ export default {
   trialDay: '日',
   trialDays: '日間',
   subscribeToAccess: 'SignTouchを引き続き使用するにはサブスクリプションに登録',
+  myAccount: 'マイアカウント',
+  accountActive: 'アカウント有効',
   createAccountToSave: '無料アカウントを作成',
   createAccountSubtitle: '写真を安全に保存して、どのデバイスからでもアクセス',
   skipForNow: '今はスキップ',

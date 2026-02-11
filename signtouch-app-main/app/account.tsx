@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { router } from 'expo-router';
-import { Crown, Info, Heart, Share2, Globe, Check, FileText, LogOut, Gift, X } from 'lucide-react-native';
+import { Crown, Info, Heart, Share2, Globe, Check, FileText, LogOut, Gift, X, Mail, User, Shield, ArrowRight, CreditCard } from 'lucide-react-native';
 import { SUBSCRIPTION_ENABLED } from '@/contexts/SubscriptionContext';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
@@ -26,6 +26,7 @@ import { validatePromoCode, getPromoPremiumStatus } from '@/utils/promoCodeStora
 import { clearTrialData } from '@/utils/trialStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { getStripeAccountId, saveStripeAccountId } from '@/utils/userProfile';
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -47,7 +48,7 @@ const LANGUAGES: { code: Language; name: string; flag: string }[] = [
 
 export default function AccountScreen() {
   const { t, language, setLanguage, isRTL } = useTranslation();
-  const { user, signOut } = useAuth();
+  const { user, signOut, sendOtpCode, verifyOtpCode } = useAuth();
   const { status } = useSubscription();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showPromoModal, setShowPromoModal] = useState(false);
@@ -56,9 +57,72 @@ export default function AccountScreen() {
   const [promoMessage, setPromoMessage] = useState<{ text: string; success: boolean } | null>(null);
   const [promoPremiumExpires, setPromoPremiumExpires] = useState<string | null>(null);
 
+  const [loginEmail, setLoginEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [loginStep, setLoginStep] = useState<'idle' | 'email' | 'otp' | 'sending' | 'verifying'>('idle');
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [stripeLinked, setStripeLinked] = useState(false);
+
   useEffect(() => {
     checkPromoPremium();
   }, []);
+
+  useEffect(() => {
+    if (user?.id) {
+      syncStripeOnLogin();
+    } else {
+      setStripeLinked(false);
+    }
+  }, [user?.id]);
+
+  const syncStripeOnLogin = async () => {
+    if (!user?.id) return;
+    try {
+      const localStripeId = await AsyncStorage.getItem('stripe_connect_account_id');
+      if (localStripeId) {
+        await saveStripeAccountId(user.id, localStripeId);
+        setStripeLinked(true);
+      } else {
+        const dbStripeId = await getStripeAccountId(user.id);
+        setStripeLinked(!!dbStripeId);
+      }
+    } catch (error) {
+      console.error('[Account] Error syncing Stripe:', error);
+    }
+  };
+
+  const handleSendOtp = async () => {
+    if (!loginEmail.trim()) return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(loginEmail.trim())) {
+      setLoginError(t('invalidEmail') || 'Adresse email invalide');
+      return;
+    }
+    setLoginStep('sending');
+    setLoginError(null);
+    const { error } = await sendOtpCode(loginEmail.trim());
+    if (error) {
+      setLoginError(error.message);
+      setLoginStep('email');
+    } else {
+      setLoginStep('otp');
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode.trim()) return;
+    setLoginStep('verifying');
+    setLoginError(null);
+    const { error } = await verifyOtpCode(loginEmail.trim(), otpCode.trim());
+    if (error) {
+      setLoginError(error.message);
+      setLoginStep('otp');
+    } else {
+      setLoginStep('idle');
+      setLoginEmail('');
+      setOtpCode('');
+    }
+  };
 
   const checkPromoPremium = async () => {
     const promoStatus = await getPromoPremiumStatus();
@@ -185,6 +249,177 @@ export default function AccountScreen() {
           <Text style={styles.subtitle}>SignTouch</Text>
         </View>
 
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>
+            {t('myAccount') || 'MON COMPTE'}
+          </Text>
+
+          {user ? (
+            <View style={styles.accountCard}>
+              <View style={styles.accountCardHeader}>
+                <View style={styles.accountAvatar}>
+                  <User size={28} color="#10b981" />
+                </View>
+                <View style={styles.accountCardInfo}>
+                  <Text style={styles.accountCardName}>
+                    {user.email}
+                  </Text>
+                  <View style={styles.accountBadge}>
+                    <Shield size={12} color="#10b981" />
+                    <Text style={styles.accountBadgeText}>
+                      {t('accountActive') || 'Compte actif'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {stripeLinked && (
+                <View style={styles.stripeLinkedBadge}>
+                  <CreditCard size={14} color="#635BFF" />
+                  <Text style={styles.stripeLinkedText}>
+                    Stripe Connect
+                  </Text>
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={styles.signOutButton}
+                onPress={handleSignOut}
+                activeOpacity={0.7}
+              >
+                <LogOut size={16} color="#ef4444" />
+                <Text style={styles.signOutButtonText}>{t('signOut')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : loginStep === 'idle' ? (
+            <View style={styles.accountCard}>
+              <View style={styles.accountCardHeader}>
+                <View style={[styles.accountAvatar, { backgroundColor: 'rgba(255,255,255,0.08)' }]}>
+                  <User size={28} color="#888" />
+                </View>
+                <View style={styles.accountCardInfo}>
+                  <Text style={styles.accountCardTitle}>
+                    {t('createAccountToSave') || 'Creez un compte gratuitement'}
+                  </Text>
+                  <Text style={styles.accountCardSubtitle}>
+                    {t('createAccountSubtitle') || 'Sauvegardez vos photos et accedez-y depuis n\'importe quel appareil'}
+                  </Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.createAccountButton}
+                onPress={() => setLoginStep('email')}
+                activeOpacity={0.7}
+              >
+                <Mail size={18} color="#ffffff" />
+                <Text style={styles.createAccountButtonText}>
+                  {t('continueWithEmail') || 'Continuer avec mon email'}
+                </Text>
+                <ArrowRight size={18} color="#ffffff" />
+              </TouchableOpacity>
+            </View>
+          ) : loginStep === 'email' || loginStep === 'sending' ? (
+            <View style={styles.accountCard}>
+              <Text style={styles.loginTitle}>
+                {t('enterYourEmail') || 'Entrez votre email'}
+              </Text>
+              <Text style={styles.loginSubtitle}>
+                {t('secureCodeExplanation') || 'Vous recevrez un code a 8 chiffres par email.'}
+              </Text>
+
+              <TextInput
+                style={styles.loginInput}
+                placeholder={t('emailPlaceholder') || 'votre@email.com'}
+                placeholderTextColor="#666"
+                value={loginEmail}
+                onChangeText={(text) => { setLoginEmail(text); setLoginError(null); }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={loginStep !== 'sending'}
+              />
+
+              {loginError && (
+                <Text style={styles.loginError}>{loginError}</Text>
+              )}
+
+              <TouchableOpacity
+                style={[styles.createAccountButton, loginStep === 'sending' && { opacity: 0.6 }]}
+                onPress={handleSendOtp}
+                disabled={loginStep === 'sending'}
+                activeOpacity={0.7}
+              >
+                {loginStep === 'sending' ? (
+                  <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                  <Text style={styles.createAccountButtonText}>
+                    {t('sendEmailLink') || 'Envoyer le code'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => { setLoginStep('idle'); setLoginError(null); setLoginEmail(''); }}
+              >
+                <Text style={styles.cancelButtonText}>
+                  {t('cancel') || 'Annuler'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.accountCard}>
+              <Text style={styles.loginTitle}>
+                {t('checkYourEmail') || 'Verifiez votre email'}
+              </Text>
+              <Text style={styles.loginSubtitle}>
+                {t('codeSentToEmail') || 'Nous avons envoye un code a 8 chiffres a votre email.'}
+              </Text>
+              <Text style={styles.loginEmailDisplay}>{loginEmail}</Text>
+
+              <TextInput
+                style={[styles.loginInput, { textAlign: 'center', letterSpacing: 4, fontSize: 22 }]}
+                placeholder="12345678"
+                placeholderTextColor="#666"
+                value={otpCode}
+                onChangeText={(text) => { setOtpCode(text); setLoginError(null); }}
+                keyboardType="number-pad"
+                maxLength={8}
+                editable={loginStep !== 'verifying'}
+              />
+
+              {loginError && (
+                <Text style={styles.loginError}>{loginError}</Text>
+              )}
+
+              <TouchableOpacity
+                style={[styles.createAccountButton, loginStep === 'verifying' && { opacity: 0.6 }]}
+                onPress={handleVerifyOtp}
+                disabled={loginStep === 'verifying'}
+                activeOpacity={0.7}
+              >
+                {loginStep === 'verifying' ? (
+                  <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                  <Text style={styles.createAccountButtonText}>
+                    {t('validate') || 'Valider'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => { setLoginStep('email'); setOtpCode(''); setLoginError(null); }}
+              >
+                <Text style={styles.cancelButtonText}>
+                  {t('changeEmail') || "Changer d'adresse email"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
         {__DEV__ && (
           <View style={styles.debugSection}>
             <Text style={styles.debugTitle}>Mode Debug</Text>
@@ -269,22 +504,6 @@ export default function AccountScreen() {
                     Premium jusqu'au {new Date(promoPremiumExpires).toLocaleDateString()}
                   </Text>
                 )}
-              </View>
-            </TouchableOpacity>
-          )}
-
-          {user && (
-            <TouchableOpacity
-              style={[styles.menuItem, isRTL && styles.menuItemRTL]}
-              onPress={handleSignOut}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
-                <LogOut size={24} color="#ef4444" strokeWidth={2} />
-              </View>
-              <View style={styles.menuTextContainer}>
-                <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('signOut')}</Text>
-                <Text style={[styles.menuSubtext, isRTL && styles.menuSubtextRTL]}>{user.email}</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -707,5 +926,145 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  accountCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  accountCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  accountAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  accountCardInfo: {
+    flex: 1,
+  },
+  accountCardName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  accountBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  accountBadgeText: {
+    fontSize: 13,
+    color: '#10b981',
+    fontWeight: '500',
+  },
+  accountCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  accountCardSubtitle: {
+    fontSize: 13,
+    color: '#888',
+    lineHeight: 18,
+  },
+  stripeLinkedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(99, 91, 255, 0.1)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+  },
+  stripeLinkedText: {
+    fontSize: 13,
+    color: '#635BFF',
+    fontWeight: '500',
+  },
+  signOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  signOutButtonText: {
+    fontSize: 14,
+    color: '#ef4444',
+    fontWeight: '500',
+  },
+  createAccountButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#10b981',
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  createAccountButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  loginTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 6,
+  },
+  loginSubtitle: {
+    fontSize: 14,
+    color: '#888',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  loginInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: '#ffffff',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  loginError: {
+    fontSize: 13,
+    color: '#ef4444',
+    marginBottom: 10,
+  },
+  loginEmailDisplay: {
+    fontSize: 14,
+    color: '#10b981',
+    fontWeight: '500',
+    marginBottom: 14,
+  },
+  cancelButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    color: '#888',
   },
 });
