@@ -711,49 +711,67 @@ export default function LiveSessionDashboardScreen() {
 
   const DEDICATION_CANVAS_SIZE = Math.min(SCREEN_WIDTH - 100, 260);
 
-  const setupDedicationCanvas = useCallback(() => {
+  const dedicationCanvasContainerRef = useRef<View>(null);
+
+  useEffect(() => {
     if (Platform.OS !== 'web' || dedicationStep !== 'signature') return;
-    setTimeout(() => {
-      const el = document.getElementById('dedication-canvas') as HTMLCanvasElement | null;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      el.width = rect.width;
-      el.height = rect.height;
-      const ctx = el.getContext('2d');
+    const timer = setTimeout(() => {
+      const containerNode = dedicationCanvasContainerRef.current as any;
+      if (!containerNode) return;
+      const domNode = containerNode._nativeTag || containerNode;
+      let parent: HTMLElement | null = null;
+      if (typeof domNode === 'number') {
+        return;
+      }
+      if (domNode instanceof HTMLElement) {
+        parent = domNode;
+      } else if (containerNode._viewConfig) {
+        return;
+      }
+      if (!parent) {
+        try {
+          const { findDOMNode } = require('react-dom');
+          parent = findDOMNode(containerNode) as HTMLElement;
+        } catch (e) {
+          return;
+        }
+      }
+      if (!parent) return;
+      parent.innerHTML = '';
+      const canvas = document.createElement('canvas');
+      const rect = parent.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.touchAction = 'none';
+      canvas.style.display = 'block';
+      parent.appendChild(canvas);
+
+      const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      dedicationCanvasRef.current = el;
+      dedicationCanvasRef.current = canvas;
       dedicationCanvasCtxRef.current = ctx;
       ctx.strokeStyle = '#000';
       ctx.lineWidth = 3;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      dedicationPaths.forEach(p => {
-        const pts = p.match(/[ML][\d.]+,[\d.]+/g);
-        if (!pts) return;
-        ctx.beginPath();
-        pts.forEach((pt, i) => {
-          const [xStr, yStr] = pt.substring(1).split(',');
-          const x = parseFloat(xStr), y = parseFloat(yStr);
-          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-      });
 
       let drawing = false;
       const getPos = (e: PointerEvent) => {
-        const r = el.getBoundingClientRect();
+        const r = canvas.getBoundingClientRect();
         return { x: e.clientX - r.left, y: e.clientY - r.top };
       };
-      el.onpointerdown = (e: PointerEvent) => {
+      canvas.addEventListener('pointerdown', (e: PointerEvent) => {
         e.preventDefault();
-        el.setPointerCapture(e.pointerId);
+        canvas.setPointerCapture(e.pointerId);
         drawing = true;
         const { x, y } = getPos(e);
         dedicationPathRef.current = `M${x.toFixed(1)},${y.toFixed(1)}`;
         ctx.beginPath();
         ctx.moveTo(x, y);
-      };
-      el.onpointermove = (e: PointerEvent) => {
+      });
+      canvas.addEventListener('pointermove', (e: PointerEvent) => {
         if (!drawing) return;
         e.preventDefault();
         const { x, y } = getPos(e);
@@ -762,31 +780,26 @@ export default function LiveSessionDashboardScreen() {
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(x, y);
-      };
-      el.onpointerup = (e: PointerEvent) => {
+      });
+      canvas.addEventListener('pointerup', (e: PointerEvent) => {
         if (!drawing) return;
         drawing = false;
         if (dedicationPathRef.current) {
           setDedicationPaths(prev => [...prev, dedicationPathRef.current]);
         }
         dedicationPathRef.current = '';
-      };
-      el.onpointerleave = (e: PointerEvent) => {
+      });
+      canvas.addEventListener('pointerleave', (e: PointerEvent) => {
         if (!drawing) return;
         drawing = false;
         if (dedicationPathRef.current) {
           setDedicationPaths(prev => [...prev, dedicationPathRef.current]);
         }
         dedicationPathRef.current = '';
-      };
-    }, 100);
+      });
+    }, 200);
+    return () => clearTimeout(timer);
   }, [dedicationStep]);
-
-  useEffect(() => {
-    if (Platform.OS === 'web' && dedicationStep === 'signature') {
-      setupDedicationCanvas();
-    }
-  }, [dedicationStep, setupDedicationCanvas]);
 
   const handleStartVideoCall = async () => {
     if (!session) return;
@@ -1120,12 +1133,10 @@ export default function LiveSessionDashboardScreen() {
                     <Text style={[styles.dedicationStepLabel, { marginBottom: 0, fontSize: 13 }]}>{t('dedicationDrawSignature')}</Text>
                   </View>
                   {Platform.OS === 'web' ? (
-                    <View style={[styles.canvas, { width: '100%', height: DEDICATION_CANVAS_SIZE * 0.6 }]}>
-                      <canvas
-                        id="dedication-canvas"
-                        style={{ width: '100%', height: '100%', touchAction: 'none', display: 'block' } as any}
-                      />
-                    </View>
+                    <View
+                      ref={dedicationCanvasContainerRef}
+                      style={[styles.canvas, { width: '100%', height: DEDICATION_CANVAS_SIZE * 0.6 }]}
+                    />
                   ) : (
                     <GestureDetector gesture={dedicationPanGesture}>
                       <View style={[styles.canvas, { width: '100%', height: DEDICATION_CANVAS_SIZE * 0.6 }]}>
