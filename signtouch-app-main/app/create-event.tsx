@@ -611,8 +611,9 @@ export default function CreateEventScreen() {
   const handleSelectDate = (day: number) => {
     const year = calendarMonth.getFullYear();
     const month = calendarMonth.getMonth();
-    const newDate = new Date(year, month, day);
-    setEventDate(newDate.toISOString().split('T')[0]);
+    const mm = String(month + 1).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    setEventDate(`${year}-${mm}-${dd}`);
     setShowDatePicker(false);
   };
 

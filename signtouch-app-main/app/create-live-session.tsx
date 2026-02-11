@@ -114,8 +114,9 @@ export default function CreateLiveSessionScreen() {
   const handleSelectDate = (day: number) => {
     const year = calendarMonth.getFullYear();
     const month = calendarMonth.getMonth();
-    const newDate = new Date(year, month, day);
-    setSessionDate(newDate.toISOString().split('T')[0]);
+    const mm = String(month + 1).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    setSessionDate(`${year}-${mm}-${dd}`);
     setShowDatePicker(false);
   };
 
