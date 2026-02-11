@@ -1033,11 +1033,6 @@ export default function LiveSessionDashboardScreen() {
         </View>
 
         <View style={styles.headerActions}>
-          {session.status === 'waiting' && (
-            <TouchableOpacity style={styles.actionButton} onPress={handleStart}>
-              <Play size={24} color="#fff" fill="#fff" />
-            </TouchableOpacity>
-          )}
           {session.status === 'active' && (
             <TouchableOpacity style={styles.actionButton} onPress={handlePause}>
               <Pause size={24} color="#fff" />
