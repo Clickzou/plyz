@@ -126,26 +126,8 @@ export default function LiveSessionDashboardScreen() {
 
     const loadSession = async () => {
       if (sessionId.startsWith('local_session_')) {
-        const now = new Date();
-        const expiresAt = new Date(now.getTime() + 30 * 60 * 1000);
-        const localSession: LiveSession = {
-          id: sessionId,
-          code: 'LOCAL',
-          celebrity_id: 'local_celebrity',
-          celebrity_name: 'Session Locale',
-          duration_minutes: 30,
-          duration_per_fan_minutes: 5,
-          max_slots: 10,
-          price_cents: 0,
-          currency: 'EUR',
-          status: 'active',
-          current_fan_id: null,
-          started_at: now.toISOString(),
-          ends_at: expiresAt.toISOString(),
-          created_at: now.toISOString(),
-          slots_used: 0,
-        };
-        setSession(localSession);
+        console.log('[Dashboard] Local session detected, redirecting to create a new session...');
+        router.replace('/create-live-session');
         return;
       }
       const s = await getSessionById(sessionId);

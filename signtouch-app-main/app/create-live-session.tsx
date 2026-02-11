@@ -242,61 +242,32 @@ export default function CreateLiveSessionScreen() {
       const celebrityId = user?.id || `celebrity_${Date.now()}`;
       let session;
       
-      const generateCode = () => {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        let code = '';
-        for (let i = 0; i < 6; i++) {
-          code += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return code;
-      };
-
       let uploadedPhotoUrl: string | null = null;
       if (coverPhotoUri) {
         const tempId = `temp_${Date.now()}`;
         uploadedPhotoUrl = await uploadCoverPhoto(tempId, coverPhotoUri);
       }
-
-      const createLocalSession = () => {
-        const now = new Date();
-        const expiresAt = new Date(now.getTime() + totalDuration * 60 * 1000);
-        return {
-          id: `local_session_${Date.now()}`,
-          code: generateCode(),
-          celebrity_id: celebrityId,
-          celebrity_name: celebrityName.trim(),
-          duration_minutes: totalDuration,
-          duration_per_fan_minutes: durationPerFan,
-          max_slots: calculatedMaxFans,
-          price_cents: price,
-          status: 'active',
-          current_fan_id: null,
-          queue: [],
-          created_at: now.toISOString(),
-          expires_at: expiresAt.toISOString(),
-          cover_photo_url: uploadedPhotoUrl,
-          celebrity_stripe_account_id: finalStripeAccountId,
-        };
-      };
       
-      try {
-        session = await createLiveSession(
-          celebrityId,
-          celebrityName.trim(),
-          totalDuration,
-          calculatedMaxFans,
-          price,
-          durationPerFan,
-          uploadedPhotoUrl,
-          finalStripeAccountId
+      console.log('[CreateSession] Calling createLiveSession with celebrityId:', celebrityId);
+      session = await createLiveSession(
+        celebrityId,
+        celebrityName.trim(),
+        totalDuration,
+        calculatedMaxFans,
+        price,
+        durationPerFan,
+        uploadedPhotoUrl,
+        finalStripeAccountId
+      );
+      
+      if (!session) {
+        console.error('[CreateSession] Failed to create session in Supabase after retries');
+        showAlert(
+          t('error') || 'Erreur',
+          t('liveSessionCreateError') || 'Impossible de créer la session. Vérifiez votre connexion et réessayez.'
         );
-        if (!session) {
-          console.log('Supabase returned null, creating local session');
-          session = createLocalSession();
-        }
-      } catch (supabaseError) {
-        console.log('Supabase error, creating local session:', supabaseError);
-        session = createLocalSession();
+        setIsCreating(false);
+        return;
       }
 
       console.log('Session created:', session);

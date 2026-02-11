@@ -173,41 +173,55 @@ export const createLiveSession = async (
   coverPhotoUrl: string | null = null,
   celebrityStripeAccountId: string | null = null
 ): Promise<LiveSession | null> => {
-  try {
-    const code = generateSessionCode();
-    
-    const insertData: any = {
-      code,
-      celebrity_id: celebrityId,
-      celebrity_name: celebrityName,
-      duration_minutes: durationMinutes,
-      duration_per_fan_minutes: durationPerFanMinutes,
-      max_slots: maxSlots,
-      price_cents: priceCents,
-      status: 'waiting',
-      cover_photo_url: coverPhotoUrl,
-    };
+  const code = generateSessionCode();
+  
+  const insertData: any = {
+    code,
+    celebrity_id: celebrityId,
+    celebrity_name: celebrityName,
+    duration_minutes: durationMinutes,
+    duration_per_fan_minutes: durationPerFanMinutes,
+    max_slots: maxSlots,
+    price_cents: priceCents,
+    status: 'waiting',
+    cover_photo_url: coverPhotoUrl,
+  };
 
-    if (celebrityStripeAccountId) {
-      insertData.celebrity_stripe_account_id = celebrityStripeAccountId;
-    }
+  if (celebrityStripeAccountId) {
+    insertData.celebrity_stripe_account_id = celebrityStripeAccountId;
+  }
 
-    const { data, error } = await supabase
-      .from('live_sessions')
-      .insert(insertData)
-      .select()
-      .single();
+  console.log('[createLiveSession] Inserting session with code:', code, 'data:', JSON.stringify(insertData));
 
-    if (error) {
-      console.error('Error creating live session:', error);
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const { data, error } = await supabase
+        .from('live_sessions')
+        .insert(insertData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error(`[createLiveSession] Attempt ${attempt}/3 error:`, JSON.stringify(error));
+        if (attempt < 3) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          continue;
+        }
+        return null;
+      }
+
+      console.log('[createLiveSession] Session created successfully:', data?.id, data?.code);
+      return data as LiveSession;
+    } catch (error) {
+      console.error(`[createLiveSession] Attempt ${attempt}/3 exception:`, error);
+      if (attempt < 3) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        continue;
+      }
       return null;
     }
-
-    return data as LiveSession;
-  } catch (error) {
-    console.error('Error creating live session:', error);
-    return null;
   }
+  return null;
 };
 
 export const updateCelebrityPushToken = async (
