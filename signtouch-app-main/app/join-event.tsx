@@ -922,7 +922,7 @@ export default function JoinEventScreen() {
                     <View style={[styles.infoIconCircle, styles.infoIconCircleWait]}>
                       <Text style={[styles.infoIconText, { color: '#f59e0b' }]}>⏱</Text>
                     </View>
-                    <Text style={styles.infoValueWait}>~{queueStats?.estimatedWaitMinutes || 0}</Text>
+                    <Text style={styles.infoValueWait}>~{Math.max(queueStats?.estimatedWaitMinutes || 1, 1)}</Text>
                     <Text style={styles.infoLabel}>min</Text>
                   </View>
                 </View>
