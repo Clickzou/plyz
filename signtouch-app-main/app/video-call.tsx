@@ -72,8 +72,9 @@ export default function VideoCallScreen() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hasLeftCall, setHasLeftCall] = useState(false);
   const [paymentCaptured, setPaymentCaptured] = useState(false);
-  const callStartTime = useRef<number>(Date.now());
+  const callStartTime = useRef<number>(0);
   const autoEndTriggered = useRef(false);
+  const [otherParticipantJoined, setOtherParticipantJoined] = useState(false);
 
   useEffect(() => {
     if (ScreenOrientation) {
@@ -97,7 +98,11 @@ export default function VideoCallScreen() {
 
   useEffect(() => {
     const durationMinutes = parseInt(params.durationPerFan || '5', 10);
-    if (!durationMinutes) return;
+    if (!durationMinutes || !otherParticipantJoined) return;
+
+    if (callStartTime.current === 0) {
+      callStartTime.current = Date.now();
+    }
 
     const durationMs = durationMinutes * 60 * 1000;
 
@@ -119,7 +124,7 @@ export default function VideoCallScreen() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [params.durationPerFan]);
+  }, [params.durationPerFan, otherParticipantJoined]);
 
   const isHost = params.isHost === 'true';
   const userName = params.userName || (isHost ? 'Host' : 'Guest');
@@ -149,6 +154,8 @@ export default function VideoCallScreen() {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.action === 'left-meeting') {
         handleCallEnded();
+      } else if (data.action === 'participant-joined') {
+        setOtherParticipantJoined(true);
       }
     } catch (e) {
     }
@@ -306,6 +313,14 @@ export default function VideoCallScreen() {
           window.ReactNativeWebView.postMessage(JSON.stringify(event.data));
         }
       });
+
+      var participantCheckInterval = setInterval(function() {
+        var videos = document.querySelectorAll('video');
+        if (videos.length >= 2) {
+          clearInterval(participantCheckInterval);
+          window.ReactNativeWebView.postMessage(JSON.stringify({action: 'participant-joined'}));
+        }
+      }, 1000);
       
       var observer = new MutationObserver(function(mutations) {
         var leaveBtn = document.querySelector('[data-testid="leave-meeting"]');
@@ -401,6 +416,16 @@ export default function VideoCallScreen() {
                     callFrame.on('left-meeting', () => {
                       handleCallEnded();
                     });
+                    callFrame.on('participant-joined', () => {
+                      setOtherParticipantJoined(true);
+                    });
+                    callFrame.on('participant-left', () => {
+                      const participants = callFrame.participants();
+                      const remoteCount = Object.keys(participants).filter((k: string) => k !== 'local').length;
+                      if (remoteCount === 0) {
+                        handleCallEnded();
+                      }
+                    });
                     (el as any)._dailyCallFrame = callFrame;
                   } catch (e) {
                     setError(t('videoCallError'));
@@ -483,9 +508,11 @@ export default function VideoCallScreen() {
           ) : null}
 
           {params.durationPerFan ? (
-            <View style={[styles.timerContainer, timeWarning && styles.timerWarning]}>
+            <View style={[styles.timerContainer, timeWarning && styles.timerWarning, !otherParticipantJoined && { opacity: 0.5 }]}>
               <Clock size={isHost ? 14 : 12} color="#fff" />
-              <Text style={[styles.timerText, !isHost && styles.timerTextFan]}>{fanTimeRemaining}</Text>
+              <Text style={[styles.timerText, !isHost && styles.timerTextFan]}>
+                {otherParticipantJoined ? fanTimeRemaining : `${params.durationPerFan}:00`}
+              </Text>
             </View>
           ) : (
             <View style={styles.liveIndicator}>
