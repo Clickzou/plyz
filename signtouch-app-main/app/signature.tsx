@@ -181,7 +181,18 @@ export default function SignatureScreen() {
     }
   }, []);
 
+  const onTapDot = useCallback((x: number, y: number) => {
+    const dotPath = `M ${x - 3} ${y} L ${x + 3} ${y} M ${x} ${y - 3} L ${x} ${y + 3}`;
+    setPaths((prev) => [...prev, { path: dotPath }]);
+  }, []);
+
+  const tapDraw = Gesture.Tap()
+    .onEnd((event) => {
+      runOnJS(onTapDot)(event.x, event.y);
+    });
+
   const panDraw = Gesture.Pan()
+    .minDistance(1)
     .onStart((event) => {
       runOnJS(onDrawStart)(event.x, event.y);
     })
@@ -191,6 +202,8 @@ export default function SignatureScreen() {
     .onEnd((event) => {
       runOnJS(onDrawEnd)(event.x, event.y);
     });
+
+  const drawGesture = Gesture.Race(panDraw, tapDraw);
 
   const clearSignature = () => {
     if (Platform.OS !== 'web') {
@@ -462,7 +475,7 @@ export default function SignatureScreen() {
             style={styles.viewShot}
             collapsable={false}
           >
-              <GestureDetector gesture={panDraw}>
+              <GestureDetector gesture={drawGesture}>
                 <View style={styles.drawingArea}>
                   <Svg width={screenWidth} height={screenHeight}>
                     {paths.map((item, index) => (

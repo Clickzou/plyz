@@ -364,6 +364,17 @@ export default function ComposeScreen() {
     Manrope_400Regular,
   });
 
+  const [fontTimeout, setFontTimeout] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!fontsLoaded) {
+        console.warn('[Compose] Font loading timed out, proceeding anyway');
+        setFontTimeout(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [fontsLoaded]);
+
   const { photoUri, signatures, memoryId, texts } = useLocalSearchParams<{
     photoUri: string;
     signatures: string;
@@ -1090,7 +1101,7 @@ export default function ComposeScreen() {
   const finalPhotoUri = loadedPhotoUri || photoUri;
 
   // Attendre que les polices soient chargées ET que la mémoire soit chargée
-  if (isLoadingMemory || !fontsLoaded) {
+  if (isLoadingMemory || (!fontsLoaded && !fontTimeout)) {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
