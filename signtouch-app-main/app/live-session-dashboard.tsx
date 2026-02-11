@@ -305,6 +305,14 @@ export default function LiveSessionDashboardScreen() {
       const fullQueue = await getFullQueue(sessionId);
       setSessionQueue(fullQueue);
 
+      if (calledFanIdRef.current) {
+        const stillInQueue = fullQueue.some((e) => e.id === calledFanIdRef.current);
+        if (!stillInQueue) {
+          calledFanIdRef.current = null;
+          setCalledFan(null);
+        }
+      }
+
       const waitingInQueue = fullQueue.filter((e) => e.status === 'waiting' || e.status === 'called' || e.status === 'in_call').length;
 
       if (waitingInQueue >= 1 && !hasPlayedFirstFanChime.current) {

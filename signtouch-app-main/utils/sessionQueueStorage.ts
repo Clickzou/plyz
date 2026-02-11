@@ -200,7 +200,7 @@ export const callNextFan = async (sessionId: string): Promise<QueueEntry | null>
       .from('session_queue')
       .update({ status: 'completed', completed_at: new Date().toISOString() })
       .eq('session_id', sessionId)
-      .eq('status', 'in_call');
+      .in('status', ['in_call', 'called']);
 
     const { data: nextFan } = await supabase
       .from('session_queue')
