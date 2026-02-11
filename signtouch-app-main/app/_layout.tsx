@@ -33,6 +33,7 @@ import {
 } from '@/utils/postPurchaseAccount';
 import { setAccountPromptSnooze } from '@/utils/postPurchaseAccountStorage';
 import { initRevenueCat } from '@/utils/revenueCat';
+import CustomAlert from '@/components/CustomAlert';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -102,6 +103,8 @@ function AppContent() {
         visible={showPostPurchaseAccount}
         onClose={handleClosePostPurchaseAccount}
       />
+
+      <CustomAlert />
     </>
   );
 }
