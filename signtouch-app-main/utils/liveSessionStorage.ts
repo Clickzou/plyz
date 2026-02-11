@@ -175,12 +175,16 @@ export const createLiveSession = async (
 ): Promise<LiveSession | null> => {
   const code = generateSessionCode();
   
+  const durationPerFanInt = durationPerFanMinutes < 1 
+    ? 1 
+    : Math.round(durationPerFanMinutes);
+
   const insertData: any = {
     code,
     celebrity_id: celebrityId,
     celebrity_name: celebrityName,
     duration_minutes: durationMinutes,
-    duration_per_fan_minutes: durationPerFanMinutes,
+    duration_per_fan_minutes: durationPerFanInt,
     max_slots: maxSlots,
     price_cents: priceCents,
     status: 'waiting',

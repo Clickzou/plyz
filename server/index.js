@@ -144,12 +144,17 @@ app.post('/api/create-session', async (req, res) => {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
 
+    const durationPerFanValue = Number(duration_per_fan_minutes);
+    const durationPerFanInt = durationPerFanValue < 1 
+      ? Math.max(1, Math.round(durationPerFanValue * 60))
+      : Math.round(durationPerFanValue);
+
     const insertData = {
       code,
       celebrity_id,
       celebrity_name,
       duration_minutes,
-      duration_per_fan_minutes,
+      duration_per_fan_minutes: durationPerFanValue < 1 ? 1 : durationPerFanInt,
       max_slots,
       price_cents,
       status: 'waiting',
