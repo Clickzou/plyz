@@ -78,7 +78,12 @@ export default function StripeConnectModal({
         );
         const data = await response.json();
         if (data.onboarding_complete) {
-          onConnected(savedAccountId);
+          setIsVerified(true);
+          setStep('onboarding');
+          await AsyncStorage.setItem('stripe_connect_account_id', savedAccountId);
+          setTimeout(() => {
+            onConnected(savedAccountId);
+          }, 2500);
           return;
         } else {
           setStep('onboarding');
