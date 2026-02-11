@@ -21,6 +21,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { createLiveSession, uploadCoverPhoto } from '@/utils/liveSessionStorage';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/contexts/AuthContext';
+import { getStripeAccountId } from '@/utils/userProfile';
 
 const formatDuration = (minutes: number): string => {
   if (minutes < 1) {
@@ -54,6 +56,7 @@ export default function CreateLiveSessionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   const [celebrityName, setCelebrityName] = useState('');
   const [durationPerFan, setDurationPerFan] = useState(0.5);
@@ -177,8 +180,10 @@ export default function CreateLiveSessionScreen() {
 
   const checkStripeConnectStatus = async (): Promise<string | null> => {
     try {
-      const savedId = await AsyncStorage.getItem('stripe_connect_account_id');
-      return savedId;
+      if (user?.id) {
+        return await getStripeAccountId(user.id);
+      }
+      return await AsyncStorage.getItem('stripe_connect_account_id');
     } catch {
       return null;
     }
@@ -186,7 +191,6 @@ export default function CreateLiveSessionScreen() {
 
   const handleStripeConnected = async (accountId: string) => {
     try {
-      await AsyncStorage.setItem('stripe_connect_account_id', accountId);
       setStripeAccountId(accountId);
       setStripeConnected(true);
       setShowStripeConnect(false);
@@ -235,7 +239,7 @@ export default function CreateLiveSessionScreen() {
     setPhotoError(false);
     console.log('[CreateSession] Starting session creation...');
     try {
-      const celebrityId = `celebrity_${Date.now()}`;
+      const celebrityId = user?.id || `celebrity_${Date.now()}`;
       let session;
       
       const generateCode = () => {
@@ -551,6 +555,7 @@ export default function CreateLiveSessionScreen() {
         onClose={() => setShowStripeConnect(false)}
         onConnected={handleStripeConnected}
         celebrityName={celebrityName}
+        userId={user?.id}
       />
     </View>
   );

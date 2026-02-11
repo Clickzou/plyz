@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { X, Shield, CreditCard, Clock, CheckCircle, ExternalLink, ArrowRight, Home, Mail, RefreshCw } from 'lucide-react-native';
 import { useTranslation } from '@/contexts/LanguageContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getStripeAccountId, saveStripeAccountId } from '@/utils/userProfile';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -24,6 +25,7 @@ interface StripeConnectModalProps {
   onConnected: (accountId: string) => void;
   celebrityName?: string;
   celebrityId?: string;
+  userId?: string;
 }
 
 export default function StripeConnectModal({
@@ -32,6 +34,7 @@ export default function StripeConnectModal({
   onConnected,
   celebrityName,
   celebrityId,
+  userId,
 }: StripeConnectModalProps) {
   const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = React.useState(false);
@@ -69,7 +72,9 @@ export default function StripeConnectModal({
 
   const checkExistingAccount = async () => {
     try {
-      const savedAccountId = await AsyncStorage.getItem('stripe_connect_account_id');
+      const savedAccountId = userId
+        ? await getStripeAccountId(userId)
+        : await AsyncStorage.getItem('stripe_connect_account_id');
       if (savedAccountId) {
         setStep('checking');
         setAccountId(savedAccountId);
@@ -80,7 +85,11 @@ export default function StripeConnectModal({
         if (data.onboarding_complete) {
           setIsVerified(true);
           setStep('onboarding');
-          await AsyncStorage.setItem('stripe_connect_account_id', savedAccountId);
+          if (userId) {
+            await saveStripeAccountId(userId, savedAccountId);
+          } else {
+            await AsyncStorage.setItem('stripe_connect_account_id', savedAccountId);
+          }
           setTimeout(() => {
             onConnected(savedAccountId);
           }, 2500);
@@ -138,7 +147,11 @@ export default function StripeConnectModal({
       console.log('[StripeConnect] Nouveau compte Express créé:', data.account_id);
       console.log('[StripeConnect] URL onboarding:', data.url);
 
-      await AsyncStorage.setItem('stripe_connect_account_id', data.account_id);
+      if (userId) {
+        await saveStripeAccountId(userId, data.account_id);
+      } else {
+        await AsyncStorage.setItem('stripe_connect_account_id', data.account_id);
+      }
       setAccountId(data.account_id);
 
       openUrl(data.url);
@@ -156,7 +169,9 @@ export default function StripeConnectModal({
     setError(null);
 
     try {
-      const savedAccountId = await AsyncStorage.getItem('stripe_connect_account_id');
+      const savedAccountId = userId
+        ? await getStripeAccountId(userId)
+        : await AsyncStorage.getItem('stripe_connect_account_id');
 
       if (!savedAccountId) {
         setStep('noAccount');
@@ -206,7 +221,11 @@ export default function StripeConnectModal({
       console.log('[StripeConnect] Admin: lien onboarding pour:', trimmed);
       console.log('[StripeConnect] URL onboarding:', data.url);
 
-      await AsyncStorage.setItem('stripe_connect_account_id', trimmed);
+      if (userId) {
+        await saveStripeAccountId(userId, trimmed);
+      } else {
+        await AsyncStorage.setItem('stripe_connect_account_id', trimmed);
+      }
       setAccountId(trimmed);
       openUrl(data.url);
       setStep('onboarding');
@@ -233,7 +252,11 @@ export default function StripeConnectModal({
         stopPolling();
         setIsVerified(true);
         setError(null);
-        await AsyncStorage.setItem('stripe_connect_account_id', accountId);
+        if (userId) {
+          await saveStripeAccountId(userId, accountId);
+        } else {
+          await AsyncStorage.setItem('stripe_connect_account_id', accountId);
+        }
         setTimeout(() => {
           onConnected(accountId);
         }, 2000);
