@@ -373,8 +373,34 @@ export default function CreateLiveSessionScreen() {
           price,
           durationPerFan,
           uploadedPhotoUrl,
-          finalStripeAccountId
+          finalStripeAccountId,
+          scheduledAt || null
         );
+        if (session && scheduledAt) {
+          try {
+            const { supabase } = await import('@/utils/supabase');
+            const scheduledDate = new Date(scheduledAt);
+            const endsAt = new Date(scheduledDate.getTime() + totalDuration * 60 * 1000);
+            const { error: esError } = await supabase
+              .from('event_sessions')
+              .insert({
+                title: celebrityName.trim(),
+                starts_at: scheduledDate.toISOString(),
+                ends_at: endsAt.toISOString(),
+                status: 'scheduled',
+                join_code: session.code,
+                event_type: 'live_video',
+                live_session_id: session.id,
+              });
+            if (esError) {
+              console.warn('[CreateSession] Fallback: event_sessions insert error:', esError);
+            } else {
+              console.log('[CreateSession] Fallback: event_sessions entry created');
+            }
+          } catch (e) {
+            console.warn('[CreateSession] Fallback: event_sessions creation failed:', e);
+          }
+        }
       }
       
       if (!session) {

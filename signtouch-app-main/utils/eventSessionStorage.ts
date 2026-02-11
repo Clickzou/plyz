@@ -227,29 +227,45 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
     const { data: { user } } = await supabase.auth.getUser();
     userId = user?.id;
   }
-  
-  if (!userId) {
-    console.log('No user found for getMyScheduledEvents');
-    return [];
+
+  let allEvents: EventSession[] = [];
+
+  if (userId) {
+    const { data, error } = await supabase
+      .from('event_sessions')
+      .select('*')
+      .eq('created_by', userId)
+      .in('status', ['scheduled', 'active', 'live', 'ended'])
+      .order('starts_at', { ascending: true });
+
+    if (!error && data) {
+      allEvents = data;
+    } else if (error) {
+      console.error('Error fetching scheduled events by user:', error);
+    }
   }
-  
-  const { data, error } = await supabase
+
+  const { data: liveVideoEvents, error: lvError } = await supabase
     .from('event_sessions')
     .select('*')
-    .eq('created_by', userId)
+    .eq('event_type', 'live_video')
+    .not('live_session_id', 'is', null)
     .in('status', ['scheduled', 'active', 'live', 'ended'])
     .order('starts_at', { ascending: true });
 
-  if (error) {
-    console.error('Error fetching scheduled events:', error);
-    return [];
+  if (!lvError && liveVideoEvents) {
+    const existingIds = new Set(allEvents.map(e => e.id));
+    for (const ev of liveVideoEvents) {
+      if (!existingIds.has(ev.id)) {
+        allEvents.push(ev);
+      }
+    }
   }
-  
-  // Filter out locally deleted events (workaround for RLS restrictions)
+
   const locallyDeleted = getLocallyDeletedEvents();
-  const filteredData = (data || []).filter(event => !locallyDeleted.includes(event.id));
+  const filteredData = allEvents.filter(event => !locallyDeleted.includes(event.id));
   
-  console.log('[getMyScheduledEvents] Filtered out', (data?.length || 0) - filteredData.length, 'locally deleted events');
+  console.log('[getMyScheduledEvents] Found', filteredData.length, 'events (filtered out', allEvents.length - filteredData.length, 'deleted)');
   
   return filteredData;
 };

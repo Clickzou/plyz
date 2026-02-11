@@ -172,7 +172,8 @@ export const createLiveSession = async (
   priceCents: number = 0,
   durationPerFanMinutes: number = 5,
   coverPhotoUrl: string | null = null,
-  celebrityStripeAccountId: string | null = null
+  celebrityStripeAccountId: string | null = null,
+  scheduledAt: string | null = null
 ): Promise<LiveSession | null> => {
   const code = generateSessionCode();
   
@@ -188,9 +189,13 @@ export const createLiveSession = async (
     duration_per_fan_minutes: durationPerFanInt,
     max_slots: maxSlots,
     price_cents: priceCents,
-    status: 'waiting',
+    status: scheduledAt ? 'scheduled' : 'waiting',
     cover_photo_url: coverPhotoUrl,
   };
+
+  if (scheduledAt) {
+    insertData.scheduled_at = scheduledAt;
+  }
 
   if (celebrityStripeAccountId) {
     insertData.celebrity_stripe_account_id = celebrityStripeAccountId;
