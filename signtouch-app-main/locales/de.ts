@@ -795,6 +795,7 @@ export default {
   videoNotSupportedWeb: 'Videoanrufe sind im Web nicht verfügbar',
   videoWebHint: 'Verwenden Sie die mobile App für Live-Videoanrufe',
   videoCallError: 'Fehler beim Verbinden mit dem Videoanruf',
+  fanConnecting: '{name} verbindet sich...',
   connectingToCall: 'Verbinde...',
   leaveCall: 'Anruf verlassen',
   leaveCallConfirm: 'Sind Sie sicher, dass Sie diesen Anruf verlassen möchten?',

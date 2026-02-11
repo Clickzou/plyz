@@ -800,6 +800,7 @@ export default {
   videoNotSupportedWeb: 'Les appels vidéo ne sont pas disponibles sur le web',
   videoWebHint: 'Utilisez l\'application mobile pour les appels vidéo en direct',
   videoCallError: 'Erreur de connexion à l\'appel vidéo',
+  fanConnecting: '{name} est en train de se connecter...',
   connectingToCall: 'Connexion en cours...',
   leaveCall: 'Quitter l\'appel',
   leaveCallConfirm: 'Êtes-vous sûr de vouloir quitter cet appel ?',

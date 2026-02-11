@@ -795,6 +795,7 @@ export default {
   videoNotSupportedWeb: 'ビデオ通話はWebで利用できません',
   videoWebHint: 'ライブビデオ通話にはモバイルアプリをご利用ください',
   videoCallError: 'ビデオ通話への接続エラー',
+  fanConnecting: '{name}さんが接続中...',
   connectingToCall: '接続中...',
   leaveCall: '通話を終了',
   leaveCallConfirm: 'この通話を終了してもよろしいですか？',

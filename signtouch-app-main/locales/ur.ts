@@ -795,6 +795,7 @@ export default {
   videoNotSupportedWeb: 'ویب پر ویڈیو کالز دستیاب نہیں ہیں',
   videoWebHint: 'براہ راست ویڈیو کالز کے لیے موبائل ایپ استعمال کریں',
   videoCallError: 'ویڈیو کال سے منسلک ہونے میں خرابی',
+  fanConnecting: '{name} جڑ رہا ہے...',
   connectingToCall: 'منسلک ہو رہا ہے...',
   leaveCall: 'کال چھوڑیں',
   leaveCallConfirm: 'کیا آپ واقعی یہ کال چھوڑنا چاہتے ہیں؟',

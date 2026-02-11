@@ -794,6 +794,7 @@ export default {
   videoNotSupportedWeb: 'Las videollamadas no están disponibles en la web',
   videoWebHint: 'Usa la aplicación móvil para videollamadas en vivo',
   videoCallError: 'Error al conectar a la videollamada',
+  fanConnecting: '{name} se está conectando...',
   connectingToCall: 'Conectando...',
   leaveCall: 'Salir de la llamada',
   leaveCallConfirm: '¿Estás seguro de que quieres salir de esta llamada?',

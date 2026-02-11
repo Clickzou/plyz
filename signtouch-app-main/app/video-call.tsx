@@ -591,6 +591,15 @@ export default function VideoCallScreen() {
         </TouchableOpacity>
       </View>
 
+      {isHost && !otherParticipantJoined && !isLoading && !waitingForNextFan && !hasLeftCall && (
+        <View style={styles.fanConnectingBanner}>
+          <ActivityIndicator size="small" color="#a78bfa" />
+          <Text style={styles.fanConnectingText}>
+            {(t('fanConnecting') || '{name} est en train de se connecter...').replace('{name}', currentFanName)}
+          </Text>
+        </View>
+      )}
+
       {isLoading && (
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingCard}>
@@ -743,6 +752,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
     overflow: 'hidden',
+  },
+  fanConnectingBanner: {
+    position: 'absolute',
+    top: 80,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(139, 92, 246, 0.85)',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    gap: 10,
+    zIndex: 50,
+  },
+  fanConnectingText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   loadingOverlay: {
     position: 'absolute',

@@ -795,6 +795,7 @@ export default {
   videoNotSupportedWeb: 'वीडियो कॉल वेब पर उपलब्ध नहीं हैं',
   videoWebHint: 'लाइव वीडियो कॉल के लिए मोबाइल ऐप का उपयोग करें',
   videoCallError: 'वीडियो कॉल से कनेक्ट करने में त्रुटि',
+  fanConnecting: '{name} कनेक्ट हो रहा है...',
   connectingToCall: 'कनेक्ट हो रहा है...',
   leaveCall: 'कॉल छोड़ें',
   leaveCallConfirm: 'क्या आप सुनिश्चित हैं कि आप इस कॉल को छोड़ना चाहते हैं?',

@@ -795,6 +795,7 @@ export default {
   videoNotSupportedWeb: 'مكالمات الفيديو غير متاحة على الويب',
   videoWebHint: 'استخدم التطبيق المحمول لمكالمات الفيديو المباشرة',
   videoCallError: 'خطأ في الاتصال بمكالمة الفيديو',
+  fanConnecting: '{name} يتصل الآن...',
   connectingToCall: 'جاري الاتصال...',
   leaveCall: 'مغادرة المكالمة',
   leaveCallConfirm: 'هل أنت متأكد من مغادرة هذه المكالمة؟',
