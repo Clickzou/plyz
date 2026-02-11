@@ -77,7 +77,7 @@ export const createDailyRoom = async (options: CreateRoomOptions = {}): Promise<
           enable_screenshare: false,
           enable_prejoin_ui: false,
           start_video_off: false,
-          start_audio_off: true,
+          start_audio_off: false,
         },
       }),
     });
@@ -130,7 +130,7 @@ export const createMeetingToken = async (options: CreateTokenOptions): Promise<s
           enable_screenshare: false,
           enable_prejoin_ui: false,
           start_video_off: false,
-          start_audio_off: !isOwner,
+          start_audio_off: false,
           exp: Math.floor(Date.now() / 1000) + (expiryMinutes * 60),
         },
       }),

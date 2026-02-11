@@ -148,6 +148,8 @@ export default function VideoCallScreen() {
     urlParams.append('activeSpeakerMode', 'false');
     urlParams.append('lang', dailyLang);
     urlParams.append('controlBarPosition', 'hidden');
+    urlParams.append('startAudioOff', 'false');
+    urlParams.append('startVideoOff', 'false');
     
     return `${baseUrl}?${urlParams.toString()}`;
   };
