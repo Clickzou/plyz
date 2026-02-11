@@ -27,6 +27,7 @@ import { clearTrialData } from '@/utils/trialStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { getStripeAccountId, saveStripeAccountId } from '@/utils/userProfile';
+import StripeConnectModal from '@/components/StripeConnectModal';
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -62,6 +63,9 @@ export default function AccountScreen() {
   const [loginStep, setLoginStep] = useState<'idle' | 'email' | 'otp' | 'sending' | 'verifying'>('idle');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [stripeLinked, setStripeLinked] = useState(false);
+  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  const [showStripeModal, setShowStripeModal] = useState(false);
+  const [stripeLoading, setStripeLoading] = useState(false);
 
   useEffect(() => {
     checkPromoPremium();
@@ -72,22 +76,28 @@ export default function AccountScreen() {
       syncStripeOnLogin();
     } else {
       setStripeLinked(false);
+      setStripeAccountId(null);
     }
   }, [user?.id]);
 
   const syncStripeOnLogin = async () => {
     if (!user?.id) return;
+    setStripeLoading(true);
     try {
       const localStripeId = await AsyncStorage.getItem('stripe_connect_account_id');
       if (localStripeId) {
         await saveStripeAccountId(user.id, localStripeId);
         setStripeLinked(true);
+        setStripeAccountId(localStripeId);
       } else {
         const dbStripeId = await getStripeAccountId(user.id);
         setStripeLinked(!!dbStripeId);
+        setStripeAccountId(dbStripeId);
       }
     } catch (error) {
       console.error('[Account] Error syncing Stripe:', error);
+    } finally {
+      setStripeLoading(false);
     }
   };
 
@@ -420,6 +430,78 @@ export default function AccountScreen() {
           )}
         </View>
 
+        {user && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>
+              STRIPE CONNECT
+            </Text>
+
+            <View style={styles.stripeCard}>
+              <View style={styles.stripeCardHeader}>
+                <View style={styles.stripeIconContainer}>
+                  <CreditCard size={24} color="#635BFF" />
+                </View>
+                <View style={styles.stripeCardInfo}>
+                  <Text style={styles.stripeCardTitle}>
+                    {t('stripeConnectPayments') || 'Paiements Stripe'}
+                  </Text>
+                  {stripeLoading ? (
+                    <ActivityIndicator size="small" color="#635BFF" style={{ alignSelf: 'flex-start', marginTop: 4 }} />
+                  ) : stripeLinked ? (
+                    <View style={styles.stripeStatusBadge}>
+                      <View style={styles.stripeStatusDot} />
+                      <Text style={styles.stripeStatusText}>
+                        {t('stripeConnected') || 'Connecté'}
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.stripeNotConnectedText}>
+                      {t('stripeNotConnected') || 'Non connecté'}
+                    </Text>
+                  )}
+                </View>
+              </View>
+
+              {stripeLinked && stripeAccountId && (
+                <View style={styles.stripeAccountIdBox}>
+                  <Text style={styles.stripeAccountIdLabel}>ID</Text>
+                  <Text style={styles.stripeAccountIdValue} numberOfLines={1}>
+                    {stripeAccountId}
+                  </Text>
+                </View>
+              )}
+
+              <Text style={styles.stripeDesc}>
+                {stripeLinked
+                  ? (t('stripeConnectedDesc') || 'Votre compte Stripe Connect est actif. Vous pouvez recevoir des paiements pour vos sessions live.')
+                  : (t('stripeNotConnectedDesc') || 'Connectez votre compte Stripe pour recevoir des paiements de vos sessions live avec les fans.')
+                }
+              </Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.stripeActionButton,
+                  stripeLinked && styles.stripeActionButtonConnected,
+                ]}
+                onPress={() => setShowStripeModal(true)}
+                activeOpacity={0.7}
+              >
+                <CreditCard size={18} color={stripeLinked ? '#635BFF' : '#ffffff'} />
+                <Text style={[
+                  styles.stripeActionButtonText,
+                  stripeLinked && styles.stripeActionButtonTextConnected,
+                ]}>
+                  {stripeLinked
+                    ? (t('stripeManage') || 'Gérer mon compte Stripe')
+                    : (t('stripeConnect') || 'Connecter Stripe Connect')
+                  }
+                </Text>
+                <ArrowRight size={16} color={stripeLinked ? '#635BFF' : '#ffffff'} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {__DEV__ && (
           <View style={styles.debugSection}>
             <Text style={styles.debugTitle}>Mode Debug</Text>
@@ -668,6 +750,17 @@ export default function AccountScreen() {
           </View>
         </View>
       </Modal>
+
+      <StripeConnectModal
+        visible={showStripeModal}
+        onClose={() => setShowStripeModal(false)}
+        onConnected={(accountId) => {
+          setStripeLinked(true);
+          setStripeAccountId(accountId);
+          setShowStripeModal(false);
+        }}
+        userId={user?.id}
+      />
 
       <BottomNav />
     </View>
@@ -1066,5 +1159,105 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 14,
     color: '#888',
+  },
+  stripeCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 91, 255, 0.15)',
+  },
+  stripeCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  stripeIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(99, 91, 255, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  stripeCardInfo: {
+    flex: 1,
+  },
+  stripeCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  stripeStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  stripeStatusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10b981',
+  },
+  stripeStatusText: {
+    fontSize: 13,
+    color: '#10b981',
+    fontWeight: '500',
+  },
+  stripeNotConnectedText: {
+    fontSize: 13,
+    color: '#888',
+  },
+  stripeAccountIdBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(99, 91, 255, 0.08)',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginBottom: 12,
+    gap: 8,
+    alignSelf: 'flex-start',
+  },
+  stripeAccountIdLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#635BFF',
+    letterSpacing: 1,
+  },
+  stripeAccountIdValue: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontFamily: Platform.OS === 'web' ? 'monospace' : undefined,
+  },
+  stripeDesc: {
+    fontSize: 13,
+    color: '#888',
+    lineHeight: 19,
+    marginBottom: 16,
+  },
+  stripeActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#635BFF',
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  stripeActionButtonConnected: {
+    backgroundColor: 'rgba(99, 91, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(99, 91, 255, 0.3)',
+  },
+  stripeActionButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  stripeActionButtonTextConnected: {
+    color: '#635BFF',
   },
 });
