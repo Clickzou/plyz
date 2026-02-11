@@ -85,7 +85,7 @@ const CANVAS_SIZE = SCREEN_WIDTH - 80;
 
 export default function LiveSessionDashboardScreen() {
   const router = useRouter();
-  const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
+  const { sessionId, sessionData } = useLocalSearchParams<{ sessionId: string; sessionData?: string }>();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
 
@@ -126,7 +126,17 @@ export default function LiveSessionDashboardScreen() {
 
     const loadSession = async () => {
       if (sessionId.startsWith('local_session_')) {
-        console.log('[Dashboard] Local session detected, redirecting to create a new session...');
+        if (sessionData) {
+          try {
+            const parsed = JSON.parse(sessionData as string) as LiveSession;
+            console.log('[Dashboard] Local session loaded from route params:', parsed.code);
+            setSession(parsed);
+            return;
+          } catch (e) {
+            console.error('[Dashboard] Failed to parse session data:', e);
+          }
+        }
+        console.log('[Dashboard] Local session without data, redirecting to create page');
         router.replace('/create-live-session');
         return;
       }
