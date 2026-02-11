@@ -187,7 +187,7 @@ app.post('/api/create-session', async (req, res) => {
       try {
         const scheduledDate = new Date(scheduled_at);
         const endsAt = new Date(scheduledDate.getTime() + (duration_minutes || 30) * 60000);
-        const { data: { user } } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(celebrity_id);
         const eventInsert = {
           title: celebrity_name,
           starts_at: scheduledDate.toISOString(),
@@ -196,8 +196,10 @@ app.post('/api/create-session', async (req, res) => {
           join_code: code,
           event_type: 'live_video',
           live_session_id: data.id,
-          created_by: celebrity_id,
         };
+        if (isUUID) {
+          eventInsert.created_by = celebrity_id;
+        }
         const { error: eventError } = await supabase
           .from('event_sessions')
           .insert(eventInsert);
