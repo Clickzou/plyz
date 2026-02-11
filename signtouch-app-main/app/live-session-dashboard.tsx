@@ -829,8 +829,8 @@ export default function LiveSessionDashboardScreen() {
     );
   }
 
-  if (session.status === 'scheduled' && session.scheduled_at) {
-    const scheduledDate = new Date(session.scheduled_at);
+  if (session.status === 'scheduled') {
+    const scheduledDate = session.scheduled_at ? new Date(session.scheduled_at) : null;
     const locale = language === 'fr' ? 'fr-FR' : 'en-US';
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -851,20 +851,24 @@ export default function LiveSessionDashboardScreen() {
             {session.celebrity_name}
           </Text>
 
-          <Text style={{ fontSize: 14, color: '#9ca3af', textAlign: 'center', marginBottom: 20 }}>
-            {scheduledDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            {' '}
-            {language === 'fr' ? 'à' : 'at'} {scheduledDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </Text>
+          {scheduledDate && (
+            <Text style={{ fontSize: 14, color: '#9ca3af', textAlign: 'center', marginBottom: 20 }}>
+              {scheduledDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              {' '}
+              {language === 'fr' ? 'à' : 'at'} {scheduledDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </Text>
+          )}
 
-          <View style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 20, alignItems: 'center', marginBottom: 24, width: '100%' }}>
-            <Text style={{ fontSize: 13, color: '#9ca3af', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 2 }}>
-              {language === 'fr' ? 'Commence dans' : 'Starts in'}
-            </Text>
-            <Text style={{ fontSize: 42, fontWeight: '800', color: '#fff', fontVariant: ['tabular-nums'] }}>
-              {scheduledCountdown || '--:--:--'}
-            </Text>
-          </View>
+          {scheduledDate && scheduledDate > new Date() && (
+            <View style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 20, alignItems: 'center', marginBottom: 24, width: '100%' }}>
+              <Text style={{ fontSize: 13, color: '#9ca3af', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 2 }}>
+                {language === 'fr' ? 'Commence dans' : 'Starts in'}
+              </Text>
+              <Text style={{ fontSize: 42, fontWeight: '800', color: '#fff', fontVariant: ['tabular-nums'] }}>
+                {scheduledCountdown || '--:--:--'}
+              </Text>
+            </View>
+          )}
 
           <Text style={{ fontSize: 16, fontWeight: '600', color: '#fff', marginBottom: 12 }}>
             {language === 'fr' ? 'Partagez Ce Code Avec Vos Fans' : 'Share This Code With Your Fans'}
