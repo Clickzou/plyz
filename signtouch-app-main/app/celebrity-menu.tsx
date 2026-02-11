@@ -360,10 +360,42 @@ export default function CelebrityMenuScreen() {
                             ? `Terminé le ${new Date(event.ends_at).toLocaleDateString()}`
                             : eventLive
                             ? `Jusqu'au ${new Date(event.ends_at).toLocaleDateString()} à ${new Date(event.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                            : event.scheduled_at
+                            ? `${new Date(event.scheduled_at).toLocaleDateString()} à ${new Date(event.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                             : `${new Date(event.starts_at).toLocaleDateString()} à ${new Date(event.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                           }
                         </Text>
                       </View>
+
+                      {isLiveVideo && (
+                        <View style={styles.eventDetailsRow}>
+                          <View style={styles.eventDetailItem}>
+                            <Text style={styles.eventDetailValue}>
+                              {event.price_cents ? `${(event.price_cents / 100).toFixed(0)}€` : t('free') || 'Gratuit'}
+                            </Text>
+                            <Text style={styles.eventDetailLabel}>{t('perFan') || 'par fan'}</Text>
+                          </View>
+                          <View style={styles.eventDetailDivider} />
+                          <View style={styles.eventDetailItem}>
+                            <Text style={styles.eventDetailValue}>
+                              {event.price_cents && event.max_fans ? `${((event.price_cents * event.max_fans) / 100).toFixed(0)}€` : '-'}
+                            </Text>
+                            <Text style={styles.eventDetailLabel}>{t('estimatedTotal') || 'total estimé'}</Text>
+                          </View>
+                          <View style={styles.eventDetailDivider} />
+                          <View style={styles.eventDetailItem}>
+                            <Text style={styles.eventDetailValue}>{event.duration_per_fan_minutes || 5} min</Text>
+                            <Text style={styles.eventDetailLabel}>{t('perFan') || 'par fan'}</Text>
+                          </View>
+                          <View style={styles.eventDetailDivider} />
+                          <View style={styles.eventDetailItem}>
+                            <Text style={styles.eventDetailValue}>
+                              {((event.duration_per_fan_minutes || 5) * (event.max_fans || 60))} min
+                            </Text>
+                            <Text style={styles.eventDetailLabel}>{t('totalDuration') || 'durée totale'}</Text>
+                          </View>
+                        </View>
+                      )}
 
                       <View style={styles.eventCode}>
                         <Text style={styles.eventCodeLabel}>{t('code') || 'Code'}:</Text>
@@ -734,6 +766,34 @@ const styles = StyleSheet.create({
   },
   eventTimeTextEnded: {
     color: '#9ca3af',
+  },
+  eventDetailsRow: {
+    flexDirection: 'row',
+    backgroundColor: '#f0fdf4',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 10,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  eventDetailItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  eventDetailValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#188661',
+  },
+  eventDetailLabel: {
+    fontSize: 10,
+    color: '#6b7280',
+    marginTop: 2,
+  },
+  eventDetailDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: '#d1d5db',
   },
   eventCode: {
     flexDirection: 'row',

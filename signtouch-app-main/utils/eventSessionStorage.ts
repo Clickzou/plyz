@@ -18,6 +18,10 @@ export interface EventSession {
   event_type?: 'qr' | 'live_video';
   live_session_id?: string;
   location?: string;
+  price_cents?: number;
+  duration_per_fan_minutes?: number;
+  max_fans?: number;
+  scheduled_at?: string;
 }
 
 export interface EventSigner {
@@ -258,7 +262,7 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
         const converted: EventSession = {
           id: ls.id,
           title: ls.celebrity_name || 'Live Session',
-          starts_at: ls.started_at || ls.created_at,
+          starts_at: ls.scheduled_at || ls.started_at || ls.created_at,
           ends_at: ls.ends_at || new Date(new Date(ls.created_at).getTime() + (ls.duration_minutes || 30) * 60000).toISOString(),
           status: ls.status === 'waiting' ? 'live' : (ls.status === 'active' ? 'live' : ls.status),
           join_code: ls.code,
@@ -267,6 +271,10 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
           created_at: ls.created_at,
           event_type: 'live_video',
           live_session_id: ls.id,
+          price_cents: ls.price_cents || 0,
+          duration_per_fan_minutes: ls.duration_per_fan_minutes || 5,
+          max_fans: ls.max_slots || 60,
+          scheduled_at: ls.scheduled_at || null,
         };
         allEvents.push(converted);
       }
