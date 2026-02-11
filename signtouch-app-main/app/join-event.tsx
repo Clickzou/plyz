@@ -94,7 +94,7 @@ export default function JoinEventScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const { status } = useSubscription();
   const [showAccountModal, setShowAccountModal] = useState(false);
@@ -832,15 +832,39 @@ export default function JoinEventScreen() {
             ) : !hasJoinedQueue ? (
               <View style={styles.joinQueueSection}>
                 <Text style={styles.joinQueueTitle}>
-                  {t('joinTheQueue') || 'Join the queue to call'}
+                  {t('joinTheQueue') || 'Rejoindre la file d\'attente'}
                 </Text>
                 <Text style={styles.joinQueueSubtitle}>
-                  {t('enterNameToJoin') || 'Enter your name to join the waiting list'}
+                  {t('enterNameToJoin') || 'Entrez votre nom pour rejoindre la liste d\'attente'}
                 </Text>
+
+                {foundLiveSession.price_cents > 0 && (
+                  <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                      <View style={{ backgroundColor: '#10B981', borderRadius: 20, width: 36, height: 36, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                        <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700' }}>€</Text>
+                      </View>
+                      <View>
+                        <Text style={{ color: '#fff', fontSize: 20, fontWeight: '700' }}>
+                          {(foundLiveSession.price_cents / 100).toFixed(2).replace('.', ',')}€
+                        </Text>
+                        <Text style={{ color: '#9ca3af', fontSize: 12 }}>
+                          {language === 'fr' ? `Appel de ${foundLiveSession.duration_per_fan_minutes || 1} min` : `${foundLiveSession.duration_per_fan_minutes || 1} min call`}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginVertical: 8 }} />
+                    <Text style={{ color: '#d1d5db', fontSize: 12, lineHeight: 18 }}>
+                      {language === 'fr' 
+                        ? '💳 Pré-autorisation : le montant est réservé sur votre carte mais ne sera débité qu\'après votre appel vidéo. Si l\'appel n\'a pas lieu, vous ne serez pas débité.'
+                        : '💳 Pre-authorization: the amount is reserved on your card but will only be charged after your video call. If the call doesn\'t happen, you won\'t be charged.'}
+                    </Text>
+                  </View>
+                )}
                 
                 <TextInput
                   style={styles.nameInput}
-                  placeholder={t('yourName') || 'Your name'}
+                  placeholder={t('yourName') || 'Votre nom'}
                   placeholderTextColor="rgba(255,255,255,0.4)"
                   value={fanName}
                   onChangeText={setFanName}
@@ -863,7 +887,11 @@ export default function JoinEventScreen() {
                     ) : (
                       <>
                         <Users size={22} color="#fff" />
-                        <Text style={styles.joinQueueButtonText}>{t('joinQueue') || 'Join Queue'}</Text>
+                        <Text style={styles.joinQueueButtonText}>
+                          {foundLiveSession.price_cents > 0
+                            ? (language === 'fr' ? 'Rejoindre la file' : 'Join Queue')
+                            : (t('joinQueue') || 'Rejoindre la file')}
+                        </Text>
                       </>
                     )}
                   </LinearGradient>
