@@ -666,7 +666,7 @@ export default function LiveSessionDashboardScreen() {
     }
   };
 
-  const DEDICATION_CANVAS_SIZE = SCREEN_WIDTH - 100;
+  const DEDICATION_CANVAS_SIZE = Math.min(SCREEN_WIDTH - 100, 320);
 
   const handleStartVideoCall = async () => {
     if (!session) return;
@@ -888,8 +888,10 @@ export default function LiveSessionDashboardScreen() {
                   <Text style={styles.dedicationStepLabel}>{t('dedicationDrawSignature')}</Text>
                   {Platform.OS === 'web' ? (
                     <View
-                      style={[styles.canvas, { width: DEDICATION_CANVAS_SIZE, height: DEDICATION_CANVAS_SIZE * 0.5, touchAction: 'none' } as any]}
+                      style={[styles.canvas, { width: DEDICATION_CANVAS_SIZE, height: DEDICATION_CANVAS_SIZE * 0.6, touchAction: 'none', userSelect: 'none' } as any]}
                       onPointerDown={(e: any) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         const rect = e.currentTarget.getBoundingClientRect();
                         const x = e.clientX - rect.left;
                         const y = e.clientY - rect.top;
@@ -900,32 +902,34 @@ export default function LiveSessionDashboardScreen() {
                       }}
                       onPointerMove={(e: any) => {
                         if (!isDrawingDedicationRef.current) return;
+                        e.preventDefault();
                         const rect = e.currentTarget.getBoundingClientRect();
                         const x = e.clientX - rect.left;
                         const y = e.clientY - rect.top;
                         dedicationPathRef.current += ` L${x.toFixed(1)},${y.toFixed(1)}`;
                         setDedicationCurrentPath(dedicationPathRef.current);
                       }}
-                      onPointerUp={() => {
+                      onPointerUp={(e: any) => {
+                        e.preventDefault();
                         if (dedicationPathRef.current) {
                           setDedicationPaths((prev) => [...prev, dedicationPathRef.current]);
                         }
                         dedicationPathRef.current = '';
                         setDedicationCurrentPath('');
                         isDrawingDedicationRef.current = false;
-                        setIsDrawingDedication(false);
+                        setTimeout(() => setIsDrawingDedication(false), 100);
                       }}
-                      onPointerLeave={() => {
+                      onPointerLeave={(e: any) => {
                         if (isDrawingDedicationRef.current && dedicationPathRef.current) {
                           setDedicationPaths((prev) => [...prev, dedicationPathRef.current]);
                         }
                         dedicationPathRef.current = '';
                         setDedicationCurrentPath('');
                         isDrawingDedicationRef.current = false;
-                        setIsDrawingDedication(false);
+                        setTimeout(() => setIsDrawingDedication(false), 100);
                       }}
                     >
-                      <Svg width={DEDICATION_CANVAS_SIZE} height={DEDICATION_CANVAS_SIZE * 0.5}>
+                      <Svg width={DEDICATION_CANVAS_SIZE} height={DEDICATION_CANVAS_SIZE * 0.6}>
                         {dedicationPaths.map((p, i) => (
                           <Path key={i} d={p} stroke="#000" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                         ))}
@@ -936,8 +940,8 @@ export default function LiveSessionDashboardScreen() {
                     </View>
                   ) : (
                     <GestureDetector gesture={dedicationPanGesture}>
-                      <View style={[styles.canvas, { width: DEDICATION_CANVAS_SIZE, height: DEDICATION_CANVAS_SIZE * 0.5 }]}>
-                        <Svg width={DEDICATION_CANVAS_SIZE} height={DEDICATION_CANVAS_SIZE * 0.5}>
+                      <View style={[styles.canvas, { width: DEDICATION_CANVAS_SIZE, height: DEDICATION_CANVAS_SIZE * 0.6 }]}>
+                        <Svg width={DEDICATION_CANVAS_SIZE} height={DEDICATION_CANVAS_SIZE * 0.6}>
                           {dedicationPaths.map((p, i) => (
                             <Path key={i} d={p} stroke="#000" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                           ))}
