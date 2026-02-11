@@ -704,7 +704,7 @@ export default function LiveSessionDashboardScreen() {
     }
   };
 
-  const DEDICATION_CANVAS_SIZE = Math.min(SCREEN_WIDTH - 100, 320);
+  const DEDICATION_CANVAS_SIZE = Math.min(SCREEN_WIDTH - 100, 260);
 
   const handleStartVideoCall = async () => {
     if (!session) return;
@@ -972,22 +972,22 @@ export default function LiveSessionDashboardScreen() {
         {showQR && session.status === 'waiting' && (
           <View style={styles.qrSection}>
             <Text style={styles.qrTitle}>{t('liveSessionShareCode')}</Text>
-            <View style={styles.qrContainer}>
-              <QRCode value={`signtouch://live/${session.code}`} size={180} />
+            <View style={[styles.qrContainer, { padding: 12 }]}>
+              <QRCode value={`signtouch://live/${session.code}`} size={120} />
             </View>
-            <TouchableOpacity style={styles.codeContainer} onPress={copyCode}>
-              <Text style={styles.codeText}>{session.code}</Text>
+            <TouchableOpacity style={[styles.codeContainer, { marginTop: 8, paddingVertical: 8, paddingHorizontal: 14 }]} onPress={copyCode}>
+              <Text style={[styles.codeText, { fontSize: 18 }]}>{session.code}</Text>
               {copied ? (
-                <Check size={20} color="#4ade80" />
+                <Check size={16} color="#4ade80" />
               ) : (
-                <Copy size={20} color="#fff" />
+                <Copy size={16} color="#fff" />
               )}
             </TouchableOpacity>
-            <Text style={styles.qrHint}>{t('liveSessionShareHint')}</Text>
+            <Text style={[styles.qrHint, { marginTop: 6, fontSize: 12 }]}>{t('liveSessionShareHint')}</Text>
 
-            <View style={styles.dedicationSetupSection}>
-              <Text style={styles.dedicationSetupTitle}>{t('dedicationSetupTitle')}</Text>
-              <Text style={styles.dedicationSetupHint}>{t('dedicationSetupHint')}</Text>
+            <View style={[styles.dedicationSetupSection, { marginTop: 12, padding: 14 }]}>
+              <Text style={[styles.dedicationSetupTitle, { fontSize: 15, marginBottom: 4 }]}>{t('dedicationSetupTitle')}</Text>
+              <Text style={[styles.dedicationSetupHint, { fontSize: 11, marginBottom: 10 }]}>{t('dedicationSetupHint')}</Text>
 
               {dedicationStep === 'photo' && (
                 <View style={styles.dedicationPhotoStep}>
@@ -1022,13 +1022,15 @@ export default function LiveSessionDashboardScreen() {
 
               {dedicationStep === 'signature' && (
                 <View style={styles.dedicationSignatureStep}>
-                  <View style={styles.dedicationStepBadge}>
-                    <Text style={styles.dedicationStepBadgeText}>2/2</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 10 }}>
+                    <View style={styles.dedicationStepBadge}>
+                      <Text style={styles.dedicationStepBadgeText}>2/2</Text>
+                    </View>
+                    {dedicationPhotoUri && (
+                      <Image source={{ uri: dedicationPhotoUri }} style={{ width: 40, height: 50, borderRadius: 8 }} resizeMode="cover" />
+                    )}
+                    <Text style={[styles.dedicationStepLabel, { marginBottom: 0, fontSize: 13 }]}>{t('dedicationDrawSignature')}</Text>
                   </View>
-                  {dedicationPhotoUri && (
-                    <Image source={{ uri: dedicationPhotoUri }} style={styles.dedicationPhotoPreview} resizeMode="cover" />
-                  )}
-                  <Text style={styles.dedicationStepLabel}>{t('dedicationDrawSignature')}</Text>
                   {Platform.OS === 'web' ? (
                     <View
                       style={[styles.canvas, { width: DEDICATION_CANVAS_SIZE, height: DEDICATION_CANVAS_SIZE * 0.6, touchAction: 'none', userSelect: 'none' } as any]}
@@ -1461,13 +1463,13 @@ const styles = StyleSheet.create({
   },
   qrSection: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 12,
   },
   qrTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '600',
     color: '#fff',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   qrContainer: {
     backgroundColor: '#fff',
@@ -1836,10 +1838,10 @@ const styles = StyleSheet.create({
   },
   dedicationStepBadge: {
     backgroundColor: '#8b5cf6',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+    marginBottom: 8,
   },
   dedicationStepBadgeText: {
     color: '#fff',
@@ -1863,12 +1865,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 8,
     backgroundColor: '#8b5cf6',
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    minHeight: 52,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    minHeight: 44,
   },
   dedicationPhotoButtonAlt: {
     backgroundColor: 'transparent',
