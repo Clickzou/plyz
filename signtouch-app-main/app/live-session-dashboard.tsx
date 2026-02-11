@@ -33,6 +33,9 @@ import {
   ChevronRight,
   DollarSign,
   TrendingUp,
+  Calendar,
+  Bell,
+  ArrowLeft,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -90,7 +93,7 @@ export default function LiveSessionDashboardScreen() {
   const router = useRouter();
   const { sessionId, sessionData } = useLocalSearchParams<{ sessionId: string; sessionData?: string }>();
   const insets = useSafeAreaInsets();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [session, setSession] = useState<LiveSession | null>(null);
   const [queue, setQueue] = useState<QueueEntry[]>([]);
@@ -129,6 +132,7 @@ export default function LiveSessionDashboardScreen() {
   const hasPlayedFirstFanChime = useRef(false);
   const [queueFull, setQueueFull] = useState(false);
   const [firstFanJoined, setFirstFanJoined] = useState(false);
+  const [scheduledCountdown, setScheduledCountdown] = useState<string>('');
 
   useEffect(() => {
     if (!sessionId) {
@@ -216,6 +220,36 @@ export default function LiveSessionDashboardScreen() {
     };
     registerPushToken();
   }, [sessionId]);
+
+  useEffect(() => {
+    if (!session?.scheduled_at || session.status !== 'scheduled') return;
+    
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const target = new Date(session.scheduled_at!).getTime();
+      const diff = target - now;
+      
+      if (diff <= 0) {
+        setScheduledCountdown('00:00:00');
+        return;
+      }
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      if (days > 0) {
+        setScheduledCountdown(`${days}j ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+      } else {
+        setScheduledCountdown(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+      }
+    };
+    
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [session?.scheduled_at, session?.status]);
 
   useEffect(() => {
     if (!session?.ends_at || session.status !== 'active') return;
@@ -767,10 +801,111 @@ export default function LiveSessionDashboardScreen() {
   const pollingCount = sessionQueue.filter((e) => e.status === 'waiting' || (e.status as string) === 'called' || (e.status as string) === 'in_call').length;
   const waitingCount = Math.max(realtimeCount, pollingCount);
 
+  const handleLaunchSession = async () => {
+    if (!session) return;
+    try {
+      const response = await fetch(`${STRIPE_SERVER_URL}/api/launch-scheduled-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: session.id }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        console.error('Launch failed:', err);
+      }
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('Error launching session:', error);
+    }
+  };
+
   if (!session) {
     return (
       <View style={[styles.container, styles.centerContent]}>
         <Text style={styles.loadingText}>{t('loading')}...</Text>
+      </View>
+    );
+  }
+
+  if (session.status === 'scheduled' && session.scheduled_at) {
+    const scheduledDate = new Date(session.scheduled_at);
+    const locale = language === 'fr' ? 'fr-FR' : 'en-US';
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />
+        <ScrollView contentContainerStyle={{ padding: 20, alignItems: 'center' }}>
+          <TouchableOpacity
+            style={{ alignSelf: 'flex-start', padding: 8, marginBottom: 8 }}
+            onPress={() => router.back()}
+          >
+            <ArrowLeft size={24} color="#fff" />
+          </TouchableOpacity>
+
+          <View style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)', borderRadius: 50, width: 70, height: 70, alignItems: 'center', justifyContent: 'center', marginTop: 10, marginBottom: 16 }}>
+            <Calendar size={34} color="#3b82f6" />
+          </View>
+
+          <Text style={{ fontSize: 22, fontWeight: '700', color: '#fff', textAlign: 'center', marginBottom: 4 }}>
+            {session.celebrity_name}
+          </Text>
+
+          <Text style={{ fontSize: 14, color: '#9ca3af', textAlign: 'center', marginBottom: 20 }}>
+            {scheduledDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            {' '}
+            {language === 'fr' ? 'à' : 'at'} {scheduledDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </Text>
+
+          <View style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 20, alignItems: 'center', marginBottom: 24, width: '100%' }}>
+            <Text style={{ fontSize: 13, color: '#9ca3af', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 2 }}>
+              {language === 'fr' ? 'Commence dans' : 'Starts in'}
+            </Text>
+            <Text style={{ fontSize: 42, fontWeight: '800', color: '#fff', fontVariant: ['tabular-nums'] }}>
+              {scheduledCountdown || '--:--:--'}
+            </Text>
+          </View>
+
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#fff', marginBottom: 12 }}>
+            {language === 'fr' ? 'Partagez Ce Code Avec Vos Fans' : 'Share This Code With Your Fans'}
+          </Text>
+
+          <View style={{ backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 16 }}>
+            <QRCode value={`signtouch://live/${session.code}`} size={160} />
+          </View>
+
+          <TouchableOpacity 
+            style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}
+            onPress={copyCode}
+          >
+            <Text style={{ fontSize: 26, fontWeight: '800', color: '#10B981', letterSpacing: 6, marginRight: 10 }}>
+              {session.code}
+            </Text>
+            {copied ? <Check size={20} color="#10B981" /> : <Copy size={20} color="#fff" />}
+          </TouchableOpacity>
+
+          <Text style={{ fontSize: 13, color: '#6b7280', marginBottom: 20 }}>
+            {language === 'fr' ? 'Les fans peuvent rejoindre avec ce code' : 'Fans can join with this code'}
+          </Text>
+
+          <TouchableOpacity
+            style={{ backgroundColor: '#10B981', paddingVertical: 16, paddingHorizontal: 32, borderRadius: 14, width: '100%', alignItems: 'center', marginBottom: 16, flexDirection: 'row', justifyContent: 'center' }}
+            onPress={handleLaunchSession}
+          >
+            <Play size={20} color="#fff" fill="#fff" style={{ marginRight: 8 }} />
+            <Text style={{ color: '#fff', fontSize: 17, fontWeight: '700' }}>
+              {language === 'fr' ? 'Lancer la session maintenant' : 'Launch session now'}
+            </Text>
+          </TouchableOpacity>
+
+          <Text style={{ fontSize: 12, color: '#6b7280', textAlign: 'center', marginBottom: 24 }}>
+            {language === 'fr' 
+              ? 'Vous pouvez lancer la session avant l\'heure prévue si vous êtes prêt'
+              : 'You can launch the session before the scheduled time if you\'re ready'}
+          </Text>
+
+          <View style={{ height: 40 }} />
+        </ScrollView>
       </View>
     );
   }

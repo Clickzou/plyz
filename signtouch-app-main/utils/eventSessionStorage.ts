@@ -16,6 +16,7 @@ export interface EventSession {
   created_by: string | null;
   created_at: string;
   event_type?: 'qr' | 'live_video';
+  live_session_id?: string;
   location?: string;
 }
 

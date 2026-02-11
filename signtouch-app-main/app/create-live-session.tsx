@@ -15,7 +15,7 @@ import {
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Clock, Users, DollarSign, Play, Star, Camera, RotateCcw, Info, ChevronDown, ChevronUp, Calendar } from 'lucide-react-native';
+import { ArrowLeft, Clock, Users, DollarSign, Play, Star, Camera, RotateCcw, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
@@ -26,6 +26,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { getStripeAccountId } from '@/utils/userProfile';
 import { scheduleCelebrityReminders } from '@/utils/scheduleReminders';
+import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
+const QRCodeSvg = require('react-native-qrcode-svg').default;
 
 const formatDuration = (minutes: number): string => {
   if (minutes < 1) {
@@ -83,6 +86,8 @@ export default function CreateLiveSessionScreen() {
   const [selectedHour, setSelectedHour] = useState(12);
   const [selectedMinute, setSelectedMinute] = useState(0);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [scheduledConfirmation, setScheduledConfirmation] = useState<{code: string, sessionId: string, scheduledAt: string} | null>(null);
+  const [confirmCopied, setConfirmCopied] = useState(false);
 
   const WEEKDAYS_FR = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
   const WEEKDAYS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -392,12 +397,16 @@ export default function CreateLiveSessionScreen() {
         console.log('[CreateSession] Notifications scheduled:', notified);
       }
 
-      router.replace({
-        pathname: '/live-session-dashboard',
-        params: { 
-          sessionId: session.id,
-        },
-      });
+      if (scheduledAt) {
+        setScheduledConfirmation({ code: session.code, sessionId: session.id, scheduledAt: scheduledAt });
+      } else {
+        router.replace({
+          pathname: '/live-session-dashboard',
+          params: { 
+            sessionId: session.id,
+          },
+        });
+      }
     } catch (error) {
       console.error('Error creating session:', error);
       showAlert(t('error'), t('liveSessionCreateError'));
@@ -405,6 +414,90 @@ export default function CreateLiveSessionScreen() {
       setIsCreating(false);
     }
   };
+
+  if (scheduledConfirmation) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />
+        <ScrollView contentContainerStyle={{ padding: 20, alignItems: 'center' }}>
+          <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', borderRadius: 50, width: 60, height: 60, alignItems: 'center', justifyContent: 'center', marginTop: 20, marginBottom: 16 }}>
+            <Check size={32} color="#10B981" />
+          </View>
+          <Text style={{ fontSize: 22, fontWeight: '700', color: '#fff', textAlign: 'center', marginBottom: 8 }}>
+            {language === 'fr' ? 'Session programmée !' : 'Session scheduled!'}
+          </Text>
+          <Text style={{ fontSize: 14, color: '#9ca3af', textAlign: 'center', marginBottom: 24, paddingHorizontal: 20 }}>
+            {language === 'fr' 
+              ? `Votre session live est programmée pour le ${new Date(scheduledConfirmation.scheduledAt).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' })} à ${new Date(scheduledConfirmation.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+              : `Your live session is scheduled for ${new Date(scheduledConfirmation.scheduledAt).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at ${new Date(scheduledConfirmation.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+            }
+          </Text>
+
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#fff', marginBottom: 12 }}>
+            {language === 'fr' ? 'Partagez Ce Code Avec Vos Fans' : 'Share This Code With Your Fans'}
+          </Text>
+
+          <View style={{ backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 16 }}>
+            <QRCodeSvg value={`signtouch://join/${scheduledConfirmation.code}`} size={180} />
+          </View>
+
+          <Text style={{ fontSize: 28, fontWeight: '800', color: '#10B981', letterSpacing: 6, marginBottom: 8 }}>
+            {scheduledConfirmation.code}
+          </Text>
+
+          <TouchableOpacity
+            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, marginBottom: 24 }}
+            onPress={async () => {
+              await Clipboard.setStringAsync(scheduledConfirmation.code);
+              setConfirmCopied(true);
+              if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              setTimeout(() => setConfirmCopied(false), 2000);
+            }}
+          >
+            {confirmCopied ? <Check size={16} color="#10B981" /> : <Copy size={16} color="#fff" />}
+            <Text style={{ color: confirmCopied ? '#10B981' : '#fff', marginLeft: 8, fontSize: 14 }}>
+              {confirmCopied ? (language === 'fr' ? 'Copié !' : 'Copied!') : (language === 'fr' ? 'Copier le code' : 'Copy code')}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)', borderRadius: 12, padding: 16, marginBottom: 24, width: '100%' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <Bell size={18} color="#3b82f6" />
+              <Text style={{ fontSize: 15, fontWeight: '600', color: '#3b82f6', marginLeft: 8 }}>
+                {language === 'fr' ? 'Rappels activés' : 'Reminders enabled'}
+              </Text>
+            </View>
+            <Text style={{ fontSize: 13, color: '#93c5fd', lineHeight: 20 }}>
+              {language === 'fr'
+                ? 'Vous recevrez une notification 1 heure avant et 2 minutes avant le début de votre session. Retrouvez cette session dans "Mes événements" pour la lancer le jour J.'
+                : 'You will receive a notification 1 hour before and 2 minutes before your session starts. Find this session in "My Events" to launch it on the day.'
+              }
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={{ backgroundColor: '#10B981', paddingVertical: 14, paddingHorizontal: 32, borderRadius: 12, width: '100%', alignItems: 'center', marginBottom: 12 }}
+            onPress={() => router.replace('/celebrity-menu')}
+          >
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
+              {language === 'fr' ? 'Voir mes événements' : 'View my events'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{ paddingVertical: 12, paddingHorizontal: 32, borderRadius: 12, width: '100%', alignItems: 'center' }}
+            onPress={() => router.replace('/')}
+          >
+            <Text style={{ color: '#9ca3af', fontSize: 14 }}>
+              {language === 'fr' ? "Retour à l'accueil" : 'Back to home'}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>

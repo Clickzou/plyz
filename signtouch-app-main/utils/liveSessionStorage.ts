@@ -10,7 +10,7 @@ export interface LiveSession {
   max_slots: number;
   price_cents: number;
   currency: string;
-  status: 'waiting' | 'active' | 'paused' | 'ended';
+  status: 'waiting' | 'active' | 'paused' | 'ended' | 'scheduled';
   current_fan_id: string | null;
   started_at: string | null;
   ends_at: string | null;
@@ -23,6 +23,7 @@ export interface LiveSession {
   dedication_photo_url?: string | null;
   dedication_signature_svg?: string | null;
   celebrity_stripe_account_id?: string | null;
+  scheduled_at?: string | null;
 }
 
 export interface QueueEntry {

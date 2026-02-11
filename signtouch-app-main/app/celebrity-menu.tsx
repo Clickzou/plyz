@@ -91,6 +91,13 @@ export default function CelebrityMenuScreen() {
   }, [myEvents, loadEventViews]);
 
   const handleContinueEvent = (event: EventSession) => {
+    if (event.event_type === 'live_video' && event.live_session_id) {
+      router.push({
+        pathname: '/live-session-dashboard',
+        params: { sessionId: event.live_session_id },
+      });
+      return;
+    }
     router.push(`/event-publish?sessionId=${event.id}&sessionTitle=${encodeURIComponent(event.title)}&joinCode=${event.join_code}&eventType=${event.event_type || 'qr'}&startsAt=${encodeURIComponent(event.starts_at)}&endsAt=${encodeURIComponent(event.ends_at)}&location=${encodeURIComponent(event.location || '')}`);
   };
 

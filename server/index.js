@@ -182,9 +182,77 @@ app.post('/api/create-session', async (req, res) => {
     }
 
     console.log('[create-session] Session created successfully:', data.id, data.code);
+
+    if (scheduled_at) {
+      try {
+        const scheduledDate = new Date(scheduled_at);
+        const endsAt = new Date(scheduledDate.getTime() + (duration_minutes || 30) * 60000);
+        const { data: { user } } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
+        const eventInsert = {
+          title: celebrity_name,
+          starts_at: scheduledDate.toISOString(),
+          ends_at: endsAt.toISOString(),
+          status: 'scheduled',
+          join_code: code,
+          event_type: 'live_video',
+          live_session_id: data.id,
+          created_by: celebrity_id,
+        };
+        const { error: eventError } = await supabase
+          .from('event_sessions')
+          .insert(eventInsert);
+        if (eventError) {
+          console.error('[create-session] Failed to create event_sessions entry:', eventError.message);
+        } else {
+          console.log('[create-session] Event session entry created for scheduled live session');
+        }
+      } catch (eventErr) {
+        console.error('[create-session] Event session creation failed:', eventErr.message);
+      }
+    }
+
     res.json({ session: data });
   } catch (e) {
     console.error('[create-session] Exception:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/launch-scheduled-session', async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    const { session_id } = req.body;
+
+    if (!session_id) {
+      return res.status(400).json({ error: 'Missing session_id' });
+    }
+
+    const { data, error } = await supabase
+      .from('live_sessions')
+      .update({ status: 'waiting' })
+      .eq('id', session_id)
+      .eq('status', 'scheduled')
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[launch-session] Error:', error.message);
+      return res.status(500).json({ error: error.message });
+    }
+
+    const { error: eventError } = await supabase
+      .from('event_sessions')
+      .update({ status: 'live' })
+      .eq('live_session_id', session_id);
+
+    if (eventError) {
+      console.warn('[launch-session] Event status update warning:', eventError.message);
+    }
+
+    console.log('[launch-session] Session launched:', data.id);
+    res.json({ session: data });
+  } catch (e) {
+    console.error('[launch-session] Exception:', e.message);
     res.status(500).json({ error: e.message });
   }
 });

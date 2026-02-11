@@ -52,6 +52,7 @@ Preferred communication style: Simple, everyday language.
     - `GET /api/verify-payment`: Verifies Checkout Session payment/authorization status (returns `authorized: true` when `requires_capture`).
     - `GET /api/session-earnings`: Returns real-time earnings for a live session (queries Stripe for captured payments, calculates celebrity's net share).
     - `GET /api/celebrity-earnings`: Returns full earnings history for a celebrity — all sessions, fan counts, duration, revenue per session, and estimated payout date.
+    - `POST /api/launch-scheduled-session`: Transitions a scheduled live session to 'waiting' status and updates linked event_sessions to 'live'.
     - `POST /api/stripe-webhook`: Handles Stripe webhook events for payment confirmation.
     - `GET /api/health`: Health check endpoint.
   - **Stripe Connect**: Full automated onboarding via `StripeConnectModal` component. Server creates Express accounts, generates onboarding links, and verifies status. Celebrity's Stripe Connect account ID stored in AsyncStorage and in live session data (`celebrity_stripe_account_id`). Payments are automatically split: SignTouch fee (15%) via application_fee_amount, rest goes to celebrity's Stripe Connect account.
