@@ -94,8 +94,8 @@ export default function JoinEventScreen() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const { user, setPostAuthRedirect } = useAuth();
-  const { status, isPremium } = useSubscription();
+  const { user } = useAuth();
+  const { status } = useSubscription();
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [pendingJoinQueue, setPendingJoinQueue] = useState(false);
 
@@ -325,12 +325,6 @@ export default function JoinEventScreen() {
   };
 
   const handleSaveSignature = async () => {
-    if (!isPremium) {
-      await setPostAuthRedirect('/join-event');
-      router.push('/paywall');
-      return;
-    }
-    
     if (!user) {
       setShowAccountModal(true);
       return;
