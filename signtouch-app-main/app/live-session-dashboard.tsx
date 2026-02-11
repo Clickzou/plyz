@@ -131,7 +131,11 @@ export default function LiveSessionDashboardScreen() {
   const [firstFanJoined, setFirstFanJoined] = useState(false);
 
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      console.log('[Dashboard] No sessionId found, redirecting to home');
+      router.replace('/');
+      return;
+    }
 
     const loadSession = async () => {
       if (sessionId.startsWith('local_session_')) {

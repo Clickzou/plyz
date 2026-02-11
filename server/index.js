@@ -747,6 +747,9 @@ app.use(
     changeOrigin: true,
     ws: true,
     logLevel: 'warn',
+    onProxyReq: (proxyReq) => {
+      proxyReq.removeHeader('origin');
+    },
   })
 );
 
