@@ -140,33 +140,19 @@ export default function CreateLiveSessionScreen() {
     return startDate.toISOString();
   };
 
-  const handleWebFileChange = useCallback((event: Event) => {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setCoverPhotoUri(e.target.result as string);
-          setPhotoError(false);
-        }
-      };
-      reader.readAsDataURL(file);
+  const handleWebFileChange = useCallback((e: any) => {
+    const file = e.target?.files?.[0];
+    if (file) {
+      const uri = URL.createObjectURL(file);
+      setCoverPhotoUri(uri);
+      setPhotoError(false);
     }
+    if (e.target) e.target.value = '';
   }, []);
 
   const handleTakeSelfie = async () => {
     try {
-      if (Platform.OS === 'web') {
-        // Use native HTML5 input with capture for camera on mobile web
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.capture = 'user'; // This opens front camera on mobile
-        input.onchange = handleWebFileChange as any;
-        input.click();
-        return;
-      }
+      if (Platform.OS === 'web') return;
 
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
       
@@ -531,27 +517,62 @@ export default function CreateLiveSessionScreen() {
         <Text style={[styles.sectionTitle, { textAlign: 'center' }]}>{t('liveSessionCoverPhoto') || 'Your Cover Photo'}</Text>
         <Text style={[styles.sectionHint, { textAlign: 'center' }]}>{t('liveSessionCoverPhotoHint') || 'Take a selfie to show fans who is hosting'}</Text>
         
-        <TouchableOpacity 
-          style={[styles.selfieContainer, photoError && styles.selfieContainerError]} 
-          onPress={handleTakeSelfie}
-        >
-          {coverPhotoUri ? (
-            <View style={styles.selfiePreviewContainer}>
-              <Image source={{ uri: coverPhotoUri }} style={styles.selfiePreview} />
-              <TouchableOpacity style={styles.retakeSelfieButton} onPress={handleTakeSelfie}>
-                <RotateCcw size={16} color="#fff" />
-                <Text style={styles.retakeSelfieText}>{t('retake') || 'Retake'}</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.selfiePrompt}>
-              <View style={styles.selfieIconCircle}>
-                <Camera size={40} color="#10B981" />
+        {Platform.OS === 'web' ? (
+          <View style={[styles.selfieContainer, photoError && styles.selfieContainerError, { position: 'relative', overflow: 'hidden' } as any]}>
+            {coverPhotoUri ? (
+              <View style={styles.selfiePreviewContainer}>
+                <Image source={{ uri: coverPhotoUri }} style={styles.selfiePreview} />
+                <View style={[styles.retakeSelfieButton, { position: 'relative', overflow: 'hidden' } as any]}>
+                  <RotateCcw size={16} color="#fff" />
+                  <Text style={styles.retakeSelfieText}>{t('retake') || 'Retake'}</Text>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="user"
+                    onChange={handleWebFileChange}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', zIndex: 10 } as any}
+                  />
+                </View>
               </View>
-              <Text style={styles.selfiePromptText}>{t('tapToTakeSelfie') || 'Tap to take a selfie'}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+            ) : (
+              <View style={styles.selfiePrompt}>
+                <View style={styles.selfieIconCircle}>
+                  <Camera size={40} color="#10B981" />
+                </View>
+                <Text style={styles.selfiePromptText}>{t('tapToTakeSelfie') || 'Tap to take a selfie'}</Text>
+              </View>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              capture="user"
+              onChange={handleWebFileChange}
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', zIndex: coverPhotoUri ? 1 : 10 } as any}
+            />
+          </View>
+        ) : (
+          <TouchableOpacity 
+            style={[styles.selfieContainer, photoError && styles.selfieContainerError]} 
+            onPress={handleTakeSelfie}
+          >
+            {coverPhotoUri ? (
+              <View style={styles.selfiePreviewContainer}>
+                <Image source={{ uri: coverPhotoUri }} style={styles.selfiePreview} />
+                <TouchableOpacity style={styles.retakeSelfieButton} onPress={handleTakeSelfie}>
+                  <RotateCcw size={16} color="#fff" />
+                  <Text style={styles.retakeSelfieText}>{t('retake') || 'Retake'}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.selfiePrompt}>
+                <View style={styles.selfieIconCircle}>
+                  <Camera size={40} color="#10B981" />
+                </View>
+                <Text style={styles.selfiePromptText}>{t('tapToTakeSelfie') || 'Tap to take a selfie'}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        )}
         {photoError && (
           <Text style={styles.errorText}>{t('liveSessionPhotoRequired') || 'Please take a cover photo'}</Text>
         )}
