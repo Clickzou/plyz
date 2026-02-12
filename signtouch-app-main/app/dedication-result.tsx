@@ -424,7 +424,22 @@ export default function DedicationResultScreen() {
           <Text style={styles.actionButtonText}>{t('share')}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.actionButton, styles.homeButton]} onPress={() => router.replace('/')}>
+        <TouchableOpacity style={[styles.actionButton, styles.homeButton]} onPress={async () => {
+          try {
+            const uri = await captureImage();
+            if (uri) {
+              await saveCollectorLive(
+                uri,
+                celebrityName || 'Celebrity',
+                (params.fanName as string) || 'Fan',
+                params.sessionId as string || undefined,
+              );
+            }
+          } catch (e) {
+            console.error('[Dedication] Auto-save before home failed:', e);
+          }
+          router.replace('/');
+        }}>
           <Home size={22} color="#fff" />
           <Text style={styles.actionButtonText}>{t('home')}</Text>
         </TouchableOpacity>
