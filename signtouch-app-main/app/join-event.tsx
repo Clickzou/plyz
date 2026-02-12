@@ -234,7 +234,7 @@ export default function JoinEventScreen() {
       setTimeout(() => setShowConfetti(false), 3500);
       playNotificationChime();
       signatureOpacity.value = withTiming(1, { duration: 400 });
-      signatureClipWidth.value = withDelay(200, withTiming(300, { duration: 2500, easing: Easing.out(Easing.ease) }));
+      signatureClipWidth.value = withDelay(200, withTiming(350, { duration: 2500, easing: Easing.out(Easing.ease) }));
       buttonPulse.value = withRepeat(
         withSequence(
           withTiming(1.05, { duration: 800, easing: Easing.inOut(Easing.ease) }),
@@ -1677,12 +1677,12 @@ const styles = StyleSheet.create({
   },
   signatureRevealContainer: {
     alignItems: 'center',
-    marginBottom: 16,
-    height: 50,
+    marginBottom: 20,
+    height: 80,
   },
   signatureImageWhite: {
-    width: 280,
-    height: 50,
+    width: 320,
+    height: 80,
     tintColor: '#fff',
   },
   readyBadge: {
