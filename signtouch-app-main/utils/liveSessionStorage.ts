@@ -804,6 +804,24 @@ export const completeSignature = async (
   }
 };
 
+export const markPaymentCaptured = async (entryId: string, captured: boolean): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('session_queue')
+      .update({ payment_captured: captured })
+      .eq('id', entryId);
+
+    if (error) {
+      console.error('Error marking payment_captured:', error);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Error marking payment_captured:', error);
+    return false;
+  }
+};
+
 export const skipFan = async (entryId: string): Promise<boolean> => {
   try {
     const { error } = await supabase

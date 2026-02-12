@@ -565,13 +565,14 @@ app.get('/api/session-earnings', async (req, res) => {
       return res.status(404).json({ error: 'Session not found' });
     }
 
-    const { data: completedEntries } = await supabase
+    const { data: capturedEntries } = await supabase
       .from('session_queue')
       .select('id')
       .eq('session_id', session_id)
-      .eq('status', 'completed');
+      .eq('status', 'completed')
+      .eq('payment_captured', true);
 
-    const completedCount = (completedEntries || []).length;
+    const completedCount = (capturedEntries || []).length;
 
     let totalCapturedCents = 0;
     if (session.price_cents > 0 && completedCount > 0) {
@@ -619,11 +620,11 @@ app.get('/api/celebrity-earnings', async (req, res) => {
     for (const session of (sessions || [])) {
       const { data: queueEntries } = await supabase
         .from('session_queue')
-        .select('id, status, fan_name, created_at, called_at')
+        .select('id, status, payment_captured, fan_name, created_at, called_at')
         .eq('session_id', session.id);
 
       const completedFans = (queueEntries || []).filter(
-        e => e.status === 'completed'
+        e => e.status === 'completed' && e.payment_captured === true
       ).length;
 
       const allFans = (queueEntries || []).length;

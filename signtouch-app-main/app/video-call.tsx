@@ -15,6 +15,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
 import { sendDedicationNotification, callNextFan } from '@/utils/sessionQueueStorage';
+import { markPaymentCaptured } from '@/utils/liveSessionStorage';
 import { recordTransaction } from '@/utils/transactionStorage';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 
@@ -352,6 +353,12 @@ export default function VideoCallScreen() {
       if (priceCents > 0 && shouldChargeFan) {
         if (params.checkoutSessionId) {
           await capturePaymentAfterCall();
+        }
+
+        if (params.queueEntryId) {
+          markPaymentCaptured(params.queueEntryId, true).catch((err) =>
+            console.error('[VideoCall] Error marking payment_captured:', err)
+          );
         }
 
         const fanDeviceId = await getOrCreateDeviceId();
