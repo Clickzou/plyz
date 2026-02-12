@@ -481,6 +481,7 @@ export default function VideoCallScreen() {
                       showFullscreenButton: false,
                       showLocalVideo: true,
                       showParticipantsBar: false,
+                      activeSpeakerMode: true,
                       startVideoOff: false,
                       startAudioOff: false,
                       customTrayButtons: {},
