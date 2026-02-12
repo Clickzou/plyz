@@ -817,6 +817,7 @@ export default function JoinEventScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />
+      <ConfettiExplosion active={showConfetti} />
       
       <View style={styles.header}>
         <TouchableOpacity 
@@ -880,7 +881,6 @@ export default function JoinEventScreen() {
 
             {queueEntry && (queueEntry.status === 'called' || queueEntry.status === 'in_call') && foundLiveSession.room_url ? (
               <View style={styles.readyToJoinContainer}>
-                <ConfettiExplosion active={showConfetti} />
                 <Animated.View style={[styles.signatureRevealContainer, signatureContainerStyle]}>
                   <Animated.View style={signatureMaskStyle}>
                     <Image 
