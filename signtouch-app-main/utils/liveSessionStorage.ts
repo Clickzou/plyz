@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface LiveSession {
   id: string;
@@ -148,6 +149,12 @@ export const uploadDedicationPhoto = async (
       .getPublicUrl(filePath);
 
     try {
+      await AsyncStorage.setItem(`dedication_photo_${sessionId}`, publicUrl);
+    } catch (e) {
+      console.log('[Dedication] Error saving photo URL to AsyncStorage:', e);
+    }
+
+    try {
       await supabase
         .from('live_sessions')
         .update({ dedication_photo_url: publicUrl } as any)
@@ -223,8 +230,25 @@ export const getDedicationAssets = async (
   console.log('[Dedication] Storage metadata:', storageMeta ? 'found' : 'not found',
     storageMeta ? `photo:${!!storageMeta.photoUrl} sig:${!!storageMeta.signatureSvg}` : '');
 
-  const photoUrl = dbPhotoUrl || storageMeta?.photoUrl || null;
-  const signatureSvg = dbSignatureSvg || storageMeta?.signatureSvg || null;
+  let localSignatureSvg: string | null = null;
+  let localPhotoUri: string | null = null;
+  try {
+    const localSig = await AsyncStorage.getItem(`dedication_signature_${sessionId}`);
+    if (localSig) {
+      localSignatureSvg = localSig;
+      console.log('[Dedication] Local AsyncStorage signature found');
+    }
+    const localPhoto = await AsyncStorage.getItem(`dedication_photo_${sessionId}`);
+    if (localPhoto) {
+      localPhotoUri = localPhoto;
+      console.log('[Dedication] Local AsyncStorage photo found');
+    }
+  } catch (e) {
+    console.log('[Dedication] AsyncStorage fallback error:', e);
+  }
+
+  const photoUrl = dbPhotoUrl || storageMeta?.photoUrl || localPhotoUri || null;
+  const signatureSvg = dbSignatureSvg || storageMeta?.signatureSvg || localSignatureSvg || null;
   const celebrityName = dbCelebrityName || storageMeta?.celebrityName || '';
 
   if (photoUrl || signatureSvg) {
