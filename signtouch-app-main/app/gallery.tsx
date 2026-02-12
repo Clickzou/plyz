@@ -1451,6 +1451,7 @@ const styles = StyleSheet.create({
     padding: 4,
     marginTop: 16,
     marginBottom: 8,
+    alignSelf: 'stretch',
   },
   tab: {
     flex: 1,
