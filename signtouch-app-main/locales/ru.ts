@@ -641,6 +641,7 @@ export default {
   eventStartsSoon: 'Событие скоро начнётся!',
   eventStartsIn2Min: 'Событие начнётся через 2 минуты!',
   notificationFailed: 'Ошибка уведомления',
+  stayOnPageNotification: 'Оставайтесь на этой странице. Вы будете автоматически перенаправлены, когда наступит ваша очередь.',
   yourTurnIn2Min: 'Ваша очередь через 2 минуты!',
   notificationScheduled: 'Уведомление запланировано',
   notificationScheduledMessage: 'Вы получите уведомление за 2 минуты до вашей очереди',

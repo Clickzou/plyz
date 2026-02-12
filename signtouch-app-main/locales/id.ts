@@ -641,6 +641,7 @@ export default {
   eventStartsSoon: 'Acara akan segera dimulai!',
   eventStartsIn2Min: 'Acara dimulai dalam 2 menit!',
   notificationFailed: 'Notifikasi gagal',
+  stayOnPageNotification: 'Tetap di halaman ini. Anda akan dialihkan secara otomatis saat giliran Anda tiba.',
   yourTurnIn2Min: 'Giliran Anda dalam 2 menit!',
   notificationScheduled: 'Notifikasi dijadwalkan',
   notificationScheduledMessage: 'Anda akan diberitahu 2 menit sebelum giliran Anda',

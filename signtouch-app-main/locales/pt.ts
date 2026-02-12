@@ -641,6 +641,7 @@ export default {
   eventStartsSoon: 'O evento começa em breve!',
   eventStartsIn2Min: 'O evento começa em 2 minutos!',
   notificationFailed: 'Falha na notificação',
+  stayOnPageNotification: 'Fique nesta página. Você será redirecionado automaticamente quando for sua vez.',
   yourTurnIn2Min: 'Sua vez em 2 minutos!',
   notificationScheduled: 'Notificação agendada',
   notificationScheduledMessage: 'Você será notificado 2 minutos antes da sua vez',

@@ -738,11 +738,21 @@ export default function JoinEventScreen() {
 
   const handleSetLiveSessionNotification = async () => {
     if (!foundLiveSession) return;
+
+    if (Platform.OS === 'web') {
+      setNotificationSet(true);
+      showAlert(
+        t('notificationScheduled') || 'Notification Scheduled',
+        t('stayOnPageNotification') || 'Stay on this page. You will be automatically redirected when it is your turn.'
+      );
+      return;
+    }
     
     if (!Notifications) {
+      setNotificationSet(true);
       showAlert(
-        t('notAvailable') || 'Not Available',
-        t('notificationsNotSupported') || 'Notifications are not supported in this environment. Please keep the app open.'
+        t('notificationScheduled') || 'Notification Scheduled',
+        t('stayOnPageNotification') || 'Stay on this page. You will be automatically redirected when it is your turn.'
       );
       return;
     }
@@ -750,9 +760,10 @@ export default function JoinEventScreen() {
     try {
       const { status } = await Notifications.requestPermissionsAsync();
       if (status !== 'granted') {
+        setNotificationSet(true);
         showAlert(
-          t('permissionRequired') || 'Permission Required',
-          t('notificationPermissionMessage') || 'Please enable notifications to receive reminders'
+          t('notificationScheduled') || 'Notification Scheduled',
+          t('stayOnPageNotification') || 'Stay on this page. You will be automatically redirected when it is your turn.'
         );
         return;
       }
@@ -775,9 +786,7 @@ export default function JoinEventScreen() {
       });
 
       setNotificationSet(true);
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       
       showAlert(
         t('notificationScheduled') || 'Notification Scheduled',
@@ -785,7 +794,11 @@ export default function JoinEventScreen() {
       );
     } catch (error) {
       console.error('Error setting live session notification:', error);
-      showAlert(t('error') || 'Error', t('notificationFailed') || 'Failed to set notification');
+      setNotificationSet(true);
+      showAlert(
+        t('notificationScheduled') || 'Notification Scheduled',
+        t('stayOnPageNotification') || 'Stay on this page. You will be automatically redirected when it is your turn.'
+      );
     }
   };
 

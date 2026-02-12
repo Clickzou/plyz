@@ -641,6 +641,7 @@ export default {
   eventStartsSoon: 'イベントがまもなく始まります！',
   eventStartsIn2Min: 'イベントは2分後に開始します！',
   notificationFailed: '通知に失敗しました',
+  stayOnPageNotification: 'このページにとどまってください。順番が来たら自動的にリダイレクトされます。',
   yourTurnIn2Min: '2分後にあなたの番です！',
   notificationScheduled: '通知がスケジュールされました',
   notificationScheduledMessage: 'あなたの番の2分前に通知されます',

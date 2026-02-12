@@ -641,6 +641,7 @@ export default {
   eventStartsSoon: 'الحدث يبدأ قريباً!',
   eventStartsIn2Min: 'الحدث يبدأ خلال دقيقتين!',
   notificationFailed: 'فشل الإشعار',
+  stayOnPageNotification: 'ابقَ في هذه الصفحة. سيتم توجيهك تلقائيًا عندما يحين دورك.',
   yourTurnIn2Min: 'دورك خلال دقيقتين!',
   notificationScheduled: 'تم جدولة الإشعار',
   notificationScheduledMessage: 'سيتم إخطارك قبل دقيقتين من دورك',

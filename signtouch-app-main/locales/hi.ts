@@ -641,6 +641,7 @@ export default {
   eventStartsSoon: 'इवेंट जल्द शुरू होगा!',
   eventStartsIn2Min: 'इवेंट 2 मिनट में शुरू होगा!',
   notificationFailed: 'नोटिफिकेशन विफल',
+  stayOnPageNotification: 'इस पेज पर बने रहें। आपकी बारी आने पर आपको स्वचालित रूप से रीडायरेक्ट किया जाएगा।',
   yourTurnIn2Min: '2 मिनट में आपकी बारी!',
   notificationScheduled: 'नोटिफिकेशन निर्धारित',
   notificationScheduledMessage: 'आपकी बारी से 2 मिनट पहले सूचित किया जाएगा',

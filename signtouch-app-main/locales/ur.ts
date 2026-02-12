@@ -641,6 +641,7 @@ export default {
   eventStartsSoon: 'ایونٹ جلد شروع ہوگا!',
   eventStartsIn2Min: 'ایونٹ 2 منٹ میں شروع ہوگا!',
   notificationFailed: 'اطلاع ناکام',
+  stayOnPageNotification: 'اس صفحے پر رہیں۔ جب آپ کی باری آئے گی تو آپ کو خودکار طور پر منتقل کیا جائے گا۔',
   yourTurnIn2Min: '2 منٹ میں آپ کی باری!',
   notificationScheduled: 'اطلاع مقرر',
   notificationScheduledMessage: 'آپ کو اپنی باری سے 2 منٹ پہلے مطلع کیا جائے گا',

@@ -641,6 +641,7 @@ export default {
   eventStartsSoon: '活动即将开始！',
   eventStartsIn2Min: '活动2分钟后开始！',
   notificationFailed: '通知失败',
+  stayOnPageNotification: '请留在此页面。轮到您时将自动跳转。',
   yourTurnIn2Min: '2分钟后轮到您！',
   notificationScheduled: '通知已安排',
   notificationScheduledMessage: '您将在轮到您前2分钟收到通知',

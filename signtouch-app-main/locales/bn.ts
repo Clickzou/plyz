@@ -641,6 +641,7 @@ export default {
   eventStartsSoon: 'ইভেন্ট শীঘ্রই শুরু হবে!',
   eventStartsIn2Min: 'ইভেন্ট 2 মিনিটে শুরু হবে!',
   notificationFailed: 'নোটিফিকেশন ব্যর্থ',
+  stayOnPageNotification: 'এই পৃষ্ঠায় থাকুন। আপনার পালা এলে আপনাকে স্বয়ংক্রিয়ভাবে পুনঃনির্দেশিত করা হবে।',
   yourTurnIn2Min: '2 মিনিটে আপনার পালা!',
   notificationScheduled: 'নোটিফিকেশন নির্ধারিত',
   notificationScheduledMessage: 'আপনার পালার 2 মিনিট আগে জানানো হবে',
