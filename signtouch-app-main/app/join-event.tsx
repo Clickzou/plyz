@@ -1701,7 +1701,7 @@ const styles = StyleSheet.create({
     color: '#10B981',
   },
   joinCallButton: {
-    marginHorizontal: 16,
+    marginHorizontal: 20,
     borderRadius: 28,
     overflow: 'hidden',
     marginBottom: 16,
