@@ -594,21 +594,22 @@ export default function VideoCallScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      
-      {!hasLeftCall && renderVideoContent()}
-      {hasLeftCall && <View style={{ flex: 1, backgroundColor: '#000' }} />}
 
-      <View style={styles.headerOverlay}>
+      <View style={styles.controlBar}>
         {isHost ? (
           <TouchableOpacity style={styles.headerBackButton} onPress={() => router.back()}>
             <ArrowLeft size={20} color="#fff" />
           </TouchableOpacity>
-        ) : null}
+        ) : (
+          <TouchableOpacity style={styles.headerBackButton} onPress={() => router.back()}>
+            <ArrowLeft size={20} color="#fff" />
+          </TouchableOpacity>
+        )}
         
         {params.durationPerFan ? (
           <View style={[styles.timerContainer, timeWarning && styles.timerWarning, !otherParticipantJoined && { opacity: 0.5 }]}>
-            <Clock size={isHost ? 14 : 12} color="#fff" />
-            <Text style={[styles.timerText, !isHost && styles.timerTextFan]}>
+            <Clock size={14} color="#fff" />
+            <Text style={styles.timerText}>
               {otherParticipantJoined ? fanTimeRemaining : `${params.durationPerFan}:00`}
             </Text>
           </View>
@@ -633,12 +634,9 @@ export default function VideoCallScreen() {
           <Text style={styles.endCallText}>{t('endCall')}</Text>
         </TouchableOpacity>
       </View>
-
-      {!isHost && (
-        <TouchableOpacity style={styles.fanBackButton} onPress={() => router.back()}>
-          <ArrowLeft size={20} color="#fff" />
-        </TouchableOpacity>
-      )}
+      
+      {!hasLeftCall && renderVideoContent()}
+      {hasLeftCall && <View style={{ flex: 1, backgroundColor: '#000' }} />}
 
       {isHost && !otherParticipantJoined && !isLoading && !waitingForNextFan && !hasLeftCall && (
         <View style={styles.fanConnectingBanner}>
@@ -698,18 +696,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  headerOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+  controlBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingTop: Platform.OS === 'web' ? 52 : 48,
-    paddingBottom: 8,
-    zIndex: 10,
+    paddingHorizontal: 10,
+    paddingTop: Platform.OS === 'web' ? 48 : 44,
+    paddingBottom: 10,
+    backgroundColor: '#1a1a2e',
   },
   headerBackButton: {
     width: 36,
@@ -721,7 +715,7 @@ const styles = StyleSheet.create({
   },
   fanBackButton: {
     position: 'absolute',
-    top: Platform.OS === 'web' ? 100 : 96,
+    top: 12,
     left: 12,
     width: 36,
     height: 36,
@@ -816,7 +810,7 @@ const styles = StyleSheet.create({
   },
   fanConnectingBanner: {
     position: 'absolute',
-    top: 140,
+    top: 60,
     left: 20,
     right: 20,
     flexDirection: 'row',
