@@ -33,6 +33,23 @@ import { getDedicationAssets } from '@/utils/liveSessionStorage';
 import { saveCollectorLive, downloadImageWeb } from '@/utils/collectorLiveStorage';
 import ViewShot from 'react-native-view-shot';
 
+const captureWebView = async (element: HTMLElement): Promise<string | null> => {
+  if (Platform.OS !== 'web') return null;
+  try {
+    const html2canvas = (await import('html2canvas')).default;
+    const canvas = await html2canvas(element, {
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#000000',
+      scale: 2,
+    });
+    return canvas.toDataURL('image/png');
+  } catch (e) {
+    console.error('[Dedication] html2canvas error:', e);
+    return null;
+  }
+};
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const PHOTO_WIDTH = SCREEN_WIDTH - 40;
 const PHOTO_HEIGHT = PHOTO_WIDTH * (4 / 3);
@@ -48,6 +65,7 @@ export default function DedicationResultScreen() {
   const { t, language } = useLanguage();
   const { user } = useAuth();
   const viewShotRef = useRef<any>(null);
+  const webCaptureRef = useRef<any>(null);
 
   const params = useLocalSearchParams<{
     sessionId: string;
@@ -188,17 +206,48 @@ export default function DedicationResultScreen() {
     return `For ${name}`;
   };
 
+  const captureImage = async (): Promise<string | null> => {
+    if (Platform.OS === 'web' && webCaptureRef.current) {
+      let el: HTMLElement | null = null;
+      const ref = webCaptureRef.current;
+      if (ref instanceof HTMLElement) {
+        el = ref;
+      } else if (ref && typeof ref === 'object') {
+        const node = (ref as any)._nativeTag || (ref as any).getInnerViewNode?.() || (ref as any);
+        if (node instanceof HTMLElement) {
+          el = node;
+        } else {
+          try {
+            const { findDOMNode } = await import('react-dom');
+            el = findDOMNode(ref) as HTMLElement;
+          } catch (e) {}
+        }
+      }
+      if (el) {
+        const dataUrl = await captureWebView(el);
+        if (dataUrl) return dataUrl;
+      }
+    }
+    if (viewShotRef.current?.capture) {
+      try {
+        return await viewShotRef.current.capture();
+      } catch (e) {
+        console.error('[Dedication] ViewShot capture failed:', e);
+      }
+    }
+    return null;
+  };
+
   const handleSave = async () => {
     try {
       setIsSaving(true);
 
-      if (!viewShotRef.current?.capture) {
+      const uri = await captureImage();
+      if (!uri) {
         showAlert(t('error'), t('dedicationSaveError'));
         setIsSaving(false);
         return;
       }
-
-      const uri = await viewShotRef.current.capture();
 
       await saveCollectorLive(
         uri,
@@ -208,7 +257,7 @@ export default function DedicationResultScreen() {
       );
 
       if (Platform.OS === 'web') {
-        downloadImageWeb(uri, `dedication_${celebrityName}_${Date.now()}.jpg`);
+        downloadImageWeb(uri, `dedication_${celebrityName}_${Date.now()}.png`);
       }
 
       showAlert(t('success'), t('dedicationSaved'));
@@ -222,17 +271,14 @@ export default function DedicationResultScreen() {
 
   const handleShare = async () => {
     try {
-      let uri = '';
-      if (viewShotRef.current?.capture) {
-        uri = await viewShotRef.current.capture();
-      }
+      const uri = await captureImage();
 
       if (Platform.OS === 'web') {
         if (uri && typeof navigator !== 'undefined' && navigator.share) {
           try {
             const response = await fetch(uri);
             const blob = await response.blob();
-            const file = new File([blob], `dedication_${celebrityName}.jpg`, { type: 'image/jpeg' });
+            const file = new File([blob], `dedication_${celebrityName}.png`, { type: 'image/png' });
             await navigator.share({
               title: `${getDedicationFor()} - ${celebrityName}`,
               text: `${getDedicationFor()} - ${celebrityName} #SignTouch`,
@@ -244,7 +290,7 @@ export default function DedicationResultScreen() {
           }
         }
         if (uri) {
-          downloadImageWeb(uri, `dedication_${celebrityName}_${Date.now()}.jpg`);
+          downloadImageWeb(uri, `dedication_${celebrityName}_${Date.now()}.png`);
         }
       } else {
         if (uri) {
@@ -301,7 +347,7 @@ export default function DedicationResultScreen() {
       </View>
 
       <View style={styles.photoWrapper}>
-        <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }} style={styles.captureArea}>
+        <View ref={webCaptureRef} collapsable={false} style={styles.captureArea}>
           {photoUrl ? (
             <Image source={{ uri: photoUrl }} style={styles.photo} resizeMode="cover" />
           ) : (
@@ -341,7 +387,7 @@ export default function DedicationResultScreen() {
           <View style={styles.watermark}>
             <Text style={styles.watermarkText}>SignTouch</Text>
           </View>
-        </ViewShot>
+        </View>
       </View>
 
       <View style={styles.colorPickerSection}>
