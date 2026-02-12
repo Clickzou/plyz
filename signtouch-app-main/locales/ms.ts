@@ -991,4 +991,6 @@ export default {
   authorizePayment: 'Benarkan {amount}€',
   paymentConfirmed: 'Pembayaran disahkan',
   paymentCapturedMessage: '{amount}€ telah dicaj untuk panggilan video anda yang berjaya.',
+  authorizationSuccess: 'Pra-kebenaran berjaya!',
+  joiningQueueNow: 'Menyertai barisan giliran...',
 };

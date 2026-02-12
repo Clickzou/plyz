@@ -985,4 +985,6 @@ export default {
   authorizePayment: 'Autorizar {amount}€',
   paymentConfirmed: 'Pago confirmado',
   paymentCapturedMessage: 'Se han cobrado {amount}€ por tu videollamada exitosa.',
+  authorizationSuccess: '¡Preautorización exitosa!',
+  joiningQueueNow: 'Uniéndose a la cola...',
 };

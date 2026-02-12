@@ -986,4 +986,6 @@ export default {
   authorizePayment: '授权 {amount}€',
   paymentConfirmed: '付款已确认',
   paymentCapturedMessage: '您的视频通话已成功，已扣款{amount}€。',
+  authorizationSuccess: '预授权成功！',
+  joiningQueueNow: '正在加入排队...',
 };

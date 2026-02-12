@@ -986,4 +986,6 @@ export default {
   authorizePayment: 'تفويض {amount}€',
   paymentConfirmed: 'تم تأكيد الدفع',
   paymentCapturedMessage: 'تم خصم {amount}€ بعد مكالمة الفيديو الناجحة.',
+  authorizationSuccess: 'تمت الموافقة المسبقة بنجاح!',
+  joiningQueueNow: 'جاري الانضمام إلى قائمة الانتظار...',
 };

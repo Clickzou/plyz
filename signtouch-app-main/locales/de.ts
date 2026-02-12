@@ -986,4 +986,6 @@ export default {
   authorizePayment: '{amount}€ autorisieren',
   paymentConfirmed: 'Zahlung bestätigt',
   paymentCapturedMessage: '{amount}€ wurden für Ihren erfolgreichen Videoanruf abgebucht.',
+  authorizationSuccess: 'Vorautorisierung erfolgreich!',
+  joiningQueueNow: 'Sie treten jetzt der Warteschlange bei...',
 };

@@ -1026,4 +1026,6 @@ export default {
   authorizePayment: 'Authorize {amount}€',
   paymentConfirmed: 'Payment Confirmed',
   paymentCapturedMessage: '{amount}€ has been charged for your successful video call.',
+  authorizationSuccess: 'Pre-authorization successful!',
+  joiningQueueNow: 'Joining the queue now...',
 };

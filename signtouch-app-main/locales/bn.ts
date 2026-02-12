@@ -991,4 +991,6 @@ export default {
   authorizePayment: '{amount}€ অনুমোদন করুন',
   paymentConfirmed: 'পেমেন্ট নিশ্চিত',
   paymentCapturedMessage: 'আপনার সফল ভিডিও কলের জন্য {amount}€ চার্জ করা হয়েছে।',
+  authorizationSuccess: 'প্রাক-অনুমোদন সফল!',
+  joiningQueueNow: 'সারিতে যোগ দিচ্ছেন...',
 };

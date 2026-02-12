@@ -986,4 +986,6 @@ export default {
   authorizePayment: '{amount}€ अधिकृत करें',
   paymentConfirmed: 'भुगतान की पुष्टि',
   paymentCapturedMessage: 'आपकी सफल वीडियो कॉल के लिए {amount}€ चार्ज किया गया।',
+  authorizationSuccess: 'पूर्व-प्राधिकरण सफल!',
+  joiningQueueNow: 'कतार में शामिल हो रहे हैं...',
 };

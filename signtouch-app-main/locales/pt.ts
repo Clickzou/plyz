@@ -986,4 +986,6 @@ export default {
   authorizePayment: 'Autorizar {amount}€',
   paymentConfirmed: 'Pagamento confirmado',
   paymentCapturedMessage: '{amount}€ foram cobrados pela sua videochamada bem-sucedida.',
+  authorizationSuccess: 'Pré-autorização bem-sucedida!',
+  joiningQueueNow: 'Entrando na fila de espera...',
 };

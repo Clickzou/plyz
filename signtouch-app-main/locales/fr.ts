@@ -1028,4 +1028,6 @@ export default {
   authorizePayment: 'Autoriser {amount}€',
   paymentConfirmed: 'Paiement confirmé',
   paymentCapturedMessage: '{amount}€ ont été débités suite à votre appel vidéo réussi.',
+  authorizationSuccess: 'Pré-autorisation réussie !',
+  joiningQueueNow: 'Vous allez rejoindre la file d'attente...',
 };

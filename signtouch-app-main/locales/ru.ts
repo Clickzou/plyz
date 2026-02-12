@@ -986,4 +986,6 @@ export default {
   authorizePayment: 'Авторизовать {amount}€',
   paymentConfirmed: 'Оплата подтверждена',
   paymentCapturedMessage: '{amount}€ списано за успешный видеозвонок.',
+  authorizationSuccess: 'Предавторизация прошла успешно!',
+  joiningQueueNow: 'Присоединяемся к очереди...',
 };

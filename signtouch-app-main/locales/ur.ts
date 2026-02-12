@@ -991,4 +991,6 @@ export default {
   authorizePayment: '{amount}€ کی اجازت دیں',
   paymentConfirmed: 'ادائیگی کی تصدیق',
   paymentCapturedMessage: 'آپ کی کامیاب ویڈیو کال کے لیے {amount}€ چارج کیا گیا۔',
+  authorizationSuccess: 'پیشگی اجازت کامیاب!',
+  joiningQueueNow: 'قطار میں شامل ہو رہے ہیں...',
 };

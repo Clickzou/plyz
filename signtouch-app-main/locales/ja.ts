@@ -986,4 +986,6 @@ export default {
   authorizePayment: '{amount}€を承認',
   paymentConfirmed: 'お支払い確認済み',
   paymentCapturedMessage: 'ビデオ通話が成功し、{amount}€が請求されました。',
+  authorizationSuccess: '事前承認が成功しました！',
+  joiningQueueNow: 'キューに参加しています...',
 };
