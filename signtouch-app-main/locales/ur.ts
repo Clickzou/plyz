@@ -981,6 +981,9 @@ export default {
   perFan: 'فی مداح',
   estimatedTotal: 'تخمینی کل',
   totalDuration: 'کل دورانیہ',
+  preAuthorization: 'پیشگی اجازت',
+  preAuthExplanation: 'یہ صرف پیشگی اجازت ہے۔ رقم آپ کے کارڈ پر محفوظ کی جائے گی لیکن فوری طور پر وصول نہیں کی جائے گی۔ آپ سے صرف کامیاب ویڈیو کال کے بعد ہی رقم وصول کی جائے گی۔ اگر کال نہیں ہوتی تو کوئی رقم نہیں کاٹی جائے گی۔',
+  authorizePayment: '{amount}€ کی اجازت دیں',
   paymentConfirmed: 'ادائیگی کی تصدیق',
   paymentCapturedMessage: 'آپ کی کامیاب ویڈیو کال کے لیے {amount}€ چارج کیا گیا۔',
 };

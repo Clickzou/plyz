@@ -1016,6 +1016,9 @@ export default {
   perFan: 'per fan',
   estimatedTotal: 'estimated total',
   totalDuration: 'total duration',
+  preAuthorization: 'Pre-authorization',
+  preAuthExplanation: 'This is a pre-authorization only. The amount will be reserved on your card but will NOT be charged immediately. You will only be charged after a successful video call. If the call does not take place, no amount will be debited.',
+  authorizePayment: 'Authorize {amount}€',
   paymentConfirmed: 'Payment Confirmed',
   paymentCapturedMessage: '{amount}€ has been charged for your successful video call.',
 };

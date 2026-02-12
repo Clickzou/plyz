@@ -976,6 +976,9 @@ export default {
   perFan: 'لكل معجب',
   estimatedTotal: 'الإجمالي المقدر',
   totalDuration: 'المدة الكلية',
+  preAuthorization: 'تفويض مسبق',
+  preAuthExplanation: 'هذا مجرد تفويض مسبق. سيتم حجز المبلغ على بطاقتك لكن لن يتم خصمه فوراً. لن يتم الخصم إلا بعد مكالمة فيديو ناجحة. إذا لم تتم المكالمة، فلن يتم خصم أي مبلغ.',
+  authorizePayment: 'تفويض {amount}€',
   paymentConfirmed: 'تم تأكيد الدفع',
   paymentCapturedMessage: 'تم خصم {amount}€ بعد مكالمة الفيديو الناجحة.',
 };

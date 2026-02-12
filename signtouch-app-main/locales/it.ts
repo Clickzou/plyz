@@ -976,6 +976,9 @@ export default {
   perFan: 'per fan',
   estimatedTotal: 'totale stimato',
   totalDuration: 'durata totale',
+  preAuthorization: 'Pre-autorizzazione',
+  preAuthExplanation: 'Questa è solo una pre-autorizzazione. L\'importo sarà riservato sulla tua carta ma NON sarà addebitato immediatamente. Sarai addebitato solo dopo una videochiamata riuscita. Se la chiamata non avviene, nessun importo sarà prelevato.',
+  authorizePayment: 'Autorizza {amount}€',
   paymentConfirmed: 'Pagamento confermato',
   paymentCapturedMessage: '{amount}€ sono stati addebitati per la tua videochiamata riuscita.',
 };

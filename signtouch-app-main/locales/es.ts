@@ -975,6 +975,9 @@ export default {
   perFan: 'por fan',
   estimatedTotal: 'total estimado',
   totalDuration: 'duración total',
+  preAuthorization: 'Pre-autorización',
+  preAuthExplanation: 'Esto es solo una pre-autorización. El importe se reservará en tu tarjeta pero NO se cobrará de inmediato. Solo se te cobrará después de una videollamada exitosa. Si la llamada no se realiza, no se te cobrará ningún importe.',
+  authorizePayment: 'Autorizar {amount}€',
   paymentConfirmed: 'Pago confirmado',
   paymentCapturedMessage: 'Se han cobrado {amount}€ por tu videollamada exitosa.',
 };

@@ -981,6 +981,9 @@ export default {
   perFan: 'প্রতি ভক্ত',
   estimatedTotal: 'আনুমানিক মোট',
   totalDuration: 'মোট সময়কাল',
+  preAuthorization: 'প্রাক-অনুমোদন',
+  preAuthExplanation: 'এটি শুধুমাত্র একটি প্রাক-অনুমোদন। পরিমাণটি আপনার কার্ডে সংরক্ষিত থাকবে কিন্তু তৎক্ষণাৎ চার্জ করা হবে না। সফল ভিডিও কলের পরেই চার্জ করা হবে। কল না হলে কোনো টাকা কাটা হবে না।',
+  authorizePayment: '{amount}€ অনুমোদন করুন',
   paymentConfirmed: 'পেমেন্ট নিশ্চিত',
   paymentCapturedMessage: 'আপনার সফল ভিডিও কলের জন্য {amount}€ চার্জ করা হয়েছে।',
 };

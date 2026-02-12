@@ -976,6 +976,9 @@ export default {
   perFan: 'ファンごと',
   estimatedTotal: '推定合計',
   totalDuration: '合計時間',
+  preAuthorization: '事前承認',
+  preAuthExplanation: 'これは事前承認のみです。金額はカードに予約されますが、すぐに請求されることはありません。ビデオ通話が成功した後にのみ請求されます。通話が行われない場合、金額は引き落とされません。',
+  authorizePayment: '{amount}€を承認',
   paymentConfirmed: 'お支払い確認済み',
   paymentCapturedMessage: 'ビデオ通話が成功し、{amount}€が請求されました。',
 };

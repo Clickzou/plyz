@@ -981,6 +981,9 @@ export default {
   perFan: 'setiap peminat',
   estimatedTotal: 'jumlah anggaran',
   totalDuration: 'jumlah masa',
+  preAuthorization: 'Pra-kebenaran',
+  preAuthExplanation: 'Ini hanya pra-kebenaran. Jumlah akan ditempah pada kad anda tetapi TIDAK akan dicaj serta-merta. Anda hanya akan dicaj selepas panggilan video berjaya. Jika panggilan tidak berlaku, tiada jumlah akan didebitkan.',
+  authorizePayment: 'Benarkan {amount}€',
   paymentConfirmed: 'Pembayaran disahkan',
   paymentCapturedMessage: '{amount}€ telah dicaj untuk panggilan video anda yang berjaya.',
 };

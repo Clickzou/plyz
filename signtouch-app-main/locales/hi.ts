@@ -976,6 +976,9 @@ export default {
   perFan: 'प्रति प्रशंसक',
   estimatedTotal: 'अनुमानित कुल',
   totalDuration: 'कुल अवधि',
+  preAuthorization: 'पूर्व-प्राधिकरण',
+  preAuthExplanation: 'यह केवल एक पूर्व-प्राधिकरण है। राशि आपके कार्ड पर आरक्षित की जाएगी लेकिन तुरंत चार्ज नहीं की जाएगी। सफल वीडियो कॉल के बाद ही चार्ज किया जाएगा। यदि कॉल नहीं होती, तो कोई राशि नहीं काटी जाएगी।',
+  authorizePayment: '{amount}€ अधिकृत करें',
   paymentConfirmed: 'भुगतान की पुष्टि',
   paymentCapturedMessage: 'आपकी सफल वीडियो कॉल के लिए {amount}€ चार्ज किया गया।',
 };

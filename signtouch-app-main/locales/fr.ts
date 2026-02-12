@@ -1018,6 +1018,9 @@ export default {
   perFan: 'par fan',
   estimatedTotal: 'total estimé',
   totalDuration: 'durée totale',
+  preAuthorization: 'Pré-autorisation',
+  preAuthExplanation: 'Ceci est une simple pré-autorisation. Le montant sera réservé sur votre carte mais ne sera PAS débité immédiatement. Vous ne serez débité(e) qu\'après un appel vidéo réussi. Si l\'appel n\'a pas lieu, aucun montant ne sera prélevé.',
+  authorizePayment: 'Autoriser {amount}€',
   paymentConfirmed: 'Paiement confirmé',
   paymentCapturedMessage: '{amount}€ ont été débités suite à votre appel vidéo réussi.',
 };

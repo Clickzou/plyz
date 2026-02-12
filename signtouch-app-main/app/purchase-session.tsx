@@ -199,7 +199,7 @@ export default function PurchaseSessionScreen() {
             >
               <Shield size={22} color="#ffffff" />
               <Text style={styles.payButtonText}>
-                {t('authorizePayment') || `Autoriser ${priceEuros}€`}
+                {(t('authorizePayment') || 'Autoriser {amount}€').replace('{amount}', priceEuros)}
               </Text>
             </TouchableOpacity>
 

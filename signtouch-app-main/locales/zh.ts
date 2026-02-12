@@ -976,6 +976,9 @@ export default {
   perFan: '每位粉丝',
   estimatedTotal: '预估总额',
   totalDuration: '总时长',
+  preAuthorization: '预授权',
+  preAuthExplanation: '这仅是预授权。金额将在您的卡上预留，但不会立即扣款。只有在视频通话成功后才会扣款。如果通话未进行，将不会扣除任何金额。',
+  authorizePayment: '授权 {amount}€',
   paymentConfirmed: '付款已确认',
   paymentCapturedMessage: '您的视频通话已成功，已扣款{amount}€。',
 };

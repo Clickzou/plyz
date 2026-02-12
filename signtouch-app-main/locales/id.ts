@@ -981,6 +981,9 @@ export default {
   perFan: 'per penggemar',
   estimatedTotal: 'total perkiraan',
   totalDuration: 'durasi total',
+  preAuthorization: 'Pra-otorisasi',
+  preAuthExplanation: 'Ini hanya pra-otorisasi. Jumlah akan direservasi di kartu Anda tetapi TIDAK akan ditagih segera. Anda hanya akan ditagih setelah panggilan video berhasil. Jika panggilan tidak terjadi, tidak ada jumlah yang akan didebit.',
+  authorizePayment: 'Otorisasi {amount}€',
   paymentConfirmed: 'Pembayaran dikonfirmasi',
   paymentCapturedMessage: '{amount}€ telah ditagihkan untuk panggilan video Anda yang berhasil.',
 };

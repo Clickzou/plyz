@@ -976,6 +976,9 @@ export default {
   perFan: 'pro Fan',
   estimatedTotal: 'geschätzter Gesamtbetrag',
   totalDuration: 'Gesamtdauer',
+  preAuthorization: 'Vorautorisierung',
+  preAuthExplanation: 'Dies ist nur eine Vorautorisierung. Der Betrag wird auf Ihrer Karte reserviert, aber NICHT sofort abgebucht. Sie werden erst nach einem erfolgreichen Videoanruf belastet. Findet der Anruf nicht statt, wird kein Betrag abgebucht.',
+  authorizePayment: '{amount}€ autorisieren',
   paymentConfirmed: 'Zahlung bestätigt',
   paymentCapturedMessage: '{amount}€ wurden für Ihren erfolgreichen Videoanruf abgebucht.',
 };
