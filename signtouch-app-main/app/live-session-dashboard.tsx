@@ -615,24 +615,18 @@ export default function LiveSessionDashboardScreen() {
     setDedicationStep('signature');
   };
 
-  const handleTakeDedicationPhoto = async () => {
-    try {
-      if (Platform.OS === 'web') {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.capture = 'user';
-        input.onchange = async (e: any) => {
-          const file = e.target?.files?.[0];
-          if (file) {
-            const uri = URL.createObjectURL(file);
-            await processDedicationPhoto(uri);
-          }
-        };
-        input.click();
-        return;
-      }
+  const handleWebFileChange = async (e: any) => {
+    const file = e.target?.files?.[0];
+    if (file) {
+      const uri = URL.createObjectURL(file);
+      await processDedicationPhoto(uri);
+    }
+    if (e.target) e.target.value = '';
+  };
 
+  const handleTakeDedicationPhoto = async () => {
+    if (Platform.OS === 'web') return;
+    try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
         showAlert(t('error'), t('cameraPermissionDenied'));
@@ -656,22 +650,8 @@ export default function LiveSessionDashboardScreen() {
   };
 
   const handlePickDedicationPhoto = async () => {
+    if (Platform.OS === 'web') return;
     try {
-      if (Platform.OS === 'web') {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = async (e: any) => {
-          const file = e.target?.files?.[0];
-          if (file) {
-            const uri = URL.createObjectURL(file);
-            await processDedicationPhoto(uri);
-          }
-        };
-        input.click();
-        return;
-      }
-
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: 'images' as any,
         quality: 0.8,
@@ -1134,26 +1114,58 @@ export default function LiveSessionDashboardScreen() {
                   </View>
                   <Text style={styles.dedicationStepLabel}>{t('dedicationTakePhoto')}</Text>
                   <View style={styles.dedicationPhotoButtons}>
-                    <TouchableOpacity
-                      style={styles.dedicationPhotoButton}
-                      onPress={handleTakeDedicationPhoto}
-                      disabled={isUploadingDedication}
-                    >
-                      {isUploadingDedication ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                      ) : (
-                        <Camera size={20} color="#fff" />
-                      )}
-                      <Text style={styles.dedicationPhotoButtonText}>{t('takeSelfie')}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.dedicationPhotoButton, styles.dedicationPhotoButtonAlt]}
-                      onPress={handlePickDedicationPhoto}
-                      disabled={isUploadingDedication}
-                    >
-                      <ImageIcon size={20} color="#fff" />
-                      <Text style={styles.dedicationPhotoButtonTextAlt}>{t('choosePhoto')}</Text>
-                    </TouchableOpacity>
+                    {Platform.OS === 'web' ? (
+                      <>
+                        <label style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#8b5cf6', borderRadius: 14, paddingTop: 12, paddingBottom: 12, paddingLeft: 16, paddingRight: 16, cursor: 'pointer', flex: 1 } as any}>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="user"
+                            onChange={handleWebFileChange}
+                            style={{ display: 'none' } as any}
+                          />
+                          {isUploadingDedication ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <Camera size={20} color="#fff" />
+                          )}
+                          <Text style={styles.dedicationPhotoButtonText}>{t('takeSelfie')}</Text>
+                        </label>
+                        <label style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(139,92,246,0.15)', borderWidth: 1, borderColor: '#8b5cf6', borderStyle: 'solid', borderRadius: 14, paddingTop: 12, paddingBottom: 12, paddingLeft: 16, paddingRight: 16, cursor: 'pointer', flex: 1 } as any}>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleWebFileChange}
+                            style={{ display: 'none' } as any}
+                          />
+                          <ImageIcon size={20} color="#fff" />
+                          <Text style={styles.dedicationPhotoButtonTextAlt}>{t('choosePhoto')}</Text>
+                        </label>
+                      </>
+                    ) : (
+                      <>
+                        <TouchableOpacity
+                          style={styles.dedicationPhotoButton}
+                          onPress={handleTakeDedicationPhoto}
+                          disabled={isUploadingDedication}
+                        >
+                          {isUploadingDedication ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <Camera size={20} color="#fff" />
+                          )}
+                          <Text style={styles.dedicationPhotoButtonText}>{t('takeSelfie')}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.dedicationPhotoButton, styles.dedicationPhotoButtonAlt]}
+                          onPress={handlePickDedicationPhoto}
+                          disabled={isUploadingDedication}
+                        >
+                          <ImageIcon size={20} color="#fff" />
+                          <Text style={styles.dedicationPhotoButtonTextAlt}>{t('choosePhoto')}</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
                   </View>
                 </View>
               )}
