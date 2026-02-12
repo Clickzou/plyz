@@ -24,7 +24,7 @@ import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, QrCode, Search, Check, Download, Camera, Users, Clock, Calendar, Bell, X, AlertTriangle } from 'lucide-react-native';
+import { ArrowLeft, QrCode, Search, Check, Download, Camera, Video, Users, Clock, Calendar, Bell, X, AlertTriangle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 let Notifications: any = null;
 try {
@@ -60,24 +60,31 @@ const SAVED_SIGNATURES_KEY = '@signtouch_event_signatures';
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 const playNotificationChime = () => {
-  if (Platform.OS === 'web' && typeof window !== 'undefined' && window.AudioContext) {
+  if (Platform.OS === 'web' && typeof window !== 'undefined' && (window.AudioContext || (window as any).webkitAudioContext)) {
     try {
-      const ctx = new AudioContext();
-      const notes = [
-        { freq: 523.25, start: 0, dur: 0.15 },
-        { freq: 659.25, start: 0.15, dur: 0.15 },
-        { freq: 783.99, start: 0.3, dur: 0.15 },
-        { freq: 1046.5, start: 0.45, dur: 0.3 },
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioCtx();
+      const masterGain = ctx.createGain();
+      masterGain.gain.value = 0.6;
+      masterGain.connect(ctx.destination);
+      const fanfare = [
+        { freq: 523.25, start: 0, dur: 0.2, type: 'triangle' as OscillatorType },
+        { freq: 659.25, start: 0.1, dur: 0.2, type: 'triangle' as OscillatorType },
+        { freq: 783.99, start: 0.2, dur: 0.2, type: 'triangle' as OscillatorType },
+        { freq: 1046.5, start: 0.35, dur: 0.4, type: 'sine' as OscillatorType },
+        { freq: 783.99, start: 0.55, dur: 0.15, type: 'sine' as OscillatorType },
+        { freq: 1046.5, start: 0.7, dur: 0.5, type: 'sine' as OscillatorType },
+        { freq: 1318.5, start: 0.7, dur: 0.5, type: 'triangle' as OscillatorType },
       ];
-      notes.forEach(({ freq, start, dur }) => {
+      fanfare.forEach(({ freq, start, dur, type }) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = 'sine';
+        osc.type = type;
         osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.3, ctx.currentTime + start);
+        gain.gain.setValueAtTime(0.4, ctx.currentTime + start);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + start + dur);
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(masterGain);
         osc.start(ctx.currentTime + start);
         osc.stop(ctx.currentTime + start + dur + 0.05);
       });
@@ -88,6 +95,96 @@ const playNotificationChime = () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e) {}
   }
+};
+
+const CONFETTI_COLORS = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#FF69B4', '#00CED1', '#FF8C00'];
+const CONFETTI_COUNT = 50;
+
+interface ConfettiPiece {
+  id: number;
+  x: number;
+  color: string;
+  size: number;
+  rotation: number;
+  shape: 'rect' | 'circle';
+}
+
+const ConfettiPieceView = ({ piece, active, index }: { piece: ConfettiPiece; active: boolean; index: number }) => {
+  const translateY = useSharedValue(-20);
+  const opacity = useSharedValue(0);
+  const rotate = useSharedValue(0);
+  const translateX = useSharedValue(0);
+
+  const params = React.useMemo(() => ({
+    delay: (index * 40) + ((index * 17) % 200),
+    fallDistance: 400 + (index % 7) * 60,
+    drift: ((index % 10) - 5) * 30,
+    spinAmount: 360 + (index % 5) * 180,
+  }), [index]);
+
+  useEffect(() => {
+    if (active) {
+      const { delay, fallDistance, drift, spinAmount } = params;
+
+      opacity.value = withDelay(delay, withSequence(
+        withTiming(1, { duration: 100 }),
+        withDelay(1800, withTiming(0, { duration: 600 }))
+      ));
+      translateY.value = withDelay(delay, withTiming(fallDistance, {
+        duration: 2400,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      }));
+      translateX.value = withDelay(delay, withTiming(drift, {
+        duration: 2400,
+        easing: Easing.out(Easing.ease),
+      }));
+      rotate.value = withDelay(delay, withTiming(spinAmount, {
+        duration: 2500,
+        easing: Easing.linear,
+      }));
+    }
+  }, [active]);
+
+  const style = useAnimatedStyle(() => ({
+    position: 'absolute' as const,
+    left: `${piece.x}%` as any,
+    top: -20,
+    width: piece.size,
+    height: piece.shape === 'rect' ? piece.size * 0.6 : piece.size,
+    borderRadius: piece.shape === 'circle' ? piece.size / 2 : 2,
+    backgroundColor: piece.color,
+    opacity: opacity.value,
+    transform: [
+      { translateY: translateY.value },
+      { translateX: translateX.value },
+      { rotate: `${rotate.value}deg` },
+    ],
+  }));
+
+  return <Animated.View style={style} />;
+};
+
+const ConfettiExplosion = ({ active }: { active: boolean }) => {
+  const pieces = React.useMemo<ConfettiPiece[]>(() => {
+    return Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
+      id: i,
+      x: (i * 2) % 100,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      size: 6 + (i % 5) * 2,
+      rotation: (i * 37) % 360,
+      shape: i % 2 === 0 ? 'rect' as const : 'circle' as const,
+    }));
+  }, []);
+
+  if (!active) return null;
+
+  return (
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 999 }}>
+      {pieces.map((piece, i) => (
+        <ConfettiPieceView key={piece.id} piece={piece} active={active} index={i} />
+      ))}
+    </View>
+  );
 };
 
 export default function JoinEventScreen() {
@@ -125,6 +222,7 @@ export default function JoinEventScreen() {
   const [checkoutSessionId, setCheckoutSessionId] = useState<string>('');
   const [paymentAuthorized, setPaymentAuthorized] = useState(false);
   const hasPlayedChime = useRef(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const signatureClipWidth = useSharedValue(0);
   const signatureOpacity = useSharedValue(0);
   const buttonPulse = useSharedValue(1);
@@ -132,6 +230,8 @@ export default function JoinEventScreen() {
   useEffect(() => {
     if (queueEntry && (queueEntry.status === 'called' || queueEntry.status === 'in_call') && !hasPlayedChime.current) {
       hasPlayedChime.current = true;
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3500);
       playNotificationChime();
       signatureOpacity.value = withTiming(1, { duration: 400 });
       signatureClipWidth.value = withDelay(200, withTiming(300, { duration: 2500, easing: Easing.out(Easing.ease) }));
@@ -780,6 +880,7 @@ export default function JoinEventScreen() {
 
             {queueEntry && (queueEntry.status === 'called' || queueEntry.status === 'in_call') && foundLiveSession.room_url ? (
               <View style={styles.readyToJoinContainer}>
+                <ConfettiExplosion active={showConfetti} />
                 <Animated.View style={[styles.signatureRevealContainer, signatureContainerStyle]}>
                   <Animated.View style={signatureMaskStyle}>
                     <Image 
@@ -820,7 +921,7 @@ export default function JoinEventScreen() {
                       end={{ x: 1, y: 0 }}
                       style={styles.joinCallButtonGradient}
                     >
-                      <Camera size={24} color="#fff" />
+                      <Video size={22} color="#fff" />
                       <Text style={styles.joinCallButtonText}>{t('joinVideoCall') || 'Join Video Call'}</Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -1600,23 +1701,29 @@ const styles = StyleSheet.create({
     color: '#10B981',
   },
   joinCallButton: {
-    width: '100%',
-    borderRadius: 16,
+    width: '85%',
+    borderRadius: 28,
     overflow: 'hidden',
     marginBottom: 16,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   joinCallButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 28,
+    gap: 10,
   },
   joinCallButtonText: {
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: '700',
     color: '#fff',
+    letterSpacing: 0.3,
   },
   waitingSection: {
     alignItems: 'center',
