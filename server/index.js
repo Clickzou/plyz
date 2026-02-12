@@ -381,6 +381,8 @@ app.post('/api/create-checkout-session', async (req, res) => {
 
     const signTouchFeeCents = Math.round(priceCents * 0.15);
 
+    const canTransfer = account.charges_enabled && (account.capabilities?.transfers === 'active' || account.capabilities?.legacy_payments === 'active');
+
     const sessionParams = {
       payment_method_types: ['card'],
       mode: 'payment',
@@ -404,16 +406,22 @@ app.post('/api/create-checkout-session', async (req, res) => {
         price_cents: String(priceCents),
         signtouch_fee_cents: String(signTouchFeeCents),
       },
-      payment_intent_data: {
+      payment_intent_data: canTransfer ? {
         capture_method: 'manual',
         application_fee_amount: signTouchFeeCents,
         transfer_data: {
           destination: celebrityStripeAccountId,
         },
+      } : {
+        capture_method: 'manual',
       },
       success_url: successUrl || `${req.headers.origin || 'https://signtouch.app'}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&live_session_id=${sessionId}&celebrity_id=${celebrityId}`,
       cancel_url: cancelUrl || `${req.headers.origin || 'https://signtouch.app'}/payment-cancel`,
     };
+
+    if (!canTransfer && isTestMode) {
+      console.warn('[Checkout] WARNING: Account', celebrityStripeAccountId, 'cannot receive transfers - creating session WITHOUT transfer_data (TEST MODE)');
+    }
 
     const checkoutSession = await stripe.checkout.sessions.create(sessionParams);
 
