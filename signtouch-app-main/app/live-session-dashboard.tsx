@@ -1044,7 +1044,7 @@ export default function LiveSessionDashboardScreen() {
             </View>
             {session.price_cents > 0 && (
               <View style={[styles.stat, styles.earningsStat, earningsAnimating && styles.earningsStatAnimating]}>
-                <TrendingUp size={16} color={earningsAnimating ? '#4ade80' : '#fff'} />
+                <TrendingUp size={16} color="#fff" />
                 <Text style={[styles.statText, styles.earningsText, earningsAnimating && styles.earningsTextAnimating]}>
                   {(sessionEarningsCents / 100).toFixed(2)}€
                 </Text>
@@ -2041,23 +2041,21 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   earningsStat: {
-    backgroundColor: 'rgba(74, 222, 128, 0.15)',
+    backgroundColor: '#22c55e',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(74, 222, 128, 0.3)',
+    borderWidth: 0,
   },
   earningsStatAnimating: {
-    backgroundColor: 'rgba(74, 222, 128, 0.3)',
-    borderColor: '#4ade80',
+    backgroundColor: '#16a34a',
   },
   earningsText: {
     color: '#fff',
     fontWeight: '700',
   },
   earningsTextAnimating: {
-    color: '#4ade80',
+    color: '#fff',
   },
   earningsSummaryCard: {
     backgroundColor: 'rgba(74, 222, 128, 0.1)',
