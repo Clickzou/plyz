@@ -596,8 +596,43 @@ export default function LiveSessionDashboardScreen() {
     }
   };
 
+  const processDedicationPhoto = async (uri: string) => {
+    setDedicationPhotoUri(uri);
+    setIsUploadingDedication(true);
+    try {
+      if (sessionId) {
+        const uploadedUrl = await uploadDedicationPhoto(sessionId, uri, session?.celebrity_name || '');
+        if (uploadedUrl) {
+          await AsyncStorage.setItem(`dedication_photo_${sessionId}`, uploadedUrl);
+        } else {
+          await AsyncStorage.setItem(`dedication_photo_${sessionId}`, uri);
+        }
+      }
+    } catch (e) {
+      console.error('[Dedication] Upload error:', e);
+    }
+    setIsUploadingDedication(false);
+    setDedicationStep('signature');
+  };
+
   const handleTakeDedicationPhoto = async () => {
     try {
+      if (Platform.OS === 'web') {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.capture = 'user';
+        input.onchange = async (e: any) => {
+          const file = e.target?.files?.[0];
+          if (file) {
+            const uri = URL.createObjectURL(file);
+            await processDedicationPhoto(uri);
+          }
+        };
+        input.click();
+        return;
+      }
+
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
         showAlert(t('error'), t('cameraPermissionDenied'));
@@ -612,20 +647,7 @@ export default function LiveSessionDashboardScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        const uri = result.assets[0].uri;
-        setDedicationPhotoUri(uri);
-        setIsUploadingDedication(true);
-
-        if (sessionId) {
-          const uploadedUrl = await uploadDedicationPhoto(sessionId, uri, session?.celebrity_name || '');
-          if (uploadedUrl) {
-            await AsyncStorage.setItem(`dedication_photo_${sessionId}`, uploadedUrl);
-          } else {
-            await AsyncStorage.setItem(`dedication_photo_${sessionId}`, uri);
-          }
-        }
-        setIsUploadingDedication(false);
-        setDedicationStep('signature');
+        await processDedicationPhoto(result.assets[0].uri);
       }
     } catch (error) {
       console.error('Error taking dedication photo:', error);
@@ -635,6 +657,21 @@ export default function LiveSessionDashboardScreen() {
 
   const handlePickDedicationPhoto = async () => {
     try {
+      if (Platform.OS === 'web') {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async (e: any) => {
+          const file = e.target?.files?.[0];
+          if (file) {
+            const uri = URL.createObjectURL(file);
+            await processDedicationPhoto(uri);
+          }
+        };
+        input.click();
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: 'images' as any,
         quality: 0.8,
@@ -643,20 +680,7 @@ export default function LiveSessionDashboardScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        const uri = result.assets[0].uri;
-        setDedicationPhotoUri(uri);
-        setIsUploadingDedication(true);
-
-        if (sessionId) {
-          const uploadedUrl = await uploadDedicationPhoto(sessionId, uri, session?.celebrity_name || '');
-          if (uploadedUrl) {
-            await AsyncStorage.setItem(`dedication_photo_${sessionId}`, uploadedUrl);
-          } else {
-            await AsyncStorage.setItem(`dedication_photo_${sessionId}`, uri);
-          }
-        }
-        setIsUploadingDedication(false);
-        setDedicationStep('signature');
+        await processDedicationPhoto(result.assets[0].uri);
       }
     } catch (error) {
       console.error('Error picking dedication photo:', error);
