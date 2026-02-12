@@ -612,7 +612,7 @@ export default {
   liveSessionWatchHint: '签名将实时出现',
   liveSessionFound: '找到直播会话！',
   sessionPrice: '会话价格',
-  joinTheQueue: '加入排队',
+  joinTheQueue: '完成预付款以加入排队',
   enterNameToJoin: '输入您的姓名加入等候名单',
   yourName: '您的姓名',
   joinQueue: '加入队列',

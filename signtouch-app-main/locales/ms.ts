@@ -612,7 +612,7 @@ export default {
   liveSessionWatchHint: 'Tandatangan akan muncul secara masa nyata',
   liveSessionFound: 'Sesi langsung ditemui!',
   sessionPrice: 'Harga sesi',
-  joinTheQueue: 'Sertai barisan',
+  joinTheQueue: 'Buat pra-bayaran untuk menyertai barisan',
   enterNameToJoin: 'Masukkan nama anda untuk menyertai senarai menunggu',
   yourName: 'Nama anda',
   joinQueue: 'Sertai',

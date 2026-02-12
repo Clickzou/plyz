@@ -612,7 +612,7 @@ export default {
   liveSessionWatchHint: 'Die Signatur erscheint in Echtzeit',
   liveSessionFound: 'Live-Session gefunden!',
   sessionPrice: 'Sitzungspreis',
-  joinTheQueue: 'Der Warteschlange beitreten',
+  joinTheQueue: 'Führen Sie Ihre Vorauszahlung durch, um der Warteschlange beizutreten',
   enterNameToJoin: 'Geben Sie Ihren Namen ein, um der Warteliste beizutreten',
   yourName: 'Ihr Name',
   joinQueue: 'Beitreten',

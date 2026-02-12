@@ -612,7 +612,7 @@ export default {
   liveSessionWatchHint: 'La firma aparecerá en tiempo real',
   liveSessionFound: '¡Sesión en vivo encontrada!',
   sessionPrice: 'Precio de la sesión',
-  joinTheQueue: 'Unirse a la cola',
+  joinTheQueue: 'Realiza tu prepago para unirte a la cola',
   enterNameToJoin: 'Ingresa tu nombre para unirte a la lista de espera',
   yourName: 'Tu nombre',
   joinQueue: 'Unirse a la cola',

@@ -612,7 +612,7 @@ export default {
   liveSessionWatchHint: 'স্বাক্ষর রিয়েল-টাইমে দেখা যাবে',
   liveSessionFound: 'লাইভ সেশন পাওয়া গেছে!',
   sessionPrice: 'সেশনের মূল্য',
-  joinTheQueue: 'সারিতে যোগ দিন',
+  joinTheQueue: 'সারিতে যোগ দিতে প্রি-পেমেন্ট করুন',
   enterNameToJoin: 'অপেক্ষার তালিকায় যোগ দিতে আপনার নাম লিখুন',
   yourName: 'আপনার নাম',
   joinQueue: 'যোগ দিন',

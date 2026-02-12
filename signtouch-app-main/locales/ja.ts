@@ -612,7 +612,7 @@ export default {
   liveSessionWatchHint: '署名がリアルタイムで表示されます',
   liveSessionFound: 'ライブセッションが見つかりました！',
   sessionPrice: 'セッション価格',
-  joinTheQueue: '列に並ぶ',
+  joinTheQueue: '事前決済を行い列に並ぶ',
   enterNameToJoin: '待機リストに参加するには名前を入力してください',
   yourName: 'あなたの名前',
   joinQueue: '参加する',

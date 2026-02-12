@@ -616,7 +616,7 @@ export default {
   liveSessionWatchHint: 'The signature will appear in real-time',
   liveSessionFound: 'Live session found!',
   sessionPrice: 'Session price',
-  joinTheQueue: 'Join the queue',
+  joinTheQueue: 'Make your pre-payment to join the queue',
   enterNameToJoin: 'Enter your name to join the waiting list',
   yourName: 'Your name',
   joinQueue: 'Join Queue',

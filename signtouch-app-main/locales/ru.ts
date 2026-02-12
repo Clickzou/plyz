@@ -612,7 +612,7 @@ export default {
   liveSessionWatchHint: 'Подпись появится в реальном времени',
   liveSessionFound: 'Живая сессия найдена!',
   sessionPrice: 'Цена сессии',
-  joinTheQueue: 'Присоединиться к очереди',
+  joinTheQueue: 'Сделайте предоплату, чтобы присоединиться к очереди',
   enterNameToJoin: 'Введите своё имя, чтобы присоединиться к списку ожидания',
   yourName: 'Ваше имя',
   joinQueue: 'Присоединиться',
