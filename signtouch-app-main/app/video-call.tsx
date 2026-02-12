@@ -75,6 +75,7 @@ export default function VideoCallScreen() {
   const [paymentCaptured, setPaymentCaptured] = useState(false);
   const callStartTime = useRef<number>(0);
   const autoEndTriggered = useRef(false);
+  const callEndReason = useRef<'timer' | 'fan_left' | 'celebrity_left' | 'fan_hangup' | 'celebrity_hangup' | 'unknown'>('unknown');
   const [otherParticipantJoined, setOtherParticipantJoined] = useState(false);
   const [waitingForNextFan, setWaitingForNextFan] = useState(false);
   const [currentFanName, setCurrentFanName] = useState(params.otherUserName || 'Fan');
@@ -123,6 +124,7 @@ export default function VideoCallScreen() {
 
       if (diff <= 0 && !autoEndTriggered.current) {
         autoEndTriggered.current = true;
+        callEndReason.current = 'timer';
         handleCallEnded();
       }
     }, 1000);
@@ -192,6 +194,9 @@ export default function VideoCallScreen() {
   };
 
   const leaveCall = () => {
+    if (callEndReason.current === 'unknown') {
+      callEndReason.current = isHost ? 'celebrity_hangup' : 'fan_hangup';
+    }
     handleCallEnded();
   };
 
@@ -251,6 +256,7 @@ export default function VideoCallScreen() {
     setOtherParticipantJoined(false);
     callStartTime.current = 0;
     autoEndTriggered.current = false;
+    callEndReason.current = 'unknown';
     setHasLeftCall(false);
     setFanTimeRemaining(`${params.durationPerFan || '5'}:00`);
     setTimeProgress(1);
@@ -338,7 +344,12 @@ export default function VideoCallScreen() {
     setShowRatingModal(false);
     if (!isHost && params.sessionId) {
       const priceCents = parseInt(params.priceCents || '0', 10);
-      if (priceCents > 0) {
+      const reason = callEndReason.current;
+      const shouldChargeFan = reason === 'timer' || reason === 'fan_hangup' || reason === 'fan_left';
+
+      console.log('[VideoCall] Call end reason:', reason, '| Charge fan:', shouldChargeFan);
+
+      if (priceCents > 0 && shouldChargeFan) {
         if (params.checkoutSessionId) {
           await capturePaymentAfterCall();
         }
@@ -355,6 +366,17 @@ export default function VideoCallScreen() {
           currency: 'EUR',
           platform: storePlatform,
         }).catch((err) => console.error('Error recording transaction:', err));
+      } else if (priceCents > 0 && !shouldChargeFan && params.checkoutSessionId) {
+        try {
+          console.log('[VideoCall] Celebrity ended early, cancelling payment');
+          await fetch(`${STRIPE_SERVER_URL}/api/cancel-payment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ checkout_session_id: params.checkoutSessionId }),
+          });
+        } catch (e) {
+          console.error('[VideoCall] Error cancelling payment:', e);
+        }
       }
 
       console.log('[VideoCall] Fan call ended, navigating to dedication-result for session:', params.sessionId);
@@ -527,6 +549,9 @@ export default function VideoCallScreen() {
                       const participants = callFrame.participants();
                       const remoteCount = Object.keys(participants).filter((k: string) => k !== 'local').length;
                       if (remoteCount === 0) {
+                        if (callEndReason.current === 'unknown') {
+                          callEndReason.current = isHost ? 'fan_left' : 'celebrity_left';
+                        }
                         handleCallEnded();
                       }
                     });
