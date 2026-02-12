@@ -597,40 +597,46 @@ export default function VideoCallScreen() {
       {hasLeftCall && <View style={{ flex: 1, backgroundColor: '#000' }} />}
 
       <View style={styles.headerOverlay}>
-        <TouchableOpacity style={styles.headerBackButton} onPress={() => router.back()}>
-          <ArrowLeft size={20} color="#fff" />
-        </TouchableOpacity>
+        {isHost ? (
+          <TouchableOpacity style={styles.headerBackButton} onPress={() => router.back()}>
+            <ArrowLeft size={20} color="#fff" />
+          </TouchableOpacity>
+        ) : null}
         
-        <View style={styles.headerCenter}>
-          {isHost && fansRemainingCount > 0 ? (
-            <View style={styles.fansRemainingBadge}>
-              <Users size={12} color="#a78bfa" />
-              <Text style={styles.fansRemainingText}>
-                {fansRemainingCount}
-              </Text>
-            </View>
-          ) : null}
+        {params.durationPerFan ? (
+          <View style={[styles.timerContainer, timeWarning && styles.timerWarning, !otherParticipantJoined && { opacity: 0.5 }]}>
+            <Clock size={isHost ? 14 : 12} color="#fff" />
+            <Text style={[styles.timerText, !isHost && styles.timerTextFan]}>
+              {otherParticipantJoined ? fanTimeRemaining : `${params.durationPerFan}:00`}
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.liveIndicator}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>LIVE</Text>
+          </View>
+        )}
 
-          {params.durationPerFan ? (
-            <View style={[styles.timerContainer, timeWarning && styles.timerWarning, !otherParticipantJoined && { opacity: 0.5 }]}>
-              <Clock size={isHost ? 14 : 12} color="#fff" />
-              <Text style={[styles.timerText, !isHost && styles.timerTextFan]}>
-                {otherParticipantJoined ? fanTimeRemaining : `${params.durationPerFan}:00`}
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.liveIndicator}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveText}>LIVE</Text>
-            </View>
-          )}
-        </View>
+        {isHost && fansRemainingCount > 0 ? (
+          <View style={styles.fansRemainingBadge}>
+            <Users size={12} color="#a78bfa" />
+            <Text style={styles.fansRemainingText}>
+              {fansRemainingCount}
+            </Text>
+          </View>
+        ) : null}
         
         <TouchableOpacity style={styles.endCallButton} onPress={leaveCall}>
           <PhoneOff size={16} color="#fff" />
           <Text style={styles.endCallText}>{t('endCall')}</Text>
         </TouchableOpacity>
       </View>
+
+      {!isHost && (
+        <TouchableOpacity style={styles.fanBackButton} onPress={() => router.back()}>
+          <ArrowLeft size={20} color="#fff" />
+        </TouchableOpacity>
+      )}
 
       {isHost && !otherParticipantJoined && !isLoading && !waitingForNextFan && !hasLeftCall && (
         <View style={styles.fanConnectingBanner}>
@@ -710,6 +716,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  fanBackButton: {
+    position: 'absolute',
+    top: Platform.OS === 'web' ? 100 : 96,
+    left: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 11,
   },
   liveIndicator: {
     flexDirection: 'row',
