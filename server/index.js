@@ -356,16 +356,22 @@ app.post('/api/create-checkout-session', async (req, res) => {
     }
 
     const account = await stripe.accounts.retrieve(celebrityStripeAccountId);
+    const stripeKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '';
+    const isTestMode = stripeKey.startsWith('sk_test_');
 
     if (!account.charges_enabled) {
-      console.error('[Checkout] Blocked: charges_enabled=false for', celebrityStripeAccountId);
-      return res.status(403).json({
-        error: 'Celebrity account cannot accept payments yet. Onboarding must be completed.',
-        code: 'CHARGES_NOT_ENABLED',
-      });
+      if (isTestMode) {
+        console.warn('[Checkout] WARNING: charges_enabled=false for', celebrityStripeAccountId, '- proceeding in TEST mode');
+      } else {
+        console.error('[Checkout] Blocked: charges_enabled=false for', celebrityStripeAccountId);
+        return res.status(403).json({
+          error: 'Celebrity account cannot accept payments yet. Onboarding must be completed.',
+          code: 'CHARGES_NOT_ENABLED',
+        });
+      }
     }
 
-    if (!account.payouts_enabled) {
+    if (!account.payouts_enabled && !isTestMode) {
       console.error('[Checkout] Blocked: payouts_enabled=false for', celebrityStripeAccountId);
       return res.status(403).json({
         error: 'Celebrity account cannot receive payouts yet. Onboarding must be completed.',
