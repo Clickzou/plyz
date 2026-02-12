@@ -507,11 +507,19 @@ export default function VideoCallScreen() {
                       startVideoOff: false,
                       startAudioOff: false,
                       customTrayButtons: {},
+                      layoutConfig: {
+                        grid: {
+                          maxTilesPerPage: 2,
+                        },
+                      },
                       iframeStyle: {
                         width: '100%',
-                        height: '100%',
+                        height: 'calc(100% + 100px)',
                         border: '0',
                         borderRadius: '0',
+                        position: 'absolute',
+                        top: '0',
+                        left: '0',
                       },
                     });
                     const joinUrl = params.roomUrl || '';
@@ -570,12 +578,11 @@ export default function VideoCallScreen() {
               }
             }}
             style={{
-              position: 'absolute' as any,
-              top: 0,
-              left: 0,
+              position: 'relative' as any,
               width: '100%',
               height: '100%',
               backgroundColor: '#000',
+              overflow: 'hidden',
             }}
           />
         </View>
