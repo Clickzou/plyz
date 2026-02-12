@@ -515,13 +515,14 @@ export default function VideoCallScreen() {
                       startAudioOff: false,
                       customTrayButtons: {},
                       iframeStyle: {
-                        width: '100%',
-                        height: 'calc(100% + 100px)',
+                        width: '100vw',
+                        height: '100vh',
                         border: '0',
                         borderRadius: '0',
-                        position: 'absolute',
+                        position: 'fixed',
                         top: '0',
                         left: '0',
+                        zIndex: '1',
                       },
                     });
                     const joinUrl = params.roomUrl || '';
@@ -742,6 +743,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 10,
     paddingTop: Platform.OS === 'web' ? 48 : 44,
+    zIndex: 10,
+    position: 'relative' as any,
     paddingBottom: 10,
     backgroundColor: '#1a1a2e',
   },
@@ -851,6 +854,7 @@ const styles = StyleSheet.create({
   fanConnectingBanner: {
     position: 'absolute',
     top: 150,
+    zIndex: 20,
     left: 20,
     right: 20,
     flexDirection: 'row',
