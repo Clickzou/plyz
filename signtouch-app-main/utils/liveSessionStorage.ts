@@ -180,13 +180,22 @@ export const updateDedicationSignature = async (
   celebrityName?: string
 ): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('live_sessions')
-      .update({ dedication_signature_svg: signatureSvg } as any)
-      .eq('id', sessionId);
+    const { error: rpcError } = await supabase.rpc('update_dedication_signature', {
+      p_session_id: sessionId,
+      p_signature_svg: signatureSvg,
+    });
 
-    if (error) {
-      console.error('Error updating dedication signature in DB:', error);
+    if (rpcError) {
+      console.error('Error updating dedication signature via RPC:', rpcError);
+      const { error } = await supabase
+        .from('live_sessions')
+        .update({ dedication_signature_svg: signatureSvg } as any)
+        .eq('id', sessionId);
+      if (error) {
+        console.error('Error updating dedication signature in DB:', error);
+      }
+    } else {
+      console.log('[Dedication] Signature saved to DB via RPC');
     }
 
     const meta: Record<string, any> = { signatureSvg };
@@ -208,19 +217,32 @@ export const getDedicationAssets = async (
   let dbCelebrityName = '';
 
   try {
-    const { data, error } = await supabase
-      .from('live_sessions')
-      .select('*')
-      .eq('id', sessionId)
-      .single();
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_dedication_assets', {
+      p_session_id: sessionId,
+    });
 
-    if (!error && data) {
-      dbCelebrityName = (data as any).celebrity_name || '';
-      dbPhotoUrl = (data as any).dedication_photo_url || null;
-      dbSignatureSvg = (data as any).dedication_signature_svg || null;
-      console.log('[Dedication] DB data - photo:', !!dbPhotoUrl, 'signature:', !!dbSignatureSvg);
+    if (!rpcError && rpcData && rpcData.length > 0) {
+      const row = rpcData[0];
+      dbCelebrityName = row.celebrity_name || '';
+      dbPhotoUrl = row.dedication_photo_url || null;
+      dbSignatureSvg = row.dedication_signature_svg || null;
+      console.log('[Dedication] RPC data - photo:', !!dbPhotoUrl, 'signature:', !!dbSignatureSvg);
     } else {
-      console.log('[Dedication] DB error or no data:', error?.message);
+      console.log('[Dedication] RPC error or no data:', rpcError?.message);
+      const { data, error } = await supabase
+        .from('live_sessions')
+        .select('*')
+        .eq('id', sessionId)
+        .single();
+
+      if (!error && data) {
+        dbCelebrityName = (data as any).celebrity_name || '';
+        dbPhotoUrl = (data as any).dedication_photo_url || null;
+        dbSignatureSvg = (data as any).dedication_signature_svg || null;
+        console.log('[Dedication] DB fallback - photo:', !!dbPhotoUrl, 'signature:', !!dbSignatureSvg);
+      } else {
+        console.log('[Dedication] DB error or no data:', error?.message);
+      }
     }
   } catch (e) {
     console.error('[Dedication] Error fetching from DB:', e);
