@@ -552,6 +552,12 @@ export const resumeSession = async (sessionId: string): Promise<boolean> => {
 
 export const endSession = async (sessionId: string): Promise<boolean> => {
   try {
+    await supabase
+      .from('session_queue')
+      .update({ status: 'completed', completed_at: new Date().toISOString() })
+      .eq('session_id', sessionId)
+      .in('status', ['current', 'signing']);
+
     const { error } = await supabase
       .from('live_sessions')
       .update({ status: 'ended' })
@@ -701,7 +707,7 @@ export const callNextFan = async (sessionId: string): Promise<QueueEntry | null>
       .from('session_queue')
       .update({ status: 'completed', completed_at: new Date().toISOString() })
       .eq('session_id', sessionId)
-      .eq('status', 'signing');
+      .in('status', ['current', 'signing']);
 
     const { data: nextFan, error } = await supabase
       .from('session_queue')

@@ -435,7 +435,7 @@ export default function LiveSessionDashboardScreen() {
   useEffect(() => {
     if (!sessionId || !session?.price_cents || session.price_cents <= 0) return;
     fetchSessionEarnings();
-    const earningsInterval = setInterval(fetchSessionEarnings, 15000);
+    const earningsInterval = setInterval(fetchSessionEarnings, 5000);
     return () => clearInterval(earningsInterval);
   }, [sessionId, session?.price_cents]);
 
