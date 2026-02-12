@@ -24,6 +24,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { getOrCreateDeviceId } from '@/utils/ratingsStorage';
 import BottomNav from '@/components/BottomNav';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -66,13 +67,14 @@ export default function MyEarningsScreen() {
   const [data, setData] = useState<EarningsData | null>(null);
 
   const fetchEarnings = useCallback(async () => {
-    if (!user?.id || !STRIPE_SERVER_URL) {
+    if (!STRIPE_SERVER_URL) {
       setLoading(false);
       return;
     }
     try {
+      const celebrityId = user?.id || await getOrCreateDeviceId();
       const response = await fetch(
-        `${STRIPE_SERVER_URL}/api/celebrity-earnings?celebrity_id=${user.id}`
+        `${STRIPE_SERVER_URL}/api/celebrity-earnings?celebrity_id=${celebrityId}`
       );
       const result = await response.json();
       setData(result);

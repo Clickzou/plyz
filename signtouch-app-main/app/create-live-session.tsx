@@ -24,6 +24,7 @@ import { createLiveSession, uploadCoverPhoto } from '@/utils/liveSessionStorage'
 import StripeConnectModal from '@/components/StripeConnectModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/contexts/AuthContext';
+import { getOrCreateDeviceId } from '@/utils/ratingsStorage';
 import { getStripeAccountId } from '@/utils/userProfile';
 import { scheduleCelebrityReminders } from '@/utils/scheduleReminders';
 import * as Clipboard from 'expo-clipboard';
@@ -321,7 +322,8 @@ export default function CreateLiveSessionScreen() {
     setPhotoError(false);
     console.log('[CreateSession] Starting session creation...');
     try {
-      const celebrityId = user?.id || `celebrity_${Date.now()}`;
+      const deviceId = await getOrCreateDeviceId();
+      const celebrityId = user?.id || deviceId;
       let session;
       
       let uploadedPhotoUrl: string | null = null;
