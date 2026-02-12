@@ -842,7 +842,7 @@ const styles = StyleSheet.create({
   },
   fanConnectingBanner: {
     position: 'absolute',
-    top: 130,
+    top: 150,
     left: 20,
     right: 20,
     flexDirection: 'row',
