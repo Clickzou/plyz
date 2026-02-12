@@ -912,6 +912,7 @@ export default {
   payoutFailed: 'विफल',
   purchaseSession: 'Purchase Session',
   purchaseFailed: 'Purchase failed',
+  celebrityAccountNotReady: "इस सेलिब्रिटी का भुगतान खाता अभी सक्रिय नहीं है। कृपया बाद में पुनः प्रयास करें।",
   sessionCreationFailed: 'Failed to create session',
   nativeRequired: 'Native App Required',
   purchaseNativeOnly: 'In-app purchases are only available on the iOS and Android apps. Please download SignTouch from the App Store or Google Play.',

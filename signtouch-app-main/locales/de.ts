@@ -912,6 +912,7 @@ export default {
   payoutFailed: 'Fehlgeschlagen',
   purchaseSession: 'Purchase Session',
   purchaseFailed: 'Purchase failed',
+  celebrityAccountNotReady: "Das Zahlungskonto dieser Berühmtheit ist noch nicht aktiviert. Bitte versuchen Sie es später erneut.",
   sessionCreationFailed: 'Failed to create session',
   nativeRequired: 'Native App Required',
   purchaseNativeOnly: 'In-app purchases are only available on the iOS and Android apps. Please download SignTouch from the App Store or Google Play.',

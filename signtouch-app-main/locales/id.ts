@@ -917,6 +917,7 @@ export default {
   payoutFailed: 'Gagal',
   purchaseSession: 'Purchase Session',
   purchaseFailed: 'Purchase failed',
+  celebrityAccountNotReady: "Akun pembayaran selebriti ini belum diaktifkan. Silakan coba lagi nanti.",
   sessionCreationFailed: 'Failed to create session',
   nativeRequired: 'Native App Required',
   purchaseNativeOnly: 'In-app purchases are only available on the iOS and Android apps. Please download SignTouch from the App Store or Google Play.',

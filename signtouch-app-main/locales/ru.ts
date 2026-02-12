@@ -912,6 +912,7 @@ export default {
   payoutFailed: 'Ошибка',
   purchaseSession: 'Purchase Session',
   purchaseFailed: 'Purchase failed',
+  celebrityAccountNotReady: "Платёжный аккаунт этой знаменитости ещё не активирован. Попробуйте позже.",
   sessionCreationFailed: 'Failed to create session',
   nativeRequired: 'Native App Required',
   purchaseNativeOnly: 'In-app purchases are only available on the iOS and Android apps. Please download SignTouch from the App Store or Google Play.',

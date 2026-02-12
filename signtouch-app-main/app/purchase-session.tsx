@@ -118,10 +118,18 @@ export default function PurchaseSessionScreen() {
       }
     } catch (error: any) {
       console.error('[Purchase] Stripe Checkout error:', error);
-      showAlert(
-        t('error') || 'Erreur',
-        t('purchaseFailed') || 'Échec du paiement. Veuillez réessayer.'
-      );
+      const errorMsg = error?.message || '';
+      if (errorMsg.includes('cannot accept payments') || errorMsg.includes('CHARGES_NOT_ENABLED') || errorMsg.includes('Onboarding')) {
+        showAlert(
+          t('error') || 'Erreur',
+          t('celebrityAccountNotReady') || "Le compte de paiement de cette célébrité n'est pas encore activé. Veuillez réessayer plus tard."
+        );
+      } else {
+        showAlert(
+          t('error') || 'Erreur',
+          t('purchaseFailed') || "Échec de l'achat"
+        );
+      }
       setPurchasing(false);
     }
   };
