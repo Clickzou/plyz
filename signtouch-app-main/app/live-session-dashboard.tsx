@@ -1116,31 +1116,31 @@ export default function LiveSessionDashboardScreen() {
                   <View style={styles.dedicationPhotoButtons}>
                     {Platform.OS === 'web' ? (
                       <>
-                        <label style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#8b5cf6', borderRadius: 14, paddingTop: 12, paddingBottom: 12, paddingLeft: 16, paddingRight: 16, cursor: 'pointer', flex: 1 } as any}>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            capture="user"
-                            onChange={handleWebFileChange}
-                            style={{ display: 'none' } as any}
-                          />
+                        <View style={[styles.dedicationPhotoButton, { position: 'relative', overflow: 'hidden' }]}>
                           {isUploadingDedication ? (
                             <ActivityIndicator size="small" color="#fff" />
                           ) : (
                             <Camera size={20} color="#fff" />
                           )}
                           <Text style={styles.dedicationPhotoButtonText}>{t('takeSelfie')}</Text>
-                        </label>
-                        <label style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(139,92,246,0.15)', borderWidth: 1, borderColor: '#8b5cf6', borderStyle: 'solid', borderRadius: 14, paddingTop: 12, paddingBottom: 12, paddingLeft: 16, paddingRight: 16, cursor: 'pointer', flex: 1 } as any}>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="user"
+                            onChange={handleWebFileChange}
+                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', zIndex: 10 } as any}
+                          />
+                        </View>
+                        <View style={[styles.dedicationPhotoButton, styles.dedicationPhotoButtonAlt, { position: 'relative', overflow: 'hidden' }]}>
+                          <ImageIcon size={20} color="#fff" />
+                          <Text style={styles.dedicationPhotoButtonTextAlt}>{t('choosePhoto')}</Text>
                           <input
                             type="file"
                             accept="image/*"
                             onChange={handleWebFileChange}
-                            style={{ display: 'none' } as any}
+                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', zIndex: 10 } as any}
                           />
-                          <ImageIcon size={20} color="#fff" />
-                          <Text style={styles.dedicationPhotoButtonTextAlt}>{t('choosePhoto')}</Text>
-                        </label>
+                        </View>
                       </>
                     ) : (
                       <>
