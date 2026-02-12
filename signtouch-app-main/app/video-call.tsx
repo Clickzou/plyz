@@ -507,11 +507,6 @@ export default function VideoCallScreen() {
                       startVideoOff: false,
                       startAudioOff: false,
                       customTrayButtons: {},
-                      layoutConfig: {
-                        grid: {
-                          maxTilesPerPage: 2,
-                        },
-                      },
                       iframeStyle: {
                         width: '100%',
                         height: 'calc(100% + 100px)',
@@ -552,6 +547,12 @@ export default function VideoCallScreen() {
                     });
                     callFrame.on('participant-joined', () => {
                       setOtherParticipantJoined(true);
+                      try { callFrame.setActiveSpeakerMode(true); } catch (e) {}
+                    });
+                    callFrame.on('active-speaker-mode-change', (evt: any) => {
+                      if (!evt.enabled) {
+                        try { callFrame.setActiveSpeakerMode(true); } catch (e) {}
+                      }
                     });
                     callFrame.on('participant-left', () => {
                       const participants = callFrame.participants();
