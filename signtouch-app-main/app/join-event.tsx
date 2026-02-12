@@ -1702,6 +1702,7 @@ const styles = StyleSheet.create({
   },
   joinCallButton: {
     width: '85%',
+    alignSelf: 'center',
     borderRadius: 28,
     overflow: 'hidden',
     marginBottom: 16,
