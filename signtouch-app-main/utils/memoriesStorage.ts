@@ -125,13 +125,30 @@ const cleanupCorruptedData = (): void => {
 
     const memories = JSON.parse(stored) as Memory[];
 
-    // Filtrer les souvenirs valides (avec uri court = déjà compressé ou file URI)
-    const validMemories = memories.filter(m => {
-      // Garder les souvenirs avec URI de taille raisonnable
-      return m.uri && m.timestamp && m.uri.length < 300000; // ~300KB max par image
-    });
+    const validMemories = memories
+      .filter(m => m.uri && m.timestamp && m.id)
+      .map(m => {
+        const isValidUri = (uri: string | undefined): boolean => {
+          if (!uri) return false;
+          if (uri.length > 300000) return false;
+          return uri.startsWith('data:') || uri.startsWith('http') || uri.startsWith('file:') || uri.startsWith('blob:');
+        };
 
-    // Limiter au nombre max et garder les plus récents
+        if (!isValidUri(m.uri) && !isValidUri(m.baseUri)) {
+          return null;
+        }
+
+        if (m.baseUri && !isValidUri(m.baseUri)) {
+          m.baseUri = m.uri;
+        }
+        if (!isValidUri(m.uri) && isValidUri(m.baseUri)) {
+          m.uri = m.baseUri!;
+        }
+
+        return m;
+      })
+      .filter((m): m is Memory => m !== null);
+
     const limitedMemories = validMemories
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, MAX_MEMORIES_WEB);
@@ -140,7 +157,6 @@ const cleanupCorruptedData = (): void => {
     console.log(`✅ Nettoyage: ${memories.length} → ${limitedMemories.length} souvenirs`);
   } catch (error) {
     console.error('Erreur nettoyage:', error);
-    // En cas d'erreur, réinitialiser complètement
     localStorage.removeItem(STORAGE_KEY);
   }
 };

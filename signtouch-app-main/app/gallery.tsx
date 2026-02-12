@@ -72,6 +72,7 @@ export default function GalleryScreen() {
   const [selectedFilter, setSelectedFilter] = useState<EventType | 'all'>('all');
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedMemories, setSelectedMemories] = useState<Set<string>>(new Set());
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [showTrialModal, setShowTrialModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [trialDaysRemaining, setTrialDaysRemaining] = useState(7);
@@ -118,6 +119,35 @@ export default function GalleryScreen() {
   };
 
   const eventTypes: (EventType | 'all')[] = ['all', 'concert', 'match', 'expo', 'salon', 'dedicace', 'rencontre', 'autre'];
+
+  const getMemoryImageUri = (memory: Memory): string => {
+    const baseKey = `base_${memory.id}`;
+    const uriKey = `uri_${memory.id}`;
+    if (failedImages.has(baseKey) && failedImages.has(uriKey)) {
+      return '';
+    }
+    if (memory.baseUri && !failedImages.has(baseKey)) {
+      return memory.baseUri;
+    }
+    if (memory.uri && !failedImages.has(uriKey)) {
+      return memory.uri;
+    }
+    return memory.uri || memory.baseUri || '';
+  };
+
+  const handleImageError = (memory: Memory) => {
+    setFailedImages(prev => {
+      const next = new Set(prev);
+      const baseKey = `base_${memory.id}`;
+      const uriKey = `uri_${memory.id}`;
+      if (memory.baseUri && !next.has(baseKey)) {
+        next.add(baseKey);
+      } else if (memory.uri && !next.has(uriKey)) {
+        next.add(uriKey);
+      }
+      return next;
+    });
+  };
 
   const getEventTypeLabel = (type: EventType | 'all') => {
     const labels: Record<EventType | 'all', string> = {
@@ -751,11 +781,18 @@ export default function GalleryScreen() {
                     activeOpacity={0.8}
                   >
                     <View style={styles.cardImageContainer}>
-                      <Image
-                        source={{ uri: memory.baseUri || memory.uri }}
-                        style={styles.cardImage}
-                        resizeMode="cover"
-                      />
+                      {getMemoryImageUri(memory) ? (
+                        <Image
+                          source={{ uri: getMemoryImageUri(memory) }}
+                          style={styles.cardImage}
+                          resizeMode="cover"
+                          onError={() => handleImageError(memory)}
+                        />
+                      ) : (
+                        <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
+                          <Camera size={24} color="#6b7280" />
+                        </View>
+                      )}
                       {selectionMode && (
                         <View style={styles.selectionIndicator}>
                           {isSelected ? (
@@ -1294,6 +1331,11 @@ const styles = StyleSheet.create({
   cardImage: {
     width: 100,
     height: 120,
+  },
+  cardImagePlaceholder: {
+    backgroundColor: '#374151',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardContent: {
     flex: 1,
