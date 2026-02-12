@@ -24,10 +24,11 @@ import * as StorageService from '@/utils/storageService';
 import { useSubscription, SUBSCRIPTION_ENABLED } from '@/contexts/SubscriptionContext';
 import { useTranslation } from '@/contexts/LanguageContext';
 
-type GalleryTab = 'photos' | 'stories';
+type GalleryTab = 'photos' | 'stories' | 'collector';
 import { useAuth } from '@/contexts/AuthContext';
 import AdModal from '@/components/AdModal';
 import SocialShareModal from '@/components/SocialShareModal';
+import { CollectorLiveItem, getAllCollectorLive, deleteCollectorLive, downloadImageWeb } from '@/utils/collectorLiveStorage';
 import TrialModal from '@/components/TrialModal';
 import AccountModal from '@/components/AccountModal';
 import { getTrialStatus, hasFirstPhotoBeenSaved } from '@/utils/trialStorage';
@@ -57,10 +58,12 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
 export default function GalleryScreen() {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
+  const [collectorItems, setCollectorItems] = useState<CollectorLiveItem[]>([]);
   const [activeTab, setActiveTab] = useState<GalleryTab>('photos');
   const [loading, setLoading] = useState(true);
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
+  const [selectedCollectorItem, setSelectedCollectorItem] = useState<CollectorLiveItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -160,10 +163,20 @@ export default function GalleryScreen() {
     }
   };
 
+  const loadCollectorData = async () => {
+    try {
+      const items = await getAllCollectorLive();
+      setCollectorItems(items);
+    } catch (error) {
+      console.error('Error loading collector live:', error);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       loadMemories();
       loadStoriesData();
+      loadCollectorData();
 
       const checkAndShowModals = async () => {
         const firstPhotoSaved = await hasFirstPhotoBeenSaved();
@@ -535,6 +548,17 @@ export default function GalleryScreen() {
               {t('galleryStories') || 'Stories'}
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'collector' && styles.tabActive]}
+            onPress={() => {
+              if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setActiveTab('collector');
+            }}
+          >
+            <Text style={[styles.tabText, activeTab === 'collector' && styles.tabTextActive]}>
+              {t('collectorLive') || 'Collector Live'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {activeTab === 'photos' && memories.length > 0 && !selectionMode && (
@@ -545,6 +569,11 @@ export default function GalleryScreen() {
         {activeTab === 'stories' && (
           <Text style={styles.instructionText}>
             {t('storiesInstruction')}
+          </Text>
+        )}
+        {activeTab === 'collector' && (
+          <Text style={styles.instructionText}>
+            {t('collectorInstruction') || 'Your personalized dedications from live sessions'}
           </Text>
         )}
         {activeTab === 'photos' && memories.length > 0 && (
@@ -637,6 +666,47 @@ export default function GalleryScreen() {
                 </TouchableOpacity>
               ))}
             </View>
+          </ScrollView>
+        )
+      )}
+
+      {activeTab === 'collector' && (
+        collectorItems.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Star size={64} color="#4b5563" />
+            <Text style={styles.emptyText}>{t('noCollectorItems') || 'No dedications yet'}</Text>
+            <Text style={styles.emptySubtext}>{t('noCollectorHint') || 'Join a live session to receive personalized dedications'}</Text>
+          </View>
+        ) : (
+          <ScrollView style={styles.storiesGrid} showsVerticalScrollIndicator={false}>
+            <View style={styles.storiesGridContent}>
+              {collectorItems.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.storyCard}
+                  onPress={() => {
+                    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setSelectedCollectorItem(item);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={{ uri: item.imageUri }}
+                    style={styles.storyImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.storyOverlay}>
+                    <Text style={styles.storyDate} numberOfLines={1}>
+                      {item.celebrityName}
+                    </Text>
+                    <Text style={[styles.storyDate, { fontSize: 10, opacity: 0.8 }]}>
+                      {new Date(item.timestamp).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={{ height: BOTTOM_NAV_HEIGHT + 40 }} />
           </ScrollView>
         )
       )}
@@ -890,6 +960,91 @@ export default function GalleryScreen() {
             <TouchableOpacity
               style={[styles.modalFloatingButton, styles.modalRedButton]}
               onPress={confirmDeleteStory}
+              disabled={isDeleting}
+              activeOpacity={0.8}
+            >
+              {isDeleting ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <Trash2 size={28} color="#ffffff" strokeWidth={2.5} />
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={selectedCollectorItem !== null}
+        transparent={false}
+        animationType="fade"
+        onRequestClose={() => setSelectedCollectorItem(null)}
+      >
+        <View style={styles.modalContainer}>
+          {selectedCollectorItem && (
+            <>
+              <Image
+                source={{ uri: selectedCollectorItem.imageUri }}
+                style={styles.fullscreenImage}
+                resizeMode="contain"
+              />
+              <View style={[styles.collectorInfoOverlay, { top: insets.top + 60 }]}>
+                <Text style={styles.collectorInfoName}>{selectedCollectorItem.celebrityName}</Text>
+                <Text style={styles.collectorInfoDate}>
+                  {new Date(selectedCollectorItem.timestamp).toLocaleDateString()} — {selectedCollectorItem.fanName}
+                </Text>
+              </View>
+            </>
+          )}
+
+          <TouchableOpacity
+            style={[styles.closeModalButton, { top: insets.top + 20 }]}
+            onPress={() => setSelectedCollectorItem(null)}
+            activeOpacity={0.8}
+          >
+            <X size={24} color="#ffffff" strokeWidth={2} />
+          </TouchableOpacity>
+
+          <View style={[styles.modalFloatingControls, { paddingBottom: insets.bottom + 20 }]}>
+            <TouchableOpacity
+              style={[styles.modalFloatingButton, styles.modalBlueButton]}
+              onPress={async () => {
+                if (!selectedCollectorItem) return;
+                if (Platform.OS === 'web') {
+                  downloadImageWeb(selectedCollectorItem.imageUri, `dedication_${selectedCollectorItem.celebrityName}_${Date.now()}.jpg`);
+                } else {
+                  try {
+                    const { status } = await MediaLibrary.requestPermissionsAsync();
+                    if (status === 'granted') {
+                      await MediaLibrary.saveToLibraryAsync(selectedCollectorItem.imageUri);
+                      showAlert(t('success'), t('dedicationSaved'));
+                    }
+                  } catch (err) {
+                    console.error('Save collector error:', err);
+                  }
+                }
+              }}
+              activeOpacity={0.8}
+            >
+              <Download size={28} color="#ffffff" strokeWidth={2.5} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modalFloatingButton, styles.modalRedButton]}
+              onPress={() => {
+                if (!selectedCollectorItem) return;
+                showConfirm(
+                  t('confirmDelete') || 'Delete',
+                  t('confirmDeleteMessage') || 'Delete this dedication?',
+                  async () => {
+                    await deleteCollectorLive(selectedCollectorItem.id);
+                    setSelectedCollectorItem(null);
+                    await loadCollectorData();
+                    if (Platform.OS !== 'web') {
+                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    }
+                  }
+                );
+              }}
               disabled={isDeleting}
               activeOpacity={0.8}
             >
@@ -1313,5 +1468,28 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginTop: -10,
+  },
+  collectorInfoOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  collectorInfoName: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '700',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  collectorInfoDate: {
+    color: '#d1d5db',
+    fontSize: 13,
+    marginTop: 2,
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
 });

@@ -30,7 +30,7 @@ import Animated, {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDedicationAssets } from '@/utils/liveSessionStorage';
-import { saveMemory } from '@/utils/storageService';
+import { saveCollectorLive, downloadImageWeb } from '@/utils/collectorLiveStorage';
 import ViewShot from 'react-native-view-shot';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -200,7 +200,16 @@ export default function DedicationResultScreen() {
 
       const uri = await viewShotRef.current.capture();
 
-      await saveMemory(uri, user?.id || null);
+      await saveCollectorLive(
+        uri,
+        celebrityName || 'Celebrity',
+        (params.fanName as string) || 'Fan',
+        params.sessionId as string || undefined,
+      );
+
+      if (Platform.OS === 'web') {
+        downloadImageWeb(uri, `dedication_${celebrityName}_${Date.now()}.jpg`);
+      }
 
       showAlert(t('success'), t('dedicationSaved'));
       setIsSaving(false);
@@ -218,15 +227,36 @@ export default function DedicationResultScreen() {
         uri = await viewShotRef.current.capture();
       }
 
-      if (Platform.OS === 'web' || !uri) {
-        await Share.share({
-          message: `${getDedicationFor()} - ${celebrityName} #SignTouch`,
-        });
+      if (Platform.OS === 'web') {
+        if (uri && typeof navigator !== 'undefined' && navigator.share) {
+          try {
+            const response = await fetch(uri);
+            const blob = await response.blob();
+            const file = new File([blob], `dedication_${celebrityName}.jpg`, { type: 'image/jpeg' });
+            await navigator.share({
+              title: `${getDedicationFor()} - ${celebrityName}`,
+              text: `${getDedicationFor()} - ${celebrityName} #SignTouch`,
+              files: [file],
+            });
+            return;
+          } catch (shareErr) {
+            console.log('[Dedication] Web Share API failed, fallback to download');
+          }
+        }
+        if (uri) {
+          downloadImageWeb(uri, `dedication_${celebrityName}_${Date.now()}.jpg`);
+        }
       } else {
-        await Share.share({
-          url: uri,
-          message: `${getDedicationFor()} - ${celebrityName} #SignTouch`,
-        });
+        if (uri) {
+          await Share.share({
+            url: uri,
+            message: `${getDedicationFor()} - ${celebrityName} #SignTouch`,
+          });
+        } else {
+          await Share.share({
+            message: `${getDedicationFor()} - ${celebrityName} #SignTouch`,
+          });
+        }
       }
     } catch (error) {
       console.error('Error sharing dedication:', error);
