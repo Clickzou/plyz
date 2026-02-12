@@ -1216,7 +1216,7 @@ export default function LiveSessionDashboardScreen() {
                         <View style={styles.dedicationSignaturePreview}>
                           <Svg width={120} height={60} viewBox={`${minX} ${minY} ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet">
                             {dedicationPaths.map((p, i) => (
-                              <Path key={i} d={p} stroke="#ffffff" strokeWidth={Math.max(2, vw / 40)} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                              <Path key={i} d={p} stroke="#1a1a2e" strokeWidth={Math.max(2, vw / 40)} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                             ))}
                           </Svg>
                         </View>
