@@ -71,6 +71,7 @@ export default function DedicationResultScreen() {
     sessionId: string;
     fanName: string;
     celebrityName: string;
+    queueEntryId: string;
   }>();
 
   const [loading, setLoading] = useState(true);
@@ -99,12 +100,12 @@ export default function DedicationResultScreen() {
         return;
       }
 
-      console.log(`[DedicationResult] Loading assets, attempt ${attempt}`);
-      const assets = await getDedicationAssets(params.sessionId);
+      console.log(`[DedicationResult] Loading assets, attempt ${attempt}, queueEntryId:`, params.queueEntryId);
+      const assets = await getDedicationAssets(params.sessionId, params.queueEntryId);
       if (cancelled) return;
 
       if (assets && assets.photoUrl) {
-        console.log('[DedicationResult] Assets loaded successfully');
+        console.log('[DedicationResult] Assets loaded successfully, signature:', !!assets.signatureSvg);
         setPhotoUrl(assets.photoUrl);
         setCelebrityName(assets.celebrityName || params.celebrityName || '');
         if (assets.signatureSvg) {
@@ -514,7 +515,7 @@ const styles = StyleSheet.create({
   },
   dedicationForText: {
     fontSize: 32,
-    fontFamily: 'Cedarville Cursive',
+    fontFamily: 'CedarvilleCursive',
     color: '#fff',
     textShadowColor: 'rgba(0,0,0,0.8)',
     textShadowOffset: { width: 1, height: 1 },
@@ -522,7 +523,7 @@ const styles = StyleSheet.create({
   },
   dedicationDateText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: 'CedarvilleCursive',
     color: 'rgba(255,255,255,0.85)',
     marginTop: 4,
     textShadowColor: 'rgba(0,0,0,0.8)',

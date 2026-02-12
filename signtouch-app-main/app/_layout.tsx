@@ -133,7 +133,7 @@ export default function RootLayout() {
     'Montserrat-Bold': Montserrat_700Bold,
     'Montserrat-ExtraBold': Montserrat_800ExtraBold,
     Satisfy: Satisfy_400Regular,
-    'Cedarville Cursive': CedarvilleCursive_400Regular,
+    CedarvilleCursive: CedarvilleCursive_400Regular,
   };
 
   if (pumpkindFont) {

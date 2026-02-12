@@ -372,6 +372,7 @@ export default function VideoCallScreen() {
           sessionId: params.sessionId,
           fanName: params.userName || '',
           celebrityName: params.otherUserName || '',
+          queueEntryId: params.queueEntryId || '',
         },
       });
     } else if (isHost) {

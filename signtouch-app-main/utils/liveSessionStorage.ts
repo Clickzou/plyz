@@ -210,7 +210,8 @@ export const updateDedicationSignature = async (
 };
 
 export const getDedicationAssets = async (
-  sessionId: string
+  sessionId: string,
+  queueEntryId?: string
 ): Promise<{ photoUrl: string | null; signatureSvg: string | null; celebrityName: string } | null> => {
   let dbPhotoUrl: string | null = null;
   let dbSignatureSvg: string | null = null;
@@ -269,8 +270,42 @@ export const getDedicationAssets = async (
     console.log('[Dedication] AsyncStorage fallback error:', e);
   }
 
+  let queueSignatureSvg: string | null = null;
+  if (queueEntryId) {
+    try {
+      const { data: queueData, error: queueError } = await supabase
+        .from('session_queue')
+        .select('signature_svg')
+        .eq('id', queueEntryId)
+        .single();
+      if (!queueError && queueData && queueData.signature_svg) {
+        queueSignatureSvg = queueData.signature_svg;
+        console.log('[Dedication] Queue entry signature found');
+      }
+    } catch (e) {
+      console.log('[Dedication] Queue entry lookup error:', e);
+    }
+  }
+  if (!queueSignatureSvg && !dbSignatureSvg && !localSignatureSvg) {
+    try {
+      const { data: queueRows } = await supabase
+        .from('session_queue')
+        .select('signature_svg')
+        .eq('session_id', sessionId)
+        .not('signature_svg', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (queueRows && queueRows.length > 0 && queueRows[0].signature_svg) {
+        queueSignatureSvg = queueRows[0].signature_svg;
+        console.log('[Dedication] Queue signature found by session_id fallback');
+      }
+    } catch (e) {
+      console.log('[Dedication] Queue session_id lookup error:', e);
+    }
+  }
+
   const photoUrl = dbPhotoUrl || storageMeta?.photoUrl || localPhotoUri || null;
-  const signatureSvg = dbSignatureSvg || storageMeta?.signatureSvg || localSignatureSvg || null;
+  const signatureSvg = dbSignatureSvg || queueSignatureSvg || storageMeta?.signatureSvg || localSignatureSvg || null;
   const celebrityName = dbCelebrityName || storageMeta?.celebrityName || '';
 
   if (photoUrl || signatureSvg) {
