@@ -148,7 +148,6 @@ export default function VideoCallScreen() {
     urlParams.append('showParticipantsBar', 'false');
     urlParams.append('activeSpeakerMode', 'false');
     urlParams.append('lang', dailyLang);
-    urlParams.append('controlBarPosition', 'hidden');
     urlParams.append('startAudioOff', 'false');
     urlParams.append('startVideoOff', 'false');
     
@@ -512,38 +511,6 @@ export default function VideoCallScreen() {
                     });
                     callFrame.join({ ...joinOptions, startVideoOff: false, startAudioOff: false }).then(() => {
                       setIsLoading(false);
-                      const hideAllDailyUI = () => {
-                        try {
-                          const iframe = el.querySelector('iframe');
-                          if (iframe && iframe.contentDocument) {
-                            const hideStyle = iframe.contentDocument.createElement('style');
-                            hideStyle.textContent = `
-                              [class*="tray"], [class*="Tray"], [class*="controls-bar"], [class*="ControlsBar"],
-                              [class*="toolbar"], [class*="Toolbar"], [class*="bottom-bar"], [class*="BottomBar"],
-                              [class*="top-bar"], [class*="TopBar"], [class*="header"], [class*="Header"],
-                              [class*="settings"], [class*="Settings"], [class*="participants-bar"],
-                              [class*="ParticipantsBar"], [class*="chat"], [class*="Chat"],
-                              [class*="sidebar"], [class*="Sidebar"], [class*="menu"], [class*="Menu"],
-                              [class*="leave"], [class*="Leave"], [class*="haircheck"],
-                              [data-testid*="tray"], [data-testid*="toolbar"], [data-testid*="header"],
-                              [data-testid*="settings"], [data-testid*="chat"], [data-testid*="sidebar"],
-                              [data-testid*="leave"], [data-testid*="participants"] {
-                                display: none !important;
-                                visibility: hidden !important;
-                                opacity: 0 !important;
-                                pointer-events: none !important;
-                                height: 0 !important;
-                                overflow: hidden !important;
-                              }
-                            `;
-                            iframe.contentDocument.head.appendChild(hideStyle);
-                          }
-                        } catch(cssErr) {}
-                      };
-                      hideAllDailyUI();
-                      setTimeout(hideAllDailyUI, 1000);
-                      setTimeout(hideAllDailyUI, 3000);
-                      setTimeout(hideAllDailyUI, 5000);
                     }).catch(() => {
                       setError(t('videoCallError'));
                       setIsLoading(false);
@@ -732,10 +699,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 8,
-    paddingTop: Platform.OS === 'web' ? 8 : 48,
+    paddingTop: Platform.OS === 'web' ? 52 : 48,
     paddingBottom: 8,
     zIndex: 10,
-    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   headerBackButton: {
     width: 36,
