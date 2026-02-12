@@ -21,6 +21,7 @@ import { ShantellSans_400Regular } from '@expo-google-fonts/shantell-sans';
 import { Manrope_400Regular } from '@expo-google-fonts/manrope';
 import { Montserrat_700Bold, Montserrat_800ExtraBold } from '@expo-google-fonts/montserrat';
 import { Satisfy_400Regular } from '@expo-google-fonts/satisfy';
+import { CedarvilleCursive_400Regular } from '@expo-google-fonts/cedarville-cursive';
 import * as SplashScreen from 'expo-splash-screen';
 import SubscriptionOfferModal from '@/components/SubscriptionOfferModal';
 import PostPurchaseAccountModal from '@/components/PostPurchaseAccountModal';
@@ -132,6 +133,7 @@ export default function RootLayout() {
     'Montserrat-Bold': Montserrat_700Bold,
     'Montserrat-ExtraBold': Montserrat_800ExtraBold,
     Satisfy: Satisfy_400Regular,
+    'Cedarville Cursive': CedarvilleCursive_400Regular,
   };
 
   if (pumpkindFont) {

@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@expo-google-fonts/cedarville-cursive": "^0.4.1",
     "@expo-google-fonts/montserrat": "^0.4.2",
     "@expo-google-fonts/satisfy": "^0.4.1",
     "cors": "^2.8.6",

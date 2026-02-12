@@ -513,13 +513,12 @@ const styles = StyleSheet.create({
     right: 20,
   },
   dedicationForText: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 32,
+    fontFamily: 'Cedarville Cursive',
     color: '#fff',
     textShadowColor: 'rgba(0,0,0,0.8)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 6,
-    fontStyle: 'italic',
   },
   dedicationDateText: {
     fontSize: 14,
