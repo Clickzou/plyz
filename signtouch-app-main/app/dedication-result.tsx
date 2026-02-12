@@ -105,20 +105,29 @@ export default function DedicationResultScreen() {
       if (cancelled) return;
 
       if (assets && assets.photoUrl) {
-        console.log('[DedicationResult] Assets loaded successfully, signature:', !!assets.signatureSvg);
         setPhotoUrl(assets.photoUrl);
         setCelebrityName(assets.celebrityName || params.celebrityName || '');
         if (assets.signatureSvg) {
           setSignaturePaths(assets.signatureSvg.split('|||'));
+          console.log('[DedicationResult] Assets loaded with signature');
+          setLoading(false);
+        } else if (attempt < 8) {
+          console.log(`[DedicationResult] Photo found but no signature yet, retrying in ${attempt * 2}s...`);
+          setLoading(false);
+          setTimeout(() => {
+            if (!cancelled) loadAssets(attempt + 1);
+          }, attempt * 2000);
+        } else {
+          console.log('[DedicationResult] Photo loaded, no signature after retries');
+          setLoading(false);
         }
-        setLoading(false);
-      } else if (attempt < 5) {
+      } else if (attempt < 8) {
         console.log(`[DedicationResult] No assets yet, retrying in ${attempt * 2}s...`);
         setTimeout(() => {
           if (!cancelled) loadAssets(attempt + 1);
         }, attempt * 2000);
       } else {
-        console.log('[DedicationResult] No assets after 5 attempts');
+        console.log('[DedicationResult] No assets after retries');
         setNoAssets(true);
         setCelebrityName(params.celebrityName || '');
         setLoading(false);

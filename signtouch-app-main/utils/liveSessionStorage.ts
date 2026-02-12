@@ -180,22 +180,15 @@ export const updateDedicationSignature = async (
   celebrityName?: string
 ): Promise<boolean> => {
   try {
-    const { error: rpcError } = await supabase.rpc('update_dedication_signature', {
-      p_session_id: sessionId,
-      p_signature_svg: signatureSvg,
-    });
+    const { error: queueError } = await supabase
+      .from('session_queue')
+      .update({ signature_svg: signatureSvg })
+      .eq('session_id', sessionId);
 
-    if (rpcError) {
-      console.error('Error updating dedication signature via RPC:', rpcError);
-      const { error } = await supabase
-        .from('live_sessions')
-        .update({ dedication_signature_svg: signatureSvg } as any)
-        .eq('id', sessionId);
-      if (error) {
-        console.error('Error updating dedication signature in DB:', error);
-      }
+    if (queueError) {
+      console.error('[Dedication] Error saving signature to session_queue:', queueError);
     } else {
-      console.log('[Dedication] Signature saved to DB via RPC');
+      console.log('[Dedication] Signature saved to all session_queue entries');
     }
 
     const meta: Record<string, any> = { signatureSvg };
@@ -214,63 +207,26 @@ export const getDedicationAssets = async (
   queueEntryId?: string
 ): Promise<{ photoUrl: string | null; signatureSvg: string | null; celebrityName: string } | null> => {
   let dbPhotoUrl: string | null = null;
-  let dbSignatureSvg: string | null = null;
   let dbCelebrityName = '';
 
   try {
-    const { data: rpcData, error: rpcError } = await supabase.rpc('get_dedication_assets', {
-      p_session_id: sessionId,
-    });
+    const { data, error } = await supabase
+      .from('live_sessions')
+      .select('celebrity_name, dedication_photo_url, cover_photo_url')
+      .eq('id', sessionId)
+      .single();
 
-    if (!rpcError && rpcData && rpcData.length > 0) {
-      const row = rpcData[0];
-      dbCelebrityName = row.celebrity_name || '';
-      dbPhotoUrl = row.dedication_photo_url || null;
-      dbSignatureSvg = row.dedication_signature_svg || null;
-      console.log('[Dedication] RPC data - photo:', !!dbPhotoUrl, 'signature:', !!dbSignatureSvg);
-    } else {
-      console.log('[Dedication] RPC error or no data:', rpcError?.message);
-      const { data, error } = await supabase
-        .from('live_sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .single();
-
-      if (!error && data) {
-        dbCelebrityName = (data as any).celebrity_name || '';
-        dbPhotoUrl = (data as any).dedication_photo_url || null;
-        dbSignatureSvg = (data as any).dedication_signature_svg || null;
-        console.log('[Dedication] DB fallback - photo:', !!dbPhotoUrl, 'signature:', !!dbSignatureSvg);
-      } else {
-        console.log('[Dedication] DB error or no data:', error?.message);
-      }
+    if (!error && data) {
+      dbCelebrityName = (data as any).celebrity_name || '';
+      dbPhotoUrl = (data as any).dedication_photo_url || (data as any).cover_photo_url || null;
+      console.log('[Dedication] Session data - photo:', !!dbPhotoUrl, 'name:', dbCelebrityName);
     }
   } catch (e) {
-    console.error('[Dedication] Error fetching from DB:', e);
-  }
-
-  const storageMeta = await loadDedicationMetadata(sessionId);
-  console.log('[Dedication] Storage metadata:', storageMeta ? 'found' : 'not found',
-    storageMeta ? `photo:${!!storageMeta.photoUrl} sig:${!!storageMeta.signatureSvg}` : '');
-
-  let localSignatureSvg: string | null = null;
-  let localPhotoUri: string | null = null;
-  try {
-    const localSig = await AsyncStorage.getItem(`dedication_signature_${sessionId}`);
-    if (localSig) {
-      localSignatureSvg = localSig;
-      console.log('[Dedication] Local AsyncStorage signature found');
-    }
-    const localPhoto = await AsyncStorage.getItem(`dedication_photo_${sessionId}`);
-    if (localPhoto) {
-      localPhotoUri = localPhoto;
-      console.log('[Dedication] Local AsyncStorage photo found');
-    }
-  } catch (e) {
-    console.log('[Dedication] AsyncStorage fallback error:', e);
+    console.error('[Dedication] Error fetching session:', e);
   }
 
   let queueSignatureSvg: string | null = null;
+
   if (queueEntryId) {
     try {
       const { data: queueData, error: queueError } = await supabase
@@ -280,13 +236,16 @@ export const getDedicationAssets = async (
         .single();
       if (!queueError && queueData && queueData.signature_svg) {
         queueSignatureSvg = queueData.signature_svg;
-        console.log('[Dedication] Queue entry signature found');
+        console.log('[Dedication] Queue entry signature found for', queueEntryId);
+      } else {
+        console.log('[Dedication] No signature on queue entry', queueEntryId, queueError?.message);
       }
     } catch (e) {
       console.log('[Dedication] Queue entry lookup error:', e);
     }
   }
-  if (!queueSignatureSvg && !dbSignatureSvg && !localSignatureSvg) {
+
+  if (!queueSignatureSvg) {
     try {
       const { data: queueRows } = await supabase
         .from('session_queue')
@@ -304,12 +263,24 @@ export const getDedicationAssets = async (
     }
   }
 
+  const storageMeta = await loadDedicationMetadata(sessionId);
+
+  let localSignatureSvg: string | null = null;
+  let localPhotoUri: string | null = null;
+  try {
+    const localSig = await AsyncStorage.getItem(`dedication_signature_${sessionId}`);
+    if (localSig) localSignatureSvg = localSig;
+    const localPhoto = await AsyncStorage.getItem(`dedication_photo_${sessionId}`);
+    if (localPhoto) localPhotoUri = localPhoto;
+  } catch (e) {}
+
   const photoUrl = dbPhotoUrl || storageMeta?.photoUrl || localPhotoUri || null;
-  const signatureSvg = dbSignatureSvg || queueSignatureSvg || storageMeta?.signatureSvg || localSignatureSvg || null;
+  const signatureSvg = queueSignatureSvg || storageMeta?.signatureSvg || localSignatureSvg || null;
   const celebrityName = dbCelebrityName || storageMeta?.celebrityName || '';
 
+  console.log('[Dedication] Final assets - photo:', !!photoUrl, 'signature:', !!signatureSvg, 'name:', celebrityName);
+
   if (photoUrl || signatureSvg) {
-    console.log('[Dedication] Returning assets - photo:', !!photoUrl, 'signature:', !!signatureSvg);
     return { photoUrl, signatureSvg, celebrityName };
   }
 
@@ -588,17 +559,46 @@ export const joinSessionQueue = async (
 
     const nextPosition = (lastPosition?.position || 0) + 1;
 
+    let dedicationSig: string | null = null;
+    try {
+      const meta = await loadDedicationMetadata(sessionId);
+      if (meta?.signatureSvg) {
+        dedicationSig = meta.signatureSvg;
+        console.log('[Queue] Found dedication signature in storage metadata');
+      }
+    } catch (e) {}
+    if (!dedicationSig) {
+      try {
+        const { data: existingEntry } = await supabase
+          .from('session_queue')
+          .select('signature_svg')
+          .eq('session_id', sessionId)
+          .not('signature_svg', 'is', null)
+          .limit(1)
+          .single();
+        if (existingEntry?.signature_svg) {
+          dedicationSig = existingEntry.signature_svg;
+          console.log('[Queue] Found dedication signature from existing queue entry');
+        }
+      } catch (e) {}
+    }
+
+    const insertData: any = {
+      session_id: sessionId,
+      fan_id: fanId,
+      fan_name: fanName,
+      photo_url: photoUrl,
+      message: message,
+      position: nextPosition,
+      status: 'waiting',
+    };
+    if (dedicationSig) {
+      insertData.signature_svg = dedicationSig;
+    }
+
     const { data, error } = await supabase
       .from('session_queue')
-      .insert({
-        session_id: sessionId,
-        fan_id: fanId,
-        fan_name: fanName,
-        photo_url: photoUrl,
-        message: message,
-        position: nextPosition,
-        status: 'waiting',
-      })
+      .insert(insertData)
       .select()
       .single();
 
@@ -726,9 +726,19 @@ export const callNextFan = async (sessionId: string): Promise<QueueEntry | null>
       return null;
     }
 
+    let dedicationSig: string | null = null;
+    try {
+      dedicationSig = await AsyncStorage.getItem(`dedication_signature_${sessionId}`);
+    } catch (e) {}
+
+    const updateData: any = { status: 'current', called_at: new Date().toISOString() };
+    if (dedicationSig && !nextFan.signature_svg) {
+      updateData.signature_svg = dedicationSig;
+    }
+
     await supabase
       .from('session_queue')
-      .update({ status: 'current', called_at: new Date().toISOString() })
+      .update(updateData)
       .eq('id', nextFan.id);
 
     await supabase
@@ -736,7 +746,7 @@ export const callNextFan = async (sessionId: string): Promise<QueueEntry | null>
       .update({ current_fan_id: nextFan.id })
       .eq('id', sessionId);
 
-    return { ...nextFan, status: 'current' } as QueueEntry;
+    return { ...nextFan, status: 'current', signature_svg: updateData.signature_svg || nextFan.signature_svg } as QueueEntry;
   } catch (error) {
     console.error('Error calling next fan:', error);
     return null;

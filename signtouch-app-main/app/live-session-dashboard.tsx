@@ -559,9 +559,14 @@ export default function LiveSessionDashboardScreen() {
   const handleNextFan = async () => {
     if (!sessionId) return;
 
-    if (currentFan && paths.length > 0) {
-      const fullSvg = `<svg viewBox="0 0 ${CANVAS_SIZE} ${CANVAS_SIZE}">${paths.map((p) => `<path d="${p}" stroke="#000" stroke-width="3" fill="none"/>`).join('')}</svg>`;
-      await completeSignature(currentFan.id, fullSvg, null);
+    if (currentFan) {
+      if (paths.length > 0) {
+        const fullSvg = `<svg viewBox="0 0 ${CANVAS_SIZE} ${CANVAS_SIZE}">${paths.map((p) => `<path d="${p}" stroke="#000" stroke-width="3" fill="none"/>`).join('')}</svg>`;
+        await completeSignature(currentFan.id, fullSvg, null);
+      } else if (dedicationPaths.length > 0) {
+        const dedicationSvg = dedicationPaths.join('|||');
+        await updateSignatureSvg(currentFan.id, dedicationSvg);
+      }
     }
 
     setPaths([]);
