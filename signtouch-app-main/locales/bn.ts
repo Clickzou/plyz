@@ -800,7 +800,7 @@ export default {
   videoNotSupportedWeb: 'ওয়েবে ভিডিও কল উপলব্ধ নেই',
   videoWebHint: 'লাইভ ভিডিও কলের জন্য মোবাইল অ্যাপ ব্যবহার করুন',
   videoCallError: 'ভিডিও কলে সংযোগে ত্রুটি',
-  fanConnecting: '{name} সংযোগ করছে...',
+  fanConnecting: 'অপেক্ষা করুন। ফ্যানের সংযোগের অপেক্ষায়',
   connectingToCall: 'সংযোগ হচ্ছে...',
   leaveCall: 'কল ছেড়ে দিন',
   leaveCallConfirm: 'আপনি কি নিশ্চিত যে আপনি এই কল ছেড়ে দিতে চান?',

@@ -800,7 +800,7 @@ export default {
   videoNotSupportedWeb: 'Le videochiamate non sono disponibili sul web',
   videoWebHint: 'Usa l\'app mobile per le videochiamate in diretta',
   videoCallError: 'Errore di connessione alla videochiamata',
-  fanConnecting: '{name} si sta connettendo...',
+  fanConnecting: 'Attendere. In attesa di connessione di un fan',
   connectingToCall: 'Connessione...',
   leaveCall: 'Lascia la chiamata',
   leaveCallConfirm: 'Sei sicuro di voler lasciare questa chiamata?',

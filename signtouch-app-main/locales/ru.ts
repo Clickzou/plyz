@@ -800,7 +800,7 @@ export default {
   videoNotSupportedWeb: 'Видеозвонки недоступны в веб-версии',
   videoWebHint: 'Используйте мобильное приложение для видеозвонков',
   videoCallError: 'Ошибка подключения к видеозвонку',
-  fanConnecting: '{name} подключается...',
+  fanConnecting: 'Пожалуйста, подождите. Ожидание подключения фаната',
   connectingToCall: 'Подключение...',
   leaveCall: 'Покинуть звонок',
   leaveCallConfirm: 'Вы уверены, что хотите покинуть этот звонок?',

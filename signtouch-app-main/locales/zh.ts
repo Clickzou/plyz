@@ -800,7 +800,7 @@ export default {
   videoNotSupportedWeb: '网页版不支持视频通话',
   videoWebHint: '请使用移动应用进行视频通话',
   videoCallError: '视频通话连接错误',
-  fanConnecting: '{name} 正在连接...',
+  fanConnecting: '请稍候。等待粉丝连接',
   connectingToCall: '连接中...',
   leaveCall: '离开通话',
   leaveCallConfirm: '确定要离开此通话吗？',

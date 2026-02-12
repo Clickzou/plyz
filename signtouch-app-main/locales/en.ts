@@ -803,7 +803,7 @@ export default {
   videoNotSupportedWeb: 'Video calls are not available on the web',
   videoWebHint: 'Use the mobile app for live video calls',
   videoCallError: 'Error connecting to video call',
-  fanConnecting: '{name} is connecting...',
+  fanConnecting: 'Please wait. Waiting for a fan to connect',
   connectingToCall: 'Connecting...',
   leaveCall: 'Leave call',
   leaveCallConfirm: 'Are you sure you want to leave this call?',

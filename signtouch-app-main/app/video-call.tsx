@@ -669,7 +669,7 @@ export default function VideoCallScreen() {
         <View style={styles.fanConnectingBanner}>
           <ActivityIndicator size="small" color="#ffffff" />
           <Text style={styles.fanConnectingText}>
-            {(t('fanConnecting') || '{name} est en train de se connecter...').replace('{name}', currentFanName)}
+            {t('fanConnecting') || 'Please wait. Waiting for a fan to connect'}
           </Text>
         </View>
       )}
@@ -731,10 +731,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingTop: Platform.OS === 'web' ? 8 : 48,
     paddingBottom: 8,
     zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   headerBackButton: {
     width: 36,

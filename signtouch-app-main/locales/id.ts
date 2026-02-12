@@ -800,7 +800,7 @@ export default {
   videoNotSupportedWeb: 'Panggilan video tidak tersedia di web',
   videoWebHint: 'Gunakan aplikasi seluler untuk panggilan video langsung',
   videoCallError: 'Kesalahan menghubungkan ke panggilan video',
-  fanConnecting: '{name} sedang terhubung...',
+  fanConnecting: 'Mohon tunggu. Menunggu koneksi penggemar',
   connectingToCall: 'Menghubungkan...',
   leaveCall: 'Tinggalkan panggilan',
   leaveCallConfirm: 'Apakah Anda yakin ingin meninggalkan panggilan ini?',
