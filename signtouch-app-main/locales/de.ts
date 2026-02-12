@@ -23,7 +23,7 @@ export default {
   galleryStories: 'Stories',
   noStories: 'Noch keine Stories',
   noStoriesHint: 'Erstelle eine Story aus deinem Fotoergebnis',
-  collectorLive: 'Collector Live',
+  collectorLive: 'Collector',
   collectorInstruction: 'Deine personalisierten Widmungen aus Live-Sessions',
   noCollectorItems: 'Keine Widmungen',
   noCollectorHint: 'Nimm an einer Live-Session teil, um personalisierte Widmungen zu erhalten',

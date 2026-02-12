@@ -23,7 +23,7 @@ export default {
   galleryStories: 'Stories',
   noStories: 'Ainda não há stories',
   noStoriesHint: 'Crie uma story a partir do resultado da sua foto',
-  collectorLive: 'Collector Live',
+  collectorLive: 'Collector',
   collectorInstruction: 'Suas dedicatórias personalizadas de sessões ao vivo',
   noCollectorItems: 'Nenhuma dedicatória',
   noCollectorHint: 'Participe de uma sessão ao vivo para receber dedicatórias personalizadas',

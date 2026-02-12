@@ -23,7 +23,7 @@ export default {
   galleryStories: 'Cerita',
   noStories: 'Belum ada cerita',
   noStoriesHint: 'Buat cerita dari hasil foto Anda',
-  collectorLive: 'Koleksi Live',
+  collectorLive: 'Koleksi',
   collectorInstruction: 'Dedikasi personal Anda dari sesi langsung',
   noCollectorItems: 'Belum ada dedikasi',
   noCollectorHint: 'Bergabung dengan sesi langsung untuk menerima dedikasi personal',

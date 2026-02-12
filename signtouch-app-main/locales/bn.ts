@@ -23,7 +23,7 @@ export default {
   galleryStories: 'স্টোরিজ',
   noStories: 'এখনো কোন স্টোরি নেই',
   noStoriesHint: 'আপনার ফটোর ফলাফল থেকে একটি স্টোরি তৈরি করুন',
-  collectorLive: 'কালেক্টর লাইভ',
+  collectorLive: 'কালেক্টর',
   collectorInstruction: 'লাইভ সেশন থেকে আপনার ব্যক্তিগত উৎসর্গ',
   noCollectorItems: 'এখনো কোনো উৎসর্গ নেই',
   noCollectorHint: 'ব্যক্তিগত উৎসর্গ পেতে একটি লাইভ সেশনে যোগ দিন',

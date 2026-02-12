@@ -23,7 +23,7 @@ export default {
   galleryStories: '故事',
   noStories: '暂无故事',
   noStoriesHint: '从照片结果创建故事',
-  collectorLive: '收藏直播',
+  collectorLive: '收藏',
   collectorInstruction: '您来自直播会话的个性化题词',
   noCollectorItems: '暂无题词',
   noCollectorHint: '加入直播会话以获取个性化题词',

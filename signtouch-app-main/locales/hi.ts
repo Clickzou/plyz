@@ -23,7 +23,7 @@ export default {
   galleryStories: 'स्टोरीज़',
   noStories: 'अभी कोई स्टोरी नहीं',
   noStoriesHint: 'अपनी फोटो के परिणाम से एक स्टोरी बनाएं',
-  collectorLive: 'कलेक्टर लाइव',
+  collectorLive: 'कलेक्टर',
   collectorInstruction: 'लाइव सेशन से आपके व्यक्तिगत समर्पण',
   noCollectorItems: 'अभी कोई समर्पण नहीं',
   noCollectorHint: 'व्यक्तिगत समर्पण प्राप्त करने के लिए लाइव सेशन में शामिल हों',

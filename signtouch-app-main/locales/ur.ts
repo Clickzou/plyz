@@ -23,7 +23,7 @@ export default {
   galleryStories: 'کہانیاں',
   noStories: 'ابھی کوئی کہانی نہیں',
   noStoriesHint: 'اپنی تصویر کے نتیجے سے ایک کہانی بنائیں',
-  collectorLive: 'کلیکٹر لائیو',
+  collectorLive: 'کلیکٹر',
   collectorInstruction: 'لائیو سیشنز سے آپ کے ذاتی وقف',
   noCollectorItems: 'ابھی کوئی وقف نہیں',
   noCollectorHint: 'ذاتی وقف حاصل کرنے کے لیے لائیو سیشن میں شامل ہوں',

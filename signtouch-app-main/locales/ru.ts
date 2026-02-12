@@ -23,7 +23,7 @@ export default {
   galleryStories: 'Истории',
   noStories: 'Пока нет историй',
   noStoriesHint: 'Создайте историю из результата вашего фото',
-  collectorLive: 'Коллекция Live',
+  collectorLive: 'Коллекция',
   collectorInstruction: 'Ваши персональные посвящения из прямых эфиров',
   noCollectorItems: 'Пока нет посвящений',
   noCollectorHint: 'Присоединяйтесь к прямому эфиру, чтобы получить персональные посвящения',

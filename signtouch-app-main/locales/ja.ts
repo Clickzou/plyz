@@ -23,7 +23,7 @@ export default {
   galleryStories: 'ストーリー',
   noStories: 'まだストーリーがありません',
   noStoriesHint: '写真の結果からストーリーを作成してください',
-  collectorLive: 'コレクターライブ',
+  collectorLive: 'コレクター',
   collectorInstruction: 'ライブセッションからのパーソナライズされた献辞',
   noCollectorItems: '献辞はまだありません',
   noCollectorHint: 'ライブセッションに参加してパーソナライズされた献辞を受け取りましょう',

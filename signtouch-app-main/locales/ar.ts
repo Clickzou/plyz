@@ -23,7 +23,7 @@ export default {
   galleryStories: 'القصص',
   noStories: 'لا توجد قصص بعد',
   noStoriesHint: 'أنشئ قصة من نتيجة صورتك',
-  collectorLive: 'مجموعة مباشر',
+  collectorLive: 'مجموعة',
   collectorInstruction: 'إهداءاتك الشخصية من الجلسات المباشرة',
   noCollectorItems: 'لا توجد إهداءات',
   noCollectorHint: 'انضم إلى جلسة مباشرة لتلقي إهداءات شخصية',
