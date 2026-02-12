@@ -631,6 +631,7 @@ export default {
   called: 'Appelé',
   waiting: 'En attente',
   more: 'de plus',
+  fanQueueExplanation: 'Vous êtes dans la file d\'attente pour un appel vidéo privé avec la célébrité. Quand ce sera votre tour, l\'appel démarrera automatiquement. Gardez cette page ouverte !',
   stayOnPage: 'Restez sur cette page - l\'appel va bientôt commencer !',
   currentlyWith: 'Actuellement avec',
   enterYourName: 'Entrez votre nom',

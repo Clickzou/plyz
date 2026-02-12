@@ -627,6 +627,7 @@ export default {
   called: '已呼叫',
   waiting: '等待中',
   more: '更多',
+  fanQueueExplanation: '您正在排队等待与明星的私人视频通话。轮到您时，通话将自动开始。请保持此页面打开！',
   stayOnPage: '请留在此页面 - 通话即将开始！',
   currentlyWith: '当前与',
   enterYourName: '输入您的姓名',

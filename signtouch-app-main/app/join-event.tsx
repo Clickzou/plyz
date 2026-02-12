@@ -899,6 +899,11 @@ export default function JoinEventScreen() {
               </View>
             ) : (
               <View style={styles.waitingSectionCompact}>
+                <View style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(59, 130, 246, 0.2)' }}>
+                  <Text style={{ color: '#93c5fd', fontSize: 14, lineHeight: 20, textAlign: 'center' }}>
+                    {t('fanQueueExplanation') || 'You are in the queue for a private video call with the celebrity. When it\'s your turn, the call will start automatically. Keep this page open!'}
+                  </Text>
+                </View>
                 <View style={styles.infoRow}>
                   <View style={styles.infoCard}>
                     <View style={styles.infoIconCircle}>

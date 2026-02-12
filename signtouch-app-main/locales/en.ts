@@ -631,6 +631,7 @@ export default {
   called: 'Called',
   waiting: 'Waiting',
   more: 'more',
+  fanQueueExplanation: 'You are in the queue for a private video call with the celebrity. When it\'s your turn, the call will start automatically. Keep this page open!',
   stayOnPage: 'Stay on this page - the call will start soon!',
   currentlyWith: 'Currently with',
   enterYourName: 'Enter your name',

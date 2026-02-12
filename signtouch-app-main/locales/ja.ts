@@ -627,6 +627,7 @@ export default {
   called: '呼び出し済み',
   waiting: '待機中',
   more: 'その他',
+  fanQueueExplanation: 'セレブとのプライベートビデオ通話の順番待ちです。あなたの番が来ると、通話が自動的に始まります。このページを開いたままにしてください！',
   stayOnPage: 'このページにお待ちください - まもなく通話が始まります！',
   currentlyWith: '現在の相手',
   enterYourName: '名前を入力',

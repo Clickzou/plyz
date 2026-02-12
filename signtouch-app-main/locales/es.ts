@@ -627,6 +627,7 @@ export default {
   called: 'Llamado',
   waiting: 'Esperando',
   more: 'más',
+  fanQueueExplanation: 'Estás en la cola para una videollamada privada con la celebridad. Cuando sea tu turno, la llamada comenzará automáticamente. ¡Mantén esta página abierta!',
   stayOnPage: 'Permanece en esta página - la llamada comenzará pronto!',
   currentlyWith: 'Actualmente con',
   enterYourName: 'Ingresa tu nombre',

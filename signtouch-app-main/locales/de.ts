@@ -627,6 +627,7 @@ export default {
   called: 'Angerufen',
   waiting: 'Wartend',
   more: 'mehr',
+  fanQueueExplanation: 'Sie stehen in der Warteschlange für einen privaten Videoanruf mit dem Star. Wenn Sie an der Reihe sind, startet der Anruf automatisch. Lassen Sie diese Seite geöffnet!',
   stayOnPage: 'Bleiben Sie auf dieser Seite - der Anruf beginnt gleich!',
   currentlyWith: 'Derzeit mit',
   enterYourName: 'Geben Sie Ihren Namen ein',

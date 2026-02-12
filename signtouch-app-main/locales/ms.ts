@@ -627,6 +627,7 @@ export default {
   called: 'Dipanggil',
   waiting: 'Menunggu',
   more: 'lagi',
+  fanQueueExplanation: 'Anda berada dalam barisan untuk panggilan video peribadi dengan selebriti. Apabila giliran anda tiba, panggilan akan bermula secara automatik. Kekalkan halaman ini terbuka!',
   stayOnPage: 'Kekal di halaman ini - panggilan akan bermula tidak lama lagi!',
   currentlyWith: 'Kini dengan',
   enterYourName: 'Masukkan nama anda',
