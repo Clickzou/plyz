@@ -601,18 +601,24 @@ export default function ComposeScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  const signatureTransforms = useRef<SignatureTransform[]>(
-    signatureUris.map((_: string, index: number) => ({
-      scale: useSharedValue(1.5),
-      savedScale: useSharedValue(1.5),
-      translateX: useSharedValue(SCREEN_WIDTH / 2 - 60 + index * 50),
-      translateY: useSharedValue(SCREEN_HEIGHT / 2 - 60 + index * 50),
-      savedTranslateX: useSharedValue(SCREEN_WIDTH / 2 - 60 + index * 50),
-      savedTranslateY: useSharedValue(SCREEN_HEIGHT / 2 - 60 + index * 50),
-      rotation: useSharedValue(0),
-      savedRotation: useSharedValue(0),
-    }))
-  ).current;
+  const signatureTransformsRef = useRef<SignatureTransform[]>([]);
+  const getOrCreateSignatureTransform = (index: number): SignatureTransform => {
+    if (!signatureTransformsRef.current[index]) {
+      const initX = SCREEN_WIDTH / 2 - 60 + index * 50;
+      const initY = SCREEN_HEIGHT / 2 - 60 + index * 50;
+      signatureTransformsRef.current[index] = {
+        scale: makeMutable(1.5),
+        savedScale: makeMutable(1.5),
+        translateX: makeMutable(initX),
+        translateY: makeMutable(initY),
+        savedTranslateX: makeMutable(initX),
+        savedTranslateY: makeMutable(initY),
+        rotation: makeMutable(0),
+        savedRotation: makeMutable(0),
+      };
+    }
+    return signatureTransformsRef.current[index];
+  };
 
   const textTransformsRef = useRef<Map<string, TextTransform>>(new Map());
   const getOrCreateTextTransform = (overlay: TextOverlay): TextTransform => {
@@ -950,7 +956,7 @@ export default function ComposeScreen() {
             const finishCapture = () => {
               console.log('[NEW CANVAS v2] Drawing', signatureImages.length, 'signatures');
               signatureImages.forEach((signatureImg, index) => {
-                const transform = signatureTransforms[index];
+                const transform = getOrCreateSignatureTransform(index);
                 const tx = transform.translateX.value * canvasScale;
                 const ty = transform.translateY.value * canvasScale;
                 const rotation = transform.rotation.value;
@@ -1109,7 +1115,7 @@ export default function ComposeScreen() {
       console.log('✅ Image capturée:', uri);
 
       const signatureOverlays: SignatureOverlay[] = signatureUris.map((sigUri: string, index: number) => {
-        const transform = signatureTransforms[index];
+        const transform = getOrCreateSignatureTransform(index);
         return {
           id: `sig_${Date.now()}_${index}`,
           uri: sigUri,
@@ -1266,7 +1272,7 @@ export default function ComposeScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     if (selectedSignatureIndex !== null) {
-      const transform = signatureTransforms[selectedSignatureIndex];
+      const transform = getOrCreateSignatureTransform(selectedSignatureIndex);
       transform.rotation.value = transform.rotation.value + Math.PI / 2;
       transform.savedRotation.value = transform.rotation.value;
     }
@@ -1301,7 +1307,7 @@ export default function ComposeScreen() {
             resizeMode="cover"
           />
           {signatureUris.map((uri: string, index: number) => {
-            const transform = signatureTransforms[index];
+            const transform = getOrCreateSignatureTransform(index);
             const gesture = createGesture(transform, index);
             const strokeScale = signatureStrokeScales[index] || 1.0;
             const color = signatureColors[index];
