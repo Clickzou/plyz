@@ -866,144 +866,31 @@ export default function ComposeScreen() {
             ctx.drawImage(photoImg, 0, 0, canvas.width, canvas.height);
             console.log('✅ Photo dessinée sur le canvas');
 
-            let loadedSignatures = 0;
-            const signatureImages: HTMLImageElement[] = [];
+            textOverlays.forEach((overlay) => {
+              const tx = overlay.x * canvasScale;
+              const ty = overlay.y * canvasScale;
+              const rotation = (overlay.rotation * Math.PI) / 180;
+              const sc = overlay.scale * canvasScale;
+              const fontSize = (overlay.fontSize || 32) * sc;
 
-            const drawAllSignatures = () => {
-              console.log('✅ Toutes les signatures chargées');
+              ctx.save();
+              ctx.translate(tx, ty);
+              ctx.rotate(rotation);
+              ctx.font = `bold ${fontSize}px ${overlay.fontFamily || 'System'}`;
+              ctx.fillStyle = overlay.color || '#ffffff';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+              ctx.shadowBlur = 5;
+              ctx.shadowOffsetX = 2;
+              ctx.shadowOffsetY = 2;
+              ctx.fillText(overlay.text, 0, 0);
+              ctx.restore();
+            });
 
-              signatureImages.forEach((signatureImg, index) => {
-                const transform = signatureTransforms[index];
-                const tx = transform.translateX.value * canvasScale;
-                const ty = transform.translateY.value * canvasScale;
-                const rotation = transform.rotation.value;
-                const strokeScale = signatureStrokeScales[index] || 1.0;
-                const sc = (transform.scale.value * strokeScale) * canvasScale;
-                const color = signatureColors[index] || '#ffffff';
-
-                console.log(`🎯 Signature ${index + 1} - Position:`, tx, ty, 'Scale:', sc, 'Rotation:', rotation, 'Color:', color);
-
-                ctx.save();
-                ctx.translate(tx, ty);
-                ctx.rotate(rotation);
-                ctx.scale(sc, sc);
-
-                if (color !== '#ffffff') {
-                  const tempCanvas = document.createElement('canvas');
-                  tempCanvas.width = 100;
-                  tempCanvas.height = 60;
-                  const tempCtx = tempCanvas.getContext('2d');
-
-                  if (tempCtx) {
-                    tempCtx.drawImage(signatureImg, 0, 0, 100, 60);
-                    tempCtx.globalCompositeOperation = 'source-in';
-                    tempCtx.fillStyle = color;
-                    tempCtx.fillRect(0, 0, 100, 60);
-
-                    ctx.drawImage(tempCanvas, 0, 0, 100, 60);
-                  }
-                } else {
-                  ctx.drawImage(signatureImg, 0, 0, 100, 60);
-                }
-
-                ctx.restore();
-              });
-
-              console.log('✅ Toutes les signatures dessinées sur le canvas');
-
-              textOverlays.forEach((overlay) => {
-                const tx = overlay.x * canvasScale;
-                const ty = overlay.y * canvasScale;
-                const rotation = (overlay.rotation * Math.PI) / 180;
-                const sc = overlay.scale * canvasScale;
-                const fontSize = (overlay.fontSize || 32) * sc;
-
-                console.log(`📝 Text - Position:`, tx, ty, 'Scale:', sc, 'Rotation:', rotation, 'Text:', overlay.text);
-
-                ctx.save();
-                ctx.translate(tx, ty);
-                ctx.rotate(rotation);
-                ctx.font = `bold ${fontSize}px ${overlay.fontFamily || 'System'}`;
-                ctx.fillStyle = overlay.color || '#ffffff';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
-                ctx.shadowBlur = 5;
-                ctx.shadowOffsetX = 2;
-                ctx.shadowOffsetY = 2;
-                ctx.fillText(overlay.text, 0, 0);
-                ctx.restore();
-              });
-
-              console.log('✅ Tous les textes dessinés sur le canvas');
-
-              const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
               console.log('✅ Data URL créé, longueur:', dataUrl.length);
               resolve(dataUrl);
-            };
-
-            // Si pas de signatures, dessiner directement le texte
-            if (signatureUris.length === 0) {
-              console.log('⚡ Pas de signatures, dessin direct du texte');
-              drawAllSignatures();
-              return;
-            }
-
-            signatureUris.forEach((uri: string, index: number) => {
-              // Vérifier si c'est une data URI JSON (mobile SVG paths)
-              if (uri.startsWith('data:application/json;base64,')) {
-                try {
-                  const base64Data = uri.split(',')[1];
-                  const jsonString = decodeURIComponent(escape(atob(base64Data)));
-                  const svgData = JSON.parse(jsonString);
-
-                  // Créer un SVG et le convertir en Image
-                  const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgData.width}" height="${svgData.height}">${svgData.paths.map((pathData: string) => `<path d="${pathData}" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round" />`).join('')}</svg>`;
-                  const svgBlob = new Blob([svgContent], { type: 'image/svg+xml' });
-                  const svgUrl = URL.createObjectURL(svgBlob);
-
-                  const signatureImg = new window.Image();
-                  signatureImg.onload = () => {
-                    console.log(`✅ Signature SVG ${index + 1} chargée`);
-                    signatureImages[index] = signatureImg;
-                    loadedSignatures++;
-                    URL.revokeObjectURL(svgUrl);
-
-                    if (loadedSignatures === signatureUris.length) {
-                      drawAllSignatures();
-                    }
-                  };
-                  signatureImg.onerror = (e) => {
-                    console.error(`❌ Erreur chargement signature SVG ${index + 1}:`, e);
-                    URL.revokeObjectURL(svgUrl);
-                    reject(new Error(`Failed to load signature ${index + 1}`));
-                  };
-                  signatureImg.src = svgUrl;
-                } catch (error) {
-                  console.error(`❌ Erreur parsing signature JSON ${index + 1}:`, error);
-                  reject(new Error(`Failed to parse signature ${index + 1}`));
-                }
-              } else {
-                // Image PNG classique
-                const signatureImg = new window.Image();
-
-                signatureImg.onload = () => {
-                  console.log(`✅ Signature ${index + 1} chargée`);
-                  signatureImages[index] = signatureImg;
-                  loadedSignatures++;
-
-                  if (loadedSignatures === signatureUris.length) {
-                    drawAllSignatures();
-                  }
-                };
-
-                signatureImg.onerror = (e) => {
-                  console.error(`❌ Erreur chargement signature ${index + 1}:`, e);
-                  reject(new Error(`Failed to load signature ${index + 1}`));
-                };
-                signatureImg.src = uri;
-              }
-            });
           };
 
           photoImg.onerror = (e) => {
