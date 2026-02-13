@@ -540,6 +540,12 @@ export default {
   liveEvents: 'Живые события',
   starMode: 'Я звезда',
   fanMode: 'Я фанат',
+  fanChoiceTitle: 'Режим фаната',
+  fanChoiceSubtitle: 'Выберите ваш опыт',
+  fanChoiceQR: 'QR-код событие',
+  fanChoiceQRDesc: 'Отсканируйте QR-код или введите код, чтобы получить автограф знаменитости',
+  fanChoiceVideo: 'Живое видео',
+  fanChoiceVideoDesc: 'Присоединитесь к видеозвонку в прямом эфире со знаменитостью',
   notAvailable: 'Недоступно',
   scannerNotOnWeb: 'QR-сканер недоступен в веб-версии. Пожалуйста, введите код вручную.',
 

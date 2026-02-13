@@ -540,6 +540,12 @@ export default {
   liveEvents: 'Acara Langsung',
   starMode: 'Saya Bintang',
   fanMode: 'Saya Peminat',
+  fanChoiceTitle: 'Mod Peminat',
+  fanChoiceSubtitle: 'Pilih pengalaman anda',
+  fanChoiceQR: 'Acara QR Code',
+  fanChoiceQRDesc: 'Imbas QR code atau masukkan kod untuk mendapatkan tandatangan selebriti',
+  fanChoiceVideo: 'Video Langsung',
+  fanChoiceVideoDesc: 'Sertai panggilan video langsung dengan selebriti',
   notAvailable: 'Tidak Tersedia',
   scannerNotOnWeb: 'Pengimbas QR tidak tersedia di web. Sila masukkan kod secara manual.',
 

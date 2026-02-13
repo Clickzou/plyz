@@ -87,6 +87,7 @@ function AppContent() {
         <Stack.Screen name="gallery" options={{ animation: 'none' }} />
         <Stack.Screen name="account" options={{ animation: 'none' }} />
         <Stack.Screen name="celebrity-menu" options={{ animation: 'none' }} />
+        <Stack.Screen name="fan-choice" options={{ animation: 'none' }} />
         <Stack.Screen name="join-event" options={{ animation: 'none' }} />
       </Stack>
 

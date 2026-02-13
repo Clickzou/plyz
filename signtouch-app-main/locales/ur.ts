@@ -540,6 +540,12 @@ export default {
   liveEvents: 'لائیو ایونٹس',
   starMode: 'میں ایک ستارہ ہوں',
   fanMode: 'میں ایک فین ہوں',
+  fanChoiceTitle: 'فین موڈ',
+  fanChoiceSubtitle: 'اپنا تجربہ چنیں',
+  fanChoiceQR: 'QR کوڈ ایونٹ',
+  fanChoiceQRDesc: 'QR کوڈ اسکین کریں یا مشہور شخصیت کا آٹوگراف حاصل کرنے کے لیے کوڈ درج کریں',
+  fanChoiceVideo: 'لائیو ویڈیو',
+  fanChoiceVideoDesc: 'مشہور شخصیت کے ساتھ لائیو ویڈیو کال میں شامل ہوں',
   notAvailable: 'دستیاب نہیں',
   scannerNotOnWeb: 'QR اسکینر ویب پر دستیاب نہیں ہے۔ براہ کرم کوڈ دستی طور پر درج کریں۔',
 

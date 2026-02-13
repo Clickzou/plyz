@@ -17,7 +17,7 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
 
-  const handleNavigation = (path: '/' | '/gallery' | '/account' | '/celebrity-menu' | '/join-event') => {
+  const handleNavigation = (path: '/' | '/gallery' | '/account' | '/celebrity-menu' | '/join-event' | '/fan-choice') => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -80,15 +80,15 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
 
       <TouchableOpacity
         style={styles.navButton}
-        onPress={() => handleNavigation('/join-event')}
+        onPress={() => handleNavigation('/fan-choice')}
         activeOpacity={0.7}
       >
         <Users
           size={24}
-          color={isActive('/join-event') ? '#6366f1' : '#ffffff'}
+          color={isActive('/fan-choice') || isActive('/join-event') || isActive('/join-live-session') ? '#6366f1' : '#ffffff'}
           strokeWidth={2}
         />
-        <Text style={[styles.navLabel, isActive('/join-event') && styles.navLabelFan]}>
+        <Text style={[styles.navLabel, (isActive('/fan-choice') || isActive('/join-event') || isActive('/join-live-session')) && styles.navLabelFan]}>
           {t('fan')}
         </Text>
       </TouchableOpacity>

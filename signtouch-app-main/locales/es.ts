@@ -540,6 +540,12 @@ export default {
   liveEvents: 'Eventos en vivo',
   starMode: 'Soy una Estrella',
   fanMode: 'Soy un Fan',
+  fanChoiceTitle: 'Modo Fan',
+  fanChoiceSubtitle: 'Elige tu experiencia',
+  fanChoiceQR: 'Evento QR Code',
+  fanChoiceQRDesc: 'Escanea un código QR o introduce un código para obtener la firma de una celebridad',
+  fanChoiceVideo: 'Video en Vivo',
+  fanChoiceVideoDesc: 'Únete a una videollamada en vivo con una celebridad',
   notAvailable: 'No disponible',
   scannerNotOnWeb: 'El escáner QR no está disponible en la web. Por favor, introduce el código manualmente.',
 

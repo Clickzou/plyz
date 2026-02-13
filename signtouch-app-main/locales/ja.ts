@@ -540,6 +540,12 @@ export default {
   liveEvents: 'ライブイベント',
   starMode: 'スターです',
   fanMode: 'ファンです',
+  fanChoiceTitle: 'ファンモード',
+  fanChoiceSubtitle: '体験を選んでください',
+  fanChoiceQR: 'QRコードイベント',
+  fanChoiceQRDesc: 'QRコードをスキャンするかコードを入力して、セレブのサインを手に入れよう',
+  fanChoiceVideo: 'ライブビデオ',
+  fanChoiceVideoDesc: 'セレブとのライブビデオ通話に参加しよう',
   notAvailable: '利用できません',
   scannerNotOnWeb: 'ウェブではQRスキャナーは利用できません。コードを手動で入力してください。',
 

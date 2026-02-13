@@ -540,6 +540,12 @@ export default {
   liveEvents: 'أحداث مباشرة',
   starMode: 'أنا نجم',
   fanMode: 'أنا معجب',
+  fanChoiceTitle: 'وضع المعجب',
+  fanChoiceSubtitle: 'اختر تجربتك',
+  fanChoiceQR: 'حدث QR Code',
+  fanChoiceQRDesc: 'امسح رمز QR أو أدخل رمزًا للحصول على توقيع المشهور',
+  fanChoiceVideo: 'فيديو مباشر',
+  fanChoiceVideoDesc: 'انضم إلى مكالمة فيديو مباشرة مع أحد المشاهير',
   notAvailable: 'غير متاح',
   scannerNotOnWeb: 'ماسح QR غير متاح على الويب. يرجى إدخال الرمز يدوياً.',
 

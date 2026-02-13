@@ -540,6 +540,12 @@ export default {
   liveEvents: 'लाइव इवेंट्स',
   starMode: 'मैं एक स्टार हूं',
   fanMode: 'मैं एक फैन हूं',
+  fanChoiceTitle: 'फैन मोड',
+  fanChoiceSubtitle: 'अपना अनुभव चुनें',
+  fanChoiceQR: 'QR कोड इवेंट',
+  fanChoiceQRDesc: 'QR कोड स्कैन करें या सेलिब्रिटी का ऑटोग्राफ पाने के लिए कोड दर्ज करें',
+  fanChoiceVideo: 'लाइव वीडियो',
+  fanChoiceVideoDesc: 'सेलिब्रिटी के साथ लाइव वीडियो कॉल में शामिल हों',
   notAvailable: 'उपलब्ध नहीं',
   scannerNotOnWeb: 'QR स्कैनर वेब पर उपलब्ध नहीं है। कृपया कोड मैन्युअल रूप से दर्ज करें।',
 
