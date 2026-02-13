@@ -1416,6 +1416,10 @@ export default function JoinEventScreen() {
                   <View style={styles.stepNumber}><Text style={styles.stepNumberText}>2</Text></View>
                   <Text style={styles.stepText}>{t('howItWorksEventStep2') || 'Once the event starts, you will receive your dedications live'}</Text>
                 </View>
+                <View style={styles.howItWorksStep}>
+                  <View style={styles.stepNumber}><Text style={styles.stepNumberText}>3</Text></View>
+                  <Text style={styles.stepText}>{t('howItWorksEventStep3') || 'You can then edit the dedications to personalize them'}</Text>
+                </View>
               </View>
             </View>
 

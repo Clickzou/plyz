@@ -846,6 +846,7 @@ export default {
   howItWorksStep4: '通话后互相评分',
   howItWorksEventStep1: '输入活动代码',
   howItWorksEventStep2: '活动开始后，您将实时收到您的签名',
+  howItWorksEventStep3: '然后您可以编辑签名以进行个性化',
   pleaseEnterName: '请输入姓名',
   pleaseDrawSignature: '请绘制签名',
   cannotAddSigner: '无法添加签名者',

@@ -851,6 +851,7 @@ export default {
   howItWorksStep4: 'Beri penilaian antara satu sama lain selepas panggilan',
   howItWorksEventStep1: 'Masukkan kod acara',
   howItWorksEventStep2: 'Sebaik sahaja acara bermula, anda akan menerima dedikasi anda secara langsung',
+  howItWorksEventStep3: 'Anda kemudian boleh mengedit dedikasi untuk memperibadikannya',
   pleaseEnterName: 'Sila masukkan nama',
   pleaseDrawSignature: 'Sila lukis tandatangan',
   cannotAddSigner: 'Tidak dapat menambah penandatangan',

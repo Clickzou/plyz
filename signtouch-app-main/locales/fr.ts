@@ -851,6 +851,7 @@ export default {
   howItWorksStep4: 'Notez-vous mutuellement après l\'appel',
   howItWorksEventStep1: 'Entrez le code de l\'événement',
   howItWorksEventStep2: 'Dès que l\'événement commence, vous recevrez vos dédicaces live',
+  howItWorksEventStep3: 'Vous pouvez ensuite éditer les dédicaces pour les personnaliser',
   pleaseEnterName: 'Veuillez entrer un nom',
   pleaseDrawSignature: 'Veuillez dessiner une signature',
   cannotAddSigner: 'Impossible d\'ajouter le signataire',

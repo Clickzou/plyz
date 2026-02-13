@@ -849,6 +849,7 @@ export default {
   howItWorksStep4: 'Rate each other after the call',
   howItWorksEventStep1: 'Enter the event code',
   howItWorksEventStep2: 'Once the event starts, you will receive your dedications live',
+  howItWorksEventStep3: 'You can then edit the dedications to personalize them',
   pleaseEnterName: 'Please enter a name',
   pleaseDrawSignature: 'Please draw a signature',
   cannotAddSigner: 'Unable to add signer',

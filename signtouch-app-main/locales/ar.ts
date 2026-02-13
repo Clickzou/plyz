@@ -846,6 +846,7 @@ export default {
   howItWorksStep4: 'قيّموا بعضكم البعض بعد المكالمة',
   howItWorksEventStep1: 'أدخل رمز الحدث',
   howItWorksEventStep2: 'بمجرد بدء الحدث، ستتلقى إهداءاتك مباشرة',
+  howItWorksEventStep3: 'يمكنك بعد ذلك تعديل الإهداءات لتخصيصها',
   pleaseEnterName: 'يرجى إدخال اسم',
   pleaseDrawSignature: 'يرجى رسم التوقيع',
   cannotAddSigner: 'تعذر إضافة الموقّع',

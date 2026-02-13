@@ -846,6 +846,7 @@ export default {
   howItWorksStep4: 'Avaliem-se mutuamente após a chamada',
   howItWorksEventStep1: 'Insira o código do evento',
   howItWorksEventStep2: 'Assim que o evento começar, receberá as suas dedicatórias ao vivo',
+  howItWorksEventStep3: 'Pode depois editar as dedicatórias para as personalizar',
   pleaseEnterName: 'Por favor insira um nome',
   pleaseDrawSignature: 'Por favor desenhe uma assinatura',
   cannotAddSigner: 'Não é possível adicionar signatário',

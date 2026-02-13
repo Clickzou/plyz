@@ -851,6 +851,7 @@ export default {
   howItWorksStep4: 'کال کے بعد ایک دوسرے کی درجہ بندی کریں',
   howItWorksEventStep1: 'ایونٹ کوڈ درج کریں',
   howItWorksEventStep2: 'جیسے ہی ایونٹ شروع ہوتا ہے، آپ کو لائیو میں اپنی وقف شدہ تصاویر ملیں گی',
+  howItWorksEventStep3: 'پھر آپ وقف شدہ تصاویر کو ذاتی بنانے کے لیے ترمیم کر سکتے ہیں',
   pleaseEnterName: 'براہ کرم ایک نام درج کریں',
   pleaseDrawSignature: 'براہ کرم ایک دستخط بنائیں',
   cannotAddSigner: 'دستخط کنندہ شامل نہیں ہو سکا',

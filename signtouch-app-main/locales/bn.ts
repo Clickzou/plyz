@@ -851,6 +851,7 @@ export default {
   howItWorksStep4: 'কলের পরে একে অপরকে রেট করুন',
   howItWorksEventStep1: 'ইভেন্ট কোড লিখুন',
   howItWorksEventStep2: 'ইভেন্ট শুরু হলেই, আপনি লাইভে আপনার উৎসর্গ পাবেন',
+  howItWorksEventStep3: 'এরপরে আপনি উৎসর্গগুলি ব্যক্তিগতকৃত করতে সম্পাদনা করতে পারেন',
   pleaseEnterName: 'অনুগ্রহ করে একটি নাম লিখুন',
   pleaseDrawSignature: 'অনুগ্রহ করে একটি স্বাক্ষর আঁকুন',
   cannotAddSigner: 'স্বাক্ষরকারী যোগ করা যাচ্ছে না',
