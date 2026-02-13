@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, createElement } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -28,7 +28,7 @@ import { Type, Minus, CreditCard as Edit3, Check, RotateCw, ChevronLeft, Chevron
 import * as Haptics from 'expo-haptics';
 import { captureRef } from 'react-native-view-shot';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path, SvgXml } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import { Memory, SignatureOverlay, TextOverlay } from '@/utils/memoriesStorage';
 import { Modal, TextInput } from 'react-native';
 import * as StorageService from '@/utils/storageService';
@@ -85,11 +85,11 @@ interface AnimatedSignatureProps {
 function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelected, gesture }: AnimatedSignatureProps) {
   const [imageDimensions, setImageDimensions] = useState({ width: 150, height: 80 });
   const [svgData, setSvgData] = useState<any>(null);
+  const [parsedPaths, setParsedPaths] = useState<Array<{ d: string; isDot: boolean }>>([]);
+  const [viewBox, setViewBox] = useState<{ width: number; height: number } | null>(null);
 
   const isJsonData = uri.startsWith('data:application/json;base64,');
   const isSvgDataUri = uri.startsWith('data:image/svg+xml;base64,');
-  const [coloredSvgUri, setColoredSvgUri] = useState<string | null>(null);
-
 
   useEffect(() => {
     if (isJsonData) {
@@ -105,26 +105,37 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
       return;
     }
 
-    if (isSvgDataUri && Platform.OS === 'web') {
+    if (isSvgDataUri) {
       try {
         const base64Data = uri.split(',')[1];
-        const svgString = decodeURIComponent(escape(atob(base64Data)));
+        const svgString = Platform.OS === 'web'
+          ? decodeURIComponent(escape(atob(base64Data)))
+          : decodeURIComponent(escape(atob(base64Data)));
         const widthMatch = svgString.match(/width="([^"]+)"/);
         const heightMatch = svgString.match(/height="([^"]+)"/);
         const w = widthMatch ? parseFloat(widthMatch[1]) : 150;
         const h = heightMatch ? parseFloat(heightMatch[1]) : 80;
+        setViewBox({ width: w, height: h });
+
         const aspectRatio = w / h;
         const displayW = Math.min(w, 200);
         const displayH = displayW / aspectRatio;
         setImageDimensions({ width: displayW, height: displayH });
 
-        let recoloredSvg = svgString;
-        recoloredSvg = recoloredSvg.replace(/stroke="#[a-fA-F0-9]+"/g, `stroke="${color}"`);
-        recoloredSvg = recoloredSvg.replace(/fill="#[a-fA-F0-9]+"/g, `fill="${color}"`);
-        console.log('[AnimatedSignature v2] SVG recolored, fill="none" count:', (recoloredSvg.match(/fill="none"/g) || []).length, 'fill color count:', (recoloredSvg.match(/fill="[^n][^"]*"/g) || []).length);
-        console.log('[AnimatedSignature v2] SVG first 500 chars:', recoloredSvg.substring(0, 500));
-        const recoloredBase64 = btoa(unescape(encodeURIComponent(recoloredSvg)));
-        setColoredSvgUri(`data:image/svg+xml;base64,${recoloredBase64}`);
+        const paths: Array<{ d: string; isDot: boolean }> = [];
+        const pathRegex = /<path\s+([^>]*?)\/>/g;
+        let match;
+        while ((match = pathRegex.exec(svgString)) !== null) {
+          const attrs = match[1];
+          const dMatch = attrs.match(/d="([^"]+)"/);
+          if (!dMatch) continue;
+          const d = dMatch[1];
+          const hasFillNone = /fill="none"/.test(attrs);
+          const isDot = !hasFillNone;
+          paths.push({ d, isDot });
+        }
+        setParsedPaths(paths);
+        console.log('[AnimatedSignature v3] Parsed', paths.length, 'paths, dots:', paths.filter(p => p.isDot).length, 'strokes:', paths.filter(p => !p.isDot).length, 'viewBox:', w, 'x', h);
       } catch (error) {
         console.error('Error parsing SVG data URI:', error);
       }
@@ -149,7 +160,7 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
         console.error('Error getting image size:', error);
       }
     );
-  }, [uri, isJsonData, isSvgDataUri, color]);
+  }, [uri, isJsonData, isSvgDataUri]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -162,22 +173,23 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
     };
   });
 
-  const renderUri2 = Platform.OS === 'web' && isSvgDataUri && coloredSvgUri ? coloredSvgUri : uri;
-
   const renderContent = () => {
-    if (Platform.OS === 'web') {
-      const imgSrc = coloredSvgUri || uri;
-      return createElement('img', {
-        src: imgSrc,
-        style: {
-          width: imageDimensions.width,
-          height: imageDimensions.height,
-          objectFit: 'contain' as any,
-          pointerEvents: 'none' as any,
-          display: 'block',
-        },
-        draggable: false,
-      });
+    if (parsedPaths.length > 0 && viewBox) {
+      return (
+        <Svg width={imageDimensions.width} height={imageDimensions.height} viewBox={`0 0 ${viewBox.width} ${viewBox.height}`}>
+          {parsedPaths.map((pathItem, idx) => (
+            <Path
+              key={idx}
+              d={pathItem.d}
+              stroke={pathItem.isDot ? 'none' : color}
+              fill={pathItem.isDot ? color : 'none'}
+              strokeWidth={8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          ))}
+        </Svg>
+      );
     }
 
     if (svgData) {
@@ -200,7 +212,7 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
 
     return (
       <Image
-        source={{ uri: renderUri2 }}
+        source={{ uri }}
         style={{ width: imageDimensions.width, height: imageDimensions.height }}
         tintColor={color}
         resizeMode="contain"
