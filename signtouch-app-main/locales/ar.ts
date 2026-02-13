@@ -594,7 +594,7 @@ export default {
   liveSessionHasEnded: 'انتهت هذه الجلسة',
   liveSessionFull: 'هذه الجلسة ممتلئة',
   liveSessionJoin: 'الانضمام للجلسة',
-  liveSessionJoinSession: 'الانضمام للجلسة',
+  liveSessionJoinSession: 'جلسة فيديو مباشرة',
   liveSessionJoinError: 'فشل في الانضمام للجلسة',
   liveSessionUploadHint: 'أضف صورة ورسالة للمشهور',
   liveSessionTakePhoto: 'التقط صورة',

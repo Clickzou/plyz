@@ -594,7 +594,7 @@ export default {
   liveSessionHasEnded: 'Эта сессия завершена',
   liveSessionFull: 'Эта сессия заполнена',
   liveSessionJoin: 'Присоединиться к сессии',
-  liveSessionJoinSession: 'Присоединиться к сессии',
+  liveSessionJoinSession: 'Живая видеосессия',
   liveSessionJoinError: 'Не удалось присоединиться к сессии',
   liveSessionUploadHint: 'Добавьте фото и сообщение для знаменитости',
   liveSessionTakePhoto: 'Сделать фото',

@@ -594,7 +594,7 @@ export default {
   liveSessionHasEnded: 'यह सत्र समाप्त हो गया है',
   liveSessionFull: 'यह सत्र भरा हुआ है',
   liveSessionJoin: 'सत्र में शामिल हों',
-  liveSessionJoinSession: 'सत्र में शामिल हों',
+  liveSessionJoinSession: 'लाइव वीडियो सेशन',
   liveSessionJoinError: 'सत्र में शामिल होने में विफल',
   liveSessionUploadHint: 'सेलेब्रिटी के लिए एक फोटो और संदेश जोड़ें',
   liveSessionTakePhoto: 'फोटो लें',

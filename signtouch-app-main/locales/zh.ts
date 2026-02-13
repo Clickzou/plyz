@@ -594,7 +594,7 @@ export default {
   liveSessionHasEnded: '此会话已结束',
   liveSessionFull: '此会话已满',
   liveSessionJoin: '加入会话',
-  liveSessionJoinSession: '加入会话',
+  liveSessionJoinSession: '现场视频会话',
   liveSessionJoinError: '加入会话失败',
   liveSessionUploadHint: '为明星添加照片和留言',
   liveSessionTakePhoto: '拍照',

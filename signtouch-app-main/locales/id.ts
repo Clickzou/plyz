@@ -594,7 +594,7 @@ export default {
   liveSessionHasEnded: 'Sesi ini telah berakhir',
   liveSessionFull: 'Sesi ini penuh',
   liveSessionJoin: 'Gabung Sesi',
-  liveSessionJoinSession: 'Gabung Sesi',
+  liveSessionJoinSession: 'Sesi Video Langsung',
   liveSessionJoinError: 'Gagal bergabung dengan sesi',
   liveSessionUploadHint: 'Tambahkan foto dan pesan untuk selebriti',
   liveSessionTakePhoto: 'Ambil Foto',

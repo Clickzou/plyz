@@ -594,7 +594,7 @@ export default {
   liveSessionHasEnded: 'このセッションは終了しました',
   liveSessionFull: 'このセッションは満員です',
   liveSessionJoin: 'セッションに参加',
-  liveSessionJoinSession: 'セッションに参加',
+  liveSessionJoinSession: 'ライブビデオセッション',
   liveSessionJoinError: 'セッションへの参加に失敗しました',
   liveSessionUploadHint: 'セレブのために写真とメッセージを追加',
   liveSessionTakePhoto: '写真を撮る',

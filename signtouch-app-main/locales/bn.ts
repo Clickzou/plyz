@@ -594,7 +594,7 @@ export default {
   liveSessionHasEnded: 'এই সেশন শেষ হয়ে গেছে',
   liveSessionFull: 'এই সেশন পূর্ণ',
   liveSessionJoin: 'সেশনে যোগ দিন',
-  liveSessionJoinSession: 'সেশনে যোগ দিন',
+  liveSessionJoinSession: 'লাইভ ভিডিও সেশন',
   liveSessionJoinError: 'সেশনে যোগ দিতে ব্যর্থ',
   liveSessionUploadHint: 'সেলিব্রিটির জন্য একটি ফটো এবং বার্তা যোগ করুন',
   liveSessionTakePhoto: 'ছবি তুলুন',

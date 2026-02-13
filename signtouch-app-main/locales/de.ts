@@ -594,7 +594,7 @@ export default {
   liveSessionHasEnded: 'Diese Session ist beendet',
   liveSessionFull: 'Diese Session ist voll',
   liveSessionJoin: 'Session beitreten',
-  liveSessionJoinSession: 'Session beitreten',
+  liveSessionJoinSession: 'Live-Video-Session',
   liveSessionJoinError: 'Beitritt zur Session fehlgeschlagen',
   liveSessionUploadHint: 'Fügen Sie ein Foto und eine Nachricht für den Promi hinzu',
   liveSessionTakePhoto: 'Foto aufnehmen',

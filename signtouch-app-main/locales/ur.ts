@@ -594,7 +594,7 @@ export default {
   liveSessionHasEnded: 'یہ سیشن ختم ہو چکا ہے',
   liveSessionFull: 'یہ سیشن بھر گیا ہے',
   liveSessionJoin: 'سیشن میں شامل ہوں',
-  liveSessionJoinSession: 'سیشن میں شامل ہوں',
+  liveSessionJoinSession: 'لائیو ویڈیو سیشن',
   liveSessionJoinError: 'سیشن میں شامل ہونے میں ناکام',
   liveSessionUploadHint: 'مشہور شخصیت کے لیے تصویر اور پیغام شامل کریں',
   liveSessionTakePhoto: 'تصویر لیں',

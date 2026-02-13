@@ -237,18 +237,35 @@ export default function JoinLiveSessionScreen() {
   };
 
   const renderCodeStep = () => (
-    <View style={styles.stepContainer}>
-      <View style={styles.iconContainer}>
-        <Users size={60} color="#fff" />
+    <ScrollView style={styles.stepContainer} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+      <View style={styles.howItWorksSection}>
+        <Text style={styles.howItWorksTitle}>{t('howItWorksTitle') || 'How does it work?'}</Text>
+        <View style={styles.howItWorksSteps}>
+          <View style={styles.howItWorksStep}>
+            <View style={styles.stepNumber}><Text style={styles.stepNumberText}>1</Text></View>
+            <Text style={styles.stepText}>{t('howItWorksStep1') || 'Enter the code shared by the celebrity'}</Text>
+          </View>
+          <View style={styles.howItWorksStep}>
+            <View style={styles.stepNumber}><Text style={styles.stepNumberText}>2</Text></View>
+            <Text style={styles.stepText}>{t('howItWorksStep2') || 'Join the queue and wait for your turn'}</Text>
+          </View>
+          <View style={styles.howItWorksStep}>
+            <View style={styles.stepNumber}><Text style={styles.stepNumberText}>3</Text></View>
+            <Text style={styles.stepText}>{t('howItWorksStep3') || 'Video call with the celebrity when called'}</Text>
+          </View>
+          <View style={styles.howItWorksStep}>
+            <View style={styles.stepNumber}><Text style={styles.stepNumberText}>4</Text></View>
+            <Text style={styles.stepText}>{t('howItWorksStep4') || 'Rate each other after the call'}</Text>
+          </View>
+        </View>
       </View>
 
-      <Text style={styles.title}>{t('liveSessionJoinTitle')}</Text>
-      <Text style={styles.subtitle}>{t('liveSessionJoinSubtitle')}</Text>
+      <Text style={styles.inputLabel}>{t('liveSessionJoinSubtitle')}</Text>
 
       <TextInput
         style={styles.codeInput}
         placeholder="ABC123"
-        placeholderTextColor="rgba(255,255,255,0.5)"
+        placeholderTextColor="rgba(255,255,255,0.4)"
         value={code}
         onChangeText={(text) => setCode(text.toUpperCase())}
         maxLength={6}
@@ -256,14 +273,16 @@ export default function JoinLiveSessionScreen() {
       />
 
       <TouchableOpacity
-        style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
+        style={[styles.searchButton, isLoading && styles.buttonDisabled]}
         onPress={() => handleJoinWithCode(code)}
         disabled={isLoading || code.length !== 6}
       >
         {isLoading ? (
-          <ActivityIndicator color="#6366f1" />
+          <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.primaryButtonText}>{t('liveSessionJoin')}</Text>
+          <>
+            <Text style={styles.searchButtonText}>{t('search') || 'Rechercher'}</Text>
+          </>
         )}
       </TouchableOpacity>
 
@@ -274,10 +293,10 @@ export default function JoinLiveSessionScreen() {
       </View>
 
       <TouchableOpacity style={styles.scanButton} onPress={requestCameraPermission}>
-        <QrCode size={28} color="#6366f1" />
-        <Text style={styles.scanButtonText}>{t('scanQRCode') || 'Scanner un QR Code'}</Text>
+        <QrCode size={28} color="#10B981" />
+        <Text style={styles.scanButtonText}>{t('scan') || 'Scanner'}</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 
   const renderUploadStep = () => (
@@ -408,13 +427,13 @@ export default function JoinLiveSessionScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <LinearGradient colors={['#6366f1', '#4f46e5']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['#0f172a', '#1e293b']} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('liveSessionJoinSession')}</Text>
+        <Text style={styles.headerTitle}>{t('liveSessionJoinSession') || 'Session Live Vidéo'}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -454,6 +473,66 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  howItWorksSection: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+  },
+  howItWorksTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#10B981',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  howItWorksSteps: {
+    gap: 12,
+  },
+  howItWorksStep: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  stepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepNumberText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  stepText: {
+    color: '#fff',
+    fontSize: 14,
+    flex: 1,
+  },
+  inputLabel: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  searchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#10B981',
+    borderRadius: 30,
+    paddingVertical: 16,
+    marginTop: 8,
+  },
+  searchButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+  },
   scrollContent: {
     paddingBottom: 40,
   },
@@ -476,34 +555,19 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   codeInput: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 16,
     paddingHorizontal: 20,
     paddingVertical: 18,
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
     color: '#fff',
     textAlign: 'center',
     letterSpacing: 8,
-    marginBottom: 24,
-  },
-  primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    backgroundColor: '#fff',
-    borderRadius: 30,
-    paddingVertical: 18,
-    marginTop: 16,
+    marginBottom: 16,
   },
   buttonDisabled: {
     opacity: 0.7,
-  },
-  primaryButtonText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#6366f1',
   },
   photoSection: {
     marginBottom: 24,
@@ -608,14 +672,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: '#10B981',
     paddingVertical: 14,
     paddingHorizontal: 24,
-    borderRadius: 12,
+    borderRadius: 30,
     gap: 10,
   },
   scanButtonText: {
-    color: '#6366f1',
+    color: '#10B981',
     fontSize: 16,
     fontWeight: '600',
   },

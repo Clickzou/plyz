@@ -594,7 +594,7 @@ export default {
   liveSessionHasEnded: 'Esta sesión ha terminado',
   liveSessionFull: 'Esta sesión está llena',
   liveSessionJoin: 'Unirse',
-  liveSessionJoinSession: 'Unirse a la Sesión',
+  liveSessionJoinSession: 'Sesión Live Vídeo',
   liveSessionJoinError: 'Error al unirse a la sesión',
   liveSessionUploadHint: 'Añade una foto y mensaje para la celebridad',
   liveSessionTakePhoto: 'Tomar Foto',
