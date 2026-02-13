@@ -287,6 +287,7 @@ export default function EventPublishScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      if (!sessionId) return;
       loadSigners();
       getActiveViewerCount(sessionId).then(setViewerCount);
       fetchEventAssets(sessionId, { limit: 100 }).then((assets) => {
@@ -297,6 +298,7 @@ export default function EventPublishScreen() {
   );
 
   useEffect(() => {
+    if (!sessionId) return;
     const interval = setInterval(async () => {
       const count = await getActiveViewerCount(sessionId);
       setViewerCount(count);
