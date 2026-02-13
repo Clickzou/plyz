@@ -1008,4 +1008,8 @@ export default {
   promoInvalid: 'Неверный промокод',
   promoExpired: 'Промокод истёк',
   promoMaxUses: 'Промокод уже использован максимально',
+  qrEvent: 'Событие с посвящением',
+  showQrCode: 'Показать QR',
+  noPhotosPublished: 'Фотографии ещё не опубликованы',
+  liveVideo: 'Живая видеосессия',
 };

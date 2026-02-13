@@ -1008,4 +1008,8 @@ export default {
   promoInvalid: '無効なプロモコード',
   promoExpired: 'プロモコードの有効期限切れ',
   promoMaxUses: 'プロモコードの使用回数上限に達しました',
+  qrEvent: 'ライブサイン会イベント',
+  showQrCode: 'QR表示',
+  noPhotosPublished: 'まだ写真が公開されていません',
+  liveVideo: 'ライブビデオセッション',
 };

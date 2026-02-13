@@ -1008,4 +1008,8 @@ export default {
   promoInvalid: 'Codice promozionale non valido',
   promoExpired: 'Codice promozionale scaduto',
   promoMaxUses: 'Codice promozionale utilizzato al massimo',
+  qrEvent: 'Evento Live Dedica',
+  showQrCode: 'Mostra QR',
+  noPhotosPublished: 'Nessuna foto pubblicata',
+  liveVideo: 'Sessione Live Video',
 };

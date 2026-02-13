@@ -1048,4 +1048,8 @@ export default {
   promoInvalid: 'Invalid promo code',
   promoExpired: 'Promo code expired',
   promoMaxUses: 'Promo code usage limit reached',
+  qrEvent: 'Live Dedication Event',
+  showQrCode: 'Show QR',
+  noPhotosPublished: 'No photos published yet',
+  liveVideo: 'Live Video Session',
 };

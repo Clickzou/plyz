@@ -1013,4 +1013,8 @@ export default {
   promoInvalid: 'غلط پرومو کوڈ',
   promoExpired: 'پرومو کوڈ ختم ہو گیا',
   promoMaxUses: 'پرومو کوڈ زیادہ سے زیادہ استعمال ہو چکا',
+  qrEvent: 'لائیو ڈیڈیکیشن ایونٹ',
+  showQrCode: 'QR دکھائیں',
+  noPhotosPublished: 'ابھی تک کوئی تصویر شائع نہیں ہوئی',
+  liveVideo: 'لائیو ویڈیو سیشن',
 };

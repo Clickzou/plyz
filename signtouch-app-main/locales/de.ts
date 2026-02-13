@@ -1008,4 +1008,8 @@ export default {
   promoInvalid: 'Ungültiger Aktionscode',
   promoExpired: 'Aktionscode abgelaufen',
   promoMaxUses: 'Aktionscode bereits maximal verwendet',
+  qrEvent: 'Live-Widmung Event',
+  showQrCode: 'QR anzeigen',
+  noPhotosPublished: 'Noch keine Fotos veröffentlicht',
+  liveVideo: 'Live-Video-Session',
 };

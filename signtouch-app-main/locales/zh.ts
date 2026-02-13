@@ -1008,4 +1008,8 @@ export default {
   promoInvalid: '无效的优惠码',
   promoExpired: '优惠码已过期',
   promoMaxUses: '优惠码已达到使用上限',
+  qrEvent: '现场签名活动',
+  showQrCode: '显示二维码',
+  noPhotosPublished: '尚未发布照片',
+  liveVideo: '现场视频会话',
 };

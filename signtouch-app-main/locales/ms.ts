@@ -1013,4 +1013,8 @@ export default {
   promoInvalid: 'Kod promo tidak sah',
   promoExpired: 'Kod promo telah tamat tempoh',
   promoMaxUses: 'Kod promo telah digunakan sehingga had maksimum',
+  qrEvent: 'Acara Dedikasi Langsung',
+  showQrCode: 'Tunjuk QR',
+  noPhotosPublished: 'Tiada foto diterbitkan lagi',
+  liveVideo: 'Sesi Video Langsung',
 };

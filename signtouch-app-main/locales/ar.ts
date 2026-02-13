@@ -1008,4 +1008,8 @@ export default {
   promoInvalid: 'رمز ترويجي غير صالح',
   promoExpired: 'رمز ترويجي منتهي الصلاحية',
   promoMaxUses: 'تم استخدام الرمز الترويجي بالحد الأقصى',
+  qrEvent: 'حدث إهداء مباشر',
+  showQrCode: 'عرض QR',
+  noPhotosPublished: 'لم يتم نشر أي صور بعد',
+  liveVideo: 'جلسة فيديو مباشرة',
 };

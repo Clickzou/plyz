@@ -1008,4 +1008,8 @@ export default {
   promoInvalid: 'अमान्य प्रोमो कोड',
   promoExpired: 'प्रोमो कोड समाप्त',
   promoMaxUses: 'प्रोमो कोड अधिकतम उपयोग तक पहुँच गया',
+  qrEvent: 'लाइव डेडिकेशन इवेंट',
+  showQrCode: 'QR दिखाएं',
+  noPhotosPublished: 'अभी तक कोई फोटो प्रकाशित नहीं',
+  liveVideo: 'लाइव वीडियो सेशन',
 };

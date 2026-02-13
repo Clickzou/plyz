@@ -1013,4 +1013,8 @@ export default {
   promoInvalid: 'অবৈধ প্রোমো কোড',
   promoExpired: 'প্রোমো কোডের মেয়াদ শেষ',
   promoMaxUses: 'প্রোমো কোড সর্বাধিক ব্যবহৃত হয়েছে',
+  qrEvent: 'লাইভ ডেডিকেশন ইভেন্ট',
+  showQrCode: 'QR দেখান',
+  noPhotosPublished: 'এখনও কোনো ছবি প্রকাশিত হয়নি',
+  liveVideo: 'লাইভ ভিডিও সেশন',
 };
