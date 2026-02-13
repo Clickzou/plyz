@@ -173,22 +173,61 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
     };
   });
 
+  const [colorizedSvgUri, setColorizedSvgUri] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (Platform.OS === 'web' && isSvgDataUri) {
+      try {
+        const base64Data = uri.split(',')[1];
+        const svgString = decodeURIComponent(escape(atob(base64Data)));
+        const colorized = svgString
+          .replace(/stroke="#[a-fA-F0-9]+"/g, `stroke="${color}"`)
+          .replace(/fill="#[a-fA-F0-9]+"/g, `fill="${color}"`);
+        const newBase64 = btoa(unescape(encodeURIComponent(colorized)));
+        setColorizedSvgUri(`data:image/svg+xml;base64,${newBase64}`);
+        console.log('[AnimatedSignature v4] Colorized SVG for web, color:', color);
+      } catch (e) {
+        console.error('[AnimatedSignature v4] Error colorizing SVG:', e);
+        setColorizedSvgUri(uri);
+      }
+    }
+  }, [uri, color, isSvgDataUri]);
+
   const renderContent = () => {
+    if (Platform.OS === 'web' && colorizedSvgUri) {
+      return (
+        <img
+          src={colorizedSvgUri}
+          style={{
+            width: imageDimensions.width,
+            height: imageDimensions.height,
+            pointerEvents: 'none' as any,
+          }}
+        />
+      );
+    }
+
     if (parsedPaths.length > 0 && viewBox) {
       return (
-        <Svg width={imageDimensions.width} height={imageDimensions.height} viewBox={`0 0 ${viewBox.width} ${viewBox.height}`}>
-          {parsedPaths.map((pathItem, idx) => (
-            <Path
-              key={idx}
-              d={pathItem.d}
-              stroke={pathItem.isDot ? 'none' : color}
-              fill={pathItem.isDot ? color : 'none'}
-              strokeWidth={8}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          ))}
-        </Svg>
+        <View style={{ width: imageDimensions.width, height: imageDimensions.height }}>
+          <Svg
+            width={imageDimensions.width}
+            height={imageDimensions.height}
+            viewBox={`0 0 ${viewBox.width} ${viewBox.height}`}
+          >
+            {parsedPaths.map((pathItem, idx) => (
+              <Path
+                key={idx}
+                d={pathItem.d}
+                stroke={pathItem.isDot ? 'none' : color}
+                fill={pathItem.isDot ? color : 'none'}
+                strokeWidth={8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
+          </Svg>
+        </View>
       );
     }
 
