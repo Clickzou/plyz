@@ -194,6 +194,8 @@ export const createEventSession = async (
     status: isScheduled ? 'scheduled' : 'live',
     join_code: joinCode,
     created_by: creatorId || null,
+    location: _location || null,
+    price_cents: _priceCents || 0,
   };
 
   const { data, error } = await supabase
