@@ -588,7 +588,7 @@ export default {
   liveSessionTotalSigned: '{{count}}টি স্বাক্ষর সম্পন্ন',
   backToHome: 'হোমে ফিরে যান',
   liveSessionJoinTitle: 'লাইভ সেশনে যোগ দিন',
-  liveSessionJoinSubtitle: 'সেলিব্রিটি শেয়ার করা কোড দিন',
+  liveSessionJoinSubtitle: 'ইভেন্ট কোড লিখুন বা QR কোড স্ক্যান করুন এবং আপনার প্রিয় সেলিব্রিটির সাথে লাইভ ভিডিও সেশন শুরু করুন',
   liveSessionInvalidCode: 'অনুগ্রহ করে একটি বৈধ ৬-অক্ষরের কোড দিন',
   liveSessionNotFound: 'সেশন পাওয়া যায়নি',
   liveSessionHasEnded: 'এই সেশন শেষ হয়ে গেছে',

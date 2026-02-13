@@ -588,7 +588,7 @@ export default {
   liveSessionTotalSigned: 'تم إكمال {{count}} توقيعات',
   backToHome: 'العودة للرئيسية',
   liveSessionJoinTitle: 'الانضمام لجلسة مباشرة',
-  liveSessionJoinSubtitle: 'أدخل الرمز الذي شاركه المشهور',
+  liveSessionJoinSubtitle: 'أدخل رمز الحدث أو امسح رمز QR لبدء جلسة الفيديو المباشرة مع نجمك المفضل',
   liveSessionInvalidCode: 'يرجى إدخال رمز صالح مكون من 6 أحرف',
   liveSessionNotFound: 'الجلسة غير موجودة',
   liveSessionHasEnded: 'انتهت هذه الجلسة',

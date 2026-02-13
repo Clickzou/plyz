@@ -588,7 +588,7 @@ export default {
   liveSessionTotalSigned: '完成 {{count}} 个签名',
   backToHome: '返回主页',
   liveSessionJoinTitle: '加入直播会话',
-  liveSessionJoinSubtitle: '输入明星分享的代码',
+  liveSessionJoinSubtitle: '输入活动代码或扫描QR码，与您最喜爱的明星开始直播视频会话',
   liveSessionInvalidCode: '请输入有效的6位代码',
   liveSessionNotFound: '未找到会话',
   liveSessionHasEnded: '此会话已结束',

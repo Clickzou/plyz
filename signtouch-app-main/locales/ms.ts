@@ -588,7 +588,7 @@ export default {
   liveSessionTotalSigned: '{{count}} tandatangan selesai',
   backToHome: 'Kembali ke Laman Utama',
   liveSessionJoinTitle: 'Sertai Sesi Langsung',
-  liveSessionJoinSubtitle: 'Masukkan kod yang dikongsi oleh selebriti',
+  liveSessionJoinSubtitle: 'Masukkan kod acara atau imbas kod QR untuk memulakan sesi video langsung anda dengan selebriti kegemaran anda',
   liveSessionInvalidCode: 'Sila masukkan kod 6 aksara yang sah',
   liveSessionNotFound: 'Sesi tidak dijumpai',
   liveSessionHasEnded: 'Sesi ini telah tamat',

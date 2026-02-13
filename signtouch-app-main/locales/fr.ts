@@ -592,7 +592,7 @@ export default {
   liveSessionTotalSigned: '{{count}} signatures réalisées',
   backToHome: 'Retour à l\'Accueil',
   liveSessionJoinTitle: 'Rejoindre une Session Live',
-  liveSessionJoinSubtitle: 'Entrez le code partagé par la célébrité',
+  liveSessionJoinSubtitle: 'Entrez le code de l\'événement ou scannez le QR code pour lancer votre session live vidéo avec votre célébrité préférée',
   liveSessionInvalidCode: 'Veuillez entrer un code valide de 6 caractères',
   liveSessionNotFound: 'Session non trouvée',
   liveSessionHasEnded: 'Cette session est terminée',

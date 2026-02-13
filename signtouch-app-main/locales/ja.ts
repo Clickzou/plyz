@@ -588,7 +588,7 @@ export default {
   liveSessionTotalSigned: '{{count}}件の署名が完了しました',
   backToHome: 'ホームに戻る',
   liveSessionJoinTitle: 'ライブセッションに参加',
-  liveSessionJoinSubtitle: 'セレブが共有したコードを入力',
+  liveSessionJoinSubtitle: 'イベントコードを入力するかQRコードをスキャンして、お気に入りのセレブとのライブビデオセッションを開始しよう',
   liveSessionInvalidCode: '有効な6文字のコードを入力してください',
   liveSessionNotFound: 'セッションが見つかりません',
   liveSessionHasEnded: 'このセッションは終了しました',

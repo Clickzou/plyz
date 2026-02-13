@@ -588,7 +588,7 @@ export default {
   liveSessionTotalSigned: '{{count}} دستخط مکمل ہوئے',
   backToHome: 'ہوم پر واپس جائیں',
   liveSessionJoinTitle: 'لائیو سیشن میں شامل ہوں',
-  liveSessionJoinSubtitle: 'مشہور شخصیت کا شیئر کردہ کوڈ درج کریں',
+  liveSessionJoinSubtitle: 'ایونٹ کوڈ درج کریں یا QR کوڈ اسکین کریں اور اپنی پسندیدہ مشہور شخصیت کے ساتھ لائیو ویڈیو سیشن شروع کریں',
   liveSessionInvalidCode: 'براہ کرم 6 حروف کا درست کوڈ درج کریں',
   liveSessionNotFound: 'سیشن نہیں ملا',
   liveSessionHasEnded: 'یہ سیشن ختم ہو چکا ہے',

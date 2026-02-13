@@ -588,7 +588,7 @@ export default {
   liveSessionTotalSigned: '{{count}} подписей выполнено',
   backToHome: 'Вернуться на главную',
   liveSessionJoinTitle: 'Присоединиться к живой сессии',
-  liveSessionJoinSubtitle: 'Введите код, которым поделилась знаменитость',
+  liveSessionJoinSubtitle: 'Введите код мероприятия или отсканируйте QR-код, чтобы начать видеосессию в прямом эфире с вашей любимой знаменитостью',
   liveSessionInvalidCode: 'Пожалуйста, введите действительный 6-значный код',
   liveSessionNotFound: 'Сессия не найдена',
   liveSessionHasEnded: 'Эта сессия завершена',

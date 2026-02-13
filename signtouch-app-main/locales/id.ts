@@ -588,7 +588,7 @@ export default {
   liveSessionTotalSigned: '{{count}} tanda tangan selesai',
   backToHome: 'Kembali ke Beranda',
   liveSessionJoinTitle: 'Gabung Sesi Langsung',
-  liveSessionJoinSubtitle: 'Masukkan kode yang dibagikan oleh selebriti',
+  liveSessionJoinSubtitle: 'Masukkan kode acara atau pindai kode QR untuk memulai sesi video langsung dengan selebriti favorit Anda',
   liveSessionInvalidCode: 'Silakan masukkan kode 6 karakter yang valid',
   liveSessionNotFound: 'Sesi tidak ditemukan',
   liveSessionHasEnded: 'Sesi ini telah berakhir',
