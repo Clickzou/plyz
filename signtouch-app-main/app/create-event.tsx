@@ -1077,13 +1077,6 @@ export default function CreateEventScreen() {
 
           {step === 'success' && createdSession && (
             <View style={styles.successContainer}>
-              <View style={[styles.successIconSmall, createdSession.status === 'scheduled' && styles.scheduledIcon]}>
-                {createdSession.status === 'scheduled' ? (
-                  <Clock size={24} color="#f59e0b" />
-                ) : (
-                  <Check size={24} color="#10B981" />
-                )}
-              </View>
               <Text style={styles.eventNameLarge}>{createdSession.title}</Text>
 
               {createdSession.status === 'scheduled' && (
