@@ -678,6 +678,10 @@ export default {
   // Event Sessions
   addSignatures: 'Add Signatures',
   eventDuration: 'Event Duration',
+  eventPrice: 'Price per fan',
+  priceFree: 'Free',
+  priceOther: 'Other',
+  customPricePlaceholder: 'Amount in €',
   endsAt: 'Ends at',
   celebrityName: 'Celebrity Name',
   enterName: 'Enter name...',

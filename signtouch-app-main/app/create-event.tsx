@@ -19,7 +19,7 @@ import { showAlert } from '@/utils/alertHelper';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Sparkles, QrCode, Copy, Share2, Check, Plus, X, Clock, Users, MapPin, Calendar, Music, Trophy, Palette, Star, User } from 'lucide-react-native';
+import { ArrowLeft, Sparkles, QrCode, Copy, Share2, Check, Plus, X, Clock, Users, MapPin, Calendar, Music, Trophy, Palette, Star, User, Euro } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import Svg, { Path, G } from 'react-native-svg';
@@ -81,6 +81,17 @@ const DURATION_OPTIONS = [
   { label: '24h', value: 1440 },
 ];
 
+const PRICE_OPTIONS = [
+  { label: 'Gratuit', value: 0, labelKey: 'priceFree' },
+  { label: '2€', value: 200, labelKey: null },
+  { label: '5€', value: 500, labelKey: null },
+  { label: '10€', value: 1000, labelKey: null },
+  { label: '20€', value: 2000, labelKey: null },
+  { label: '50€', value: 5000, labelKey: null },
+  { label: '100€', value: 10000, labelKey: null },
+  { label: 'Autre', value: -1, labelKey: 'priceOther' },
+];
+
 const EVENT_FORM_STORAGE_KEY = '@create_event_form_data';
 const EVENT_PENDING_CREATE_KEY = '@create_event_pending';
 
@@ -104,6 +115,9 @@ export default function CreateEventScreen() {
   const [selectedMinute, setSelectedMinute] = useState(0);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [eventType, setEventType] = useState<EventType>('rencontre');
+  const [selectedPriceCents, setSelectedPriceCents] = useState(0);
+  const [showCustomPrice, setShowCustomPrice] = useState(false);
+  const [customPriceText, setCustomPriceText] = useState('');
   const [isLive, setIsLive] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createdSession, setCreatedSession] = useState<EventSession | null>(null);
@@ -148,12 +162,13 @@ export default function CreateEventScreen() {
       eventTime,
       eventType,
       isLive,
+      selectedPriceCents,
       signers,
       activeSignerIndex,
     };
     await AsyncStorage.setItem(EVENT_FORM_STORAGE_KEY, JSON.stringify(formData));
     await AsyncStorage.setItem(EVENT_PENDING_CREATE_KEY, 'true');
-  }, [step, eventName, selectedDuration, eventLocation, eventDate, eventTime, eventType, isLive, signers, activeSignerIndex]);
+  }, [step, eventName, selectedDuration, eventLocation, eventDate, eventTime, eventType, isLive, selectedPriceCents, signers, activeSignerIndex]);
 
   // Restaurer les données du formulaire et continuer
   const restoreAndContinue = useCallback(async () => {
@@ -184,6 +199,7 @@ export default function CreateEventScreen() {
       setEventDate(formData.eventDate || new Date().toISOString().split('T')[0]);
       setEventTime(formData.eventTime || '');
       setEventType(formData.eventType || 'rencontre');
+      setSelectedPriceCents(formData.selectedPriceCents || 0);
       setIsLive(formData.isLive || false);
       setSigners(formData.signers || [{ name: '', paths: [] }]);
       setActiveSignerIndex(formData.activeSignerIndex || 0);
@@ -227,7 +243,8 @@ export default function CreateEventScreen() {
         return startDate;
       })();
       
-      const session = await createEventSession(formData.eventName.trim(), formData.selectedDuration, creatorId, scheduledStart, formData.eventLocation?.trim());
+      const priceCents = formData.selectedPriceCents > 0 ? formData.selectedPriceCents : undefined;
+      const session = await createEventSession(formData.eventName.trim(), formData.selectedDuration, creatorId, scheduledStart, formData.eventLocation?.trim(), priceCents);
       
       const addedSigners: EventSigner[] = [];
       for (const signer of validSigners) {
@@ -505,7 +522,7 @@ export default function CreateEventScreen() {
     try {
       const creatorId = user?.id || undefined;
       const scheduledStart = getScheduledStartDate();
-      const session = await createEventSession(eventName.trim(), selectedDuration, creatorId, scheduledStart, eventLocation?.trim());
+      const session = await createEventSession(eventName.trim(), selectedDuration, creatorId, scheduledStart, eventLocation?.trim(), selectedPriceCents > 0 ? selectedPriceCents : undefined);
       
       const addedSigners: EventSigner[] = [];
       for (const signer of validSigners) {
@@ -716,6 +733,66 @@ export default function CreateEventScreen() {
                   onChangeText={setEventLocation}
                   maxLength={100}
                 />
+              </View>
+
+              <View style={styles.section}>
+                <View style={styles.sectionHeaderRow}>
+                  <Euro size={18} color="#f59e0b" />
+                  <Text style={styles.sectionTitle}>{t('eventPrice') || 'Prix par fan'}</Text>
+                </View>
+                <View style={styles.durationGrid}>
+                  {PRICE_OPTIONS.map((option) => {
+                    const isCustom = option.value === -1;
+                    const isSelected = isCustom ? showCustomPrice : (!showCustomPrice && selectedPriceCents === option.value);
+                    const displayLabel = option.labelKey ? ((t as any)(option.labelKey) || option.label) : option.label;
+                    return (
+                      <TouchableOpacity
+                        key={option.value}
+                        style={[
+                          styles.durationButton,
+                          isSelected && styles.durationButtonActive
+                        ]}
+                        onPress={() => {
+                          if (isCustom) {
+                            setShowCustomPrice(true);
+                            setCustomPriceText('');
+                          } else {
+                            setShowCustomPrice(false);
+                            setSelectedPriceCents(option.value);
+                          }
+                        }}
+                      >
+                        <Text style={[
+                          styles.durationButtonText,
+                          isSelected && styles.durationButtonTextActive
+                        ]}>
+                          {displayLabel}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                {showCustomPrice && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+                    <TextInput
+                      style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                      placeholder={t('customPricePlaceholder') || 'Montant en €'}
+                      placeholderTextColor="rgba(255,255,255,0.4)"
+                      value={customPriceText}
+                      onChangeText={(text) => {
+                        const cleaned = text.replace(/[^0-9.,]/g, '').replace(',', '.');
+                        setCustomPriceText(cleaned);
+                        const parsed = parseFloat(cleaned);
+                        if (!isNaN(parsed) && parsed > 0) {
+                          setSelectedPriceCents(Math.round(parsed * 100));
+                        }
+                      }}
+                      keyboardType="decimal-pad"
+                      maxLength={7}
+                    />
+                    <Text style={{ color: '#fff', fontSize: 18, marginLeft: 8, fontWeight: '600' }}>€</Text>
+                  </View>
+                )}
               </View>
 
               <TouchableOpacity

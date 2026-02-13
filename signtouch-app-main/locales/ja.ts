@@ -674,6 +674,10 @@ export default {
   // Event Sessions
   addSignatures: '署名を追加',
   eventDuration: 'イベント時間',
+  eventPrice: 'ファンあたりの価格',
+  priceFree: '無料',
+  priceOther: 'その他',
+  customPricePlaceholder: '金額（€）',
   endsAt: '終了時間',
   celebrityName: 'セレブの名前',
   enterName: '名前を入力...',

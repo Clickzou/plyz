@@ -164,7 +164,8 @@ export const createEventSession = async (
   durationMinutes: number,
   creatorId?: string,
   scheduledStartAt?: Date,
-  location?: string
+  location?: string,
+  priceCents?: number
 ): Promise<EventSession> => {
   const joinCode = generateJoinCode();
   const isScheduled = scheduledStartAt && scheduledStartAt.getTime() > Date.now() + 60000;
@@ -173,17 +174,22 @@ export const createEventSession = async (
 
   console.log('Creating event session with join_code:', joinCode);
 
+  const insertData: any = {
+    title,
+    starts_at: startsAt.toISOString(),
+    ends_at: endsAt.toISOString(),
+    status: isScheduled ? 'scheduled' : 'live',
+    join_code: joinCode,
+    created_by: creatorId || null,
+    location: location || null,
+  };
+  if (priceCents !== undefined && priceCents > 0) {
+    insertData.price_cents = priceCents;
+  }
+
   const { data, error } = await supabase
     .from('event_sessions')
-    .insert({
-      title,
-      starts_at: startsAt.toISOString(),
-      ends_at: endsAt.toISOString(),
-      status: isScheduled ? 'scheduled' : 'live',
-      join_code: joinCode,
-      created_by: creatorId || null,
-      location: location || null,
-    })
+    .insert(insertData)
     .select()
     .single();
 

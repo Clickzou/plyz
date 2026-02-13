@@ -674,6 +674,10 @@ export default {
   // Event Sessions
   addSignatures: 'إضافة توقيعات',
   eventDuration: 'مدة الحدث',
+  eventPrice: 'السعر لكل معجب',
+  priceFree: 'مجاني',
+  priceOther: 'أخرى',
+  customPricePlaceholder: 'المبلغ بـ €',
   endsAt: 'ينتهي في',
   celebrityName: 'اسم المشهور',
   enterName: 'أدخل الاسم...',

@@ -674,6 +674,10 @@ export default {
   // Event Sessions
   addSignatures: 'دستخط شامل کریں',
   eventDuration: 'ایونٹ کا دورانیہ',
+  eventPrice: 'فی فین قیمت',
+  priceFree: 'مفت',
+  priceOther: 'دیگر',
+  customPricePlaceholder: '€ میں رقم',
   endsAt: 'ختم ہوتا ہے',
   celebrityName: 'مشہور شخصیت کا نام',
   enterName: 'نام درج کریں...',

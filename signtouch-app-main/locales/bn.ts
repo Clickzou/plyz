@@ -674,6 +674,10 @@ export default {
   // Event Sessions
   addSignatures: 'স্বাক্ষর যোগ করুন',
   eventDuration: 'ইভেন্টের সময়কাল',
+  eventPrice: 'প্রতি ফ্যান মূল্য',
+  priceFree: 'বিনামূল্যে',
+  priceOther: 'অন্যান্য',
+  customPricePlaceholder: '€ তে পরিমাণ',
   endsAt: 'শেষ হয়',
   celebrityName: 'সেলিব্রিটির নাম',
   enterName: 'নাম লিখুন...',

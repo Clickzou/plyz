@@ -674,6 +674,10 @@ export default {
   // Event Sessions
   addSignatures: 'Добавить подписи',
   eventDuration: 'Продолжительность события',
+  eventPrice: 'Цена за фаната',
+  priceFree: 'Бесплатно',
+  priceOther: 'Другое',
+  customPricePlaceholder: 'Сумма в €',
   endsAt: 'Заканчивается в',
   celebrityName: 'Имя знаменитости',
   enterName: 'Введите имя...',

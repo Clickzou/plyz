@@ -674,6 +674,10 @@ export default {
   // Event Sessions
   addSignatures: 'Aggiungi firme',
   eventDuration: 'Durata evento',
+  eventPrice: 'Prezzo per fan',
+  priceFree: 'Gratuito',
+  priceOther: 'Altro',
+  customPricePlaceholder: 'Importo in €',
   endsAt: 'Termina alle',
   celebrityName: 'Nome celebrità',
   enterName: 'Inserisci nome...',

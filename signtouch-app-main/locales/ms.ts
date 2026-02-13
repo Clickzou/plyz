@@ -674,6 +674,10 @@ export default {
   // Event Sessions
   addSignatures: 'Tambah Tandatangan',
   eventDuration: 'Tempoh Acara',
+  eventPrice: 'Harga setiap peminat',
+  priceFree: 'Percuma',
+  priceOther: 'Lain-lain',
+  customPricePlaceholder: 'Jumlah dalam €',
   endsAt: 'Berakhir pada',
   celebrityName: 'Nama Selebriti',
   enterName: 'Masukkan nama...',

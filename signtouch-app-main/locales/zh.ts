@@ -674,6 +674,10 @@ export default {
   // Event Sessions
   addSignatures: '添加签名',
   eventDuration: '活动时长',
+  eventPrice: '每位粉丝价格',
+  priceFree: '免费',
+  priceOther: '其他',
+  customPricePlaceholder: '金额（€）',
   endsAt: '结束于',
   celebrityName: '明星姓名',
   enterName: '输入姓名...',
