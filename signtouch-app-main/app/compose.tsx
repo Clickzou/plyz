@@ -135,7 +135,6 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
           paths.push({ d, isDot });
         }
         setParsedPaths(paths);
-        console.log('[AnimatedSignature v3] Parsed', paths.length, 'paths, dots:', paths.filter(p => p.isDot).length, 'strokes:', paths.filter(p => !p.isDot).length, 'viewBox:', w, 'x', h);
       } catch (error) {
         console.error('Error parsing SVG data URI:', error);
       }
@@ -185,7 +184,6 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
           .replace(/fill="#[a-fA-F0-9]+"/g, `fill="${color}"`);
         const newBase64 = btoa(unescape(encodeURIComponent(colorized)));
         setColorizedSvgUri(`data:image/svg+xml;base64,${newBase64}`);
-        console.log('[AnimatedSignature v4] Colorized SVG for web, color:', color);
       } catch (e) {
         console.error('[AnimatedSignature v4] Error colorizing SVG:', e);
         setColorizedSvgUri(uri);
