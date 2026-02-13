@@ -87,9 +87,31 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
   const [svgData, setSvgData] = useState<any>(null);
   const [parsedPaths, setParsedPaths] = useState<Array<{ d: string; isDot: boolean }>>([]);
   const [viewBox, setViewBox] = useState<{ width: number; height: number } | null>(null);
+  const [colorizedSvgUri, setColorizedSvgUri] = useState<string | null>(null);
+
+  const [webPos, setWebPos] = useState({ x: transform.translateX.value, y: transform.translateY.value });
+  const [webScale, setWebScale] = useState(transform.scale.value * strokeScale);
+  const [webRotation, setWebRotation] = useState(transform.rotation.value);
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef({ x: 0, y: 0 });
+  const posAtDragStartRef = useRef({ x: 0, y: 0 });
+  const rafRef = useRef<number | null>(null);
 
   const isJsonData = uri.startsWith('data:application/json;base64,');
   const isSvgDataUri = uri.startsWith('data:image/svg+xml;base64,');
+  const safeColor = color || '#ffffff';
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const sync = () => {
+      setWebPos({ x: transform.translateX.value, y: transform.translateY.value });
+      setWebScale(transform.scale.value * strokeScale);
+      setWebRotation(transform.rotation.value);
+      rafRef.current = requestAnimationFrame(sync);
+    };
+    rafRef.current = requestAnimationFrame(sync);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [transform, strokeScale]);
 
   useEffect(() => {
     if (isJsonData) {
@@ -108,9 +130,7 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
     if (isSvgDataUri) {
       try {
         const base64Data = uri.split(',')[1];
-        const svgString = Platform.OS === 'web'
-          ? decodeURIComponent(escape(atob(base64Data)))
-          : decodeURIComponent(escape(atob(base64Data)));
+        const svgString = decodeURIComponent(escape(atob(base64Data)));
         const widthMatch = svgString.match(/width="([^"]+)"/);
         const heightMatch = svgString.match(/height="([^"]+)"/);
         const w = widthMatch ? parseFloat(widthMatch[1]) : 150;
@@ -141,9 +161,7 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
       return;
     }
 
-    if (Platform.OS === 'web') {
-      return;
-    }
+    if (Platform.OS === 'web') return;
 
     Image.getSize(
       uri,
@@ -161,6 +179,23 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
     );
   }, [uri, isJsonData, isSvgDataUri]);
 
+  useEffect(() => {
+    if (isSvgDataUri) {
+      try {
+        const base64Data = uri.split(',')[1];
+        const svgString = decodeURIComponent(escape(atob(base64Data)));
+        const colorized = svgString
+          .replace(/stroke="#[a-fA-F0-9]+"/g, `stroke="${safeColor}"`)
+          .replace(/fill="#[a-fA-F0-9]+"/g, `fill="${safeColor}"`);
+        const newBase64 = btoa(unescape(encodeURIComponent(colorized)));
+        setColorizedSvgUri(`data:image/svg+xml;base64,${newBase64}`);
+      } catch (e) {
+        console.error('[AnimatedSignature] Error colorizing SVG:', e);
+        setColorizedSvgUri(uri);
+      }
+    }
+  }, [uri, safeColor, isSvgDataUri]);
+
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [
@@ -172,39 +207,69 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
     };
   });
 
-  const [colorizedSvgUri, setColorizedSvgUri] = useState<string | null>(null);
+  const handleWebMouseDown = (e: any) => {
+    if (Platform.OS !== 'web') return;
+    isDraggingRef.current = true;
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    posAtDragStartRef.current = { x: transform.translateX.value, y: transform.translateY.value };
 
-  useEffect(() => {
-    if (Platform.OS === 'web' && isSvgDataUri) {
-      try {
-        const base64Data = uri.split(',')[1];
-        const svgString = decodeURIComponent(escape(atob(base64Data)));
-        const colorized = svgString
-          .replace(/stroke="#[a-fA-F0-9]+"/g, `stroke="${color}"`)
-          .replace(/fill="#[a-fA-F0-9]+"/g, `fill="${color}"`);
-        const newBase64 = btoa(unescape(encodeURIComponent(colorized)));
-        setColorizedSvgUri(`data:image/svg+xml;base64,${newBase64}`);
-      } catch (e) {
-        console.error('[AnimatedSignature v4] Error colorizing SVG:', e);
-        setColorizedSvgUri(uri);
-      }
-    }
-  }, [uri, color, isSvgDataUri]);
+    const handleMouseMove = (ev: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      const dx = ev.clientX - dragStartRef.current.x;
+      const dy = ev.clientY - dragStartRef.current.y;
+      transform.translateX.value = posAtDragStartRef.current.x + dx;
+      transform.translateY.value = posAtDragStartRef.current.y + dy;
+      transform.savedTranslateX.value = transform.translateX.value;
+      transform.savedTranslateY.value = transform.translateY.value;
+    };
 
-  const renderContent = () => {
-    if (Platform.OS === 'web' && colorizedSvgUri) {
-      return (
+    const handleMouseUp = () => {
+      isDraggingRef.current = false;
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const webImgUri = colorizedSvgUri || uri;
+
+  if (Platform.OS === 'web') {
+    return (
+      <div
+        onMouseDown={handleWebMouseDown as any}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: imageDimensions.width,
+          height: imageDimensions.height,
+          transform: `translate(${webPos.x}px, ${webPos.y}px) scale(${webScale}) rotate(${webRotation}rad)`,
+          transformOrigin: '0 0',
+          cursor: 'grab',
+          zIndex: isSelected ? 1000 : (index + 10),
+          userSelect: 'none' as const,
+          border: isSelected ? '2px solid #10b981' : '2px solid transparent',
+          borderRadius: 4,
+        }}
+      >
         <img
-          src={colorizedSvgUri}
+          src={webImgUri}
+          draggable={false}
           style={{
-            width: imageDimensions.width,
-            height: imageDimensions.height,
-            pointerEvents: 'none' as any,
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain' as any,
+            display: 'block',
+            pointerEvents: 'none' as const,
           }}
         />
-      );
-    }
+      </div>
+    );
+  }
 
+  const renderContent = () => {
     if (parsedPaths.length > 0 && viewBox) {
       return (
         <View style={{ width: imageDimensions.width, height: imageDimensions.height }}>
@@ -217,8 +282,8 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
               <Path
                 key={idx}
                 d={pathItem.d}
-                stroke={pathItem.isDot ? 'none' : color}
-                fill={pathItem.isDot ? color : 'none'}
+                stroke={pathItem.isDot ? 'none' : safeColor}
+                fill={pathItem.isDot ? safeColor : 'none'}
                 strokeWidth={8}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -236,7 +301,7 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
             <Path
               key={idx}
               d={pathData}
-              stroke={color}
+              stroke={safeColor}
               strokeWidth={8}
               fill="none"
               strokeLinecap="round"
@@ -251,7 +316,7 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
       <Image
         source={{ uri }}
         style={{ width: imageDimensions.width, height: imageDimensions.height }}
-        tintColor={color}
+        tintColor={safeColor}
         resizeMode="contain"
       />
     );
