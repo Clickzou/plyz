@@ -236,6 +236,15 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
   const webImgUri = colorizedSvgUri || uri;
 
   if (Platform.OS === 'web') {
+    const safeX = Number.isFinite(webPos.x) ? webPos.x : 100;
+    const safeY = Number.isFinite(webPos.y) ? webPos.y : 100;
+    const safeScale = Number.isFinite(webScale) && webScale > 0 ? webScale : 1;
+    const safeRot = Number.isFinite(webRotation) ? webRotation : 0;
+    const w = Number.isFinite(imageDimensions.width) && imageDimensions.width > 0 ? imageDimensions.width : 150;
+    const h = Number.isFinite(imageDimensions.height) && imageDimensions.height > 0 ? imageDimensions.height : 80;
+
+    console.log(`[WebSig] idx=${index} pos=${safeX.toFixed(0)},${safeY.toFixed(0)} scale=${safeScale.toFixed(2)} dims=${w}x${h} uri=${webImgUri ? webImgUri.substring(0, 40) : 'null'}`);
+
     return (
       <div
         onMouseDown={handleWebMouseDown as any}
@@ -243,9 +252,9 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
           position: 'absolute',
           top: 0,
           left: 0,
-          width: imageDimensions.width,
-          height: imageDimensions.height,
-          transform: `translate(${webPos.x}px, ${webPos.y}px) scale(${webScale}) rotate(${webRotation}rad)`,
+          width: w,
+          height: h,
+          transform: `translate(${safeX}px, ${safeY}px) scale(${safeScale}) rotate(${safeRot}rad)`,
           transformOrigin: '0 0',
           cursor: 'grab',
           zIndex: isSelected ? 1000 : (index + 10),
@@ -257,6 +266,8 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
         <img
           src={webImgUri}
           draggable={false}
+          onError={(e) => console.error('[WebSig] img load error', e)}
+          onLoad={() => console.log('[WebSig] img loaded OK')}
           style={{
             width: '100%',
             height: '100%',
@@ -1623,6 +1634,7 @@ const styles = StyleSheet.create({
   viewShot: {
     flex: 1,
     position: 'relative',
+    overflow: 'visible' as any,
   },
   photo: {
     width: '100%',
