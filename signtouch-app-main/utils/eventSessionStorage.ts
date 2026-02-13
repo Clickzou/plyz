@@ -194,8 +194,6 @@ export const createEventSession = async (
     status: isScheduled ? 'scheduled' : 'live',
     join_code: joinCode,
     created_by: creatorId || null,
-    location: _location || null,
-    price_cents: _priceCents || 0,
   };
 
   const { data, error } = await supabase
@@ -210,7 +208,12 @@ export const createEventSession = async (
   }
   
   console.log('Session created successfully:', data.id, 'join_code:', data.join_code);
-  return data;
+  
+  const result = { ...data } as EventSession;
+  if (_location) result.location = _location;
+  if (_priceCents && _priceCents > 0) result.price_cents = _priceCents;
+  
+  return result;
 };
 
 export const startScheduledEvent = async (sessionId: string): Promise<EventSession> => {
