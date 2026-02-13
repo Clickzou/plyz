@@ -665,9 +665,9 @@ export default {
   celebrityMenuTitle: 'وقع مباشرة',
   celebrityMenuSubtitle: 'شارك توقيعك وصورك مباشرة مع المعجبين في الأحداث الشخصية أو عبر الفيديو',
   celebrityEventSimple: 'حدث إهداء مباشر',
-  celebrityEventSimpleDesc: 'أنشئ حدث إهداء مباشر خلال فعالية. يمكنك إرسال صورك وإهداءاتك الشخصية في الوقت الفعلي لمعجبيك',
+  celebrityEventSimpleDesc: 'أنشئ حدثًا وأرسل صورًا مهداة مباشرة لمعجبيك. مثالي للمباريات والحفلات أو الأحداث الخاصة.',
   celebrityLiveSession: 'جلسة فيديو مباشرة مدفوعة',
-  celebrityLiveSessionDesc: 'امنح معجبيك لحظة فريدة عبر الفيديو المباشر. سيحظى كل معجب بامتياز التحدث معك مباشرة. لا يتم مشاركة أي رقم هاتف، كل شيء يمر عبر تطبيق SignTouch',
+  celebrityLiveSessionDesc: 'تحدث وجهًا لوجه مع معجبيك عبر الفيديو المباشر. لا يتم مشاركة أي رقم هاتف، كل شيء يمر عبر تطبيق SignTouch',
   celebrityMenuDisclaimer: 'يتطلب اتصالاً بالإنترنت (واي فاي أو بيانات الهاتف).',
 
   paymentDelaysTitle: 'مواعيد الدفع',

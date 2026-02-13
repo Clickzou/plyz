@@ -669,9 +669,9 @@ export default {
   celebrityMenuTitle: 'Sign Live',
   celebrityMenuSubtitle: 'Share your signature and photos live with fans at in-person events or via video',
   celebrityEventSimple: 'Live Dedication Event',
-  celebrityEventSimpleDesc: 'Generate a live dedication event during an event. You can send your personalized photos and dedications in real time to your fans',
+  celebrityEventSimpleDesc: 'Create an event and send dedicated photos live to your fans. Perfect for matches, concerts or special events.',
   celebrityLiveSession: 'Paid Video Live Session',
-  celebrityLiveSessionDesc: 'Give your fans a unique moment in live video. Each fan will have the privilege of speaking with you live. No phone number is shared, everything goes through the SignTouch app',
+  celebrityLiveSessionDesc: 'Chat face to face with your fans via live video. No phone number is shared, everything goes through the SignTouch app',
   celebrityMenuDisclaimer: 'Requires an internet connection.',
 
   paymentDelaysTitle: 'Payment Timelines',

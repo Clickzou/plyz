@@ -665,9 +665,9 @@ export default {
   celebrityMenuTitle: 'ライブサイン',
   celebrityMenuSubtitle: '対面イベントやビデオでファンと署名や写真をライブで共有',
   celebrityEventSimple: 'ライブサイン会イベント',
-  celebrityEventSimpleDesc: 'イベント中にライブサイン会イベントを作成します。パーソナライズされた写真とサインをリアルタイムでファンに送ることができます',
+  celebrityEventSimpleDesc: 'イベントを作成し、サイン入り写真をライブでファンに送りましょう。試合、コンサート、特別イベントに最適です。',
   celebrityLiveSession: '有料ビデオライブセッション',
-  celebrityLiveSessionDesc: 'ファンにライブビデオでユニークな瞬間を提供しましょう。各ファンにはあなたとライブで話す特権があります。電話番号は共有されません。すべてSignTouchアプリを通じて行われます',
+  celebrityLiveSessionDesc: 'ライブビデオでファンと対面で会話しましょう。電話番号は共有されません。すべてSignTouchアプリを通じて行われます',
   celebrityMenuDisclaimer: 'インターネット接続が必要です（Wi-Fiまたはモバイルデータ）。',
 
   paymentDelaysTitle: '支払いスケジュール',

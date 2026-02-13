@@ -665,9 +665,9 @@ export default {
   celebrityMenuTitle: 'Assinar Ao Vivo',
   celebrityMenuSubtitle: 'Compartilhe sua assinatura e fotos ao vivo com fãs em eventos presenciais ou por vídeo',
   celebrityEventSimple: 'Evento Live Dedicatória',
-  celebrityEventSimpleDesc: 'Gere um evento live dedicatória durante um evento. Poderá enviar as suas fotos e dedicatórias personalizadas em tempo real aos seus fãs',
+  celebrityEventSimpleDesc: 'Crie um evento e envie fotos dedicadas ao vivo para os seus fãs. Perfeito para jogos, concertos ou eventos especiais.',
   celebrityLiveSession: 'Sessão de Vídeo Paga Ao Vivo',
-  celebrityLiveSessionDesc: 'Ofereça aos seus fãs um momento único em vídeo ao vivo. Cada fã terá o privilégio de falar consigo ao vivo. Nenhum número de telefone é partilhado, tudo passa pela aplicação SignTouch',
+  celebrityLiveSessionDesc: 'Converse cara a cara com os seus fãs por vídeo ao vivo. Nenhum número de telefone é partilhado, tudo passa pela aplicação SignTouch',
   celebrityMenuDisclaimer: 'Requer ligação à internet.',
 
   paymentDelaysTitle: 'Prazos de pagamento',

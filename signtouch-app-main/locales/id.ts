@@ -665,9 +665,9 @@ export default {
   celebrityMenuTitle: 'Tanda Tangan Langsung',
   celebrityMenuSubtitle: 'Bagikan tanda tangan dan foto Anda secara langsung dengan penggemar di acara langsung atau melalui video',
   celebrityEventSimple: 'Acara Dedikasi Langsung',
-  celebrityEventSimpleDesc: 'Buat acara dedikasi langsung selama acara. Anda dapat mengirim foto dan dedikasi personal secara real time kepada penggemar Anda',
+  celebrityEventSimpleDesc: 'Buat acara dan kirim foto berdedikasi secara langsung kepada penggemar Anda. Sempurna untuk pertandingan, konser, atau acara spesial.',
   celebrityLiveSession: 'Sesi Video Langsung Berbayar',
-  celebrityLiveSessionDesc: 'Berikan penggemar Anda momen unik melalui video langsung. Setiap penggemar akan memiliki hak istimewa untuk berbicara dengan Anda secara langsung. Tidak ada nomor telepon yang dibagikan, semuanya melalui aplikasi SignTouch',
+  celebrityLiveSessionDesc: 'Ngobrol tatap muka dengan penggemar Anda melalui video langsung. Tidak ada nomor telepon yang dibagikan, semuanya melalui aplikasi SignTouch',
   celebrityMenuDisclaimer: 'Memerlukan koneksi internet (Wi-Fi atau data seluler).',
 
   paymentDelaysTitle: 'Jadwal Pembayaran',

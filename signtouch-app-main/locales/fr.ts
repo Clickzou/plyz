@@ -669,9 +669,9 @@ export default {
   celebrityMenuTitle: 'Signez en Direct',
   celebrityMenuSubtitle: 'Partagez votre signature et vos photos en direct avec vos fans lors d\'un événement en présentiel ou en vidéo',
   celebrityEventSimple: 'Événement Live Dédicace',
-  celebrityEventSimpleDesc: 'Générez un événement live dédicace lors d\'un événement. Vous pourrez envoyer vos photos et dédicaces personnalisées en temps réel à vos fans',
+  celebrityEventSimpleDesc: 'Créez un événement et envoyez en live des photos dédicacées à vos fans. Parfait pour matchs, concerts ou événements spéciaux.',
   celebrityLiveSession: 'Session Live Vidéo',
-  celebrityLiveSessionDesc: 'Offrez à vos fans un moment unique en vidéo Live. Chaque fan aura le privilège de vous parler en direct. Aucun numéro de téléphone n\'est communiqué, tout passe par l\'application SignTouch',
+  celebrityLiveSessionDesc: 'Discutez en live vidéo avec vos fans en face à face. Aucun numéro de téléphone n\'est communiqué, tout passe par l\'application SignTouch',
   celebrityMenuDisclaimer: 'Une connexion internet est nécessaire.',
 
   paymentDelaysTitle: 'Délais de reversement',

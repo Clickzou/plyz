@@ -665,9 +665,9 @@ export default {
   celebrityMenuTitle: '实时签名',
   celebrityMenuSubtitle: '在现场活动或通过视频与粉丝实时分享您的签名和照片',
   celebrityEventSimple: '现场签名活动',
-  celebrityEventSimpleDesc: '在活动期间创建一个现场签名活动。您可以实时向粉丝发送个性化照片和签名留念',
+  celebrityEventSimpleDesc: '创建活动并实时向粉丝发送签名照片。非常适合比赛、演唱会或特别活动。',
   celebrityLiveSession: '付费视频直播会话',
-  celebrityLiveSessionDesc: '为粉丝提供独特的直播视频时刻。每位粉丝都将有幸与您现场交流。不会分享任何电话号码，一切通过SignTouch应用进行',
+  celebrityLiveSessionDesc: '通过直播视频与粉丝面对面交流。不会分享任何电话号码，一切通过SignTouch应用进行',
   celebrityMenuDisclaimer: '需要网络连接（Wi-Fi或移动数据）。',
 
   paymentDelaysTitle: '付款时间表',
