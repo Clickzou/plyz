@@ -995,4 +995,10 @@ export default {
   paymentCapturedMessage: '{amount}€ telah dicaj untuk panggilan video anda yang berjaya.',
   authorizationSuccess: 'Pra-kebenaran berjaya!',
   joiningQueueNow: 'Menyertai barisan giliran...',
+
+
+  promoApplied: 'Kod promo digunakan — sesi percuma!',
+  promoInvalid: 'Kod promo tidak sah',
+  promoExpired: 'Kod promo telah tamat tempoh',
+  promoMaxUses: 'Kod promo telah digunakan sehingga had maksimum',
 };

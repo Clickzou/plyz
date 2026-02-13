@@ -990,4 +990,10 @@ export default {
   paymentCapturedMessage: 'تم خصم {amount}€ بعد مكالمة الفيديو الناجحة.',
   authorizationSuccess: 'تمت الموافقة المسبقة بنجاح!',
   joiningQueueNow: 'جاري الانضمام إلى قائمة الانتظار...',
+
+
+  promoApplied: 'تم تطبيق الرمز الترويجي — جلسة مجانية!',
+  promoInvalid: 'رمز ترويجي غير صالح',
+  promoExpired: 'رمز ترويجي منتهي الصلاحية',
+  promoMaxUses: 'تم استخدام الرمز الترويجي بالحد الأقصى',
 };

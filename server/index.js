@@ -697,6 +697,101 @@ app.get('/api/celebrity-earnings', async (req, res) => {
   }
 });
 
+app.post('/api/validate-promo-code', async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    const { code, session_id } = req.body;
+
+    if (!code || !session_id) {
+      return res.status(400).json({ error: 'Missing code or session_id' });
+    }
+
+    const upperCode = code.trim().toUpperCase();
+
+    const { data: promos, error } = await supabase
+      .from('promo_code_live_video')
+      .select('*')
+      .eq('code', upperCode)
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('[PromoCode] Supabase error:', error.message);
+      return res.status(500).json({ error: error.message });
+    }
+
+    const promo = (promos || []).find(p =>
+      p.session_id === session_id || p.session_id === null
+    );
+
+    if (!promo) {
+      return res.json({ valid: false, reason: 'invalid_code' });
+    }
+
+    if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+      return res.json({ valid: false, reason: 'expired' });
+    }
+
+    if (promo.max_uses !== null && promo.used_count >= promo.max_uses) {
+      return res.json({ valid: false, reason: 'max_uses_reached' });
+    }
+
+    return res.json({
+      valid: true,
+      promo_id: promo.id,
+      discount_percent: promo.discount_percent,
+    });
+  } catch (error) {
+    console.error('[PromoCode] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/use-promo-code', async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    const { promo_id } = req.body;
+
+    if (!promo_id) {
+      return res.status(400).json({ error: 'Missing promo_id' });
+    }
+
+    const { data: promo } = await supabase
+      .from('promo_code_live_video')
+      .select('used_count, max_uses, is_active')
+      .eq('id', promo_id)
+      .single();
+
+    if (!promo || !promo.is_active) {
+      return res.status(400).json({ error: 'Promo code not found or inactive' });
+    }
+
+    if (promo.max_uses !== null && promo.used_count >= promo.max_uses) {
+      return res.status(400).json({ error: 'Promo code usage limit reached' });
+    }
+
+    const newCount = (promo.used_count || 0) + 1;
+
+    const query = supabase
+      .from('promo_code_live_video')
+      .update({ used_count: newCount })
+      .eq('id', promo_id)
+      .eq('used_count', promo.used_count);
+
+    const { error, count } = await query;
+
+    if (error) {
+      console.error('[PromoCode] Increment error:', error.message);
+      return res.status(500).json({ error: error.message });
+    }
+
+    console.log('[PromoCode] Used promo:', promo_id, '| New count:', newCount);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[PromoCode] Use error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/stripe/express/create-and-onboard', async (req, res) => {
   try {
     const stripe = await getStripe();

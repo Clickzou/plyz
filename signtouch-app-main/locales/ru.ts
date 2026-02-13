@@ -990,4 +990,10 @@ export default {
   paymentCapturedMessage: '{amount}€ списано за успешный видеозвонок.',
   authorizationSuccess: 'Предавторизация прошла успешно!',
   joiningQueueNow: 'Присоединяемся к очереди...',
+
+
+  promoApplied: 'Промокод применён — бесплатная сессия!',
+  promoInvalid: 'Неверный промокод',
+  promoExpired: 'Промокод истёк',
+  promoMaxUses: 'Промокод уже использован максимально',
 };

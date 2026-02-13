@@ -1032,4 +1032,10 @@ export default {
   paymentCapturedMessage: '{amount}€ ont été débités suite à votre appel vidéo réussi.',
   authorizationSuccess: 'Pré-autorisation réussie !',
   joiningQueueNow: "Vous allez rejoindre la file d'attente...",
+
+
+  promoApplied: 'Code promo appliqué — session gratuite !',
+  promoInvalid: 'Code promo invalide',
+  promoExpired: 'Code promo expiré',
+  promoMaxUses: 'Code promo déjà utilisé au maximum',
 };

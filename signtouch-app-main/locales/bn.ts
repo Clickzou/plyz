@@ -995,4 +995,10 @@ export default {
   paymentCapturedMessage: 'আপনার সফল ভিডিও কলের জন্য {amount}€ চার্জ করা হয়েছে।',
   authorizationSuccess: 'প্রাক-অনুমোদন সফল!',
   joiningQueueNow: 'সারিতে যোগ দিচ্ছেন...',
+
+
+  promoApplied: 'প্রোমো কোড প্রয়োগ করা হয়েছে — বিনামূল্যে সেশন!',
+  promoInvalid: 'অবৈধ প্রোমো কোড',
+  promoExpired: 'প্রোমো কোডের মেয়াদ শেষ',
+  promoMaxUses: 'প্রোমো কোড সর্বাধিক ব্যবহৃত হয়েছে',
 };

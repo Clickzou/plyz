@@ -995,4 +995,10 @@ export default {
   paymentCapturedMessage: '{amount}€ telah ditagihkan untuk panggilan video Anda yang berhasil.',
   authorizationSuccess: 'Pra-otorisasi berhasil!',
   joiningQueueNow: 'Bergabung dengan antrean...',
+
+
+  promoApplied: 'Kode promo diterapkan — sesi gratis!',
+  promoInvalid: 'Kode promo tidak valid',
+  promoExpired: 'Kode promo kedaluwarsa',
+  promoMaxUses: 'Kode promo telah digunakan maksimal',
 };

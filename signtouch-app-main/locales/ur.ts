@@ -995,4 +995,10 @@ export default {
   paymentCapturedMessage: 'آپ کی کامیاب ویڈیو کال کے لیے {amount}€ چارج کیا گیا۔',
   authorizationSuccess: 'پیشگی اجازت کامیاب!',
   joiningQueueNow: 'قطار میں شامل ہو رہے ہیں...',
+
+
+  promoApplied: 'پرومو کوڈ لاگو — مفت سیشن!',
+  promoInvalid: 'غلط پرومو کوڈ',
+  promoExpired: 'پرومو کوڈ ختم ہو گیا',
+  promoMaxUses: 'پرومو کوڈ زیادہ سے زیادہ استعمال ہو چکا',
 };

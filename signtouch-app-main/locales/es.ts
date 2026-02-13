@@ -989,4 +989,10 @@ export default {
   paymentCapturedMessage: 'Se han cobrado {amount}€ por tu videollamada exitosa.',
   authorizationSuccess: '¡Preautorización exitosa!',
   joiningQueueNow: 'Uniéndose a la cola...',
+
+
+  promoApplied: 'Código promocional aplicado — ¡sesión gratuita!',
+  promoInvalid: 'Código promocional inválido',
+  promoExpired: 'Código promocional expirado',
+  promoMaxUses: 'Código promocional utilizado al máximo',
 };

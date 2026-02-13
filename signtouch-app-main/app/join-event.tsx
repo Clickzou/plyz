@@ -221,6 +221,10 @@ export default function JoinEventScreen() {
   const [isJoiningQueue, setIsJoiningQueue] = useState(false);
   const [checkoutSessionId, setCheckoutSessionId] = useState<string>('');
   const [paymentAuthorized, setPaymentAuthorized] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoValidating, setPromoValidating] = useState(false);
+  const [promoResult, setPromoResult] = useState<{ valid: boolean; promo_id?: string; discount_percent?: number; reason?: string } | null>(null);
+  const [promoApplied, setPromoApplied] = useState(false);
   const hasPlayedChime = useRef(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const signatureClipWidth = useSharedValue(0);
@@ -614,6 +618,29 @@ export default function JoinEventScreen() {
     }
   };
 
+  const handleValidatePromo = async () => {
+    if (!promoCode.trim() || !foundLiveSession) return;
+    setPromoValidating(true);
+    setPromoResult(null);
+    try {
+      const response = await fetch(`${STRIPE_SERVER_URL}/api/validate-promo-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoCode.trim(), session_id: foundLiveSession.id }),
+      });
+      const data = await response.json();
+      setPromoResult(data);
+      if (data.valid && data.discount_percent === 100) {
+        setPromoApplied(true);
+      }
+    } catch (error) {
+      console.error('[PromoCode] Validation error:', error);
+      setPromoResult({ valid: false });
+    } finally {
+      setPromoValidating(false);
+    }
+  };
+
   const handleJoinQueue = async () => {
     if (!foundLiveSession || !fanName.trim()) {
       showAlert(t('error') || 'Error', t('enterYourName') || 'Please enter your name');
@@ -626,7 +653,7 @@ export default function JoinEventScreen() {
       return;
     }
 
-    if (foundLiveSession.price_cents > 0 && !paymentAuthorized) {
+    if (foundLiveSession.price_cents > 0 && !paymentAuthorized && !promoApplied) {
       router.push({
         pathname: '/purchase-session',
         params: {
@@ -661,6 +688,18 @@ export default function JoinEventScreen() {
         setQueueEntry(entry);
         setHasJoinedQueue(true);
         AsyncStorage.removeItem('@signtouch_pending_checkout').catch(() => {});
+
+        if (promoApplied && promoResult?.promo_id) {
+          try {
+            await fetch(`${STRIPE_SERVER_URL}/api/use-promo-code`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ promo_id: promoResult.promo_id }),
+            });
+          } catch (e) {
+            console.error('[PromoCode] Error marking promo as used:', e);
+          }
+        }
         
         const stats = await getQueuePosition(foundLiveSession.id);
         if (stats) {
@@ -960,18 +999,81 @@ export default function JoinEventScreen() {
                       </View>
                       <View>
                         <Text style={{ color: '#fff', fontSize: 20, fontWeight: '700' }}>
-                          {(foundLiveSession.price_cents / 100).toFixed(2).replace('.', ',')}€
+                          {promoApplied
+                            ? (language === 'fr' ? 'GRATUIT' : 'FREE')
+                            : `${(foundLiveSession.price_cents / 100).toFixed(2).replace('.', ',')}€`}
                         </Text>
                         <Text style={{ color: '#9ca3af', fontSize: 12 }}>
                           {language === 'fr' ? `Appel de ${foundLiveSession.duration_per_fan_minutes || 1} min` : `${foundLiveSession.duration_per_fan_minutes || 1} min call`}
                         </Text>
                       </View>
+                      {promoApplied && (
+                        <View style={{ marginLeft: 'auto', backgroundColor: '#10B981', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
+                          <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>-100%</Text>
+                        </View>
+                      )}
                     </View>
-                    <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginVertical: 8 }} />
-                    <Text style={{ color: '#d1d5db', fontSize: 12, lineHeight: 18 }}>
-                      {language === 'fr' 
-                        ? '💳 Pré-autorisation : le montant est réservé sur votre carte mais ne sera débité qu\'après votre appel vidéo. Si l\'appel n\'a pas lieu, vous ne serez pas débité.'
-                        : '💳 Pre-authorization: the amount is reserved on your card but will only be charged after your video call. If the call doesn\'t happen, you won\'t be charged.'}
+                    {!promoApplied && (
+                      <>
+                        <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginVertical: 8 }} />
+                        <Text style={{ color: '#d1d5db', fontSize: 12, lineHeight: 18 }}>
+                          {language === 'fr' 
+                            ? '💳 Pré-autorisation : le montant est réservé sur votre carte mais ne sera débité qu\'après votre appel vidéo. Si l\'appel n\'a pas lieu, vous ne serez pas débité.'
+                            : '💳 Pre-authorization: the amount is reserved on your card but will only be charged after your video call. If the call doesn\'t happen, you won\'t be charged.'}
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                )}
+
+                {foundLiveSession.price_cents > 0 && !promoApplied && (
+                  <View style={{ marginBottom: 16 }}>
+                    <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: '600', marginBottom: 8 }}>
+                      {t('promoCode') || 'Code promo'}
+                    </Text>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      <TextInput
+                        style={[styles.nameInput, { flex: 1, marginBottom: 0 }]}
+                        placeholder={t('enterPromoCode') || 'Entrer un code promo'}
+                        placeholderTextColor="rgba(255,255,255,0.4)"
+                        value={promoCode}
+                        onChangeText={(text) => {
+                          setPromoCode(text.toUpperCase());
+                          setPromoResult(null);
+                          setPromoApplied(false);
+                        }}
+                        autoCapitalize="characters"
+                        maxLength={30}
+                      />
+                      <TouchableOpacity
+                        style={{ backgroundColor: promoCode.trim() ? '#3b82f6' : 'rgba(255,255,255,0.1)', borderRadius: 12, paddingHorizontal: 16, justifyContent: 'center', alignItems: 'center', opacity: promoCode.trim() ? 1 : 0.5 }}
+                        onPress={handleValidatePromo}
+                        disabled={!promoCode.trim() || promoValidating}
+                      >
+                        {promoValidating ? (
+                          <ActivityIndicator color="#fff" size="small" />
+                        ) : (
+                          <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>{t('apply') || 'Appliquer'}</Text>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                    {promoResult && !promoResult.valid && (
+                      <Text style={{ color: '#ef4444', fontSize: 12, marginTop: 6 }}>
+                        {promoResult.reason === 'expired'
+                          ? (t('promoExpired') || 'Code promo expiré')
+                          : promoResult.reason === 'max_uses_reached'
+                            ? (t('promoMaxUses') || 'Code promo déjà utilisé au maximum')
+                            : (t('promoInvalid') || 'Code promo invalide')}
+                      </Text>
+                    )}
+                  </View>
+                )}
+
+                {promoApplied && (
+                  <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', borderRadius: 12, padding: 12, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)', flexDirection: 'row', alignItems: 'center' }}>
+                    <Check size={18} color="#10B981" />
+                    <Text style={{ color: '#10B981', fontSize: 14, fontWeight: '600', marginLeft: 8, flex: 1 }}>
+                      {t('promoApplied') || 'Code promo appliqué — session gratuite !'}
                     </Text>
                   </View>
                 )}

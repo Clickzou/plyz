@@ -990,4 +990,10 @@ export default {
   paymentCapturedMessage: 'ビデオ通話が成功し、{amount}€が請求されました。',
   authorizationSuccess: '事前承認が成功しました！',
   joiningQueueNow: 'キューに参加しています...',
+
+
+  promoApplied: 'プロモコード適用済み — 無料セッション！',
+  promoInvalid: '無効なプロモコード',
+  promoExpired: 'プロモコードの有効期限切れ',
+  promoMaxUses: 'プロモコードの使用回数上限に達しました',
 };

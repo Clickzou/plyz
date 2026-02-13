@@ -1030,4 +1030,10 @@ export default {
   paymentCapturedMessage: '{amount}€ has been charged for your successful video call.',
   authorizationSuccess: 'Pre-authorization successful!',
   joiningQueueNow: 'Joining the queue now...',
+
+
+  promoApplied: 'Promo code applied — free session!',
+  promoInvalid: 'Invalid promo code',
+  promoExpired: 'Promo code expired',
+  promoMaxUses: 'Promo code usage limit reached',
 };

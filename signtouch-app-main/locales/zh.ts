@@ -990,4 +990,10 @@ export default {
   paymentCapturedMessage: '您的视频通话已成功，已扣款{amount}€。',
   authorizationSuccess: '预授权成功！',
   joiningQueueNow: '正在加入排队...',
+
+
+  promoApplied: '优惠码已应用 — 免费会话！',
+  promoInvalid: '无效的优惠码',
+  promoExpired: '优惠码已过期',
+  promoMaxUses: '优惠码已达到使用上限',
 };

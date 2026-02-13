@@ -990,4 +990,10 @@ export default {
   paymentCapturedMessage: 'आपकी सफल वीडियो कॉल के लिए {amount}€ चार्ज किया गया।',
   authorizationSuccess: 'पूर्व-प्राधिकरण सफल!',
   joiningQueueNow: 'कतार में शामिल हो रहे हैं...',
+
+
+  promoApplied: 'प्रोमो कोड लागू — मुफ्त सत्र!',
+  promoInvalid: 'अमान्य प्रोमो कोड',
+  promoExpired: 'प्रोमो कोड समाप्त',
+  promoMaxUses: 'प्रोमो कोड अधिकतम उपयोग तक पहुँच गया',
 };

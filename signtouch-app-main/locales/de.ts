@@ -990,4 +990,10 @@ export default {
   paymentCapturedMessage: '{amount}€ wurden für Ihren erfolgreichen Videoanruf abgebucht.',
   authorizationSuccess: 'Vorautorisierung erfolgreich!',
   joiningQueueNow: 'Sie treten jetzt der Warteschlange bei...',
+
+
+  promoApplied: 'Aktionscode angewendet — kostenlose Session!',
+  promoInvalid: 'Ungültiger Aktionscode',
+  promoExpired: 'Aktionscode abgelaufen',
+  promoMaxUses: 'Aktionscode bereits maximal verwendet',
 };
