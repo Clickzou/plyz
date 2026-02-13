@@ -221,12 +221,13 @@ export default function EventGalleryScreen() {
   }, [startPolling, stopPolling, startHeartbeat, stopHeartbeat, handleRefresh]);
 
   const handleOpenEditor = (asset: EventAsset) => {
-    if (asset.signature_metadata && asset.original_photo_url) {
+    const originalUrl = asset.original_photo_url || (asset.signature_metadata as any)?.original_photo_url;
+    if (asset.signature_metadata && originalUrl) {
       const meta = asset.signature_metadata;
       router.push({
         pathname: '/event-photo-editor',
         params: {
-          photoUrl: asset.original_photo_url,
+          photoUrl: originalUrl,
           signatureUrl: meta.signature_url,
           positionX: String(meta.position_x),
           positionY: String(meta.position_y),

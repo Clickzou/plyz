@@ -568,6 +568,10 @@ export const publishEventAsset = async (
     originalPhotoUrl = getSessionImageUrl(origPath);
   }
 
+  const metadataWithOriginal = options?.signatureMetadata
+    ? { ...options.signatureMetadata, original_photo_url: originalPhotoUrl }
+    : originalPhotoUrl ? { original_photo_url: originalPhotoUrl } : null;
+
   const { data, error } = await supabase
     .from('event_assets')
     .insert({
@@ -575,11 +579,14 @@ export const publishEventAsset = async (
       signer_id: signerId || null,
       asset_type: type,
       asset_url: imageUrl,
-      original_photo_url: originalPhotoUrl,
-      signature_metadata: options?.signatureMetadata || null,
+      signature_metadata: metadataWithOriginal,
     })
     .select()
     .single();
+
+  if (!error && data && originalPhotoUrl) {
+    data.original_photo_url = originalPhotoUrl;
+  }
 
   if (error) {
     console.error('Insert asset error:', error);
