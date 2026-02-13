@@ -799,6 +799,104 @@ app.post('/api/use-promo-code', async (req, res) => {
   }
 });
 
+app.post('/api/validate-event-promo-code', async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    const { code, event_session_id } = req.body;
+
+    if (!code || !event_session_id) {
+      return res.status(400).json({ error: 'Missing code or event_session_id' });
+    }
+
+    const upperCode = code.trim().toUpperCase();
+
+    const { data: promos, error } = await supabase
+      .from('promo_code_event')
+      .select('*')
+      .eq('code', upperCode)
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('[EventPromoCode] Supabase error:', error.message);
+      return res.status(500).json({ error: error.message });
+    }
+
+    const promo = (promos || []).find(p =>
+      p.event_session_id === event_session_id || p.event_session_id === null
+    );
+
+    if (!promo) {
+      return res.json({ valid: false, reason: 'invalid_code' });
+    }
+
+    if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+      return res.json({ valid: false, reason: 'expired' });
+    }
+
+    if (promo.max_uses !== null && promo.used_count >= promo.max_uses) {
+      return res.json({ valid: false, reason: 'max_uses_reached' });
+    }
+
+    return res.json({
+      valid: true,
+      promo_id: promo.id,
+      discount_percent: promo.discount_percent,
+    });
+  } catch (error) {
+    console.error('[EventPromoCode] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/use-event-promo-code', async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    const { promo_id } = req.body;
+
+    if (!promo_id) {
+      return res.status(400).json({ error: 'Missing promo_id' });
+    }
+
+    const { data: promo } = await supabase
+      .from('promo_code_event')
+      .select('used_count, max_uses, is_active')
+      .eq('id', promo_id)
+      .single();
+
+    if (!promo || !promo.is_active) {
+      return res.status(400).json({ error: 'Promo code not found or inactive' });
+    }
+
+    if (promo.max_uses !== null && promo.used_count >= promo.max_uses) {
+      return res.status(400).json({ error: 'Promo code usage limit reached' });
+    }
+
+    const newCount = (promo.used_count || 0) + 1;
+
+    const { data: updated, error } = await supabase
+      .from('promo_code_event')
+      .update({ used_count: newCount })
+      .eq('id', promo_id)
+      .eq('used_count', promo.used_count)
+      .select('id');
+
+    if (error) {
+      console.error('[EventPromoCode] Increment error:', error.message);
+      return res.status(500).json({ error: error.message });
+    }
+
+    if (!updated || updated.length === 0) {
+      return res.status(409).json({ error: 'Concurrent update detected, please retry' });
+    }
+
+    console.log('[EventPromoCode] Used promo:', promo_id, '| New count:', newCount);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[EventPromoCode] Use error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/stripe/express/create-and-onboard', async (req, res) => {
   try {
     const stripe = await getStripe();
@@ -1079,6 +1177,42 @@ app.get('/api/check-event-access', async (req, res) => {
   } catch (error) {
     console.error('[EventPayment] Check access error:', error.message);
     res.json({ paid: false });
+  }
+});
+
+app.post('/api/record-free-event-access', async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    const { event_session_id, fan_id, promo_id } = req.body;
+
+    if (!event_session_id || !fan_id || !promo_id) {
+      return res.status(400).json({ error: 'Missing event_session_id, fan_id, or promo_id' });
+    }
+
+    const { data: promo } = await supabase
+      .from('promo_code_event')
+      .select('id, discount_percent, is_active, event_session_id')
+      .eq('id', promo_id)
+      .eq('is_active', true)
+      .single();
+
+    if (!promo || promo.discount_percent !== 100) {
+      return res.status(403).json({ error: 'Invalid or non-100% promo code' });
+    }
+
+    if (promo.event_session_id && promo.event_session_id !== event_session_id) {
+      return res.status(403).json({ error: 'Promo code not valid for this event' });
+    }
+
+    const key = `${event_session_id}_${fan_id}`;
+    if (!global.eventPaidRecords) global.eventPaidRecords = {};
+    global.eventPaidRecords[key] = { paid: true, paidAt: new Date().toISOString(), method: 'promo_code', promo_id };
+
+    console.log('[EventPromoAccess] Recorded free access for:', key, '| Promo:', promo_id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[EventPromoAccess] Error:', error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 

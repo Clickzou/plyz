@@ -53,7 +53,9 @@ Preferred communication style: Simple, everyday language.
     - `GET /api/session-earnings`: Returns real-time earnings for a live session (queries Stripe for captured payments, calculates celebrity's net share).
     - `GET /api/celebrity-earnings`: Returns full earnings history for a celebrity — all sessions, fan counts, duration, revenue per session, and estimated payout date.
     - `POST /api/launch-scheduled-session`: Transitions a scheduled live session to 'waiting' status and updates linked event_sessions to 'live'.
-    - `POST /api/validate-promo-code`: Validates a promo code for a live session (checks active, expiry, max_uses). Returns discount_percent if valid.
+    - `POST /api/validate-promo-code`: Validates a promo code for a live video session (checks active, expiry, max_uses in `promo_code_live_video` table). Returns discount_percent if valid.
+    - `POST /api/validate-event-promo-code`: Validates a promo code for a dedication event (checks active, expiry, max_uses in `promo_code_event` table). Returns discount_percent if valid.
+    - `POST /api/use-event-promo-code`: Increments used_count for an event promo code after successful gallery access (atomic with optimistic locking).
     - `POST /api/use-promo-code`: Increments used_count for a promo code after successful queue join (atomic with optimistic locking).
     - `POST /api/set-event-payment-config`: Stores event payment config (price, celebrity Stripe account) for a dedication event session.
     - `GET /api/get-event-payment-config`: Retrieves payment config for an event session (price, celebrity Stripe account).

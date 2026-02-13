@@ -227,6 +227,10 @@ export default function JoinEventScreen() {
   const [promoApplied, setPromoApplied] = useState(false);
   const hasPlayedChime = useRef(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [eventPromoCode, setEventPromoCode] = useState('');
+  const [eventPromoValidating, setEventPromoValidating] = useState(false);
+  const [eventPromoResult, setEventPromoResult] = useState<{ valid: boolean; promo_id?: string; discount_percent?: number; reason?: string } | null>(null);
+  const [eventPromoApplied, setEventPromoApplied] = useState(false);
   const [eventPaymentConfig, setEventPaymentConfig] = useState<{priceCents: number, celebrityStripeAccountId?: string, celebrityName?: string} | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [eventPaid, setEventPaid] = useState(false);
@@ -292,6 +296,21 @@ export default function JoinEventScreen() {
               await AsyncStorage.setItem(`@event_paid_${verifyData.eventSessionId}`, 'true');
               setEventPaid(true);
               setCode(returnCode);
+
+              const pendingPromoId = await AsyncStorage.getItem('@event_pending_promo_id');
+              if (pendingPromoId) {
+                try {
+                  await fetch(`${STRIPE_SERVER_URL}/api/use-event-promo-code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ promo_id: pendingPromoId }),
+                  });
+                } catch (e) {
+                  console.error('[EventPromoCode] Use after payment error:', e);
+                }
+                await AsyncStorage.removeItem('@event_pending_promo_id');
+              }
+
               setTimeout(() => handleSearch(returnCode), 500);
             }
           } catch (e) {
@@ -317,6 +336,20 @@ export default function JoinEventScreen() {
                 await AsyncStorage.setItem(`@event_paid_${pendingSessionId}`, 'true');
                 setEventPaid(true);
                 await AsyncStorage.removeItem('@event_pending_payment_session');
+
+                const pendingPromoId = await AsyncStorage.getItem('@event_pending_promo_id');
+                if (pendingPromoId) {
+                  try {
+                    await fetch(`${STRIPE_SERVER_URL}/api/use-event-promo-code`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ promo_id: pendingPromoId }),
+                    });
+                  } catch (pe) {
+                    console.error('[EventPromoCode] Use after mobile payment error:', pe);
+                  }
+                  await AsyncStorage.removeItem('@event_pending_promo_id');
+                }
               }
             } catch (e) {
               console.warn('Mobile payment check failed:', e);
@@ -642,13 +675,21 @@ export default function JoinEventScreen() {
         await AsyncStorage.setItem('@event_pending_payment_session', foundSession.id);
       }
 
+      if (eventPromoResult?.valid && eventPromoResult.promo_id) {
+        await AsyncStorage.setItem('@event_pending_promo_id', eventPromoResult.promo_id);
+      } else {
+        await AsyncStorage.removeItem('@event_pending_promo_id');
+      }
+
       const response = await fetch(`${STRIPE_SERVER_URL}/api/create-event-checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           eventSessionId: foundSession.id,
           fanId: viewerId,
-          priceCents: eventPaymentConfig.priceCents,
+          priceCents: eventPromoResult?.valid && eventPromoResult.discount_percent && eventPromoResult.discount_percent < 100
+            ? Math.round(eventPaymentConfig.priceCents * (1 - eventPromoResult.discount_percent / 100))
+            : eventPaymentConfig.priceCents,
           celebrityStripeAccountId: eventPaymentConfig.celebrityStripeAccountId,
           celebrityName: eventPaymentConfig.celebrityName,
           successUrl: `${origin}/join-event?code=${foundSession.join_code}&payment_success=true&checkout_session_id={CHECKOUT_SESSION_ID}`,
@@ -678,7 +719,25 @@ export default function JoinEventScreen() {
 
   const goToGallery = async () => {
     if (foundSession) {
-      if (eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !eventPaid) {
+      if (eventPromoApplied && eventPromoResult?.promo_id) {
+        try {
+          await fetch(`${STRIPE_SERVER_URL}/api/use-event-promo-code`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ promo_id: eventPromoResult.promo_id }),
+          });
+          const viewerId = await getOrCreateDeviceId();
+          await fetch(`${STRIPE_SERVER_URL}/api/record-free-event-access`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ event_session_id: foundSession.id, fan_id: viewerId, promo_id: eventPromoResult.promo_id }),
+          });
+          await AsyncStorage.setItem(`@event_paid_${foundSession.id}`, 'true');
+          setEventPaid(true);
+        } catch (e) {
+          console.error('[EventPromoCode] Use error:', e);
+        }
+      } else if (eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !eventPaid) {
         try {
           const viewerId = await getOrCreateDeviceId();
           const checkRes = await fetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${foundSession.id}&fan_id=${viewerId}`);
@@ -728,6 +787,10 @@ export default function JoinEventScreen() {
     setQueueEntry(null);
     setQueueStats(null);
     setFanName('');
+    setEventPromoCode('');
+    setEventPromoValidating(false);
+    setEventPromoResult(null);
+    setEventPromoApplied(false);
   };
 
   const cancelPreAuthorization = async () => {
@@ -774,6 +837,31 @@ export default function JoinEventScreen() {
       setPromoResult({ valid: false });
     } finally {
       setPromoValidating(false);
+    }
+  };
+
+  const handleValidateEventPromo = async () => {
+    if (!eventPromoCode.trim() || !foundSession) return;
+    setEventPromoValidating(true);
+    setEventPromoResult(null);
+    try {
+      const response = await fetch(`${STRIPE_SERVER_URL}/api/validate-event-promo-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: eventPromoCode.trim(), event_session_id: foundSession.id }),
+      });
+      const data = await response.json();
+      setEventPromoResult(data);
+      if (data.valid && data.discount_percent > 0) {
+        if (data.discount_percent === 100) {
+          setEventPromoApplied(true);
+        }
+      }
+    } catch (error) {
+      console.error('[EventPromoCode] Validation error:', error);
+      setEventPromoResult({ valid: false });
+    } finally {
+      setEventPromoValidating(false);
     }
   };
 
@@ -1510,7 +1598,67 @@ export default function JoinEventScreen() {
               </View>
             )}
 
-            {eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !eventPaid && (
+            {eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !eventPaid && !eventPromoApplied && (
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: '600', marginBottom: 8 }}>
+                  {t('promoCode') || 'Code promo'}
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <TextInput
+                    style={[styles.nameInput, { flex: 1, marginBottom: 0 }]}
+                    placeholder={t('enterPromoCode') || 'Entrer un code promo'}
+                    placeholderTextColor="rgba(255,255,255,0.4)"
+                    value={eventPromoCode}
+                    onChangeText={(text) => {
+                      setEventPromoCode(text.toUpperCase());
+                      setEventPromoResult(null);
+                      setEventPromoApplied(false);
+                    }}
+                    autoCapitalize="characters"
+                    maxLength={30}
+                  />
+                  <TouchableOpacity
+                    style={{ backgroundColor: eventPromoCode.trim() ? '#6366f1' : 'rgba(255,255,255,0.1)', borderRadius: 12, paddingHorizontal: 16, justifyContent: 'center', alignItems: 'center', opacity: eventPromoCode.trim() ? 1 : 0.5 }}
+                    onPress={handleValidateEventPromo}
+                    disabled={!eventPromoCode.trim() || eventPromoValidating}
+                  >
+                    {eventPromoValidating ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>{t('apply') || 'Appliquer'}</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+                {eventPromoResult && !eventPromoResult.valid && (
+                  <Text style={{ color: '#ef4444', fontSize: 12, marginTop: 6 }}>
+                    {eventPromoResult.reason === 'expired'
+                      ? (t('promoExpired') || 'Code promo expiré')
+                      : eventPromoResult.reason === 'max_uses_reached'
+                        ? (t('promoMaxUses') || 'Code promo déjà utilisé au maximum')
+                        : (t('promoInvalid') || 'Code promo invalide')}
+                  </Text>
+                )}
+                {eventPromoResult && eventPromoResult.valid && eventPromoResult.discount_percent && eventPromoResult.discount_percent < 100 && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                    <Check size={14} color="#10B981" />
+                    <Text style={{ color: '#10B981', fontSize: 12, marginLeft: 4, fontWeight: '600' }}>
+                      -{eventPromoResult.discount_percent}% {t('promoDiscountApplied') || 'de réduction appliquée'}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {eventPromoApplied && (
+              <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', borderRadius: 12, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)', flexDirection: 'row', alignItems: 'center' }}>
+                <Check size={18} color="#10B981" />
+                <Text style={{ color: '#10B981', fontSize: 14, fontWeight: '600', marginLeft: 8, flex: 1 }}>
+                  {t('promoApplied') || 'Code promo appliqué — accès gratuit !'}
+                </Text>
+              </View>
+            )}
+
+            {eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !eventPaid && !eventPromoApplied && (
               <View style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)', borderRadius: 8, padding: 10, marginBottom: 12 }}>
                 <Text style={{ color: '#818cf8', fontSize: 13, textAlign: 'center' }}>
                   {t('eventRequiresPayment') || 'Cet événement est payant'}
@@ -1527,7 +1675,7 @@ export default function JoinEventScreen() {
               </View>
             )}
 
-            {eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !eventPaid ? (
+            {eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !eventPaid && !eventPromoApplied ? (
               <TouchableOpacity 
                 style={[styles.joinButton, { backgroundColor: '#6366f1' }]} 
                 onPress={goToGallery}
@@ -1537,7 +1685,11 @@ export default function JoinEventScreen() {
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
                   <Text style={styles.joinButtonText}>
-                    {t('payAndJoin') || 'Payer'} {(eventPaymentConfig.priceCents / 100).toFixed(2).replace('.', ',')}€ {t('andJoin') || '& Rejoindre'}
+                    {t('payAndJoin') || 'Payer'} {(
+                      eventPromoResult?.valid && eventPromoResult.discount_percent && eventPromoResult.discount_percent < 100
+                        ? (Math.round(eventPaymentConfig.priceCents * (1 - eventPromoResult.discount_percent / 100)) / 100).toFixed(2).replace('.', ',')
+                        : (eventPaymentConfig.priceCents / 100).toFixed(2).replace('.', ',')
+                    )}€ {t('andJoin') || '& Rejoindre'}
                   </Text>
                 )}
               </TouchableOpacity>
