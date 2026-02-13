@@ -1203,8 +1203,10 @@ export default function ResultScreen() {
     }
   };
 
-  const displayUri = memory ? (memory.baseUri || memory.uri) : imageUri;
-  const hasBaseUri = memory ? !!memory.baseUri : true;
+  const hasBaseUri = memory ? !!memory.baseUri : false;
+  const displayUri = memory
+    ? (isEditMode && memory.baseUri ? memory.baseUri : memory.uri)
+    : imageUri;
 
   // Hide welcome message on tap
   const hideWelcomeMessage = () => {
@@ -2137,14 +2139,7 @@ export default function ResultScreen() {
                 />
               </TouchableOpacity>
             </View>
-            {/* Static overlays (non-editable) - only if baseUri exists (otherwise baked into uri) */}
-            {!isEditMode && hasBaseUri && signatureOverlays.map(overlay => (
-              <StaticSignature
-                key={overlay.id}
-                overlay={overlay}
-              />
-            ))}
-            {/* Draggable overlays (editable) - only if baseUri exists (otherwise baked into uri) */}
+            {/* Draggable overlays (editable) - only in edit mode with baseUri as background */}
             {isEditMode && !saving && hasBaseUri && signatureOverlays.map(overlay => (
               <DraggableSignature
                 key={overlay.id}
@@ -2157,14 +2152,7 @@ export default function ResultScreen() {
                 isSelected={selectedElementId === overlay.id}
               />
             ))}
-            {/* Static text overlays (non-editable) */}
-            {!isEditMode && textOverlays.map(overlay => (
-              <StaticText
-                key={overlay.id}
-                overlay={overlay}
-              />
-            ))}
-            {/* Draggable text overlays (editable) */}
+            {/* Draggable text overlays (editable) - only in edit mode */}
             {isEditMode && !saving && textOverlays.map(overlay => (
               <DraggableText
                 key={overlay.id}
