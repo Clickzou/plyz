@@ -811,7 +811,7 @@ app.post('/api/validate-event-promo-code', async (req, res) => {
     const upperCode = code.trim().toUpperCase();
 
     const { data: promos, error } = await supabase
-      .from('promo_code_event')
+      .from('promo_code_evenement_qr')
       .select('*')
       .eq('code', upperCode)
       .eq('is_active', true);
@@ -858,7 +858,7 @@ app.post('/api/use-event-promo-code', async (req, res) => {
     }
 
     const { data: promo } = await supabase
-      .from('promo_code_event')
+      .from('promo_code_evenement_qr')
       .select('used_count, max_uses, is_active')
       .eq('id', promo_id)
       .single();
@@ -874,7 +874,7 @@ app.post('/api/use-event-promo-code', async (req, res) => {
     const newCount = (promo.used_count || 0) + 1;
 
     const { data: updated, error } = await supabase
-      .from('promo_code_event')
+      .from('promo_code_evenement_qr')
       .update({ used_count: newCount })
       .eq('id', promo_id)
       .eq('used_count', promo.used_count)
@@ -1190,7 +1190,7 @@ app.post('/api/record-free-event-access', async (req, res) => {
     }
 
     const { data: promo } = await supabase
-      .from('promo_code_event')
+      .from('promo_code_evenement_qr')
       .select('id, discount_percent, is_active, event_session_id')
       .eq('id', promo_id)
       .eq('is_active', true)
