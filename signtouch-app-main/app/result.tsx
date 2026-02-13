@@ -749,7 +749,6 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
 }
 
 export default function ResultScreen() {
-  // Charger les polices pour mobile avec les noms techniques
   const [fontsLoaded] = useFonts({
     ShadowsIntoLight_400Regular,
     CoveredByYourGrace_400Regular,
@@ -762,6 +761,22 @@ export default function ResultScreen() {
     ShantellSans_400Regular,
     Manrope_400Regular,
   });
+
+  const [fontsReady, setFontsReady] = useState(false);
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      setFontsReady(true);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      if (!fontsReady) {
+        console.warn('[Result] Font loading timed out, proceeding anyway');
+        setFontsReady(true);
+      }
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, [fontsLoaded]);
 
   const params = useLocalSearchParams<{ imageUri?: string; memoryId?: string }>();
   const { imageUri, memoryId } = params;
@@ -948,20 +963,20 @@ export default function ResultScreen() {
     }, [memoryId, isEditMode, signatureOverlays.length])
   );
 
+  const [loadError, setLoadError] = useState(false);
+
   const loadMemory = async () => {
     try {
       setLoading(true);
+      setLoadError(false);
       const memories = await StorageService.getAllMemories(user?.id || null);
       const found = memories.find(m => m.id === memoryId);
       if (found) {
         setMemory(found);
-        // Only load overlays if baseUri exists (meaning the overlays are not baked into the image)
-        // If baseUri doesn't exist, the overlays are already in the uri image
         if (found.baseUri) {
           setSignatureOverlays(found.signatureOverlays || []);
           setTextOverlays(found.textOverlays || []);
         } else {
-          // No baseUri means overlays are baked into the image, don't load them
           setSignatureOverlays([]);
           setTextOverlays([]);
         }
@@ -970,10 +985,14 @@ export default function ResultScreen() {
           setContrast(found.adjustments.contrast || 0);
           setSaturation(found.adjustments.saturation || 0);
         }
+      } else {
+        console.error('Memory not found:', memoryId);
+        setLoadError(true);
       }
       setLoading(false);
     } catch (error) {
       console.error('Error loading memory:', error);
+      setLoadError(true);
       setLoading(false);
     }
   };
@@ -1863,8 +1882,18 @@ export default function ResultScreen() {
     setShowShareModal(true);
   };
 
-  // Attendre que les polices soient chargées ET que l'image soit chargée
-  if (!displayUri || loading || !fontsLoaded) {
+  if (loadError) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: '#ffffff', fontSize: 16, marginBottom: 20 }}>{t('gallery_error_loading') || 'Unable to load this memory'}</Text>
+        <TouchableOpacity onPress={() => router.back()} style={{ backgroundColor: '#10b981', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}>
+          <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '600' }}>{t('back') || 'Back'}</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (!displayUri || loading || !fontsReady) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#10b981" />
