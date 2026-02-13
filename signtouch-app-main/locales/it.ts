@@ -543,9 +543,9 @@ export default {
   fanChoiceTitle: 'Modalità Fan',
   fanChoiceSubtitle: 'Scegli la tua esperienza',
   fanChoiceQR: 'Evento Live Dedica',
-  fanChoiceQRDesc: 'Scansiona un QR code o inserisci un codice per ottenere la dedica di una celebrità',
+  fanChoiceQRDesc: 'Ricevi in tempo reale foto dedicate esclusive durante un evento.',
   fanChoiceVideo: 'Sessione Video Live',
-  fanChoiceVideoDesc: 'Partecipa a una videochiamata dal vivo con una celebrità',
+  fanChoiceVideoDesc: 'Partecipa a una videochiamata dal vivo e chatta in privato con la tua celebrità preferita. Riceverai anche una foto dedicata alla fine del video',
   notAvailable: 'Non disponibile',
   scannerNotOnWeb: 'Lo scanner QR non è disponibile sul web. Inserisci il codice manualmente.',
 

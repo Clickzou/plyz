@@ -543,9 +543,9 @@ export default {
   fanChoiceTitle: '粉丝模式',
   fanChoiceSubtitle: '选择您的体验',
   fanChoiceQR: '现场签名活动',
-  fanChoiceQRDesc: '扫描QR码或输入代码以获取名人签名留念',
+  fanChoiceQRDesc: '在活动期间实时接收独家签名照片。',
   fanChoiceVideo: '直播视频会话',
-  fanChoiceVideoDesc: '加入与名人的直播视频通话',
+  fanChoiceVideoDesc: '加入直播视频通话，与您最喜爱的明星私密交流。视频结束后您还将收到一张签名照片',
   notAvailable: '不可用',
   scannerNotOnWeb: 'QR扫描仪在网页上不可用。请手动输入代码。',
 

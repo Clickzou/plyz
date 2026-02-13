@@ -543,9 +543,9 @@ export default {
   fanChoiceTitle: 'Mode Fan',
   fanChoiceSubtitle: 'Choisissez votre expérience',
   fanChoiceQR: 'Événement Live Dédicace',
-  fanChoiceQRDesc: 'Scannez un QR code ou entrez un code pour récupérer la dédicace d\'une célébrité',
+  fanChoiceQRDesc: 'Recevez en temps réel des photos dédicacées exclusives lors d\'un événement.',
   fanChoiceVideo: 'Session Live Vidéo',
-  fanChoiceVideoDesc: 'Rejoignez un appel vidéo en direct avec une célébrité',
+  fanChoiceVideoDesc: 'Rejoignez un appel vidéo en direct et échangez en privé avec votre célébrité préférée. Vous recevrez aussi une photo dédicacée à la fin de cette vidéo',
   notAvailable: 'Non disponible',
   scannerNotOnWeb: 'Le scanner QR n\'est pas disponible sur le web. Veuillez entrer le code manuellement.',
 

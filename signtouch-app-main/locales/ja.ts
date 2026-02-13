@@ -543,9 +543,9 @@ export default {
   fanChoiceTitle: 'ファンモード',
   fanChoiceSubtitle: '体験を選んでください',
   fanChoiceQR: 'ライブサイン会イベント',
-  fanChoiceQRDesc: 'QRコードをスキャンするかコードを入力して、セレブのサイン色紙を手に入れよう',
+  fanChoiceQRDesc: 'イベント中にリアルタイムで限定サイン写真を受け取ろう。',
   fanChoiceVideo: 'ライブビデオセッション',
-  fanChoiceVideoDesc: 'セレブとのライブビデオ通話に参加しよう',
+  fanChoiceVideoDesc: 'ライブビデオ通話に参加して、お気に入りのセレブとプライベートに交流しよう。ビデオの最後にはサイン写真ももらえます',
   notAvailable: '利用できません',
   scannerNotOnWeb: 'ウェブではQRスキャナーは利用できません。コードを手動で入力してください。',
 

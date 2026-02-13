@@ -543,9 +543,9 @@ export default {
   fanChoiceTitle: 'Fan-Modus',
   fanChoiceSubtitle: 'Wähle dein Erlebnis',
   fanChoiceQR: 'Live-Widmung Event',
-  fanChoiceQRDesc: 'Scanne einen QR-Code oder gib einen Code ein, um die Widmung eines Stars zu erhalten',
+  fanChoiceQRDesc: 'Erhalte exklusive signierte Fotos in Echtzeit während eines Events.',
   fanChoiceVideo: 'Live-Video-Sitzung',
-  fanChoiceVideoDesc: 'Nimm an einem Live-Videoanruf mit einem Star teil',
+  fanChoiceVideoDesc: 'Nimm an einem Live-Videoanruf teil und chatte privat mit deinem Lieblingsstar. Du erhältst auch ein signiertes Foto am Ende des Videos',
   notAvailable: 'Nicht verfügbar',
   scannerNotOnWeb: 'QR-Scanner ist im Web nicht verfügbar. Bitte geben Sie den Code manuell ein.',
 

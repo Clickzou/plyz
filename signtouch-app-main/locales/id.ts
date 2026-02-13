@@ -543,9 +543,9 @@ export default {
   fanChoiceTitle: 'Mode Penggemar',
   fanChoiceSubtitle: 'Pilih pengalaman Anda',
   fanChoiceQR: 'Acara Dedikasi Langsung',
-  fanChoiceQRDesc: 'Pindai QR code atau masukkan kode untuk mendapatkan dedikasi selebriti',
+  fanChoiceQRDesc: 'Terima foto berdedikasi eksklusif secara real time selama acara.',
   fanChoiceVideo: 'Sesi Video Langsung',
-  fanChoiceVideoDesc: 'Bergabung dengan panggilan video langsung dengan selebriti',
+  fanChoiceVideoDesc: 'Bergabung dengan panggilan video langsung dan ngobrol secara pribadi dengan selebriti favorit Anda. Anda juga akan menerima foto berdedikasi di akhir video',
   notAvailable: 'Tidak Tersedia',
   scannerNotOnWeb: 'Pemindai QR tidak tersedia di web. Silakan masukkan kode secara manual.',
 

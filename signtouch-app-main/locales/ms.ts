@@ -543,9 +543,9 @@ export default {
   fanChoiceTitle: 'Mod Peminat',
   fanChoiceSubtitle: 'Pilih pengalaman anda',
   fanChoiceQR: 'Acara Dedikasi Langsung',
-  fanChoiceQRDesc: 'Imbas QR code atau masukkan kod untuk mendapatkan dedikasi selebriti',
+  fanChoiceQRDesc: 'Terima foto berdedikasi eksklusif secara masa nyata semasa acara.',
   fanChoiceVideo: 'Sesi Video Langsung',
-  fanChoiceVideoDesc: 'Sertai panggilan video langsung dengan selebriti',
+  fanChoiceVideoDesc: 'Sertai panggilan video langsung dan berbual secara peribadi dengan selebriti kegemaran anda. Anda juga akan menerima foto berdedikasi di akhir video',
   notAvailable: 'Tidak Tersedia',
   scannerNotOnWeb: 'Pengimbas QR tidak tersedia di web. Sila masukkan kod secara manual.',
 
