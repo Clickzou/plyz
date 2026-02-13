@@ -1077,19 +1077,14 @@ export default function CreateEventScreen() {
 
           {step === 'success' && createdSession && (
             <View style={styles.successContainer}>
-              <View style={[styles.successIcon, createdSession.status === 'scheduled' && styles.scheduledIcon]}>
+              <View style={[styles.successIconSmall, createdSession.status === 'scheduled' && styles.scheduledIcon]}>
                 {createdSession.status === 'scheduled' ? (
-                  <Clock size={40} color="#f59e0b" />
+                  <Clock size={24} color="#f59e0b" />
                 ) : (
-                  <Check size={40} color="#10B981" />
+                  <Check size={24} color="#10B981" />
                 )}
               </View>
-              <Text style={styles.successTitle}>
-                {createdSession.status === 'scheduled' 
-                  ? ((t as any)('eventScheduled') || 'Event Scheduled!')
-                  : (t('eventCreated') || 'Event Created!')}
-              </Text>
-              <Text style={styles.eventNameText}>{createdSession.title}</Text>
+              <Text style={styles.eventNameLarge}>{createdSession.title}</Text>
 
               {createdSession.status === 'scheduled' && (
                 <>
@@ -1165,7 +1160,7 @@ export default function CreateEventScreen() {
               <View style={styles.qrContainer}>
                 <QRCode
                   value={qrValue}
-                  size={180}
+                  size={150}
                   backgroundColor="#ffffff"
                   color="#1a1a2e"
                 />
@@ -1559,26 +1554,25 @@ const styles = StyleSheet.create({
   },
   createButtonDisabled: { opacity: 0.7 },
   createButtonText: { color: '#ffffff', fontSize: 18, fontWeight: '600' },
-  successContainer: { alignItems: 'center', paddingTop: 10 },
-  successIcon: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+  successContainer: { alignItems: 'center', paddingTop: 4 },
+  successIconSmall: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(16,185,129,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
-  successTitle: { fontSize: 22, fontWeight: '700', color: '#ffffff', marginBottom: 6 },
-  eventNameText: { fontSize: 16, color: 'rgba(255,255,255,0.7)', marginBottom: 16 },
+  eventNameLarge: { fontSize: 26, fontWeight: '700', color: '#ffffff', marginBottom: 12 },
   statsRow: { flexDirection: 'row', gap: 20, marginBottom: 20 },
   statItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   statText: { color: 'rgba(255,255,255,0.7)', fontSize: 14 },
   eventInfoCard: {
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
+    padding: 12,
+    marginBottom: 12,
     width: '100%',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
@@ -1586,13 +1580,13 @@ const styles = StyleSheet.create({
   eventInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 4,
+    gap: 10,
+    paddingVertical: 2,
   },
   eventInfoIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1600,23 +1594,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   eventInfoLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: 'rgba(255,255,255,0.5)',
-    marginBottom: 2,
+    marginBottom: 1,
   },
   eventInfoValue: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#fff',
     fontWeight: '600',
   },
   eventInfoDivider: {
     height: 1,
     backgroundColor: 'rgba(255,255,255,0.06)',
-    marginVertical: 10,
+    marginVertical: 6,
   },
-  qrContainer: { padding: 16, backgroundColor: '#ffffff', borderRadius: 16, marginBottom: 20 },
-  codeContainer: { alignItems: 'center', marginBottom: 20 },
-  codeLabel: { fontSize: 14, color: 'rgba(255,255,255,0.6)', marginBottom: 8 },
+  qrContainer: { padding: 12, backgroundColor: '#ffffff', borderRadius: 14, marginBottom: 10 },
+  codeContainer: { alignItems: 'center', marginBottom: 12 },
+  codeLabel: { fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 4 },
   codeRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   codeText: { fontSize: 28, fontWeight: '700', color: '#ffffff', letterSpacing: 4 },
   copyButton: {
