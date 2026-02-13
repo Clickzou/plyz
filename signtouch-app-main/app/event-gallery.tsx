@@ -296,11 +296,6 @@ export default function EventGalleryScreen() {
           </View>
         )}
         <View style={styles.actionButtons}>
-          {(item.asset_type === 'photo_signed' || item.asset_type === 'signed_photo') && item.signer && (
-            <TouchableOpacity style={styles.cloneBtn} onPress={() => handleClone(item)}>
-              <Copy size={16} color="#fff" />
-            </TouchableOpacity>
-          )}
           <TouchableOpacity style={styles.downloadBtn} onPress={() => handleDownload(item)}>
             <Download size={18} color="#fff" />
           </TouchableOpacity>
