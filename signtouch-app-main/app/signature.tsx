@@ -22,6 +22,7 @@ SplashScreen.preventAutoHideAsync();
 
 interface DrawingPath {
   path: string;
+  isDot?: boolean;
 }
 
 export default function SignatureScreen() {
@@ -171,10 +172,13 @@ export default function SignatureScreen() {
 
       let finalPath = currentPathRef.current;
       if (distance < 5) {
-        finalPath = `M ${startPoint.x - 2} ${startPoint.y} L ${startPoint.x + 2} ${startPoint.y} L ${startPoint.x} ${startPoint.y - 2} L ${startPoint.x} ${startPoint.y + 2}`;
+        const r = 4;
+        const cx = startPoint.x;
+        const cy = startPoint.y;
+        finalPath = `M ${cx - r} ${cy} A ${r} ${r} 0 1 0 ${cx + r} ${cy} A ${r} ${r} 0 1 0 ${cx - r} ${cy} Z`;
       }
 
-      setPaths((prev) => [...prev, { path: finalPath }]);
+      setPaths((prev) => [...prev, { path: finalPath, isDot: distance < 5 }]);
       setCurrentPath('');
       currentPathRef.current = '';
       startPointRef.current = null;
@@ -182,8 +186,9 @@ export default function SignatureScreen() {
   }, []);
 
   const onTapDot = useCallback((x: number, y: number) => {
-    const dotPath = `M ${x - 3} ${y} L ${x + 3} ${y} M ${x} ${y - 3} L ${x} ${y + 3}`;
-    setPaths((prev) => [...prev, { path: dotPath }]);
+    const r = 4;
+    const dotPath = `M ${x - r} ${y} A ${r} ${r} 0 1 0 ${x + r} ${y} A ${r} ${r} 0 1 0 ${x - r} ${y} Z`;
+    setPaths((prev) => [...prev, { path: dotPath, isDot: true }]);
   }, []);
 
   const tapDraw = Gesture.Tap()
@@ -232,7 +237,7 @@ export default function SignatureScreen() {
 
           paths.forEach((item) => {
             const pathData = item.path;
-            const commands = pathData.split(/(?=[ML])/);
+            const commands = pathData.split(/(?=[MLAZ])/);
 
             commands.forEach((command) => {
               const parts = command.trim().split(/\s+/);
@@ -245,6 +250,13 @@ export default function SignatureScreen() {
                 minY = Math.min(minY, y);
                 maxX = Math.max(maxX, x);
                 maxY = Math.max(maxY, y);
+              } else if (type === 'A' && parts.length >= 8) {
+                const endX = parseFloat(parts[6]);
+                const endY = parseFloat(parts[7]);
+                minX = Math.min(minX, endX);
+                minY = Math.min(minY, endY);
+                maxX = Math.max(maxX, endX);
+                maxY = Math.max(maxY, endY);
               }
             });
           });
@@ -256,10 +268,9 @@ export default function SignatureScreen() {
             return;
           }
 
-          // Normaliser les paths pour qu'ils commencent à (0,0)
           const normalizedPaths = paths.map(item => {
             const pathData = item.path;
-            const commands = pathData.split(/(?=[ML])/);
+            const commands = pathData.split(/(?=[MLAZ])/);
             let d = '';
             commands.forEach(command => {
               const parts = command.trim().split(/\s+/);
@@ -268,17 +279,25 @@ export default function SignatureScreen() {
                 const x = parseFloat(parts[1]) - minX + padding;
                 const y = parseFloat(parts[2]) - minY + padding;
                 d += `${type} ${x} ${y} `;
+              } else if (type === 'A' && parts.length >= 8) {
+                const endX = parseFloat(parts[6]) - minX + padding;
+                const endY = parseFloat(parts[7]) - minY + padding;
+                d += `A ${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]} ${parts[5]} ${endX} ${endY} `;
+              } else if (type === 'Z') {
+                d += 'Z ';
               }
             });
-            return d.trim();
+            return { d: d.trim(), isDot: item.isDot || false };
           });
 
           const boundingWidth = maxX - minX + padding * 2;
           const boundingHeight = maxY - minY + padding * 2;
 
-          // Créer un SVG string au lieu de PNG
           const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${boundingWidth}" height="${boundingHeight}" viewBox="0 0 ${boundingWidth} ${boundingHeight}">
-  ${normalizedPaths.map(pathData => `<path d="${pathData}" stroke="#ffffff" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round" />`).join('\n  ')}
+  ${normalizedPaths.map(p => p.isDot
+    ? `<path d="${p.d}" stroke="none" fill="#ffffff" />`
+    : `<path d="${p.d}" stroke="#ffffff" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round" />`
+  ).join('\n  ')}
 </svg>`;
 
           // Convertir le SVG en data URI
@@ -300,7 +319,7 @@ export default function SignatureScreen() {
 
           paths.forEach((item) => {
             const pathData = item.path;
-            const commands = pathData.split(/(?=[ML])/);
+            const commands = pathData.split(/(?=[MLAZ])/);
 
             commands.forEach((command) => {
               const parts = command.trim().split(/\s+/);
@@ -315,6 +334,15 @@ export default function SignatureScreen() {
                   maxX = Math.max(maxX, x);
                   maxY = Math.max(maxY, y);
                 }
+              } else if (type === 'A' && parts.length >= 8) {
+                const endX = parseFloat(parts[6]);
+                const endY = parseFloat(parts[7]);
+                if (!isNaN(endX) && !isNaN(endY)) {
+                  minX = Math.min(minX, endX);
+                  minY = Math.min(minY, endY);
+                  maxX = Math.max(maxX, endX);
+                  maxY = Math.max(maxY, endY);
+                }
               }
             });
           });
@@ -326,10 +354,9 @@ export default function SignatureScreen() {
             return;
           }
 
-          // Normaliser les paths pour qu'ils commencent à (0,0)
           const normalizedPaths = paths.map(item => {
             const pathData = item.path;
-            const commands = pathData.split(/(?=[ML])/);
+            const commands = pathData.split(/(?=[MLAZ])/);
             let d = '';
             commands.forEach(command => {
               const parts = command.trim().split(/\s+/);
@@ -338,6 +365,12 @@ export default function SignatureScreen() {
                 const x = parseFloat(parts[1]) - minX + padding;
                 const y = parseFloat(parts[2]) - minY + padding;
                 d += `${type} ${x} ${y} `;
+              } else if (type === 'A' && parts.length >= 8) {
+                const endX = parseFloat(parts[6]) - minX + padding;
+                const endY = parseFloat(parts[7]) - minY + padding;
+                d += `A ${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]} ${parts[5]} ${endX} ${endY} `;
+              } else if (type === 'Z') {
+                d += 'Z ';
               }
             });
             return d.trim();
@@ -346,9 +379,8 @@ export default function SignatureScreen() {
           const boundingWidth = maxX - minX + padding * 2;
           const boundingHeight = maxY - minY + padding * 2;
 
-          // Créer une data URI JSON contenant les paths
           const svgJson = JSON.stringify({
-            paths: normalizedPaths,
+            paths: normalizedPaths.map(p => p),
             width: boundingWidth,
             height: boundingHeight
           });
@@ -482,9 +514,9 @@ export default function SignatureScreen() {
                       <Path
                         key={index}
                         d={item.path}
-                        stroke="#ffffff"
-                        strokeWidth={8}
-                        fill="none"
+                        stroke={item.isDot ? "none" : "#ffffff"}
+                        strokeWidth={item.isDot ? 0 : 8}
+                        fill={item.isDot ? "#ffffff" : "none"}
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
