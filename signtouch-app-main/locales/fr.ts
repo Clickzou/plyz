@@ -758,7 +758,7 @@ export default {
   startTimeHint: 'L\'événement commencera à cette heure',
   eventScheduled: 'Événement planifié!',
   startsAt: 'Commence à',
-  fanGalleryHint: 'Appuyez pour télécharger. Utilisez l\'icône copier pour créer votre propre photo avec cette signature!',
+  fanGalleryHint: 'Touchez une photo signée pour la personnaliser. Utilisez l\'icône copier pour créer votre propre photo avec cette signature !',
 
   // Trial System
   trialExpired: 'Votre essai gratuit est terminé',
@@ -1054,4 +1054,6 @@ export default {
   showQrCode: 'Voir QR',
   noPhotosPublished: 'Aucune photo publiée',
   liveVideo: 'Session Live Vidéo',
+  dragSignatureHint: 'Glissez la signature pour la déplacer. Utilisez les boutons pour redimensionner, pivoter ou changer la couleur.',
+  editPhoto: 'Modifier la photo',
 };

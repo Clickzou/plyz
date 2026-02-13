@@ -220,6 +220,29 @@ export default function EventGalleryScreen() {
     return () => subscription.remove();
   }, [startPolling, stopPolling, startHeartbeat, stopHeartbeat, handleRefresh]);
 
+  const handleOpenEditor = (asset: EventAsset) => {
+    if (asset.signature_metadata && asset.original_photo_url) {
+      const meta = asset.signature_metadata;
+      router.push({
+        pathname: '/event-photo-editor',
+        params: {
+          photoUrl: asset.original_photo_url,
+          signatureUrl: meta.signature_url,
+          positionX: String(meta.position_x),
+          positionY: String(meta.position_y),
+          scale: String(meta.scale),
+          rotation: String(meta.rotation),
+          color: meta.color,
+          containerWidth: String(meta.container_width),
+          containerHeight: String(meta.container_height),
+          signerName: asset.signer?.display_name || '',
+        },
+      });
+    } else {
+      handleDownload(asset);
+    }
+  };
+
   const handleDownload = async (asset: EventAsset) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -227,14 +250,12 @@ export default function EventGalleryScreen() {
     try {
       let imageUri = asset.asset_url;
       
-      // On mobile, download the image first to a local file
       if (Platform.OS !== 'web') {
         const localUri = FileSystem.documentDirectory + `signtouch-${Date.now()}.png`;
         const downloadResult = await FileSystem.downloadAsync(asset.asset_url, localUri);
         imageUri = downloadResult.uri;
       }
       
-      // Save to SignTouch gallery
       await saveMemory(imageUri, user?.id || null, {
         isEdited: true,
       });
@@ -265,7 +286,7 @@ export default function EventGalleryScreen() {
   };
 
   const renderAsset = ({ item }: { item: EventAsset }) => (
-    <TouchableOpacity style={styles.assetCard} onPress={() => handleDownload(item)} activeOpacity={0.9}>
+    <TouchableOpacity style={styles.assetCard} onPress={() => handleOpenEditor(item)} activeOpacity={0.9}>
       <Image source={{ uri: item.asset_url }} style={styles.assetImage} resizeMode="cover" />
       <View style={styles.assetOverlay}>
         {item.signer && (

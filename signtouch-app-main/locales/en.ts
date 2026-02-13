@@ -1052,4 +1052,6 @@ export default {
   showQrCode: 'Show QR',
   noPhotosPublished: 'No photos published yet',
   liveVideo: 'Live Video Session',
+  dragSignatureHint: 'Drag the signature to move it. Use the buttons to resize, rotate, or change color.',
+  editPhoto: 'Edit Photo',
 };

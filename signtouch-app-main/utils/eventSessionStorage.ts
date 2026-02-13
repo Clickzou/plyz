@@ -33,12 +33,25 @@ export interface EventSigner {
   created_at: string;
 }
 
+export interface SignatureMetadata {
+  position_x: number;
+  position_y: number;
+  scale: number;
+  rotation: number;
+  color: string;
+  signature_url: string;
+  container_width: number;
+  container_height: number;
+}
+
 export interface EventAsset {
   id: string;
   event_id: string;
   signer_id: string | null;
   asset_type: 'photo' | 'photo_signed' | 'signature' | 'signed_photo' | 'signature_only';
   asset_url: string;
+  original_photo_url: string | null;
+  signature_metadata: SignatureMetadata | null;
   created_at: string;
   signer?: EventSigner;
 }
@@ -535,10 +548,20 @@ export const publishEventAsset = async (
   eventId: string,
   imageUri: string,
   type: 'photo' | 'photo_signed' | 'signature',
-  signerId?: string
+  signerId?: string,
+  options?: {
+    originalPhotoUri?: string;
+    signatureMetadata?: SignatureMetadata;
+  }
 ): Promise<EventAsset> => {
   const path = await uploadSessionImage(imageUri, eventId, 'asset');
   const imageUrl = getSessionImageUrl(path);
+
+  let originalPhotoUrl: string | null = null;
+  if (options?.originalPhotoUri) {
+    const origPath = await uploadSessionImage(options.originalPhotoUri, eventId, 'asset');
+    originalPhotoUrl = getSessionImageUrl(origPath);
+  }
 
   const { data, error } = await supabase
     .from('event_assets')
@@ -547,6 +570,8 @@ export const publishEventAsset = async (
       signer_id: signerId || null,
       asset_type: type,
       asset_url: imageUrl,
+      original_photo_url: originalPhotoUrl,
+      signature_metadata: options?.signatureMetadata || null,
     })
     .select()
     .single();

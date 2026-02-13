@@ -56,6 +56,7 @@ import BottomNav from '@/components/BottomNav';
 const QRCodeSvg = require('react-native-qrcode-svg').default;
 import {
   EventSigner,
+  SignatureMetadata,
   getEventSigners,
   publishEventAsset,
   getActiveViewerCount,
@@ -387,10 +388,17 @@ export default function EventPublishScreen() {
             sigImg.src = selectedSigner.signature_url!;
           });
           
-          const sigWidth = 150 * signatureScale;
-          const sigHeight = (sigImg.height / sigImg.width) * sigWidth;
-          const sigX = (canvas.width / 2) + signaturePosition.x - (sigWidth / 2);
-          const sigY = (canvas.height / 2) + signaturePosition.y - (sigHeight / 2);
+          const previewW = containerLayout.width || 300;
+          const previewH = containerLayout.height || 400;
+          const scaleX = canvas.width / previewW;
+          const scaleY = canvas.height / previewH;
+          
+          const baseSigWidth = 200;
+          const baseSigHeight = 100;
+          const sigWidth = baseSigWidth * signatureScale * scaleX;
+          const sigHeight = baseSigHeight * signatureScale * scaleY;
+          const sigX = (canvas.width / 2) + (signaturePosition.x * scaleX) - (sigWidth / 2);
+          const sigY = (canvas.height / 2) + (signaturePosition.y * scaleY) - (sigHeight / 2);
           
           ctx.save();
           ctx.translate(sigX + sigWidth / 2, sigY + sigHeight / 2);
@@ -468,11 +476,26 @@ export default function EventPublishScreen() {
     try {
       const imageToPublish = type === 'photo_signed' ? await captureComposite() : selectedImage;
       
+      const publishOptions = type === 'photo_signed' && selectedSigner?.signature_url ? {
+        originalPhotoUri: selectedImage!,
+        signatureMetadata: {
+          position_x: signaturePosition.x,
+          position_y: signaturePosition.y,
+          scale: signatureScale,
+          rotation: signatureRotation,
+          color: signatureColor,
+          signature_url: selectedSigner.signature_url,
+          container_width: containerLayout.width || 300,
+          container_height: containerLayout.height || 400,
+        } as SignatureMetadata,
+      } : undefined;
+      
       await publishEventAsset(
         sessionId,
         imageToPublish,
         type,
-        type === 'photo_signed' ? selectedSignerId || undefined : undefined
+        type === 'photo_signed' ? selectedSignerId || undefined : undefined,
+        publishOptions
       );
 
       setPublishedCount((prev) => prev + 1);
