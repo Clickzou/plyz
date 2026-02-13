@@ -1302,17 +1302,61 @@ export default function JoinEventScreen() {
             </View>
             <Text style={styles.foundTitle}>{foundSession.title}</Text>
             
-            <View style={styles.sessionInfo}>
-              <View style={styles.sessionInfoItem}>
-                <Users size={18} color="#10B981" />
-                <Text style={styles.sessionInfoText}>{sessionSigners.length} {t('celebrities') || 'celebrities'}</Text>
+            <View style={styles.eventDetailsCard}>
+              <View style={styles.eventDetailRow}>
+                <View style={styles.eventDetailIconCircle}>
+                  <Users size={16} color="#10B981" />
+                </View>
+                <View style={styles.eventDetailContent}>
+                  <Text style={styles.eventDetailLabel}>{t('celebrities') || 'Celebrities'}</Text>
+                  <Text style={styles.eventDetailValue}>{sessionSigners.length} {t('celebrities') || 'celebrities'}</Text>
+                </View>
               </View>
-              <View style={styles.sessionInfoItem}>
-                <Clock size={18} color="#f59e0b" />
-                <Text style={styles.sessionInfoText}>
-                  {t('until') || 'Until'} {new Date(foundSession.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Text>
+
+              <View style={styles.eventDetailDivider} />
+
+              <View style={styles.eventDetailRow}>
+                <View style={[styles.eventDetailIconCircle, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
+                  <Clock size={16} color="#f59e0b" />
+                </View>
+                <View style={styles.eventDetailContent}>
+                  <Text style={styles.eventDetailLabel}>{t('eventDuration') || 'Duration'}</Text>
+                  <Text style={styles.eventDetailValue}>
+                    {t('until') || 'Until'} {new Date(foundSession.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </Text>
+                </View>
               </View>
+
+              <View style={styles.eventDetailDivider} />
+
+              <View style={styles.eventDetailRow}>
+                <View style={[styles.eventDetailIconCircle, { backgroundColor: 'rgba(99, 102, 241, 0.15)' }]}>
+                  <Text style={{ color: '#818cf8', fontSize: 16, fontWeight: '700' }}>€</Text>
+                </View>
+                <View style={styles.eventDetailContent}>
+                  <Text style={styles.eventDetailLabel}>{t('eventPrice') || 'Price'}</Text>
+                  <Text style={styles.eventDetailValue}>
+                    {foundSession.price_cents && foundSession.price_cents > 0
+                      ? `${(foundSession.price_cents / 100).toFixed(2).replace('.', ',')}€`
+                      : (t('free') || 'Free')}
+                  </Text>
+                </View>
+              </View>
+
+              {foundSession.location && (
+                <>
+                  <View style={styles.eventDetailDivider} />
+                  <View style={styles.eventDetailRow}>
+                    <View style={[styles.eventDetailIconCircle, { backgroundColor: 'rgba(239, 68, 68, 0.15)' }]}>
+                      <Text style={{ color: '#ef4444', fontSize: 14 }}>📍</Text>
+                    </View>
+                    <View style={styles.eventDetailContent}>
+                      <Text style={styles.eventDetailLabel}>{t('eventLocation') || 'Location'}</Text>
+                      <Text style={styles.eventDetailValue}>{foundSession.location}</Text>
+                    </View>
+                  </View>
+                </>
+              )}
             </View>
 
             {sessionSigners.length > 0 && (
@@ -1611,6 +1655,47 @@ const styles = StyleSheet.create({
   sessionInfo: { flexDirection: 'row', gap: 20, marginBottom: 16 },
   sessionInfoItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   sessionInfoText: { fontSize: 14, color: 'rgba(255,255,255,0.7)' },
+  eventDetailsCard: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  eventDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 4,
+  },
+  eventDetailIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  eventDetailContent: {
+    flex: 1,
+  },
+  eventDetailLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
+    marginBottom: 2,
+  },
+  eventDetailValue: {
+    fontSize: 15,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  eventDetailDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    marginVertical: 10,
+  },
   signersPreview: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24, justifyContent: 'center' },
   signerChip: {
     backgroundColor: 'rgba(16,185,129,0.2)',
