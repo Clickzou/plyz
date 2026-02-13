@@ -219,8 +219,21 @@ function StaticSignature({ overlay }: StaticSignatureProps) {
       } catch (e) {}
     }
 
-    const displayWidth = 150;
-    const displayHeight = 80;
+    let displayWidth = 150;
+    let displayHeight = 80;
+    try {
+      const b64 = overlay.uri.split(',')[1];
+      const raw = decodeURIComponent(escape(atob(b64)));
+      const wm = raw.match(/width="([^"]+)"/);
+      const hm = raw.match(/height="([^"]+)"/);
+      if (wm && hm) {
+        const w = parseFloat(wm[1]);
+        const h = parseFloat(hm[1]);
+        const ar = w / h;
+        displayWidth = Math.min(w, 200);
+        displayHeight = displayWidth / ar;
+      }
+    } catch (e) {}
 
     return (
       <div
@@ -306,13 +319,16 @@ function StaticSignature({ overlay }: StaticSignatureProps) {
       const heightMatch = svgString.match(/height="([^"]+)"/);
       const width = widthMatch ? parseFloat(widthMatch[1]) : 300;
       const height = heightMatch ? parseFloat(heightMatch[1]) : 150;
+      const ar = width / height;
+      const dw = Math.min(width, 200);
+      const dh = dw / ar;
 
       return (
         <View style={[styles.signatureWrapper, {
           left: overlay.x,
           top: overlay.y,
-          width: 150,
-          height: 80,
+          width: dw,
+          height: dh,
           transform: [
             { rotate: `${overlay.rotation}deg` },
             { scale: overlay.scale }
@@ -499,19 +515,19 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
     } else if (isSvgData) {
       try {
         const base64Data = overlay.uri.split(',')[1];
-        const svgString = atob(base64Data);
+        const svgString = Platform.OS === 'web'
+          ? decodeURIComponent(escape(atob(base64Data)))
+          : atob(base64Data);
         const pathRegex = /d="([^"]+)"/g;
         let match;
         while ((match = pathRegex.exec(svgString)) !== null) {
           svgPaths.push(match[1]);
         }
-        // Extract dimensions
         const widthMatch = svgString.match(/width="([^"]+)"/);
         const heightMatch = svgString.match(/height="([^"]+)"/);
         if (widthMatch) svgWidth = parseFloat(widthMatch[1]);
         if (heightMatch) svgHeight = parseFloat(heightMatch[1]);
         
-        // Extract viewBox if present (contains original canvas dimensions)
         const viewBoxMatch = svgString.match(/viewBox="([^"]+)"/);
         if (viewBoxMatch) {
           const parts = viewBoxMatch[1].split(/\s+/);
@@ -524,9 +540,9 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
           viewBoxHeight = svgHeight;
         }
         
-        // Display at consistent size
-        displayWidth = 150;
-        displayHeight = 80;
+        const aspectRatio = svgWidth / svgHeight;
+        displayWidth = Math.min(svgWidth, 200);
+        displayHeight = displayWidth / aspectRatio;
       } catch (error) {
         console.error('Error parsing SVG data:', error);
       }
@@ -1188,6 +1204,7 @@ export default function ResultScreen() {
   };
 
   const displayUri = memory ? (memory.baseUri || memory.uri) : imageUri;
+  const hasBaseUri = memory ? !!memory.baseUri : true;
 
   // Hide welcome message on tap
   const hideWelcomeMessage = () => {
@@ -2120,15 +2137,15 @@ export default function ResultScreen() {
                 />
               </TouchableOpacity>
             </View>
-            {/* Static overlays (non-editable) */}
-            {!isEditMode && signatureOverlays.map(overlay => (
+            {/* Static overlays (non-editable) - only if baseUri exists (otherwise baked into uri) */}
+            {!isEditMode && hasBaseUri && signatureOverlays.map(overlay => (
               <StaticSignature
                 key={overlay.id}
                 overlay={overlay}
               />
             ))}
-            {/* Draggable overlays (editable) */}
-            {isEditMode && !saving && signatureOverlays.map(overlay => (
+            {/* Draggable overlays (editable) - only if baseUri exists (otherwise baked into uri) */}
+            {isEditMode && !saving && hasBaseUri && signatureOverlays.map(overlay => (
               <DraggableSignature
                 key={overlay.id}
                 overlay={overlay}
