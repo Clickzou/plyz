@@ -55,7 +55,12 @@ Preferred communication style: Simple, everyday language.
     - `POST /api/launch-scheduled-session`: Transitions a scheduled live session to 'waiting' status and updates linked event_sessions to 'live'.
     - `POST /api/validate-promo-code`: Validates a promo code for a live session (checks active, expiry, max_uses). Returns discount_percent if valid.
     - `POST /api/use-promo-code`: Increments used_count for a promo code after successful queue join (atomic with optimistic locking).
-    - `POST /api/stripe-webhook`: Handles Stripe webhook events for payment confirmation.
+    - `POST /api/set-event-payment-config`: Stores event payment config (price, celebrity Stripe account) for a dedication event session.
+    - `GET /api/get-event-payment-config`: Retrieves payment config for an event session (price, celebrity Stripe account).
+    - `POST /api/create-event-checkout`: Creates Stripe Checkout session for dedication event payment with 15% platform fee and Connect transfer.
+    - `GET /api/verify-event-payment`: Verifies Stripe Checkout payment status and records paid access server-side.
+    - `GET /api/check-event-access`: Checks if a fan has paid for a specific event session (server-side verification).
+    - `POST /api/stripe-webhook`: Handles Stripe webhook events for payment confirmation (also records dedication event payments).
     - `GET /api/health`: Health check endpoint.
   - **Stripe Connect**: Full automated onboarding via `StripeConnectModal` component. Server creates Express accounts, generates onboarding links, and verifies status. Celebrity's Stripe Connect account ID stored in AsyncStorage and in live session data (`celebrity_stripe_account_id`). Payments are automatically split: SignTouch fee (15%) via application_fee_amount, rest goes to celebrity's Stripe Connect account.
   - **Fee Structure**: SignTouch 15% + Stripe 2.9% + 0.30€ per transaction. No Apple/Google store fees.
