@@ -871,6 +871,7 @@ export default function ComposeScreen() {
             const totalSignatures = signatureUris.length;
 
             const finishCapture = () => {
+              console.log('[NEW CANVAS v2] Drawing', signatureImages.length, 'signatures');
               signatureImages.forEach((signatureImg, index) => {
                 const transform = signatureTransforms[index];
                 const tx = transform.translateX.value * canvasScale;
