@@ -1208,6 +1208,10 @@ export default function ResultScreen() {
     ? (isEditMode && memory.baseUri ? memory.baseUri : memory.uri)
     : imageUri;
 
+  if (memory) {
+    console.log('[Result] editMode=', isEditMode, 'hasBaseUri=', hasBaseUri, 'displayUri=', displayUri?.substring(0, 60), 'uri=', memory.uri?.substring(0, 60), 'baseUri=', memory.baseUri?.substring(0, 60));
+  }
+
   // Hide welcome message on tap
   const hideWelcomeMessage = () => {
     if (showWelcomeMessage) {

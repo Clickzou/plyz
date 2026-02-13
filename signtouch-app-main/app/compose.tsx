@@ -663,8 +663,9 @@ export default function ComposeScreen() {
       const memory = memories.find(m => m.id === memoryId);
 
       if (memory && memory.uri) {
-        console.log('✅ Memory trouvée, URI:', memory.uri.substring(0, 50) + '...');
-        setLoadedPhotoUri(memory.uri);
+        const basePhoto = memory.baseUri || memory.uri;
+        console.log('✅ Memory trouvée, baseUri:', basePhoto.substring(0, 50) + '...');
+        setLoadedPhotoUri(basePhoto);
       } else {
         console.warn('⚠️ Memory non trouvée ou sans URI');
         setLoadedPhotoUri(photoUri as string);
