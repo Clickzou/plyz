@@ -28,7 +28,7 @@ import { Type, Minus, CreditCard as Edit3, Check, RotateCw, ChevronLeft, Chevron
 import * as Haptics from 'expo-haptics';
 import { captureRef } from 'react-native-view-shot';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, SvgXml } from 'react-native-svg';
 import { Memory, SignatureOverlay, TextOverlay } from '@/utils/memoriesStorage';
 import { Modal, TextInput } from 'react-native';
 import * as StorageService from '@/utils/storageService';
@@ -162,53 +162,32 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
 
   const renderUri2 = Platform.OS === 'web' && isSvgDataUri && coloredSvgUri ? coloredSvgUri : uri;
 
-  const [webSvgPaths, setWebSvgPaths] = useState<Array<{ d: string; isDot: boolean }>>([]);
-  const [webSvgViewBox, setWebSvgViewBox] = useState<{ width: number; height: number } | null>(null);
+  const [webSvgXml, setWebSvgXml] = useState<string | null>(null);
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
     if (!isSvgDataUri) return;
     try {
       const base64Data = uri.split(',')[1];
-      const svgString = decodeURIComponent(escape(atob(base64Data)));
-      const widthMatch = svgString.match(/width="([^"]+)"/);
-      const heightMatch = svgString.match(/height="([^"]+)"/);
-      const w = widthMatch ? parseFloat(widthMatch[1]) : 150;
-      const h = heightMatch ? parseFloat(heightMatch[1]) : 80;
-      setWebSvgViewBox({ width: w, height: h });
-
-      const pathRegex = /<path\s+d="([^"]+)"[^/]*\/>/g;
-      const paths: Array<{ d: string; isDot: boolean }> = [];
-      let match;
-      while ((match = pathRegex.exec(svgString)) !== null) {
-        const d = match[0];
-        const isDot = d.includes('fill=') && !d.includes('fill="none"');
-        paths.push({ d: match[1], isDot });
-      }
-      setWebSvgPaths(paths);
-      console.log('[AnimatedSignature WEB] SVG parsed:', paths.length, 'paths, viewBox:', w, 'x', h);
+      let svgString = decodeURIComponent(escape(atob(base64Data)));
+      svgString = svgString.replace(/stroke="#[a-fA-F0-9]+"/g, `stroke="${color}"`);
+      svgString = svgString.replace(/fill="#[a-fA-F0-9]+"/g, `fill="${color}"`);
+      setWebSvgXml(svgString);
+      console.log('[AnimatedSignature WEB] SvgXml ready, length:', svgString.length);
     } catch (error) {
-      console.error('[AnimatedSignature WEB] Error parsing SVG:', error);
+      console.error('[AnimatedSignature WEB] Error decoding SVG:', error);
     }
-  }, [uri, isSvgDataUri]);
+  }, [uri, isSvgDataUri, color]);
 
   const renderContent = () => {
     if (Platform.OS === 'web') {
-      if (isSvgDataUri && webSvgPaths.length > 0 && webSvgViewBox) {
+      if (isSvgDataUri && webSvgXml) {
         return (
-          <Svg width={imageDimensions.width} height={imageDimensions.height} viewBox={`0 0 ${webSvgViewBox.width} ${webSvgViewBox.height}`}>
-            {webSvgPaths.map((pathItem, idx) => (
-              <Path
-                key={idx}
-                d={pathItem.d}
-                stroke={pathItem.isDot ? 'none' : color}
-                fill={pathItem.isDot ? color : 'none'}
-                strokeWidth={8}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            ))}
-          </Svg>
+          <SvgXml
+            xml={webSvgXml}
+            width={imageDimensions.width}
+            height={imageDimensions.height}
+          />
         );
       }
       if (isJsonData && svgData) {
