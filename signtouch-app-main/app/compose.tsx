@@ -86,8 +86,8 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
   const [imageDimensions, setImageDimensions] = useState({ width: 150, height: 80 });
   const [svgData, setSvgData] = useState<any>(null);
 
-  // Vérifier si c'est une data URI JSON (mobile SVG paths)
   const isJsonData = uri.startsWith('data:application/json;base64,');
+  const isSvgDataUri = uri.startsWith('data:image/svg+xml;base64,');
 
   useEffect(() => {
     if (isJsonData) {
@@ -99,6 +99,26 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
         setImageDimensions({ width: parsed.width, height: parsed.height });
       } catch (error) {
         console.error('Error parsing SVG data:', error);
+      }
+      return;
+    }
+
+    if (isSvgDataUri && Platform.OS === 'web') {
+      try {
+        const base64Data = uri.split(',')[1];
+        const svgString = decodeURIComponent(escape(atob(base64Data)));
+        const widthMatch = svgString.match(/width="([^"]+)"/);
+        const heightMatch = svgString.match(/height="([^"]+)"/);
+        const pathMatches = [...svgString.matchAll(/<path[^>]*d="([^"]+)"[^>]*\/>/g)];
+        const paths = pathMatches.map(m => m[1]);
+        const w = widthMatch ? parseFloat(widthMatch[1]) : 150;
+        const h = heightMatch ? parseFloat(heightMatch[1]) : 80;
+        if (paths.length > 0) {
+          setSvgData({ paths, width: w, height: h });
+          setImageDimensions({ width: Math.min(w, 250), height: Math.min(h, 150) });
+        }
+      } catch (error) {
+        console.error('Error parsing SVG data URI:', error);
       }
       return;
     }
@@ -121,7 +141,7 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
         console.error('Error getting image size:', error);
       }
     );
-  }, [uri, isJsonData]);
+  }, [uri, isJsonData, isSvgDataUri]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -146,7 +166,7 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
         }
       ]}>
         {svgData ? (
-          <Svg width={svgData.width} height={svgData.height} style={styles.signature}>
+          <Svg width={imageDimensions.width} height={imageDimensions.height} viewBox={`0 0 ${svgData.width} ${svgData.height}`} style={styles.signature}>
             {svgData.paths.map((pathData: string, idx: number) => (
               <Path
                 key={idx}
@@ -162,7 +182,8 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
         ) : (
           <Image
             source={{ uri }}
-            style={[styles.signature, { tintColor: color }]}
+            style={[styles.signature]}
+            tintColor={color}
             resizeMode="contain"
           />
         )}
