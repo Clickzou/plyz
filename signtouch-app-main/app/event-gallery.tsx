@@ -11,6 +11,14 @@ import {
   AppState,
   Platform,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  withSequence,
+  Easing,
+} from 'react-native-reanimated';
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -33,10 +41,139 @@ import { saveMemory } from '@/utils/storageService';
 import { useAuth } from '@/contexts/AuthContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
+let Notifications: any = null;
+try {
+  Notifications = require('expo-notifications');
+} catch (e) {}
+
 type TabType = 'all' | 'official' | 'signed';
 
 const POLLING_INTERVAL = 20000;
 const HEARTBEAT_INTERVAL = 60000;
+
+const playNewPhotoChime = () => {
+  if (Platform.OS === 'web' && typeof window !== 'undefined' && (window.AudioContext || (window as any).webkitAudioContext)) {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioCtx();
+      const masterGain = ctx.createGain();
+      masterGain.gain.value = 0.5;
+      masterGain.connect(ctx.destination);
+      const notes = [
+        { freq: 587.33, start: 0, dur: 0.15, type: 'triangle' as OscillatorType },
+        { freq: 783.99, start: 0.12, dur: 0.15, type: 'triangle' as OscillatorType },
+        { freq: 1046.5, start: 0.24, dur: 0.3, type: 'sine' as OscillatorType },
+        { freq: 1318.5, start: 0.4, dur: 0.4, type: 'sine' as OscillatorType },
+      ];
+      notes.forEach(({ freq, start, dur, type }) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.35, ctx.currentTime + start);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + start + dur);
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(ctx.currentTime + start);
+        osc.stop(ctx.currentTime + start + dur + 0.05);
+      });
+    } catch (e) {}
+  }
+  if (Platform.OS !== 'web') {
+    try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (e) {}
+  }
+};
+
+const CONFETTI_COLORS = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#FF69B4', '#00CED1', '#FF8C00'];
+const CONFETTI_COUNT = 50;
+
+interface ConfettiPiece {
+  id: number;
+  x: number;
+  color: string;
+  size: number;
+  rotation: number;
+  shape: 'rect' | 'circle';
+}
+
+const ConfettiPieceView = ({ piece, active, index }: { piece: ConfettiPiece; active: boolean; index: number }) => {
+  const translateY = useSharedValue(-20);
+  const opacity = useSharedValue(0);
+  const rotate = useSharedValue(0);
+  const translateX = useSharedValue(0);
+
+  const params = React.useMemo(() => ({
+    delay: (index * 40) + ((index * 17) % 200),
+    fallDistance: 400 + (index % 7) * 60,
+    drift: ((index % 10) - 5) * 30,
+    spinAmount: 360 + (index % 5) * 180,
+  }), [index]);
+
+  useEffect(() => {
+    if (active) {
+      const { delay, fallDistance, drift, spinAmount } = params;
+      opacity.value = withDelay(delay, withSequence(
+        withTiming(1, { duration: 100 }),
+        withDelay(1800, withTiming(0, { duration: 600 }))
+      ));
+      translateY.value = withDelay(delay, withTiming(fallDistance, {
+        duration: 2400,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      }));
+      translateX.value = withDelay(delay, withTiming(drift, {
+        duration: 2400,
+        easing: Easing.out(Easing.ease),
+      }));
+      rotate.value = withDelay(delay, withTiming(spinAmount, {
+        duration: 2500,
+        easing: Easing.linear,
+      }));
+    }
+  }, [active]);
+
+  const style = useAnimatedStyle(() => ({
+    position: 'absolute' as const,
+    left: `${piece.x}%` as any,
+    top: -20,
+    width: piece.size,
+    height: piece.shape === 'rect' ? piece.size * 0.6 : piece.size,
+    borderRadius: piece.shape === 'circle' ? piece.size / 2 : 2,
+    backgroundColor: piece.color,
+    opacity: opacity.value,
+    transform: [
+      { translateY: translateY.value },
+      { translateX: translateX.value },
+      { rotate: `${rotate.value}deg` },
+    ],
+  }));
+
+  return <Animated.View style={style} />;
+};
+
+const ConfettiExplosion = ({ active }: { active: boolean }) => {
+  const pieces = React.useMemo<ConfettiPiece[]>(() => {
+    return Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
+      id: i,
+      x: (i * 2) % 100,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      size: 6 + (i % 5) * 2,
+      rotation: (i * 37) % 360,
+      shape: i % 2 === 0 ? 'rect' as const : 'circle' as const,
+    }));
+  }, []);
+
+  if (!active) return null;
+
+  return (
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 999 }}>
+      {pieces.map((piece, i) => (
+        <ConfettiPieceView key={piece.id} piece={piece} active={active} index={i} />
+      ))}
+    </View>
+  );
+};
 
 export default function EventGalleryScreen() {
   const router = useRouter();
@@ -51,12 +188,18 @@ export default function EventGalleryScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState('');
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [newPhotoSignerName, setNewPhotoSignerName] = useState('');
 
   const viewerIdRef = useRef<string>('');
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastFetchedAtRef = useRef<string | null>(null);
   const appStateRef = useRef(AppState.currentState);
+  const knownAssetIdsRef = useRef<Set<string>>(new Set());
+  const initialLoadDoneRef = useRef(false);
+  const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const notificationPermissionRef = useRef<string | null>(null);
 
   const isValidSession = params.sessionId && params.endsAt;
   
@@ -74,6 +217,41 @@ export default function EventGalleryScreen() {
 
   const signers: EventSigner[] = params.signers ? JSON.parse(params.signers as string) : [];
 
+  const triggerNewPhotoAlert = useCallback(async (signerName: string) => {
+    playNewPhotoChime();
+
+    setNewPhotoSignerName(signerName || ((t as any)('newDedicatedPhoto') || 'Nouvelle photo'));
+    setShowConfetti(true);
+    if (confettiTimerRef.current) clearTimeout(confettiTimerRef.current);
+    confettiTimerRef.current = setTimeout(() => {
+      setShowConfetti(false);
+      setNewPhotoSignerName('');
+    }, 3500);
+
+    if (Notifications && Platform.OS !== 'web') {
+      try {
+        if (!notificationPermissionRef.current) {
+          const { status } = await Notifications.requestPermissionsAsync();
+          notificationPermissionRef.current = status;
+        }
+        if (notificationPermissionRef.current === 'granted') {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: (t as any)('newDedicatedPhoto') || 'Nouvelle photo dédicacée !',
+              body: signerName
+                ? `${signerName} ${(t as any)('hasPublishedPhoto') || 'a publié une nouvelle photo dédicacée pour vous'}`
+                : ((t as any)('newPhotoAvailable') || 'Une nouvelle photo dédicacée est disponible !'),
+              sound: true,
+            },
+            trigger: null,
+          });
+        }
+      } catch (e) {
+        console.warn('Notification error:', e);
+      }
+    }
+  }, [t]);
+
   const loadAssets = useCallback(async (isRefresh = false) => {
     try {
       const typeFilter = activeTab === 'official' ? 'photo' : activeTab === 'signed' ? 'photo_signed' : 'all';
@@ -85,11 +263,23 @@ export default function EventGalleryScreen() {
 
       if (newAssets.length > 0) {
         if (isRefresh) {
+          const newIds = newAssets.map(a => a.id);
+          newIds.forEach(id => knownAssetIdsRef.current.add(id));
           setAssets(newAssets);
         } else {
+          const trulyNew = newAssets.filter(a => !knownAssetIdsRef.current.has(a.id));
+
+          if (trulyNew.length > 0 && initialLoadDoneRef.current) {
+            trulyNew.forEach(a => knownAssetIdsRef.current.add(a.id));
+            const latestNew = trulyNew[0];
+            const signerName = latestNew.signer?.display_name || '';
+            triggerNewPhotoAlert(signerName);
+          }
+
           setAssets(prev => {
             const existingIds = new Set(prev.map(a => a.id));
             const uniqueNew = newAssets.filter(a => !existingIds.has(a.id));
+            uniqueNew.forEach(a => knownAssetIdsRef.current.add(a.id));
             return [...uniqueNew, ...prev];
           });
         }
@@ -98,7 +288,7 @@ export default function EventGalleryScreen() {
     } catch (error) {
       console.error('Error loading assets:', error);
     }
-  }, [session.id, activeTab]);
+  }, [session.id, activeTab, triggerNewPhotoAlert]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -169,6 +359,7 @@ export default function EventGalleryScreen() {
       setIsLoading(true);
       viewerIdRef.current = await getOrCreateDeviceId();
       await loadAssets(true);
+      initialLoadDoneRef.current = true;
       const count = await getActiveViewerCount(session.id);
       setViewerCount(count);
       setIsLoading(false);
@@ -184,6 +375,7 @@ export default function EventGalleryScreen() {
       stopPolling();
       stopHeartbeat();
       clearInterval(timeInterval);
+      if (confettiTimerRef.current) clearTimeout(confettiTimerRef.current);
       if (viewerIdRef.current && session.id) {
         leaveEventSession(session.id, viewerIdRef.current);
       }
@@ -313,6 +505,15 @@ export default function EventGalleryScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient colors={['#1a1a2e', '#16213e']} style={StyleSheet.absoluteFill} />
+      <ConfettiExplosion active={showConfetti} />
+
+      {showConfetti && newPhotoSignerName ? (
+        <View style={styles.newPhotoBanner}>
+          <Text style={styles.newPhotoBannerText}>
+            {newPhotoSignerName} {(t as any)('hasPublishedPhoto') || 'a publié une nouvelle photo dédicacée !'}
+          </Text>
+        </View>
+      ) : null}
       
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -530,5 +731,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#6366f1',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  newPhotoBanner: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(16, 185, 129, 0.95)',
+    borderRadius: 16,
+    padding: 16,
+    zIndex: 1000,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  newPhotoBannerText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });
