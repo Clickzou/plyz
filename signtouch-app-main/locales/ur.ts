@@ -522,7 +522,7 @@ export default {
   joinMyEvent: 'میرے ایونٹ میں شامل ہوں',
   openSignTouch: 'SignTouch کھولیں اور میرا دستخط حاصل کرنے کے لیے یہ کوڈ درج کریں!',
   eventExpires24h: 'یہ ایونٹ 24 گھنٹے میں ختم ہو جائے گا',
-  enterEventCode: 'ایونٹ کوڈ درج کریں یا QR کوڈ اسکین کریں',
+  enterEventCode: 'ایونٹ کوڈ درج کریں یا QR کوڈ اسکین کریں اور اپنی وقف شدہ تصاویر حاصل کریں',
   invalidCode: 'براہ کرم درست کوڈ درج کریں',
   eventNotFound: 'ایونٹ نہیں ملا',
   eventNotFoundMessage: 'یہ ایونٹ موجود نہیں ہے یا ختم ہو چکا ہے',

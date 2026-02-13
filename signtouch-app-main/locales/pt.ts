@@ -522,7 +522,7 @@ export default {
   joinMyEvent: 'Entre no meu evento',
   openSignTouch: 'Abra o SignTouch e insira este código para obter minha assinatura!',
   eventExpires24h: 'Este evento expira em 24 horas',
-  enterEventCode: 'Insira o código do evento ou escaneie o QR code para obter a assinatura',
+  enterEventCode: 'Insira o código do evento ou escaneie o QR code para receber as suas fotos dedicadas',
   invalidCode: 'Por favor, insira um código válido',
   eventNotFound: 'Evento não encontrado',
   eventNotFoundMessage: 'Este evento não existe ou expirou',

@@ -522,7 +522,7 @@ export default {
   joinMyEvent: '私のイベントに参加',
   openSignTouch: 'SignTouchを開いてこのコードを入力してサインを取得！',
   eventExpires24h: 'このイベントは24時間後に終了します',
-  enterEventCode: 'イベントコードを入力するかQRコードをスキャンしてサインを取得',
+  enterEventCode: 'イベントコードを入力するかQRコードをスキャンしてサイン写真を受け取ろう',
   invalidCode: '有効なコードを入力してください',
   eventNotFound: 'イベントが見つかりません',
   eventNotFoundMessage: 'このイベントは存在しないか期限切れです',

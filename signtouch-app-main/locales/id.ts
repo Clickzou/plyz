@@ -522,7 +522,7 @@ export default {
   joinMyEvent: 'Gabung acara saya',
   openSignTouch: 'Buka SignTouch dan masukkan kode ini untuk mendapatkan tanda tangan saya!',
   eventExpires24h: 'Acara ini berakhir dalam 24 jam',
-  enterEventCode: 'Masukkan kode acara atau pindai kode QR untuk mendapatkan tanda tangan',
+  enterEventCode: 'Masukkan kode acara atau pindai kode QR untuk menerima foto berdedikasi Anda',
   invalidCode: 'Silakan masukkan kode yang valid',
   eventNotFound: 'Acara Tidak Ditemukan',
   eventNotFoundMessage: 'Acara ini tidak ada atau sudah kedaluwarsa',

@@ -522,7 +522,7 @@ export default {
   joinMyEvent: '加入我的活动',
   openSignTouch: '打开SignTouch并输入此代码获取我的签名！',
   eventExpires24h: '此活动将在24小时后过期',
-  enterEventCode: '输入活动代码或扫描二维码获取签名',
+  enterEventCode: '输入活动代码或扫描二维码以接收您的签名照片',
   invalidCode: '请输入有效代码',
   eventNotFound: '未找到活动',
   eventNotFoundMessage: '此活动不存在或已过期',

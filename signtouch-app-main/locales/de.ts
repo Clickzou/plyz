@@ -522,7 +522,7 @@ export default {
   joinMyEvent: 'Treten Sie meinem Event bei',
   openSignTouch: 'Öffnen Sie SignTouch und geben Sie diesen Code ein, um meine Unterschrift zu erhalten!',
   eventExpires24h: 'Dieses Event läuft in 24 Stunden ab',
-  enterEventCode: 'Geben Sie den Event-Code ein oder scannen Sie den QR-Code, um die Signatur zu erhalten',
+  enterEventCode: 'Gib den Event-Code ein oder scanne den QR-Code, um deine signierten Fotos zu erhalten',
   invalidCode: 'Bitte geben Sie einen gültigen Code ein',
   eventNotFound: 'Event nicht gefunden',
   eventNotFoundMessage: 'Dieses Event existiert nicht oder ist abgelaufen',

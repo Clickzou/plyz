@@ -522,7 +522,7 @@ export default {
   joinMyEvent: 'انضم إلى حدثي',
   openSignTouch: 'افتح SignTouch وأدخل هذا الرمز للحصول على توقيعي!',
   eventExpires24h: 'ينتهي هذا الحدث خلال 24 ساعة',
-  enterEventCode: 'أدخل رمز الحدث أو امسح رمز QR للحصول على التوقيع',
+  enterEventCode: 'أدخل رمز الحدث أو امسح رمز QR لتلقي صورك المهداة',
   invalidCode: 'يرجى إدخال رمز صالح',
   eventNotFound: 'الحدث غير موجود',
   eventNotFoundMessage: 'هذا الحدث غير موجود أو انتهى',
