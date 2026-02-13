@@ -193,16 +193,68 @@ interface StaticSignatureProps {
 }
 
 function StaticSignature({ overlay }: StaticSignatureProps) {
-  // Vérifier si c'est une data URI JSON (mobile SVG paths)
+  const signatureColor = overlay.color || '#ffffff';
   const isJsonData = overlay.uri.startsWith('data:application/json;base64,');
+  const isSvgData = overlay.uri.startsWith('data:image/svg+xml');
+
+  if (Platform.OS === 'web' && (isSvgData || isJsonData)) {
+    let webImgUri = overlay.uri;
+
+    if (isJsonData) {
+      try {
+        const base64Data = overlay.uri.split(',')[1];
+        const jsonString = decodeURIComponent(escape(atob(base64Data)));
+        const svgData = JSON.parse(jsonString);
+        const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgData.width}" height="${svgData.height}">${svgData.paths.map((p: string) => `<path d="${p}" stroke="${signatureColor}" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
+        webImgUri = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
+      } catch (e) {}
+    } else if (isSvgData) {
+      try {
+        const base64Data = overlay.uri.split(',')[1];
+        const svgString = decodeURIComponent(escape(atob(base64Data)));
+        const recolored = svgString
+          .replace(/stroke="#[a-fA-F0-9]+"/g, `stroke="${signatureColor}"`)
+          .replace(/fill="#[a-fA-F0-9]+"/g, `fill="${signatureColor}"`);
+        webImgUri = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(recolored)))}`;
+      } catch (e) {}
+    }
+
+    const displayWidth = 150;
+    const displayHeight = 80;
+
+    return (
+      <div
+        style={{
+          position: 'absolute' as any,
+          top: 0,
+          left: 0,
+          width: displayWidth,
+          height: displayHeight,
+          transform: `translate(${overlay.x}px, ${overlay.y}px) scale(${overlay.scale}) rotate(${overlay.rotation}deg)`,
+          zIndex: 10,
+          pointerEvents: 'none' as any,
+        }}
+      >
+        <img
+          src={webImgUri}
+          draggable={false}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain' as any,
+            display: 'block',
+            pointerEvents: 'none' as any,
+          }}
+        />
+      </div>
+    );
+  }
 
   if (isJsonData) {
     try {
       const base64Data = overlay.uri.split(',')[1];
       const jsonString = decodeURIComponent(escape(atob(base64Data)));
       const svgData = JSON.parse(jsonString);
-
-      const signatureColor = overlay.color || '#ffffff';
 
       return (
         <View style={[styles.signatureWrapper, {
@@ -240,26 +292,16 @@ function StaticSignature({ overlay }: StaticSignatureProps) {
     }
   }
 
-  // SVG data (web)
-  const isSvgData = overlay.uri.startsWith('data:image/svg+xml');
-
   if (isSvgData) {
     try {
       const base64Data = overlay.uri.split(',')[1];
       const svgString = atob(base64Data);
-
-      // Extract all path data from the SVG
       const paths: string[] = [];
       const pathRegex = /d="([^"]+)"/g;
       let match;
       while ((match = pathRegex.exec(svgString)) !== null) {
         paths.push(match[1]);
       }
-
-      // Use the color from overlay
-      const signatureColor = overlay.color || '#ffffff';
-
-      // Extract dimensions from SVG
       const widthMatch = svgString.match(/width="([^"]+)"/);
       const heightMatch = svgString.match(/height="([^"]+)"/);
       const width = widthMatch ? parseFloat(widthMatch[1]) : 300;
@@ -302,7 +344,6 @@ function StaticSignature({ overlay }: StaticSignatureProps) {
     }
   }
 
-  // Image PNG fallback
   return (
     <View style={[styles.draggableTextContainer, {
       left: overlay.x,
@@ -606,7 +647,9 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
       try {
         const base64Data = overlay.uri.split(',')[1];
         const svgString = atob(base64Data);
-        const recolored = svgString.replace(/stroke="[^"]*"/g, `stroke="${signatureColor}"`);
+        const recolored = svgString
+          .replace(/stroke="#[a-fA-F0-9]+"/g, `stroke="${signatureColor}"`)
+          .replace(/fill="#[a-fA-F0-9]+"/g, `fill="${signatureColor}"`);
         webImgUri = `data:image/svg+xml;base64,${btoa(recolored)}`;
       } catch (e) {}
     }
