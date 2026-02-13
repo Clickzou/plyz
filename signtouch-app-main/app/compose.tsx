@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, createElement } from 'react';
 import {
   View,
   Text,
@@ -119,8 +119,8 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
         setImageDimensions({ width: displayW, height: displayH });
 
         let recoloredSvg = svgString;
-        recoloredSvg = recoloredSvg.replace(/stroke="[^"]*"/g, `stroke="${color}"`);
-        recoloredSvg = recoloredSvg.replace(/fill="[^"]*"/g, `fill="${color}"`);
+        recoloredSvg = recoloredSvg.replace(/stroke="#[a-fA-F0-9]+"/g, `stroke="${color}"`);
+        recoloredSvg = recoloredSvg.replace(/fill="#[a-fA-F0-9]+"/g, `fill="${color}"`);
         const recoloredBase64 = btoa(unescape(encodeURIComponent(recoloredSvg)));
         setColoredSvgUri(`data:image/svg+xml;base64,${recoloredBase64}`);
       } catch (error) {
@@ -162,52 +162,20 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
 
   const renderUri2 = Platform.OS === 'web' && isSvgDataUri && coloredSvgUri ? coloredSvgUri : uri;
 
-  const [webSvgXml, setWebSvgXml] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (Platform.OS !== 'web') return;
-    if (!isSvgDataUri) return;
-    try {
-      const base64Data = uri.split(',')[1];
-      let svgString = decodeURIComponent(escape(atob(base64Data)));
-      svgString = svgString.replace(/stroke="#[a-fA-F0-9]+"/g, `stroke="${color}"`);
-      svgString = svgString.replace(/fill="#[a-fA-F0-9]+"/g, `fill="${color}"`);
-      setWebSvgXml(svgString);
-      console.log('[AnimatedSignature WEB] SvgXml ready, length:', svgString.length);
-    } catch (error) {
-      console.error('[AnimatedSignature WEB] Error decoding SVG:', error);
-    }
-  }, [uri, isSvgDataUri, color]);
-
   const renderContent = () => {
     if (Platform.OS === 'web') {
-      if (isSvgDataUri && webSvgXml) {
-        return (
-          <SvgXml
-            xml={webSvgXml}
-            width={imageDimensions.width}
-            height={imageDimensions.height}
-          />
-        );
-      }
-      if (isJsonData && svgData) {
-        return (
-          <Svg width={imageDimensions.width} height={imageDimensions.height} viewBox={`0 0 ${svgData.width} ${svgData.height}`}>
-            {svgData.paths.map((pathData: string, idx: number) => (
-              <Path
-                key={idx}
-                d={pathData}
-                stroke={color}
-                strokeWidth={8}
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            ))}
-          </Svg>
-        );
-      }
-      return null;
+      const imgSrc = coloredSvgUri || uri;
+      return createElement('img', {
+        src: imgSrc,
+        style: {
+          width: imageDimensions.width,
+          height: imageDimensions.height,
+          objectFit: 'contain' as any,
+          pointerEvents: 'none' as any,
+          display: 'block',
+        },
+        draggable: false,
+      });
     }
 
     if (svgData) {
