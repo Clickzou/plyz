@@ -108,6 +108,8 @@ export default function EventPublishScreen() {
   const [coloredSvgXml, setColoredSvgXml] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   
+  const selectedSigner = signers.find((s) => s.id === selectedSignerId);
+  
   // Fetch and colorize SVG for mobile
   useEffect(() => {
     if (Platform.OS === 'web') return;
@@ -489,8 +491,6 @@ export default function EventPublishScreen() {
       setIsPublishing(false);
     }
   };
-
-  const selectedSigner = signers.find((s) => s.id === selectedSignerId);
 
   return (
     <View style={styles.container}>
