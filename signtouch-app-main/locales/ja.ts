@@ -537,7 +537,7 @@ export default {
   useNow: '今すぐ使用',
   saveFailed: '保存に失敗しました',
   searchAnother: '別のイベントを検索',
-  liveEvents: 'ライブイベント',
+  liveEvents: 'ライブサイン会イベント',
   starMode: 'スターです',
   fanMode: 'ファンです',
   fanChoiceTitle: 'ファンモード',

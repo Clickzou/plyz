@@ -537,7 +537,7 @@ export default {
   useNow: 'Guna Sekarang',
   saveFailed: 'Gagal menyimpan tandatangan',
   searchAnother: 'Cari acara lain',
-  liveEvents: 'Acara Langsung',
+  liveEvents: 'Acara Dedikasi Langsung',
   starMode: 'Saya Bintang',
   fanMode: 'Saya Peminat',
   fanChoiceTitle: 'Mod Peminat',

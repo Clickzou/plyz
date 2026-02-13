@@ -537,7 +537,7 @@ export default {
   useNow: 'Usar agora',
   saveFailed: 'Falha ao salvar',
   searchAnother: 'Buscar outro evento',
-  liveEvents: 'Eventos ao vivo',
+  liveEvents: 'Eventos Live Dedicatória',
   starMode: 'Sou uma Estrela',
   fanMode: 'Sou um Fã',
   fanChoiceTitle: 'Modo Fã',

@@ -537,7 +537,7 @@ export default {
   useNow: 'Использовать сейчас',
   saveFailed: 'Не удалось сохранить',
   searchAnother: 'Искать другое событие',
-  liveEvents: 'Живые события',
+  liveEvents: 'Живые события с посвящением',
   starMode: 'Я звезда',
   fanMode: 'Я фанат',
   fanChoiceTitle: 'Режим фаната',

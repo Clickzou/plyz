@@ -537,7 +537,7 @@ export default {
   useNow: 'अभी उपयोग करें',
   saveFailed: 'सहेजने में विफल',
   searchAnother: 'अन्य इवेंट खोजें',
-  liveEvents: 'लाइव इवेंट्स',
+  liveEvents: 'लाइव डेडिकेशन इवेंट्स',
   starMode: 'मैं एक स्टार हूं',
   fanMode: 'मैं एक फैन हूं',
   fanChoiceTitle: 'फैन मोड',

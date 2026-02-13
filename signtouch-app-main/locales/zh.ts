@@ -537,7 +537,7 @@ export default {
   useNow: '立即使用',
   saveFailed: '保存失败',
   searchAnother: '搜索其他活动',
-  liveEvents: '现场活动',
+  liveEvents: '现场签名活动',
   starMode: '我是明星',
   fanMode: '我是粉丝',
   fanChoiceTitle: '粉丝模式',

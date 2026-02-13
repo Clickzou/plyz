@@ -537,7 +537,7 @@ export default {
   useNow: 'ابھی استعمال کریں',
   saveFailed: 'محفوظ کرنے میں ناکام',
   searchAnother: 'دوسرا ایونٹ تلاش کریں',
-  liveEvents: 'لائیو ایونٹس',
+  liveEvents: 'لائیو ڈیڈیکیشن ایونٹس',
   starMode: 'میں ایک ستارہ ہوں',
   fanMode: 'میں ایک فین ہوں',
   fanChoiceTitle: 'فین موڈ',

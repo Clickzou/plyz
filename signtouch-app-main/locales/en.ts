@@ -537,7 +537,7 @@ export default {
   useNow: 'Use Now',
   saveFailed: 'Failed to save signature',
   searchAnother: 'Search another event',
-  liveEvents: 'Live Events',
+  liveEvents: 'Live Dedication Events',
   starMode: 'I\'m a Star',
   fanMode: 'I\'m a Fan',
   fanChoiceTitle: 'Fan Mode',

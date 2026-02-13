@@ -537,7 +537,7 @@ export default {
   useNow: 'استخدم الآن',
   saveFailed: 'فشل في حفظ التوقيع',
   searchAnother: 'البحث عن حدث آخر',
-  liveEvents: 'أحداث مباشرة',
+  liveEvents: 'أحداث إهداء مباشرة',
   starMode: 'أنا نجم',
   fanMode: 'أنا معجب',
   fanChoiceTitle: 'وضع المعجب',
