@@ -293,7 +293,7 @@ export default function JoinLiveSessionScreen() {
       </View>
 
       <TouchableOpacity style={styles.scanButton} onPress={requestCameraPermission}>
-        <QrCode size={28} color="#10B981" />
+        <QrCode size={28} color="#818cf8" />
         <Text style={styles.scanButtonText}>{t('scan') || 'Scanner'}</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
   howItWorksTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#10B981',
+    color: '#818cf8',
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#10B981',
+    backgroundColor: '#6366f1',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#10B981',
+    backgroundColor: '#6366f1',
     borderRadius: 30,
     paddingVertical: 16,
     marginTop: 8,
@@ -672,16 +672,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    backgroundColor: 'rgba(99, 102, 241, 0.12)',
     borderWidth: 1,
-    borderColor: '#10B981',
+    borderColor: '#818cf8',
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 30,
     gap: 10,
   },
   scanButtonText: {
-    color: '#10B981',
+    color: '#818cf8',
     fontSize: 16,
     fontWeight: '600',
   },
