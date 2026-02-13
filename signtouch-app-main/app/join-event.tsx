@@ -1472,8 +1472,8 @@ export default function JoinEventScreen() {
                 <View style={styles.eventDetailContent}>
                   <Text style={styles.eventDetailLabel}>{t('eventPrice') || 'Price'}</Text>
                   <Text style={styles.eventDetailValue}>
-                    {foundSession.price_cents && foundSession.price_cents > 0
-                      ? `${(foundSession.price_cents / 100).toFixed(2).replace('.', ',')}€`
+                    {(eventPaymentConfig?.priceCents || foundSession.price_cents || 0) > 0
+                      ? `${((eventPaymentConfig?.priceCents || foundSession.price_cents || 0) / 100).toFixed(2).replace('.', ',')}€`
                       : (t('free') || 'Free')}
                   </Text>
                 </View>
