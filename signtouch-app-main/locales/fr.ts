@@ -694,7 +694,7 @@ export default {
   signature: 'Signature',
   signaturesReady: 'signatures prêtes',
   atLeastOneSigner: 'Ajoutez au moins une signature',
-  celebrities: 'célébrités',
+  celebrities: 'Célébrités',
   myActiveEvents: 'Mes événements en cours',
   continue: 'Continuer',
   until: 'Jusqu\'à',
