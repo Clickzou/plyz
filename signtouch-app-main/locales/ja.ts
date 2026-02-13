@@ -844,6 +844,8 @@ export default {
   howItWorksStep2: '順番待ちの列に参加して待つ',
   howItWorksStep3: '呼ばれたらセレブリティとビデオ通話',
   howItWorksStep4: '通話後にお互いを評価',
+  howItWorksEventStep1: 'イベントコードを入力',
+  howItWorksEventStep2: 'イベントが始まると、リアルタイムでサインが届きます',
   pleaseEnterName: '名前を入力してください',
   pleaseDrawSignature: '署名を描いてください',
   cannotAddSigner: '署名者を追加できません',

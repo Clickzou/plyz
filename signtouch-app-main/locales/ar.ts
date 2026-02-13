@@ -844,6 +844,8 @@ export default {
   howItWorksStep2: 'انضم إلى قائمة الانتظار وانتظر دورك',
   howItWorksStep3: 'مكالمة فيديو مع المشهور عند استدعائك',
   howItWorksStep4: 'قيّموا بعضكم البعض بعد المكالمة',
+  howItWorksEventStep1: 'أدخل رمز الحدث',
+  howItWorksEventStep2: 'بمجرد بدء الحدث، ستتلقى إهداءاتك مباشرة',
   pleaseEnterName: 'يرجى إدخال اسم',
   pleaseDrawSignature: 'يرجى رسم التوقيع',
   cannotAddSigner: 'تعذر إضافة الموقّع',

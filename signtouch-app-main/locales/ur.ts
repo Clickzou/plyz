@@ -849,6 +849,8 @@ export default {
   howItWorksStep2: 'قطار میں شامل ہوں اور اپنی باری کا انتظار کریں',
   howItWorksStep3: 'بلائے جانے پر مشہور شخصیت کے ساتھ ویڈیو کال',
   howItWorksStep4: 'کال کے بعد ایک دوسرے کی درجہ بندی کریں',
+  howItWorksEventStep1: 'ایونٹ کوڈ درج کریں',
+  howItWorksEventStep2: 'جیسے ہی ایونٹ شروع ہوتا ہے، آپ کو لائیو میں اپنی وقف شدہ تصاویر ملیں گی',
   pleaseEnterName: 'براہ کرم ایک نام درج کریں',
   pleaseDrawSignature: 'براہ کرم ایک دستخط بنائیں',
   cannotAddSigner: 'دستخط کنندہ شامل نہیں ہو سکا',

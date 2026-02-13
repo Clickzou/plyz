@@ -844,6 +844,8 @@ export default {
   howItWorksStep2: '加入排队等待您的回合',
   howItWorksStep3: '被叫到时与名人进行视频通话',
   howItWorksStep4: '通话后互相评分',
+  howItWorksEventStep1: '输入活动代码',
+  howItWorksEventStep2: '活动开始后，您将实时收到您的签名',
   pleaseEnterName: '请输入姓名',
   pleaseDrawSignature: '请绘制签名',
   cannotAddSigner: '无法添加签名者',

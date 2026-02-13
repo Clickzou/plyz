@@ -849,6 +849,8 @@ export default {
   howItWorksStep2: 'Bergabung dalam antrean dan tunggu giliran Anda',
   howItWorksStep3: 'Panggilan video dengan selebriti saat dipanggil',
   howItWorksStep4: 'Saling beri peringkat setelah panggilan',
+  howItWorksEventStep1: 'Masukkan kode acara',
+  howItWorksEventStep2: 'Begitu acara dimulai, Anda akan menerima dedikasi Anda secara langsung',
   pleaseEnterName: 'Silakan masukkan nama',
   pleaseDrawSignature: 'Silakan gambar tanda tangan',
   cannotAddSigner: 'Tidak dapat menambahkan penanda tangan',

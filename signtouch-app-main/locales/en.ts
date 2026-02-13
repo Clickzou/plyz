@@ -847,6 +847,8 @@ export default {
   howItWorksStep2: 'Join the queue and wait for your turn',
   howItWorksStep3: 'Video call with the celebrity when called',
   howItWorksStep4: 'Rate each other after the call',
+  howItWorksEventStep1: 'Enter the event code',
+  howItWorksEventStep2: 'Once the event starts, you will receive your dedications live',
   pleaseEnterName: 'Please enter a name',
   pleaseDrawSignature: 'Please draw a signature',
   cannotAddSigner: 'Unable to add signer',

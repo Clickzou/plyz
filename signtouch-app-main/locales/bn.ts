@@ -849,6 +849,8 @@ export default {
   howItWorksStep2: 'সারিতে যোগ দিন এবং আপনার পালার জন্য অপেক্ষা করুন',
   howItWorksStep3: 'ডাকা হলে সেলিব্রিটির সাথে ভিডিও কল',
   howItWorksStep4: 'কলের পরে একে অপরকে রেট করুন',
+  howItWorksEventStep1: 'ইভেন্ট কোড লিখুন',
+  howItWorksEventStep2: 'ইভেন্ট শুরু হলেই, আপনি লাইভে আপনার উৎসর্গ পাবেন',
   pleaseEnterName: 'অনুগ্রহ করে একটি নাম লিখুন',
   pleaseDrawSignature: 'অনুগ্রহ করে একটি স্বাক্ষর আঁকুন',
   cannotAddSigner: 'স্বাক্ষরকারী যোগ করা যাচ্ছে না',

@@ -844,6 +844,8 @@ export default {
   howItWorksStep2: 'Entre na fila e aguarde sua vez',
   howItWorksStep3: 'Videochamada com a celebridade quando for chamado',
   howItWorksStep4: 'Avaliem-se mutuamente após a chamada',
+  howItWorksEventStep1: 'Insira o código do evento',
+  howItWorksEventStep2: 'Assim que o evento começar, receberá as suas dedicatórias ao vivo',
   pleaseEnterName: 'Por favor insira um nome',
   pleaseDrawSignature: 'Por favor desenhe uma assinatura',
   cannotAddSigner: 'Não é possível adicionar signatário',

@@ -1186,19 +1186,11 @@ export default function JoinEventScreen() {
               <View style={styles.howItWorksSteps}>
                 <View style={styles.howItWorksStep}>
                   <View style={styles.stepNumber}><Text style={styles.stepNumberText}>1</Text></View>
-                  <Text style={styles.stepText}>{t('howItWorksStep1') || 'Enter the code shared by the celebrity'}</Text>
+                  <Text style={styles.stepText}>{t('howItWorksEventStep1') || 'Enter the event code'}</Text>
                 </View>
                 <View style={styles.howItWorksStep}>
                   <View style={styles.stepNumber}><Text style={styles.stepNumberText}>2</Text></View>
-                  <Text style={styles.stepText}>{t('howItWorksStep2') || 'Join the queue and wait for your turn'}</Text>
-                </View>
-                <View style={styles.howItWorksStep}>
-                  <View style={styles.stepNumber}><Text style={styles.stepNumberText}>3</Text></View>
-                  <Text style={styles.stepText}>{t('howItWorksStep3') || 'Video call with the celebrity when called'}</Text>
-                </View>
-                <View style={styles.howItWorksStep}>
-                  <View style={styles.stepNumber}><Text style={styles.stepNumberText}>4</Text></View>
-                  <Text style={styles.stepText}>{t('howItWorksStep4') || 'Rate each other after the call'}</Text>
+                  <Text style={styles.stepText}>{t('howItWorksEventStep2') || 'Once the event starts, you will receive your dedications live'}</Text>
                 </View>
               </View>
             </View>

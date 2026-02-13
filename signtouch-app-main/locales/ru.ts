@@ -844,6 +844,8 @@ export default {
   howItWorksStep2: 'Присоединитесь к очереди и ждите своей очереди',
   howItWorksStep3: 'Видеозвонок со знаменитостью, когда вас вызовут',
   howItWorksStep4: 'Оцените друг друга после звонка',
+  howItWorksEventStep1: 'Введите код мероприятия',
+  howItWorksEventStep2: 'Как только мероприятие начнётся, вы получите свои посвящения в прямом эфире',
   pleaseEnterName: 'Пожалуйста, введите имя',
   pleaseDrawSignature: 'Пожалуйста, нарисуйте подпись',
   cannotAddSigner: 'Невозможно добавить подписанта',

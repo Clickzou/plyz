@@ -844,6 +844,8 @@ export default {
   howItWorksStep2: 'Tritt der Warteschlange bei und warte auf deinen Turn',
   howItWorksStep3: 'Videoanruf mit der Berühmtheit, wenn du aufgerufen wirst',
   howItWorksStep4: 'Bewertet euch gegenseitig nach dem Anruf',
+  howItWorksEventStep1: 'Gib den Event-Code ein',
+  howItWorksEventStep2: 'Sobald das Event beginnt, erhältst du deine Widmungen live',
   pleaseEnterName: 'Bitte geben Sie einen Namen ein',
   pleaseDrawSignature: 'Bitte zeichnen Sie eine Unterschrift',
   cannotAddSigner: 'Unterzeichner kann nicht hinzugefügt werden',

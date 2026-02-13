@@ -843,6 +843,8 @@ export default {
   howItWorksStep2: 'Únete a la cola y espera tu turno',
   howItWorksStep3: 'Videollamada con la celebridad cuando seas llamado',
   howItWorksStep4: 'Califíquense mutuamente después de la llamada',
+  howItWorksEventStep1: 'Ingresa el código del evento',
+  howItWorksEventStep2: 'En cuanto comience el evento, recibirás tus dedicatorias en vivo',
   pleaseEnterName: 'Por favor ingrese un nombre',
   pleaseDrawSignature: 'Por favor dibuje una firma',
   cannotAddSigner: 'No se puede agregar el firmante',
