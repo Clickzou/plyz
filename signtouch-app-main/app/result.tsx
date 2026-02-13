@@ -2135,6 +2135,7 @@ export default function ResultScreen() {
                 style={StyleSheet.absoluteFillObject}
               >
                 <FilteredImage
+                  key={isEditMode ? 'edit-base' : 'view-baked'}
                   uri={displayUri}
                   brightness={showEffectsPanel ? tempBrightness : brightness}
                   contrast={showEffectsPanel ? tempContrast : contrast}

@@ -1122,6 +1122,9 @@ export default function ComposeScreen() {
       });
 
       console.log('💾 Sauvegarde dans la galerie avec overlays...');
+      console.log('[Save] uri starts:', uri?.substring(0, 80));
+      console.log('[Save] baseUri starts:', (finalPhotoUri as string)?.substring(0, 80));
+      console.log('[Save] same?', uri === finalPhotoUri);
 
       if (Platform.OS === 'web') {
         // Web: utiliser localStorage avec gestion quota
