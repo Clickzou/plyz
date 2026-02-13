@@ -496,6 +496,153 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
 
   const signatureColor = overlay.color || '#ffffff';
 
+  const [webPos, setWebPos] = useState({ x: overlay.x, y: overlay.y });
+  const [webScaleVal, setWebScaleVal] = useState(overlay.scale);
+  const [webRotVal, setWebRotVal] = useState(overlay.rotation);
+  const webDraggingRef = useRef(false);
+  const webDragStartRef = useRef({ x: 0, y: 0 });
+  const webPosAtStartRef = useRef({ x: 0, y: 0 });
+
+  const webRafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const sync = () => {
+      setWebPos({ x: translateX.value, y: translateY.value });
+      setWebScaleVal(scale.value);
+      setWebRotVal(rotation.value);
+      webRafRef.current = requestAnimationFrame(sync);
+    };
+    webRafRef.current = requestAnimationFrame(sync);
+    return () => { if (webRafRef.current) cancelAnimationFrame(webRafRef.current); };
+  }, [translateX, translateY, scale, rotation]);
+
+  const handleWebDragStart = useCallback((e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onPress();
+    webDraggingRef.current = true;
+    webDragStartRef.current = { x: e.clientX, y: e.clientY };
+    webPosAtStartRef.current = { x: translateX.value, y: translateY.value };
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!webDraggingRef.current) return;
+      const dx = moveEvent.clientX - webDragStartRef.current.x;
+      const dy = moveEvent.clientY - webDragStartRef.current.y;
+      translateX.value = webPosAtStartRef.current.x + dx;
+      translateY.value = webPosAtStartRef.current.y + dy;
+    };
+
+    const handleMouseUp = () => {
+      webDraggingRef.current = false;
+      onPositionChange(overlay.id, translateX.value, translateY.value);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [translateX, translateY, onPositionChange, overlay.id, onPress]);
+
+  const renderSvgContent = () => {
+    if (svgInfo.svgData) {
+      return (
+        <Svg
+          key={`${overlay.id}-${overlay.uri.slice(-20)}`}
+          width={svgInfo.svgData.width}
+          height={svgInfo.svgData.height}
+          viewBox={`0 0 ${svgInfo.svgData.width} ${svgInfo.svgData.height}`}
+          style={styles.signature}
+        >
+          {svgInfo.svgData.paths.map((pathData: string, index: number) => (
+            <Path
+              key={`path-${index}-${overlay.uri.slice(-10)}`}
+              d={pathData}
+              stroke={signatureColor}
+              strokeWidth={8}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          ))}
+        </Svg>
+      );
+    } else if (svgInfo.isSvgData && svgInfo.svgPaths.length > 0) {
+      return (
+        <Svg
+          key={`${overlay.id}-${overlay.uri.slice(-20)}`}
+          width={svgInfo.displayWidth}
+          height={svgInfo.displayHeight}
+          viewBox={`0 0 ${svgInfo.viewBoxWidth} ${svgInfo.viewBoxHeight}`}
+          style={styles.signature}
+        >
+          {svgInfo.svgPaths.map((pathData, index) => (
+            <Path
+              key={`path-${index}-${overlay.uri.slice(-10)}`}
+              d={pathData}
+              stroke={signatureColor}
+              strokeWidth={4}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          ))}
+        </Svg>
+      );
+    }
+    return null;
+  };
+
+  if (Platform.OS === 'web') {
+    let webImgUri = overlay.uri;
+
+    if (svgInfo.svgData) {
+      const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgInfo.svgData.width}" height="${svgInfo.svgData.height}" viewBox="0 0 ${svgInfo.svgData.width} ${svgInfo.svgData.height}">${svgInfo.svgData.paths.map((p: string) => `<path d="${p}" stroke="${signatureColor}" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
+      webImgUri = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
+    } else if (svgInfo.isSvgData && svgInfo.svgPaths.length > 0) {
+      const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgInfo.viewBoxWidth}" height="${svgInfo.viewBoxHeight}" viewBox="0 0 ${svgInfo.viewBoxWidth} ${svgInfo.viewBoxHeight}">${svgInfo.svgPaths.map((p: string) => `<path d="${p}" stroke="${signatureColor}" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
+      webImgUri = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
+    } else if (overlay.uri.startsWith('data:image/svg+xml')) {
+      try {
+        const base64Data = overlay.uri.split(',')[1];
+        const svgString = atob(base64Data);
+        const recolored = svgString.replace(/stroke="[^"]*"/g, `stroke="${signatureColor}"`);
+        webImgUri = `data:image/svg+xml;base64,${btoa(recolored)}`;
+      } catch (e) {}
+    }
+
+    return (
+      <div
+        onMouseDown={handleWebDragStart}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: svgInfo.displayWidth,
+          height: svgInfo.displayHeight,
+          transform: `translate(${webPos.x}px, ${webPos.y}px) scale(${webScaleVal}) rotate(${webRotVal}deg)`,
+          cursor: 'grab',
+          zIndex: isSelected ? 1000 : 10,
+          userSelect: 'none' as const,
+          border: isSelected ? '2px solid #10b981' : '2px solid transparent',
+          borderRadius: 4,
+        }}
+      >
+        <img
+          src={webImgUri}
+          draggable={false}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain' as any,
+            display: 'block',
+            pointerEvents: 'none' as const,
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <Animated.View style={[styles.draggableTextContainer, animatedStyle]} pointerEvents="box-none">
       <GestureDetector gesture={composedGesture}>
