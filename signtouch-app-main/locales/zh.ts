@@ -505,7 +505,7 @@ export default {
   storyTikTok: 'TikTok',
 
   // Live Events
-  createEvent: '现场二维码活动',
+  createEvent: '现场签名活动',
   joinEvent: '加入活动',
   eventName: '活动名称',
   eventNamePlaceholder: '演唱会、比赛、见面会...',
@@ -664,8 +664,8 @@ export default {
   // Celebrity Menu
   celebrityMenuTitle: '实时签名',
   celebrityMenuSubtitle: '在现场活动或通过视频与粉丝实时分享您的签名和照片',
-  celebrityEventSimple: '现场二维码活动',
-  celebrityEventSimpleDesc: '在活动期间创建一个现场QR活动。您可以实时向粉丝发送个性化照片和签名',
+  celebrityEventSimple: '现场签名活动',
+  celebrityEventSimpleDesc: '在活动期间创建一个现场签名活动。您可以实时向粉丝发送个性化照片和签名留念',
   celebrityLiveSession: '付费视频直播会话',
   celebrityLiveSessionDesc: '为粉丝提供独特的直播视频时刻。每位粉丝都将有幸与您现场交流。不会分享任何电话号码，一切通过SignTouch应用进行',
   celebrityMenuDisclaimer: '需要网络连接（Wi-Fi或移动数据）。',

@@ -505,7 +505,7 @@ export default {
   storyTikTok: 'TikTok',
 
   // Live Events
-  createEvent: 'লাইভ QR ইভেন্ট',
+  createEvent: 'লাইভ ডেডিকেশন ইভেন্ট',
   joinEvent: 'ইভেন্টে যোগ দিন',
   eventName: 'ইভেন্টের নাম',
   eventNamePlaceholder: 'কনসার্ট, ম্যাচ, মিটিং...',
@@ -664,8 +664,8 @@ export default {
   // Celebrity Menu
   celebrityMenuTitle: 'লাইভ সাইন',
   celebrityMenuSubtitle: 'সশরীর ইভেন্টে বা ভিডিওর মাধ্যমে ফ্যানদের সাথে আপনার স্বাক্ষর এবং ফটো শেয়ার করুন',
-  celebrityEventSimple: 'লাইভ QR ইভেন্ট',
-  celebrityEventSimpleDesc: 'একটি ইভেন্টের সময় একটি লাইভ QR ইভেন্ট তৈরি করুন। আপনি আপনার ভক্তদের কাছে রিয়েল টাইমে আপনার ব্যক্তিগত ছবি এবং উৎসর্গ পাঠাতে পারবেন',
+  celebrityEventSimple: 'লাইভ ডেডিকেশন ইভেন্ট',
+  celebrityEventSimpleDesc: 'একটি ইভেন্টের সময় একটি লাইভ ডেডিকেশন ইভেন্ট তৈরি করুন। আপনি আপনার ভক্তদের কাছে রিয়েল টাইমে আপনার ব্যক্তিগত ছবি এবং উৎসর্গ পাঠাতে পারবেন',
   celebrityLiveSession: 'পেইড ভিডিও লাইভ সেশন',
   celebrityLiveSessionDesc: 'আপনার ভক্তদের লাইভ ভিডিওতে একটি অনন্য মুহূর্ত দিন। প্রতিটি ভক্ত আপনার সাথে সরাসরি কথা বলার সুযোগ পাবে। কোনো ফোন নম্বর শেয়ার করা হয় না, সবকিছু SignTouch অ্যাপের মাধ্যমে হয়',
   celebrityMenuDisclaimer: 'ইন্টারনেট সংযোগ প্রয়োজন (Wi-Fi বা মোবাইল ডেটা)।',

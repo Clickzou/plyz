@@ -505,7 +505,7 @@ export default {
   storyTikTok: 'TikTok',
 
   // Live Events
-  createEvent: 'Live QR-Event',
+  createEvent: 'Live-Widmung Event',
   joinEvent: 'Event beitreten',
   eventName: 'Event-Name',
   eventNamePlaceholder: 'Konzert, Spiel, Treffen...',
@@ -664,8 +664,8 @@ export default {
   // Celebrity Menu
   celebrityMenuTitle: 'Live signieren',
   celebrityMenuSubtitle: 'Teilen Sie Ihre Signatur und Fotos live mit Fans bei persönlichen Events oder per Video',
-  celebrityEventSimple: 'Live QR-Event',
-  celebrityEventSimpleDesc: 'Erstellen Sie ein Live-QR-Event während einer Veranstaltung. Sie können Ihre personalisierten Fotos und Widmungen in Echtzeit an Ihre Fans senden',
+  celebrityEventSimple: 'Live-Widmung Event',
+  celebrityEventSimpleDesc: 'Erstellen Sie ein Live-Widmung-Event während einer Veranstaltung. Sie können Ihre personalisierten Fotos und Widmungen in Echtzeit an Ihre Fans senden',
   celebrityLiveSession: 'Bezahlte Video-Live-Session',
   celebrityLiveSessionDesc: 'Bieten Sie Ihren Fans einen einzigartigen Moment im Live-Video. Jeder Fan hat das Privileg, live mit Ihnen zu sprechen. Keine Telefonnummer wird weitergegeben, alles läuft über die SignTouch-App',
   celebrityMenuDisclaimer: 'Erfordert eine Internetverbindung.',

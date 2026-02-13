@@ -505,7 +505,7 @@ export default {
   storyTikTok: 'TikTok',
 
   // Live Events
-  createEvent: 'ライブQRイベント',
+  createEvent: 'ライブサイン会イベント',
   joinEvent: 'イベントに参加',
   eventName: 'イベント名',
   eventNamePlaceholder: 'コンサート、試合、ミーティング...',
@@ -664,8 +664,8 @@ export default {
   // Celebrity Menu
   celebrityMenuTitle: 'ライブサイン',
   celebrityMenuSubtitle: '対面イベントやビデオでファンと署名や写真をライブで共有',
-  celebrityEventSimple: 'ライブQRイベント',
-  celebrityEventSimpleDesc: 'イベント中にライブQRイベントを作成します。パーソナライズされた写真とサインをリアルタイムでファンに送ることができます',
+  celebrityEventSimple: 'ライブサイン会イベント',
+  celebrityEventSimpleDesc: 'イベント中にライブサイン会イベントを作成します。パーソナライズされた写真とサインをリアルタイムでファンに送ることができます',
   celebrityLiveSession: '有料ビデオライブセッション',
   celebrityLiveSessionDesc: 'ファンにライブビデオでユニークな瞬間を提供しましょう。各ファンにはあなたとライブで話す特権があります。電話番号は共有されません。すべてSignTouchアプリを通じて行われます',
   celebrityMenuDisclaimer: 'インターネット接続が必要です（Wi-Fiまたはモバイルデータ）。',

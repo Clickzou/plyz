@@ -505,7 +505,7 @@ export default {
   storyTikTok: 'TikTok',
 
   // Live Events
-  createEvent: 'Acara QR Langsung',
+  createEvent: 'Acara Dedikasi Langsung',
   joinEvent: 'Sertai Acara',
   eventName: 'Nama Acara',
   eventNamePlaceholder: 'Konsert, Perlawanan, Pertemuan...',
@@ -664,8 +664,8 @@ export default {
   // Celebrity Menu
   celebrityMenuTitle: 'Tandatangan Langsung',
   celebrityMenuSubtitle: 'Kongsi tandatangan dan foto anda secara langsung dengan peminat di acara secara bersemuka atau melalui video',
-  celebrityEventSimple: 'Acara QR Langsung',
-  celebrityEventSimpleDesc: 'Cipta acara QR langsung semasa acara. Anda boleh menghantar foto dan dedikasi peribadi secara masa nyata kepada peminat anda',
+  celebrityEventSimple: 'Acara Dedikasi Langsung',
+  celebrityEventSimpleDesc: 'Cipta acara dedikasi langsung semasa acara. Anda boleh menghantar foto dan dedikasi peribadi secara masa nyata kepada peminat anda',
   celebrityLiveSession: 'Sesi Video Langsung Berbayar',
   celebrityLiveSessionDesc: 'Berikan peminat anda detik unik melalui video langsung. Setiap peminat akan mendapat keistimewaan untuk bercakap dengan anda secara langsung. Tiada nombor telefon dikongsi, semuanya melalui aplikasi SignTouch',
   celebrityMenuDisclaimer: 'Memerlukan sambungan internet (Wi-Fi atau data mudah alih).',

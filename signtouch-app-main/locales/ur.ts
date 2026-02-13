@@ -505,7 +505,7 @@ export default {
   storyTikTok: 'TikTok',
 
   // Live Events
-  createEvent: 'لائیو QR ایونٹ',
+  createEvent: 'لائیو ڈیڈیکیشن ایونٹ',
   joinEvent: 'ایونٹ میں شامل ہوں',
   eventName: 'ایونٹ کا نام',
   eventNamePlaceholder: 'کنسرٹ، میچ، ملاقات...',
@@ -664,8 +664,8 @@ export default {
   // Celebrity Menu
   celebrityMenuTitle: 'لائیو سائن کریں',
   celebrityMenuSubtitle: 'ذاتی تقریبات یا ویڈیو کے ذریعے مداحوں کے ساتھ اپنے دستخط اور تصاویر لائیو شیئر کریں',
-  celebrityEventSimple: 'لائیو QR ایونٹ',
-  celebrityEventSimpleDesc: 'ایک تقریب کے دوران لائیو QR ایونٹ بنائیں۔ آپ اپنے مداحوں کو ریئل ٹائم میں اپنی ذاتی تصاویر اور وقف بھیج سکتے ہیں',
+  celebrityEventSimple: 'لائیو ڈیڈیکیشن ایونٹ',
+  celebrityEventSimpleDesc: 'ایک تقریب کے دوران لائیو ڈیڈیکیشن ایونٹ بنائیں۔ آپ اپنے مداحوں کو ریئل ٹائم میں اپنی ذاتی تصاویر اور وقف بھیج سکتے ہیں',
   celebrityLiveSession: 'ادا شدہ ویڈیو لائیو سیشن',
   celebrityLiveSessionDesc: 'اپنے مداحوں کو لائیو ویڈیو میں ایک منفرد لمحہ دیں۔ ہر مداح کو آپ سے براہ راست بات کرنے کا اعزاز حاصل ہوگا۔ کوئی فون نمبر شیئر نہیں کیا جاتا، سب کچھ SignTouch ایپ کے ذریعے ہوتا ہے',
   celebrityMenuDisclaimer: 'انٹرنیٹ کنکشن ضروری ہے (Wi-Fi یا موبائل ڈیٹا)۔',

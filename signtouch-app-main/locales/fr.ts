@@ -505,7 +505,7 @@ export default {
   storyTikTok: 'TikTok',
 
   // Live Events
-  createEvent: 'Événement QR Live',
+  createEvent: 'Événement Live Dédicace',
   joinEvent: 'Rejoindre un événement',
   eventName: 'Nom de l\'événement',
   eventNamePlaceholder: 'Concert, Match, Rencontre...',
@@ -668,8 +668,8 @@ export default {
   // Celebrity Menu
   celebrityMenuTitle: 'Signez en Direct',
   celebrityMenuSubtitle: 'Partagez votre signature et vos photos en direct avec vos fans lors d\'un événement en présentiel ou en vidéo',
-  celebrityEventSimple: 'Événement QR Live',
-  celebrityEventSimpleDesc: 'Générez un événement QR live lors d\'un événement. Vous pourrez envoyer vos photos et dédicaces personnalisées en temps réel à vos fans',
+  celebrityEventSimple: 'Événement Live Dédicace',
+  celebrityEventSimpleDesc: 'Générez un événement live dédicace lors d\'un événement. Vous pourrez envoyer vos photos et dédicaces personnalisées en temps réel à vos fans',
   celebrityLiveSession: 'Session Live Vidéo',
   celebrityLiveSessionDesc: 'Offrez à vos fans un moment unique en vidéo Live. Chaque fan aura le privilège de vous parler en direct. Aucun numéro de téléphone n\'est communiqué, tout passe par l\'application SignTouch',
   celebrityMenuDisclaimer: 'Une connexion internet est nécessaire.',

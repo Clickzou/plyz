@@ -505,7 +505,7 @@ export default {
   storyTikTok: 'TikTok',
 
   // Live Events
-  createEvent: 'حدث QR مباشر',
+  createEvent: 'حدث إهداء مباشر',
   joinEvent: 'الانضمام لحدث',
   eventName: 'اسم الحدث',
   eventNamePlaceholder: 'حفلة، مباراة، لقاء...',
@@ -664,8 +664,8 @@ export default {
   // Celebrity Menu
   celebrityMenuTitle: 'وقع مباشرة',
   celebrityMenuSubtitle: 'شارك توقيعك وصورك مباشرة مع المعجبين في الأحداث الشخصية أو عبر الفيديو',
-  celebrityEventSimple: 'حدث QR مباشر',
-  celebrityEventSimpleDesc: 'أنشئ حدث QR مباشر خلال فعالية. يمكنك إرسال صورك وإهداءاتك الشخصية في الوقت الفعلي لمعجبيك',
+  celebrityEventSimple: 'حدث إهداء مباشر',
+  celebrityEventSimpleDesc: 'أنشئ حدث إهداء مباشر خلال فعالية. يمكنك إرسال صورك وإهداءاتك الشخصية في الوقت الفعلي لمعجبيك',
   celebrityLiveSession: 'جلسة فيديو مباشرة مدفوعة',
   celebrityLiveSessionDesc: 'امنح معجبيك لحظة فريدة عبر الفيديو المباشر. سيحظى كل معجب بامتياز التحدث معك مباشرة. لا يتم مشاركة أي رقم هاتف، كل شيء يمر عبر تطبيق SignTouch',
   celebrityMenuDisclaimer: 'يتطلب اتصالاً بالإنترنت (واي فاي أو بيانات الهاتف).',
