@@ -158,33 +158,54 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
     };
   });
 
-  if (Platform.OS === 'web' && isSvgDataUri && coloredSvgUri) {
-    return (
-      <GestureDetector gesture={gesture}>
-        <Animated.View style={[
-          styles.signatureWrapper, 
-          animatedStyle, 
-          { 
-            width: imageDimensions.width, 
-            height: imageDimensions.height,
-            zIndex: isSelected ? 1000 : index,
-          }
-        ]}>
+  const renderUri = Platform.OS === 'web' && isSvgDataUri && coloredSvgUri ? coloredSvgUri : uri;
+  const useImageFallback = Platform.OS === 'web' && isSvgDataUri;
+
+  const renderContent = () => {
+    if (Platform.OS === 'web' && isSvgDataUri) {
+      const imgUri = coloredSvgUri || uri;
+      return (
+        <View style={{ width: imageDimensions.width, height: imageDimensions.height }}>
           <img
-            src={coloredSvgUri}
-            draggable={false}
+            src={imgUri}
             style={{
-              width: imageDimensions.width,
-              height: imageDimensions.height,
+              width: '100%',
+              height: '100%',
               objectFit: 'contain' as any,
-              pointerEvents: 'none' as any,
+              display: 'block',
             }}
           />
-          {isSelected && <View style={styles.selectionBorder} />}
-        </Animated.View>
-      </GestureDetector>
+        </View>
+      );
+    }
+
+    if (svgData) {
+      return (
+        <Svg width={imageDimensions.width} height={imageDimensions.height} viewBox={`0 0 ${svgData.width} ${svgData.height}`}>
+          {svgData.paths.map((pathData: string, idx: number) => (
+            <Path
+              key={idx}
+              d={pathData}
+              stroke={color}
+              strokeWidth={8}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          ))}
+        </Svg>
+      );
+    }
+
+    return (
+      <Image
+        source={{ uri: renderUri }}
+        style={{ width: imageDimensions.width, height: imageDimensions.height }}
+        tintColor={color}
+        resizeMode="contain"
+      />
     );
-  }
+  };
 
   return (
     <GestureDetector gesture={gesture}>
@@ -194,31 +215,13 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
         { 
           width: imageDimensions.width, 
           height: imageDimensions.height,
-          zIndex: isSelected ? 1000 : index,
+          zIndex: isSelected ? 1000 : (index + 10),
+          overflow: 'visible',
+          borderWidth: 2,
+          borderColor: 'rgba(255,0,0,0.5)',
         }
       ]}>
-        {svgData ? (
-          <Svg width={imageDimensions.width} height={imageDimensions.height} viewBox={`0 0 ${svgData.width} ${svgData.height}`} style={styles.signature}>
-            {svgData.paths.map((pathData: string, idx: number) => (
-              <Path
-                key={idx}
-                d={pathData}
-                stroke={color}
-                strokeWidth={8}
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            ))}
-          </Svg>
-        ) : (
-          <Image
-            source={{ uri }}
-            style={[styles.signature]}
-            tintColor={color}
-            resizeMode="contain"
-          />
-        )}
+        {renderContent()}
         {isSelected && <View style={styles.selectionBorder} />}
       </Animated.View>
     </GestureDetector>
