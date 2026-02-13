@@ -866,31 +866,130 @@ export default function ComposeScreen() {
             ctx.drawImage(photoImg, 0, 0, canvas.width, canvas.height);
             console.log('✅ Photo dessinée sur le canvas');
 
-            textOverlays.forEach((overlay) => {
-              const tx = overlay.x * canvasScale;
-              const ty = overlay.y * canvasScale;
-              const rotation = (overlay.rotation * Math.PI) / 180;
-              const sc = overlay.scale * canvasScale;
-              const fontSize = (overlay.fontSize || 32) * sc;
+            let loadedSignatures = 0;
+            const signatureImages: HTMLImageElement[] = [];
+            const totalSignatures = signatureUris.length;
 
-              ctx.save();
-              ctx.translate(tx, ty);
-              ctx.rotate(rotation);
-              ctx.font = `bold ${fontSize}px ${overlay.fontFamily || 'System'}`;
-              ctx.fillStyle = overlay.color || '#ffffff';
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
-              ctx.shadowBlur = 5;
-              ctx.shadowOffsetX = 2;
-              ctx.shadowOffsetY = 2;
-              ctx.fillText(overlay.text, 0, 0);
-              ctx.restore();
-            });
+            const finishCapture = () => {
+              signatureImages.forEach((signatureImg, index) => {
+                const transform = signatureTransforms[index];
+                const tx = transform.translateX.value * canvasScale;
+                const ty = transform.translateY.value * canvasScale;
+                const rotation = transform.rotation.value;
+                const strokeScale = signatureStrokeScales[index] || 1.0;
+                const sc = (transform.scale.value * strokeScale) * canvasScale;
+                const color = signatureColors[index] || '#ffffff';
 
-              const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-              console.log('✅ Data URL créé, longueur:', dataUrl.length);
+                let baseW = 150;
+                let baseH = 80;
+                const uri = signatureUris[index];
+                if (uri.startsWith('data:image/svg+xml;base64,')) {
+                  try {
+                    const b64 = uri.split(',')[1];
+                    const raw = decodeURIComponent(escape(atob(b64)));
+                    const wm = raw.match(/width="([^"]+)"/);
+                    const hm = raw.match(/height="([^"]+)"/);
+                    if (wm && hm) {
+                      const svgW = parseFloat(wm[1]);
+                      const svgH = parseFloat(hm[1]);
+                      const ar = svgW / svgH;
+                      baseW = Math.min(svgW, 200);
+                      baseH = baseW / ar;
+                    }
+                  } catch (e) {}
+                }
+
+                ctx.save();
+                ctx.translate(tx, ty);
+                ctx.rotate(rotation);
+                ctx.scale(sc, sc);
+
+                if (color !== '#ffffff') {
+                  const tempCanvas = document.createElement('canvas');
+                  tempCanvas.width = baseW * 2;
+                  tempCanvas.height = baseH * 2;
+                  const tempCtx = tempCanvas.getContext('2d');
+
+                  if (tempCtx) {
+                    tempCtx.drawImage(signatureImg, 0, 0, tempCanvas.width, tempCanvas.height);
+                    tempCtx.globalCompositeOperation = 'source-in';
+                    tempCtx.fillStyle = color;
+                    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                    ctx.drawImage(tempCanvas, 0, 0, baseW, baseH);
+                  }
+                } else {
+                  ctx.drawImage(signatureImg, 0, 0, baseW, baseH);
+                }
+
+                ctx.restore();
+              });
+
+              textOverlays.forEach((overlay) => {
+                const tx = overlay.x * canvasScale;
+                const ty = overlay.y * canvasScale;
+                const rotation = (overlay.rotation * Math.PI) / 180;
+                const sc = overlay.scale * canvasScale;
+                const fontSize = (overlay.fontSize || 32) * sc;
+
+                ctx.save();
+                ctx.translate(tx, ty);
+                ctx.rotate(rotation);
+                ctx.font = `bold ${fontSize}px ${overlay.fontFamily || 'System'}`;
+                ctx.fillStyle = overlay.color || '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+                ctx.shadowBlur = 5;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+                ctx.fillText(overlay.text, 0, 0);
+                ctx.restore();
+              });
+
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
               resolve(dataUrl);
+            };
+
+            if (totalSignatures === 0) {
+              finishCapture();
+              return;
+            }
+
+            signatureUris.forEach((uri: string, index: number) => {
+              const signatureImg = new window.Image();
+
+              signatureImg.onload = () => {
+                signatureImages[index] = signatureImg;
+                loadedSignatures++;
+                if (loadedSignatures === totalSignatures) {
+                  finishCapture();
+                }
+              };
+
+              signatureImg.onerror = () => {
+                loadedSignatures++;
+                if (loadedSignatures === totalSignatures) {
+                  finishCapture();
+                }
+              };
+
+              if (uri.startsWith('data:application/json;base64,')) {
+                try {
+                  const base64Data = uri.split(',')[1];
+                  const jsonString = decodeURIComponent(escape(atob(base64Data)));
+                  const svgData = JSON.parse(jsonString);
+                  const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgData.width}" height="${svgData.height}">${svgData.paths.map((pathData: string) => `<path d="${pathData}" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round" />`).join('')}</svg>`;
+                  const svgBlob = new Blob([svgContent], { type: 'image/svg+xml' });
+                  const svgUrl = URL.createObjectURL(svgBlob);
+                  signatureImg.src = svgUrl;
+                } catch (error) {
+                  loadedSignatures++;
+                  if (loadedSignatures === totalSignatures) finishCapture();
+                }
+              } else {
+                signatureImg.src = uri;
+              }
+            });
           };
 
           photoImg.onerror = (e) => {
