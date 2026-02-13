@@ -622,6 +622,16 @@ export const publishEventAsset = async (
 
     if (metadataWithOriginal) {
       try {
+        const metaJson = JSON.stringify(metadataWithOriginal);
+        const metaFileName = `sessions/${eventId}/meta_${data.id}.json`;
+        const metaBytes = new TextEncoder().encode(metaJson);
+        await supabase.storage
+          .from('events')
+          .upload(metaFileName, metaBytes, { contentType: 'application/json', upsert: true });
+      } catch (e) {
+        console.warn('Failed to upload asset metadata to storage:', e);
+      }
+      try {
         await AsyncStorage.setItem(
           `@event_asset_meta_${data.id}`,
           JSON.stringify(metadataWithOriginal)
@@ -671,7 +681,44 @@ export const fetchEventAssets = async (
 
   const { data, error } = await query;
   if (error) throw new Error(`Fetch assets error: ${error.message}`);
-  return data || [];
+  
+  const assets = data || [];
+  
+  const signedAssets = assets.filter(
+    a => (a.asset_type === 'photo_signed' || a.asset_type === 'signed_photo') && !a.signature_metadata
+  );
+
+  if (signedAssets.length > 0) {
+    await Promise.all(signedAssets.map(async (asset) => {
+      try {
+        const cached = await AsyncStorage.getItem(`@event_asset_meta_${asset.id}`);
+        if (cached) {
+          const meta = JSON.parse(cached);
+          asset.signature_metadata = meta;
+          asset.original_photo_url = meta.original_photo_url;
+          return;
+        }
+      } catch {}
+
+      try {
+        const metaPath = `sessions/${eventId}/meta_${asset.id}.json`;
+        const { data: metaData } = await supabase.storage
+          .from('events')
+          .download(metaPath);
+        if (metaData) {
+          const text = await metaData.text();
+          const meta = JSON.parse(text);
+          asset.signature_metadata = meta;
+          asset.original_photo_url = meta.original_photo_url;
+          try {
+            await AsyncStorage.setItem(`@event_asset_meta_${asset.id}`, text);
+          } catch {}
+        }
+      } catch {}
+    }));
+  }
+  
+  return assets;
 };
 
 export const getSessionByCode = async (joinCode: string): Promise<EventSession | null> => {
