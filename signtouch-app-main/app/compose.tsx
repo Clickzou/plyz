@@ -121,6 +121,8 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
         let recoloredSvg = svgString;
         recoloredSvg = recoloredSvg.replace(/stroke="#[a-fA-F0-9]+"/g, `stroke="${color}"`);
         recoloredSvg = recoloredSvg.replace(/fill="#[a-fA-F0-9]+"/g, `fill="${color}"`);
+        console.log('[AnimatedSignature v2] SVG recolored, fill="none" count:', (recoloredSvg.match(/fill="none"/g) || []).length, 'fill color count:', (recoloredSvg.match(/fill="[^n][^"]*"/g) || []).length);
+        console.log('[AnimatedSignature v2] SVG first 500 chars:', recoloredSvg.substring(0, 500));
         const recoloredBase64 = btoa(unescape(encodeURIComponent(recoloredSvg)));
         setColoredSvgUri(`data:image/svg+xml;base64,${recoloredBase64}`);
       } catch (error) {
