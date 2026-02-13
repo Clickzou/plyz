@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ActivityInd
 import { Mail, CheckCircle, KeyRound, X } from 'lucide-react-native';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { router } from 'expo-router';
 
 interface AccountModalProps {
   visible: boolean;
@@ -19,7 +18,7 @@ export default function AccountModal({
   returnPath 
 }: AccountModalProps) {
   const { t } = useTranslation();
-  const { sendOtpCode, verifyOtpCode, setPostAuthRedirect } = useAuth();
+  const { sendOtpCode, verifyOtpCode } = useAuth();
   const [step, setStep] = useState<'email' | 'code' | 'success'>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -63,14 +62,9 @@ export default function AccountModal({
       if (verifyError) {
         setError(verifyError.message);
       } else {
-        // Sauvegarder le chemin de retour avant de rediriger vers subscription
-        if (returnPath) {
-          await setPostAuthRedirect(returnPath);
-        }
         setStep('success');
         setTimeout(() => {
           handleClose();
-          router.replace('/paywall');
         }, 1500);
       }
     } catch (err: any) {
