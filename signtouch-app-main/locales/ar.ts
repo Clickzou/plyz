@@ -544,7 +544,7 @@ export default {
   fanChoiceSubtitle: 'اختر تجربتك',
   fanChoiceQR: 'حدث إهداء مباشر',
   fanChoiceQRDesc: 'امسح رمز QR أو أدخل رمزًا للحصول على إهداء المشهور',
-  fanChoiceVideo: 'فيديو مباشر',
+  fanChoiceVideo: 'جلسة فيديو مباشرة',
   fanChoiceVideoDesc: 'انضم إلى مكالمة فيديو مباشرة مع أحد المشاهير',
   notAvailable: 'غير متاح',
   scannerNotOnWeb: 'ماسح QR غير متاح على الويب. يرجى إدخال الرمز يدوياً.',

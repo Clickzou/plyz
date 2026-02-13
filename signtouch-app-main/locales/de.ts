@@ -544,7 +544,7 @@ export default {
   fanChoiceSubtitle: 'Wähle dein Erlebnis',
   fanChoiceQR: 'Live-Widmung Event',
   fanChoiceQRDesc: 'Scanne einen QR-Code oder gib einen Code ein, um die Widmung eines Stars zu erhalten',
-  fanChoiceVideo: 'Live-Video',
+  fanChoiceVideo: 'Live-Video-Sitzung',
   fanChoiceVideoDesc: 'Nimm an einem Live-Videoanruf mit einem Star teil',
   notAvailable: 'Nicht verfügbar',
   scannerNotOnWeb: 'QR-Scanner ist im Web nicht verfügbar. Bitte geben Sie den Code manuell ein.',

@@ -544,7 +544,7 @@ export default {
   fanChoiceSubtitle: 'Выберите ваш опыт',
   fanChoiceQR: 'Живое событие с посвящением',
   fanChoiceQRDesc: 'Отсканируйте QR-код или введите код, чтобы получить посвящение от знаменитости',
-  fanChoiceVideo: 'Живое видео',
+  fanChoiceVideo: 'Сессия живого видео',
   fanChoiceVideoDesc: 'Присоединитесь к видеозвонку в прямом эфире со знаменитостью',
   notAvailable: 'Недоступно',
   scannerNotOnWeb: 'QR-сканер недоступен в веб-версии. Пожалуйста, введите код вручную.',

@@ -544,7 +544,7 @@ export default {
   fanChoiceSubtitle: 'अपना अनुभव चुनें',
   fanChoiceQR: 'लाइव डेडिकेशन इवेंट',
   fanChoiceQRDesc: 'QR कोड स्कैन करें या सेलिब्रिटी का समर्पण पाने के लिए कोड दर्ज करें',
-  fanChoiceVideo: 'लाइव वीडियो',
+  fanChoiceVideo: 'लाइव वीडियो सेशन',
   fanChoiceVideoDesc: 'सेलिब्रिटी के साथ लाइव वीडियो कॉल में शामिल हों',
   notAvailable: 'उपलब्ध नहीं',
   scannerNotOnWeb: 'QR स्कैनर वेब पर उपलब्ध नहीं है। कृपया कोड मैन्युअल रूप से दर्ज करें।',

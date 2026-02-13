@@ -544,7 +544,7 @@ export default {
   fanChoiceSubtitle: 'Pilih pengalaman anda',
   fanChoiceQR: 'Acara Dedikasi Langsung',
   fanChoiceQRDesc: 'Imbas QR code atau masukkan kod untuk mendapatkan dedikasi selebriti',
-  fanChoiceVideo: 'Video Langsung',
+  fanChoiceVideo: 'Sesi Video Langsung',
   fanChoiceVideoDesc: 'Sertai panggilan video langsung dengan selebriti',
   notAvailable: 'Tidak Tersedia',
   scannerNotOnWeb: 'Pengimbas QR tidak tersedia di web. Sila masukkan kod secara manual.',

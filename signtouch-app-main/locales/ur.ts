@@ -544,7 +544,7 @@ export default {
   fanChoiceSubtitle: 'اپنا تجربہ چنیں',
   fanChoiceQR: 'لائیو ڈیڈیکیشن ایونٹ',
   fanChoiceQRDesc: 'QR کوڈ اسکین کریں یا مشہور شخصیت کی طرف سے وقف حاصل کرنے کے لیے کوڈ درج کریں',
-  fanChoiceVideo: 'لائیو ویڈیو',
+  fanChoiceVideo: 'لائیو ویڈیو سیشن',
   fanChoiceVideoDesc: 'مشہور شخصیت کے ساتھ لائیو ویڈیو کال میں شامل ہوں',
   notAvailable: 'دستیاب نہیں',
   scannerNotOnWeb: 'QR اسکینر ویب پر دستیاب نہیں ہے۔ براہ کرم کوڈ دستی طور پر درج کریں۔',
