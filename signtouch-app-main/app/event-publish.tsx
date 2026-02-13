@@ -277,6 +277,7 @@ export default function EventPublishScreen() {
   ).current;
 
   const loadSigners = useCallback(async () => {
+    if (!sessionId) return;
     const loadedSigners = await getEventSigners(sessionId);
     setSigners(loadedSigners);
     if (loadedSigners.length > 0 && !selectedSignerId) {
