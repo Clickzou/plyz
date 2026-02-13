@@ -94,6 +94,7 @@ const PRICE_OPTIONS = [
 
 const EVENT_FORM_STORAGE_KEY = '@create_event_form_data';
 const EVENT_PENDING_CREATE_KEY = '@create_event_pending';
+const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 export default function CreateEventScreen() {
   const router = useRouter();
@@ -256,6 +257,25 @@ export default function CreateEventScreen() {
       setCreatedSession(session);
       setCreatedSigners(addedSigners);
       setStep('success');
+
+      if (session && priceCents && priceCents > 0 && STRIPE_SERVER_URL) {
+        const stripeAccountId = await AsyncStorage.getItem('stripe_connect_account_id');
+        try {
+          await fetch(`${STRIPE_SERVER_URL}/api/set-event-payment-config`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              eventSessionId: session.id,
+              priceCents: priceCents,
+              celebrityStripeAccountId: stripeAccountId,
+              celebrityName: validSigners[0]?.name || 'Célébrité',
+              creatorId: user?.id,
+            }),
+          });
+        } catch (e) {
+          console.warn('Failed to store event payment config:', e);
+        }
+      }
 
       if (scheduledStart) {
         await scheduleCelebrityReminders({
@@ -534,6 +554,26 @@ export default function CreateEventScreen() {
       setCreatedSession(session);
       setCreatedSigners(addedSigners);
       setStep('success');
+
+      const effectivePriceCents = selectedPriceCents > 0 ? selectedPriceCents : 0;
+      if (session && effectivePriceCents > 0 && STRIPE_SERVER_URL) {
+        const stripeAccountId = await AsyncStorage.getItem('stripe_connect_account_id');
+        try {
+          await fetch(`${STRIPE_SERVER_URL}/api/set-event-payment-config`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              eventSessionId: session.id,
+              priceCents: effectivePriceCents,
+              celebrityStripeAccountId: stripeAccountId,
+              celebrityName: validSigners[0]?.name || 'Célébrité',
+              creatorId: user?.id,
+            }),
+          });
+        } catch (e) {
+          console.warn('Failed to store event payment config:', e);
+        }
+      }
 
       if (scheduledStart) {
         await scheduleCelebrityReminders({

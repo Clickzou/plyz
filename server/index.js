@@ -71,13 +71,20 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object;
-      const { session_id, fan_id, celebrity_id, price_cents, signtouch_fee_cents } = session.metadata || {};
+      const { session_id, fan_id, celebrity_id, price_cents, signtouch_fee_cents, event_session_id, event_type } = session.metadata || {};
       console.log('[Webhook] ✅ checkout.session.completed');
       console.log('[Webhook]   Session live:', session_id);
       console.log('[Webhook]   Fan:', fan_id, '| Célébrité:', celebrity_id);
       console.log('[Webhook]   Montant:', price_cents, 'cents | Commission SignTouch:', signtouch_fee_cents, 'cents');
       console.log('[Webhook]   Payment status:', session.payment_status);
       console.log('[Webhook]   Stripe Checkout ID:', session.id);
+
+      if (event_type === 'dedication' && event_session_id && fan_id && session.payment_status === 'paid') {
+        if (!global.eventPaidRecords) global.eventPaidRecords = {};
+        const key = `${event_session_id}_${fan_id}`;
+        global.eventPaidRecords[key] = { paid: true, checkoutSessionId: session.id, paidAt: new Date().toISOString() };
+        console.log('[Webhook] Recorded event paid access via webhook:', key);
+      }
       break;
     }
 
@@ -867,6 +874,211 @@ app.get('/api/stripe/express/account-link', async (req, res) => {
   } catch (error) {
     console.error('[Connect Express] Error:', error.message);
     res.status(500).json({ error: error.message });
+  }
+});
+
+if (!global.eventPaymentConfigs) global.eventPaymentConfigs = {};
+
+app.post('/api/set-event-payment-config', async (req, res) => {
+  try {
+    const { eventSessionId, priceCents, celebrityStripeAccountId, celebrityName, creatorId } = req.body;
+    if (!eventSessionId) return res.status(400).json({ error: 'Missing eventSessionId' });
+
+    global.eventPaymentConfigs[eventSessionId] = {
+      priceCents: priceCents || 0,
+      celebrityStripeAccountId: celebrityStripeAccountId || null,
+      celebrityName: celebrityName || null,
+      creatorId: creatorId || null,
+    };
+
+    try {
+      const supabase = getSupabase();
+      await supabase
+        .from('event_payment_configs')
+        .upsert({
+          event_session_id: eventSessionId,
+          price_cents: priceCents || 0,
+          celebrity_stripe_account_id: celebrityStripeAccountId || null,
+          celebrity_name: celebrityName || null,
+          creator_id: creatorId || null,
+        }, { onConflict: 'event_session_id' });
+    } catch (dbErr) {
+      console.warn('[EventPayment] DB store failed (using in-memory):', dbErr.message);
+    }
+
+    console.log('[EventPayment] Config stored for event:', eventSessionId, '| Price:', priceCents);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[EventPayment] Error:', error.message);
+    if (req.body.eventSessionId) {
+      global.eventPaymentConfigs[req.body.eventSessionId] = req.body;
+    }
+    res.json({ success: true });
+  }
+});
+
+app.get('/api/get-event-payment-config', async (req, res) => {
+  try {
+    const { event_session_id } = req.query;
+    if (!event_session_id) return res.status(400).json({ error: 'Missing event_session_id' });
+
+    const memConfig = global.eventPaymentConfigs[event_session_id];
+    if (memConfig) {
+      return res.json(memConfig);
+    }
+
+    try {
+      const supabase = getSupabase();
+      const { data, error } = await supabase
+        .from('event_payment_configs')
+        .select('*')
+        .eq('event_session_id', event_session_id)
+        .single();
+
+      if (!error && data) {
+        return res.json({
+          priceCents: data.price_cents || 0,
+          celebrityStripeAccountId: data.celebrity_stripe_account_id,
+          celebrityName: data.celebrity_name,
+          creatorId: data.creator_id,
+        });
+      }
+    } catch (dbErr) {
+      console.warn('[EventPayment] DB lookup failed:', dbErr.message);
+    }
+
+    res.json({ priceCents: 0 });
+  } catch (error) {
+    console.error('[EventPayment] Get config error:', error.message);
+    res.json({ priceCents: 0 });
+  }
+});
+
+app.post('/api/create-event-checkout', async (req, res) => {
+  try {
+    const stripe = await getStripe();
+    const { eventSessionId, fanId, priceCents, celebrityStripeAccountId, celebrityName, successUrl, cancelUrl } = req.body;
+
+    if (!priceCents || priceCents < 100) {
+      return res.status(400).json({ error: 'Minimum price is 1€ (100 cents)' });
+    }
+
+    if (!eventSessionId) {
+      return res.status(400).json({ error: 'Missing event session ID' });
+    }
+
+    const signTouchFeeCents = Math.round(priceCents * 0.15);
+
+    let sessionParams = {
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: [{
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: `Dédicace Live - ${celebrityName || 'Événement'}`,
+            description: 'Accès aux photos dédicacées en direct',
+          },
+          unit_amount: priceCents,
+        },
+        quantity: 1,
+      }],
+      metadata: {
+        event_session_id: eventSessionId,
+        fan_id: fanId || 'anonymous',
+        event_type: 'dedication',
+        price_cents: String(priceCents),
+        signtouch_fee_cents: String(signTouchFeeCents),
+      },
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+    };
+
+    if (celebrityStripeAccountId) {
+      try {
+        const account = await stripe.accounts.retrieve(celebrityStripeAccountId);
+        const canTransfer = account.charges_enabled && (account.capabilities?.transfers === 'active' || account.capabilities?.legacy_payments === 'active');
+
+        if (canTransfer) {
+          sessionParams.payment_intent_data = {
+            application_fee_amount: signTouchFeeCents,
+            transfer_data: {
+              destination: celebrityStripeAccountId,
+            },
+          };
+        }
+      } catch (e) {
+        console.warn('[EventCheckout] Could not verify Stripe account:', e.message);
+      }
+    }
+
+    const checkoutSession = await stripe.checkout.sessions.create(sessionParams);
+
+    console.log('[EventCheckout] Session created:', checkoutSession.id, 'for event:', eventSessionId, '| Price:', priceCents, '| Fee:', signTouchFeeCents);
+
+    res.json({
+      checkoutSessionId: checkoutSession.id,
+      url: checkoutSession.url,
+    });
+  } catch (error) {
+    console.error('[EventCheckout] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+if (!global.eventPaidRecords) global.eventPaidRecords = {};
+
+app.get('/api/verify-event-payment', async (req, res) => {
+  try {
+    const stripe = await getStripe();
+    const { checkout_session_id } = req.query;
+
+    if (!checkout_session_id) {
+      return res.status(400).json({ error: 'Missing checkout_session_id' });
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(checkout_session_id);
+    const eventSessionId = session.metadata?.event_session_id;
+    const fanId = session.metadata?.fan_id;
+    const paid = session.payment_status === 'paid';
+
+    if (paid && eventSessionId && fanId) {
+      const key = `${eventSessionId}_${fanId}`;
+      global.eventPaidRecords[key] = { paid: true, checkoutSessionId: checkout_session_id, paidAt: new Date().toISOString() };
+      console.log('[EventPayment] Recorded paid access:', key);
+    }
+
+    res.json({
+      paid,
+      status: session.payment_status,
+      eventSessionId,
+      fanId,
+    });
+  } catch (error) {
+    console.error('[EventPayment] Verify error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/check-event-access', async (req, res) => {
+  try {
+    const { event_session_id, fan_id } = req.query;
+
+    if (!event_session_id || !fan_id) {
+      return res.status(400).json({ error: 'Missing event_session_id or fan_id' });
+    }
+
+    const key = `${event_session_id}_${fan_id}`;
+    const record = global.eventPaidRecords?.[key];
+
+    if (record?.paid) {
+      return res.json({ paid: true, paidAt: record.paidAt });
+    }
+
+    res.json({ paid: false });
+  } catch (error) {
+    console.error('[EventPayment] Check access error:', error.message);
+    res.json({ paid: false });
   }
 });
 

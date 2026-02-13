@@ -566,12 +566,22 @@ export default function EventPublishScreen() {
           <Euro size={16} color={priceCents > 0 ? '#10B981' : '#6B7280'} />
           <Text style={[styles.earningsText, priceCents <= 0 && { color: '#6B7280' }]}>
             {priceCents > 0
-              ? `${t('estimatedRevenue') || 'Revenus estimés'}: ${((priceCents / 100) * viewerCount).toFixed(2).replace('.', ',')}€`
+              ? `${t('estimatedRevenue') || 'Revenus estimés'}: ${(((priceCents / 100) * viewerCount) * (1 - 0.15 - 0.029) - viewerCount * 0.30).toFixed(2).replace('.', ',')}€`
               : (t('freeSession') || 'Session gratuite')}
           </Text>
-          {priceCents > 0 && (
+          {priceCents > 0 && viewerCount > 0 && (
+            <View>
+              <Text style={styles.earningsDetail}>
+                {t('grossRevenue') || 'Brut'}: {((priceCents / 100) * viewerCount).toFixed(2).replace('.', ',')}€ ({(priceCents / 100).toFixed(2).replace('.', ',')}€ × {viewerCount})
+              </Text>
+              <Text style={[styles.earningsDetail, { color: '#EF4444', marginTop: 2 }]}>
+                SignTouch 15%: -{(((priceCents / 100) * viewerCount) * 0.15).toFixed(2).replace('.', ',')}€ | Stripe: -{((((priceCents / 100) * viewerCount) * 0.029) + viewerCount * 0.30).toFixed(2).replace('.', ',')}€
+              </Text>
+            </View>
+          )}
+          {priceCents > 0 && viewerCount === 0 && (
             <Text style={styles.earningsDetail}>
-              ({(priceCents / 100).toFixed(2).replace('.', ',')}€ × {viewerCount})
+              ({(priceCents / 100).toFixed(2).replace('.', ',')}€ / {t('perFan') || 'fan'})
             </Text>
           )}
         </View>

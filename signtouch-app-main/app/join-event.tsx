@@ -227,6 +227,9 @@ export default function JoinEventScreen() {
   const [promoApplied, setPromoApplied] = useState(false);
   const hasPlayedChime = useRef(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [eventPaymentConfig, setEventPaymentConfig] = useState<{priceCents: number, celebrityStripeAccountId?: string, celebrityName?: string} | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [eventPaid, setEventPaid] = useState(false);
   const signatureClipWidth = useSharedValue(0);
   const signatureOpacity = useSharedValue(0);
   const buttonPulse = useSharedValue(1);
@@ -271,6 +274,59 @@ export default function JoinEventScreen() {
       handleJoinQueue();
     }
   }, [user, pendingJoinQueue]);
+
+  useEffect(() => {
+    const checkEventPaymentReturn = async () => {
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentSuccess = urlParams.get('payment_success');
+        const checkoutId = urlParams.get('checkout_session_id');
+        const returnCode = urlParams.get('code');
+
+        if (paymentSuccess === 'true' && checkoutId && returnCode) {
+          try {
+            const verifyRes = await fetch(`${STRIPE_SERVER_URL}/api/verify-event-payment?checkout_session_id=${checkoutId}`);
+            const verifyData = await verifyRes.json();
+
+            if (verifyData.paid && verifyData.eventSessionId) {
+              await AsyncStorage.setItem(`@event_paid_${verifyData.eventSessionId}`, 'true');
+              setEventPaid(true);
+              setCode(returnCode);
+              setTimeout(() => handleSearch(returnCode), 500);
+            }
+          } catch (e) {
+            console.warn('Event payment verification failed:', e);
+          }
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+      }
+
+      if (Platform.OS !== 'web') {
+        const pendingSessionId = await AsyncStorage.getItem('@event_pending_payment_session');
+        if (pendingSessionId) {
+          const localPaid = await AsyncStorage.getItem(`@event_paid_${pendingSessionId}`);
+          if (localPaid === 'true') {
+            setEventPaid(true);
+            await AsyncStorage.removeItem('@event_pending_payment_session');
+          } else {
+            try {
+              const viewerId = await getOrCreateDeviceId();
+              const checkRes = await fetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${pendingSessionId}&fan_id=${viewerId}`);
+              const checkData = await checkRes.json();
+              if (checkData.paid) {
+                await AsyncStorage.setItem(`@event_paid_${pendingSessionId}`, 'true');
+                setEventPaid(true);
+                await AsyncStorage.removeItem('@event_pending_payment_session');
+              }
+            } catch (e) {
+              console.warn('Mobile payment check failed:', e);
+            }
+          }
+        }
+      }
+    };
+    checkEventPaymentReturn();
+  }, []);
 
   useEffect(() => {
     if (params.code) {
@@ -451,6 +507,18 @@ export default function JoinEventScreen() {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
+        if (STRIPE_SERVER_URL) {
+          try {
+            const paymentRes = await fetch(`${STRIPE_SERVER_URL}/api/get-event-payment-config?event_session_id=${sessionResult.session.id}`);
+            const paymentConfig = await paymentRes.json();
+            setEventPaymentConfig(paymentConfig);
+          } catch (e) {
+            console.warn('Failed to fetch payment config:', e);
+            setEventPaymentConfig({ priceCents: 0 });
+          }
+        } else {
+          setEventPaymentConfig({ priceCents: 0 });
+        }
         return;
       }
       
@@ -562,8 +630,76 @@ export default function JoinEventScreen() {
     }
   };
 
-  const goToGallery = () => {
+  const handleEventPayment = async () => {
+    if (!foundSession || !eventPaymentConfig) return;
+    setIsProcessingPayment(true);
+
+    try {
+      const viewerId = await getOrCreateDeviceId();
+      const origin = Platform.OS === 'web' ? window.location.origin : 'https://signtouch.app';
+
+      if (Platform.OS !== 'web') {
+        await AsyncStorage.setItem('@event_pending_payment_session', foundSession.id);
+      }
+
+      const response = await fetch(`${STRIPE_SERVER_URL}/api/create-event-checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventSessionId: foundSession.id,
+          fanId: viewerId,
+          priceCents: eventPaymentConfig.priceCents,
+          celebrityStripeAccountId: eventPaymentConfig.celebrityStripeAccountId,
+          celebrityName: eventPaymentConfig.celebrityName,
+          successUrl: `${origin}/join-event?code=${foundSession.join_code}&payment_success=true&checkout_session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${origin}/join-event?code=${foundSession.join_code}&payment_cancelled=true`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        if (Platform.OS === 'web') {
+          window.location.href = data.url;
+        } else {
+          const { Linking } = require('react-native');
+          Linking.openURL(data.url);
+        }
+      } else {
+        showAlert(t('error') || 'Error', t('paymentFailed') || 'Payment initialization failed');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      showAlert(t('error') || 'Error', t('paymentFailed') || 'Payment failed');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const goToGallery = async () => {
     if (foundSession) {
+      if (eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !eventPaid) {
+        try {
+          const viewerId = await getOrCreateDeviceId();
+          const checkRes = await fetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${foundSession.id}&fan_id=${viewerId}`);
+          const checkData = await checkRes.json();
+          if (checkData.paid) {
+            await AsyncStorage.setItem(`@event_paid_${foundSession.id}`, 'true');
+            setEventPaid(true);
+          } else {
+            await handleEventPayment();
+            return;
+          }
+        } catch (e) {
+          const storedPaid = await AsyncStorage.getItem(`@event_paid_${foundSession.id}`);
+          if (storedPaid === 'true') {
+            setEventPaid(true);
+          } else {
+            await handleEventPayment();
+            return;
+          }
+        }
+      }
       router.push({
         pathname: '/event-gallery',
         params: {
@@ -1374,9 +1510,42 @@ export default function JoinEventScreen() {
               </View>
             )}
 
-            <TouchableOpacity style={styles.joinButton} onPress={goToGallery}>
-              <Text style={styles.joinButtonText}>{t('liveSessionJoin') || 'Join Event'}</Text>
-            </TouchableOpacity>
+            {eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !eventPaid && (
+              <View style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)', borderRadius: 8, padding: 10, marginBottom: 12 }}>
+                <Text style={{ color: '#818cf8', fontSize: 13, textAlign: 'center' }}>
+                  {t('eventRequiresPayment') || 'Cet événement est payant'}
+                </Text>
+              </View>
+            )}
+
+            {eventPaid && (
+              <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', borderRadius: 8, padding: 10, marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <Check size={16} color="#10B981" />
+                <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '600' }}>
+                  {t('paymentConfirmed') || 'Paiement confirmé'}
+                </Text>
+              </View>
+            )}
+
+            {eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !eventPaid ? (
+              <TouchableOpacity 
+                style={[styles.joinButton, { backgroundColor: '#6366f1' }]} 
+                onPress={goToGallery}
+                disabled={isProcessingPayment}
+              >
+                {isProcessingPayment ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.joinButtonText}>
+                    {t('payAndJoin') || 'Payer'} {(eventPaymentConfig.priceCents / 100).toFixed(2).replace('.', ',')}€ {t('andJoin') || '& Rejoindre'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.joinButton} onPress={goToGallery}>
+                <Text style={styles.joinButtonText}>{t('liveSessionJoin') || 'Join Event'}</Text>
+              </TouchableOpacity>
+            )}
             
             <TouchableOpacity style={styles.searchAnotherButton} onPress={handleSearchAnother}>
               <Text style={styles.searchAnotherText}>{t('searchAnother') || 'Search another event'}</Text>
