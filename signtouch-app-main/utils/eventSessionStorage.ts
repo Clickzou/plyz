@@ -572,20 +572,64 @@ export const publishEventAsset = async (
     ? { ...options.signatureMetadata, original_photo_url: originalPhotoUrl }
     : originalPhotoUrl ? { original_photo_url: originalPhotoUrl } : null;
 
-  const { data, error } = await supabase
-    .from('event_assets')
-    .insert({
-      event_id: eventId,
-      signer_id: signerId || null,
-      asset_type: type,
-      asset_url: imageUrl,
-      signature_metadata: metadataWithOriginal,
-    })
-    .select()
-    .single();
+  const insertBase = {
+    event_id: eventId,
+    signer_id: signerId || null,
+    asset_type: type,
+    asset_url: imageUrl,
+  };
 
-  if (!error && data && originalPhotoUrl) {
-    data.original_photo_url = originalPhotoUrl;
+  let data: any = null;
+  let error: any = null;
+
+  const tryInsert = async (insertObj: Record<string, any>) => {
+    const result = await supabase
+      .from('event_assets')
+      .insert(insertObj)
+      .select()
+      .single();
+    return result;
+  };
+
+  const result1 = await tryInsert({
+    ...insertBase,
+    signature_metadata: metadataWithOriginal,
+    original_photo_url: originalPhotoUrl,
+  });
+
+  if (result1.error?.code === 'PGRST204') {
+    const result2 = await tryInsert({
+      ...insertBase,
+      signature_metadata: metadataWithOriginal,
+    });
+
+    if (result2.error?.code === 'PGRST204') {
+      const result3 = await tryInsert(insertBase);
+      data = result3.data;
+      error = result3.error;
+    } else {
+      data = result2.data;
+      error = result2.error;
+    }
+  } else {
+    data = result1.data;
+    error = result1.error;
+  }
+
+  if (!error && data) {
+    if (originalPhotoUrl) data.original_photo_url = originalPhotoUrl;
+    if (metadataWithOriginal) data.signature_metadata = metadataWithOriginal;
+
+    if (metadataWithOriginal) {
+      try {
+        await AsyncStorage.setItem(
+          `@event_asset_meta_${data.id}`,
+          JSON.stringify(metadataWithOriginal)
+        );
+      } catch (e) {
+        console.warn('Failed to cache asset metadata:', e);
+      }
+    }
   }
 
   if (error) {
