@@ -88,6 +88,7 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
 
   const isJsonData = uri.startsWith('data:application/json;base64,');
   const isSvgDataUri = uri.startsWith('data:image/svg+xml;base64,');
+  const [coloredSvgUri, setColoredSvgUri] = useState<string | null>(null);
 
   useEffect(() => {
     if (isJsonData) {
@@ -109,14 +110,17 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
         const svgString = decodeURIComponent(escape(atob(base64Data)));
         const widthMatch = svgString.match(/width="([^"]+)"/);
         const heightMatch = svgString.match(/height="([^"]+)"/);
-        const pathMatches = [...svgString.matchAll(/<path[^>]*d="([^"]+)"[^>]*\/>/g)];
-        const paths = pathMatches.map(m => m[1]);
         const w = widthMatch ? parseFloat(widthMatch[1]) : 150;
         const h = heightMatch ? parseFloat(heightMatch[1]) : 80;
-        if (paths.length > 0) {
-          setSvgData({ paths, width: w, height: h });
-          setImageDimensions({ width: Math.min(w, 250), height: Math.min(h, 150) });
-        }
+        const aspectRatio = w / h;
+        const displayW = Math.min(w, 200);
+        const displayH = displayW / aspectRatio;
+        setImageDimensions({ width: displayW, height: displayH });
+
+        let recoloredSvg = svgString;
+        recoloredSvg = recoloredSvg.replace(/stroke="[^"]*"/g, `stroke="${color}"`);
+        const recoloredBase64 = btoa(unescape(encodeURIComponent(recoloredSvg)));
+        setColoredSvgUri(`data:image/svg+xml;base64,${recoloredBase64}`);
       } catch (error) {
         console.error('Error parsing SVG data URI:', error);
       }
@@ -141,7 +145,7 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
         console.error('Error getting image size:', error);
       }
     );
-  }, [uri, isJsonData, isSvgDataUri]);
+  }, [uri, isJsonData, isSvgDataUri, color]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -153,6 +157,34 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
       ],
     };
   });
+
+  if (Platform.OS === 'web' && isSvgDataUri && coloredSvgUri) {
+    return (
+      <GestureDetector gesture={gesture}>
+        <Animated.View style={[
+          styles.signatureWrapper, 
+          animatedStyle, 
+          { 
+            width: imageDimensions.width, 
+            height: imageDimensions.height,
+            zIndex: isSelected ? 1000 : index,
+          }
+        ]}>
+          <img
+            src={coloredSvgUri}
+            draggable={false}
+            style={{
+              width: imageDimensions.width,
+              height: imageDimensions.height,
+              objectFit: 'contain' as any,
+              pointerEvents: 'none' as any,
+            }}
+          />
+          {isSelected && <View style={styles.selectionBorder} />}
+        </Animated.View>
+      </GestureDetector>
+    );
+  }
 
   return (
     <GestureDetector gesture={gesture}>
@@ -406,6 +438,11 @@ export default function ComposeScreen() {
 
   const signatureUris = signatures ? JSON.parse(signatures as string) : [];
   const initialTexts = texts ? JSON.parse(texts as string) : [];
+  
+  console.log('[Compose] signatureUris count:', signatureUris.length, 'signatures param:', signatures ? 'present' : 'missing');
+  if (signatureUris.length > 0) {
+    console.log('[Compose] First signature URI type:', signatureUris[0].substring(0, 40));
+  }
 
   const [loadedPhotoUri, setLoadedPhotoUri] = useState<string | null>(null);
   const [isLoadingMemory, setIsLoadingMemory] = useState(!!memoryId);
