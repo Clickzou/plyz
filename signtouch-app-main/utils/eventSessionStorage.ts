@@ -181,8 +181,10 @@ export const createEventSession = async (
     status: isScheduled ? 'scheduled' : 'live',
     join_code: joinCode,
     created_by: creatorId || null,
-    location: location || null,
   };
+  if (location) {
+    insertData.location = location;
+  }
   if (priceCents !== undefined && priceCents > 0) {
     insertData.price_cents = priceCents;
   }
