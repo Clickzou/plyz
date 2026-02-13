@@ -1105,17 +1105,61 @@ export default function CreateEventScreen() {
                 </>
               )}
 
-              <View style={styles.statsRow}>
-                <View style={styles.statItem}>
-                  <Users size={18} color="#10B981" />
-                  <Text style={styles.statText}>{t('celebrity') || 'Celebrity'} : {createdSigners.length}</Text>
+              <View style={styles.eventInfoCard}>
+                <View style={styles.eventInfoRow}>
+                  <View style={[styles.eventInfoIconCircle, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>  
+                    <Users size={16} color="#10B981" />
+                  </View>
+                  <View style={styles.eventInfoContent}>
+                    <Text style={styles.eventInfoLabel}>{t('celebrities') || 'Celebrities'}</Text>
+                    <Text style={styles.eventInfoValue}>{createdSigners.length}</Text>
+                  </View>
                 </View>
-                <View style={styles.statItem}>
-                  <Clock size={18} color="#10B981" />
-                  <Text style={styles.statText}>
-                    {t('until') || 'Until'} {new Date(createdSession.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </Text>
+
+                <View style={styles.eventInfoDivider} />
+
+                <View style={styles.eventInfoRow}>
+                  <View style={[styles.eventInfoIconCircle, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
+                    <Clock size={16} color="#f59e0b" />
+                  </View>
+                  <View style={styles.eventInfoContent}>
+                    <Text style={styles.eventInfoLabel}>{t('eventDuration') || 'Duration'}</Text>
+                    <Text style={styles.eventInfoValue}>
+                      {t('until') || 'Until'} {new Date(createdSession.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                  </View>
                 </View>
+
+                <View style={styles.eventInfoDivider} />
+
+                <View style={styles.eventInfoRow}>
+                  <View style={[styles.eventInfoIconCircle, { backgroundColor: 'rgba(99, 102, 241, 0.15)' }]}>
+                    <Euro size={16} color="#818cf8" />
+                  </View>
+                  <View style={styles.eventInfoContent}>
+                    <Text style={styles.eventInfoLabel}>{t('eventPrice') || 'Price per fan'}</Text>
+                    <Text style={styles.eventInfoValue}>
+                      {createdSession.price_cents && createdSession.price_cents > 0
+                        ? `${(createdSession.price_cents / 100).toFixed(2).replace('.', ',')}€`
+                        : (t('free') || 'Gratuit')}
+                    </Text>
+                  </View>
+                </View>
+
+                {createdSession.location && (
+                  <>
+                    <View style={styles.eventInfoDivider} />
+                    <View style={styles.eventInfoRow}>
+                      <View style={[styles.eventInfoIconCircle, { backgroundColor: 'rgba(239, 68, 68, 0.15)' }]}>
+                        <MapPin size={16} color="#ef4444" />
+                      </View>
+                      <View style={styles.eventInfoContent}>
+                        <Text style={styles.eventInfoLabel}>{t('eventLocation') || 'Location'}</Text>
+                        <Text style={styles.eventInfoValue}>{createdSession.location}</Text>
+                      </View>
+                    </View>
+                  </>
+                )}
               </View>
 
               <View style={styles.qrContainer}>
@@ -1530,6 +1574,46 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', gap: 20, marginBottom: 20 },
   statItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   statText: { color: 'rgba(255,255,255,0.7)', fontSize: 14 },
+  eventInfoCard: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  eventInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 4,
+  },
+  eventInfoIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  eventInfoContent: {
+    flex: 1,
+  },
+  eventInfoLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
+    marginBottom: 2,
+  },
+  eventInfoValue: {
+    fontSize: 15,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  eventInfoDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    marginVertical: 10,
+  },
   qrContainer: { padding: 16, backgroundColor: '#ffffff', borderRadius: 16, marginBottom: 20 },
   codeContainer: { alignItems: 'center', marginBottom: 20 },
   codeLabel: { fontSize: 14, color: 'rgba(255,255,255,0.6)', marginBottom: 8 },
