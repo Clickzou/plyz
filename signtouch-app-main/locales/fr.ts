@@ -1010,6 +1010,8 @@ export default {
 
   myEarnings: 'Mes revenus',
   totalEarnings: 'Revenus totaux',
+  freeSession: 'Session gratuite',
+  estimatedRevenue: 'Revenus estimés',
   sessions: 'sessions',
   nextPayout: 'Prochain versement',
   estimatedDate: 'Date estimée',

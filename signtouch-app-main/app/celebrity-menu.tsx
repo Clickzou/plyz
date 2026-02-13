@@ -98,7 +98,7 @@ export default function CelebrityMenuScreen() {
       });
       return;
     }
-    router.push(`/event-publish?sessionId=${event.id}&sessionTitle=${encodeURIComponent(event.title)}&joinCode=${event.join_code}&eventType=${event.event_type || 'qr'}&startsAt=${encodeURIComponent(event.starts_at)}&endsAt=${encodeURIComponent(event.ends_at)}&location=${encodeURIComponent(event.location || '')}`);
+    router.push(`/event-publish?sessionId=${event.id}&sessionTitle=${encodeURIComponent(event.title)}&joinCode=${event.join_code}&eventType=${event.event_type || 'qr'}&startsAt=${encodeURIComponent(event.starts_at)}&endsAt=${encodeURIComponent(event.ends_at)}&location=${encodeURIComponent(event.location || '')}&priceCents=${event.price_cents || 0}`);
   };
 
   const handleShowQr = (event: EventSession) => {

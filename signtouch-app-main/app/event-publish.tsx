@@ -16,7 +16,7 @@ import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Move, ZoomIn, ZoomOut, RotateCcw, Palette, QrCode, X, Copy, Share2, Plus, UserPlus, Calendar, Clock, Video, MapPin } from 'lucide-react-native';
+import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Move, ZoomIn, ZoomOut, RotateCcw, Palette, QrCode, X, Copy, Share2, Plus, UserPlus, Calendar, Clock, Video, MapPin, Euro } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
 import { SvgUri, SvgXml } from 'react-native-svg';
@@ -76,6 +76,7 @@ export default function EventPublishScreen() {
   const startsAt = params.startsAt as string;
   const endsAt = params.endsAt as string;
   const location = params.location as string;
+  const priceCents = parseInt(params.priceCents as string || '0', 10);
   
   const formatDateTime = (dateStr: string) => {
     if (!dateStr) return '';
@@ -561,6 +562,20 @@ export default function EventPublishScreen() {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.earningsCard}>
+          <Euro size={16} color={priceCents > 0 ? '#10B981' : '#6B7280'} />
+          <Text style={[styles.earningsText, priceCents <= 0 && { color: '#6B7280' }]}>
+            {priceCents > 0
+              ? `${t('estimatedRevenue') || 'Revenus estimés'}: ${((priceCents / 100) * viewerCount).toFixed(2).replace('.', ',')}€`
+              : (t('freeSession') || 'Session gratuite')}
+          </Text>
+          {priceCents > 0 && (
+            <Text style={styles.earningsDetail}>
+              ({(priceCents / 100).toFixed(2).replace('.', ',')}€ × {viewerCount})
+            </Text>
+          )}
+        </View>
+
         <View style={styles.eventInfoCard}>
           <View style={styles.eventInfoRow}>
             {eventType === 'live_video' ? (
@@ -944,6 +959,27 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 20, fontWeight: '700', color: '#fff' },
   statLabel: { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4 },
   statDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
+  earningsCard: {
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+  },
+  earningsText: {
+    color: '#10B981',
+    fontSize: 15,
+    fontWeight: '600' as const,
+    flex: 1,
+  },
+  earningsDetail: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+  },
   eventInfoCard: {
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 12,

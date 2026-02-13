@@ -587,6 +587,7 @@ export default function CreateEventScreen() {
           sessionId: createdSession.id,
           sessionTitle: createdSession.title,
           joinCode: createdSession.join_code,
+          priceCents: String(createdSession.price_cents || 0),
         }
       });
     }
