@@ -1525,9 +1525,6 @@ export default function JoinEventScreen() {
           </View>
         ) : foundSession ? (
           <View style={styles.resultContainer}>
-            <View style={styles.successIcon}>
-              <Check size={40} color="#10B981" />
-            </View>
             <Text style={styles.foundTitle}>{foundSession.title}</Text>
             
             <View style={styles.eventDetailsCard}>
@@ -1709,9 +1706,6 @@ export default function JoinEventScreen() {
           </View>
         ) : foundEvent ? (
           <View style={styles.resultContainer}>
-            <View style={styles.successIcon}>
-              <Check size={40} color="#10B981" />
-            </View>
             <Text style={styles.foundTitle}>{t('signatureFound') || 'Signature Found!'}</Text>
             <Text style={styles.eventName}>{foundEvent.name}</Text>
 
