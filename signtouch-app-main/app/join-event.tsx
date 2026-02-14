@@ -1869,12 +1869,12 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   contentContainer: { padding: 20 },
   rejoinBanner: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
     borderRadius: 14,
     padding: 16,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.5)',
+    borderWidth: 2,
+    borderColor: '#ef4444',
   },
   rejoinBannerContent: {
     flexDirection: 'row' as const,
@@ -1891,7 +1891,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#10B981',
+    backgroundColor: '#ef4444',
   },
   rejoinBannerTitle: {
     fontSize: 15,
