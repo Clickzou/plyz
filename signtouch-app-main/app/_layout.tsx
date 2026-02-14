@@ -35,6 +35,7 @@ import {
 import { setAccountPromptSnooze } from '@/utils/postPurchaseAccountStorage';
 import { initRevenueCat } from '@/utils/revenueCat';
 import CustomAlert from '@/components/CustomAlert';
+import { CelebrityModeProvider } from '@/contexts/CelebrityModeContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -156,7 +157,9 @@ export default function RootLayout() {
       <AuthProvider>
         <LanguageProvider>
           <SubscriptionProvider>
-            <AppContent />
+            <CelebrityModeProvider>
+              <AppContent />
+            </CelebrityModeProvider>
           </SubscriptionProvider>
         </LanguageProvider>
       </AuthProvider>

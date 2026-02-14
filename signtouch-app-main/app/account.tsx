@@ -28,6 +28,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { getStripeAccountId, saveStripeAccountId } from '@/utils/userProfile';
 import StripeConnectModal from '@/components/StripeConnectModal';
+import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
+import { Star } from 'lucide-react-native';
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -51,6 +53,7 @@ export default function AccountScreen() {
   const { t, language, setLanguage, isRTL } = useTranslation();
   const { user, signOut, sendOtpCode, verifyOtpCode } = useAuth();
   const { status } = useSubscription();
+  const { isCelebrity, toggleCelebrityMode } = useCelebrityMode();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [promoCode, setPromoCode] = useState('');
@@ -510,6 +513,48 @@ export default function AccountScreen() {
               </TouchableOpacity>
             </View>
           )}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>
+            {t('celebrityModeSection')}
+          </Text>
+
+          <View style={styles.accountCard}>
+            <View style={styles.accountCardHeader}>
+              <View style={[styles.accountAvatar, { backgroundColor: isCelebrity ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.08)' }]}>
+                <Star size={28} color={isCelebrity ? '#f59e0b' : '#888'} fill={isCelebrity ? '#f59e0b' : 'transparent'} />
+              </View>
+              <View style={styles.accountCardInfo}>
+                <Text style={styles.accountCardName}>
+                  {isCelebrity ? (t('celebrityModeActive')) : (t('celebrityModeInactive'))}
+                </Text>
+                <Text style={styles.accountCardSubtitle}>
+                  {isCelebrity ? (t('celebrityModeActiveDesc')) : (t('celebrityModeInactiveDesc'))}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.createAccountButton,
+                isCelebrity && { backgroundColor: '#374151' },
+              ]}
+              onPress={() => {
+                if (Platform.OS !== 'web') {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                toggleCelebrityMode();
+              }}
+              activeOpacity={0.7}
+            >
+              <Star size={18} color="#ffffff" fill={isCelebrity ? 'transparent' : '#ffffff'} />
+              <Text style={styles.createAccountButtonText}>
+                {isCelebrity ? (t('disableCelebrityMode')) : (t('enableCelebrityMode'))}
+              </Text>
+              <ArrowRight size={18} color="#ffffff" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {__DEV__ && (

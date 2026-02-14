@@ -1,9 +1,10 @@
 import { View, TouchableOpacity, StyleSheet, Platform, Text } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
-import { Home, Images, User, Star, Users, Search, Newspaper, Inbox } from 'lucide-react-native';
+import { Home, Images, User, Star, Users, Search, Newspaper, Inbox, Radio } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 
 export const BOTTOM_NAV_HEIGHT = 70;
 
@@ -16,6 +17,7 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { isCelebrity } = useCelebrityMode();
 
   const handleNavigation = (path: string) => {
     if (Platform.OS !== 'web') {
@@ -63,34 +65,36 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.navButton}
-        onPress={() => handleNavigation('/celebrity-menu')}
-        activeOpacity={0.7}
-      >
-        <Star
-          size={24}
-          color={isActiveMulti('/celebrity-menu', '/create-event', '/create-live-session') ? '#f59e0b' : '#ffffff'}
-          fill={isActiveMulti('/celebrity-menu', '/create-event', '/create-live-session') ? '#f59e0b' : 'transparent'}
-          strokeWidth={2}
-        />
-        <Text style={[styles.navLabel, isActiveMulti('/celebrity-menu', '/create-event', '/create-live-session') && styles.navLabelStar]}>
-          {t('celebrity')}
-        </Text>
-      </TouchableOpacity>
+      {isCelebrity && (
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => handleNavigation('/celebrity-menu')}
+          activeOpacity={0.7}
+        >
+          <Star
+            size={24}
+            color={isActiveMulti('/celebrity-menu', '/create-event', '/create-live-session') ? '#f59e0b' : '#ffffff'}
+            fill={isActiveMulti('/celebrity-menu', '/create-event', '/create-live-session') ? '#f59e0b' : 'transparent'}
+            strokeWidth={2}
+          />
+          <Text style={[styles.navLabel, isActiveMulti('/celebrity-menu', '/create-event', '/create-live-session') && styles.navLabelStar]}>
+            {t('celebrity')}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       <TouchableOpacity
         style={styles.navButton}
         onPress={() => handleNavigation('/fan-choice')}
         activeOpacity={0.7}
       >
-        <Users
+        <Radio
           size={24}
           color={isActiveMulti('/fan-choice', '/join-event', '/join-live-session') ? '#6366f1' : '#ffffff'}
           strokeWidth={2}
         />
         <Text style={[styles.navLabel, isActiveMulti('/fan-choice', '/join-event', '/join-live-session') && styles.navLabelFan]}>
-          {t('fan')}
+          {t('live')}
         </Text>
       </TouchableOpacity>
 
