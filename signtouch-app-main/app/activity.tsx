@@ -12,6 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
+import { FeedSkeleton } from '@/components/SkeletonLoader';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
@@ -55,7 +56,7 @@ export default function ActivityScreen() {
   const { t } = useLanguage();
   const { isCelebrity, toggleCelebrityMode } = useCelebrityMode();
   const [posts, setPosts] = useState<FeedPost[]>(DEMO_FEED);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
@@ -194,10 +195,8 @@ export default function ActivityScreen() {
         ))}
       </View>
 
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#10b981" />
-        </View>
+      {loading && posts.length === 0 ? (
+        <FeedSkeleton />
       ) : posts.length === 0 ? (
         <View style={styles.center}>
           <Newspaper size={48} color="#374151" />

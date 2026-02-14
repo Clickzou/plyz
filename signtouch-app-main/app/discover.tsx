@@ -5,10 +5,12 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Search, Star, CheckCircle, ShieldCheck, ChevronRight, X } from 'lucide-react-native';
+import { Search, Star, CheckCircle, ShieldCheck, ChevronRight, X, Heart, TrendingUp } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useFollow } from '@/contexts/FollowContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
+import { DiscoverSkeleton } from '@/components/SkeletonLoader';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
@@ -52,8 +54,9 @@ export default function DiscoverScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { isFollowing, toggleFollow } = useFollow();
   const [celebrities, setCelebrities] = useState<Celebrity[]>(DEMO_CELEBRITIES);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('popular');
   const [page, setPage] = useState(1);
@@ -175,6 +178,21 @@ export default function DiscoverScreen() {
               </View>
             )}
           </View>
+          <TouchableOpacity
+            style={styles.followButton}
+            onPress={(e) => {
+              e.stopPropagation?.();
+              toggleFollow({ user_id: item.user_id, stage_name: item.stage_name, avatar_url: item.avatar_url });
+            }}
+            activeOpacity={0.7}
+          >
+            <Heart
+              size={18}
+              color={isFollowing(item.user_id) ? '#ef4444' : '#ffffff'}
+              fill={isFollowing(item.user_id) ? '#ef4444' : 'transparent'}
+              strokeWidth={2}
+            />
+          </TouchableOpacity>
         </View>
         <View style={styles.cardBody}>
           <Text style={styles.cardName} numberOfLines={1}>{item.stage_name}</Text>
@@ -226,6 +244,34 @@ export default function DiscoverScreen() {
         </View>
       </View>
 
+      {!search.trim() && (
+        <View style={styles.trendingSection}>
+          <View style={styles.trendingHeader}>
+            <TrendingUp size={16} color="#f59e0b" />
+            <Text style={styles.trendingTitle}>{t('trendingNow') || 'Popular now'}</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trendingList}>
+            {DEMO_CELEBRITIES.slice(0, 5).map(celeb => (
+              <TouchableOpacity
+                key={`trending-${celeb.user_id}`}
+                style={styles.trendingChip}
+                onPress={() => router.push(`/celebrity-detail?id=${celeb.user_id}`)}
+                activeOpacity={0.7}
+              >
+                {celeb.avatar_url && !failedImages.has(celeb.user_id) ? (
+                  <Image source={{ uri: celeb.avatar_url }} style={styles.trendingAvatar} onError={() => handleImageError(celeb.user_id)} />
+                ) : (
+                  <View style={[styles.trendingAvatar, { backgroundColor: '#374151', justifyContent: 'center', alignItems: 'center' }]}>
+                    <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{celeb.stage_name[0]}</Text>
+                  </View>
+                )}
+                <Text style={styles.trendingName} numberOfLines={1}>{celeb.stage_name.split(' ')[0]}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sortRow} contentContainerStyle={styles.sortRowContent}>
         {SORT_OPTIONS.map(opt => (
           <TouchableOpacity
@@ -240,10 +286,10 @@ export default function DiscoverScreen() {
         ))}
       </ScrollView>
 
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#10b981" />
-        </View>
+      {loading && celebrities.length === 0 ? (
+        <ScrollView style={{ flex: 1 }}>
+          <DiscoverSkeleton />
+        </ScrollView>
       ) : celebrities.length === 0 ? (
         <View style={styles.center}>
           <Star size={48} color="#374151" />
@@ -318,4 +364,25 @@ const styles = StyleSheet.create({
   cardActions: { marginTop: 8 },
   actionButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   actionText: { color: '#10b981', fontSize: 12, fontWeight: '600' },
+  followButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  trendingSection: { paddingHorizontal: 16, marginTop: 10, marginBottom: 4 },
+  trendingHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
+  trendingTitle: { color: '#f59e0b', fontSize: 13, fontWeight: '600' },
+  trendingList: { gap: 12, paddingRight: 16 },
+  trendingChip: {
+    alignItems: 'center', gap: 6, width: 60,
+  },
+  trendingAvatar: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: '#f59e0b' },
+  trendingName: { color: '#fff', fontSize: 10, fontWeight: '600', textAlign: 'center' },
 });

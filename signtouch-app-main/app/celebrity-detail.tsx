@@ -7,11 +7,13 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   ArrowLeft, CheckCircle, ShieldCheck, Globe, ExternalLink,
-  Video, PenTool, Flag, Calendar, MessageSquare,
+  Video, PenTool, Flag, Calendar, MessageSquare, Heart,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFollow } from '@/contexts/FollowContext';
+import { CelebrityDetailSkeleton } from '@/components/SkeletonLoader';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
@@ -47,6 +49,7 @@ export default function CelebrityDetailScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { isFollowing, toggleFollow } = useFollow();
   const [celebrity, setCelebrity] = useState<CelebrityDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -189,9 +192,7 @@ export default function CelebrityDetailScreen() {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <LinearGradient colors={['#0a1628', '#0f2035', '#0a1628']} style={StyleSheet.absoluteFill} />
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#10b981" />
-        </View>
+        <CelebrityDetailSkeleton />
       </View>
     );
   }
@@ -228,6 +229,23 @@ export default function CelebrityDetailScreen() {
           <TouchableOpacity style={[styles.backButton, { top: 8 }]} onPress={() => router.back()}>
             <ArrowLeft size={24} color="#fff" />
           </TouchableOpacity>
+          {celebrity && (
+            <TouchableOpacity
+              style={styles.followHeroButton}
+              onPress={() => toggleFollow({ user_id: celebrity.user_id, stage_name: celebrity.stage_name, avatar_url: celebrity.avatar_url })}
+              activeOpacity={0.7}
+            >
+              <Heart
+                size={20}
+                color={isFollowing(celebrity.user_id) ? '#ef4444' : '#ffffff'}
+                fill={isFollowing(celebrity.user_id) ? '#ef4444' : 'transparent'}
+                strokeWidth={2}
+              />
+              <Text style={[styles.followHeroText, isFollowing(celebrity.user_id) && { color: '#ef4444' }]}>
+                {isFollowing(celebrity.user_id) ? t('following') || 'Following' : t('follow') || 'Follow'}
+              </Text>
+            </TouchableOpacity>
+          )}
           <View style={styles.heroInfo}>
             <Text style={styles.heroName}>{celebrity.stage_name}</Text>
             <View style={styles.badgeRow}>
@@ -425,6 +443,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a1628' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   backButton: { position: 'absolute', left: 16, top: 16, zIndex: 10, padding: 8, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.4)' },
+  followHeroButton: {
+    position: 'absolute', right: 16, top: 8, zIndex: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+  },
+  followHeroText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   heroSection: { height: 300, position: 'relative' },
   heroImage: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
   heroInitial: { color: '#fff', fontSize: 60, fontWeight: '700' },

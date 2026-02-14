@@ -30,6 +30,7 @@ import { getStripeAccountId, saveStripeAccountId } from '@/utils/userProfile';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import { Star } from 'lucide-react-native';
+import { FanBadgeCard } from '@/components/FanBadge';
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -513,6 +514,13 @@ export default function AccountScreen() {
               </TouchableOpacity>
             </View>
           )}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>
+            FAN STATUS
+          </Text>
+          <FanBadgeCard />
         </View>
 
         <View style={styles.section}>
