@@ -1195,7 +1195,8 @@ export default function StoryScreen() {
           const memories = await getAllMemories();
           const memory = memories.find(m => m.id === sourceMemoryId);
           if (memory) {
-            setImageUri(memory.uri);
+            const hasBaseUri = memory.baseUri && memory.baseUri !== memory.uri;
+            setImageUri(hasBaseUri ? memory.baseUri : memory.uri);
             const sigs = memory.signatureOverlays || [];
             const txts = memory.textOverlays || [];
             console.log('📥 Story loaded from memory:', { sigCount: sigs.length, txtCount: txts.length });
