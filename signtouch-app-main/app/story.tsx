@@ -1159,7 +1159,7 @@ export default function StoryScreen() {
 
   const storyId = params.storyId as string | undefined;
   const mode = params.mode as string | undefined;
-  const sourceMemoryId = params.memoryId as string | undefined;
+  const sourceMemoryId = (params.memoryId || params.sourceMemoryId) as string | undefined;
 
   const [imageUri, setImageUri] = useState(params.imageUri as string || '');
   const [signatureOverlays, setSignatureOverlays] = useState<SignatureOverlay[]>([]);
@@ -1236,12 +1236,35 @@ export default function StoryScreen() {
         }
       } else {
         try {
-          const sigs = params.signatureOverlays ? JSON.parse(params.signatureOverlays as string) : [];
-          const txts = params.textOverlays ? JSON.parse(params.textOverlays as string) : [];
-          console.log('📥 Story loaded from params:', { sigCount: sigs.length, txtCount: txts.length });
-          if (sigs.length > 0) {
-            console.log('📥 First signature:', { id: sigs[0].id, uri: sigs[0].uri?.substring(0, 50), color: sigs[0].color });
+          let sigs: SignatureOverlay[] = [];
+          let txts: TextOverlay[] = [];
+          let resolvedImageUri = params.imageUri as string || '';
+
+          if (sourceMemoryId) {
+            const memories = await getAllMemories();
+            const memory = memories.find(m => m.id === sourceMemoryId);
+            if (memory) {
+              const hasBaseUri = !!(memory.baseUri && memory.baseUri !== memory.uri);
+              console.log('📥 Story: memory found, hasBaseUri=', hasBaseUri, 'baseUri starts:', memory.baseUri?.substring(0, 60));
+              if (hasBaseUri) {
+                resolvedImageUri = memory.baseUri!;
+                sigs = memory.signatureOverlays || [];
+                txts = memory.textOverlays || [];
+              } else {
+                resolvedImageUri = memory.uri;
+                sigs = [];
+                txts = [];
+              }
+            }
           }
+
+          if (sigs.length === 0 && !sourceMemoryId) {
+            sigs = params.signatureOverlays ? JSON.parse(params.signatureOverlays as string) : [];
+            txts = params.textOverlays ? JSON.parse(params.textOverlays as string) : [];
+          }
+
+          console.log('📥 Story loaded:', { sigCount: sigs.length, txtCount: txts.length, imageUri: resolvedImageUri?.substring(0, 60) });
+          setImageUri(resolvedImageUri);
           setSignatureOverlays(sigs);
           setTextOverlays(txts);
           if (sigs.length > 0) {
@@ -1254,7 +1277,6 @@ export default function StoryScreen() {
           }
           if (txts.length > 0) {
             const firstTxt = txts[0];
-            console.log('📝 First text overlay:', { text: firstTxt.text, y: firstTxt.y, color: firstTxt.color });
             setTextY(firstTxt.y);
             setTextScale(firstTxt.scale);
             setTextColor(firstTxt.color || '#ffffff');
