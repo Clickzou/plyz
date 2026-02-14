@@ -847,7 +847,7 @@ export default {
   howItWorksEventStep1: 'Inserisci il codice dell\'evento',
   howItWorksEventStep2: 'Non appena l\'evento inizia, riceverai le tue dediche in diretta',
   howItWorksEventStep3: 'Puoi quindi modificare le dediche per personalizzarle',
-  rejoinEventMessage: 'Tocca per tornare all'evento',
+  rejoinEventMessage: 'Tocca per tornare all\'evento',
   pleaseEnterName: 'Inserisci un nome',
   pleaseDrawSignature: 'Disegna una firma',
   cannotAddSigner: 'Impossibile aggiungere il firmatario',
