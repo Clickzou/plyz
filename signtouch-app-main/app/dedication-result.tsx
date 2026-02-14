@@ -20,7 +20,7 @@ import {
   RotateCcw,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Rect } from 'react-native-svg';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -387,8 +387,9 @@ export default function DedicationResultScreen() {
           </View>
 
           <GestureDetector gesture={composedGesture}>
-            <Animated.View style={[styles.signatureContainer, signatureAnimatedStyle]}>
-              <Svg width={PHOTO_WIDTH * 0.6} height={PHOTO_WIDTH * 0.3} viewBox={`0 0 ${SCREEN_WIDTH - 100} ${(SCREEN_WIDTH - 100) * 0.5}`}>
+            <Animated.View style={[styles.signatureContainer, { width: PHOTO_WIDTH * 0.7, height: PHOTO_WIDTH * 0.35 }, signatureAnimatedStyle]}>
+              <Svg width="100%" height="100%" viewBox={`0 0 ${SCREEN_WIDTH - 100} ${(SCREEN_WIDTH - 100) * 0.5}`}>
+                <Rect x="0" y="0" width={SCREEN_WIDTH - 100} height={(SCREEN_WIDTH - 100) * 0.5} fill="transparent" />
                 {signaturePaths.map((p, i) => (
                   <Path
                     key={i}
@@ -585,7 +586,9 @@ const styles = StyleSheet.create({
   },
   signatureContainer: {
     position: 'absolute',
-    alignSelf: 'center',
+    left: (PHOTO_WIDTH - PHOTO_WIDTH * 0.7) / 2,
+    top: 0,
+    zIndex: 10,
   },
   watermark: {
     position: 'absolute',
