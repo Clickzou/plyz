@@ -2298,10 +2298,6 @@ export default function ResultScreen() {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    if (!isPremium) {
-      router.push('/paywall');
-      return;
-    }
     setShowShareModal(true);
   };
 
