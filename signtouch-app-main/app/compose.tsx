@@ -211,6 +211,8 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
   const hasDraggedRef = useRef(false);
   const initialPinchDistRef = useRef(0);
   const scaleAtPinchStartRef = useRef(1);
+  const initialPinchAngleRef = useRef(0);
+  const rotationAtPinchStartRef = useRef(0);
 
   const handlePointerDown = (e: any) => {
     if (Platform.OS !== 'web') return;
@@ -246,6 +248,8 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
     window.addEventListener('mouseup', handleMouseUp);
   };
 
+  const getTouchAngle = (t0: any, t1: any) => Math.atan2(t1.clientY - t0.clientY, t1.clientX - t0.clientX);
+
   const handleTouchStart = (e: any) => {
     if (Platform.OS !== 'web') return;
     e.stopPropagation();
@@ -263,6 +267,8 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
       const dy = touches[1].clientY - touches[0].clientY;
       initialPinchDistRef.current = Math.sqrt(dx * dx + dy * dy);
       scaleAtPinchStartRef.current = transform.scale.value;
+      initialPinchAngleRef.current = getTouchAngle(touches[0], touches[1]);
+      rotationAtPinchStartRef.current = transform.rotation.value;
     }
   };
 
@@ -284,6 +290,8 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
       const dist = Math.sqrt(dx * dx + dy * dy);
       const ratio = dist / initialPinchDistRef.current;
       transform.scale.value = Math.max(0.3, Math.min(4, scaleAtPinchStartRef.current * ratio));
+      const angle = getTouchAngle(touches[0], touches[1]);
+      transform.rotation.value = rotationAtPinchStartRef.current + (angle - initialPinchAngleRef.current);
     }
   };
 
@@ -292,6 +300,7 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
     isDraggingRef.current = false;
     if (initialPinchDistRef.current > 0) {
       transform.savedScale.value = transform.scale.value;
+      transform.savedRotation.value = transform.rotation.value;
       initialPinchDistRef.current = 0;
     }
   };
@@ -421,6 +430,7 @@ interface AnimatedTextProps {
   isSelected: boolean;
   gesture: any;
   onFontPress?: () => void;
+  onSelect?: () => void;
   screenWidth: number;
 }
 
@@ -446,18 +456,38 @@ const getMobileFontFamily = (fontFamily: string): string => {
   return FONT_NAME_MAP[fontFamily] || fontFamily;
 };
 
-function AnimatedText({ overlay, transform, isSelected, gesture, onFontPress, screenWidth }: AnimatedTextProps) {
+function AnimatedText({ overlay, transform, isSelected, gesture, onFontPress, onSelect, screenWidth }: AnimatedTextProps) {
   const mobileFontFamily = getMobileFontFamily(overlay.fontFamily);
   const [buttonOnLeft, setButtonOnLeft] = useState(false);
-  
-  // Debug logging
-  console.log('[AnimatedText] Platform:', Platform.OS, 'fontFamily:', overlay.fontFamily, '-> mobileFontFamily:', mobileFontFamily);
-  
+
+  const webTextPosRef = useRef({ x: transform.translateX.value, y: transform.translateY.value });
+  const [webTextPos, setWebTextPos] = useState({ x: transform.translateX.value, y: transform.translateY.value });
+  const [webTextScale, setWebTextScale] = useState(transform.scale.value);
+  const [webTextRotation, setWebTextRotation] = useState(transform.rotation.value);
+  const textDraggingRef = useRef(false);
+  const textDragStartRef = useRef({ x: 0, y: 0 });
+  const textPosAtStartRef = useRef({ x: 0, y: 0 });
+  const textPinchDistRef = useRef(0);
+  const textScaleAtStartRef = useRef(1);
+  const textPinchAngleRef = useRef(0);
+  const textRotAtStartRef = useRef(0);
+  const textRafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const sync = () => {
+      setWebTextPos({ x: transform.translateX.value, y: transform.translateY.value });
+      setWebTextScale(transform.scale.value);
+      setWebTextRotation(transform.rotation.value);
+      textRafRef.current = requestAnimationFrame(sync);
+    };
+    textRafRef.current = requestAnimationFrame(sync);
+    return () => { if (textRafRef.current) cancelAnimationFrame(textRafRef.current); };
+  }, [transform]);
+
   const animatedStyle = useAnimatedStyle(() => {
-    // Mettre à jour la position du bouton
     const isOnRight = transform.translateX.value > screenWidth / 2 - 50;
     runOnJS(setButtonOnLeft)(isOnRight);
-    
     return {
       transform: [
         { translateX: transform.translateX.value },
@@ -467,6 +497,128 @@ function AnimatedText({ overlay, transform, isSelected, gesture, onFontPress, sc
       ],
     };
   });
+
+  const getAngle = (t0: any, t1: any) => Math.atan2(t1.clientY - t0.clientY, t1.clientX - t0.clientX);
+
+  if (Platform.OS === 'web') {
+    const handleTextPointerDown = (e: any) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onSelect?.();
+      if (e.pointerType === 'touch') return;
+      textDraggingRef.current = true;
+      textDragStartRef.current = { x: e.clientX, y: e.clientY };
+      textPosAtStartRef.current = { x: transform.translateX.value, y: transform.translateY.value };
+      const move = (ev: MouseEvent) => {
+        if (!textDraggingRef.current) return;
+        transform.translateX.value = textPosAtStartRef.current.x + (ev.clientX - textDragStartRef.current.x);
+        transform.translateY.value = textPosAtStartRef.current.y + (ev.clientY - textDragStartRef.current.y);
+        transform.savedTranslateX.value = transform.translateX.value;
+        transform.savedTranslateY.value = transform.translateY.value;
+      };
+      const up = () => { textDraggingRef.current = false; window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+      window.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', up);
+    };
+    const handleTextTouchStart = (e: any) => {
+      e.stopPropagation();
+      onSelect?.();
+      const touches = e.touches;
+      if (touches.length === 1) {
+        textDraggingRef.current = true;
+        textDragStartRef.current = { x: touches[0].clientX, y: touches[0].clientY };
+        textPosAtStartRef.current = { x: transform.translateX.value, y: transform.translateY.value };
+      } else if (touches.length === 2) {
+        textDraggingRef.current = false;
+        const dx = touches[1].clientX - touches[0].clientX;
+        const dy = touches[1].clientY - touches[0].clientY;
+        textPinchDistRef.current = Math.sqrt(dx * dx + dy * dy);
+        textScaleAtStartRef.current = transform.scale.value;
+        textPinchAngleRef.current = getAngle(touches[0], touches[1]);
+        textRotAtStartRef.current = transform.rotation.value;
+      }
+    };
+    const handleTextTouchMove = (e: any) => {
+      e.preventDefault();
+      const touches = e.touches;
+      if (touches.length === 1 && textDraggingRef.current) {
+        transform.translateX.value = textPosAtStartRef.current.x + (touches[0].clientX - textDragStartRef.current.x);
+        transform.translateY.value = textPosAtStartRef.current.y + (touches[0].clientY - textDragStartRef.current.y);
+        transform.savedTranslateX.value = transform.translateX.value;
+        transform.savedTranslateY.value = transform.translateY.value;
+      } else if (touches.length === 2 && textPinchDistRef.current > 0) {
+        const dx = touches[1].clientX - touches[0].clientX;
+        const dy = touches[1].clientY - touches[0].clientY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        transform.scale.value = Math.max(0.3, Math.min(4, textScaleAtStartRef.current * (dist / textPinchDistRef.current)));
+        transform.rotation.value = textRotAtStartRef.current + (getAngle(touches[0], touches[1]) - textPinchAngleRef.current);
+      }
+    };
+    const handleTextTouchEnd = () => {
+      textDraggingRef.current = false;
+      if (textPinchDistRef.current > 0) {
+        transform.savedScale.value = transform.scale.value;
+        transform.savedRotation.value = transform.rotation.value;
+        textPinchDistRef.current = 0;
+      }
+    };
+
+    const safeX = Number.isFinite(webTextPos.x) ? webTextPos.x : 100;
+    const safeY = Number.isFinite(webTextPos.y) ? webTextPos.y : 200;
+    const safeScale = Number.isFinite(webTextScale) && webTextScale > 0 ? webTextScale : 1;
+    const safeRot = Number.isFinite(webTextRotation) ? webTextRotation : 0;
+    const isOnRight = safeX > screenWidth / 2 - 50;
+
+    return (
+      <div
+        onPointerDown={handleTextPointerDown as any}
+        onTouchStart={handleTextTouchStart as any}
+        onTouchMove={handleTextTouchMove as any}
+        onTouchEnd={handleTextTouchEnd as any}
+        style={{
+          position: 'absolute' as const,
+          top: 0,
+          left: 0,
+          transform: `translate(${safeX}px, ${safeY}px) scale(${safeScale}) rotate(${safeRot}rad)`,
+          transformOrigin: '0 0',
+          cursor: 'grab',
+          zIndex: isSelected ? 1000 : 5,
+          userSelect: 'none' as const,
+          touchAction: 'none' as const,
+          border: isSelected ? '2px solid #10b981' : '2px solid transparent',
+          borderRadius: 4,
+          padding: 4,
+        }}
+      >
+        <span style={{
+          color: overlay.color,
+          fontFamily: mobileFontFamily,
+          fontSize: overlay.fontSize,
+          whiteSpace: 'nowrap' as const,
+        }}>
+          {overlay.text}
+        </span>
+        {isSelected && onFontPress && (
+          <div
+            onClick={(e) => { e.stopPropagation(); onFontPress(); }}
+            style={{
+              position: 'absolute' as const,
+              top: -30,
+              [isOnRight ? 'left' : 'right']: 0,
+              background: 'rgba(0,0,0,0.7)',
+              color: '#fff',
+              borderRadius: 12,
+              padding: '2px 8px',
+              fontSize: 14,
+              cursor: 'pointer',
+            }}
+          >
+            Aa
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <GestureDetector gesture={gesture}>
@@ -1408,6 +1560,10 @@ export default function ComposeScreen() {
                 isSelected={isSelected}
                 gesture={gesture}
                 onFontPress={() => setShowEditFontPicker(!showEditFontPicker)}
+                onSelect={() => {
+                  setSelectedTextIndex(index);
+                  setSelectedSignatureIndex(null);
+                }}
                 screenWidth={SCREEN_WIDTH}
               />
             );
