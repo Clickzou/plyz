@@ -549,8 +549,8 @@ export default function EventPublishScreen() {
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>{t('myEvents') || 'My Events'}</Text>
-          <Text style={styles.headerSubtitle}>{sessionTitle}</Text>
+          <Text style={styles.headerTitle}>{sessionTitle}</Text>
+          <Text style={styles.headerCodeLabel}>{t('eventCode') || 'Code'}: <Text style={styles.headerCodeValue}>{joinCode}</Text></Text>
         </View>
         <View style={styles.viewerBadge}>
           <Users size={14} color="#10B981" />
@@ -957,6 +957,8 @@ const styles = StyleSheet.create({
   headerCenter: { flex: 1, marginLeft: 12 },
   headerTitle: { fontSize: 18, fontWeight: '600', color: '#fff' },
   headerSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.6)' },
+  headerCodeLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+  headerCodeValue: { fontSize: 14, color: '#10B981', fontWeight: '700', letterSpacing: 1 },
   viewerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
