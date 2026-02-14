@@ -1,6 +1,6 @@
 import { View, TouchableOpacity, StyleSheet, Platform, Text } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
-import { Home, Images, User, Star, Users, Search, Newspaper, Inbox, Radio } from 'lucide-react-native';
+import { Home, Images, User, Star, Users, Search, Newspaper, Inbox, Radio, Camera } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -26,8 +26,16 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
     router.push(path as any);
   };
 
+  const handleCameraPress = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    router.push('/camera' as any);
+  };
+
   const isActive = (path: string) => pathname === path;
   const isActiveMulti = (...paths: string[]) => paths.some(p => pathname === p || pathname.startsWith(p));
+  const isCameraActive = isActiveMulti('/camera', '/photo-editor', '/signature', '/result');
 
   return (
     <View style={[
@@ -41,7 +49,7 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
         activeOpacity={0.7}
       >
         <Newspaper
-          size={24}
+          size={22}
           color={isActiveMulti('/activity', '/') ? '#10b981' : '#ffffff'}
           strokeWidth={2}
         />
@@ -56,7 +64,7 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
         activeOpacity={0.7}
       >
         <Search
-          size={24}
+          size={22}
           color={isActiveMulti('/discover', '/celebrity-detail') ? '#10b981' : '#ffffff'}
           strokeWidth={2}
         />
@@ -65,6 +73,23 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
         </Text>
       </TouchableOpacity>
 
+      <View style={styles.cameraButtonWrapper}>
+        <TouchableOpacity
+          style={[
+            styles.cameraButton,
+            isCameraActive && styles.cameraButtonActive
+          ]}
+          onPress={handleCameraPress}
+          activeOpacity={0.8}
+        >
+          <Camera
+            size={28}
+            color="#ffffff"
+            strokeWidth={2.5}
+          />
+        </TouchableOpacity>
+      </View>
+
       {isCelebrity && (
         <TouchableOpacity
           style={styles.navButton}
@@ -72,7 +97,7 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
           activeOpacity={0.7}
         >
           <Star
-            size={24}
+            size={22}
             color={isActiveMulti('/celebrity-menu', '/create-event', '/create-live-session') ? '#f59e0b' : '#ffffff'}
             fill={isActiveMulti('/celebrity-menu', '/create-event', '/create-live-session') ? '#f59e0b' : 'transparent'}
             strokeWidth={2}
@@ -89,7 +114,7 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
         activeOpacity={0.7}
       >
         <Radio
-          size={24}
+          size={22}
           color={isActiveMulti('/fan-choice', '/join-event', '/join-live-session') ? '#6366f1' : '#ffffff'}
           strokeWidth={2}
         />
@@ -104,7 +129,7 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
         activeOpacity={0.7}
       >
         <Inbox
-          size={24}
+          size={22}
           color={isActive('/my-space') ? '#10b981' : '#ffffff'}
           strokeWidth={2}
         />
@@ -119,7 +144,7 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
         activeOpacity={0.7}
       >
         <User
-          size={24}
+          size={22}
           color={isActive('/account') ? '#10b981' : '#ffffff'}
           strokeWidth={2}
         />
@@ -150,6 +175,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 4,
     paddingVertical: 6,
+  },
+  cameraButtonWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -30,
+  },
+  cameraButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#10b981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 3,
+    borderColor: 'rgba(0, 0, 0, 0.95)',
+  },
+  cameraButtonActive: {
+    backgroundColor: '#059669',
+    shadowOpacity: 0.6,
   },
   navLabel: {
     color: '#ffffff',
