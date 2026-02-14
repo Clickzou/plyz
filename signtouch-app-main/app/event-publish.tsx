@@ -21,6 +21,8 @@ import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
 import { SvgUri, SvgXml } from 'react-native-svg';
 
+const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
+
 const SIGNATURE_COLORS = [
   '#FFFFFF',
   '#000000',
@@ -101,6 +103,8 @@ export default function EventPublishScreen() {
   const [viewerCount, setViewerCount] = useState(0);
   const [publishedCount, setPublishedCount] = useState(0);
   const [publishedAssets, setPublishedAssets] = useState<any[]>([]);
+  const [realNetCents, setRealNetCents] = useState<number | null>(null);
+  const [paidFanCount, setPaidFanCount] = useState(0);
   
   const [signaturePosition, setSignaturePosition] = useState({ x: 0, y: 0 });
   const [signatureScale, setSignatureScale] = useState(1);
@@ -296,7 +300,16 @@ export default function EventPublishScreen() {
         setPublishedCount(assets.length);
         setPublishedAssets(assets);
       });
-    }, [sessionId, loadSigners])
+      if (priceCents > 0 && STRIPE_SERVER_URL) {
+        fetch(`${STRIPE_SERVER_URL}/api/event-session-earnings?event_session_id=${sessionId}`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.net_cents !== undefined) setRealNetCents(data.net_cents);
+            if (data.paid_fan_count !== undefined) setPaidFanCount(data.paid_fan_count);
+          })
+          .catch(() => {});
+      }
+    }, [sessionId, loadSigners, priceCents])
   );
 
   useEffect(() => {
@@ -304,10 +317,18 @@ export default function EventPublishScreen() {
     const interval = setInterval(async () => {
       const count = await getActiveViewerCount(sessionId);
       setViewerCount(count);
+      if (priceCents > 0 && STRIPE_SERVER_URL) {
+        try {
+          const r = await fetch(`${STRIPE_SERVER_URL}/api/event-session-earnings?event_session_id=${sessionId}`);
+          const data = await r.json();
+          if (data.net_cents !== undefined) setRealNetCents(data.net_cents);
+          if (data.paid_fan_count !== undefined) setPaidFanCount(data.paid_fan_count);
+        } catch {}
+      }
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [sessionId]);
+  }, [sessionId, priceCents]);
 
   const resetSignatureTransform = () => {
     setSignaturePosition({ x: 0, y: 0 });
@@ -566,20 +587,10 @@ export default function EventPublishScreen() {
           <Euro size={16} color={priceCents > 0 ? '#10B981' : '#6B7280'} />
           <Text style={[styles.earningsText, priceCents <= 0 && { color: '#6B7280' }]}>
             {priceCents > 0
-              ? `${t('estimatedRevenue') || 'Revenus estimés'}: ${(((priceCents / 100) * viewerCount) * (1 - 0.15 - 0.029) - viewerCount * 0.30).toFixed(2).replace('.', ',')}€`
+              ? `${t('estimatedRevenue') || 'Revenus estimés (net)'}: ${realNetCents !== null ? (realNetCents / 100).toFixed(2).replace('.', ',') : '0,00'}€`
               : (t('freeSession') || 'Session gratuite')}
           </Text>
-          {priceCents > 0 && viewerCount > 0 && (
-            <View>
-              <Text style={styles.earningsDetail}>
-                {t('grossRevenue') || 'Brut'}: {((priceCents / 100) * viewerCount).toFixed(2).replace('.', ',')}€ ({(priceCents / 100).toFixed(2).replace('.', ',')}€ × {viewerCount})
-              </Text>
-              <Text style={[styles.earningsDetail, { color: '#EF4444', marginTop: 2 }]}>
-                SignTouch 15%: -{(((priceCents / 100) * viewerCount) * 0.15).toFixed(2).replace('.', ',')}€ | Stripe: -{((((priceCents / 100) * viewerCount) * 0.029) + viewerCount * 0.30).toFixed(2).replace('.', ',')}€
-              </Text>
-            </View>
-          )}
-          {priceCents > 0 && viewerCount === 0 && (
+          {priceCents > 0 && (
             <Text style={styles.earningsDetail}>
               ({(priceCents / 100).toFixed(2).replace('.', ',')}€ / {t('perFan') || 'fan'})
             </Text>

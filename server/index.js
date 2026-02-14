@@ -1158,6 +1158,45 @@ app.get('/api/verify-event-payment', async (req, res) => {
   }
 });
 
+app.get('/api/event-session-earnings', async (req, res) => {
+  try {
+    const stripe = await getStripe();
+    const { event_session_id } = req.query;
+
+    if (!event_session_id) {
+      return res.status(400).json({ error: 'Missing event_session_id' });
+    }
+
+    const checkoutSessions = await stripe.checkout.sessions.list({
+      limit: 100,
+    });
+
+    let totalGrossCents = 0;
+    let paidFanCount = 0;
+
+    for (const cs of checkoutSessions.data) {
+      if (cs.metadata?.event_session_id === event_session_id && cs.payment_status === 'paid') {
+        totalGrossCents += cs.amount_total || 0;
+        paidFanCount++;
+      }
+    }
+
+    const signTouchFeeCents = Math.round(totalGrossCents * 0.15);
+    const stripeFeeCents = Math.round(totalGrossCents * 0.029) + paidFanCount * 30;
+    const netCents = totalGrossCents - signTouchFeeCents - stripeFeeCents;
+
+    res.json({
+      event_session_id,
+      total_gross_cents: totalGrossCents,
+      net_cents: Math.max(0, netCents),
+      paid_fan_count: paidFanCount,
+    });
+  } catch (error) {
+    console.error('[EventEarnings] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/check-event-access', async (req, res) => {
   try {
     const { event_session_id, fan_id } = req.query;
