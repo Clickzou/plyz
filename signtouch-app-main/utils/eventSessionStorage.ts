@@ -231,6 +231,13 @@ export const createEventSession = async (
     created_by: creatorId || null,
   };
 
+  if (_location && _location.trim()) {
+    insertData.location = _location.trim();
+  }
+  if (_priceCents && _priceCents > 0) {
+    insertData.price_cents = _priceCents;
+  }
+
   const { data, error } = await supabase
     .from('event_sessions')
     .insert(insertData)
