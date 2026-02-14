@@ -17,6 +17,17 @@ function getSupabase() {
   return supabaseClient;
 }
 
+let supabaseAdmin = null;
+function getSupabaseAdmin() {
+  if (!supabaseAdmin) {
+    const url = process.env.EXPO_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new Error('Missing Supabase service role key');
+    supabaseAdmin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+  }
+  return supabaseAdmin;
+}
+
 let stripeClient = null;
 
 function getStripeCredentials() {
@@ -1281,6 +1292,747 @@ app.get('/stripe/return', (req, res) => {
 </div>
 <script>setTimeout(function(){window.location.href="${appUrl}";},2000);</script>
 </body></html>`);
+});
+
+// ============================================================
+// MARKETPLACE API ENDPOINTS
+// ============================================================
+
+app.get('/api/celebrities', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { search, sort, category, page, limit: lim } = req.query;
+    const page_num = Math.max(1, parseInt(page) || 1);
+    const per_page = Math.min(50, Math.max(1, parseInt(lim) || 20));
+    const offset = (page_num - 1) * per_page;
+
+    let query = db
+      .from('celebrity_profiles')
+      .select(`
+        user_id, stage_name, bio, website,
+        stripe_verified, official_verified, is_listed,
+        wikidata_image_url, wikidata_occupations, wikidata_types,
+        popularity_score, created_at,
+        profiles!inner(display_name, avatar_url),
+        celebrity_pricing(video_call_price_cents, autograph_price_cents, live_dedication_price_cents, currency)
+      `, { count: 'exact' })
+      .eq('is_listed', true);
+
+    if (search && search.trim().length > 0) {
+      query = query.ilike('stage_name', `%${search.trim()}%`);
+    }
+
+    if (category && category !== 'all') {
+      query = query.contains('wikidata_types', [category]);
+    }
+
+    switch (sort) {
+      case 'name_asc':
+        query = query.order('stage_name', { ascending: true });
+        break;
+      case 'name_desc':
+        query = query.order('stage_name', { ascending: false });
+        break;
+      case 'price_asc':
+        query = query.order('popularity_score', { ascending: true });
+        break;
+      case 'newest':
+        query = query.order('created_at', { ascending: false });
+        break;
+      default:
+        query = query.order('popularity_score', { ascending: false });
+    }
+
+    query = query.range(offset, offset + per_page - 1);
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    res.json({
+      celebrities: (data || []).map(c => ({
+        user_id: c.user_id,
+        stage_name: c.stage_name,
+        bio: c.bio,
+        avatar_url: c.profiles?.avatar_url || c.wikidata_image_url,
+        display_name: c.profiles?.display_name,
+        stripe_verified: c.stripe_verified,
+        official_verified: c.official_verified,
+        occupations: c.wikidata_occupations || [],
+        types: c.wikidata_types || [],
+        popularity_score: c.popularity_score,
+        pricing: c.celebrity_pricing?.[0] || null,
+      })),
+      total: count || 0,
+      page: page_num,
+      per_page,
+      total_pages: Math.ceil((count || 0) / per_page),
+    });
+  } catch (error) {
+    console.error('[Celebrities] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/celebrity/:id', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { id } = req.params;
+
+    const { data: celeb, error: celebError } = await db
+      .from('celebrity_profiles')
+      .select(`
+        *, 
+        profiles(display_name, avatar_url),
+        celebrity_pricing(*)
+      `)
+      .eq('user_id', id)
+      .single();
+
+    if (celebError) throw celebError;
+    if (!celeb) return res.status(404).json({ error: 'Celebrity not found' });
+
+    const { data: recentPosts } = await db
+      .from('posts')
+      .select('*')
+      .eq('celebrity_id', id)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    const { count: totalBookings } = await db
+      .from('booking_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('celebrity_id', id)
+      .eq('status', 'completed');
+
+    res.json({
+      celebrity: {
+        ...celeb,
+        avatar_url: celeb.profiles?.avatar_url || celeb.wikidata_image_url,
+        display_name: celeb.profiles?.display_name,
+        pricing: celeb.celebrity_pricing?.[0] || null,
+        posts: recentPosts || [],
+        completed_sessions: totalBookings || 0,
+      },
+    });
+  } catch (error) {
+    console.error('[Celebrity Detail] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/feed', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { page, limit: lim, kind } = req.query;
+    const page_num = Math.max(1, parseInt(page) || 1);
+    const per_page = Math.min(50, Math.max(1, parseInt(lim) || 20));
+    const offset = (page_num - 1) * per_page;
+
+    let query = db
+      .from('posts')
+      .select(`
+        *,
+        celebrity_profiles!inner(stage_name, wikidata_image_url, official_verified, stripe_verified, user_id,
+          profiles(avatar_url, display_name)
+        )
+      `, { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + per_page - 1);
+
+    if (kind && kind !== 'all') {
+      query = query.eq('kind', kind);
+    }
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    res.json({
+      posts: (data || []).map(p => ({
+        ...p,
+        celebrity: {
+          user_id: p.celebrity_profiles?.user_id,
+          stage_name: p.celebrity_profiles?.stage_name,
+          avatar_url: p.celebrity_profiles?.profiles?.avatar_url || p.celebrity_profiles?.wikidata_image_url,
+          official_verified: p.celebrity_profiles?.official_verified,
+          stripe_verified: p.celebrity_profiles?.stripe_verified,
+        },
+        celebrity_profiles: undefined,
+      })),
+      total: count || 0,
+      page: page_num,
+      per_page,
+    });
+  } catch (error) {
+    console.error('[Feed] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/posts', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { celebrity_id, kind, title, body, media_url, event_date, price_cents } = req.body;
+
+    if (!celebrity_id) return res.status(400).json({ error: 'celebrity_id required' });
+
+    const { data, error } = await db
+      .from('posts')
+      .insert({
+        celebrity_id,
+        kind: kind || 'post',
+        title: title || null,
+        body: body || null,
+        media_url: media_url || null,
+        event_date: event_date || null,
+        price_cents: price_cents || 0,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ post: data });
+  } catch (error) {
+    console.error('[Create Post] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/report', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { reporter_id, celebrity_id, reason } = req.body;
+
+    if (!celebrity_id || !reason) {
+      return res.status(400).json({ error: 'celebrity_id and reason required' });
+    }
+
+    const { data, error } = await db
+      .from('reports')
+      .insert({ reporter_id: reporter_id || null, celebrity_id, reason })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ report: data });
+  } catch (error) {
+    console.error('[Report] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/book-video', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const stripe = await getStripe();
+    const { fan_id, celebrity_id, duration_minutes } = req.body;
+
+    if (!fan_id || !celebrity_id) {
+      return res.status(400).json({ error: 'fan_id and celebrity_id required' });
+    }
+
+    const { data: celeb, error: celebError } = await db
+      .from('celebrity_profiles')
+      .select('stripe_account_id, stage_name, celebrity_pricing(*)')
+      .eq('user_id', celebrity_id)
+      .single();
+
+    if (celebError || !celeb) {
+      return res.status(404).json({ error: 'Celebrity not found' });
+    }
+
+    if (!celeb.stripe_account_id) {
+      return res.status(400).json({ error: 'Celebrity has not set up payments' });
+    }
+
+    const pricing = celeb.celebrity_pricing?.[0];
+    if (!pricing || pricing.video_call_price_cents <= 0) {
+      return res.status(400).json({ error: 'Celebrity has not set video call pricing' });
+    }
+
+    const dur = duration_minutes || pricing.video_call_duration_minutes || 15;
+    let price_cents = pricing.video_call_price_cents;
+    if (pricing.video_call_unit === 'minute') {
+      price_cents = pricing.video_call_price_cents * dur;
+    }
+
+    const signtouch_fee = Math.round(price_cents * 0.15);
+
+    const { data: booking, error: bookingError } = await db
+      .from('booking_requests')
+      .insert({
+        fan_id,
+        celebrity_id,
+        status: 'pending_payment',
+        duration_minutes: dur,
+        price_cents,
+        currency: pricing.currency || 'eur',
+      })
+      .select()
+      .single();
+
+    if (bookingError) throw bookingError;
+
+    const host = req.headers.host || req.hostname;
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: pricing.currency || 'eur',
+          product_data: {
+            name: `Video Call - ${celeb.stage_name} (${dur}min)`,
+          },
+          unit_amount: price_cents,
+        },
+        quantity: 1,
+      }],
+      payment_intent_data: {
+        capture_method: 'manual',
+        application_fee_amount: signtouch_fee,
+        transfer_data: { destination: celeb.stripe_account_id },
+      },
+      metadata: {
+        booking_id: booking.id,
+        fan_id,
+        celebrity_id,
+        type: 'video_booking',
+      },
+      success_url: `https://${host}/booking-success?booking_id=${booking.id}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `https://${host}/celebrity-detail?id=${celebrity_id}`,
+    });
+
+    await db
+      .from('booking_requests')
+      .update({ stripe_session_id: session.id })
+      .eq('id', booking.id);
+
+    res.json({
+      booking_id: booking.id,
+      checkout_url: session.url,
+      session_id: session.id,
+    });
+  } catch (error) {
+    console.error('[Book Video] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/autograph', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const stripe = await getStripe();
+    const { fan_id, celebrity_id, message } = req.body;
+
+    if (!fan_id || !celebrity_id) {
+      return res.status(400).json({ error: 'fan_id and celebrity_id required' });
+    }
+
+    const { data: celeb, error: celebError } = await db
+      .from('celebrity_profiles')
+      .select('stripe_account_id, stage_name, celebrity_pricing(*)')
+      .eq('user_id', celebrity_id)
+      .single();
+
+    if (celebError || !celeb) {
+      return res.status(404).json({ error: 'Celebrity not found' });
+    }
+
+    if (!celeb.stripe_account_id) {
+      return res.status(400).json({ error: 'Celebrity has not set up payments' });
+    }
+
+    const pricing = celeb.celebrity_pricing?.[0];
+    if (!pricing || pricing.autograph_price_cents <= 0) {
+      return res.status(400).json({ error: 'Celebrity has not set autograph pricing' });
+    }
+
+    const price_cents = pricing.autograph_price_cents;
+    const signtouch_fee = Math.round(price_cents * 0.15);
+
+    const { data: autograph, error: autographError } = await db
+      .from('autograph_requests')
+      .insert({
+        fan_id,
+        celebrity_id,
+        message: message || null,
+        status: 'pending_payment',
+        price_cents,
+        currency: pricing.currency || 'eur',
+      })
+      .select()
+      .single();
+
+    if (autographError) throw autographError;
+
+    const host = req.headers.host || req.hostname;
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: pricing.currency || 'eur',
+          product_data: {
+            name: `Autograph - ${celeb.stage_name}`,
+          },
+          unit_amount: price_cents,
+        },
+        quantity: 1,
+      }],
+      payment_intent_data: {
+        application_fee_amount: signtouch_fee,
+        transfer_data: { destination: celeb.stripe_account_id },
+      },
+      metadata: {
+        autograph_id: autograph.id,
+        fan_id,
+        celebrity_id,
+        type: 'autograph_request',
+      },
+      success_url: `https://${host}/autograph-success?autograph_id=${autograph.id}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `https://${host}/celebrity-detail?id=${celebrity_id}`,
+    });
+
+    await db
+      .from('autograph_requests')
+      .update({ stripe_session_id: session.id })
+      .eq('id', autograph.id);
+
+    res.json({
+      autograph_id: autograph.id,
+      checkout_url: session.url,
+      session_id: session.id,
+    });
+  } catch (error) {
+    console.error('[Autograph] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/my-bookings', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { user_id, role } = req.query;
+    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+
+    const column = role === 'celebrity' ? 'celebrity_id' : 'fan_id';
+    const { data, error } = await db
+      .from('booking_requests')
+      .select(`
+        *,
+        celebrity_profiles!booking_requests_celebrity_id_fkey(stage_name, wikidata_image_url,
+          profiles(avatar_url, display_name)
+        ),
+        profiles!booking_requests_fan_id_fkey(display_name, avatar_url)
+      `)
+      .eq(column, user_id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json({ bookings: data || [] });
+  } catch (error) {
+    console.error('[My Bookings] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/my-autographs', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { user_id, role } = req.query;
+    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+
+    const column = role === 'celebrity' ? 'celebrity_id' : 'fan_id';
+    const { data, error } = await db
+      .from('autograph_requests')
+      .select(`
+        *,
+        celebrity_profiles!autograph_requests_celebrity_id_fkey(stage_name, wikidata_image_url,
+          profiles(avatar_url, display_name)
+        ),
+        profiles!autograph_requests_fan_id_fkey(display_name, avatar_url)
+      `)
+      .eq(column, user_id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json({ autographs: data || [] });
+  } catch (error) {
+    console.error('[My Autographs] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/update-booking-status', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { booking_id, status } = req.body;
+    if (!booking_id || !status) return res.status(400).json({ error: 'booking_id and status required' });
+
+    const update = { status, updated_at: new Date().toISOString() };
+    if (status === 'completed') update.completed_at = new Date().toISOString();
+
+    const { data, error } = await db
+      .from('booking_requests')
+      .update(update)
+      .eq('id', booking_id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ booking: data });
+  } catch (error) {
+    console.error('[Update Booking] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/update-autograph-status', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { autograph_id, status, delivery_url } = req.body;
+    if (!autograph_id || !status) return res.status(400).json({ error: 'autograph_id and status required' });
+
+    const update = { status, updated_at: new Date().toISOString() };
+    if (delivery_url) update.delivery_url = delivery_url;
+
+    const { data, error } = await db
+      .from('autograph_requests')
+      .update(update)
+      .eq('id', autograph_id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ autograph: data });
+  } catch (error) {
+    console.error('[Update Autograph] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/upsert-celebrity-profile', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { user_id, stage_name, bio, website } = req.body;
+    if (!user_id || !stage_name) return res.status(400).json({ error: 'user_id and stage_name required' });
+
+    const { error: profileError } = await db
+      .from('profiles')
+      .upsert({ id: user_id, role: 'celebrity', updated_at: new Date().toISOString() }, { onConflict: 'id' });
+    if (profileError) throw profileError;
+
+    const { data, error } = await db
+      .from('celebrity_profiles')
+      .upsert({
+        user_id,
+        stage_name,
+        bio: bio || null,
+        website: website || null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ profile: data });
+  } catch (error) {
+    console.error('[Upsert Celebrity Profile] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/upsert-celebrity-pricing', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { user_id, video_call_price_cents, video_call_unit, video_call_duration_minutes, autograph_price_cents, live_dedication_price_cents, currency } = req.body;
+    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+
+    const { data, error } = await db
+      .from('celebrity_pricing')
+      .upsert({
+        user_id,
+        video_call_price_cents: video_call_price_cents || 0,
+        video_call_unit: video_call_unit || 'session',
+        video_call_duration_minutes: video_call_duration_minutes || 15,
+        autograph_price_cents: autograph_price_cents || 0,
+        live_dedication_price_cents: live_dedication_price_cents || 0,
+        currency: currency || 'eur',
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ pricing: data });
+  } catch (error) {
+    console.error('[Upsert Celebrity Pricing] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/wikidata/search', async (req, res) => {
+  try {
+    const { query: q, lang } = req.query;
+    if (!q) return res.status(400).json({ error: 'query required' });
+    const language = lang || 'en';
+
+    const url = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(q)}&language=${language}&limit=5&format=json`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    const candidates = (data.search || []).map(item => ({
+      wikidata_id: item.id,
+      label: item.label,
+      description: item.description || '',
+    }));
+
+    res.json({ candidates });
+  } catch (error) {
+    console.error('[Wikidata Search] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/wikidata/entity/:id', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { id } = req.params;
+
+    const { data: cached } = await db
+      .from('wikidata_entities')
+      .select('*')
+      .eq('wikidata_id', id)
+      .single();
+
+    const oneDay = 24 * 60 * 60 * 1000;
+    if (cached && cached.updated_at && (Date.now() - new Date(cached.updated_at).getTime()) < oneDay) {
+      return res.json({ entity: cached, source: 'cache' });
+    }
+
+    const url = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${id}&props=labels|descriptions|claims|sitelinks&languages=en|fr&format=json`;
+    const response = await fetch(url);
+    const data = await response.json();
+    const entity = data.entities?.[id];
+    if (!entity) return res.status(404).json({ error: 'Entity not found' });
+
+    const label = entity.labels?.en?.value || entity.labels?.fr?.value || id;
+    const description = entity.descriptions?.en?.value || entity.descriptions?.fr?.value || '';
+
+    let image_url = null;
+    const imageClaimValues = entity.claims?.P18;
+    if (imageClaimValues && imageClaimValues.length > 0) {
+      const fileName = imageClaimValues[0].mainsnak?.datavalue?.value;
+      if (fileName) {
+        const encodedName = encodeURIComponent(fileName.replace(/ /g, '_'));
+        image_url = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodedName}?width=400`;
+      }
+    }
+
+    let wikipedia_url = null;
+    if (entity.sitelinks?.enwiki) {
+      wikipedia_url = `https://en.wikipedia.org/wiki/${encodeURIComponent(entity.sitelinks.enwiki.title)}`;
+    } else if (entity.sitelinks?.frwiki) {
+      wikipedia_url = `https://fr.wikipedia.org/wiki/${encodeURIComponent(entity.sitelinks.frwiki.title)}`;
+    }
+
+    const occupations = [];
+    const occupationClaims = entity.claims?.P106 || [];
+    for (const claim of occupationClaims.slice(0, 5)) {
+      const occId = claim.mainsnak?.datavalue?.value?.id;
+      if (occId) occupations.push(occId);
+    }
+
+    const types = [];
+    const instanceOfClaims = entity.claims?.P31 || [];
+    for (const claim of instanceOfClaims.slice(0, 5)) {
+      const typeId = claim.mainsnak?.datavalue?.value?.id;
+      if (typeId) types.push(typeId);
+    }
+
+    const entityRecord = {
+      wikidata_id: id,
+      label,
+      description,
+      image_url,
+      wikipedia_url,
+      occupations,
+      types,
+      updated_at: new Date().toISOString(),
+    };
+
+    await db.from('wikidata_entities').upsert(entityRecord, { onConflict: 'wikidata_id' });
+
+    res.json({ entity: entityRecord, source: 'wikidata' });
+  } catch (error) {
+    console.error('[Wikidata Entity] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/wikidata/sync-celebrity', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { celebrity_id, wikidata_id } = req.body;
+    if (!celebrity_id || !wikidata_id) return res.status(400).json({ error: 'celebrity_id and wikidata_id required' });
+
+    const entityRes = await fetch(`http://localhost:${5000}/api/wikidata/entity/${wikidata_id}`);
+    const entityData = await entityRes.json();
+    if (!entityData.entity) return res.status(404).json({ error: 'Wikidata entity not found' });
+
+    const ent = entityData.entity;
+    const { error } = await db
+      .from('celebrity_profiles')
+      .update({
+        wikidata_id: ent.wikidata_id,
+        wikidata_label: ent.label,
+        wikipedia_url: ent.wikipedia_url,
+        wikidata_image_url: ent.image_url,
+        wikidata_occupations: ent.occupations,
+        wikidata_types: ent.types,
+        wikidata_confidence: 100,
+        wikidata_last_sync: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', celebrity_id);
+
+    if (error) throw error;
+    res.json({ success: true, entity: ent });
+  } catch (error) {
+    console.error('[Wikidata Sync] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/verify-booking-payment', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const stripe = await getStripe();
+    const { booking_id, session_id } = req.query;
+    if (!session_id) return res.status(400).json({ error: 'session_id required' });
+
+    const checkoutSession = await stripe.checkout.sessions.retrieve(session_id);
+    const pi = checkoutSession.payment_intent;
+    const paymentIntent = pi ? await stripe.paymentIntents.retrieve(pi) : null;
+
+    const authorized = paymentIntent?.status === 'requires_capture';
+    const paid = checkoutSession.payment_status === 'paid' || paymentIntent?.status === 'succeeded';
+
+    if ((authorized || paid) && booking_id) {
+      await db
+        .from('booking_requests')
+        .update({
+          status: authorized ? 'paid' : 'paid',
+          stripe_payment_intent_id: pi,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', booking_id);
+    }
+
+    res.json({ authorized, paid, status: paymentIntent?.status || checkoutSession.payment_status });
+  } catch (error) {
+    console.error('[Verify Booking] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 const EXPO_PORT = 19006;

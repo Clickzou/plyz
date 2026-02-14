@@ -1,6 +1,6 @@
 import { View, TouchableOpacity, StyleSheet, Platform, Text } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
-import { Home, Images, User, Star, Users } from 'lucide-react-native';
+import { Home, Images, User, Star, Users, Search, Newspaper, Inbox } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -17,14 +17,15 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
 
-  const handleNavigation = (path: '/' | '/gallery' | '/account' | '/celebrity-menu' | '/join-event' | '/fan-choice') => {
+  const handleNavigation = (path: string) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    router.push(path);
+    router.push(path as any);
   };
 
   const isActive = (path: string) => pathname === path;
+  const isActiveMulti = (...paths: string[]) => paths.some(p => pathname === p || pathname.startsWith(p));
 
   return (
     <View style={[
@@ -49,32 +50,32 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
 
       <TouchableOpacity
         style={styles.navButton}
-        onPress={() => handleNavigation('/celebrity-menu')}
+        onPress={() => handleNavigation('/discover')}
         activeOpacity={0.7}
       >
-        <Star
+        <Search
           size={24}
-          color={isActive('/celebrity-menu') || isActive('/create-event') || isActive('/create-live-session') ? '#f59e0b' : '#ffffff'}
-          fill={isActive('/celebrity-menu') || isActive('/create-event') || isActive('/create-live-session') ? '#f59e0b' : 'transparent'}
+          color={isActiveMulti('/discover', '/celebrity-detail') ? '#10b981' : '#ffffff'}
           strokeWidth={2}
         />
-        <Text style={[styles.navLabel, (isActive('/celebrity-menu') || isActive('/create-event') || isActive('/create-live-session')) && styles.navLabelStar]}>
-          {t('celebrity')}
+        <Text style={[styles.navLabel, isActiveMulti('/discover', '/celebrity-detail') && styles.navLabelActive]}>
+          {t('discover')}
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.navButton}
-        onPress={() => handleNavigation('/gallery')}
+        onPress={() => handleNavigation('/celebrity-menu')}
         activeOpacity={0.7}
       >
-        <Images
+        <Star
           size={24}
-          color={isActive('/gallery') ? '#10b981' : '#ffffff'}
+          color={isActiveMulti('/celebrity-menu', '/create-event', '/create-live-session') ? '#f59e0b' : '#ffffff'}
+          fill={isActiveMulti('/celebrity-menu', '/create-event', '/create-live-session') ? '#f59e0b' : 'transparent'}
           strokeWidth={2}
         />
-        <Text style={[styles.navLabel, isActive('/gallery') && styles.navLabelActive]}>
-          {t('gallery')}
+        <Text style={[styles.navLabel, isActiveMulti('/celebrity-menu', '/create-event', '/create-live-session') && styles.navLabelStar]}>
+          {t('celebrity')}
         </Text>
       </TouchableOpacity>
 
@@ -85,11 +86,26 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
       >
         <Users
           size={24}
-          color={isActive('/fan-choice') || isActive('/join-event') || isActive('/join-live-session') ? '#6366f1' : '#ffffff'}
+          color={isActiveMulti('/fan-choice', '/join-event', '/join-live-session') ? '#6366f1' : '#ffffff'}
           strokeWidth={2}
         />
-        <Text style={[styles.navLabel, (isActive('/fan-choice') || isActive('/join-event') || isActive('/join-live-session')) && styles.navLabelFan]}>
+        <Text style={[styles.navLabel, isActiveMulti('/fan-choice', '/join-event', '/join-live-session') && styles.navLabelFan]}>
           {t('fan')}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.navButton}
+        onPress={() => handleNavigation('/my-space')}
+        activeOpacity={0.7}
+      >
+        <Inbox
+          size={24}
+          color={isActive('/my-space') ? '#10b981' : '#ffffff'}
+          strokeWidth={2}
+        />
+        <Text style={[styles.navLabel, isActive('/my-space') && styles.navLabelActive]}>
+          {t('mySpace')}
         </Text>
       </TouchableOpacity>
 
@@ -128,12 +144,12 @@ const styles = StyleSheet.create({
   navButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     paddingVertical: 6,
   },
   navLabel: {
     color: '#ffffff',
-    fontSize: 10,
+    fontSize: 9,
     marginTop: 4,
     fontWeight: '500',
   },

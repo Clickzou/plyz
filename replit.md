@@ -81,6 +81,17 @@ Preferred communication style: Simple, everyday language.
 - `react-native-qrcode-svg`, `expo-barcode-scanner`: For QR code generation and scanning in live events.
 - `@daily-co/react-native-daily-js`: For video calls.
 
+### Marketplace Features (NEW)
+- **Celebrity Discovery Wall**: `discover.tsx` - Search, sort, filter celebrities with pagination and badge system
+- **Celebrity Detail**: `celebrity-detail.tsx` - Full profile with tabs (About/Pricing/Posts), booking and autograph actions
+- **Activity Feed**: `activity.tsx` - News feed with posts and events from celebrities
+- **My Space**: `my-space.tsx` - Fan's bookings and autograph requests
+- **API Endpoints**: 15+ marketplace endpoints in `server/index.js` (GET /api/celebrities, GET /api/celebrity/:id, GET /api/feed, POST /api/posts, POST /api/report, POST /api/book-video, POST /api/autograph, etc.)
+- **Wikidata Integration**: Server-side search, entity resolution, and celebrity profile sync
+- **Badge System**: Official verified + Stripe Connect verified badges
+- **Navigation**: BottomNav updated to 6 tabs (Home, Discover, Celebrity, Fan, My Space, Account)
+- **Migration Required**: Marketplace tables must be created in Supabase SQL Editor using `server/migration.sql`. Tables needed: celebrity_profiles, celebrity_pricing, booking_requests, autograph_requests, posts, wikidata_entities, reports.
+
 ### Environment Variables
 - `EXPO_PUBLIC_SUPABASE_URL`
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`

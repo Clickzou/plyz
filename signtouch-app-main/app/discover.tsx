@@ -1,0 +1,275 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput,
+  Image, ActivityIndicator, Platform, ScrollView, Linking,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Search, Star, CheckCircle, ShieldCheck, ChevronRight, X } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLanguage } from '@/contexts/LanguageContext';
+import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
+
+const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
+
+interface Celebrity {
+  user_id: string;
+  stage_name: string;
+  bio: string | null;
+  avatar_url: string | null;
+  display_name: string | null;
+  stripe_verified: boolean;
+  official_verified: boolean;
+  occupations: string[];
+  types: string[];
+  popularity_score: number;
+  pricing: {
+    video_call_price_cents: number;
+    autograph_price_cents: number;
+    currency: string;
+  } | null;
+}
+
+const SORT_OPTIONS = [
+  { key: 'popular', label: 'sortPopularity' },
+  { key: 'name_asc', label: 'sortNameAsc' },
+  { key: 'name_desc', label: 'sortNameDesc' },
+  { key: 'newest', label: 'sortNewest' },
+] as const;
+
+export default function DiscoverScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
+  const [celebrities, setCelebrities] = useState<Celebrity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('popular');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchCelebrities = useCallback(async (p = 1, reset = false) => {
+    try {
+      if (reset) setLoading(true);
+      const params = new URLSearchParams({ page: String(p), limit: '20', sort });
+      if (search.trim()) params.set('search', search.trim());
+
+      const res = await fetch(`${API_BASE}/api/celebrities?${params}`);
+      const data = await res.json();
+
+      if (reset || p === 1) {
+        setCelebrities(data.celebrities || []);
+      } else {
+        setCelebrities(prev => [...prev, ...(data.celebrities || [])]);
+      }
+      setTotalPages(data.total_pages || 1);
+      setTotal(data.total || 0);
+      setPage(p);
+    } catch (err) {
+      console.error('Error fetching celebrities:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [search, sort]);
+
+  useEffect(() => {
+    fetchCelebrities(1, true);
+  }, [sort]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCelebrities(1, true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const formatPrice = (cents: number, currency: string) => {
+    const amount = (cents / 100).toFixed(2);
+    const symbols: Record<string, string> = { eur: '€', usd: '$', gbp: '£' };
+    return `${amount}${symbols[currency] || currency}`;
+  };
+
+  const renderCelebrity = ({ item }: { item: Celebrity }) => {
+    const minPrice = item.pricing
+      ? Math.min(
+          ...[item.pricing.video_call_price_cents, item.pricing.autograph_price_cents]
+            .filter(p => p > 0)
+        )
+      : 0;
+
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => router.push(`/celebrity-detail?id=${item.user_id}`)}
+        activeOpacity={0.8}
+      >
+        <View style={styles.cardImageContainer}>
+          {item.avatar_url ? (
+            <Image source={{ uri: item.avatar_url }} style={styles.cardImage} />
+          ) : (
+            <LinearGradient colors={['#374151', '#1f2937']} style={styles.cardImage}>
+              <Text style={styles.cardInitial}>
+                {(item.stage_name || '?')[0].toUpperCase()}
+              </Text>
+            </LinearGradient>
+          )}
+          <View style={styles.badgeRow}>
+            {item.official_verified && (
+              <View style={[styles.badge, styles.officialBadge]}>
+                <CheckCircle size={10} color="#fff" />
+                <Text style={styles.badgeText}>{t('officialBadge')}</Text>
+              </View>
+            )}
+            {item.stripe_verified && (
+              <View style={[styles.badge, styles.stripeBadge]}>
+                <ShieldCheck size={10} color="#fff" />
+              </View>
+            )}
+          </View>
+        </View>
+        <View style={styles.cardBody}>
+          <Text style={styles.cardName} numberOfLines={1}>{item.stage_name}</Text>
+          {item.bio && (
+            <Text style={styles.cardBio} numberOfLines={2}>{item.bio}</Text>
+          )}
+          {minPrice > 0 && item.pricing && (
+            <Text style={styles.cardPrice}>
+              {t('fromPrice')} {formatPrice(minPrice, item.pricing.currency)}
+            </Text>
+          )}
+          <View style={styles.cardActions}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => router.push(`/celebrity-detail?id=${item.user_id}`)}
+            >
+              <Text style={styles.actionText}>{t('viewProfile')}</Text>
+              <ChevronRight size={14} color="#10b981" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <LinearGradient colors={['#0a1628', '#0f2035', '#0a1628']} style={StyleSheet.absoluteFill} />
+      <View style={styles.header}>
+        <Text style={styles.title}>{t('discoverTitle')}</Text>
+        <Text style={styles.subtitle}>{t('discoverSubtitle')}</Text>
+      </View>
+
+      <View style={styles.searchRow}>
+        <View style={styles.searchBox}>
+          <Search size={18} color="#9ca3af" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder={t('searchPlaceholder')}
+            placeholderTextColor="#6b7280"
+            value={search}
+            onChangeText={setSearch}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')}>
+              <X size={18} color="#9ca3af" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sortRow} contentContainerStyle={styles.sortRowContent}>
+        {SORT_OPTIONS.map(opt => (
+          <TouchableOpacity
+            key={opt.key}
+            style={[styles.sortChip, sort === opt.key && styles.sortChipActive]}
+            onPress={() => setSort(opt.key)}
+          >
+            <Text style={[styles.sortChipText, sort === opt.key && styles.sortChipTextActive]}>
+              {t(opt.label as any)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#10b981" />
+        </View>
+      ) : celebrities.length === 0 ? (
+        <View style={styles.center}>
+          <Star size={48} color="#374151" />
+          <Text style={styles.emptyText}>{t('noCelebrities')}</Text>
+          <Text style={styles.emptyHint}>{t('noCelebritiesHint')}</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={celebrities}
+          renderItem={renderCelebrity}
+          keyExtractor={item => item.user_id}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 20, paddingHorizontal: 12 }}
+          onRefresh={() => {
+            setRefreshing(true);
+            fetchCelebrities(1, true);
+          }}
+          refreshing={refreshing}
+          onEndReached={() => {
+            if (page < totalPages) fetchCelebrities(page + 1);
+          }}
+          onEndReachedThreshold={0.5}
+        />
+      )}
+
+      <BottomNav />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#0a1628' },
+  header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 5 },
+  title: { color: '#fff', fontSize: 24, fontWeight: '700' },
+  subtitle: { color: '#9ca3af', fontSize: 14, marginTop: 2 },
+  searchRow: { paddingHorizontal: 16, marginTop: 12, marginBottom: 4 },
+  searchBox: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12, paddingHorizontal: 14, paddingVertical: Platform.OS === 'web' ? 10 : 0, height: 44,
+  },
+  searchInput: { flex: 1, color: '#fff', fontSize: 15, marginLeft: 10 },
+  sortRow: { marginTop: 8, maxHeight: 44 },
+  sortRowContent: { paddingHorizontal: 16, gap: 8 },
+  sortChip: {
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.06)', marginRight: 8,
+  },
+  sortChipActive: { backgroundColor: '#10b981' },
+  sortChipText: { color: '#9ca3af', fontSize: 13, fontWeight: '500' },
+  sortChipTextActive: { color: '#fff' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  emptyText: { color: '#9ca3af', fontSize: 16, marginTop: 12, fontWeight: '600' },
+  emptyHint: { color: '#6b7280', fontSize: 13, marginTop: 4 },
+  row: { justifyContent: 'space-between', marginBottom: 12 },
+  card: {
+    width: '48%', backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+  },
+  cardImageContainer: { position: 'relative', height: 160 },
+  cardImage: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
+  cardInitial: { color: '#fff', fontSize: 36, fontWeight: '700' },
+  badgeRow: { position: 'absolute', top: 8, left: 8, flexDirection: 'row', gap: 4 },
+  badge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8, gap: 3 },
+  officialBadge: { backgroundColor: 'rgba(16,185,129,0.85)' },
+  stripeBadge: { backgroundColor: 'rgba(99,102,241,0.85)' },
+  badgeText: { color: '#fff', fontSize: 9, fontWeight: '600' },
+  cardBody: { padding: 12 },
+  cardName: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  cardBio: { color: '#9ca3af', fontSize: 11, marginTop: 4, lineHeight: 16 },
+  cardPrice: { color: '#10b981', fontSize: 12, fontWeight: '600', marginTop: 6 },
+  cardActions: { marginTop: 8 },
+  actionButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  actionText: { color: '#10b981', fontSize: 12, fontWeight: '600' },
+});
