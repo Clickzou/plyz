@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Share2, Palette, Pencil, Plus, Sparkles, X, RotateCw, Check, Save, Eraser, Type, BookOpen, Film } from 'lucide-react-native';
+import { Download, Trash2, Share2, Palette, Pencil, Plus, Sparkles, X, RotateCw, Check, Save, Eraser, Type, BookOpen } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -2713,24 +2713,6 @@ export default function ResultScreen() {
 
               {memoryId && (
                 <TouchableOpacity
-                  style={styles.storyButton}
-                  onPress={() => router.push({
-                    pathname: '/story',
-                    params: { 
-                      imageUri: displayUri, 
-                      eventType: memory?.metadata?.eventType || 'meetup',
-                      signatureOverlays: JSON.stringify(signatureOverlays),
-                      textOverlays: JSON.stringify(textOverlays),
-                    }
-                  })}
-                  activeOpacity={0.7}
-                >
-                  <Film size={24} color="#ffffff" strokeWidth={2} />
-                </TouchableOpacity>
-              )}
-
-              {memoryId && (
-                <TouchableOpacity
                   style={styles.notebookButton}
                   onPress={() => setShowMetadataModal(true)}
                   activeOpacity={0.7}
@@ -3459,14 +3441,6 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     backgroundColor: '#10B981',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  storyButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#46ACC2',
     justifyContent: 'center',
     alignItems: 'center',
   },

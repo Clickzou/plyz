@@ -12,19 +12,18 @@ import {
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Camera, X, Pencil, Share2, BookOpen, Filter, Star, User, MapPin, Calendar, Music, Trophy, Palette, Users, CheckCircle2, Circle, Film, Play } from 'lucide-react-native';
+import { Download, Trash2, Camera, X, Pencil, Share2, BookOpen, Filter, Star, User, MapPin, Calendar, Music, Trophy, Palette, Users, CheckCircle2, Circle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import { Memory, MemoryMetadata, EventType } from '@/utils/memoriesStorage';
-import { Story, getStories, deleteStory } from '@/utils/storiesStorage';
 import MetadataModal from '@/components/MetadataModal';
 import * as StorageService from '@/utils/storageService';
 import { useSubscription, SUBSCRIPTION_ENABLED } from '@/contexts/SubscriptionContext';
 import { useTranslation } from '@/contexts/LanguageContext';
 
-type GalleryTab = 'photos' | 'stories' | 'collector';
+type GalleryTab = 'photos' | 'collector';
 import { useAuth } from '@/contexts/AuthContext';
 import AdModal from '@/components/AdModal';
 import SocialShareModal from '@/components/SocialShareModal';
@@ -57,12 +56,10 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
 
 export default function GalleryScreen() {
   const [memories, setMemories] = useState<Memory[]>([]);
-  const [stories, setStories] = useState<Story[]>([]);
   const [collectorItems, setCollectorItems] = useState<CollectorLiveItem[]>([]);
   const [activeTab, setActiveTab] = useState<GalleryTab>('photos');
   const [loading, setLoading] = useState(true);
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
-  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [selectedCollectorItem, setSelectedCollectorItem] = useState<CollectorLiveItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
@@ -184,15 +181,6 @@ export default function GalleryScreen() {
     }
   };
 
-  const loadStoriesData = async () => {
-    try {
-      const loadedStories = await getStories();
-      setStories(loadedStories);
-    } catch (error) {
-      console.error('Error loading stories:', error);
-    }
-  };
-
   const loadCollectorData = async () => {
     try {
       const items = await getAllCollectorLive();
@@ -205,7 +193,6 @@ export default function GalleryScreen() {
   useFocusEffect(
     useCallback(() => {
       loadMemories();
-      loadStoriesData();
       loadCollectorData();
 
       const checkAndShowModals = async () => {
@@ -366,42 +353,6 @@ export default function GalleryScreen() {
     } finally {
       setIsDeleting(false);
     }
-  };
-
-  const handleDeleteStory = async () => {
-    if (!selectedStory) return;
-
-    try {
-      setIsDeleting(true);
-      await deleteStory(selectedStory.id);
-      
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-
-      setSelectedStory(null);
-      await loadStoriesData();
-    } catch (error) {
-      console.error('Error deleting story:', error);
-      showAlert(t('error'), t('saveError'));
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const confirmDeleteStory = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-
-    showConfirm(
-      t('confirmDelete'),
-      t('confirmDeleteMessage'),
-      [
-        { text: t('cancel'), style: 'cancel' },
-        { text: t('delete'), style: 'destructive', onPress: handleDeleteStory },
-      ]
-    );
   };
 
   const goToCamera = () => {
@@ -568,17 +519,6 @@ export default function GalleryScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tab, activeTab === 'stories' && styles.tabActive]}
-            onPress={() => {
-              if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setActiveTab('stories');
-            }}
-          >
-            <Text style={[styles.tabText, activeTab === 'stories' && styles.tabTextActive]}>
-              {t('galleryStories') || 'Stories'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
             style={[styles.tab, activeTab === 'collector' && styles.tabActive]}
             onPress={() => {
               if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -594,11 +534,6 @@ export default function GalleryScreen() {
         {activeTab === 'photos' && memories.length > 0 && !selectionMode && (
           <Text style={styles.instructionText}>
             {t('galleryInstruction')}
-          </Text>
-        )}
-        {activeTab === 'stories' && (
-          <Text style={styles.instructionText}>
-            {t('storiesInstruction')}
           </Text>
         )}
         {activeTab === 'collector' && (
@@ -661,43 +596,6 @@ export default function GalleryScreen() {
             );
           })}
         </ScrollView>
-      )}
-
-      {activeTab === 'stories' && (
-        stories.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Film size={64} color="#4b5563" />
-            <Text style={styles.emptyText}>{t('noStories') || 'No stories yet'}</Text>
-            <Text style={styles.emptySubtext}>{t('noStoriesHint') || 'Create a story from your photo result'}</Text>
-          </View>
-        ) : (
-          <ScrollView style={styles.storiesGrid} showsVerticalScrollIndicator={false}>
-            <View style={styles.storiesGridContent}>
-              {stories.map((story) => (
-                <TouchableOpacity
-                  key={story.id}
-                  style={styles.storyCard}
-                  onPress={() => {
-                    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setSelectedStory(story);
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Image
-                    source={{ uri: story.uri }}
-                    style={styles.storyImage}
-                    resizeMode="cover"
-                  />
-                  <View style={styles.storyOverlay}>
-                    <Text style={styles.storyDate}>
-                      {new Date(story.timestamp).toLocaleDateString()}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
-        )
       )}
 
       {activeTab === 'collector' && (
@@ -917,100 +815,6 @@ export default function GalleryScreen() {
       </Modal>
 
       <Modal
-        visible={selectedStory !== null}
-        transparent={false}
-        animationType="fade"
-        onRequestClose={() => setSelectedStory(null)}
-      >
-        <View style={styles.modalContainer}>
-          {selectedStory && (
-            <Image
-              source={{ uri: selectedStory.uri }}
-              style={styles.fullscreenImage}
-              resizeMode="contain"
-            />
-          )}
-
-          <TouchableOpacity
-            style={[styles.closeModalButton, { top: insets.top + 20 }]}
-            onPress={() => setSelectedStory(null)}
-            activeOpacity={0.8}
-          >
-            <X size={24} color="#ffffff" strokeWidth={2} />
-          </TouchableOpacity>
-
-          <View style={[styles.modalFloatingControls, { paddingBottom: insets.bottom + 20 }]}>
-            <TouchableOpacity
-              style={[styles.modalFloatingButton, styles.modalGreenButton]}
-              onPress={() => {
-                if (selectedStory) {
-                  setSelectedStory(null);
-                  router.push({
-                    pathname: '/story',
-                    params: {
-                      imageUri: selectedStory.uri,
-                      memoryId: selectedStory.sourceMemoryId || '',
-                      storyId: selectedStory.id,
-                      mode: 'preview',
-                    }
-                  });
-                }
-              }}
-              activeOpacity={0.8}
-            >
-              <Play size={28} color="#ffffff" strokeWidth={2.5} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.modalFloatingButton, styles.modalBlueButton]}
-              onPress={() => {
-                if (selectedStory) {
-                  setSelectedStory(null);
-                  router.push({
-                    pathname: '/story',
-                    params: {
-                      imageUri: selectedStory.uri,
-                      memoryId: selectedStory.sourceMemoryId || '',
-                      storyId: selectedStory.id,
-                      mode: 'edit',
-                    }
-                  });
-                }
-              }}
-              activeOpacity={0.8}
-            >
-              <Pencil size={28} color="#ffffff" strokeWidth={2.5} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.modalFloatingButton, styles.modalBlueButton]}
-              onPress={() => {
-                if (selectedStory) {
-                  setShowShareModal(true);
-                }
-              }}
-              activeOpacity={0.8}
-            >
-              <Share2 size={28} color="#ffffff" strokeWidth={2.5} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.modalFloatingButton, styles.modalRedButton]}
-              onPress={confirmDeleteStory}
-              disabled={isDeleting}
-              activeOpacity={0.8}
-            >
-              {isDeleting ? (
-                <ActivityIndicator color="#ffffff" size="small" />
-              ) : (
-                <Trash2 size={28} color="#ffffff" strokeWidth={2.5} />
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal
         visible={selectedCollectorItem !== null}
         transparent={false}
         animationType="fade"
@@ -1098,7 +902,7 @@ export default function GalleryScreen() {
       <SocialShareModal
         visible={showShareModal}
         onClose={() => setShowShareModal(false)}
-        imageUri={selectedStory?.uri || selectedMemory?.uri || ''}
+        imageUri={selectedMemory?.uri || ''}
       />
 
       <AdModal
