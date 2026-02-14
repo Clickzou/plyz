@@ -552,7 +552,7 @@ export default {
   liveEvents: 'Live Dedication Events',
   starMode: 'I\'m a Star',
   fanMode: 'I\'m a Fan',
-  fanChoiceTitle: 'Fan Mode',
+  fanChoiceTitle: 'Live',
   fanChoiceSubtitle: 'Choose your experience',
   fanChoiceQR: 'Live Dedication Event',
   fanChoiceQRDesc: 'Receive exclusive dedicated photos in real time during an event.',
@@ -1170,6 +1170,9 @@ export default {
   noBookingsHint: 'Book a video call with your favorite celebrity',
   noAutographs: 'No autograph requests yet',
   noAutographsHint: 'Request an autograph from a celebrity',
+  mySpaceSignInTitle: 'Sign in to access your space',
+  mySpaceSignInDesc: 'View your bookings, autograph requests, and keep track of your interactions with celebrities.',
+  mySpaceSignInButton: 'Sign in',
 
   // Marketplace - Celebrity Dashboard
   celebrityDashboard: 'Dashboard',
@@ -1195,4 +1198,10 @@ export default {
   searchWikidata: 'Search Wikidata...',
   wikidataLinked: 'Wikidata linked!',
   profileSaved: 'Profile saved!',
+
+  deleteSelectedConfirm: 'Delete selected events?',
+  events: 'events',
+  deselectAll: 'Deselect All',
+  selectAll: 'Select All',
+  waitingViewers: 'viewers waiting',
 };

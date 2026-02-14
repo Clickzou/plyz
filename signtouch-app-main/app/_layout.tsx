@@ -85,11 +85,16 @@ function AppContent() {
       >
         <Stack.Screen name="+not-found" />
         <Stack.Screen name="index" options={{ animation: 'none' }} />
+        <Stack.Screen name="activity" options={{ animation: 'none' }} />
+        <Stack.Screen name="discover" options={{ animation: 'none' }} />
         <Stack.Screen name="gallery" options={{ animation: 'none' }} />
         <Stack.Screen name="account" options={{ animation: 'none' }} />
         <Stack.Screen name="celebrity-menu" options={{ animation: 'none' }} />
+        <Stack.Screen name="celebrity-detail" />
         <Stack.Screen name="fan-choice" options={{ animation: 'none' }} />
+        <Stack.Screen name="my-space" options={{ animation: 'none' }} />
         <Stack.Screen name="join-event" options={{ animation: 'none' }} />
+        <Stack.Screen name="compose" />
       </Stack>
 
       <StatusBar style="auto" />

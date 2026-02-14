@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput,
-  Image, ActivityIndicator, Platform, ScrollView, Linking,
+  Image, ActivityIndicator, Platform, ScrollView, Linking, ImageErrorEventData, NativeSyntheticEvent,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -126,6 +126,12 @@ export default function DiscoverScreen() {
     return `${amount}${symbols[currency] || currency}`;
   };
 
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
+  const handleImageError = (userId: string) => {
+    setFailedImages(prev => new Set(prev).add(userId));
+  };
+
   const renderCelebrity = ({ item }: { item: Celebrity }) => {
     const minPrice = item.pricing
       ? Math.min(
@@ -134,6 +140,8 @@ export default function DiscoverScreen() {
         )
       : 0;
 
+    const showAvatar = item.avatar_url && !failedImages.has(item.user_id);
+
     return (
       <TouchableOpacity
         style={styles.card}
@@ -141,8 +149,12 @@ export default function DiscoverScreen() {
         activeOpacity={0.8}
       >
         <View style={styles.cardImageContainer}>
-          {item.avatar_url ? (
-            <Image source={{ uri: item.avatar_url }} style={styles.cardImage} />
+          {showAvatar ? (
+            <Image
+              source={{ uri: item.avatar_url! }}
+              style={styles.cardImage}
+              onError={() => handleImageError(item.user_id)}
+            />
           ) : (
             <LinearGradient colors={['#374151', '#1f2937']} style={styles.cardImage}>
               <Text style={styles.cardInitial}>

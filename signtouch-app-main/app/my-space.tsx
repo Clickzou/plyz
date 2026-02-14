@@ -168,9 +168,25 @@ export default function MySpaceScreen() {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <LinearGradient colors={['#0a1628', '#0f2035', '#0a1628']} style={StyleSheet.absoluteFill} />
+        <View style={styles.header}>
+          <Text style={styles.title}>{t('mySpaceTitle')}</Text>
+        </View>
         <View style={styles.center}>
-          <Inbox size={48} color="#374151" />
-          <Text style={styles.emptyText}>Please sign in to view your bookings</Text>
+          <View style={styles.signInCard}>
+            <View style={styles.signInIconWrap}>
+              <Inbox size={40} color="#10b981" />
+            </View>
+            <Text style={styles.signInTitle}>{t('mySpaceSignInTitle')}</Text>
+            <Text style={styles.signInDesc}>{t('mySpaceSignInDesc')}</Text>
+            <TouchableOpacity
+              style={styles.signInButton}
+              onPress={() => router.push('/account')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.signInButtonText}>{t('mySpaceSignInButton')}</Text>
+              <ChevronRight size={18} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
         <BottomNav />
       </View>
@@ -292,4 +308,52 @@ const styles = StyleSheet.create({
   itemDate: { color: '#6b7280', fontSize: 11, marginTop: 2 },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   statusText: { fontSize: 11, fontWeight: '600' },
+  signInCard: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    marginHorizontal: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  signInIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  signInTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  signInDesc: {
+    color: '#9ca3af',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  signInButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#10b981',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 14,
+    width: '100%',
+  },
+  signInButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });
