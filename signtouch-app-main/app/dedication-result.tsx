@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -173,6 +173,100 @@ export default function DedicationResultScreen() {
       { rotate: `${sigRotation.value}rad` },
     ],
   }));
+
+  const webTouchRef = useRef<View>(null);
+  const webTouchState = useRef<{
+    startX: number; startY: number;
+    lastX: number; lastY: number;
+    baseTX: number; baseTY: number;
+    baseScale: number; baseDist: number;
+    baseRotation: number; baseAngle: number;
+    fingers: number;
+  } | null>(null);
+
+  const getTouchDist = (t: TouchList) => {
+    const dx = t[1].clientX - t[0].clientX;
+    const dy = t[1].clientY - t[0].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+  const getTouchAngle = (t: TouchList) => {
+    return Math.atan2(t[1].clientY - t[0].clientY, t[1].clientX - t[0].clientX);
+  };
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const el = (webTouchRef.current as any)?._nativeTag || (webTouchRef.current as any);
+    let domEl: HTMLElement | null = null;
+    if (el instanceof HTMLElement) {
+      domEl = el;
+    } else if (webTouchRef.current) {
+      try {
+        const findDOMNode = require('react-dom').findDOMNode;
+        domEl = findDOMNode(webTouchRef.current) as HTMLElement;
+      } catch (e) {}
+    }
+    if (!domEl) return;
+
+    const onTouchStart = (ev: TouchEvent) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const t = ev.touches[0];
+      webTouchState.current = {
+        startX: t.clientX, startY: t.clientY,
+        lastX: t.clientX, lastY: t.clientY,
+        baseTX: sigTranslateX.value, baseTY: sigTranslateY.value,
+        baseScale: sigScale.value, baseDist: 0,
+        baseRotation: sigRotation.value, baseAngle: 0,
+        fingers: ev.touches.length,
+      };
+      if (ev.touches.length >= 2) {
+        webTouchState.current.baseDist = getTouchDist(ev.touches);
+        webTouchState.current.baseAngle = getTouchAngle(ev.touches);
+      }
+    };
+    const onTouchMove = (ev: TouchEvent) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (!webTouchState.current) return;
+      const st = webTouchState.current;
+      if (ev.touches.length >= 2 && st.fingers < 2) {
+        st.baseDist = getTouchDist(ev.touches);
+        st.baseAngle = getTouchAngle(ev.touches);
+        st.baseScale = sigScale.value;
+        st.baseRotation = sigRotation.value;
+        st.fingers = ev.touches.length;
+      }
+      const t = ev.touches[0];
+      sigTranslateX.value = st.baseTX + (t.clientX - st.startX);
+      sigTranslateY.value = st.baseTY + (t.clientY - st.startY);
+      if (ev.touches.length >= 2) {
+        const dist = getTouchDist(ev.touches);
+        sigScale.value = Math.max(0.3, Math.min(3, st.baseScale * (dist / st.baseDist)));
+        const angle = getTouchAngle(ev.touches);
+        sigRotation.value = st.baseRotation + (angle - st.baseAngle);
+      }
+    };
+    const onTouchEnd = (ev: TouchEvent) => {
+      ev.preventDefault();
+      if (ev.touches.length === 0) {
+        webTouchState.current = null;
+      }
+    };
+
+    domEl.addEventListener('touchstart', onTouchStart, { passive: false });
+    domEl.addEventListener('touchmove', onTouchMove, { passive: false });
+    domEl.addEventListener('touchend', onTouchEnd, { passive: false });
+    domEl.addEventListener('touchcancel', onTouchEnd, { passive: false });
+    domEl.style.touchAction = 'none';
+    domEl.style.userSelect = 'none';
+
+    return () => {
+      domEl!.removeEventListener('touchstart', onTouchStart);
+      domEl!.removeEventListener('touchmove', onTouchMove);
+      domEl!.removeEventListener('touchend', onTouchEnd);
+      domEl!.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, [signaturePaths]);
 
   const handleResetPosition = () => {
     sigTranslateX.value = withSpring(0);
@@ -386,9 +480,12 @@ export default function DedicationResultScreen() {
             <Text style={styles.liveBadgeText}>LIVE {celebrityName}</Text>
           </View>
 
-          <GestureDetector gesture={composedGesture}>
-            <Animated.View style={[styles.signatureContainer, { width: PHOTO_WIDTH * 0.7, height: PHOTO_WIDTH * 0.35 }, signatureAnimatedStyle]}>
-              <Svg width="100%" height="100%" viewBox={`0 0 ${SCREEN_WIDTH - 100} ${(SCREEN_WIDTH - 100) * 0.5}`}>
+          {Platform.OS === 'web' ? (
+            <Animated.View
+              ref={webTouchRef as any}
+              style={[styles.signatureContainer, styles.signatureTouchArea, { width: PHOTO_WIDTH * 0.7 + 30, height: PHOTO_WIDTH * 0.35 + 30 }, signatureAnimatedStyle]}
+            >
+              <Svg width={PHOTO_WIDTH * 0.7} height={PHOTO_WIDTH * 0.35} viewBox={`0 0 ${SCREEN_WIDTH - 100} ${(SCREEN_WIDTH - 100) * 0.5}`}>
                 <Rect x="0" y="0" width={SCREEN_WIDTH - 100} height={(SCREEN_WIDTH - 100) * 0.5} fill="transparent" />
                 {signaturePaths.map((p, i) => (
                   <Path
@@ -403,7 +500,26 @@ export default function DedicationResultScreen() {
                 ))}
               </Svg>
             </Animated.View>
-          </GestureDetector>
+          ) : (
+            <GestureDetector gesture={composedGesture}>
+              <Animated.View style={[styles.signatureContainer, { width: PHOTO_WIDTH * 0.7, height: PHOTO_WIDTH * 0.35 }, signatureAnimatedStyle]}>
+                <Svg width="100%" height="100%" viewBox={`0 0 ${SCREEN_WIDTH - 100} ${(SCREEN_WIDTH - 100) * 0.5}`}>
+                  <Rect x="0" y="0" width={SCREEN_WIDTH - 100} height={(SCREEN_WIDTH - 100) * 0.5} fill="transparent" />
+                  {signaturePaths.map((p, i) => (
+                    <Path
+                      key={i}
+                      d={p}
+                      stroke={signatureColor}
+                      strokeWidth={3}
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  ))}
+                </Svg>
+              </Animated.View>
+            </GestureDetector>
+          )}
 
           <View style={styles.watermark}>
             <Text style={styles.watermarkText}>SignTouch</Text>
@@ -590,6 +706,13 @@ const styles = StyleSheet.create({
     top: 0,
     zIndex: 10,
   },
+  signatureTouchArea: {
+    left: (PHOTO_WIDTH - PHOTO_WIDTH * 0.7 - 30) / 2,
+    padding: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    cursor: 'grab',
+  } as any,
   watermark: {
     position: 'absolute',
     bottom: 10,
