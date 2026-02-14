@@ -36,6 +36,8 @@ export default function CelebrityMenuScreen() {
   const [copied, setCopied] = useState(false);
   const [eventViews, setEventViews] = useState<Record<string, number>>({});
   const [eventFilter, setEventFilter] = useState<FilterType>('live');
+  const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
+  const [isDeletingSelected, setIsDeletingSelected] = useState(false);
 
   const loadMyEvents = useCallback(async () => {
     try {
@@ -199,6 +201,51 @@ export default function CelebrityMenuScreen() {
     return 'scheduled';
   };
 
+  const endedEvents = myEvents.filter(e => getEventStatus(e) === 'ended');
+  const allEndedSelected = endedEvents.length > 0 && endedEvents.every(e => selectedEventIds.has(e.id));
+
+  const toggleSelectAll = () => {
+    if (allEndedSelected) {
+      setSelectedEventIds(new Set());
+    } else {
+      setSelectedEventIds(new Set(endedEvents.map(e => e.id)));
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedEventIds.size === 0) return;
+    const count = selectedEventIds.size;
+    showConfirm(
+      t('deleteEvent') || 'Supprimer',
+      `${t('deleteSelectedConfirm') || 'Supprimer'} ${count} ${t('events') || 'événement(s)'} ?`,
+      [
+        { text: t('cancel') || 'Annuler', style: 'cancel' },
+        {
+          text: t('delete') || 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            setIsDeletingSelected(true);
+            try {
+              await Promise.all(
+                Array.from(selectedEventIds).map(id => deleteEventSession(id))
+              );
+              if (Platform.OS !== 'web') {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              }
+              setSelectedEventIds(new Set());
+              loadMyEvents();
+            } catch (error) {
+              console.error('Bulk delete failed:', error);
+              showAlert(t('error') || 'Erreur', t('deleteFailed') || 'Échec de la suppression');
+            } finally {
+              setIsDeletingSelected(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const filteredEvents = myEvents.filter((event) => {
     if (eventFilter === 'all') return true;
     const status = getEventStatus(event);
@@ -304,6 +351,40 @@ export default function CelebrityMenuScreen() {
                     </Text>
                   </TouchableOpacity>
                 </View>
+                {eventFilter === 'ended' && endedEvents.length > 0 && (
+                  <View style={styles.bulkActionsRow}>
+                    <TouchableOpacity style={styles.selectAllBtn} onPress={toggleSelectAll}>
+                      {allEndedSelected ? (
+                        <Check size={16} color="#10B981" />
+                      ) : (
+                        <View style={styles.uncheckedBox} />
+                      )}
+                      <Text style={styles.selectAllText}>
+                        {allEndedSelected
+                          ? (t('deselectAll') || 'Tout désélectionner')
+                          : (t('selectAll') || 'Tout sélectionner')}
+                      </Text>
+                    </TouchableOpacity>
+                    {selectedEventIds.size > 0 && (
+                      <TouchableOpacity
+                        style={styles.deleteSelectedBtn}
+                        onPress={handleDeleteSelected}
+                        disabled={isDeletingSelected}
+                      >
+                        {isDeletingSelected ? (
+                          <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                          <>
+                            <Trash2 size={14} color="#fff" />
+                            <Text style={styles.deleteSelectedText}>
+                              {t('delete') || 'Supprimer'} ({selectedEventIds.size})
+                            </Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
                 <View style={styles.eventsList}>
                 {filteredEvents.map((event) => {
                   const isLiveVideo = event.event_type === 'live_video';
@@ -311,8 +392,31 @@ export default function CelebrityMenuScreen() {
                   const eventLive = isEventLive(event);
                   const currentStatus = getEventStatus(event);
                   return (
-                    <View key={event.id} style={styles.eventCard}>
+                    <TouchableOpacity
+                      key={event.id}
+                      style={[styles.eventCard, eventFilter === 'ended' && selectedEventIds.has(event.id) && styles.eventCardSelected]}
+                      activeOpacity={eventFilter === 'ended' ? 0.7 : 1}
+                      onPress={() => {
+                        if (eventFilter === 'ended') {
+                          setSelectedEventIds(prev => {
+                            const next = new Set(prev);
+                            if (next.has(event.id)) next.delete(event.id);
+                            else next.add(event.id);
+                            return next;
+                          });
+                        }
+                      }}
+                    >
                       <View style={styles.eventHeader}>
+                        {eventFilter === 'ended' && (
+                          <View style={styles.eventCheckbox}>
+                            {selectedEventIds.has(event.id) ? (
+                              <Check size={14} color="#fff" />
+                            ) : (
+                              <View style={styles.uncheckedBox} />
+                            )}
+                          </View>
+                        )}
                         <View style={styles.eventTypeBadges}>
                           <View style={[
                             styles.eventTypeBadge,
@@ -435,7 +539,7 @@ export default function CelebrityMenuScreen() {
                           </TouchableOpacity>
                         </View>
                       )}
-                    </View>
+                    </TouchableOpacity>
                   );
                 })}
               </View>
@@ -678,9 +782,54 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 5,
   },
+  eventCardSelected: {
+    borderWidth: 2,
+    borderColor: '#10B981',
+  },
   eventCardEnded: {
     backgroundColor: '#f3f4f6',
     opacity: 0.8,
+  },
+  bulkActionsRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  selectAllBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+  },
+  selectAllText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600' as const,
+  },
+  uncheckedBox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.5)',
+  },
+  eventCheckbox: {
+    marginRight: 8,
+  },
+  deleteSelectedBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  deleteSelectedText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600' as const,
   },
   eventHeader: {
     flexDirection: 'row',
