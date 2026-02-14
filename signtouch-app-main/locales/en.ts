@@ -850,6 +850,7 @@ export default {
   howItWorksEventStep1: 'Enter the event code',
   howItWorksEventStep2: 'Once the event starts, you will receive your dedications live',
   howItWorksEventStep3: 'You can then edit the dedications to personalize them',
+  rejoinEventMessage: 'Tap to rejoin the event',
   pleaseEnterName: 'Please enter a name',
   pleaseDrawSignature: 'Please draw a signature',
   cannotAddSigner: 'Unable to add signer',

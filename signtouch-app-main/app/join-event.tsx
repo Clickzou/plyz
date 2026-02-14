@@ -52,6 +52,10 @@ import {
   getOrCreateDeviceId,
   EventSession,
   EventSigner,
+  saveActiveFanEvent,
+  getActiveFanEvent,
+  clearActiveFanEvent,
+  ActiveFanEvent,
 } from '@/utils/eventSessionStorage';
 import BarCodeScannerWrapper, { requestCameraPermissionAsync, isBarCodeScannerAvailable } from '@/components/BarCodeScannerWrapper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -234,6 +238,7 @@ export default function JoinEventScreen() {
   const [eventPaymentConfig, setEventPaymentConfig] = useState<{priceCents: number, celebrityStripeAccountId?: string, celebrityName?: string} | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [eventPaid, setEventPaid] = useState(false);
+  const [activeFanEvent, setActiveFanEvent] = useState<ActiveFanEvent | null>(null);
   const signatureClipWidth = useSharedValue(0);
   const signatureOpacity = useSharedValue(0);
   const buttonPulse = useSharedValue(1);
@@ -359,6 +364,14 @@ export default function JoinEventScreen() {
       }
     };
     checkEventPaymentReturn();
+  }, []);
+
+  useEffect(() => {
+    if (!params.code && !params.paymentAuthorized) {
+      getActiveFanEvent().then(event => {
+        if (event) setActiveFanEvent(event);
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -759,6 +772,16 @@ export default function JoinEventScreen() {
           }
         }
       }
+      const signersJson = JSON.stringify(sessionSigners);
+      await saveActiveFanEvent({
+        sessionId: foundSession.id,
+        sessionTitle: foundSession.title,
+        joinCode: foundSession.join_code,
+        endsAt: foundSession.ends_at,
+        signers: signersJson,
+        savedAt: Date.now(),
+      });
+      setActiveFanEvent(null);
       router.push({
         pathname: '/event-gallery',
         params: {
@@ -766,7 +789,7 @@ export default function JoinEventScreen() {
           sessionTitle: foundSession.title,
           joinCode: foundSession.join_code,
           endsAt: foundSession.ends_at,
-          signers: JSON.stringify(sessionSigners),
+          signers: signersJson,
         }
       });
     }
@@ -1405,6 +1428,65 @@ export default function JoinEventScreen() {
           </View>
         ) : !foundEvent && !foundSession && !eventFull ? (
           <>
+            {activeFanEvent && (
+              <TouchableOpacity
+                style={styles.rejoinBanner}
+                onPress={async () => {
+                  try {
+                    const viewerId = await getOrCreateDeviceId();
+                    const storedPaid = await AsyncStorage.getItem(`@event_paid_${activeFanEvent.sessionId}`);
+                    if (storedPaid !== 'true' && STRIPE_SERVER_URL) {
+                      const checkRes = await fetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${activeFanEvent.sessionId}&fan_id=${viewerId}`);
+                      const checkData = await checkRes.json();
+                      if (!checkData.paid) {
+                        const payRes = await fetch(`${STRIPE_SERVER_URL}/api/get-event-payment-config?event_session_id=${activeFanEvent.sessionId}`);
+                        const payConfig = await payRes.json();
+                        if (payConfig.priceCents > 0) {
+                          await clearActiveFanEvent();
+                          setActiveFanEvent(null);
+                          setCode(activeFanEvent.joinCode);
+                          handleSearch(activeFanEvent.joinCode);
+                          return;
+                        }
+                      }
+                    }
+                    router.push({
+                      pathname: '/event-gallery',
+                      params: {
+                        sessionId: activeFanEvent.sessionId,
+                        sessionTitle: activeFanEvent.sessionTitle,
+                        joinCode: activeFanEvent.joinCode,
+                        endsAt: activeFanEvent.endsAt,
+                        signers: activeFanEvent.signers,
+                      },
+                    });
+                  } catch {
+                    router.push({
+                      pathname: '/event-gallery',
+                      params: {
+                        sessionId: activeFanEvent.sessionId,
+                        sessionTitle: activeFanEvent.sessionTitle,
+                        joinCode: activeFanEvent.joinCode,
+                        endsAt: activeFanEvent.endsAt,
+                        signers: activeFanEvent.signers,
+                      },
+                    });
+                  }
+                }}
+              >
+                <View style={styles.rejoinBannerContent}>
+                  <View style={styles.rejoinBannerLeft}>
+                    <View style={styles.rejoinLiveDot} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rejoinBannerTitle}>{activeFanEvent.sessionTitle}</Text>
+                      <Text style={styles.rejoinBannerSub}>{t('rejoinEventMessage') || 'Tap to rejoin the event'}</Text>
+                    </View>
+                  </View>
+                  <ArrowLeft size={20} color="#fff" style={{ transform: [{ rotate: '180deg' }] }} />
+                </View>
+              </TouchableOpacity>
+            )}
+
             <View style={styles.howItWorksSection}>
               <Text style={styles.howItWorksTitle}>{t('howItWorksTitle') || 'How does it work?'}</Text>
               <View style={styles.howItWorksSteps}>
@@ -1786,6 +1868,41 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '600', color: '#fff' },
   content: { flex: 1 },
   contentContainer: { padding: 20 },
+  rejoinBanner: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.5)',
+  },
+  rejoinBannerContent: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+  },
+  rejoinBannerLeft: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    flex: 1,
+    gap: 12,
+  },
+  rejoinLiveDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#10B981',
+  },
+  rejoinBannerTitle: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#fff',
+    marginBottom: 2,
+  },
+  rejoinBannerSub: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+  },
   howItWorksSection: {
     backgroundColor: 'rgba(16, 185, 129, 0.1)',
     borderRadius: 16,

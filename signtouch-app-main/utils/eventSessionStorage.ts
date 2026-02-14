@@ -771,3 +771,55 @@ export const getEventPublishedCount = async (eventId: string): Promise<number> =
   if (error) return 0;
   return count || 0;
 };
+
+const ACTIVE_FAN_EVENT_KEY = '@signtouch_active_fan_event';
+
+export interface ActiveFanEvent {
+  sessionId: string;
+  sessionTitle: string;
+  joinCode: string;
+  endsAt: string;
+  signers: string;
+  savedAt: number;
+}
+
+export const saveActiveFanEvent = async (event: ActiveFanEvent): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(ACTIVE_FAN_EVENT_KEY, JSON.stringify(event));
+  } catch (e) {
+    console.warn('[saveActiveFanEvent] Error:', e);
+  }
+};
+
+export const getActiveFanEvent = async (): Promise<ActiveFanEvent | null> => {
+  try {
+    const stored = await AsyncStorage.getItem(ACTIVE_FAN_EVENT_KEY);
+    if (!stored) return null;
+    const event: ActiveFanEvent = JSON.parse(stored);
+    if (new Date(event.endsAt) < new Date()) {
+      await AsyncStorage.removeItem(ACTIVE_FAN_EVENT_KEY);
+      return null;
+    }
+    const { data: session } = await supabase
+      .from('event_sessions')
+      .select('status')
+      .eq('id', event.sessionId)
+      .single();
+    if (!session || session.status === 'ended' || session.status === 'deleted') {
+      await AsyncStorage.removeItem(ACTIVE_FAN_EVENT_KEY);
+      return null;
+    }
+    return event;
+  } catch (e) {
+    console.warn('[getActiveFanEvent] Error:', e);
+    return null;
+  }
+};
+
+export const clearActiveFanEvent = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(ACTIVE_FAN_EVENT_KEY);
+  } catch (e) {
+    console.warn('[clearActiveFanEvent] Error:', e);
+  }
+};

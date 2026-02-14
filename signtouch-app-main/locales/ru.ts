@@ -847,6 +847,7 @@ export default {
   howItWorksEventStep1: 'Введите код мероприятия',
   howItWorksEventStep2: 'Как только мероприятие начнётся, вы получите свои посвящения в прямом эфире',
   howItWorksEventStep3: 'Затем вы можете редактировать посвящения, чтобы персонализировать их',
+  rejoinEventMessage: 'Нажмите, чтобы вернуться к событию',
   pleaseEnterName: 'Пожалуйста, введите имя',
   pleaseDrawSignature: 'Пожалуйста, нарисуйте подпись',
   cannotAddSigner: 'Невозможно добавить подписанта',

@@ -847,6 +847,7 @@ export default {
   howItWorksEventStep1: 'أدخل رمز الحدث',
   howItWorksEventStep2: 'بمجرد بدء الحدث، ستتلقى إهداءاتك مباشرة',
   howItWorksEventStep3: 'يمكنك بعد ذلك تعديل الإهداءات لتخصيصها',
+  rejoinEventMessage: 'انقر للعودة إلى الحدث',
   pleaseEnterName: 'يرجى إدخال اسم',
   pleaseDrawSignature: 'يرجى رسم التوقيع',
   cannotAddSigner: 'تعذر إضافة الموقّع',

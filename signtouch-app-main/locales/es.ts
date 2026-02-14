@@ -846,6 +846,7 @@ export default {
   howItWorksEventStep1: 'Ingresa el código del evento',
   howItWorksEventStep2: 'En cuanto comience el evento, recibirás tus dedicatorias en vivo',
   howItWorksEventStep3: 'Luego puedes editar las dedicatorias para personalizarlas',
+  rejoinEventMessage: 'Toca para volver al evento',
   pleaseEnterName: 'Por favor ingrese un nombre',
   pleaseDrawSignature: 'Por favor dibuje una firma',
   cannotAddSigner: 'No se puede agregar el firmante',

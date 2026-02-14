@@ -847,6 +847,7 @@ export default {
   howItWorksEventStep1: 'इवेंट कोड दर्ज करें',
   howItWorksEventStep2: 'जैसे ही इवेंट शुरू होता है, आपको लाइव में अपनी डेडिकेशन मिलेंगी',
   howItWorksEventStep3: 'फिर आप डेडिकेशन को व्यक्तिगत बनाने के लिए संपादित कर सकते हैं',
+  rejoinEventMessage: 'इवेंट में वापस जाने के लिए टैप करें',
   pleaseEnterName: 'कृपया एक नाम दर्ज करें',
   pleaseDrawSignature: 'कृपया एक हस्ताक्षर बनाएं',
   cannotAddSigner: 'हस्ताक्षरकर्ता जोड़ने में असमर्थ',

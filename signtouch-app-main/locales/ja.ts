@@ -847,6 +847,7 @@ export default {
   howItWorksEventStep1: 'イベントコードを入力',
   howItWorksEventStep2: 'イベントが始まると、リアルタイムでサインが届きます',
   howItWorksEventStep3: 'その後、サインを編集してカスタマイズできます',
+  rejoinEventMessage: 'タップしてイベントに戻る',
   pleaseEnterName: '名前を入力してください',
   pleaseDrawSignature: '署名を描いてください',
   cannotAddSigner: '署名者を追加できません',

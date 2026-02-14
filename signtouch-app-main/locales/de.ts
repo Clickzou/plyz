@@ -847,6 +847,7 @@ export default {
   howItWorksEventStep1: 'Gib den Event-Code ein',
   howItWorksEventStep2: 'Sobald das Event beginnt, erhältst du deine Widmungen live',
   howItWorksEventStep3: 'Du kannst die Widmungen dann bearbeiten, um sie zu personalisieren',
+  rejoinEventMessage: 'Tippen, um zum Event zurückzukehren',
   pleaseEnterName: 'Bitte geben Sie einen Namen ein',
   pleaseDrawSignature: 'Bitte zeichnen Sie eine Unterschrift',
   cannotAddSigner: 'Unterzeichner kann nicht hinzugefügt werden',

@@ -36,6 +36,7 @@ import {
   leaveEventSession,
   getOrCreateDeviceId,
   getActiveViewerCount,
+  clearActiveFanEvent,
 } from '@/utils/eventSessionStorage';
 import { saveMemory } from '@/utils/storageService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -336,6 +337,7 @@ export default function EventGalleryScreen() {
 
     if (diff <= 0) {
       setTimeRemaining(t('eventEnded') || 'Event ended');
+      clearActiveFanEvent();
       return;
     }
 
