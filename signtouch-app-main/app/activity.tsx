@@ -5,10 +5,12 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Newspaper, CheckCircle, Calendar, MessageSquare, Camera } from 'lucide-react-native';
+import { Newspaper, CheckCircle, Calendar, MessageSquare, Camera, Star, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
@@ -45,15 +47,39 @@ const FILTERS = [
   { key: 'event', label: 'filterEvents' },
 ] as const;
 
+const BANNER_DISMISSED_KEY = '@signtouch_celebrity_banner_dismissed';
+
 export default function ActivityScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { isCelebrity, toggleCelebrityMode } = useCelebrityMode();
   const [posts, setPosts] = useState<FeedPost[]>(DEMO_FEED);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(true);
+
+  useEffect(() => {
+    AsyncStorage.getItem(BANNER_DISMISSED_KEY).then(val => {
+      setBannerDismissed(val === 'true');
+    });
+  }, []);
+
+  const showBanner = !isCelebrity && !bannerDismissed;
+
+  const dismissBanner = async () => {
+    setBannerDismissed(true);
+    await AsyncStorage.setItem(BANNER_DISMISSED_KEY, 'true');
+  };
+
+  const handleActivateCelebrity = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    toggleCelebrityMode();
+  };
 
   const fetchFeed = useCallback(async (p = 1, reset = false) => {
     try {
@@ -184,6 +210,30 @@ export default function ActivityScreen() {
           renderItem={renderPost}
           keyExtractor={item => item.id}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: BOTTOM_NAV_HEIGHT + 20 }}
+          ListHeaderComponent={showBanner ? (
+            <View style={styles.celebrityBanner}>
+              <TouchableOpacity style={styles.bannerClose} onPress={dismissBanner} activeOpacity={0.7}>
+                <X size={16} color="#9ca3af" />
+              </TouchableOpacity>
+              <View style={styles.bannerContent}>
+                <View style={styles.bannerIconWrap}>
+                  <Star size={28} color="#f59e0b" fill="#f59e0b" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.bannerTitle}>{t('celebrityBannerTitle')}</Text>
+                  <Text style={styles.bannerDesc}>{t('celebrityBannerDesc')}</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.bannerButton}
+                onPress={handleActivateCelebrity}
+                activeOpacity={0.8}
+              >
+                <Star size={16} color="#000" fill="#000" />
+                <Text style={styles.bannerButtonText}>{t('celebrityBannerButton')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
           onRefresh={() => {
             setRefreshing(true);
             fetchFeed(1, true);
@@ -269,5 +319,67 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
     zIndex: 100,
+  },
+  celebrityBanner: {
+    backgroundColor: 'rgba(245,158,11,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.25)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    position: 'relative' as const,
+  },
+  bannerClose: {
+    position: 'absolute' as const,
+    top: 10,
+    right: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    zIndex: 2,
+  },
+  bannerContent: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+    marginBottom: 14,
+    paddingRight: 24,
+  },
+  bannerIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(245,158,11,0.15)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  bannerTitle: {
+    color: '#f59e0b',
+    fontSize: 16,
+    fontWeight: '700' as const,
+    marginBottom: 3,
+  },
+  bannerDesc: {
+    color: '#d1d5db',
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  bannerButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 8,
+    backgroundColor: '#f59e0b',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  bannerButtonText: {
+    color: '#000',
+    fontSize: 14,
+    fontWeight: '700' as const,
   },
 });
