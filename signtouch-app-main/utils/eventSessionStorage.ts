@@ -29,6 +29,25 @@ const getLocalEventIds = async (): Promise<string[]> => {
   }
 };
 
+const EVENT_PRICE_PREFIX = '@signtouch_event_price_';
+
+export const saveEventPrice = async (eventId: string, priceCents: number) => {
+  try {
+    await AsyncStorage.setItem(`${EVENT_PRICE_PREFIX}${eventId}`, priceCents.toString());
+  } catch (e) {
+    console.error('Error saving event price:', e);
+  }
+};
+
+export const getEventPrice = async (eventId: string): Promise<number | null> => {
+  try {
+    const val = await AsyncStorage.getItem(`${EVENT_PRICE_PREFIX}${eventId}`);
+    return val ? parseInt(val, 10) : null;
+  } catch (e) {
+    return null;
+  }
+};
+
 export const removeLocalEventId = async (eventId: string) => {
   try {
     const stored = await AsyncStorage.getItem(MY_EVENT_IDS_KEY);
@@ -231,10 +250,6 @@ export const createEventSession = async (
     created_by: creatorId || null,
   };
 
-  if (_priceCents && _priceCents > 0) {
-    insertData.price_cents = _priceCents;
-  }
-
   const { data, error } = await supabase
     .from('event_sessions')
     .insert(insertData)
@@ -369,6 +384,15 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
 
   const locallyDeleted = getLocallyDeletedEvents();
   const filteredData = allEvents.filter(event => !locallyDeleted.includes(event.id));
+  
+  for (const event of filteredData) {
+    if (!event.price_cents || event.price_cents === 0) {
+      const localPrice = await getEventPrice(event.id);
+      if (localPrice && localPrice > 0) {
+        event.price_cents = localPrice;
+      }
+    }
+  }
   
   console.log('[getMyScheduledEvents] Found', filteredData.length, 'events (filtered out', allEvents.length - filteredData.length, 'deleted)');
   

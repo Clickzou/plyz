@@ -50,7 +50,8 @@ import {
   getMyScheduledEvents,
   EventSession,
   EventSigner,
-  removeLocalEventId
+  removeLocalEventId,
+  saveEventPrice
 } from '@/utils/eventSessionStorage';
 
 const MY_EVENT_IDS_KEY = '@signtouch_my_event_ids';
@@ -263,6 +264,9 @@ export default function CreateEventScreen() {
       const priceCents = formData.selectedPriceCents > 0 ? formData.selectedPriceCents : undefined;
       const session = await createEventSession(formData.eventName.trim(), formData.selectedDuration, creatorId, scheduledStart, formData.eventLocation?.trim(), priceCents);
       await saveEventIdLocally(session.id);
+      if (priceCents && priceCents > 0) {
+        await saveEventPrice(session.id, priceCents);
+      }
       
       const addedSigners: EventSigner[] = [];
       for (const signer of validSigners) {
@@ -559,8 +563,12 @@ export default function CreateEventScreen() {
     try {
       const creatorId = user?.id || undefined;
       const scheduledStart = getScheduledStartDate();
-      const session = await createEventSession(eventName.trim(), selectedDuration, creatorId, scheduledStart, eventLocation?.trim(), selectedPriceCents > 0 ? selectedPriceCents : undefined);
+      const priceCentsVal = selectedPriceCents > 0 ? selectedPriceCents : undefined;
+      const session = await createEventSession(eventName.trim(), selectedDuration, creatorId, scheduledStart, eventLocation?.trim(), priceCentsVal);
       await saveEventIdLocally(session.id);
+      if (priceCentsVal && priceCentsVal > 0) {
+        await saveEventPrice(session.id, priceCentsVal);
+      }
       
       const addedSigners: EventSigner[] = [];
       for (const signer of validSigners) {
