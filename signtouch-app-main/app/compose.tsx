@@ -1350,13 +1350,41 @@ export default function ComposeScreen() {
       console.log('[Save] same?', uri === finalPhotoUri);
 
       if (Platform.OS === 'web') {
+        // Web: compress baseUri to reduce localStorage usage
+        let compressedBaseUri = finalPhotoUri as string;
+        try {
+          const baseImg = new window.Image();
+          compressedBaseUri = await new Promise<string>((res) => {
+            baseImg.onload = () => {
+              const maxW = 800;
+              const scale = Math.min(1, maxW / baseImg.width);
+              const c = document.createElement('canvas');
+              c.width = baseImg.width * scale;
+              c.height = baseImg.height * scale;
+              const cx = c.getContext('2d');
+              if (cx) {
+                cx.drawImage(baseImg, 0, 0, c.width, c.height);
+                res(c.toDataURL('image/jpeg', 0.8));
+              } else {
+                res(finalPhotoUri as string);
+              }
+            };
+            baseImg.onerror = () => res(finalPhotoUri as string);
+            baseImg.src = finalPhotoUri as string;
+          });
+        } catch (e) {
+          console.warn('BaseUri compression failed, using original');
+        }
+        console.log('[Save] compressedBaseUri starts:', compressedBaseUri?.substring(0, 80));
+        console.log('[Save] baseUri === uri?', compressedBaseUri === uri);
+
         // Web: utiliser localStorage avec gestion quota
         const timestamp = Date.now();
         const newMemoryId = `memory_${timestamp}.jpg`;
         const newMemory: Memory = {
           id: newMemoryId,
           uri: uri,
-          baseUri: finalPhotoUri as string,
+          baseUri: compressedBaseUri,
           timestamp: timestamp,
           signatureOverlays: signatureOverlays.length > 0 ? signatureOverlays : undefined,
           textOverlays: textOverlays.length > 0 ? textOverlays : undefined,

@@ -601,6 +601,68 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
     document.addEventListener('mouseup', handleMouseUp);
   }, [translateX, translateY, onPositionChange, overlay.id, onPress]);
 
+  const touchStartRef = useRef<{ dist: number; angle: number; scale: number; rotation: number; cx: number; cy: number; x: number; y: number } | null>(null);
+
+  const handleTouchStart = useCallback((e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onPress();
+    const touches = e.touches;
+    if (touches.length === 1) {
+      webDraggingRef.current = true;
+      webDragStartRef.current = { x: touches[0].clientX, y: touches[0].clientY };
+      webPosAtStartRef.current = { x: translateX.value, y: translateY.value };
+    } else if (touches.length === 2) {
+      webDraggingRef.current = false;
+      const t0 = touches[0];
+      const t1 = touches[1];
+      const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      const angle = Math.atan2(t1.clientY - t0.clientY, t1.clientX - t0.clientX);
+      touchStartRef.current = {
+        dist, angle,
+        scale: scale.value,
+        rotation: rotation.value,
+        cx: (t0.clientX + t1.clientX) / 2,
+        cy: (t0.clientY + t1.clientY) / 2,
+        x: translateX.value,
+        y: translateY.value,
+      };
+    }
+  }, [translateX, translateY, scale, rotation, onPress]);
+
+  const handleTouchMove = useCallback((e: any) => {
+    e.preventDefault();
+    const touches = e.touches;
+    if (touches.length === 1 && webDraggingRef.current) {
+      const dx = touches[0].clientX - webDragStartRef.current.x;
+      const dy = touches[0].clientY - webDragStartRef.current.y;
+      translateX.value = webPosAtStartRef.current.x + dx;
+      translateY.value = webPosAtStartRef.current.y + dy;
+    } else if (touches.length === 2 && touchStartRef.current) {
+      const t0 = touches[0];
+      const t1 = touches[1];
+      const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      const angle = Math.atan2(t1.clientY - t0.clientY, t1.clientX - t0.clientX);
+      const s = touchStartRef.current;
+      const newScale = Math.max(0.2, Math.min(5, s.scale * (dist / s.dist)));
+      scale.value = newScale;
+      const angleDiff = (angle - s.angle) * (180 / Math.PI);
+      rotation.value = s.rotation + angleDiff;
+    }
+  }, [translateX, translateY, scale, rotation]);
+
+  const handleTouchEnd = useCallback((e: any) => {
+    if (webDraggingRef.current) {
+      webDraggingRef.current = false;
+      onPositionChange(overlay.id, translateX.value, translateY.value);
+    }
+    if (touchStartRef.current) {
+      touchStartRef.current = null;
+      onScaleChange(overlay.id, scale.value);
+      onRotationChange(overlay.id, rotation.value);
+    }
+  }, [translateX, translateY, scale, rotation, onPositionChange, onScaleChange, onRotationChange, overlay.id]);
+
   const renderSvgContent = () => {
     if (svgInfo.svgData) {
       return (
@@ -673,6 +735,9 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
     return (
       <div
         onMouseDown={handleWebDragStart}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         style={{
           position: 'absolute',
           top: 0,
@@ -683,6 +748,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
           cursor: 'grab',
           zIndex: isSelected ? 1000 : 10,
           userSelect: 'none' as const,
+          touchAction: 'none' as const,
           border: isSelected ? '2px solid #10b981' : '2px solid transparent',
           borderRadius: 4,
         }}
@@ -924,6 +990,150 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
       ],
     };
   });
+
+  const [webPos, setWebPos] = useState({ x: overlay.x, y: overlay.y });
+  const [webScaleVal, setWebScaleVal] = useState(overlay.scale);
+  const [webRotVal, setWebRotVal] = useState(overlay.rotation);
+  const webDraggingRef = useRef(false);
+  const webDragStartRef = useRef({ x: 0, y: 0 });
+  const webPosAtStartRef = useRef({ x: 0, y: 0 });
+  const webRafRef = useRef<number | null>(null);
+  const textTouchStartRef = useRef<{ dist: number; angle: number; scale: number; rotation: number } | null>(null);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const sync = () => {
+      setWebPos({ x: translateX.value, y: translateY.value });
+      setWebScaleVal(scale.value);
+      setWebRotVal(rotation.value);
+      webRafRef.current = requestAnimationFrame(sync);
+    };
+    webRafRef.current = requestAnimationFrame(sync);
+    return () => { if (webRafRef.current) cancelAnimationFrame(webRafRef.current); };
+  }, [translateX, translateY, scale, rotation]);
+
+  if (Platform.OS === 'web') {
+    const handleMouseDown = (e: any) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onPress();
+      webDraggingRef.current = true;
+      webDragStartRef.current = { x: e.clientX, y: e.clientY };
+      webPosAtStartRef.current = { x: translateX.value, y: translateY.value };
+      const handleMouseMove = (me: MouseEvent) => {
+        if (!webDraggingRef.current) return;
+        translateX.value = webPosAtStartRef.current.x + (me.clientX - webDragStartRef.current.x);
+        translateY.value = webPosAtStartRef.current.y + (me.clientY - webDragStartRef.current.y);
+      };
+      const handleMouseUp = () => {
+        webDraggingRef.current = false;
+        onPositionChange(overlay.id, translateX.value, translateY.value);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    };
+    const handleTouchStart = (e: any) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onPress();
+      const touches = e.touches;
+      if (touches.length === 1) {
+        webDraggingRef.current = true;
+        webDragStartRef.current = { x: touches[0].clientX, y: touches[0].clientY };
+        webPosAtStartRef.current = { x: translateX.value, y: translateY.value };
+      } else if (touches.length === 2) {
+        webDraggingRef.current = false;
+        const t0 = touches[0]; const t1 = touches[1];
+        textTouchStartRef.current = {
+          dist: Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY),
+          angle: Math.atan2(t1.clientY - t0.clientY, t1.clientX - t0.clientX),
+          scale: scale.value,
+          rotation: rotation.value,
+        };
+      }
+    };
+    const handleTouchMove = (e: any) => {
+      e.preventDefault();
+      const touches = e.touches;
+      if (touches.length === 1 && webDraggingRef.current) {
+        translateX.value = webPosAtStartRef.current.x + (touches[0].clientX - webDragStartRef.current.x);
+        translateY.value = webPosAtStartRef.current.y + (touches[0].clientY - webDragStartRef.current.y);
+      } else if (touches.length === 2 && textTouchStartRef.current) {
+        const t0 = touches[0]; const t1 = touches[1];
+        const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+        const angle = Math.atan2(t1.clientY - t0.clientY, t1.clientX - t0.clientX);
+        const s = textTouchStartRef.current;
+        scale.value = Math.max(0.3, Math.min(5, s.scale * (dist / s.dist)));
+        rotation.value = s.rotation + (angle - s.angle) * (180 / Math.PI);
+      }
+    };
+    const handleTouchEnd = () => {
+      if (webDraggingRef.current) {
+        webDraggingRef.current = false;
+        onPositionChange(overlay.id, translateX.value, translateY.value);
+      }
+      if (textTouchStartRef.current) {
+        textTouchStartRef.current = null;
+        onScaleChange(overlay.id, scale.value);
+        onRotationChange(overlay.id, rotation.value);
+      }
+    };
+
+    return (
+      <div style={{ position: 'absolute', top: 0, left: 0, zIndex: isSelected ? 1000 : 10 }}>
+        <div
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{
+            transform: `translate(${webPos.x}px, ${webPos.y}px) scale(${webScaleVal}) rotate(${webRotVal}deg)`,
+            cursor: 'grab',
+            userSelect: 'none' as const,
+            touchAction: 'none' as const,
+            border: isSelected ? '2px solid #10b981' : '2px solid transparent',
+            borderRadius: 4,
+            padding: 4,
+          }}
+        >
+          <span style={{
+            fontFamily: mobileFontFamily,
+            fontSize: overlay.fontSize,
+            color: overlay.color,
+            fontWeight: 'bold',
+            textShadow: '2px 2px 5px rgba(0,0,0,0.75)',
+            whiteSpace: 'nowrap' as const,
+            pointerEvents: 'none' as const,
+          }}>
+            {overlay.text}
+          </span>
+        </div>
+        {isSelected && onFontPress && (
+          <div
+            onClick={(e) => { e.stopPropagation(); onFontPress(); }}
+            style={{
+              position: 'absolute',
+              top: -30,
+              right: -10,
+              backgroundColor: '#3b82f6',
+              borderRadius: 12,
+              width: 24,
+              height: 24,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 1001,
+            }}
+          >
+            <span style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>Aa</span>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <Animated.View style={[styles.textWrapper, { left: 0, top: 0 }, animatedStyle]} pointerEvents="box-none">
@@ -1203,9 +1413,9 @@ export default function ResultScreen() {
     }
   };
 
-  const hasBaseUri = memory ? !!memory.baseUri : false;
+  const hasBaseUri = memory ? !!(memory.baseUri && memory.baseUri !== memory.uri) : false;
   const displayUri = memory
-    ? (isEditMode && memory.baseUri ? memory.baseUri : memory.uri)
+    ? (isEditMode && hasBaseUri ? memory.baseUri! : memory.uri)
     : imageUri;
 
   if (memory) {
