@@ -264,6 +264,16 @@ export default function DedicationResultScreen() {
         celebrityName || 'Celebrity',
         (params.fanName as string) || 'Fan',
         params.sessionId as string || undefined,
+        undefined,
+        {
+          photoUri: photoUrl || undefined,
+          signaturePaths: signaturePaths.length > 0 ? signaturePaths : undefined,
+          signatureColor: signatureColor,
+          signatureX: sigTranslateX.value,
+          signatureY: sigTranslateY.value,
+          signatureScale: sigScale.value,
+          signatureRotation: sigRotation.value,
+        },
       );
 
       if (Platform.OS === 'web') {
@@ -443,6 +453,16 @@ export default function DedicationResultScreen() {
                 celebrityName || 'Celebrity',
                 (params.fanName as string) || 'Fan',
                 params.sessionId as string || undefined,
+                undefined,
+                {
+                  photoUri: photoUrl || undefined,
+                  signaturePaths: signaturePaths.length > 0 ? signaturePaths : undefined,
+                  signatureColor: signatureColor,
+                  signatureX: sigTranslateX.value,
+                  signatureY: sigTranslateY.value,
+                  signatureScale: sigScale.value,
+                  signatureRotation: sigRotation.value,
+                },
               );
             }
           } catch (e) {

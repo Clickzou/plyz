@@ -619,7 +619,7 @@ export default function GalleryScreen() {
                   activeOpacity={0.8}
                 >
                   <Image
-                    source={{ uri: item.imageUri }}
+                    source={{ uri: item.imageUri || item.uri }}
                     style={styles.storyImage}
                     resizeMode="cover"
                   />
@@ -824,7 +824,7 @@ export default function GalleryScreen() {
           {selectedCollectorItem && (
             <>
               <Image
-                source={{ uri: selectedCollectorItem.imageUri }}
+                source={{ uri: selectedCollectorItem.imageUri || selectedCollectorItem.uri }}
                 style={styles.fullscreenImage}
                 resizeMode="contain"
               />
@@ -847,16 +847,32 @@ export default function GalleryScreen() {
 
           <View style={[styles.modalFloatingControls, { paddingBottom: insets.bottom + 20 }]}>
             <TouchableOpacity
+              style={[styles.modalFloatingButton, { backgroundColor: '#8b5cf6' }]}
+              onPress={() => {
+                if (!selectedCollectorItem) return;
+                const item = selectedCollectorItem;
+                setSelectedCollectorItem(null);
+                router.push({
+                  pathname: '/collector-edit',
+                  params: { collectorId: item.id },
+                });
+              }}
+              activeOpacity={0.8}
+            >
+              <Pencil size={28} color="#ffffff" strokeWidth={2.5} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
               style={[styles.modalFloatingButton, styles.modalBlueButton]}
               onPress={async () => {
                 if (!selectedCollectorItem) return;
                 if (Platform.OS === 'web') {
-                  downloadImageWeb(selectedCollectorItem.imageUri, `dedication_${selectedCollectorItem.celebrityName}_${Date.now()}.jpg`);
+                  downloadImageWeb(selectedCollectorItem.imageUri || selectedCollectorItem.uri, `dedication_${selectedCollectorItem.celebrityName}_${Date.now()}.jpg`);
                 } else {
                   try {
                     const { status } = await MediaLibrary.requestPermissionsAsync();
                     if (status === 'granted') {
-                      await MediaLibrary.saveToLibraryAsync(selectedCollectorItem.imageUri);
+                      await MediaLibrary.saveToLibraryAsync(selectedCollectorItem.imageUri || selectedCollectorItem.uri);
                       showAlert(t('success'), t('dedicationSaved'));
                     }
                   } catch (err) {

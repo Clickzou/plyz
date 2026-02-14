@@ -895,6 +895,8 @@ export default {
   noPhoto: 'No photo',
   signatureColor: 'Signature color',
   dedicationGestureHint: 'Move, pinch to resize, two fingers to rotate',
+  editDedication: 'Edit Dedication',
+  dedicationNoEditHint: 'This dedication was saved before editing was available. New dedications can be fully edited.',
   dedicationSaved: 'Dedication saved to your gallery!',
   dedicationSaveError: 'Could not save the dedication.',
   adminDashboard: 'Dashboard',

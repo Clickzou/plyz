@@ -67,6 +67,15 @@ export const saveCollectorLive = async (
   fanName: string,
   sessionId?: string,
   sessionCode?: string,
+  rawData?: {
+    photoUri?: string;
+    signaturePaths?: string[];
+    signatureColor?: string;
+    signatureX?: number;
+    signatureY?: number;
+    signatureScale?: number;
+    signatureRotation?: number;
+  },
 ): Promise<CollectorLiveItem> => {
   const timestamp = Date.now();
   const id = `collector_${timestamp}`;
@@ -83,11 +92,13 @@ export const saveCollectorLive = async (
   const item: CollectorLiveItem = {
     id,
     uri: finalUri,
+    imageUri: finalUri,
     timestamp,
     celebrityName,
     fanName,
     sessionId,
     sessionCode,
+    ...(rawData || {}),
   };
 
   const items = await getAllCollectorLive();

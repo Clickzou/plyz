@@ -897,6 +897,8 @@ export default {
   noPhoto: 'Pas de photo',
   signatureColor: 'Couleur de la signature',
   dedicationGestureHint: 'Déplacez, pincez pour redimensionner, deux doigts pour pivoter',
+  editDedication: 'Éditer la dédicace',
+  dedicationNoEditHint: 'Cette dédicace a été sauvegardée avant que l\'édition soit disponible. Les nouvelles dédicaces peuvent être entièrement éditées.',
   dedicationSaved: 'Dédicace sauvegardée dans votre galerie !',
   dedicationSaveError: 'Impossible de sauvegarder la dédicace.',
   adminDashboard: 'Tableau de bord',
