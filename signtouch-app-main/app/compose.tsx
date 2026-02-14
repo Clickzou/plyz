@@ -83,7 +83,6 @@ interface AnimatedSignatureProps {
 }
 
 function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelected, gesture }: AnimatedSignatureProps) {
-  console.log(`[AnimatedSignature] RENDER idx=${index} transform exists:`, !!transform, 'translateX:', transform?.translateX?.value);
   const [imageDimensions, setImageDimensions] = useState({ width: 150, height: 80 });
   const [svgData, setSvgData] = useState<any>(null);
   const [parsedPaths, setParsedPaths] = useState<Array<{ d: string; isDot: boolean }>>([]);
@@ -605,8 +604,10 @@ export default function ComposeScreen() {
   const signatureTransformsRef = useRef<SignatureTransform[]>([]);
   const getOrCreateSignatureTransform = (index: number): SignatureTransform => {
     if (!signatureTransformsRef.current[index]) {
-      const initX = SCREEN_WIDTH / 2 - 60 + index * 50;
-      const initY = SCREEN_HEIGHT / 2 - 60 + index * 50;
+      const containerW = Platform.OS === 'web' ? Math.min(SCREEN_WIDTH, 420) : SCREEN_WIDTH;
+      const containerH = Platform.OS === 'web' ? Math.min(SCREEN_HEIGHT, 700) : SCREEN_HEIGHT;
+      const initX = containerW / 2 - 60 + index * 30;
+      const initY = containerH / 3 + index * 40;
       signatureTransformsRef.current[index] = {
         scale: makeMutable(1.5),
         savedScale: makeMutable(1.5),
@@ -1307,10 +1308,8 @@ export default function ComposeScreen() {
             style={styles.photo}
             resizeMode="cover"
           />
-          {(() => { console.log('[Compose RENDER] signatureUris.length:', signatureUris.length); return null; })()}
           {signatureUris.map((uri: string, index: number) => {
             const transform = getOrCreateSignatureTransform(index);
-            console.log(`[Compose MAP] idx=${index} transform:`, !!transform, 'tx:', transform?.translateX?.value);
             const gesture = createGesture(transform, index);
             const strokeScale = signatureStrokeScales[index] || 1.0;
             const color = signatureColors[index];
