@@ -1195,11 +1195,11 @@ export default function StoryScreen() {
           const memories = await getAllMemories();
           const memory = memories.find(m => m.id === sourceMemoryId);
           if (memory) {
-            const hasBaseUri = memory.baseUri && memory.baseUri !== memory.uri;
+            const hasBaseUri = !!(memory.baseUri && memory.baseUri !== memory.uri);
             setImageUri(hasBaseUri ? memory.baseUri : memory.uri);
-            const sigs = memory.signatureOverlays || [];
-            const txts = memory.textOverlays || [];
-            console.log('📥 Story loaded from memory:', { sigCount: sigs.length, txtCount: txts.length });
+            const sigs = hasBaseUri ? (memory.signatureOverlays || []) : [];
+            const txts = hasBaseUri ? (memory.textOverlays || []) : [];
+            console.log('📥 Story loaded from memory:', { sigCount: sigs.length, txtCount: txts.length, hasBaseUri });
             if (sigs.length > 0) {
               console.log('📥 First signature from memory:', { id: sigs[0].id, uri: sigs[0].uri?.substring(0, 50), color: sigs[0].color });
             }
