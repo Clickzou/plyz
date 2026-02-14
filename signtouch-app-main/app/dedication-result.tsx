@@ -174,10 +174,9 @@ export default function DedicationResultScreen() {
     ],
   }));
 
-  const webTouchRef = useRef<View>(null);
+  const webPhotoTouchRef = useRef<View>(null);
   const webTouchState = useRef<{
     startX: number; startY: number;
-    lastX: number; lastY: number;
     baseTX: number; baseTY: number;
     baseScale: number; baseDist: number;
     baseRotation: number; baseAngle: number;
@@ -193,16 +192,15 @@ export default function DedicationResultScreen() {
     return Math.atan2(t[1].clientY - t[0].clientY, t[1].clientX - t[0].clientX);
   };
 
-  useEffect(() => {
-    if (Platform.OS !== 'web') return;
-    const el = (webTouchRef.current as any)?._nativeTag || (webTouchRef.current as any);
+  const attachWebTouch = useCallback((node: any) => {
+    if (Platform.OS !== 'web' || !node) return;
     let domEl: HTMLElement | null = null;
-    if (el instanceof HTMLElement) {
-      domEl = el;
-    } else if (webTouchRef.current) {
+    if (node instanceof HTMLElement) {
+      domEl = node;
+    } else {
       try {
         const findDOMNode = require('react-dom').findDOMNode;
-        domEl = findDOMNode(webTouchRef.current) as HTMLElement;
+        domEl = findDOMNode(node) as HTMLElement;
       } catch (e) {}
     }
     if (!domEl) return;
@@ -213,7 +211,6 @@ export default function DedicationResultScreen() {
       const t = ev.touches[0];
       webTouchState.current = {
         startX: t.clientX, startY: t.clientY,
-        lastX: t.clientX, lastY: t.clientY,
         baseTX: sigTranslateX.value, baseTY: sigTranslateY.value,
         baseScale: sigScale.value, baseDist: 0,
         baseRotation: sigRotation.value, baseAngle: 0,
@@ -252,21 +249,39 @@ export default function DedicationResultScreen() {
         webTouchState.current = null;
       }
     };
+    const onMouseDown = (ev: MouseEvent) => {
+      ev.preventDefault();
+      webTouchState.current = {
+        startX: ev.clientX, startY: ev.clientY,
+        baseTX: sigTranslateX.value, baseTY: sigTranslateY.value,
+        baseScale: sigScale.value, baseDist: 0,
+        baseRotation: sigRotation.value, baseAngle: 0,
+        fingers: 1,
+      };
+      const onMouseMove = (me: MouseEvent) => {
+        if (!webTouchState.current) return;
+        sigTranslateX.value = webTouchState.current.baseTX + (me.clientX - webTouchState.current.startX);
+        sigTranslateY.value = webTouchState.current.baseTY + (me.clientY - webTouchState.current.startY);
+      };
+      const onMouseUp = () => {
+        webTouchState.current = null;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    };
 
     domEl.addEventListener('touchstart', onTouchStart, { passive: false });
     domEl.addEventListener('touchmove', onTouchMove, { passive: false });
     domEl.addEventListener('touchend', onTouchEnd, { passive: false });
     domEl.addEventListener('touchcancel', onTouchEnd, { passive: false });
+    domEl.addEventListener('mousedown', onMouseDown);
     domEl.style.touchAction = 'none';
     domEl.style.userSelect = 'none';
-
-    return () => {
-      domEl!.removeEventListener('touchstart', onTouchStart);
-      domEl!.removeEventListener('touchmove', onTouchMove);
-      domEl!.removeEventListener('touchend', onTouchEnd);
-      domEl!.removeEventListener('touchcancel', onTouchEnd);
-    };
-  }, [signaturePaths]);
+    (domEl.style as any).webkitUserSelect = 'none';
+    domEl.style.cursor = 'grab';
+  }, []);
 
   const handleResetPosition = () => {
     sigTranslateX.value = withSpring(0);
@@ -461,7 +476,7 @@ export default function DedicationResultScreen() {
       </View>
 
       <View style={styles.photoWrapper}>
-        <View ref={webCaptureRef} collapsable={false} style={styles.captureArea}>
+        <View ref={(node) => { webCaptureRef.current = node; if (Platform.OS === 'web') attachWebTouch(node); }} collapsable={false} style={styles.captureArea}>
           {photoUrl ? (
             <Image source={{ uri: photoUrl }} style={styles.photo} resizeMode="cover" />
           ) : (
@@ -470,22 +485,21 @@ export default function DedicationResultScreen() {
             </View>
           )}
 
-          <View style={styles.textOverlay}>
+          <View style={[styles.textOverlay, Platform.OS === 'web' && { pointerEvents: 'none' } as any]}>
             <Text style={styles.dedicationForText}>{getDedicationFor()}</Text>
             <Text style={styles.dedicationDateText}>{formatDate()}</Text>
           </View>
 
-          <View style={styles.liveBadge}>
+          <View style={[styles.liveBadge, Platform.OS === 'web' && { pointerEvents: 'none' } as any]}>
             <View style={styles.liveBadgeDot} />
             <Text style={styles.liveBadgeText}>LIVE {celebrityName}</Text>
           </View>
 
           {Platform.OS === 'web' ? (
             <Animated.View
-              ref={webTouchRef as any}
-              style={[styles.signatureContainer, styles.signatureTouchArea, { width: PHOTO_WIDTH * 0.7 + 30, height: PHOTO_WIDTH * 0.35 + 30 }, signatureAnimatedStyle]}
+              style={[styles.signatureContainer, { width: PHOTO_WIDTH * 0.7, height: PHOTO_WIDTH * 0.35, pointerEvents: 'none' } as any, signatureAnimatedStyle]}
             >
-              <Svg width={PHOTO_WIDTH * 0.7} height={PHOTO_WIDTH * 0.35} viewBox={`0 0 ${SCREEN_WIDTH - 100} ${(SCREEN_WIDTH - 100) * 0.5}`}>
+              <Svg width="100%" height="100%" viewBox={`0 0 ${SCREEN_WIDTH - 100} ${(SCREEN_WIDTH - 100) * 0.5}`}>
                 <Rect x="0" y="0" width={SCREEN_WIDTH - 100} height={(SCREEN_WIDTH - 100) * 0.5} fill="transparent" />
                 {signaturePaths.map((p, i) => (
                   <Path
@@ -521,7 +535,7 @@ export default function DedicationResultScreen() {
             </GestureDetector>
           )}
 
-          <View style={styles.watermark}>
+          <View style={[styles.watermark, Platform.OS === 'web' && { pointerEvents: 'none' } as any]}>
             <Text style={styles.watermarkText}>SignTouch</Text>
           </View>
         </View>
@@ -706,13 +720,6 @@ const styles = StyleSheet.create({
     top: 0,
     zIndex: 10,
   },
-  signatureTouchArea: {
-    left: (PHOTO_WIDTH - PHOTO_WIDTH * 0.7 - 30) / 2,
-    padding: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    cursor: 'grab',
-  } as any,
   watermark: {
     position: 'absolute',
     bottom: 10,
