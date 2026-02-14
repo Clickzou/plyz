@@ -60,16 +60,26 @@ interface FilteredImageProps {
 function FilteredImage({ uri, brightness, contrast, saturation, style }: FilteredImageProps) {
   if (Platform.OS === 'web') {
     return (
-      <Image
-        source={{ uri }}
-        style={[
-          style,
-          {
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: 'hidden',
+      }}>
+        <img
+          key={uri.substring(uri.length - 30)}
+          src={uri}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover' as const,
+            display: 'block',
             filter: `brightness(${100 + brightness}%) contrast(${100 + contrast}%) saturate(${100 + saturation}%)`,
-          } as any
-        ]}
-        resizeMode="cover"
-      />
+          }}
+        />
+      </div>
     );
   }
 
@@ -559,6 +569,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
   const webDraggingRef = useRef(false);
   const webDragStartRef = useRef({ x: 0, y: 0 });
   const webPosAtStartRef = useRef({ x: 0, y: 0 });
+  const webTouchRef = useRef<{ initialDist: number; initialAngle: number; initialScale: number; initialRotation: number } | null>(null);
 
   const webRafRef = useRef<number | null>(null);
 
@@ -600,6 +611,63 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
   }, [translateX, translateY, onPositionChange, overlay.id, onPress]);
+
+  const handleWebTouchStart = useCallback((e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const touches = e.touches;
+    if (touches.length === 1) {
+      onPress();
+      webDraggingRef.current = true;
+      webDragStartRef.current = { x: touches[0].clientX, y: touches[0].clientY };
+      webPosAtStartRef.current = { x: translateX.value, y: translateY.value };
+    } else if (touches.length === 2) {
+      const t0 = touches[0];
+      const t1 = touches[1];
+      const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      const angle = Math.atan2(t1.clientY - t0.clientY, t1.clientX - t0.clientX);
+      webTouchRef.current = {
+        initialDist: dist,
+        initialAngle: angle,
+        initialScale: scale.value,
+        initialRotation: rotation.value,
+      };
+      webDraggingRef.current = false;
+    }
+  }, [translateX, translateY, scale, rotation, onPress]);
+
+  const handleWebTouchMove = useCallback((e: any) => {
+    e.preventDefault();
+    const touches = e.touches;
+    if (touches.length === 1 && webDraggingRef.current) {
+      const dx = touches[0].clientX - webDragStartRef.current.x;
+      const dy = touches[0].clientY - webDragStartRef.current.y;
+      translateX.value = webPosAtStartRef.current.x + dx;
+      translateY.value = webPosAtStartRef.current.y + dy;
+    } else if (touches.length === 2 && webTouchRef.current) {
+      const t0 = touches[0];
+      const t1 = touches[1];
+      const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      const angle = Math.atan2(t1.clientY - t0.clientY, t1.clientX - t0.clientX);
+      const scaleFactor = dist / webTouchRef.current.initialDist;
+      const newScale = Math.max(0.2, Math.min(5, webTouchRef.current.initialScale * scaleFactor));
+      scale.value = newScale;
+      const angleDiff = (angle - webTouchRef.current.initialAngle) * (180 / Math.PI);
+      rotation.value = webTouchRef.current.initialRotation + angleDiff;
+    }
+  }, [translateX, translateY, scale, rotation]);
+
+  const handleWebTouchEnd = useCallback((e: any) => {
+    if (webDraggingRef.current) {
+      webDraggingRef.current = false;
+      onPositionChange(overlay.id, translateX.value, translateY.value);
+    }
+    if (webTouchRef.current) {
+      onScaleChange(overlay.id, scale.value);
+      onRotationChange(overlay.id, rotation.value);
+      webTouchRef.current = null;
+    }
+  }, [translateX, translateY, scale, rotation, onPositionChange, onScaleChange, onRotationChange, overlay.id]);
 
   const renderSvgContent = () => {
     if (svgInfo.svgData) {
@@ -673,6 +741,9 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
     return (
       <div
         onMouseDown={handleWebDragStart}
+        onTouchStart={handleWebTouchStart}
+        onTouchMove={handleWebTouchMove}
+        onTouchEnd={handleWebTouchEnd}
         style={{
           position: 'absolute',
           top: 0,
@@ -683,6 +754,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
           cursor: 'grab',
           zIndex: isSelected ? 1000 : 10,
           userSelect: 'none' as const,
+          touchAction: 'none' as const,
           border: isSelected ? '2px solid #10b981' : '2px solid transparent',
           borderRadius: 4,
         }}
@@ -924,6 +996,156 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
       ],
     };
   });
+
+  const [webPos, setWebPos] = useState({ x: overlay.x, y: overlay.y });
+  const [webScaleVal, setWebScaleVal] = useState(overlay.scale);
+  const [webRotVal, setWebRotVal] = useState(overlay.rotation);
+  const webDraggingRef = useRef(false);
+  const webDragStartRef = useRef({ x: 0, y: 0 });
+  const webPosAtStartRef = useRef({ x: 0, y: 0 });
+  const webTouchRef = useRef<{ initialDist: number; initialAngle: number; initialScale: number; initialRotation: number } | null>(null);
+  const webRafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const sync = () => {
+      setWebPos({ x: translateX.value, y: translateY.value });
+      setWebScaleVal(scale.value);
+      setWebRotVal(rotation.value);
+      webRafRef.current = requestAnimationFrame(sync);
+    };
+    webRafRef.current = requestAnimationFrame(sync);
+    return () => { if (webRafRef.current) cancelAnimationFrame(webRafRef.current); };
+  }, [translateX, translateY, scale, rotation]);
+
+  const handleTextMouseDown = useCallback((e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onPress();
+    webDraggingRef.current = true;
+    webDragStartRef.current = { x: e.clientX, y: e.clientY };
+    webPosAtStartRef.current = { x: translateX.value, y: translateY.value };
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!webDraggingRef.current) return;
+      translateX.value = webPosAtStartRef.current.x + (moveEvent.clientX - webDragStartRef.current.x);
+      translateY.value = webPosAtStartRef.current.y + (moveEvent.clientY - webDragStartRef.current.y);
+    };
+    const handleMouseUp = () => {
+      webDraggingRef.current = false;
+      onPositionChange(overlay.id, translateX.value, translateY.value);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [translateX, translateY, onPositionChange, overlay.id, onPress]);
+
+  const handleTextTouchStart = useCallback((e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const touches = e.touches;
+    if (touches.length === 1) {
+      onPress();
+      webDraggingRef.current = true;
+      webDragStartRef.current = { x: touches[0].clientX, y: touches[0].clientY };
+      webPosAtStartRef.current = { x: translateX.value, y: translateY.value };
+    } else if (touches.length === 2) {
+      const t0 = touches[0]; const t1 = touches[1];
+      webTouchRef.current = {
+        initialDist: Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY),
+        initialAngle: Math.atan2(t1.clientY - t0.clientY, t1.clientX - t0.clientX),
+        initialScale: scale.value,
+        initialRotation: rotation.value,
+      };
+      webDraggingRef.current = false;
+    }
+  }, [translateX, translateY, scale, rotation, onPress]);
+
+  const handleTextTouchMove = useCallback((e: any) => {
+    e.preventDefault();
+    const touches = e.touches;
+    if (touches.length === 1 && webDraggingRef.current) {
+      translateX.value = webPosAtStartRef.current.x + (touches[0].clientX - webDragStartRef.current.x);
+      translateY.value = webPosAtStartRef.current.y + (touches[0].clientY - webDragStartRef.current.y);
+    } else if (touches.length === 2 && webTouchRef.current) {
+      const t0 = touches[0]; const t1 = touches[1];
+      const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      const angle = Math.atan2(t1.clientY - t0.clientY, t1.clientX - t0.clientX);
+      scale.value = Math.max(0.3, Math.min(5, webTouchRef.current.initialScale * (dist / webTouchRef.current.initialDist)));
+      rotation.value = webTouchRef.current.initialRotation + (angle - webTouchRef.current.initialAngle) * (180 / Math.PI);
+    }
+  }, [translateX, translateY, scale, rotation]);
+
+  const handleTextTouchEnd = useCallback((e: any) => {
+    if (webDraggingRef.current) {
+      webDraggingRef.current = false;
+      onPositionChange(overlay.id, translateX.value, translateY.value);
+    }
+    if (webTouchRef.current) {
+      onScaleChange(overlay.id, scale.value);
+      onRotationChange(overlay.id, rotation.value);
+      webTouchRef.current = null;
+    }
+  }, [translateX, translateY, scale, rotation, onPositionChange, onScaleChange, onRotationChange, overlay.id]);
+
+  if (Platform.OS === 'web') {
+    return (
+      <div
+        onMouseDown={handleTextMouseDown}
+        onTouchStart={handleTextTouchStart}
+        onTouchMove={handleTextTouchMove}
+        onTouchEnd={handleTextTouchEnd}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          transform: `translate(${webPos.x}px, ${webPos.y}px) scale(${webScaleVal}) rotate(${webRotVal}deg)`,
+          cursor: 'grab',
+          zIndex: isSelected ? 1000 : 10,
+          userSelect: 'none' as const,
+          touchAction: 'none' as const,
+          border: isSelected ? '2px solid #10b981' : '2px solid transparent',
+          borderRadius: 4,
+          padding: 4,
+        }}
+      >
+        <span style={{
+          fontFamily: overlay.fontFamily,
+          fontSize: overlay.fontSize,
+          color: overlay.color,
+          fontWeight: 'bold',
+          textShadow: '2px 2px 5px rgba(0,0,0,0.75)',
+          whiteSpace: 'nowrap' as const,
+        }}>
+          {overlay.text}
+        </span>
+        {isSelected && onFontPress && (
+          <div
+            onMouseDown={(e) => { e.stopPropagation(); onFontPress(); }}
+            onTouchStart={(e) => { e.stopPropagation(); onFontPress(); }}
+            style={{
+              position: 'absolute',
+              top: -30,
+              right: -10,
+              backgroundColor: '#10b981',
+              borderRadius: 12,
+              width: 24,
+              height: 24,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              fontSize: 12,
+              color: 'white',
+              fontWeight: 'bold',
+            }}
+          >
+            Aa
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <Animated.View style={[styles.textWrapper, { left: 0, top: 0 }, animatedStyle]} pointerEvents="box-none">
@@ -1685,20 +1907,138 @@ export default function ResultScreen() {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       if (Platform.OS === 'web') {
-        // Sur le web : on ne fait PAS de captureRef (findNodeHandle non supporté)
         console.log('💾 Saving memory with', signatureOverlays.length, 'signatures');
-        signatureOverlays.forEach((overlay, idx) => {
-          console.log(`  Signature ${idx}:`, {
-            id: overlay.id,
-            color: overlay.color,
-            x: overlay.x,
-            y: overlay.y,
-            uriStart: overlay.uri.substring(0, 100)
-          });
-        });
+
+        const baseImageUri = memory.baseUri || memory.uri;
+        let bakedUri = memory.uri;
+
+        try {
+          const loadImage = (src: string): Promise<HTMLImageElement> => {
+            return new Promise((resolve, reject) => {
+              const img = new window.Image();
+              img.onload = () => resolve(img);
+              img.onerror = () => reject(new Error('Failed to load: ' + src.substring(0, 50)));
+              img.src = src;
+            });
+          };
+
+          const photoImg = await loadImage(baseImageUri);
+          const naturalW = photoImg.naturalWidth || photoImg.width;
+          const naturalH = photoImg.naturalHeight || photoImg.height;
+          const maxDim = 800;
+          const imgScale = Math.min(1, maxDim / Math.max(naturalW, naturalH));
+          const canvasW = Math.round(naturalW * imgScale);
+          const canvasH = Math.round(naturalH * imgScale);
+
+          const containerWidth = Math.min(window.innerWidth, 420);
+          const containerHeight = window.innerHeight;
+          const coordScaleX = canvasW / containerWidth;
+          const coordScaleY = canvasH / containerHeight;
+
+          const canvas = document.createElement('canvas');
+          canvas.width = canvasW;
+          canvas.height = canvasH;
+          const ctx = canvas.getContext('2d');
+
+          if (ctx) {
+            const br = brightness || 0;
+            const co = contrast || 0;
+            const sa = saturation || 0;
+            if (br !== 0 || co !== 0 || sa !== 0) {
+              (ctx as any).filter = `brightness(${100 + br}%) contrast(${100 + co}%) saturate(${100 + sa}%)`;
+            }
+            ctx.drawImage(photoImg, 0, 0, canvasW, canvasH);
+            (ctx as any).filter = 'none';
+
+            const sigImages: { img: HTMLImageElement; overlay: SignatureOverlay; baseW: number; baseH: number }[] = [];
+            for (const overlay of signatureOverlays) {
+              let baseW = 150;
+              let baseH = 80;
+              if (overlay.uri.startsWith('data:image/svg+xml;base64,')) {
+                try {
+                  const b64 = overlay.uri.split(',')[1];
+                  const raw = decodeURIComponent(escape(atob(b64)));
+                  const wm = raw.match(/width="([^"]+)"/);
+                  const hm = raw.match(/height="([^"]+)"/);
+                  if (wm && hm) {
+                    const svgW = parseFloat(wm[1]);
+                    const svgH = parseFloat(hm[1]);
+                    baseW = Math.min(svgW, 200);
+                    baseH = baseW / (svgW / svgH);
+                  }
+                } catch (e) {}
+              }
+              try {
+                const img = await loadImage(overlay.uri);
+                sigImages.push({ img, overlay, baseW, baseH });
+              } catch (e) {
+                console.warn('Skip signature load:', e);
+              }
+            }
+
+            sigImages.forEach(({ img: sigImg, overlay, baseW, baseH }) => {
+              const tx = overlay.x * coordScaleX;
+              const ty = overlay.y * coordScaleY;
+              const rot = (overlay.rotation * Math.PI) / 180;
+              const avgScale = (coordScaleX + coordScaleY) / 2;
+              const sc = overlay.scale * avgScale;
+
+              ctx.save();
+              ctx.translate(tx, ty);
+              ctx.rotate(rot);
+              ctx.scale(sc, sc);
+
+              if (overlay.color && overlay.color !== '#ffffff') {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = baseW * 2;
+                tempCanvas.height = baseH * 2;
+                const tempCtx = tempCanvas.getContext('2d');
+                if (tempCtx) {
+                  tempCtx.drawImage(sigImg, 0, 0, tempCanvas.width, tempCanvas.height);
+                  tempCtx.globalCompositeOperation = 'source-in';
+                  tempCtx.fillStyle = overlay.color;
+                  tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                  ctx.drawImage(tempCanvas, 0, 0, baseW, baseH);
+                }
+              } else {
+                ctx.drawImage(sigImg, 0, 0, baseW, baseH);
+              }
+              ctx.restore();
+            });
+
+            textOverlays.forEach((overlay) => {
+              const tx = overlay.x * coordScaleX;
+              const ty = overlay.y * coordScaleY;
+              const rot = (overlay.rotation * Math.PI) / 180;
+              const avgScale = (coordScaleX + coordScaleY) / 2;
+              const sc = overlay.scale * avgScale;
+              const fontSize = (overlay.fontSize || 32) * sc;
+
+              ctx.save();
+              ctx.translate(tx, ty);
+              ctx.rotate(rot);
+              ctx.font = `bold ${fontSize}px ${overlay.fontFamily || 'System'}`;
+              ctx.fillStyle = overlay.color || '#ffffff';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+              ctx.shadowBlur = 5;
+              ctx.shadowOffsetX = 2;
+              ctx.shadowOffsetY = 2;
+              ctx.fillText(overlay.text, 0, 0);
+              ctx.restore();
+            });
+
+            bakedUri = canvas.toDataURL('image/jpeg', 0.8);
+          }
+        } catch (e) {
+          console.error('❌ Canvas bake error:', e);
+        }
 
         const updatedMemory: Memory = {
           ...memory,
+          uri: bakedUri,
+          baseUri: baseImageUri,
           signatureOverlays,
           textOverlays,
           adjustments:
@@ -1709,13 +2049,8 @@ export default function ResultScreen() {
           isEdited: true,
         };
 
-        console.log('📤 Sending to updateMemory:', {
-          id: updatedMemory.id,
-          overlaysCount: updatedMemory.signatureOverlays?.length || 0,
-          overlays: updatedMemory.signatureOverlays?.map(o => ({ id: o.id, color: o.color }))
-        });
-
         await updateMemory(updatedMemory);
+        setMemory(updatedMemory);
         setSaving(false);
         return;
       }
