@@ -289,6 +289,8 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
     userId = user?.id;
   }
 
+  console.log('[getMyScheduledEvents] userId:', userId);
+
   let allEvents: EventSession[] = [];
 
   if (userId) {
@@ -300,6 +302,7 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
       .order('starts_at', { ascending: true });
 
     if (!error && data) {
+      console.log('[getMyScheduledEvents] Found', data.length, 'events by user ID');
       allEvents = data;
     } else if (error) {
       console.error('Error fetching scheduled events by user:', error);
@@ -307,9 +310,11 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
   }
 
   const localIds = await getLocalEventIds();
+  console.log('[getMyScheduledEvents] Local IDs:', localIds.length, localIds);
   const existingEventIds = new Set(allEvents.map(e => e.id));
   const missingLocalIds = localIds.filter(id => !existingEventIds.has(id));
   if (missingLocalIds.length > 0) {
+    console.log('[getMyScheduledEvents] Fetching', missingLocalIds.length, 'missing local events');
     const { data: localEvents, error: localError } = await supabase
       .from('event_sessions')
       .select('*')
@@ -317,6 +322,7 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
       .in('status', ['scheduled', 'active', 'live', 'ended']);
 
     if (!localError && localEvents) {
+      console.log('[getMyScheduledEvents] Found', localEvents.length, 'local events from DB');
       allEvents = [...allEvents, ...localEvents];
     } else if (localError) {
       console.error('Error fetching local events:', localError);

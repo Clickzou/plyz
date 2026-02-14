@@ -49,8 +49,24 @@ import {
   startScheduledEvent,
   getMyScheduledEvents,
   EventSession,
-  EventSigner 
+  EventSigner,
+  removeLocalEventId
 } from '@/utils/eventSessionStorage';
+
+const MY_EVENT_IDS_KEY = '@signtouch_my_event_ids';
+const saveEventIdLocally = async (eventId: string) => {
+  try {
+    const stored = await AsyncStorage.getItem(MY_EVENT_IDS_KEY);
+    const ids: string[] = stored ? JSON.parse(stored) : [];
+    if (!ids.includes(eventId)) {
+      ids.push(eventId);
+      await AsyncStorage.setItem(MY_EVENT_IDS_KEY, JSON.stringify(ids));
+    }
+    console.log('[create-event] Saved event ID locally:', eventId, 'total:', ids.length);
+  } catch (e) {
+    console.error('[create-event] Failed to save event ID locally:', e);
+  }
+};
 
 interface PathData {
   id: string;
@@ -246,6 +262,7 @@ export default function CreateEventScreen() {
       
       const priceCents = formData.selectedPriceCents > 0 ? formData.selectedPriceCents : undefined;
       const session = await createEventSession(formData.eventName.trim(), formData.selectedDuration, creatorId, scheduledStart, formData.eventLocation?.trim(), priceCents);
+      await saveEventIdLocally(session.id);
       
       const addedSigners: EventSigner[] = [];
       for (const signer of validSigners) {
@@ -543,6 +560,7 @@ export default function CreateEventScreen() {
       const creatorId = user?.id || undefined;
       const scheduledStart = getScheduledStartDate();
       const session = await createEventSession(eventName.trim(), selectedDuration, creatorId, scheduledStart, eventLocation?.trim(), selectedPriceCents > 0 ? selectedPriceCents : undefined);
+      await saveEventIdLocally(session.id);
       
       const addedSigners: EventSigner[] = [];
       for (const signer of validSigners) {
