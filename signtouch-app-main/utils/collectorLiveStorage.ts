@@ -9,6 +9,14 @@ export interface CollectorLiveItem {
   fanName: string;
   sessionId?: string;
   sessionCode?: string;
+  photoUri?: string;
+  signaturePaths?: string[];
+  signatureColor?: string;
+  signatureX?: number;
+  signatureY?: number;
+  signatureScale?: number;
+  signatureRotation?: number;
+  imageUri?: string;
 }
 
 const STORAGE_KEY = '@signtouch_collector_live';
@@ -120,6 +128,22 @@ export const deleteCollectorLive = async (id: string): Promise<void> => {
     }
   } catch (error) {
     console.error('[CollectorLive] Error deleting:', error);
+  }
+};
+
+export const updateCollectorLive = async (id: string, updates: Partial<CollectorLiveItem>): Promise<void> => {
+  try {
+    const items = await getAllCollectorLive();
+    const idx = items.findIndex(item => item.id === id);
+    if (idx === -1) return;
+    items[idx] = { ...items[idx], ...updates };
+    if (Platform.OS === 'web') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } else {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+  } catch (error) {
+    console.error('[CollectorLive] Error updating:', error);
   }
 };
 
