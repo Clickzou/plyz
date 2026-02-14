@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
-const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
+const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
 interface Celebrity {
   user_id: string;
@@ -30,6 +30,17 @@ interface Celebrity {
   } | null;
 }
 
+const DEMO_CELEBRITIES: Celebrity[] = [
+  { user_id: 'mock-001', stage_name: 'Zinedine Zidane', bio: "Ballon d'Or 1998. Légende du Real Madrid et de l'Équipe de France.", avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg/440px-Zinedine_Zidane_by_Tasnim_03.jpg', display_name: 'Zinedine Zidane', stripe_verified: true, official_verified: true, occupations: ['footballer'], types: ['sports'], popularity_score: 98, pricing: { video_call_price_cents: 15000, autograph_price_cents: 5000, currency: 'eur' } },
+  { user_id: 'mock-003', stage_name: 'Kylian Mbappé', bio: 'Champion du Monde 2018. Attaquant du Real Madrid.', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg/440px-2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg', display_name: 'Kylian Mbappé', stripe_verified: true, official_verified: true, occupations: ['footballer'], types: ['sports'], popularity_score: 97, pricing: { video_call_price_cents: 25000, autograph_price_cents: 10000, currency: 'eur' } },
+  { user_id: 'mock-005', stage_name: 'Omar Sy', bio: 'Acteur français. "Intouchables" et "Lupin" sur Netflix.', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg', display_name: 'Omar Sy', stripe_verified: true, official_verified: true, occupations: ['actor'], types: ['entertainment'], popularity_score: 93, pricing: { video_call_price_cents: 22000, autograph_price_cents: 8000, currency: 'eur' } },
+  { user_id: 'mock-002', stage_name: 'Marion Cotillard', bio: "Oscar de la meilleure actrice pour 'La Môme'.", avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Marion_Cotillard_2019.jpg/440px-Marion_Cotillard_2019.jpg', display_name: 'Marion Cotillard', stripe_verified: true, official_verified: true, occupations: ['actress'], types: ['entertainment'], popularity_score: 92, pricing: { video_call_price_cents: 20000, autograph_price_cents: 7500, currency: 'eur' } },
+  { user_id: 'mock-004', stage_name: 'Aya Nakamura', bio: 'Artiste francophone la plus écoutée au monde.', avatar_url: null, display_name: 'Aya Nakamura', stripe_verified: true, official_verified: true, occupations: ['singer'], types: ['music'], popularity_score: 90, pricing: { video_call_price_cents: 18000, autograph_price_cents: 6000, currency: 'eur' } },
+  { user_id: 'mock-006', stage_name: 'Teddy Riner', bio: 'Triple champion olympique de judo. 10 titres de champion du monde.', avatar_url: null, display_name: 'Teddy Riner', stripe_verified: true, official_verified: true, occupations: ['judoka'], types: ['sports'], popularity_score: 88, pricing: { video_call_price_cents: 12000, autograph_price_cents: 4000, currency: 'eur' } },
+  { user_id: 'mock-007', stage_name: 'Léa Seydoux', bio: "James Bond Girl. Palme d'Or à Cannes.", avatar_url: null, display_name: 'Léa Seydoux', stripe_verified: false, official_verified: true, occupations: ['actress'], types: ['entertainment'], popularity_score: 85, pricing: { video_call_price_cents: 18000, autograph_price_cents: 6500, currency: 'eur' } },
+  { user_id: 'mock-008', stage_name: 'DJ Snake', bio: '"Turn Down for What", "Lean On", "Taki Taki". Milliards de streams.', avatar_url: null, display_name: 'DJ Snake', stripe_verified: true, official_verified: false, occupations: ['DJ'], types: ['music'], popularity_score: 82, pricing: { video_call_price_cents: 15000, autograph_price_cents: 5000, currency: 'eur' } },
+];
+
 const SORT_OPTIONS = [
   { key: 'popular', label: 'sortPopularity' },
   { key: 'name_asc', label: 'sortNameAsc' },
@@ -41,8 +52,8 @@ export default function DiscoverScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const [celebrities, setCelebrities] = useState<Celebrity[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [celebrities, setCelebrities] = useState<Celebrity[]>(DEMO_CELEBRITIES);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('popular');
   const [page, setPage] = useState(1);
@@ -52,23 +63,46 @@ export default function DiscoverScreen() {
 
   const fetchCelebrities = useCallback(async (p = 1, reset = false) => {
     try {
-      if (reset) setLoading(true);
+      if (reset && celebrities.length === 0) setLoading(true);
       const params = new URLSearchParams({ page: String(p), limit: '20', sort });
       if (search.trim()) params.set('search', search.trim());
 
-      const res = await fetch(`${API_BASE}/api/celebrities?${params}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const res = await fetch(`${API_BASE}/api/celebrities?${params}`, { signal: controller.signal });
+      clearTimeout(timeoutId);
       const data = await res.json();
 
-      if (reset || p === 1) {
-        setCelebrities(data.celebrities || []);
+      if (data.celebrities && data.celebrities.length > 0) {
+        if (reset || p === 1) {
+          setCelebrities(data.celebrities);
+        } else {
+          setCelebrities(prev => [...prev, ...data.celebrities]);
+        }
+        setTotalPages(data.total_pages || 1);
+        setTotal(data.total || 0);
+        setPage(p);
       } else {
-        setCelebrities(prev => [...prev, ...(data.celebrities || [])]);
+        throw new Error('No data from API');
       }
-      setTotalPages(data.total_pages || 1);
-      setTotal(data.total || 0);
-      setPage(p);
     } catch (err) {
-      console.error('Error fetching celebrities:', err);
+      console.warn('Using demo celebrities:', err);
+      let demo = [...DEMO_CELEBRITIES];
+      if (search.trim()) {
+        const s = search.trim().toLowerCase();
+        demo = demo.filter(c => c.stage_name.toLowerCase().includes(s));
+      }
+      switch (sort) {
+        case 'name_asc': demo.sort((a, b) => a.stage_name.localeCompare(b.stage_name)); break;
+        case 'name_desc': demo.sort((a, b) => b.stage_name.localeCompare(a.stage_name)); break;
+        case 'newest': break;
+        default: demo.sort((a, b) => b.popularity_score - a.popularity_score);
+      }
+      setCelebrities(demo);
+      setTotalPages(1);
+      setTotal(demo.length);
+      setPage(1);
     } finally {
       setLoading(false);
       setRefreshing(false);

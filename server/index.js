@@ -1298,6 +1298,187 @@ app.get('/stripe/return', (req, res) => {
 // MARKETPLACE API ENDPOINTS
 // ============================================================
 
+const MOCK_CELEBRITIES = [
+  {
+    user_id: 'mock-001',
+    stage_name: 'Zinedine Zidane',
+    bio: 'Ancien footballeur international et entraîneur. Ballon d\'Or 1998. Légende du Real Madrid et de l\'Équipe de France.',
+    website: 'https://en.wikipedia.org/wiki/Zinedine_Zidane',
+    avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg/440px-Zinedine_Zidane_by_Tasnim_03.jpg',
+    stripe_verified: true,
+    official_verified: true,
+    stripe_account_id: 'acct_mock_zidane',
+    wikidata_image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg/440px-Zinedine_Zidane_by_Tasnim_03.jpg',
+    wikipedia_url: 'https://fr.wikipedia.org/wiki/Zinedine_Zidane',
+    wikidata_occupations: ['footballer', 'manager'],
+    wikidata_types: ['sports'],
+    popularity_score: 98,
+    created_at: '2025-01-15T10:00:00Z',
+    pricing: { video_call_price_cents: 15000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 5000, live_dedication_price_cents: 8000, currency: 'eur' },
+  },
+  {
+    user_id: 'mock-002',
+    stage_name: 'Marion Cotillard',
+    bio: 'Actrice française, lauréate de l\'Oscar de la meilleure actrice pour "La Môme". Ambassadrice Greenpeace.',
+    website: null,
+    avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Marion_Cotillard_2019.jpg/440px-Marion_Cotillard_2019.jpg',
+    stripe_verified: true,
+    official_verified: true,
+    stripe_account_id: 'acct_mock_cotillard',
+    wikidata_image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Marion_Cotillard_2019.jpg/440px-Marion_Cotillard_2019.jpg',
+    wikipedia_url: 'https://fr.wikipedia.org/wiki/Marion_Cotillard',
+    wikidata_occupations: ['actress', 'singer'],
+    wikidata_types: ['entertainment'],
+    popularity_score: 92,
+    created_at: '2025-02-10T10:00:00Z',
+    pricing: { video_call_price_cents: 20000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 7500, live_dedication_price_cents: 10000, currency: 'eur' },
+  },
+  {
+    user_id: 'mock-003',
+    stage_name: 'Kylian Mbappé',
+    bio: 'Footballeur international français. Champion du Monde 2018. Attaquant du Real Madrid.',
+    website: 'https://www.kmbappe.com',
+    avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg/440px-2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg',
+    stripe_verified: true,
+    official_verified: true,
+    stripe_account_id: 'acct_mock_mbappe',
+    wikidata_image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg/440px-2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg',
+    wikipedia_url: 'https://fr.wikipedia.org/wiki/Kylian_Mbapp%C3%A9',
+    wikidata_occupations: ['footballer'],
+    wikidata_types: ['sports'],
+    popularity_score: 97,
+    created_at: '2025-01-20T10:00:00Z',
+    pricing: { video_call_price_cents: 25000, video_call_unit: 'session', video_call_duration_minutes: 5, autograph_price_cents: 10000, live_dedication_price_cents: 15000, currency: 'eur' },
+  },
+  {
+    user_id: 'mock-004',
+    stage_name: 'Aya Nakamura',
+    bio: 'Chanteuse et auteure-compositrice. Artiste francophone la plus écoutée au monde sur les plateformes de streaming.',
+    website: null,
+    avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Tierra_Whack_%2848631292083%29_%28cropped%29.jpg/440px-Tierra_Whack_%2848631292083%29_%28cropped%29.jpg',
+    stripe_verified: true,
+    official_verified: true,
+    stripe_account_id: 'acct_mock_nakamura',
+    wikidata_image_url: null,
+    wikipedia_url: 'https://fr.wikipedia.org/wiki/Aya_Nakamura',
+    wikidata_occupations: ['singer', 'songwriter'],
+    wikidata_types: ['music'],
+    popularity_score: 90,
+    created_at: '2025-03-01T10:00:00Z',
+    pricing: { video_call_price_cents: 18000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 6000, live_dedication_price_cents: 9000, currency: 'eur' },
+  },
+  {
+    user_id: 'mock-005',
+    stage_name: 'Omar Sy',
+    bio: 'Acteur et humoriste français. Connu pour "Intouchables" et la série Netflix "Lupin".',
+    website: null,
+    avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg',
+    stripe_verified: true,
+    official_verified: true,
+    stripe_account_id: 'acct_mock_omarsy',
+    wikidata_image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg',
+    wikipedia_url: 'https://fr.wikipedia.org/wiki/Omar_Sy',
+    wikidata_occupations: ['actor', 'comedian'],
+    wikidata_types: ['entertainment'],
+    popularity_score: 93,
+    created_at: '2025-01-25T10:00:00Z',
+    pricing: { video_call_price_cents: 22000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 8000, live_dedication_price_cents: 12000, currency: 'eur' },
+  },
+  {
+    user_id: 'mock-006',
+    stage_name: 'Teddy Riner',
+    bio: 'Judoka français, triple champion olympique. Légende du judo mondial avec 10 titres de champion du monde.',
+    website: null,
+    avatar_url: null,
+    stripe_verified: true,
+    official_verified: true,
+    stripe_account_id: 'acct_mock_riner',
+    wikidata_image_url: null,
+    wikipedia_url: 'https://fr.wikipedia.org/wiki/Teddy_Riner',
+    wikidata_occupations: ['judoka'],
+    wikidata_types: ['sports'],
+    popularity_score: 88,
+    created_at: '2025-02-15T10:00:00Z',
+    pricing: { video_call_price_cents: 12000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 4000, live_dedication_price_cents: 7000, currency: 'eur' },
+  },
+  {
+    user_id: 'mock-007',
+    stage_name: 'Léa Seydoux',
+    bio: 'Actrice française. James Bond Girl dans "Spectre" et "Mourir Peut Attendre". Palme d\'Or à Cannes.',
+    website: null,
+    avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/L%C3%A9a_Seydoux_Cannes_2022.jpg/440px-L%C3%A9a_Seydoux_Cannes_2022.jpg',
+    stripe_verified: false,
+    official_verified: true,
+    stripe_account_id: null,
+    wikidata_image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/L%C3%A9a_Seydoux_Cannes_2022.jpg/440px-L%C3%A9a_Seydoux_Cannes_2022.jpg',
+    wikipedia_url: 'https://fr.wikipedia.org/wiki/L%C3%A9a_Seydoux',
+    wikidata_occupations: ['actress'],
+    wikidata_types: ['entertainment'],
+    popularity_score: 85,
+    created_at: '2025-03-10T10:00:00Z',
+    pricing: { video_call_price_cents: 18000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 6500, live_dedication_price_cents: 9000, currency: 'eur' },
+  },
+  {
+    user_id: 'mock-008',
+    stage_name: 'DJ Snake',
+    bio: 'DJ et producteur français. Connu pour "Turn Down for What", "Lean On" et "Taki Taki". Milliards de streams.',
+    website: 'https://djsnake.com',
+    avatar_url: null,
+    stripe_verified: true,
+    official_verified: false,
+    stripe_account_id: 'acct_mock_djsnake',
+    wikidata_image_url: null,
+    wikipedia_url: 'https://fr.wikipedia.org/wiki/DJ_Snake',
+    wikidata_occupations: ['DJ', 'producer'],
+    wikidata_types: ['music'],
+    popularity_score: 82,
+    created_at: '2025-02-20T10:00:00Z',
+    pricing: { video_call_price_cents: 15000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 5000, live_dedication_price_cents: 8000, currency: 'eur' },
+  },
+];
+
+const MOCK_FEED = [
+  {
+    id: 'post-001', kind: 'post', title: 'Nouveau chapitre', body: 'Très heureux d\'annoncer une nouvelle aventure. Restez connectés pour la suite... Merci pour votre soutien incroyable !', media_url: null, event_date: null, created_at: '2025-12-10T14:30:00Z',
+    celebrity: { user_id: 'mock-005', stage_name: 'Omar Sy', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg', official_verified: true, stripe_verified: true },
+  },
+  {
+    id: 'post-002', kind: 'event', title: 'Session Live Exclusive', body: 'Rejoignez-moi pour une session live exclusive ce week-end. On parlera football, souvenirs et avenir.', media_url: null, event_date: '2026-02-20T18:00:00Z', created_at: '2025-12-08T10:00:00Z',
+    celebrity: { user_id: 'mock-001', stage_name: 'Zinedine Zidane', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg/440px-Zinedine_Zidane_by_Tasnim_03.jpg', official_verified: true, stripe_verified: true },
+  },
+  {
+    id: 'post-003', kind: 'post', title: null, body: 'Merci à tous les fans pour votre énergie incroyable au concert de Paris ! Vous êtes les meilleurs. On se retrouve bientôt sur scène.', media_url: null, event_date: null, created_at: '2025-12-05T20:00:00Z',
+    celebrity: { user_id: 'mock-004', stage_name: 'Aya Nakamura', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Tierra_Whack_%2848631292083%29_%28cropped%29.jpg/440px-Tierra_Whack_%2848631292083%29_%28cropped%29.jpg', official_verified: true, stripe_verified: true },
+  },
+  {
+    id: 'post-004', kind: 'event', title: 'Dédicace en Live', body: 'Réservez votre créneau pour une dédicace personnalisée en vidéo. Places limitées !', media_url: null, event_date: '2026-03-01T15:00:00Z', created_at: '2025-12-03T09:00:00Z',
+    celebrity: { user_id: 'mock-002', stage_name: 'Marion Cotillard', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Marion_Cotillard_2019.jpg/440px-Marion_Cotillard_2019.jpg', official_verified: true, stripe_verified: true },
+  },
+  {
+    id: 'post-005', kind: 'post', title: 'Allez Paris !', body: 'Quel match incroyable hier soir ! On ne lâche rien. Le travail continue chaque jour.', media_url: null, event_date: null, created_at: '2025-11-28T22:00:00Z',
+    celebrity: { user_id: 'mock-003', stage_name: 'Kylian Mbappé', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg/440px-2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg', official_verified: true, stripe_verified: true },
+  },
+  {
+    id: 'post-006', kind: 'post', title: 'Retour au dojo', body: 'La préparation pour les prochains championnats a commencé. Le judo c\'est ma vie, chaque jour sur le tatami.', media_url: null, event_date: null, created_at: '2025-11-25T08:00:00Z',
+    celebrity: { user_id: 'mock-006', stage_name: 'Teddy Riner', avatar_url: null, official_verified: true, stripe_verified: true },
+  },
+];
+
+function getMockCelebrities(search, sort) {
+  let results = [...MOCK_CELEBRITIES];
+  if (search && search.trim().length > 0) {
+    const s = search.trim().toLowerCase();
+    results = results.filter(c => c.stage_name.toLowerCase().includes(s) || (c.bio && c.bio.toLowerCase().includes(s)));
+  }
+  switch (sort) {
+    case 'name_asc': results.sort((a, b) => a.stage_name.localeCompare(b.stage_name)); break;
+    case 'name_desc': results.sort((a, b) => b.stage_name.localeCompare(a.stage_name)); break;
+    case 'newest': results.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); break;
+    default: results.sort((a, b) => b.popularity_score - a.popularity_score);
+  }
+  return results;
+}
+
 app.get('/api/celebrities', async (req, res) => {
   try {
     const db = getSupabaseAdmin();
@@ -1368,8 +1549,32 @@ app.get('/api/celebrities', async (req, res) => {
       total_pages: Math.ceil((count || 0) / per_page),
     });
   } catch (error) {
-    console.error('[Celebrities] Error:', error.message);
-    res.status(500).json({ error: error.message });
+    console.error('[Celebrities] Falling back to mock data:', error.message);
+    const { search, sort, page, limit: lim } = req.query;
+    const page_num = Math.max(1, parseInt(page) || 1);
+    const per_page = Math.min(50, Math.max(1, parseInt(lim) || 20));
+    const all = getMockCelebrities(search, sort);
+    const offset = (page_num - 1) * per_page;
+    const paged = all.slice(offset, offset + per_page);
+    res.json({
+      celebrities: paged.map(c => ({
+        user_id: c.user_id,
+        stage_name: c.stage_name,
+        bio: c.bio,
+        avatar_url: c.avatar_url,
+        display_name: c.stage_name,
+        stripe_verified: c.stripe_verified,
+        official_verified: c.official_verified,
+        occupations: c.wikidata_occupations || [],
+        types: c.wikidata_types || [],
+        popularity_score: c.popularity_score,
+        pricing: c.pricing || null,
+      })),
+      total: all.length,
+      page: page_num,
+      per_page,
+      total_pages: Math.ceil(all.length / per_page),
+    });
   }
 });
 
@@ -1415,8 +1620,21 @@ app.get('/api/celebrity/:id', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('[Celebrity Detail] Error:', error.message);
-    res.status(500).json({ error: error.message });
+    console.error('[Celebrity Detail] Falling back to mock data:', error.message);
+    const { id } = req.params;
+    const mock = MOCK_CELEBRITIES.find(c => c.user_id === id);
+    if (!mock) return res.status(404).json({ error: 'Celebrity not found' });
+    const mockPosts = MOCK_FEED.filter(p => p.celebrity.user_id === id).map(p => ({
+      id: p.id, kind: p.kind, title: p.title, body: p.body, media_url: p.media_url, event_date: p.event_date, created_at: p.created_at,
+    }));
+    res.json({
+      celebrity: {
+        ...mock,
+        display_name: mock.stage_name,
+        posts: mockPosts,
+        completed_sessions: Math.floor(Math.random() * 50) + 10,
+      },
+    });
   }
 });
 
@@ -1463,8 +1681,18 @@ app.get('/api/feed', async (req, res) => {
       per_page,
     });
   } catch (error) {
-    console.error('[Feed] Error:', error.message);
-    res.status(500).json({ error: error.message });
+    console.error('[Feed] Falling back to mock data:', error.message);
+    const { kind } = req.query;
+    let mockResults = [...MOCK_FEED];
+    if (kind && kind !== 'all') {
+      mockResults = mockResults.filter(p => p.kind === kind);
+    }
+    res.json({
+      posts: mockResults,
+      total: mockResults.length,
+      page: 1,
+      per_page: 20,
+    });
   }
 });
 

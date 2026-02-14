@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 
-const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
+const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
 interface CelebrityDetail {
   user_id: string;
@@ -59,14 +59,30 @@ export default function CelebrityDetailScreen() {
     if (id) fetchCelebrity();
   }, [id]);
 
+  const DEMO_CELEBS: Record<string, CelebrityDetail> = {
+    'mock-001': { user_id: 'mock-001', stage_name: 'Zinedine Zidane', bio: "Ancien footballeur international et entraîneur. Ballon d'Or 1998. Légende du Real Madrid et de l'Équipe de France.", website: 'https://en.wikipedia.org/wiki/Zinedine_Zidane', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg/440px-Zinedine_Zidane_by_Tasnim_03.jpg', display_name: 'Zinedine Zidane', stripe_verified: true, official_verified: true, stripe_account_id: 'acct_mock', wikidata_image_url: null, wikipedia_url: 'https://fr.wikipedia.org/wiki/Zinedine_Zidane', wikidata_occupations: ['footballer', 'manager'], popularity_score: 98, completed_sessions: 42, pricing: { video_call_price_cents: 15000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 5000, live_dedication_price_cents: 8000, currency: 'eur' }, posts: [{ id: 'p1', title: 'Session Live Exclusive', body: 'Rejoignez-moi pour une session live ce week-end.', media_url: null, created_at: '2025-12-08T10:00:00Z' }] },
+    'mock-002': { user_id: 'mock-002', stage_name: 'Marion Cotillard', bio: "Actrice française, lauréate de l'Oscar de la meilleure actrice.", website: null, avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Marion_Cotillard_2019.jpg/440px-Marion_Cotillard_2019.jpg', display_name: 'Marion Cotillard', stripe_verified: true, official_verified: true, stripe_account_id: 'acct_mock', wikidata_image_url: null, wikipedia_url: 'https://fr.wikipedia.org/wiki/Marion_Cotillard', wikidata_occupations: ['actress'], popularity_score: 92, completed_sessions: 28, pricing: { video_call_price_cents: 20000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 7500, live_dedication_price_cents: 10000, currency: 'eur' }, posts: [] },
+    'mock-003': { user_id: 'mock-003', stage_name: 'Kylian Mbappé', bio: 'Footballeur international français. Champion du Monde 2018.', website: 'https://www.kmbappe.com', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg/440px-2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg', display_name: 'Kylian Mbappé', stripe_verified: true, official_verified: true, stripe_account_id: 'acct_mock', wikidata_image_url: null, wikipedia_url: 'https://fr.wikipedia.org/wiki/Kylian_Mbapp%C3%A9', wikidata_occupations: ['footballer'], popularity_score: 97, completed_sessions: 35, pricing: { video_call_price_cents: 25000, video_call_unit: 'session', video_call_duration_minutes: 5, autograph_price_cents: 10000, live_dedication_price_cents: 15000, currency: 'eur' }, posts: [] },
+    'mock-005': { user_id: 'mock-005', stage_name: 'Omar Sy', bio: 'Acteur et humoriste français. "Intouchables" et "Lupin".', website: null, avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg', display_name: 'Omar Sy', stripe_verified: true, official_verified: true, stripe_account_id: 'acct_mock', wikidata_image_url: null, wikipedia_url: 'https://fr.wikipedia.org/wiki/Omar_Sy', wikidata_occupations: ['actor'], popularity_score: 93, completed_sessions: 31, pricing: { video_call_price_cents: 22000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 8000, live_dedication_price_cents: 12000, currency: 'eur' }, posts: [{ id: 'p2', title: 'Nouveau chapitre', body: 'Très heureux d\'annoncer une nouvelle aventure !', media_url: null, created_at: '2025-12-10T14:30:00Z' }] },
+  };
+
   const fetchCelebrity = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE}/api/celebrity/${id}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const res = await fetch(`${API_BASE}/api/celebrity/${id}`, { signal: controller.signal });
+      clearTimeout(timeoutId);
       const data = await res.json();
-      setCelebrity(data.celebrity);
+      if (data.celebrity) {
+        setCelebrity(data.celebrity);
+      } else {
+        throw new Error('No data');
+      }
     } catch (err) {
-      console.error('Error fetching celebrity:', err);
+      console.warn('Using demo celebrity:', err);
+      const demo = DEMO_CELEBS[id as string];
+      if (demo) setCelebrity(demo);
     } finally {
       setLoading(false);
     }

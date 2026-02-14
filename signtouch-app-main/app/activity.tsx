@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  Image, ActivityIndicator, Platform,
+  Image, ActivityIndicator, Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,7 +10,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
-const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
+const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+
+const DEMO_FEED: FeedPost[] = [
+  { id: 'post-001', kind: 'post', title: 'Nouveau chapitre', body: "Très heureux d'annoncer une nouvelle aventure. Restez connectés !", media_url: null, event_date: null, created_at: '2025-12-10T14:30:00Z', celebrity: { user_id: 'mock-005', stage_name: 'Omar Sy', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg', official_verified: true, stripe_verified: true } },
+  { id: 'post-002', kind: 'event', title: 'Session Live Exclusive', body: 'Rejoignez-moi pour une session live exclusive. On parlera football et souvenirs.', media_url: null, event_date: '2026-02-20T18:00:00Z', created_at: '2025-12-08T10:00:00Z', celebrity: { user_id: 'mock-001', stage_name: 'Zinedine Zidane', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg/440px-Zinedine_Zidane_by_Tasnim_03.jpg', official_verified: true, stripe_verified: true } },
+  { id: 'post-003', kind: 'post', title: null, body: 'Merci à tous les fans pour votre énergie incroyable au concert de Paris !', media_url: null, event_date: null, created_at: '2025-12-05T20:00:00Z', celebrity: { user_id: 'mock-004', stage_name: 'Aya Nakamura', avatar_url: null, official_verified: true, stripe_verified: true } },
+  { id: 'post-004', kind: 'event', title: 'Dédicace en Live', body: 'Réservez votre créneau pour une dédicace personnalisée en vidéo. Places limitées !', media_url: null, event_date: '2026-03-01T15:00:00Z', created_at: '2025-12-03T09:00:00Z', celebrity: { user_id: 'mock-002', stage_name: 'Marion Cotillard', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Marion_Cotillard_2019.jpg/440px-Marion_Cotillard_2019.jpg', official_verified: true, stripe_verified: true } },
+  { id: 'post-005', kind: 'post', title: 'Allez Madrid !', body: 'Quel match incroyable hier soir ! On ne lâche rien.', media_url: null, event_date: null, created_at: '2025-11-28T22:00:00Z', celebrity: { user_id: 'mock-003', stage_name: 'Kylian Mbappé', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg/440px-2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg', official_verified: true, stripe_verified: true } },
+  { id: 'post-006', kind: 'post', title: 'Retour au dojo', body: "La préparation pour les championnats a commencé. Le judo c'est ma vie.", media_url: null, event_date: null, created_at: '2025-11-25T08:00:00Z', celebrity: { user_id: 'mock-006', stage_name: 'Teddy Riner', avatar_url: null, official_verified: true, stripe_verified: true } },
+];
 
 interface FeedPost {
   id: string;
@@ -39,29 +48,43 @@ export default function ActivityScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const [posts, setPosts] = useState<FeedPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState<FeedPost[]>(DEMO_FEED);
+  const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchFeed = useCallback(async (p = 1, reset = false) => {
     try {
-      if (reset) setLoading(true);
+      if (reset && posts.length === 0) setLoading(true);
       const params = new URLSearchParams({ page: String(p), limit: '20' });
       if (filter !== 'all') params.set('kind', filter);
 
-      const res = await fetch(`${API_BASE}/api/feed?${params}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const res = await fetch(`${API_BASE}/api/feed?${params}`, { signal: controller.signal });
+      clearTimeout(timeoutId);
       const data = await res.json();
 
-      if (reset || p === 1) {
-        setPosts(data.posts || []);
+      if (data.posts && data.posts.length > 0) {
+        if (reset || p === 1) {
+          setPosts(data.posts);
+        } else {
+          setPosts(prev => [...prev, ...data.posts]);
+        }
+        setPage(p);
       } else {
-        setPosts(prev => [...prev, ...(data.posts || [])]);
+        throw new Error('No data');
       }
-      setPage(p);
     } catch (err) {
-      console.error('Error fetching feed:', err);
+      console.warn('Using demo feed:', err);
+      let demo = [...DEMO_FEED];
+      if (filter !== 'all') {
+        demo = demo.filter(p => p.kind === filter);
+      }
+      setPosts(demo);
+      setPage(1);
     } finally {
       setLoading(false);
       setRefreshing(false);

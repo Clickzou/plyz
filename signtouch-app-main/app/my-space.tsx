@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  Image, ActivityIndicator, ScrollView,
+  Image, ActivityIndicator, ScrollView, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,7 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
-const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
+const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
 type TabType = 'bookings' | 'autographs';
 
