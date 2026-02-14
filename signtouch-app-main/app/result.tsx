@@ -2714,18 +2714,15 @@ export default function ResultScreen() {
               {memoryId && (
                 <TouchableOpacity
                   style={styles.storyButton}
-                  onPress={() => {
-                    router.push({
-                      pathname: '/story',
-                      params: { 
-                        imageUri: displayUri, 
-                        eventType: memory?.metadata?.eventType || 'meetup',
-                        signatureOverlays: JSON.stringify(signatureOverlays),
-                        textOverlays: JSON.stringify(textOverlays),
-                        sourceMemoryId: memoryId,
-                      }
-                    });
-                  }}
+                  onPress={() => router.push({
+                    pathname: '/story',
+                    params: { 
+                      imageUri: displayUri, 
+                      eventType: memory?.metadata?.eventType || 'meetup',
+                      signatureOverlays: JSON.stringify(signatureOverlays),
+                      textOverlays: JSON.stringify(textOverlays),
+                    }
+                  })}
                   activeOpacity={0.7}
                 >
                   <Film size={24} color="#ffffff" strokeWidth={2} />
