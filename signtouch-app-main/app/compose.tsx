@@ -80,9 +80,10 @@ interface AnimatedSignatureProps {
   color: string;
   isSelected: boolean;
   gesture: any;
+  onSelect?: () => void;
 }
 
-function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelected, gesture }: AnimatedSignatureProps) {
+function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelected, gesture, onSelect }: AnimatedSignatureProps) {
   const [imageDimensions, setImageDimensions] = useState({ width: 150, height: 80 });
   const [svgData, setSvgData] = useState<any>(null);
   const [parsedPaths, setParsedPaths] = useState<Array<{ d: string; isDot: boolean }>>([]);
@@ -207,9 +208,20 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
     };
   });
 
-  const handleWebMouseDown = (e: any) => {
+  const hasDraggedRef = useRef(false);
+  const initialPinchDistRef = useRef(0);
+  const scaleAtPinchStartRef = useRef(1);
+
+  const handlePointerDown = (e: any) => {
     if (Platform.OS !== 'web') return;
+    e.stopPropagation();
+    e.preventDefault();
+    onSelect?.();
+
+    if (e.pointerType === 'touch') return;
+
     isDraggingRef.current = true;
+    hasDraggedRef.current = false;
     dragStartRef.current = { x: e.clientX, y: e.clientY };
     posAtDragStartRef.current = { x: transform.translateX.value, y: transform.translateY.value };
 
@@ -217,6 +229,7 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
       if (!isDraggingRef.current) return;
       const dx = ev.clientX - dragStartRef.current.x;
       const dy = ev.clientY - dragStartRef.current.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasDraggedRef.current = true;
       transform.translateX.value = posAtDragStartRef.current.x + dx;
       transform.translateY.value = posAtDragStartRef.current.y + dy;
       transform.savedTranslateX.value = transform.translateX.value;
@@ -233,6 +246,56 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
     window.addEventListener('mouseup', handleMouseUp);
   };
 
+  const handleTouchStart = (e: any) => {
+    if (Platform.OS !== 'web') return;
+    e.stopPropagation();
+    onSelect?.();
+
+    const touches = e.touches;
+    if (touches.length === 1) {
+      isDraggingRef.current = true;
+      hasDraggedRef.current = false;
+      dragStartRef.current = { x: touches[0].clientX, y: touches[0].clientY };
+      posAtDragStartRef.current = { x: transform.translateX.value, y: transform.translateY.value };
+    } else if (touches.length === 2) {
+      isDraggingRef.current = false;
+      const dx = touches[1].clientX - touches[0].clientX;
+      const dy = touches[1].clientY - touches[0].clientY;
+      initialPinchDistRef.current = Math.sqrt(dx * dx + dy * dy);
+      scaleAtPinchStartRef.current = transform.scale.value;
+    }
+  };
+
+  const handleTouchMove = (e: any) => {
+    if (Platform.OS !== 'web') return;
+    e.preventDefault();
+    const touches = e.touches;
+    if (touches.length === 1 && isDraggingRef.current) {
+      const dx = touches[0].clientX - dragStartRef.current.x;
+      const dy = touches[0].clientY - dragStartRef.current.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasDraggedRef.current = true;
+      transform.translateX.value = posAtDragStartRef.current.x + dx;
+      transform.translateY.value = posAtDragStartRef.current.y + dy;
+      transform.savedTranslateX.value = transform.translateX.value;
+      transform.savedTranslateY.value = transform.translateY.value;
+    } else if (touches.length === 2 && initialPinchDistRef.current > 0) {
+      const dx = touches[1].clientX - touches[0].clientX;
+      const dy = touches[1].clientY - touches[0].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const ratio = dist / initialPinchDistRef.current;
+      transform.scale.value = Math.max(0.3, Math.min(4, scaleAtPinchStartRef.current * ratio));
+    }
+  };
+
+  const handleTouchEnd = (e: any) => {
+    if (Platform.OS !== 'web') return;
+    isDraggingRef.current = false;
+    if (initialPinchDistRef.current > 0) {
+      transform.savedScale.value = transform.scale.value;
+      initialPinchDistRef.current = 0;
+    }
+  };
+
   const webImgUri = colorizedSvgUri || uri;
 
   if (Platform.OS === 'web') {
@@ -243,11 +306,12 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
     const w = Number.isFinite(imageDimensions.width) && imageDimensions.width > 0 ? imageDimensions.width : 150;
     const h = Number.isFinite(imageDimensions.height) && imageDimensions.height > 0 ? imageDimensions.height : 80;
 
-    console.log(`[WebSig] idx=${index} pos=${safeX.toFixed(0)},${safeY.toFixed(0)} scale=${safeScale.toFixed(2)} dims=${w}x${h} uri=${webImgUri ? webImgUri.substring(0, 40) : 'null'}`);
-
     return (
       <div
-        onMouseDown={handleWebMouseDown as any}
+        onPointerDown={handlePointerDown as any}
+        onTouchStart={handleTouchStart as any}
+        onTouchMove={handleTouchMove as any}
+        onTouchEnd={handleTouchEnd as any}
         style={{
           position: 'absolute',
           top: 0,
@@ -256,9 +320,10 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
           height: h,
           transform: `translate(${safeX}px, ${safeY}px) scale(${safeScale}) rotate(${safeRot}rad)`,
           transformOrigin: '0 0',
-          cursor: 'grab',
+          cursor: isDraggingRef.current ? 'grabbing' : 'grab',
           zIndex: isSelected ? 1000 : (index + 10),
           userSelect: 'none' as const,
+          touchAction: 'none' as const,
           border: isSelected ? '2px solid #10b981' : '2px solid transparent',
           borderRadius: 4,
         }}
@@ -266,8 +331,6 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
         <img
           src={webImgUri}
           draggable={false}
-          onError={(e) => console.error('[WebSig] img load error', e)}
-          onLoad={() => console.log('[WebSig] img loaded OK')}
           style={{
             width: '100%',
             height: '100%',
@@ -1325,6 +1388,10 @@ export default function ComposeScreen() {
                 color={color}
                 isSelected={isSelected}
                 gesture={gesture}
+                onSelect={() => {
+                  setSelectedSignatureIndex(index);
+                  setSelectedTextIndex(null);
+                }}
               />
             );
           })}
