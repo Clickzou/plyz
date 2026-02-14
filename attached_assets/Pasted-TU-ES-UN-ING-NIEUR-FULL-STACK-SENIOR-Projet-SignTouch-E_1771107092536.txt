@@ -1,0 +1,294 @@
+TU ES UN INGÉNIEUR FULL-STACK SENIOR.
+
+Projet: SignTouch (Expo React Native + Supabase + Stripe Connect).
+Objectif: Construire un système complet avec:
+1) Un mur de célébrités (Discover) avec recherche + tri + actions
+2) Un feed "News" (Activity) avec posts + événements
+3) Réservation appel vidéo + demande autographe (paiement Stripe Connect)
+4) Système de badge (Stripe + officiel)
+5) Enrichissement automatique via Wikidata (sans input utilisateur)
+
+STACK:
+- Front: Expo React Native (TypeScript, expo-router)
+- Backend: Supabase (Postgres + RLS)
+- Paiement: Stripe Connect (destination charges)
+- Auth: Supabase Auth
+
+======================================================================
+A) BASE DE DONNÉES SUPABASE
+======================================================================
+
+1) profiles
+- id uuid PK
+- display_name text
+- avatar_url text
+- role text CHECK IN ('fan','celebrity','admin')
+
+2) celebrity_profiles
+- user_id uuid PK
+- stage_name text
+- bio text
+- website text
+- stripe_account_id text
+- stripe_charges_enabled boolean
+- stripe_payouts_enabled boolean
+- stripe_verified boolean
+- official_verified boolean default false
+- is_listed boolean default true
+
+-- WIKIDATA
+- wikidata_id text
+- wikidata_label text
+- wikipedia_url text
+- wikidata_image_url text
+- wikidata_occupations text[]
+- wikidata_types text[]
+- wikidata_confidence integer
+- wikidata_last_sync timestamptz
+
+- popularity_score integer default 0
+
+INDEX:
+- trigram index sur stage_name
+
+3) celebrity_pricing
+- user_id uuid PK
+- video_call_price_cents integer
+- video_call_unit text ('minute','session')
+- video_call_duration_minutes integer
+- autograph_price_cents integer
+- live_dedication_price_cents integer
+- currency text
+
+4) booking_requests
+- id uuid PK
+- fan_id uuid
+- celebrity_id uuid
+- status text ('pending_payment','paid','confirmed','completed')
+- duration_minutes integer
+- price_cents integer
+- stripe_session_id text
+- created_at timestamptz
+
+5) autograph_requests
+- id uuid PK
+- fan_id uuid
+- celebrity_id uuid
+- message text
+- status text
+- price_cents integer
+- stripe_session_id text
+
+6) posts
+- id uuid PK
+- celebrity_id uuid
+- kind text ('post','event')
+- title text
+- body text
+- media_url text
+- event_date timestamptz
+- price_cents integer
+- created_at timestamptz
+
+7) wikidata_entities (CACHE)
+- wikidata_id text PK
+- label text
+- description text
+- image_url text
+- wikipedia_url text
+- occupations text[]
+- updated_at timestamptz
+
+8) reports
+- id uuid PK
+- reporter_id uuid
+- celebrity_id uuid
+- reason text
+- created_at timestamptz
+
+======================================================================
+B) API BACKEND
+======================================================================
+
+1) GET /api/celebrities
+PARAMS:
+- search
+- sort ∈ {relevance,name,price_video,price_autograph,active,next_event}
+
+TRI:
+- relevance:
+  official_verified DESC
+  stripe_verified DESC
+  popularity_score DESC
+  stage_name ASC
+
+2) GET /api/celebrity/:id
+- détails + posts + events
+
+3) POST /api/book-video
+- crée booking
+- Stripe Checkout
+- transfer_data.destination = stripe_account_id
+
+4) POST /api/autograph
+- même logique
+
+5) GET /api/feed
+- posts triés par date
+
+6) POST /api/posts
+- célébrité publie news
+
+7) POST /api/report
+- signalement profil
+
+======================================================================
+C) INTÉGRATION WIKIDATA
+======================================================================
+
+Créer service "wikidataService":
+
+Fonctions:
+
+1) searchCandidates(name)
+→ appel API Wikidata
+
+2) resolveCelebrity(celebrity)
+→ matching:
+- nom proche
+- wikipedia existe
+- website match (si dispo)
+→ score de confiance
+
+3) syncEntity(wikidata_id)
+→ récupérer:
+- label
+- description
+- image
+- wikipedia
+- occupations
+
+Stocker dans:
+- wikidata_entities
+- celebrity_profiles
+
+CACHE obligatoire (pas d’appel direct en UI)
+
+======================================================================
+D) UI (EXPO)
+======================================================================
+
+TABS:
+- Discover
+- Activity
+- My
+- Profile
+
+----------------------
+1) DISCOVER SCREEN
+----------------------
+- search bar
+- filtre TRI (dropdown)
+
+FlatList:
+Card célébrité:
+- avatar
+- stage_name
+- occupation (wikidata)
+- badges:
+  🔵 Officiel
+  🟢 Vérifié paiement
+
+- prix:
+  - Appel vidéo
+  - Autographe
+  - Live dédicace
+
+- boutons:
+  - Réserver visio
+  - Autographe
+
+- menu:
+  - Signaler
+
+----------------------
+2) CELEBRITY DETAIL
+----------------------
+- header + bio
+- pricing
+- prochains events
+- derniers posts
+
+CTA sticky:
+- réserver
+- autographe
+
+----------------------
+3) ACTIVITY (NEWS)
+----------------------
+Feed:
+- posts
+- events
+
+Event card:
+- date
+- prix
+- bouton réserver
+
+----------------------
+4) BOOKING FLOW
+----------------------
+- choix durée
+- paiement Stripe
+- status tracking
+
+----------------------
+5) MY SCREEN
+----------------------
+Fan:
+- mes réservations
+- mes autographes
+
+Celebrity:
+- mes demandes
+- mes posts
+
+----------------------
+6) PROFILE
+----------------------
+- settings
+- pricing
+- visibilité
+
+======================================================================
+E) SÉCURITÉ
+======================================================================
+
+- RLS activé sur toutes tables
+- vérifier JWT côté API
+- recalcul prix côté serveur
+- Stripe webhook:
+  - update status = paid
+
+======================================================================
+F) PLAN D’EXÉCUTION
+======================================================================
+
+1) Créer tables Supabase
+2) Implémenter API
+3) Implémenter Discover
+4) Implémenter Booking
+5) Implémenter Feed
+6) Ajouter Wikidata
+7) Tests + logs
+
+======================================================================
+
+IMPORTANT:
+- Code propre TypeScript
+- UI fluide mobile
+- pagination performante
+- aucun appel Wikidata côté client
+- tout doit fonctionner en production
+
+COMMENCE PAR ANALYSER LE REPO EXISTANT ET ADAPTE LE CODE.
