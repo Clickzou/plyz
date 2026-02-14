@@ -4,6 +4,41 @@ import * as FileSystem from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const DEVICE_ID_KEY = '@signtouch_device_id';
+const MY_EVENT_IDS_KEY = '@signtouch_my_event_ids';
+
+const addLocalEventId = async (eventId: string) => {
+  try {
+    const stored = await AsyncStorage.getItem(MY_EVENT_IDS_KEY);
+    const ids: string[] = stored ? JSON.parse(stored) : [];
+    if (!ids.includes(eventId)) {
+      ids.push(eventId);
+      await AsyncStorage.setItem(MY_EVENT_IDS_KEY, JSON.stringify(ids));
+    }
+  } catch (e) {
+    console.error('Error saving local event ID:', e);
+  }
+};
+
+const getLocalEventIds = async (): Promise<string[]> => {
+  try {
+    const stored = await AsyncStorage.getItem(MY_EVENT_IDS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (e) {
+    console.error('Error reading local event IDs:', e);
+    return [];
+  }
+};
+
+export const removeLocalEventId = async (eventId: string) => {
+  try {
+    const stored = await AsyncStorage.getItem(MY_EVENT_IDS_KEY);
+    const ids: string[] = stored ? JSON.parse(stored) : [];
+    const filtered = ids.filter(id => id !== eventId);
+    await AsyncStorage.setItem(MY_EVENT_IDS_KEY, JSON.stringify(filtered));
+  } catch (e) {
+    console.error('Error removing local event ID:', e);
+  }
+};
 
 export interface EventSession {
   id: string;
@@ -209,6 +244,8 @@ export const createEventSession = async (
   
   console.log('Session created successfully:', data.id, 'join_code:', data.join_code);
   
+  await addLocalEventId(data.id);
+  
   const result = { ...data } as EventSession;
   if (_location) result.location = _location;
   if (_priceCents && _priceCents > 0) result.price_cents = _priceCents;
@@ -266,6 +303,23 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
       allEvents = data;
     } else if (error) {
       console.error('Error fetching scheduled events by user:', error);
+    }
+  }
+
+  const localIds = await getLocalEventIds();
+  const existingEventIds = new Set(allEvents.map(e => e.id));
+  const missingLocalIds = localIds.filter(id => !existingEventIds.has(id));
+  if (missingLocalIds.length > 0) {
+    const { data: localEvents, error: localError } = await supabase
+      .from('event_sessions')
+      .select('*')
+      .in('id', missingLocalIds)
+      .in('status', ['scheduled', 'active', 'live', 'ended']);
+
+    if (!localError && localEvents) {
+      allEvents = [...allEvents, ...localEvents];
+    } else if (localError) {
+      console.error('Error fetching local events:', localError);
     }
   }
 
@@ -371,6 +425,7 @@ export const initDeletedEventsCache = async (): Promise<void> => {
 
 export const deleteEventSession = async (sessionId: string): Promise<void> => {
   console.log('[deleteEventSession] Deleting event:', sessionId);
+  await removeLocalEventId(sessionId);
   
   const { data: liveSession } = await supabase
     .from('live_sessions')
