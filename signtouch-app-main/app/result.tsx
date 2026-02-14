@@ -2715,8 +2715,12 @@ export default function ResultScreen() {
                 <TouchableOpacity
                   style={styles.storyButton}
                   onPress={() => {
-                    const hasBase = memory && memory.baseUri && memory.baseUri !== memory.uri;
-                    const storyImageUri = hasBase ? memory.baseUri : displayUri;
+                    const hasBase = !!(memory && memory.baseUri && memory.baseUri !== memory.uri);
+                    const storyImageUri = hasBase ? memory!.baseUri! : displayUri;
+                    console.log('[Story Nav] hasBase=', hasBase, 'memory.baseUri?', !!memory?.baseUri, 'memory.uri?', !!memory?.uri, 'same?', memory?.baseUri === memory?.uri);
+                    console.log('[Story Nav] storyImageUri starts:', storyImageUri?.substring(0, 80));
+                    console.log('[Story Nav] displayUri starts:', displayUri?.substring(0, 80));
+                    console.log('[Story Nav] sigOverlays=', signatureOverlays.length, 'textOverlays=', textOverlays.length);
                     router.push({
                       pathname: '/story',
                       params: { 
