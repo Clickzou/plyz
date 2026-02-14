@@ -83,6 +83,7 @@ interface AnimatedSignatureProps {
 }
 
 function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelected, gesture }: AnimatedSignatureProps) {
+  console.log(`[AnimatedSignature] RENDER idx=${index} transform exists:`, !!transform, 'translateX:', transform?.translateX?.value);
   const [imageDimensions, setImageDimensions] = useState({ width: 150, height: 80 });
   const [svgData, setSvgData] = useState<any>(null);
   const [parsedPaths, setParsedPaths] = useState<Array<{ d: string; isDot: boolean }>>([]);
@@ -1306,8 +1307,10 @@ export default function ComposeScreen() {
             style={styles.photo}
             resizeMode="cover"
           />
+          {(() => { console.log('[Compose RENDER] signatureUris.length:', signatureUris.length); return null; })()}
           {signatureUris.map((uri: string, index: number) => {
             const transform = getOrCreateSignatureTransform(index);
+            console.log(`[Compose MAP] idx=${index} transform:`, !!transform, 'tx:', transform?.translateX?.value);
             const gesture = createGesture(transform, index);
             const strokeScale = signatureStrokeScales[index] || 1.0;
             const color = signatureColors[index];
