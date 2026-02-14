@@ -1013,4 +1013,7 @@ export default {
   showQrCode: 'عرض QR',
   noPhotosPublished: 'لم يتم نشر أي صور بعد',
   liveVideo: 'جلسة فيديو مباشرة',
+  hasPublishedPhoto: 'نشر صورة مهداة جديدة لك!',
+  newDedicatedPhoto: 'صورة مهداة جديدة!',
+  newPhotoAvailable: 'صورة مهداة جديدة متاحة!',
 };

@@ -1018,4 +1018,7 @@ export default {
   showQrCode: 'Tampilkan QR',
   noPhotosPublished: 'Belum ada foto yang dipublikasikan',
   liveVideo: 'Sesi Video Langsung',
+  hasPublishedPhoto: 'telah menerbitkan foto dedikasi baru untuk Anda!',
+  newDedicatedPhoto: 'Foto dedikasi baru!',
+  newPhotoAvailable: 'Foto dedikasi baru tersedia!',
 };

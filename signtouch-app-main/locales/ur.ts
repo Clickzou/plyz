@@ -1018,4 +1018,7 @@ export default {
   showQrCode: 'QR دکھائیں',
   noPhotosPublished: 'ابھی تک کوئی تصویر شائع نہیں ہوئی',
   liveVideo: 'لائیو ویڈیو سیشن',
+  hasPublishedPhoto: 'نے آپ کے لیے ایک نئی مخصوص تصویر شائع کی ہے!',
+  newDedicatedPhoto: 'نئی مخصوص تصویر!',
+  newPhotoAvailable: 'ایک نئی مخصوص تصویر دستیاب ہے!',
 };

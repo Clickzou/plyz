@@ -1064,4 +1064,7 @@ export default {
   eventRequiresPayment: 'This event requires payment',
   paymentConfirmed: 'Payment confirmed',
   paymentFailed: 'Payment failed',
+  hasPublishedPhoto: 'has published a new dedicated photo for you!',
+  newDedicatedPhoto: 'New dedicated photo!',
+  newPhotoAvailable: 'A new dedicated photo is available!',
 };

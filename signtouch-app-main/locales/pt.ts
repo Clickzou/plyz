@@ -1013,4 +1013,7 @@ export default {
   showQrCode: 'Ver QR',
   noPhotosPublished: 'Nenhuma foto publicada ainda',
   liveVideo: 'Sessão Live Vídeo',
+  hasPublishedPhoto: 'publicou uma nova foto dedicada para você!',
+  newDedicatedPhoto: 'Nova foto dedicada!',
+  newPhotoAvailable: 'Uma nova foto dedicada está disponível!',
 };

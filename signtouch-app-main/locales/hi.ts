@@ -1013,4 +1013,7 @@ export default {
   showQrCode: 'QR दिखाएं',
   noPhotosPublished: 'अभी तक कोई फोटो प्रकाशित नहीं',
   liveVideo: 'लाइव वीडियो सेशन',
+  hasPublishedPhoto: 'ने आपके लिए एक नई समर्पित फ़ोटो प्रकाशित की है!',
+  newDedicatedPhoto: 'नई समर्पित फ़ोटो!',
+  newPhotoAvailable: 'एक नई समर्पित फ़ोटो उपलब्ध है!',
 };

@@ -1066,4 +1066,7 @@ export default {
   eventRequiresPayment: 'Cet événement est payant',
   paymentConfirmed: 'Paiement confirmé',
   paymentFailed: 'Échec du paiement',
+  hasPublishedPhoto: 'a publié une nouvelle photo dédicacée pour vous !',
+  newDedicatedPhoto: 'Nouvelle photo dédicacée !',
+  newPhotoAvailable: 'Une nouvelle photo dédicacée est disponible !',
 };

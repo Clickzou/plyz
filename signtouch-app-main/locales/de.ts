@@ -1013,4 +1013,7 @@ export default {
   showQrCode: 'QR anzeigen',
   noPhotosPublished: 'Noch keine Fotos veröffentlicht',
   liveVideo: 'Live-Video-Session',
+  hasPublishedPhoto: 'hat ein neues signiertes Foto für dich veröffentlicht!',
+  newDedicatedPhoto: 'Neues signiertes Foto!',
+  newPhotoAvailable: 'Ein neues signiertes Foto ist verfügbar!',
 };

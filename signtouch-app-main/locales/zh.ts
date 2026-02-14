@@ -1013,4 +1013,7 @@ export default {
   showQrCode: '显示二维码',
   noPhotosPublished: '尚未发布照片',
   liveVideo: '现场视频会话',
+  hasPublishedPhoto: '为你发布了一张新的签名照片！',
+  newDedicatedPhoto: '新签名照片！',
+  newPhotoAvailable: '一张新的签名照片已发布！',
 };

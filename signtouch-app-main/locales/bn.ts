@@ -1018,4 +1018,7 @@ export default {
   showQrCode: 'QR দেখান',
   noPhotosPublished: 'এখনও কোনো ছবি প্রকাশিত হয়নি',
   liveVideo: 'লাইভ ভিডিও সেশন',
+  hasPublishedPhoto: 'আপনার জন্য একটি নতুন উৎসর্গিত ছবি প্রকাশ করেছে!',
+  newDedicatedPhoto: 'নতুন উৎসর্গিত ছবি!',
+  newPhotoAvailable: 'একটি নতুন উৎসর্গিত ছবি উপলব্ধ!',
 };

@@ -1013,4 +1013,7 @@ export default {
   showQrCode: 'QR表示',
   noPhotosPublished: 'まだ写真が公開されていません',
   liveVideo: 'ライブビデオセッション',
+  hasPublishedPhoto: 'があなたのために新しいサイン入り写真を公開しました！',
+  newDedicatedPhoto: '新しいサイン入り写真！',
+  newPhotoAvailable: '新しいサイン入り写真が公開されました！',
 };

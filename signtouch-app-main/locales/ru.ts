@@ -1013,4 +1013,7 @@ export default {
   showQrCode: 'Показать QR',
   noPhotosPublished: 'Фотографии ещё не опубликованы',
   liveVideo: 'Живая видеосессия',
+  hasPublishedPhoto: 'опубликовал(а) новое фото с автографом для вас!',
+  newDedicatedPhoto: 'Новое фото с автографом!',
+  newPhotoAvailable: 'Доступно новое фото с автографом!',
 };
