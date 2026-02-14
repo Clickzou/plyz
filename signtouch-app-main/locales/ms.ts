@@ -1,6 +1,7 @@
 export default {
   // Navigation & Tabs
   home: 'Laman Utama',
+  feed: 'Suapan',
   gallery: 'Galeri',
   camera: 'Kamera',
   account: 'Akaun',

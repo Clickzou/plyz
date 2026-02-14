@@ -1,6 +1,7 @@
 export default {
   // Navigation & Tabs
   home: 'Главная',
+  feed: 'Лента',
   gallery: 'Галерея',
   camera: 'Камера',
   account: 'Аккаунт',

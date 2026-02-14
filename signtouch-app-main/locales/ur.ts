@@ -1,6 +1,7 @@
 export default {
   // Navigation & Tabs
   home: 'ہوم',
+  feed: 'فیڈ',
   gallery: 'گیلری',
   camera: 'کیمرا',
   account: 'اکاؤنٹ',

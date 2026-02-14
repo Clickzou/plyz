@@ -5,7 +5,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Newspaper, CheckCircle, Calendar, MessageSquare } from 'lucide-react-native';
+import { Newspaper, CheckCircle, Calendar, MessageSquare, Camera } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
@@ -194,6 +195,19 @@ export default function ActivityScreen() {
         />
       )}
 
+      <TouchableOpacity
+        style={styles.fab}
+        activeOpacity={0.85}
+        onPress={() => {
+          if (Platform.OS !== 'web') {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+          router.push('/camera');
+        }}
+      >
+        <Camera size={28} color="#fff" strokeWidth={2.5} />
+      </TouchableOpacity>
+
       <BottomNav />
     </View>
   );
@@ -239,4 +253,21 @@ const styles = StyleSheet.create({
   postImage: { width: '100%', height: 200, borderRadius: 12, marginTop: 10 },
   eventDateRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
   eventDateText: { color: '#f59e0b', fontSize: 13, fontWeight: '500' },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: BOTTOM_NAV_HEIGHT + 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#10b981',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#10b981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 100,
+  },
 });

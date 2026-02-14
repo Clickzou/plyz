@@ -1,6 +1,7 @@
 export default {
   // Navigation & Tabs
   home: '主页',
+  feed: '动态',
   gallery: '图库',
   camera: '相机',
   account: '账户',

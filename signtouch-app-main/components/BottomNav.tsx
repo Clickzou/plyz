@@ -35,16 +35,16 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
     ]}>
       <TouchableOpacity
         style={styles.navButton}
-        onPress={() => handleNavigation('/')}
+        onPress={() => handleNavigation('/activity')}
         activeOpacity={0.7}
       >
-        <Home
+        <Newspaper
           size={24}
-          color={isActive('/') ? '#10b981' : '#ffffff'}
+          color={isActiveMulti('/activity', '/') ? '#10b981' : '#ffffff'}
           strokeWidth={2}
         />
-        <Text style={[styles.navLabel, isActive('/') && styles.navLabelActive]}>
-          {t('home')}
+        <Text style={[styles.navLabel, isActiveMulti('/activity', '/') && styles.navLabelActive]}>
+          {t('feed')}
         </Text>
       </TouchableOpacity>
 
