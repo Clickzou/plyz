@@ -602,8 +602,13 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
   }, [translateX, translateY, onPositionChange, overlay.id, onPress]);
 
   const touchStartRef = useRef<{ dist: number; angle: number; scale: number; rotation: number; cx: number; cy: number; x: number; y: number } | null>(null);
+  const sigDivRef = useRef<HTMLDivElement | null>(null);
 
-  const handleTouchStart = useCallback((e: any) => {
+  const handleTouchStartRef = useRef<(e: TouchEvent) => void>(() => {});
+  const handleTouchMoveRef = useRef<(e: TouchEvent) => void>(() => {});
+  const handleTouchEndRef = useRef<(e: TouchEvent) => void>(() => {});
+
+  handleTouchStartRef.current = (e: TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
     onPress();
@@ -628,9 +633,9 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
         y: translateY.value,
       };
     }
-  }, [translateX, translateY, scale, rotation, onPress]);
+  };
 
-  const handleTouchMove = useCallback((e: any) => {
+  handleTouchMoveRef.current = (e: TouchEvent) => {
     e.preventDefault();
     const touches = e.touches;
     if (touches.length === 1 && webDraggingRef.current) {
@@ -649,9 +654,9 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
       const angleDiff = (angle - s.angle) * (180 / Math.PI);
       rotation.value = s.rotation + angleDiff;
     }
-  }, [translateX, translateY, scale, rotation]);
+  };
 
-  const handleTouchEnd = useCallback((e: any) => {
+  handleTouchEndRef.current = (e: TouchEvent) => {
     if (webDraggingRef.current) {
       webDraggingRef.current = false;
       onPositionChange(overlay.id, translateX.value, translateY.value);
@@ -661,7 +666,24 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
       onScaleChange(overlay.id, scale.value);
       onRotationChange(overlay.id, rotation.value);
     }
-  }, [translateX, translateY, scale, rotation, onPositionChange, onScaleChange, onRotationChange, overlay.id]);
+  };
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const el = sigDivRef.current;
+    if (!el) return;
+    const onStart = (e: TouchEvent) => handleTouchStartRef.current(e);
+    const onMove = (e: TouchEvent) => handleTouchMoveRef.current(e);
+    const onEnd = (e: TouchEvent) => handleTouchEndRef.current(e);
+    el.addEventListener('touchstart', onStart, { passive: false });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd, { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+    };
+  }, []);
 
   const renderSvgContent = () => {
     if (svgInfo.svgData) {
@@ -734,23 +756,24 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
 
     return (
       <div
+        ref={sigDivRef as any}
         onMouseDown={handleWebDragStart}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
         style={{
           position: 'absolute',
           top: 0,
           left: 0,
-          width: svgInfo.displayWidth,
-          height: svgInfo.displayHeight,
+          width: Math.max(svgInfo.displayWidth, 80),
+          height: Math.max(svgInfo.displayHeight, 60),
+          padding: 15,
           transform: `translate(${webPos.x}px, ${webPos.y}px) scale(${webScaleVal}) rotate(${webRotVal}deg)`,
           cursor: 'grab',
-          zIndex: isSelected ? 1000 : 10,
+          zIndex: isSelected ? 1000 : 100,
           userSelect: 'none' as const,
           touchAction: 'none' as const,
           border: isSelected ? '2px solid #10b981' : '2px solid transparent',
           borderRadius: 4,
+          pointerEvents: 'auto' as const,
+          boxSizing: 'content-box' as const,
         }}
       >
         <img
@@ -1012,6 +1035,11 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
     return () => { if (webRafRef.current) cancelAnimationFrame(webRafRef.current); };
   }, [translateX, translateY, scale, rotation]);
 
+  const textDivRef = useRef<HTMLDivElement | null>(null);
+  const textTouchStartFnRef = useRef<(e: TouchEvent) => void>(() => {});
+  const textTouchMoveFnRef = useRef<(e: TouchEvent) => void>(() => {});
+  const textTouchEndFnRef = useRef<(e: TouchEvent) => void>(() => {});
+
   if (Platform.OS === 'web') {
     const handleMouseDown = (e: any) => {
       e.preventDefault();
@@ -1034,7 +1062,8 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     };
-    const handleTouchStart = (e: any) => {
+
+    textTouchStartFnRef.current = (e: TouchEvent) => {
       e.preventDefault();
       e.stopPropagation();
       onPress();
@@ -1054,7 +1083,7 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
         };
       }
     };
-    const handleTouchMove = (e: any) => {
+    textTouchMoveFnRef.current = (e: TouchEvent) => {
       e.preventDefault();
       const touches = e.touches;
       if (touches.length === 1 && webDraggingRef.current) {
@@ -1069,7 +1098,7 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
         rotation.value = s.rotation + (angle - s.angle) * (180 / Math.PI);
       }
     };
-    const handleTouchEnd = () => {
+    textTouchEndFnRef.current = (e: TouchEvent) => {
       if (webDraggingRef.current) {
         webDraggingRef.current = false;
         onPositionChange(overlay.id, translateX.value, translateY.value);
@@ -1081,21 +1110,36 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
       }
     };
 
+    useEffect(() => {
+      const el = textDivRef.current;
+      if (!el) return;
+      const onStart = (e: TouchEvent) => textTouchStartFnRef.current(e);
+      const onMove = (e: TouchEvent) => textTouchMoveFnRef.current(e);
+      const onEnd = (e: TouchEvent) => textTouchEndFnRef.current(e);
+      el.addEventListener('touchstart', onStart, { passive: false });
+      el.addEventListener('touchmove', onMove, { passive: false });
+      el.addEventListener('touchend', onEnd, { passive: false });
+      return () => {
+        el.removeEventListener('touchstart', onStart);
+        el.removeEventListener('touchmove', onMove);
+        el.removeEventListener('touchend', onEnd);
+      };
+    }, []);
+
     return (
-      <div style={{ position: 'absolute', top: 0, left: 0, zIndex: isSelected ? 1000 : 10 }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, zIndex: isSelected ? 1000 : 100 }}>
         <div
+          ref={textDivRef as any}
           onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
           style={{
             transform: `translate(${webPos.x}px, ${webPos.y}px) scale(${webScaleVal}) rotate(${webRotVal}deg)`,
             cursor: 'grab',
             userSelect: 'none' as const,
             touchAction: 'none' as const,
+            pointerEvents: 'auto' as const,
             border: isSelected ? '2px solid #10b981' : '2px solid transparent',
             borderRadius: 4,
-            padding: 4,
+            padding: 10,
           }}
         >
           <span style={{
