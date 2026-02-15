@@ -86,7 +86,7 @@ export default function RequestAutographScreen() {
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <ArrowLeft size={22} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('requestAutographTitle') || 'Request Autograph'}</Text>
+        <Text style={styles.headerTitle}>{t('requestAutographTitle') || 'Request Dedication'}</Text>
         <View style={{ width: 38 }} />
       </View>
 
