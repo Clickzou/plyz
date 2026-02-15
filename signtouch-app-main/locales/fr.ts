@@ -1389,6 +1389,7 @@ export default {
   dedicationStep2: 'Partagez le QR code sur place ou en ligne',
   dedicationStep3: 'Les fans scannent le QR code et reçoivent votre dédicace',
   dedicationStep4: 'Publiez photos et selfies pendant l\'événement pour vos fans',
+  fanIntroText: 'Bienvenue dans votre espace fan ! Rejoignez des sessions live vidéo avec vos célébrités préférées, participez à des événements dédicaces et retrouvez ici toutes vos réservations.',
   celIntroText: 'Le mode Célébrité vous permet de créer des sessions live vidéo et des événements dédicaces pour interagir avec vos fans. Connectez votre compte Stripe pour certifier votre identité et être rémunéré directement.',
   celStripeVerify: 'Certifier mon compte célébrité',
   celStripeVerifySub: 'Connectez Stripe pour être vérifié et recevoir vos paiements',

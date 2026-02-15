@@ -1404,6 +1404,7 @@ export default {
   dedicationStep2: 'Share the QR code on-site or online',
   dedicationStep3: 'Fans scan the QR code and receive your dedication',
   dedicationStep4: 'Publish photos and selfies during the event for your fans',
+  fanIntroText: 'Welcome to your fan space! Join live video sessions with your favourite celebrities, participate in dedication events and find all your bookings here.',
   celIntroText: 'Celebrity mode lets you create live video sessions and dedication events to interact with your fans. Connect your Stripe account to verify your identity and get paid directly.',
   celStripeVerify: 'Verify my celebrity account',
   celStripeVerifySub: 'Connect Stripe to get verified and receive your payments',

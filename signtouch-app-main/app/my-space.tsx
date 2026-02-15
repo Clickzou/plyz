@@ -718,6 +718,11 @@ export default function MySpaceScreen() {
 
   const renderFanView = () => (
     <>
+      <View style={styles.fanIntroBox}>
+        <Text style={styles.fanIntroText}>
+          {t('fanIntroText' as any) || 'Bienvenue dans votre espace fan ! Rejoignez des sessions live vidéo avec vos célébrités préférées, participez à des événements dédicaces et retrouvez ici toutes vos réservations.'}
+        </Text>
+      </View>
       <View style={styles.fanJoinRow}>
         <TouchableOpacity
           style={styles.fanJoinBtn}
@@ -1466,6 +1471,21 @@ export default function MySpaceScreen() {
 }
 
 const styles = StyleSheet.create({
+  fanIntroBox: {
+    backgroundColor: 'rgba(59,130,246,0.08)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(59,130,246,0.2)',
+    padding: 14,
+    marginBottom: 12,
+    marginTop: 4,
+    marginHorizontal: 16,
+  },
+  fanIntroText: {
+    color: '#93c5fd',
+    fontSize: 13,
+    lineHeight: 20,
+  },
   celIntroBox: {
     backgroundColor: 'rgba(99,102,241,0.08)',
     borderRadius: 12,
