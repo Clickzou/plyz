@@ -195,7 +195,7 @@ export default function OnboardingOverlay() {
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
     zIndex: 9999,
   },
   topSection: {
