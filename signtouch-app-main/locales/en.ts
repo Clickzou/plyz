@@ -1299,7 +1299,7 @@ export default {
   platformFee: 'Platform fee (15%)',
   marketplaceStripeFee: 'Stripe fee',
   celebrityReceives: 'Celebrity receives',
-  proceedToPayment: 'Proceed to Payment',
+  proceedToPayment: 'Pre-payment',
   bookingSuccess: 'Booking confirmed!',
   bookingSuccessHint: 'You will be notified when the celebrity accepts',
   bookingSuccessInfo: 'The celebrity will review your booking request. Once accepted, you will receive instructions to join the video call.',

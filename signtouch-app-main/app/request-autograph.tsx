@@ -168,7 +168,7 @@ export default function RequestAutographScreen() {
             <>
               <CreditCard size={20} color="#fff" />
               <Text style={styles.payBtnText}>
-                {t('proceedToPayment') || 'Proceed to Payment'} · {formatPrice(priceCents)}
+                {t('proceedToPayment') || 'Pre-payment'} - {formatPrice(priceCents)}
               </Text>
               <ChevronRight size={18} color="#fff" />
             </>

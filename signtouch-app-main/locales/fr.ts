@@ -1292,7 +1292,7 @@ export default {
   platformFee: 'Commission plateforme (15%)',
   marketplaceStripeFee: 'Frais Stripe',
   celebrityReceives: 'La célébrité reçoit',
-  proceedToPayment: 'Procéder au paiement',
+  proceedToPayment: 'Pré-paiement',
   bookingSuccess: 'Réservation confirmée !',
   bookingSuccessHint: 'Vous serez notifié quand la célébrité accepte',
   bookingSuccessInfo: 'La célébrité examinera votre demande de réservation. Une fois acceptée, vous recevrez les instructions pour rejoindre l\'appel vidéo.',

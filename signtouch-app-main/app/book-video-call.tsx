@@ -207,7 +207,7 @@ export default function BookVideoCallScreen() {
             <>
               <CreditCard size={20} color="#fff" />
               <Text style={styles.payBtnText}>
-                {t('proceedToPayment') || 'Proceed to Payment'} · {formatPrice(totalCents)}
+                {t('proceedToPayment') || 'Pre-payment'} - {formatPrice(totalCents)}
               </Text>
               <ChevronRight size={18} color="#fff" />
             </>
