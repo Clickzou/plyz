@@ -519,6 +519,37 @@ export default function MySpaceScreen() {
 
   const renderFanView = () => (
     <>
+      <View style={styles.fanJoinRow}>
+        <TouchableOpacity
+          style={styles.fanJoinBtn}
+          onPress={() => router.push('/join-live-session' as any)}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.fanJoinIcon, { backgroundColor: 'rgba(239,68,68,0.15)' }]}>
+            <Video size={20} color="#ef4444" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.fanJoinTitle}>{t('fanJoinLive' as any) || 'Rejoindre un Live'}</Text>
+            <Text style={styles.fanJoinSub}>{t('fanJoinLiveSub' as any) || 'Session vidéo avec une célébrité'}</Text>
+          </View>
+          <ChevronRight size={18} color="#6b7280" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.fanJoinBtn}
+          onPress={() => router.push('/join-event' as any)}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.fanJoinIcon, { backgroundColor: 'rgba(168,85,247,0.15)' }]}>
+            <Sparkles size={20} color="#a855f7" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.fanJoinTitle}>{t('fanJoinDedication' as any) || 'Rejoindre une Dédicace'}</Text>
+            <Text style={styles.fanJoinSub}>{t('fanJoinDedicationSub' as any) || 'Événement dédicace en direct'}</Text>
+          </View>
+          <ChevronRight size={18} color="#6b7280" />
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.tabBar}>
         <TouchableOpacity
           style={[styles.tabItem, tab === 'bookings' && styles.tabItemActive]}
@@ -1187,6 +1218,38 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  fanJoinRow: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    gap: 10,
+  },
+  fanJoinBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  fanJoinIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fanJoinTitle: {
+    color: '#e5e7eb',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  fanJoinSub: {
+    color: '#6b7280',
+    fontSize: 11,
+    marginTop: 2,
   },
   publishBtn: {
     flexDirection: 'row',
