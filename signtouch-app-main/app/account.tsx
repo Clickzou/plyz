@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { router } from 'expo-router';
-import { Crown, Info, Heart, Share2, Globe, Check, FileText, LogOut, Gift, X, Mail, User, Shield, ArrowRight, CreditCard } from 'lucide-react-native';
+import { Crown, Info, Heart, Share2, Globe, Check, FileText, LogOut, Gift, X, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle } from 'lucide-react-native';
 import { SUBSCRIPTION_ENABLED } from '@/contexts/SubscriptionContext';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
@@ -202,6 +202,10 @@ export default function AccountScreen() {
       setShowLanguageModal(true);
     } else if (action === 'legal') {
       router.push('/legal');
+    } else if (action === 'replayTutorial') {
+      AsyncStorage.removeItem('@signtouch_onboarding_done').then(() => {
+        router.push('/activity');
+      });
     } else {
       console.log('Action:', action);
     }
@@ -662,6 +666,17 @@ export default function AccountScreen() {
               <Info size={24} color="#10b981" strokeWidth={2} />
             </View>
             <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('about')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
+            onPress={() => handlePress('replayTutorial')}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
+              <HelpCircle size={24} color="#10b981" strokeWidth={2} />
+            </View>
+            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('replayTutorial') || 'Replay Tutorial'}</Text>
           </TouchableOpacity>
         </View>
 
