@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   Image, Platform, Modal, TextInput, KeyboardAvoidingView,
-  Animated as RNAnimated, Dimensions
+  Animated as RNAnimated, Dimensions, Share
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Newspaper, CheckCircle, Calendar, Heart, MessageCircle, Star, X, Send } from 'lucide-react-native';
+import { Newspaper, CheckCircle, Calendar, Heart, MessageCircle, Star, X, Send, Share2 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -249,6 +249,15 @@ export default function ActivityScreen() {
     await AsyncStorage.setItem(COMMENTS_KEY, JSON.stringify(updated));
   };
 
+  const sharePost = async (item: FeedPost) => {
+    try {
+      const message = item.title
+        ? `${item.celebrity.stage_name} - ${item.title}\n\n${item.body || ''}\n\nVia SignTouch`
+        : `${item.celebrity.stage_name}\n\n${item.body || ''}\n\nVia SignTouch`;
+      await Share.share({ message });
+    } catch {}
+  };
+
   const showBanner = !isCelebrity && !bannerDismissed;
 
   const dismissBanner = async () => {
@@ -398,6 +407,16 @@ export default function ActivityScreen() {
             <Text style={[styles.actionCount, commentCount > 0 && { color: '#3b82f6' }]}>
               {commentCount > 0 ? formatCount(commentCount) : t('comment' as any)}
             </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionGroup}
+            onPress={() => sharePost(item)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.actionBtn}>
+              <Share2 size={20} color="#6b7280" />
+            </View>
+            <Text style={styles.actionCount}>{t('share' as any) || 'Share'}</Text>
           </TouchableOpacity>
         </View>
       </View>
