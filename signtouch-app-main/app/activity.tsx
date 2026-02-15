@@ -470,30 +470,7 @@ export default function ActivityScreen() {
           renderItem={renderPost}
           keyExtractor={item => item.id}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: BOTTOM_NAV_HEIGHT + 20 }}
-          ListHeaderComponent={showBanner ? (
-            <View style={styles.celebrityBanner}>
-              <TouchableOpacity style={styles.bannerClose} onPress={dismissBanner} activeOpacity={0.7}>
-                <X size={16} color="#9ca3af" />
-              </TouchableOpacity>
-              <View style={styles.bannerContent}>
-                <View style={styles.bannerIconWrap}>
-                  <Star size={28} color="#f59e0b" fill="#f59e0b" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.bannerTitle}>{t('celebrityBannerTitle')}</Text>
-                  <Text style={styles.bannerDesc}>{t('celebrityBannerDesc')}</Text>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={styles.bannerButton}
-                onPress={handleActivateCelebrity}
-                activeOpacity={0.8}
-              >
-                <Star size={16} color="#000" fill="#000" />
-                <Text style={styles.bannerButtonText}>{t('celebrityBannerButton')}</Text>
-              </TouchableOpacity>
-            </View>
-          ) : null}
+          ListHeaderComponent={null}
           onRefresh={() => {
             setRefreshing(true);
             fetchFeed(1, true);
