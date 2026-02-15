@@ -1,24 +1,87 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions, Platform } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Dimensions, Platform, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Camera } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
-const SPLASH_DURATION = 3000;
-const ONBOARDING_KEY = '@signtouch_onboarding_done';
+const SPLASH_DURATION = 5000;
 
 export default function SplashScreen() {
   const router = useRouter();
   const logoScale = useRef(new Animated.Value(0.5)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
-  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const signatureOpacity = useRef(new Animated.Value(0)).current;
   const subtitleOpacity = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const fadeOut = useRef(new Animated.Value(1)).current;
+  const circle1Anim = useRef(new Animated.Value(0)).current;
+  const circle2Anim = useRef(new Animated.Value(0)).current;
+  const circle3Anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    Animated.stagger(200, [
+      Animated.timing(circle1Anim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(circle2Anim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(circle3Anim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle1Anim, {
+          toValue: 1.1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(circle1Anim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle2Anim, {
+          toValue: 1.15,
+          duration: 2500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(circle2Anim, {
+          toValue: 1,
+          duration: 2500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle3Anim, {
+          toValue: 1.08,
+          duration: 1800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(circle3Anim, {
+          toValue: 1,
+          duration: 1800,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
     Animated.sequence([
       Animated.parallel([
         Animated.spring(logoScale, {
@@ -29,18 +92,18 @@ export default function SplashScreen() {
         }),
         Animated.timing(logoOpacity, {
           toValue: 1,
-          duration: 600,
+          duration: 800,
           useNativeDriver: true,
         }),
       ]),
-      Animated.timing(titleOpacity, {
+      Animated.timing(signatureOpacity, {
         toValue: 1,
-        duration: 500,
+        duration: 600,
         useNativeDriver: true,
       }),
       Animated.timing(subtitleOpacity, {
         toValue: 1,
-        duration: 400,
+        duration: 500,
         useNativeDriver: true,
       }),
     ]).start();
@@ -48,13 +111,13 @@ export default function SplashScreen() {
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.08,
-          duration: 1200,
+          toValue: 1.06,
+          duration: 1500,
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 1200,
+          duration: 1500,
           useNativeDriver: true,
         }),
       ])
@@ -82,9 +145,9 @@ export default function SplashScreen() {
         style={StyleSheet.absoluteFill}
       />
 
-      <View style={styles.bgCircle1} />
-      <View style={styles.bgCircle2} />
-      <View style={styles.bgCircle3} />
+      <Animated.View style={[styles.bgCircle1, { transform: [{ scale: circle1Anim }] }]} />
+      <Animated.View style={[styles.bgCircle2, { transform: [{ scale: circle2Anim }] }]} />
+      <Animated.View style={[styles.bgCircle3, { transform: [{ scale: circle3Anim }] }]} />
 
       <View style={styles.content}>
         <Animated.View
@@ -98,17 +161,23 @@ export default function SplashScreen() {
             },
           ]}
         >
-          <View style={styles.logoInner}>
-            <Camera size={48} color="#fff" strokeWidth={2} />
-          </View>
+          <Image
+            source={require('../assets/logo-signtouch.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </Animated.View>
 
-        <Animated.Text style={[styles.title, { opacity: titleOpacity }]}>
-          SignTouch
-        </Animated.Text>
+        <Animated.View style={[styles.signatureContainer, { opacity: signatureOpacity }]}>
+          <Image
+            source={require('../assets/images/signature.png')}
+            style={styles.signatureImage}
+            resizeMode="contain"
+          />
+        </Animated.View>
 
         <Animated.Text style={[styles.subtitle, { opacity: subtitleOpacity }]}>
-          Your memories, your signature
+          Admirer, expérimenter et Garder un souvenir.
         </Animated.Text>
       </View>
 
@@ -162,39 +231,28 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   logoContainer: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
+    marginBottom: 20,
   },
-  logoInner: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  logoImage: {
+    width: 160,
+    height: 160,
   },
-  title: {
-    fontSize: 42,
-    fontWeight: '800',
-    color: '#fff',
-    letterSpacing: -1,
-    marginBottom: 8,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
+  signatureContainer: {
+    marginBottom: 16,
+  },
+  signatureImage: {
+    width: 200,
+    height: 60,
+    tintColor: '#000',
   },
   subtitle: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.8)',
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.85)',
     fontWeight: '500',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    paddingHorizontal: 40,
   },
   footer: {
     paddingBottom: 60,
