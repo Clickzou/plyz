@@ -104,3 +104,9 @@ Preferred communication style: Simple, everyday language.
 - `STRIPE_SECRET_KEY` — Stripe secret API key (server-side only)
 - `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret (server-side only)
 - `STRIPE_SERVER_PORT` — Port for Stripe Express server (default: 3001)
+- `MOCK_MODE` — Set to `true` to enable mock celebrity data (development only, must NOT be set in production). When disabled, all mock-* IDs are rejected and no fallback to mock data occurs.
+
+### Security
+- **Mock Mode Protection**: `MOCK_MODE` env var gates all mock data. In production, `MOCK_MODE` is absent so mock celebrity IDs are rejected (400), and API error fallbacks return 500 instead of mock data.
+- **JWT Auth on Payment Endpoints**: `/api/book-video` and `/api/autograph` require a valid Supabase JWT (`Authorization: Bearer <token>`). Server verifies the token via `supabase.auth.getUser()` and confirms `fan_id` matches the authenticated user. Returns 401 if missing/invalid, 403 if fan_id mismatch.
+- **Server-Side Price Calculation**: Prices for mock celebrities are always computed from the `MOCK_CELEBS` server-side dictionary, never trusted from the client.

@@ -17,7 +17,7 @@ export default function BookVideoCallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const params = useLocalSearchParams<{
     celebrityId: string;
     celebrityName: string;
@@ -59,9 +59,13 @@ export default function BookVideoCallScreen() {
     }
     try {
       setLoading(true);
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
       const res = await fetch(`${API_BASE}/api/book-video`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           fan_id: user.id,
           celebrity_id: params.celebrityId,

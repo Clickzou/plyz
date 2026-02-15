@@ -63,6 +63,9 @@ loadNsfwModel();
 
 const app = express();
 
+const MOCK_MODE = process.env.MOCK_MODE === 'true' || process.env.ENABLE_MOCK_CELEBS === 'true';
+console.log(`[Server] Mock mode: ${MOCK_MODE ? 'ENABLED' : 'DISABLED'}`);
+
 const MOCK_CELEBS = {
   'mock-001': { stage_name: 'Zinedine Zidane', pricing: { video_call_price_cents: 15000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 5000, currency: 'eur' } },
   'mock-002': { stage_name: 'Marion Cotillard', pricing: { video_call_price_cents: 20000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 7500, currency: 'eur' } },
@@ -71,7 +74,28 @@ const MOCK_CELEBS = {
 };
 
 function isMockCelebrity(id) {
-  return id && id.startsWith('mock-') && MOCK_CELEBS[id];
+  return MOCK_MODE && id && id.startsWith('mock-') && MOCK_CELEBS[id];
+}
+
+function isMockId(id) {
+  return id && id.startsWith('mock-');
+}
+
+async function verifySupabaseJWT(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+  const token = authHeader.replace('Bearer ', '');
+  try {
+    const supabase = getSupabase();
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) return null;
+    return user;
+  } catch (e) {
+    console.error('[Auth] JWT verification failed:', e.message);
+    return null;
+  }
 }
 
 let supabaseClient = null;
@@ -1617,7 +1641,11 @@ app.get('/api/celebrities', async (req, res) => {
       total_pages: Math.ceil((count || 0) / per_page),
     });
   } catch (error) {
-    console.error('[Celebrities] Falling back to mock data:', error.message);
+    console.error('[Celebrities] Error:', error.message);
+    if (!MOCK_MODE) {
+      return res.status(500).json({ error: 'Service temporarily unavailable' });
+    }
+    console.log('[Celebrities] Falling back to mock data');
     const { search, sort, page, limit: lim } = req.query;
     const page_num = Math.max(1, parseInt(page) || 1);
     const per_page = Math.min(50, Math.max(1, parseInt(lim) || 20));
@@ -1770,7 +1798,11 @@ app.get('/api/celebrity/:id', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('[Celebrity Detail] Falling back to mock data:', error.message);
+    console.error('[Celebrity Detail] Error:', error.message);
+    if (!MOCK_MODE) {
+      return res.status(500).json({ error: 'Service temporarily unavailable' });
+    }
+    console.log('[Celebrity Detail] Falling back to mock data');
     const { id } = req.params;
     const mock = MOCK_CELEBRITIES.find(c => c.user_id === id);
     if (!mock) return res.status(404).json({ error: 'Celebrity not found' });
@@ -1831,7 +1863,11 @@ app.get('/api/feed', async (req, res) => {
       per_page,
     });
   } catch (error) {
-    console.error('[Feed] Falling back to mock data:', error.message);
+    console.error('[Feed] Error:', error.message);
+    if (!MOCK_MODE) {
+      return res.status(500).json({ error: 'Service temporarily unavailable' });
+    }
+    console.log('[Feed] Falling back to mock data');
     const { kind } = req.query;
     let mockResults = [...MOCK_FEED];
     if (kind && kind !== 'all') {
@@ -1922,6 +1958,10 @@ app.get('/api/celebrity-events', async (req, res) => {
     res.json({ events: data || [] });
   } catch (error) {
     console.error('[Celebrity Events] Error:', error.message);
+    if (!MOCK_MODE) {
+      return res.status(500).json({ error: 'Service temporarily unavailable' });
+    }
+    console.log('[Celebrity Events] Falling back to mock data');
     const { celebrity_id } = req.query;
     const demoEvents = [
       { id: 'evt-001', celebrity_id: celebrity_id || 'mock-001', celebrity_name: 'Zinedine Zidane', code: 'ZZ2026', status: 'scheduled', price_cents: 15000, duration_minutes: 30, max_slots: 20, location: 'Paris, France', scheduled_at: '2026-03-15T18:00:00Z', created_at: '2026-02-01T10:00:00Z' },
@@ -1990,6 +2030,18 @@ app.post('/api/book-video', async (req, res) => {
 
     if (!fan_id || !celebrity_id) {
       return res.status(400).json({ error: 'fan_id and celebrity_id required' });
+    }
+
+    const user = await verifySupabaseJWT(req);
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    if (user.id !== fan_id) {
+      return res.status(403).json({ error: 'fan_id does not match authenticated user' });
+    }
+
+    if (isMockId(celebrity_id) && !MOCK_MODE) {
+      return res.status(400).json({ error: 'Mock celebrities are not available' });
     }
 
     const host = req.headers.host || req.hostname;
@@ -2117,6 +2169,18 @@ app.post('/api/autograph', async (req, res) => {
 
     if (!fan_id || !celebrity_id) {
       return res.status(400).json({ error: 'fan_id and celebrity_id required' });
+    }
+
+    const user = await verifySupabaseJWT(req);
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    if (user.id !== fan_id) {
+      return res.status(403).json({ error: 'fan_id does not match authenticated user' });
+    }
+
+    if (isMockId(celebrity_id) && !MOCK_MODE) {
+      return res.status(400).json({ error: 'Mock celebrities are not available' });
     }
 
     const host = req.headers.host || req.hostname;
