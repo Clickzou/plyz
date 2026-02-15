@@ -90,8 +90,9 @@ Preferred communication style: Simple, everyday language.
 - **API Endpoints**: 15+ marketplace endpoints in `server/index.js` (GET /api/celebrities, GET /api/celebrity/:id, GET /api/feed, POST /api/posts, POST /api/report, POST /api/book-video, POST /api/autograph, etc.)
 - **Wikidata Integration**: Server-side search, entity resolution, and celebrity profile sync
 - **Badge System**: Official verified + Stripe Connect verified badges
-- **Navigation**: BottomNav updated to 6 tabs (Home, Discover, Celebrity, Fan, My Space, Account)
-- **Migration Required**: Marketplace tables must be created in Supabase SQL Editor using `server/migration.sql`. Tables needed: celebrity_profiles, celebrity_pricing, booking_requests, autograph_requests, posts, wikidata_entities, reports.
+- **Organization Verification**: `org-verification.tsx` - Non-individual accounts (sports clubs, brands, associations, media, labels, agencies) can request verification for a special badge. Accessible from celebrity onboarding. API endpoints: `POST /api/org-verification-request`, `GET /api/org-verification-status`. Status flow: pending → approved/rejected/more_info. Rejected/more_info allows resubmission.
+- **Navigation**: BottomNav updated to 4 tabs (Actu, Découvrir, Mon Espace, Compte) + camera center
+- **Migration Required**: Marketplace tables must be created in Supabase SQL Editor using `server/migration.sql`. Tables needed: celebrity_profiles, celebrity_pricing, booking_requests, autograph_requests, posts, wikidata_entities, reports, organization_verification_requests.
 
 ### Environment Variables
 - `EXPO_PUBLIC_SUPABASE_URL`
