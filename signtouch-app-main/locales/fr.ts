@@ -1378,6 +1378,7 @@ export default {
   settingsSave: 'Enregistrer',
   settingsSaved: 'Paramètres enregistrés !',
 
+  accountSubtitle: 'Langue, connexion, paramètres et préférences',
   upcomingEvents: 'Événements en cours ou programmés',
   noEvents: 'Aucun événement pour le moment',
   eventActive: 'En cours',

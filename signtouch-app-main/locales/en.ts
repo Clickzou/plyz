@@ -1393,6 +1393,7 @@ export default {
   settingsSave: 'Save',
   settingsSaved: 'Settings saved!',
 
+  accountSubtitle: 'Language, login, settings and preferences',
   upcomingEvents: 'Current & Scheduled Events',
   noEvents: 'No events at the moment',
   eventActive: 'Active',

@@ -6,7 +6,7 @@ import {
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Inbox, Video, PenTool, Clock, CheckCircle, XCircle, ChevronRight,
+  Inbox, Video, PenTool, Clock, CheckCircle, XCircle, ChevronRight, User,
   Star, Users, DollarSign, Plus, FileText, Eye, TrendingUp, Sparkles, Radio,
   QrCode, Trash2, Copy, Share2, X, Check, Edit3, Play, Calendar, Settings, Globe, Save,
 } from 'lucide-react-native';
@@ -725,6 +725,20 @@ export default function MySpaceScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.fanJoinTitle}>{t('fanJoinDedication' as any) || 'Rejoindre Session Live Dédicace'}</Text>
             <Text style={styles.fanJoinSub}>{t('fanJoinDedicationSub' as any) || 'Scannez un QR code ou entrez un code pour recevoir une dédicace personnalisée de votre célébrité'}</Text>
+          </View>
+          <ChevronRight size={18} color="#6b7280" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.fanJoinBtn}
+          onPress={() => router.push('/account' as any)}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.fanJoinIcon, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
+            <User size={20} color="#10b981" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.fanJoinTitle}>{t('accountTitle') || 'Mon Compte'}</Text>
+            <Text style={styles.fanJoinSub}>{t('accountSubtitle' as any) || 'Langue, connexion, paramètres et préférences'}</Text>
           </View>
           <ChevronRight size={18} color="#6b7280" />
         </TouchableOpacity>
