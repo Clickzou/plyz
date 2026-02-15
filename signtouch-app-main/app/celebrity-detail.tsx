@@ -71,7 +71,7 @@ export default function CelebrityDetailScreen() {
   const autographLoading = false;
   const [showReport, setShowReport] = useState(false);
   const [reportReason, setReportReason] = useState('');
-  const [activeTab, setActiveTab] = useState<'about' | 'pricing' | 'posts'>('about');
+  const [activeTab, setActiveTab] = useState<'about' | 'posts'>('about');
   const [events, setEvents] = useState<LiveEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
 
@@ -437,7 +437,7 @@ export default function CelebrityDetailScreen() {
         </View>
 
         <View style={styles.tabs}>
-          {(['about', 'pricing', 'posts'] as const).map(tab => (
+          {(['about', 'posts'] as const).map(tab => (
             <TouchableOpacity
               key={tab}
               style={[styles.tab, activeTab === tab && styles.tabActive]}
@@ -546,37 +546,6 @@ export default function CelebrityDetailScreen() {
                   <Text style={styles.reportSubmitText}>Submit</Text>
                 </TouchableOpacity>
               </View>
-            )}
-          </View>
-        )}
-
-        {activeTab === 'pricing' && p && (
-          <View style={styles.section}>
-            {p.video_call_price_cents > 0 && (
-              <TouchableOpacity style={styles.priceCard} onPress={handleBookCall} activeOpacity={0.8}>
-                <Video size={20} color="#10b981" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.priceLabel}>{t('videoCallPrice')}</Text>
-                  <Text style={styles.priceSubLabel}>
-                    {t('sessionDuration', { minutes: p.video_call_duration_minutes })}
-                  </Text>
-                </View>
-                <Text style={styles.priceValue}>
-                  {formatPrice(p.video_call_price_cents, p.currency)}
-                  {p.video_call_unit === 'minute' ? t('perMinute') : ''}
-                </Text>
-              </TouchableOpacity>
-            )}
-            {p.autograph_price_cents > 0 && (
-              <TouchableOpacity style={styles.priceCard} onPress={handleAutograph} activeOpacity={0.8}>
-                <PenTool size={20} color="#f59e0b" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.priceLabel}>{t('autographPrice')}</Text>
-                </View>
-                <Text style={styles.priceValue}>
-                  {formatPrice(p.autograph_price_cents, p.currency)}
-                </Text>
-              </TouchableOpacity>
             )}
           </View>
         )}
@@ -811,10 +780,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  priceCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 14, padding: 16, marginBottom: 10 },
-  priceLabel: { color: '#fff', fontSize: 15, fontWeight: '600' },
-  priceSubLabel: { color: '#9ca3af', fontSize: 12, marginTop: 2 },
-  priceValue: { color: '#10b981', fontSize: 18, fontWeight: '700' },
 
   postCard: {
     backgroundColor: 'rgba(255,255,255,0.05)',
