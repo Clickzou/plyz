@@ -284,32 +284,34 @@ export default function MySpaceScreen() {
 
   const renderFanView = () => (
     <>
-      <View style={styles.tabRow}>
+      <View style={styles.tabBar}>
         <TouchableOpacity
-          style={[styles.tabBtn, tab === 'bookings' && styles.tabBtnActive]}
+          style={[styles.tabItem, tab === 'bookings' && styles.tabItemActive]}
           onPress={() => setTab('bookings')}
+          activeOpacity={0.7}
         >
-          <Video size={16} color={tab === 'bookings' ? '#fff' : '#6b7280'} />
-          <Text style={[styles.tabText, tab === 'bookings' && styles.tabTextActive]}>
+          <Video size={15} color={tab === 'bookings' ? '#10b981' : '#6b7280'} />
+          <Text style={[styles.tabLabel, tab === 'bookings' && styles.tabLabelActive]}>
             {t('myBookings')}
           </Text>
           {bookings.length > 0 && (
-            <View style={styles.countBadge}>
-              <Text style={styles.countText}>{bookings.length}</Text>
+            <View style={[styles.tabCountBadge, tab === 'bookings' && styles.tabCountBadgeActive]}>
+              <Text style={[styles.tabCountText, tab === 'bookings' && styles.tabCountTextActive]}>{bookings.length}</Text>
             </View>
           )}
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tabBtn, tab === 'autographs' && styles.tabBtnActive]}
+          style={[styles.tabItem, tab === 'autographs' && styles.tabItemActive]}
           onPress={() => setTab('autographs')}
+          activeOpacity={0.7}
         >
-          <PenTool size={16} color={tab === 'autographs' ? '#fff' : '#6b7280'} />
-          <Text style={[styles.tabText, tab === 'autographs' && styles.tabTextActive]}>
+          <PenTool size={15} color={tab === 'autographs' ? '#f59e0b' : '#6b7280'} />
+          <Text style={[styles.tabLabel, tab === 'autographs' && styles.tabLabelActive]}>
             {t('myAutographs')}
           </Text>
           {autographs.length > 0 && (
-            <View style={styles.countBadge}>
-              <Text style={styles.countText}>{autographs.length}</Text>
+            <View style={[styles.tabCountBadge, tab === 'autographs' && styles.tabCountBadgeAutograph]}>
+              <Text style={[styles.tabCountText, tab === 'autographs' && styles.tabCountTextActive]}>{autographs.length}</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -449,32 +451,30 @@ export default function MySpaceScreen() {
       <LinearGradient colors={['#0a1628', '#0f2035', '#0a1628']} style={StyleSheet.absoluteFill} />
       <View style={styles.header}>
         <Text style={styles.title}>{t('mySpaceTitle')}</Text>
+        {isCelebrity && (
+          <View style={styles.modeChipRow}>
+            <TouchableOpacity
+              style={[styles.modeChip, mode === 'fan' && styles.modeChipActiveFan]}
+              onPress={() => setMode('fan')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.modeChipText, mode === 'fan' && styles.modeChipTextActive]}>
+                Fan
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modeChip, mode === 'celebrity' && styles.modeChipActiveCel]}
+              onPress={() => setMode('celebrity')}
+              activeOpacity={0.8}
+            >
+              <Star size={12} color={mode === 'celebrity' ? '#000' : '#6b7280'} fill={mode === 'celebrity' ? '#000' : 'transparent'} />
+              <Text style={[styles.modeChipText, mode === 'celebrity' && styles.modeChipTextActiveCel]}>
+                {t('celDashModeCelebrity' as any) || 'Célébrité'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
-
-      {isCelebrity && (
-        <View style={styles.modeToggleRow}>
-          <TouchableOpacity
-            style={[styles.modeBtn, mode === 'fan' && styles.modeBtnActiveFan]}
-            onPress={() => setMode('fan')}
-            activeOpacity={0.8}
-          >
-            <Users size={15} color={mode === 'fan' ? '#fff' : '#6b7280'} />
-            <Text style={[styles.modeBtnText, mode === 'fan' && styles.modeBtnTextActive]}>
-              {t('celDashModeFan' as any) || 'Fan'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.modeBtn, mode === 'celebrity' && styles.modeBtnActiveCel]}
-            onPress={() => setMode('celebrity')}
-            activeOpacity={0.8}
-          >
-            <Star size={15} color={mode === 'celebrity' ? '#000' : '#6b7280'} fill={mode === 'celebrity' ? '#000' : 'transparent'} />
-            <Text style={[styles.modeBtnText, mode === 'celebrity' && styles.modeBtnTextActiveCel]}>
-              {t('celDashModeCelebrity' as any) || 'Célébrité'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
 
       {mode === 'celebrity' && isCelebrity ? renderCelebrityView() : renderFanView()}
 
@@ -485,61 +485,91 @@ export default function MySpaceScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a1628' },
-  header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 5 },
-  title: { color: '#fff', fontSize: 24, fontWeight: '700' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  title: { color: '#fff', fontSize: 22, fontWeight: '700' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   emptyText: { color: '#9ca3af', fontSize: 16, marginTop: 12, fontWeight: '600' },
   emptyHint: { color: '#6b7280', fontSize: 13, marginTop: 4, textAlign: 'center' },
 
-  modeToggleRow: {
+  modeChipRow: {
     flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 10,
-    marginBottom: 4,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 14,
-    padding: 4,
+    gap: 6,
   },
-  modeBtn: {
+  modeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  modeChipActiveFan: {
+    backgroundColor: '#10b981',
+    borderColor: '#10b981',
+  },
+  modeChipActiveCel: {
+    backgroundColor: '#f59e0b',
+    borderColor: '#f59e0b',
+  },
+  modeChipText: {
+    color: '#6b7280',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  modeChipTextActive: {
+    color: '#fff',
+  },
+  modeChipTextActiveCel: {
+    color: '#000',
+  },
+
+  tabBar: {
+    flexDirection: 'row',
+    marginHorizontal: 20,
+    marginTop: 6,
+    marginBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+  },
+  tabItem: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 10,
-    borderRadius: 11,
+    paddingVertical: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
-  modeBtnActiveFan: {
-    backgroundColor: '#10b981',
+  tabItemActive: {
+    borderBottomColor: '#10b981',
   },
-  modeBtnActiveCel: {
-    backgroundColor: '#f59e0b',
+  tabLabel: { color: '#6b7280', fontSize: 13, fontWeight: '600' },
+  tabLabelActive: { color: '#e5e7eb' },
+  tabCountBadge: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 10,
+    marginLeft: 2,
   },
-  modeBtnText: {
-    color: '#6b7280',
-    fontSize: 14,
-    fontWeight: '600',
+  tabCountBadgeActive: {
+    backgroundColor: 'rgba(16,185,129,0.2)',
   },
-  modeBtnTextActive: {
-    color: '#fff',
+  tabCountBadgeAutograph: {
+    backgroundColor: 'rgba(245,158,11,0.2)',
   },
-  modeBtnTextActiveCel: {
-    color: '#000',
-  },
-
-  tabRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 8, marginTop: 12, marginBottom: 12 },
-  tabBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    paddingVertical: 10, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.06)',
-  },
-  tabBtnActive: { backgroundColor: '#10b981' },
-  tabText: { color: '#6b7280', fontSize: 13, fontWeight: '600' },
-  tabTextActive: { color: '#fff' },
-  countBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 6, paddingVertical: 1,
-    borderRadius: 8, marginLeft: 2,
-  },
-  countText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  tabCountText: { color: '#6b7280', fontSize: 11, fontWeight: '700' },
+  tabCountTextActive: { color: '#e5e7eb' },
   itemCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 14, padding: 14,
