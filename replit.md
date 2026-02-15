@@ -91,8 +91,9 @@ Preferred communication style: Simple, everyday language.
 - **Wikidata Integration**: Server-side search, entity resolution, and celebrity profile sync
 - **Badge System**: Official verified + Stripe Connect verified badges
 - **Organization Verification**: `org-verification.tsx` - Non-individual accounts (sports clubs, brands, associations, media, labels, agencies) can request verification for a special badge. Accessible from celebrity onboarding. API endpoints: `POST /api/org-verification-request`, `GET /api/org-verification-status`. Status flow: pending → approved/rejected/more_info. Rejected/more_info allows resubmission.
+- **Creator Verification**: `creator-verification.tsx` - Streamers, YouTubers, TikTokers, and influencers who are not on Wikidata can request verification by submitting their social media links (Twitch, YouTube, TikTok, Instagram, X/Twitter) with follower counts. Accessible from celebrity onboarding alongside org verification. API endpoints: `POST /api/creator-verification-request`, `GET /api/creator-verification-status`. Same status flow as org verification. DB table: `creator_verification_requests`.
 - **Navigation**: BottomNav updated to 4 tabs (Actu, Découvrir, Mon Espace, Compte) + camera center
-- **Migration Required**: Marketplace tables must be created in Supabase SQL Editor using `server/migration.sql`. Tables needed: celebrity_profiles, celebrity_pricing, booking_requests, autograph_requests, posts, wikidata_entities, reports, organization_verification_requests.
+- **Migration Required**: Marketplace tables must be created in Supabase SQL Editor using `server/migration.sql`. Tables needed: celebrity_profiles, celebrity_pricing, booking_requests, autograph_requests, posts, wikidata_entities, reports, organization_verification_requests, creator_verification_requests.
 
 ### Environment Variables
 - `EXPO_PUBLIC_SUPABASE_URL`

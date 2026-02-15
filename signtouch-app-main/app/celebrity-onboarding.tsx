@@ -297,10 +297,31 @@ export default function CelebrityOnboardingScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            {t('celOnboardOrgSection' as any) || 'COMPTE ORGANISATION'}
+            {t('celOnboardVerifSection' as any) || 'VÉRIFICATION'}
           </Text>
           <TouchableOpacity
-            style={styles.orgCard}
+            style={styles.creatorCard}
+            onPress={() => router.push('/creator-verification')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.orgCardInner}>
+              <View style={styles.creatorIconWrap}>
+                <TrendingUp size={24} color="#3b82f6" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.orgCardTitle}>
+                  {t('celOnboardCreatorTitle' as any) || 'Streamer / Créateur de contenu ?'}
+                </Text>
+                <Text style={styles.orgCardDesc}>
+                  {t('celOnboardCreatorDesc' as any) || 'Twitch, YouTube, TikTok, Instagram... Faites vérifier votre profil pour obtenir un badge vérifié.'}
+                </Text>
+              </View>
+              <ArrowRight size={18} color="#3b82f6" />
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.orgCard, { marginTop: 10 }]}
             onPress={() => router.push('/org-verification')}
             activeOpacity={0.7}
           >
@@ -504,6 +525,16 @@ const styles = StyleSheet.create({
   },
   stripeButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
 
+  creatorCard: {
+    backgroundColor: 'rgba(59,130,246,0.08)',
+    borderRadius: 16, borderWidth: 1, borderColor: 'rgba(59,130,246,0.2)',
+    overflow: 'hidden',
+  },
+  creatorIconWrap: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: 'rgba(59,130,246,0.15)',
+    alignItems: 'center', justifyContent: 'center',
+  },
   orgCard: {
     backgroundColor: 'rgba(139,92,246,0.08)',
     borderRadius: 16, borderWidth: 1, borderColor: 'rgba(139,92,246,0.2)',

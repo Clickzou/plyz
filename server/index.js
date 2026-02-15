@@ -2708,6 +2708,103 @@ app.get('/api/org-verification-status', async (req, res) => {
   }
 });
 
+app.post('/api/creator-verification-request', async (req, res) => {
+  try {
+    const {
+      user_id, display_name, primary_platform, platform_links,
+      follower_count, content_category, additional_info
+    } = req.body;
+
+    if (!user_id || !display_name || !primary_platform) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const validPlatforms = ['twitch', 'youtube', 'tiktok', 'instagram', 'x'];
+    if (!validPlatforms.includes(primary_platform)) {
+      return res.status(400).json({ error: 'Invalid platform' });
+    }
+
+    if (!platform_links || Object.keys(platform_links).length === 0) {
+      return res.status(400).json({ error: 'At least one platform link is required' });
+    }
+
+    const supabase = getSupabase();
+
+    const { data: existing } = await supabase
+      .from('creator_verification_requests')
+      .select('id, status')
+      .eq('user_id', user_id)
+      .in('status', ['pending', 'approved'])
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      const req = existing[0];
+      if (req.status === 'approved') {
+        return res.status(409).json({ error: 'already_verified', message: 'Your creator profile is already verified' });
+      }
+      return res.status(409).json({ error: 'request_pending', message: 'A verification request is already pending' });
+    }
+
+    const { data, error } = await supabase
+      .from('creator_verification_requests')
+      .insert({
+        user_id,
+        display_name,
+        primary_platform,
+        platform_links: platform_links || {},
+        follower_count: follower_count || null,
+        content_category: content_category || null,
+        additional_info: additional_info || null,
+        status: 'pending',
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({ success: true, request: data });
+  } catch (error) {
+    console.error('[creator-verification-request]', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/creator-verification-status', async (req, res) => {
+  try {
+    const { user_id } = req.query;
+    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+
+    const supabase = getSupabase();
+
+    const { data, error } = await supabase
+      .from('creator_verification_requests')
+      .select('*')
+      .eq('user_id', user_id)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      return res.json({ has_request: false, status: null });
+    }
+
+    const request = data[0];
+    res.json({
+      has_request: true,
+      status: request.status,
+      display_name: request.display_name,
+      primary_platform: request.primary_platform,
+      admin_notes: request.admin_notes,
+      created_at: request.created_at,
+      reviewed_at: request.reviewed_at,
+    });
+  } catch (error) {
+    console.error('[creator-verification-status]', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const EXPO_PORT = 19006;
 const PORT = 5000;
 

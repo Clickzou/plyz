@@ -232,6 +232,30 @@ DO $$ BEGIN CREATE POLICY event_payment_select ON event_payment_configs FOR SELE
 DO $$ BEGIN CREATE POLICY event_payment_insert ON event_payment_configs FOR INSERT WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN CREATE POLICY event_payment_update ON event_payment_configs FOR UPDATE USING (true); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
+-- 11) creator_verification_requests
+CREATE TABLE IF NOT EXISTS creator_verification_requests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  display_name text NOT NULL,
+  primary_platform text NOT NULL CHECK (primary_platform IN ('twitch', 'youtube', 'tiktok', 'instagram', 'x')),
+  platform_links jsonb DEFAULT '{}',
+  follower_count text,
+  content_category text,
+  additional_info text,
+  status text DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'more_info')),
+  admin_notes text,
+  created_at timestamptz DEFAULT now(),
+  reviewed_at timestamptz
+);
+
+CREATE INDEX IF NOT EXISTS idx_creator_verif_user ON creator_verification_requests(user_id);
+CREATE INDEX IF NOT EXISTS idx_creator_verif_status ON creator_verification_requests(status);
+
+ALTER TABLE creator_verification_requests ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN CREATE POLICY creator_verif_select ON creator_verification_requests FOR SELECT USING (auth.uid() = user_id); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY creator_verif_insert ON creator_verification_requests FOR INSERT WITH CHECK (auth.uid() = user_id); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
 -- ============================================================
 -- SAFE ALTER STATEMENTS (for existing databases)
 -- These add missing columns without breaking existing data
