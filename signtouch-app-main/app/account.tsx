@@ -9,14 +9,16 @@ import {
   Modal,
   TextInput,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { router } from 'expo-router';
-import { Crown, Info, Heart, Share2, Globe, Check, FileText, LogOut, Gift, X, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle } from 'lucide-react-native';
+import { Crown, Info, Heart, Share2, Globe, Check, FileText, LogOut, Gift, X, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle, Camera } from 'lucide-react-native';
 import { SUBSCRIPTION_ENABLED } from '@/contexts/SubscriptionContext';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import * as Clipboard from 'expo-clipboard';
+import * as ImagePicker from 'expo-image-picker';
 import BottomNav from '@/components/BottomNav';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,7 +57,7 @@ export default function AccountScreen() {
   const { t, language, setLanguage, isRTL } = useTranslation();
   const { user, signOut, sendOtpCode, verifyOtpCode } = useAuth();
   const { status } = useSubscription();
-  const { isCelebrity, toggleCelebrityMode } = useCelebrityMode();
+  const { isCelebrity, toggleCelebrityMode, profilePhoto, setProfilePhoto } = useCelebrityMode();
   const { startOnboarding } = useOnboarding();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showPromoModal, setShowPromoModal] = useState(false);
@@ -247,6 +249,33 @@ export default function AccountScreen() {
       'URL copiée!',
       `Cette URL a été copiée dans le presse-papiers:\n\n${url}\n\nAjoute-la dans Supabase Dashboard:\nAuthentication → URL Configuration → Redirect URLs`
     );
+  };
+
+  const pickProfilePhoto = async () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      showAlert(t('permissionRequired' as any) || 'Permission required', t('galleryPermission' as any) || 'Please allow access to your photo library.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      await setProfilePhoto(result.assets[0].uri);
+    }
+  };
+
+  const removeProfilePhoto = async () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    await setProfilePhoto(null);
   };
 
   const handleResetTrial = async () => {
@@ -536,9 +565,20 @@ export default function AccountScreen() {
 
           <View style={styles.accountCard}>
             <View style={styles.accountCardHeader}>
-              <View style={[styles.accountAvatar, { backgroundColor: isCelebrity ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.08)' }]}>
-                <Star size={28} color={isCelebrity ? '#f59e0b' : '#888'} fill={isCelebrity ? '#f59e0b' : 'transparent'} />
-              </View>
+              <TouchableOpacity
+                style={[styles.accountAvatar, { backgroundColor: isCelebrity ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.08)' }]}
+                onPress={pickProfilePhoto}
+                activeOpacity={0.7}
+              >
+                {profilePhoto ? (
+                  <Image source={{ uri: profilePhoto }} style={styles.profilePhotoImage} />
+                ) : (
+                  <Star size={28} color={isCelebrity ? '#f59e0b' : '#888'} fill={isCelebrity ? '#f59e0b' : 'transparent'} />
+                )}
+                <View style={styles.profilePhotoBadge}>
+                  <Camera size={10} color="#fff" />
+                </View>
+              </TouchableOpacity>
               <View style={styles.accountCardInfo}>
                 <Text style={styles.accountCardName}>
                   {isCelebrity ? (t('celebrityModeActive')) : (t('celebrityModeInactive'))}
@@ -548,6 +588,45 @@ export default function AccountScreen() {
                 </Text>
               </View>
             </View>
+
+            {isCelebrity && (
+              <View style={styles.profilePhotoSection}>
+                <TouchableOpacity
+                  style={styles.profilePhotoPickerLarge}
+                  onPress={pickProfilePhoto}
+                  activeOpacity={0.7}
+                >
+                  {profilePhoto ? (
+                    <Image source={{ uri: profilePhoto }} style={styles.profilePhotoLarge} />
+                  ) : (
+                    <View style={styles.profilePhotoPlaceholder}>
+                      <Camera size={32} color="#6b7280" />
+                      <Text style={styles.profilePhotoPlaceholderText}>
+                        {t('addProfilePhoto' as any) || 'Add photo'}
+                      </Text>
+                    </View>
+                  )}
+                  <View style={styles.profilePhotoEditBadge}>
+                    <Camera size={14} color="#fff" />
+                  </View>
+                </TouchableOpacity>
+                <Text style={styles.profilePhotoHint}>
+                  {t('profilePhotoHint' as any) || 'Tap to add or change your profile photo'}
+                </Text>
+                {profilePhoto && (
+                  <TouchableOpacity
+                    style={styles.removePhotoBtn}
+                    onPress={removeProfilePhoto}
+                    activeOpacity={0.7}
+                  >
+                    <X size={14} color="#ef4444" />
+                    <Text style={styles.removePhotoBtnText}>
+                      {t('removePhoto' as any) || 'Remove photo'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
 
             <TouchableOpacity
               style={[
@@ -1120,6 +1199,91 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
+    overflow: 'hidden',
+  },
+  profilePhotoImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
+  profilePhotoBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#f59e0b',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#1e293b',
+  },
+  profilePhotoSection: {
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+    marginTop: 4,
+  },
+  profilePhotoPickerLarge: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(245,158,11,0.4)',
+    borderStyle: 'dashed',
+  },
+  profilePhotoLarge: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 50,
+  },
+  profilePhotoPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  profilePhotoPlaceholderText: {
+    color: '#6b7280',
+    fontSize: 11,
+    marginTop: 4,
+  },
+  profilePhotoEditBadge: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f59e0b',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#1e293b',
+  },
+  profilePhotoHint: {
+    color: '#9ca3af',
+    fontSize: 12,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  removePhotoBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(239,68,68,0.1)',
+  },
+  removePhotoBtnText: {
+    color: '#ef4444',
+    fontSize: 12,
+    fontWeight: '500',
   },
   accountCardInfo: {
     flex: 1,
