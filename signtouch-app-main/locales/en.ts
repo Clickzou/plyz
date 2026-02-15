@@ -1138,6 +1138,14 @@ export default {
   noActivityHint: 'Follow celebrities to see their posts',
   postedBy: 'Posted by',
   eventOn: 'Event on',
+  like: 'Like',
+  liked: 'Liked',
+  comment: 'Comment',
+  comments: 'Comments',
+  noComments: 'No comments yet',
+  addComment: 'Add a comment...',
+  send: 'Send',
+  reply: 'Reply',
 
   // Marketplace - Booking
   bookVideoCall: 'Book Video Call',

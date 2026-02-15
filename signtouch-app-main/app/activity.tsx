@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  Image, ActivityIndicator, Platform
+  Image, Platform, Modal, TextInput, KeyboardAvoidingView,
+  Animated as RNAnimated, Dimensions
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Newspaper, CheckCircle, Calendar, MessageSquare, Star, X } from 'lucide-react-native';
+import { Newspaper, CheckCircle, Calendar, Heart, MessageCircle, Star, X, Send } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -15,6 +16,8 @@ import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import { FeedSkeleton } from '@/components/SkeletonLoader';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+const LIKES_KEY = '@signtouch_post_likes';
+const COMMENTS_KEY = '@signtouch_post_comments';
 
 const DEMO_FEED: FeedPost[] = [
   { id: 'post-001', kind: 'post', title: 'Nouveau chapitre', body: "Très heureux d'annoncer une nouvelle aventure. Restez connectés !", media_url: null, event_date: null, created_at: '2025-12-10T14:30:00Z', celebrity: { user_id: 'mock-005', stage_name: 'Omar Sy', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg', official_verified: true, stripe_verified: true } },
@@ -42,6 +45,14 @@ interface FeedPost {
   };
 }
 
+interface Comment {
+  id: string;
+  postId: string;
+  text: string;
+  author: string;
+  createdAt: string;
+}
+
 const FILTERS = [
   { key: 'all', label: 'filterAll' },
   { key: 'post', label: 'filterPosts' },
@@ -49,6 +60,48 @@ const FILTERS = [
 ] as const;
 
 const BANNER_DISMISSED_KEY = '@signtouch_celebrity_banner_dismissed';
+
+function formatTimeAgo(dateStr: string): string {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'now';
+  if (diffMin < 60) return `${diffMin}m`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours}h`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d`;
+  return date.toLocaleDateString();
+}
+
+function LikeButton({ postId, likedPosts, onToggle }: { postId: string; likedPosts: Set<string>; onToggle: (id: string) => void }) {
+  const scale = useRef(new RNAnimated.Value(1)).current;
+  const isLiked = likedPosts.has(postId);
+
+  const handlePress = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    RNAnimated.sequence([
+      RNAnimated.timing(scale, { toValue: 1.3, duration: 100, useNativeDriver: true }),
+      RNAnimated.timing(scale, { toValue: 1, duration: 100, useNativeDriver: true }),
+    ]).start();
+    onToggle(postId);
+  };
+
+  return (
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.7} style={styles.actionBtn}>
+      <RNAnimated.View style={{ transform: [{ scale }] }}>
+        <Heart
+          size={20}
+          color={isLiked ? '#ef4444' : '#6b7280'}
+          fill={isLiked ? '#ef4444' : 'none'}
+        />
+      </RNAnimated.View>
+    </TouchableOpacity>
+  );
+}
 
 export default function ActivityScreen() {
   const router = useRouter();
@@ -62,11 +115,89 @@ export default function ActivityScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(true);
 
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [allComments, setAllComments] = useState<Record<string, Comment[]>>({});
+  const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState('');
+  const slideAnim = useRef(new RNAnimated.Value(Dimensions.get('window').height)).current;
+
   useEffect(() => {
     AsyncStorage.getItem(BANNER_DISMISSED_KEY).then(val => {
       setBannerDismissed(val === 'true');
     });
+    loadLikes();
+    loadComments();
   }, []);
+
+  const loadLikes = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(LIKES_KEY);
+      if (stored) setLikedPosts(new Set(JSON.parse(stored)));
+    } catch {}
+  };
+
+  const loadComments = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(COMMENTS_KEY);
+      if (stored) setAllComments(JSON.parse(stored));
+    } catch {}
+  };
+
+  const toggleLike = async (postId: string) => {
+    setLikedPosts(prev => {
+      const next = new Set(prev);
+      if (next.has(postId)) {
+        next.delete(postId);
+      } else {
+        next.add(postId);
+      }
+      AsyncStorage.setItem(LIKES_KEY, JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  const openComments = (postId: string) => {
+    setCommentModalPostId(postId);
+    setCommentText('');
+    RNAnimated.spring(slideAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+      tension: 65,
+      friction: 11,
+    }).start();
+  };
+
+  const closeComments = () => {
+    RNAnimated.timing(slideAnim, {
+      toValue: Dimensions.get('window').height,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      setCommentModalPostId(null);
+      setCommentText('');
+    });
+  };
+
+  const addComment = async () => {
+    if (!commentText.trim() || !commentModalPostId) return;
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    const newComment: Comment = {
+      id: `comment-${Date.now()}`,
+      postId: commentModalPostId,
+      text: commentText.trim(),
+      author: 'You',
+      createdAt: new Date().toISOString(),
+    };
+    const updated = {
+      ...allComments,
+      [commentModalPostId]: [...(allComments[commentModalPostId] || []), newComment],
+    };
+    setAllComments(updated);
+    setCommentText('');
+    await AsyncStorage.setItem(COMMENTS_KEY, JSON.stringify(updated));
+  };
 
   const showBanner = !isCelebrity && !bannerDismissed;
 
@@ -123,55 +254,88 @@ export default function ActivityScreen() {
     fetchFeed(1, true);
   }, [filter]);
 
-  const renderPost = ({ item }: { item: FeedPost }) => (
-    <View style={styles.postCard}>
-      <TouchableOpacity
-        style={styles.postHeader}
-        onPress={() => router.push(`/celebrity-detail?id=${item.celebrity.user_id}`)}
-      >
-        {item.celebrity.avatar_url ? (
-          <Image source={{ uri: item.celebrity.avatar_url }} style={styles.avatar} />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarInitial}>
-              {(item.celebrity.stage_name || '?')[0].toUpperCase()}
+  const getCommentCount = (postId: string) => (allComments[postId] || []).length;
+
+  const renderPost = ({ item }: { item: FeedPost }) => {
+    const commentCount = getCommentCount(item.id);
+    const isLiked = likedPosts.has(item.id);
+
+    return (
+      <View style={styles.postCard}>
+        <TouchableOpacity
+          style={styles.postHeader}
+          onPress={() => router.push(`/celebrity-detail?id=${item.celebrity.user_id}`)}
+        >
+          {item.celebrity.avatar_url ? (
+            <Image source={{ uri: item.celebrity.avatar_url }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarInitial}>
+                {(item.celebrity.stage_name || '?')[0].toUpperCase()}
+              </Text>
+            </View>
+          )}
+          <View style={{ flex: 1 }}>
+            <View style={styles.nameRow}>
+              <Text style={styles.stageName}>{item.celebrity.stage_name}</Text>
+              {item.celebrity.official_verified && (
+                <CheckCircle size={14} color="#10b981" />
+              )}
+            </View>
+            <Text style={styles.postTime}>
+              {new Date(item.created_at).toLocaleDateString()}
+            </Text>
+          </View>
+          {item.kind === 'event' && (
+            <View style={styles.eventBadge}>
+              <Calendar size={12} color="#fff" />
+              <Text style={styles.eventBadgeText}>Event</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {item.title && <Text style={styles.postTitle}>{item.title}</Text>}
+        {item.body && <Text style={styles.postBody}>{item.body}</Text>}
+        {item.media_url && (
+          <Image source={{ uri: item.media_url }} style={styles.postImage} />
+        )}
+        {item.kind === 'event' && item.event_date && (
+          <View style={styles.eventDateRow}>
+            <Calendar size={14} color="#f59e0b" />
+            <Text style={styles.eventDateText}>
+              {t('eventOn')} {new Date(item.event_date).toLocaleDateString()}
             </Text>
           </View>
         )}
-        <View style={{ flex: 1 }}>
-          <View style={styles.nameRow}>
-            <Text style={styles.stageName}>{item.celebrity.stage_name}</Text>
-            {item.celebrity.official_verified && (
-              <CheckCircle size={14} color="#10b981" />
+
+        <View style={styles.actionsRow}>
+          <View style={styles.actionGroup}>
+            <LikeButton postId={item.id} likedPosts={likedPosts} onToggle={toggleLike} />
+            {isLiked && (
+              <Text style={[styles.actionCount, { color: '#ef4444' }]}>
+                {t('liked' as any)}
+              </Text>
             )}
           </View>
-          <Text style={styles.postTime}>
-            {new Date(item.created_at).toLocaleDateString()}
-          </Text>
+          <TouchableOpacity
+            style={styles.actionGroup}
+            onPress={() => openComments(item.id)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.actionBtn}>
+              <MessageCircle size={20} color={commentCount > 0 ? '#3b82f6' : '#6b7280'} />
+            </View>
+            <Text style={[styles.actionCount, commentCount > 0 && { color: '#3b82f6' }]}>
+              {commentCount > 0 ? commentCount : t('comment' as any)}
+            </Text>
+          </TouchableOpacity>
         </View>
-        {item.kind === 'event' && (
-          <View style={styles.eventBadge}>
-            <Calendar size={12} color="#fff" />
-            <Text style={styles.eventBadgeText}>Event</Text>
-          </View>
-        )}
-      </TouchableOpacity>
+      </View>
+    );
+  };
 
-      {item.title && <Text style={styles.postTitle}>{item.title}</Text>}
-      {item.body && <Text style={styles.postBody}>{item.body}</Text>}
-      {item.media_url && (
-        <Image source={{ uri: item.media_url }} style={styles.postImage} />
-      )}
-      {item.kind === 'event' && item.event_date && (
-        <View style={styles.eventDateRow}>
-          <Calendar size={14} color="#f59e0b" />
-          <Text style={styles.eventDateText}>
-            {t('eventOn')} {new Date(item.event_date).toLocaleDateString()}
-          </Text>
-        </View>
-      )}
-    </View>
-  );
+  const modalPost = commentModalPostId ? posts.find(p => p.id === commentModalPostId) : null;
+  const modalComments = commentModalPostId ? (allComments[commentModalPostId] || []) : [];
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -244,6 +408,91 @@ export default function ActivityScreen() {
         />
       )}
 
+      <Modal
+        visible={commentModalPostId !== null}
+        transparent
+        animationType="none"
+        onRequestClose={closeComments}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity style={styles.modalBackdrop} onPress={closeComments} activeOpacity={1} />
+          <RNAnimated.View
+            style={[
+              styles.commentSheet,
+              { transform: [{ translateY: slideAnim }], paddingBottom: insets.bottom + 8 },
+            ]}
+          >
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>{t('comments' as any)}</Text>
+
+            {modalPost && (
+              <View style={styles.sheetPostPreview}>
+                <Text style={styles.sheetPostAuthor}>{modalPost.celebrity.stage_name}</Text>
+                {modalPost.title && <Text style={styles.sheetPostText} numberOfLines={1}>{modalPost.title}</Text>}
+                {modalPost.body && <Text style={styles.sheetPostBody} numberOfLines={2}>{modalPost.body}</Text>}
+              </View>
+            )}
+
+            <View style={styles.commentDivider} />
+
+            {modalComments.length === 0 ? (
+              <View style={styles.noCommentsWrap}>
+                <MessageCircle size={32} color="#374151" />
+                <Text style={styles.noCommentsText}>{t('noComments' as any)}</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={modalComments}
+                keyExtractor={c => c.id}
+                style={styles.commentList}
+                renderItem={({ item: c }) => (
+                  <View style={styles.commentItem}>
+                    <View style={styles.commentAvatar}>
+                      <Text style={styles.commentAvatarText}>
+                        {c.author[0].toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <View style={styles.commentHeader}>
+                        <Text style={styles.commentAuthor}>{c.author}</Text>
+                        <Text style={styles.commentTime}>{formatTimeAgo(c.createdAt)}</Text>
+                      </View>
+                      <Text style={styles.commentText}>{c.text}</Text>
+                    </View>
+                  </View>
+                )}
+                ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+              />
+            )}
+
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              keyboardVerticalOffset={100}
+            >
+              <View style={styles.commentInputRow}>
+                <TextInput
+                  style={styles.commentInput}
+                  placeholder={t('addComment' as any)}
+                  placeholderTextColor="#6b7280"
+                  value={commentText}
+                  onChangeText={setCommentText}
+                  multiline
+                  maxLength={500}
+                />
+                <TouchableOpacity
+                  style={[styles.sendBtn, !commentText.trim() && styles.sendBtnDisabled]}
+                  onPress={addComment}
+                  disabled={!commentText.trim()}
+                  activeOpacity={0.7}
+                >
+                  <Send size={18} color={commentText.trim() ? '#fff' : '#6b7280'} />
+                </TouchableOpacity>
+              </View>
+            </KeyboardAvoidingView>
+          </RNAnimated.View>
+        </View>
+      </Modal>
+
       <BottomNav />
     </View>
   );
@@ -289,6 +538,166 @@ const styles = StyleSheet.create({
   postImage: { width: '100%', height: 200, borderRadius: 12, marginTop: 10 },
   eventDateRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
   eventDateText: { color: '#f59e0b', fontSize: 13, fontWeight: '500' },
+
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 24,
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+  },
+  actionGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  actionBtn: {
+    padding: 4,
+  },
+  actionCount: {
+    color: '#6b7280',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  commentSheet: {
+    backgroundColor: '#111827',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '75%',
+    minHeight: 320,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+  },
+  sheetHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#374151',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  sheetTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  sheetPostPreview: {
+    paddingBottom: 12,
+  },
+  sheetPostAuthor: {
+    color: '#10b981',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  sheetPostText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  sheetPostBody: {
+    color: '#9ca3af',
+    fontSize: 13,
+    marginTop: 2,
+  },
+  commentDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 12,
+  },
+  noCommentsWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 32,
+  },
+  noCommentsText: {
+    color: '#6b7280',
+    fontSize: 14,
+    marginTop: 8,
+  },
+  commentList: {
+    flex: 1,
+    marginBottom: 12,
+  },
+  commentItem: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  commentAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#1f2937',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  commentAvatarText: {
+    color: '#9ca3af',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  commentAuthor: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  commentTime: {
+    color: '#6b7280',
+    fontSize: 11,
+  },
+  commentText: {
+    color: '#d1d5db',
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 2,
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    color: '#fff',
+    fontSize: 14,
+    maxHeight: 80,
+  },
+  sendBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#10b981',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sendBtnDisabled: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+
   celebrityBanner: {
     backgroundColor: 'rgba(245,158,11,0.08)',
     borderWidth: 1,
