@@ -1,6 +1,6 @@
 import { View, TouchableOpacity, StyleSheet, Platform, Text } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
-import { User, Search, Newspaper, Inbox, Camera } from 'lucide-react-native';
+import { Search, Newspaper, Inbox, Camera, Images } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -31,7 +31,6 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
     router.push('/camera' as any);
   };
 
-  const isActive = (path: string) => pathname === path;
   const isActiveMulti = (...paths: string[]) => paths.some(p => pathname === p || pathname.startsWith(p));
   const isCameraActive = isActiveMulti('/camera', '/photo-editor', '/signature', '/result');
 
@@ -90,31 +89,31 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
 
       <TouchableOpacity
         style={styles.navButton}
-        onPress={() => handleNavigation('/my-space')}
+        onPress={() => handleNavigation('/gallery')}
         activeOpacity={0.7}
       >
-        <Inbox
+        <Images
           size={22}
-          color={isActiveMulti('/my-space', '/create-event', '/create-live-session', '/join-event', '/join-live-session') ? '#10b981' : '#ffffff'}
+          color={isActiveMulti('/gallery') ? '#10b981' : '#ffffff'}
           strokeWidth={2}
         />
-        <Text style={[styles.navLabel, isActiveMulti('/my-space', '/create-event', '/create-live-session', '/join-event', '/join-live-session') && styles.navLabelActive]}>
-          {t('mySpace')}
+        <Text style={[styles.navLabel, isActiveMulti('/gallery') && styles.navLabelActive]}>
+          {t('gallery')}
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.navButton}
-        onPress={() => handleNavigation('/account')}
+        onPress={() => handleNavigation('/my-space')}
         activeOpacity={0.7}
       >
-        <User
+        <Inbox
           size={22}
-          color={isActive('/account') ? '#10b981' : '#ffffff'}
+          color={isActiveMulti('/my-space', '/create-event', '/create-live-session', '/join-event', '/join-live-session', '/account') ? '#10b981' : '#ffffff'}
           strokeWidth={2}
         />
-        <Text style={[styles.navLabel, isActive('/account') && styles.navLabelActive]}>
-          {t('account')}
+        <Text style={[styles.navLabel, isActiveMulti('/my-space', '/create-event', '/create-live-session', '/join-event', '/join-live-session', '/account') && styles.navLabelActive]}>
+          {t('mySpace')}
         </Text>
       </TouchableOpacity>
     </View>
