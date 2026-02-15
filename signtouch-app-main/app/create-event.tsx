@@ -19,7 +19,7 @@ import { showAlert } from '@/utils/alertHelper';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Sparkles, QrCode, Copy, Share2, Check, Plus, X, Clock, Users, MapPin, Calendar, Music, Trophy, Palette, Star, User, Euro } from 'lucide-react-native';
+import { ArrowLeft, Sparkles, QrCode, Copy, Share2, Check, Plus, X, Clock, Users, MapPin, Calendar, Music, Trophy, Palette, Star, User, Euro, Send } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import Svg, { Path, G } from 'react-native-svg';
@@ -116,7 +116,7 @@ const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 export default function CreateEventScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user, setPostAuthRedirect } = useAuth();
   const { status, isPremium } = useSubscription();
   const [showAccountModal, setShowAccountModal] = useState(false);
@@ -1237,6 +1237,26 @@ export default function CreateEventScreen() {
               </View>
 
               <View style={styles.actionsColumn}>
+                <TouchableOpacity
+                  style={[styles.publishButton, { backgroundColor: '#f59e0b' }]}
+                  onPress={() => {
+                    router.push({
+                      pathname: '/create-post',
+                      params: {
+                        prefillKind: 'event',
+                        prefillTitle: `${t('dedicationEvent') || 'Événement Dédicace'} - ${signers[0]?.name || ''}`,
+                        prefillBody: `${language === 'fr' ? 'Rejoignez-moi pour un événement dédicace exclusif !' : 'Join me for an exclusive dedication event!'}\n\n${language === 'fr' ? 'Code' : 'Code'}: ${createdSession.join_code}`,
+                        prefillDate: createdSession.scheduled_at || new Date().toISOString(),
+                      },
+                    });
+                  }}
+                >
+                  <Send size={20} color="#000" />
+                  <Text style={[styles.publishButtonText, { color: '#000' }]}>
+                    {language === 'fr' ? 'Publier dans le fil Actu' : 'Publish to Feed'}
+                  </Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity style={styles.publishButton} onPress={goToPublish}>
                   <Sparkles size={20} color="#ffffff" />
                   <Text style={styles.publishButtonText}>

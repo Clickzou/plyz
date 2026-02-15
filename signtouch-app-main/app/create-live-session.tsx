@@ -15,7 +15,7 @@ import {
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Clock, Users, DollarSign, Play, Star, Camera, RotateCcw, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy } from 'lucide-react-native';
+import { ArrowLeft, Clock, Users, DollarSign, Play, Star, Camera, RotateCcw, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy, Send } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
@@ -466,6 +466,27 @@ export default function CreateLiveSessionScreen() {
               }
             </Text>
           </View>
+
+          <TouchableOpacity
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#f59e0b', paddingVertical: 14, paddingHorizontal: 32, borderRadius: 12, width: '100%', marginBottom: 12 }}
+            onPress={() => {
+              const scheduledDate = new Date(scheduledConfirmation.scheduledAt);
+              router.push({
+                pathname: '/create-post',
+                params: {
+                  prefillKind: 'event',
+                  prefillTitle: `${language === 'fr' ? 'Session Live' : 'Live Session'} - ${celebrityName}`,
+                  prefillBody: `${language === 'fr' ? 'Rejoignez-moi pour une session live exclusive !' : 'Join me for an exclusive live session!'}\n\n${language === 'fr' ? 'Code' : 'Code'}: ${scheduledConfirmation.code}`,
+                  prefillDate: scheduledDate.toISOString(),
+                },
+              });
+            }}
+          >
+            <Send size={18} color="#000" />
+            <Text style={{ color: '#000', fontSize: 16, fontWeight: '700' }}>
+              {language === 'fr' ? 'Publier dans le fil Actu' : 'Publish to Feed'}
+            </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={{ backgroundColor: '#10B981', paddingVertical: 14, paddingHorizontal: 32, borderRadius: 12, width: '100%', alignItems: 'center', marginBottom: 12 }}

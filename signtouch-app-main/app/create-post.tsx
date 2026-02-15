@@ -3,9 +3,9 @@ import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
   Image, Platform, ScrollView, ActivityIndicator, KeyboardAvoidingView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, ImagePlus, X, Send, Camera } from 'lucide-react-native';
+import { ArrowLeft, ImagePlus, X, Send, Camera, FileText, Calendar } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as Haptics from 'expo-haptics';
@@ -98,13 +98,23 @@ async function uploadImageToServer(uri: string): Promise<{ url: string | null; r
   }
 }
 
+type PostKind = 'post' | 'event';
+
 export default function CreatePostScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user } = useAuth();
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
+  const params = useLocalSearchParams<{
+    prefillTitle?: string;
+    prefillBody?: string;
+    prefillKind?: string;
+    prefillDate?: string;
+  }>();
+  const [kind, setKind] = useState<PostKind>((params.prefillKind as PostKind) || 'post');
+  const [title, setTitle] = useState(params.prefillTitle || '');
+  const [body, setBody] = useState(params.prefillBody || '');
+  const [eventDate, setEventDate] = useState(params.prefillDate || '');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [moderating, setModerating] = useState(false);
@@ -179,13 +189,14 @@ export default function CreatePostScreen() {
         }
       }
 
+      const eventDateValue = kind === 'event' && eventDate.trim() ? eventDate.trim() : null;
       const newPost = {
         id: `local-${Date.now()}`,
-        kind: 'post' as const,
+        kind,
         title: title.trim() || null,
         body: body.trim() || null,
         media_url: mediaUrl,
-        event_date: null,
+        event_date: eventDateValue,
         created_at: new Date().toISOString(),
         celebrity: {
           user_id: user?.id || 'local-celebrity',
@@ -202,10 +213,11 @@ export default function CreatePostScreen() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             celebrity_id: user?.id || 'local-celebrity',
-            kind: 'post',
+            kind,
             title: newPost.title,
             body: newPost.body,
             media_url: mediaUrl,
+            event_date: eventDateValue,
           }),
         });
         if (res.ok) {
@@ -263,6 +275,29 @@ export default function CreatePostScreen() {
               </Text>
             </>
           )}
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.kindRow}>
+        <TouchableOpacity
+          style={[styles.kindBtn, kind === 'post' && styles.kindBtnActive]}
+          onPress={() => setKind('post')}
+          activeOpacity={0.8}
+        >
+          <FileText size={16} color={kind === 'post' ? '#fff' : '#6b7280'} />
+          <Text style={[styles.kindText, kind === 'post' && styles.kindTextActive]}>
+            {t('createPostTypePost' as any) || 'Post'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.kindBtn, kind === 'event' && styles.kindBtnActiveEvent]}
+          onPress={() => setKind('event')}
+          activeOpacity={0.8}
+        >
+          <Calendar size={16} color={kind === 'event' ? '#000' : '#6b7280'} />
+          <Text style={[styles.kindText, kind === 'event' && styles.kindTextActiveEvent]}>
+            {t('createPostTypeEvent' as any) || 'Événement'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -335,6 +370,24 @@ export default function CreatePostScreen() {
               <Text style={styles.mediaBtnText}>{t('camera' as any)}</Text>
             </TouchableOpacity>
           </View>
+
+          {kind === 'event' && (
+            <View style={styles.eventDateSection}>
+              <Text style={styles.eventDateLabel}>
+                {t('createPostEventDate' as any) || 'Date de l\'événement'}
+              </Text>
+              <TextInput
+                style={styles.eventDateInput}
+                value={eventDate}
+                onChangeText={setEventDate}
+                placeholder="2026-03-15T18:00"
+                placeholderTextColor="#4b5563"
+              />
+              <Text style={styles.eventDateHint}>
+                {t('createPostEventDateHint' as any) || 'Format : AAAA-MM-JJTHH:MM'}
+              </Text>
+            </View>
+          )}
 
           <Text style={styles.hint}>{t('postImageHint' as any)}</Text>
         </ScrollView>
@@ -474,5 +527,68 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 16,
     lineHeight: 18,
+  },
+  kindRow: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  kindBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  kindBtnActive: {
+    backgroundColor: '#10b981',
+  },
+  kindBtnActiveEvent: {
+    backgroundColor: '#f59e0b',
+  },
+  kindText: {
+    color: '#6b7280',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  kindTextActive: {
+    color: '#fff',
+  },
+  kindTextActiveEvent: {
+    color: '#000',
+  },
+  eventDateSection: {
+    marginTop: 20,
+    backgroundColor: 'rgba(245,158,11,0.08)',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.2)',
+  },
+  eventDateLabel: {
+    color: '#f59e0b',
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  eventDateInput: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: '#fff',
+    fontSize: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  eventDateHint: {
+    color: '#6b7280',
+    fontSize: 11,
+    marginTop: 6,
   },
 });
