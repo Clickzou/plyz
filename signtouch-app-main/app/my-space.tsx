@@ -135,7 +135,7 @@ export default function MySpaceScreen() {
       if (data.pricing) {
         setVideoCallPriceEur(String((data.pricing.video_call_price_cents || 0) / 100));
         setVideoCallDuration(String(data.pricing.video_call_duration_minutes || 15));
-        setVideoCallUnit(data.pricing.video_call_unit || 'session');
+        setVideoCallUnit('minute');
         setAutographPriceEur(String((data.pricing.autograph_price_cents || 0) / 100));
         setDedicationPriceEur(String((data.pricing.live_dedication_price_cents || 0) / 100));
         setSettingsCurrency(data.pricing.currency || 'eur');
@@ -176,7 +176,7 @@ export default function MySpaceScreen() {
         body: JSON.stringify({
           user_id: user.id,
           video_call_price_cents: parsePrice(videoCallPriceEur),
-          video_call_unit: videoCallUnit,
+          video_call_unit: 'minute',
           video_call_duration_minutes: parseDuration(videoCallDuration),
           autograph_price_cents: parsePrice(autographPriceEur),
           live_dedication_price_cents: parsePrice(dedicationPriceEur),
@@ -1020,29 +1020,6 @@ export default function MySpaceScreen() {
                     placeholder="15"
                     placeholderTextColor="#4b5563"
                   />
-                </View>
-                <View style={styles.settingsField}>
-                  <Text style={styles.settingsLabel}>{t('settingsUnit' as any) || 'Tarification'}</Text>
-                  <View style={styles.settingsUnitRow}>
-                    <TouchableOpacity
-                      style={[styles.settingsUnitBtn, videoCallUnit === 'session' && styles.settingsUnitBtnActive]}
-                      onPress={() => setVideoCallUnit('session')}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.settingsUnitText, videoCallUnit === 'session' && styles.settingsUnitTextActive]}>
-                        {t('perSession' as any) || '/session'}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.settingsUnitBtn, videoCallUnit === 'minute' && styles.settingsUnitBtnActive]}
-                      onPress={() => setVideoCallUnit('minute')}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.settingsUnitText, videoCallUnit === 'minute' && styles.settingsUnitTextActive]}>
-                        {t('perMinute' as any) || '/min'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
                 </View>
               </View>
 
