@@ -1216,7 +1216,7 @@ export default {
   fromPrice: 'À partir de',
   perSession: '/session',
   perMinute: '/min',
-  bookCall: 'Réserver',
+  bookCall: 'Live vidéo face à face',
   requestAutograph: 'Autographe',
   viewProfile: 'Voir le profil',
   celebrityDetailTitle: 'Profil Célébrité',

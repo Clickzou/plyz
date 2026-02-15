@@ -149,13 +149,22 @@ export default function CelebrityDetailScreen() {
     return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   };
 
+  const showAlert = (msg: string) => {
+    if (Platform.OS === 'web') {
+      window.alert(msg);
+    } else {
+      Alert.alert('', msg);
+    }
+  };
+
   const handleBookCall = () => {
+    if (!celebrity) return;
     if (!user) {
-      Alert.alert('', t('mySpaceSignInTitle') || 'Please sign in first');
+      showAlert(t('mySpaceSignInTitle') || 'Please sign in first');
       return;
     }
-    if (!celebrity?.stripe_account_id) {
-      Alert.alert('', t('celebrityNoPayments') || 'This celebrity has not set up payments yet');
+    if (!celebrity.stripe_account_id) {
+      showAlert(t('celebrityNoPayments') || 'This celebrity has not set up payments yet');
       return;
     }
     const p = celebrity.pricing;
@@ -174,12 +183,13 @@ export default function CelebrityDetailScreen() {
   };
 
   const handleAutograph = () => {
+    if (!celebrity) return;
     if (!user) {
-      Alert.alert('', t('mySpaceSignInTitle') || 'Please sign in first');
+      showAlert(t('mySpaceSignInTitle') || 'Please sign in first');
       return;
     }
-    if (!celebrity?.stripe_account_id) {
-      Alert.alert('', t('celebrityNoPayments') || 'This celebrity has not set up payments yet');
+    if (!celebrity.stripe_account_id) {
+      showAlert(t('celebrityNoPayments') || 'This celebrity has not set up payments yet');
       return;
     }
     const p = celebrity.pricing;
@@ -197,7 +207,7 @@ export default function CelebrityDetailScreen() {
 
   const handleRegisterEvent = (event: LiveEvent) => {
     if (!user) {
-      Alert.alert('', t('mySpaceSignInTitle') || 'Connectez-vous pour vous inscrire');
+      showAlert(t('mySpaceSignInTitle') || 'Connectez-vous pour vous inscrire');
       return;
     }
     if (event.price_cents > 0 && celebrity?.stripe_account_id) {
