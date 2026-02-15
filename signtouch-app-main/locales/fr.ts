@@ -1150,7 +1150,7 @@ export default {
   onboardingDiscoverTitle: 'Découvrir les célébrités',
   onboardingDiscoverDesc: 'Parcourez le mur des célébrités, recherchez par nom et trouvez des stars vérifiées à suivre.',
   onboardingCameraTitle: 'Capturez vos souvenirs',
-  onboardingCameraDesc: 'Prenez des photos, ajoutez des signatures, des textes et créez des souvenirs personnalisés uniques à garder pour toujours.',
+  onboardingCameraDesc: 'Prenez un selfie avec votre célébrité, demandez-lui de signer et repartez avec votre dédicace personnalisée !',
   onboardingLiveTitle: 'Sessions Live',
   onboardingLiveDesc: 'Rejoignez des appels vidéo en direct avec des célébrités, obtenez des dédicaces personnalisées et collectionnez des autographes exclusifs.',
   onboardingCelebrityTitle: 'Mode Célébrité',
