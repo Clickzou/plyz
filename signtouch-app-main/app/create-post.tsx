@@ -11,6 +11,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { showAlert } from '@/utils/alertHelper';
 
@@ -101,6 +102,7 @@ export default function CreatePostScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -186,7 +188,7 @@ export default function CreatePostScreen() {
         event_date: null,
         created_at: new Date().toISOString(),
         celebrity: {
-          user_id: 'local-celebrity',
+          user_id: user?.id || 'local-celebrity',
           stage_name: 'You',
           avatar_url: null,
           official_verified: false,
@@ -199,7 +201,7 @@ export default function CreatePostScreen() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            celebrity_id: 'local-celebrity',
+            celebrity_id: user?.id || 'local-celebrity',
             kind: 'post',
             title: newPost.title,
             body: newPost.body,

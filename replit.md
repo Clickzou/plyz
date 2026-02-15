@@ -86,7 +86,7 @@ Preferred communication style: Simple, everyday language.
 - **Celebrity Discovery Wall**: `discover.tsx` - Search, sort, filter celebrities with pagination and badge system
 - **Celebrity Detail**: `celebrity-detail.tsx` - Full profile with tabs (About/Pricing/Posts), booking and autograph actions
 - **Activity Feed**: `activity.tsx` - News feed with posts and events from celebrities
-- **My Space**: `my-space.tsx` - Fan's bookings and autograph requests
+- **My Space**: `my-space.tsx` - Dual-mode dashboard with Fan/Celebrity toggle. Fan mode shows bookings and autograph requests. Celebrity mode shows incoming bookings from fans, autograph requests, earnings stats (85% share), and a "Publish Post" button linking to `create-post.tsx`.
 - **API Endpoints**: 15+ marketplace endpoints in `server/index.js` (GET /api/celebrities, GET /api/celebrity/:id, GET /api/feed, POST /api/posts, POST /api/report, POST /api/book-video, POST /api/autograph, etc.)
 - **Wikidata Integration**: Server-side search, entity resolution, and celebrity profile sync
 - **Badge System**: Official verified + Stripe Connect verified badges
