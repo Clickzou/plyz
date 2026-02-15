@@ -836,6 +836,20 @@ export default function MySpaceScreen() {
           </View>
           <ChevronRight size={18} color="#6b7280" />
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.celCreateBtn}
+          onPress={() => router.push('/account' as any)}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.celCreateIcon, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
+            <User size={20} color="#10b981" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.celCreateTitle}>{t('accountTitle') || 'Mon Compte'}</Text>
+            <Text style={styles.celCreateSub}>{t('accountSubtitle' as any) || 'Langue, connexion, paramètres et préférences'}</Text>
+          </View>
+          <ChevronRight size={18} color="#6b7280" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.celSubTabBar}>
