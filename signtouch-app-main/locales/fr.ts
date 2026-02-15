@@ -1379,6 +1379,11 @@ export default {
   settingsSaved: 'Paramètres enregistrés !',
 
   accountSubtitle: 'Langue, connexion, paramètres et préférences',
+  liveSessionStepsTitle: 'Comment ça marche ?',
+  liveSessionStep1: 'Prenez un selfie et remplissez les infos de la session',
+  liveSessionStep2: 'Partagez le code ou le QR code avec vos fans',
+  liveSessionStep3: 'Les fans rejoignent la file d\'attente et paient',
+  liveSessionStep4: 'Lancez la session et appelez vos fans en vidéo un par un',
   upcomingEvents: 'Événements en cours ou programmés',
   noEvents: 'Aucun événement pour le moment',
   eventActive: 'En cours',

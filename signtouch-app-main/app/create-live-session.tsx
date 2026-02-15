@@ -535,6 +535,26 @@ export default function CreateLiveSessionScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.stepsContainer}>
+          <Text style={styles.stepsTitle}>{t('liveSessionStepsTitle' as any) || 'Comment ça marche ?'}</Text>
+          <View style={styles.stepRow}>
+            <View style={styles.stepNumber}><Text style={styles.stepNumberText}>1</Text></View>
+            <Text style={styles.stepText}>{t('liveSessionStep1' as any) || 'Prenez un selfie et remplissez les infos de la session'}</Text>
+          </View>
+          <View style={styles.stepRow}>
+            <View style={styles.stepNumber}><Text style={styles.stepNumberText}>2</Text></View>
+            <Text style={styles.stepText}>{t('liveSessionStep2' as any) || 'Partagez le code ou le QR code avec vos fans'}</Text>
+          </View>
+          <View style={styles.stepRow}>
+            <View style={styles.stepNumber}><Text style={styles.stepNumberText}>3</Text></View>
+            <Text style={styles.stepText}>{t('liveSessionStep3' as any) || 'Les fans rejoignent la file d\'attente et paient'}</Text>
+          </View>
+          <View style={styles.stepRow}>
+            <View style={styles.stepNumber}><Text style={styles.stepNumberText}>4</Text></View>
+            <Text style={styles.stepText}>{t('liveSessionStep4' as any) || 'Lancez la session et appelez vos fans en vidéo un par un'}</Text>
+          </View>
+        </View>
+
         <Text style={[styles.sectionTitle, { textAlign: 'center' }]}>{t('liveSessionCoverPhoto') || 'Your Cover Photo'}</Text>
         <Text style={[styles.sectionHint, { textAlign: 'center' }]}>{t('liveSessionCoverPhotoHint') || 'Take a selfie to show fans who is hosting'}</Text>
         
@@ -977,6 +997,46 @@ export default function CreateLiveSessionScreen() {
 }
 
 const styles = StyleSheet.create({
+  stepsContainer: {
+    backgroundColor: 'rgba(16,185,129,0.08)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.25)',
+    padding: 16,
+    marginBottom: 20,
+  },
+  stepsTitle: {
+    color: '#10b981',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  stepNumber: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    marginTop: 1,
+  },
+  stepNumberText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  stepText: {
+    color: '#d1d5db',
+    fontSize: 13,
+    flex: 1,
+    lineHeight: 20,
+  },
   container: {
     flex: 1,
   },

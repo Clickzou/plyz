@@ -1394,6 +1394,11 @@ export default {
   settingsSaved: 'Settings saved!',
 
   accountSubtitle: 'Language, login, settings and preferences',
+  liveSessionStepsTitle: 'How does it work?',
+  liveSessionStep1: 'Take a selfie and fill in the session details',
+  liveSessionStep2: 'Share the code or QR code with your fans',
+  liveSessionStep3: 'Fans join the queue and pay',
+  liveSessionStep4: 'Start the session and video call your fans one by one',
   upcomingEvents: 'Current & Scheduled Events',
   noEvents: 'No events at the moment',
   eventActive: 'Active',
