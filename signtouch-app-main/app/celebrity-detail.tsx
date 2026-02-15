@@ -677,9 +677,8 @@ const styles = StyleSheet.create({
   stripeBadge: { backgroundColor: 'rgba(99,102,241,0.85)' },
   badgeText: { color: '#fff', fontSize: 11, fontWeight: '600' },
   sessionsCount: { color: '#9ca3af', fontSize: 13, marginTop: 4 },
-  actionRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 12, marginTop: 18 },
+  actionRow: { flexDirection: 'column', paddingHorizontal: 16, gap: 12, marginTop: 18 },
   mainAction: {
-    flex: 1,
     borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#000',
