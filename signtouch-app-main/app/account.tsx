@@ -631,6 +631,7 @@ export default function AccountScreen() {
             <TouchableOpacity
               style={[
                 styles.createAccountButton,
+                !isCelebrity && { backgroundColor: '#f59e0b' },
                 isCelebrity && { backgroundColor: '#374151' },
               ]}
               onPress={() => {
@@ -641,11 +642,11 @@ export default function AccountScreen() {
               }}
               activeOpacity={0.7}
             >
-              <Star size={18} color="#ffffff" fill={isCelebrity ? 'transparent' : '#ffffff'} />
-              <Text style={styles.createAccountButtonText}>
+              <Star size={18} color={isCelebrity ? '#ffffff' : '#000000'} fill={isCelebrity ? 'transparent' : '#000000'} />
+              <Text style={[styles.createAccountButtonText, !isCelebrity && { color: '#000000' }]}>
                 {isCelebrity ? (t('disableCelebrityMode')) : (t('enableCelebrityMode'))}
               </Text>
-              <ArrowRight size={18} color="#ffffff" />
+              <ArrowRight size={18} color={isCelebrity ? '#ffffff' : '#000000'} />
             </TouchableOpacity>
           </View>
         </View>
