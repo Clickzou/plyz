@@ -63,6 +63,17 @@ loadNsfwModel();
 
 const app = express();
 
+const MOCK_CELEBS = {
+  'mock-001': { stage_name: 'Zinedine Zidane', pricing: { video_call_price_cents: 15000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 5000, currency: 'eur' } },
+  'mock-002': { stage_name: 'Marion Cotillard', pricing: { video_call_price_cents: 20000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 7500, currency: 'eur' } },
+  'mock-003': { stage_name: 'Kylian Mbappé', pricing: { video_call_price_cents: 25000, video_call_unit: 'session', video_call_duration_minutes: 5, autograph_price_cents: 10000, currency: 'eur' } },
+  'mock-005': { stage_name: 'Omar Sy', pricing: { video_call_price_cents: 22000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 8000, currency: 'eur' } },
+};
+
+function isMockCelebrity(id) {
+  return id && id.startsWith('mock-') && MOCK_CELEBS[id];
+}
+
 let supabaseClient = null;
 function getSupabase() {
   if (!supabaseClient) {
@@ -1974,7 +1985,6 @@ app.post('/api/report', async (req, res) => {
 
 app.post('/api/book-video', async (req, res) => {
   try {
-    const db = getSupabaseAdmin();
     const stripe = await getStripe();
     const { fan_id, celebrity_id, duration_minutes } = req.body;
 
@@ -1982,6 +1992,38 @@ app.post('/api/book-video', async (req, res) => {
       return res.status(400).json({ error: 'fan_id and celebrity_id required' });
     }
 
+    const host = req.headers.host || req.hostname;
+    const mockCeleb = isMockCelebrity(celebrity_id);
+
+    if (mockCeleb) {
+      const mock = MOCK_CELEBS[celebrity_id];
+      const pricing = mock.pricing;
+      const dur = duration_minutes || pricing.video_call_duration_minutes || 15;
+      let price_cents = pricing.video_call_price_cents;
+      if (pricing.video_call_unit === 'minute') {
+        price_cents = pricing.video_call_price_cents * dur;
+      }
+      const mockBookingId = `test-booking-${Date.now()}`;
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: pricing.currency || 'eur',
+            product_data: { name: `[TEST] Video Call - ${mock.stage_name} (${dur}min)` },
+            unit_amount: price_cents,
+          },
+          quantity: 1,
+        }],
+        payment_intent_data: { capture_method: 'manual' },
+        metadata: { booking_id: mockBookingId, fan_id, celebrity_id, type: 'video_booking', test_mode: 'true' },
+        success_url: `https://${host}/booking-success?booking_id=${mockBookingId}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `https://${host}/celebrity-detail?id=${celebrity_id}`,
+      });
+      return res.json({ booking_id: mockBookingId, checkout_url: session.url, session_id: session.id });
+    }
+
+    const db = getSupabaseAdmin();
     const { data: celeb, error: celebError } = await db
       .from('celebrity_profiles')
       .select('stripe_account_id, stage_name, celebrity_pricing(*)')
@@ -2024,7 +2066,6 @@ app.post('/api/book-video', async (req, res) => {
 
     if (bookingError) throw bookingError;
 
-    const host = req.headers.host || req.hostname;
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -2071,7 +2112,6 @@ app.post('/api/book-video', async (req, res) => {
 
 app.post('/api/autograph', async (req, res) => {
   try {
-    const db = getSupabaseAdmin();
     const stripe = await getStripe();
     const { fan_id, celebrity_id, message } = req.body;
 
@@ -2079,6 +2119,33 @@ app.post('/api/autograph', async (req, res) => {
       return res.status(400).json({ error: 'fan_id and celebrity_id required' });
     }
 
+    const host = req.headers.host || req.hostname;
+    const mockCeleb = isMockCelebrity(celebrity_id);
+
+    if (mockCeleb) {
+      const mock = MOCK_CELEBS[celebrity_id];
+      const pricing = mock.pricing;
+      const price_cents = pricing.autograph_price_cents;
+      const mockAutographId = `test-autograph-${Date.now()}`;
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: pricing.currency || 'eur',
+            product_data: { name: `[TEST] Dédicace - ${mock.stage_name}` },
+            unit_amount: price_cents,
+          },
+          quantity: 1,
+        }],
+        metadata: { autograph_id: mockAutographId, fan_id, celebrity_id, type: 'autograph_request', test_mode: 'true' },
+        success_url: `https://${host}/autograph-success?autograph_id=${mockAutographId}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `https://${host}/celebrity-detail?id=${celebrity_id}`,
+      });
+      return res.json({ autograph_id: mockAutographId, checkout_url: session.url, session_id: session.id });
+    }
+
+    const db = getSupabaseAdmin();
     const { data: celeb, error: celebError } = await db
       .from('celebrity_profiles')
       .select('stripe_account_id, stage_name, celebrity_pricing(*)')
@@ -2116,7 +2183,6 @@ app.post('/api/autograph', async (req, res) => {
 
     if (autographError) throw autographError;
 
-    const host = req.headers.host || req.hostname;
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -2124,7 +2190,7 @@ app.post('/api/autograph', async (req, res) => {
         price_data: {
           currency: pricing.currency || 'eur',
           product_data: {
-            name: `Autograph - ${celeb.stage_name}`,
+            name: `Dédicace - ${celeb.stage_name}`,
           },
           unit_amount: price_cents,
         },
