@@ -8,8 +8,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import {
   Inbox, Video, PenTool, Clock, CheckCircle, XCircle, ChevronRight,
   Star, Users, DollarSign, Plus, FileText, Eye, TrendingUp, Sparkles, Radio,
-  QrCode, Trash2, Copy, Share2, X, Check, Edit3, Play, Calendar,
+  QrCode, Trash2, Copy, Share2, X, Check, Edit3, Play, Calendar, Settings, Globe, Save,
 } from 'lucide-react-native';
+import { TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import * as Clipboard from 'expo-clipboard';
@@ -25,7 +26,7 @@ const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SE
 
 type TabType = 'bookings' | 'autographs';
 type ModeType = 'fan' | 'celebrity';
-type CelTabType = 'dashboard' | 'events';
+type CelTabType = 'dashboard' | 'events' | 'settings';
 type FilterType = 'all' | 'live' | 'ended' | 'scheduled';
 
 interface Booking {
@@ -102,6 +103,16 @@ export default function MySpaceScreen() {
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
 
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [videoCallPriceEur, setVideoCallPriceEur] = useState('');
+  const [videoCallDuration, setVideoCallDuration] = useState('15');
+  const [videoCallUnit, setVideoCallUnit] = useState<'session' | 'minute'>('session');
+  const [autographPriceEur, setAutographPriceEur] = useState('');
+  const [dedicationPriceEur, setDedicationPriceEur] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [settingsCurrency, setSettingsCurrency] = useState('eur');
+
   const scrollViewRef = useRef<ScrollView>(null);
   const bookingsSectionY = useRef(0);
   const autographsSectionY = useRef(0);
@@ -113,6 +124,86 @@ export default function MySpaceScreen() {
   };
   scrollToAutographsRef.current = () => {
     scrollViewRef.current?.scrollTo({ y: autographsSectionY.current, animated: true });
+  };
+
+  const fetchSettings = useCallback(async () => {
+    if (!user?.id) return;
+    setSettingsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/my-celebrity-pricing?user_id=${user.id}`);
+      const data = await res.json();
+      if (data.pricing) {
+        setVideoCallPriceEur(String((data.pricing.video_call_price_cents || 0) / 100));
+        setVideoCallDuration(String(data.pricing.video_call_duration_minutes || 15));
+        setVideoCallUnit(data.pricing.video_call_unit || 'session');
+        setAutographPriceEur(String((data.pricing.autograph_price_cents || 0) / 100));
+        setDedicationPriceEur(String((data.pricing.live_dedication_price_cents || 0) / 100));
+        setSettingsCurrency(data.pricing.currency || 'eur');
+      }
+      if (data.website !== undefined) {
+        setWebsiteUrl(data.website || '');
+      }
+    } catch (err) {
+      console.error('Fetch settings error:', err);
+    } finally {
+      setSettingsLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (celTab === 'settings' && isCelebrity) {
+      fetchSettings();
+    }
+  }, [celTab, isCelebrity, fetchSettings]);
+
+  const parsePrice = (val: string): number => {
+    const n = parseFloat(val);
+    return isNaN(n) || n < 0 ? 0 : Math.round(n * 100);
+  };
+
+  const parseDuration = (val: string): number => {
+    const n = parseInt(val, 10);
+    return isNaN(n) || n < 1 ? 15 : n;
+  };
+
+  const saveSettings = async () => {
+    if (!user?.id) return;
+    setSettingsSaving(true);
+    try {
+      const pricingRes = await fetch(`${API_BASE}/api/upsert-celebrity-pricing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user.id,
+          video_call_price_cents: parsePrice(videoCallPriceEur),
+          video_call_unit: videoCallUnit,
+          video_call_duration_minutes: parseDuration(videoCallDuration),
+          autograph_price_cents: parsePrice(autographPriceEur),
+          live_dedication_price_cents: parsePrice(dedicationPriceEur),
+          currency: settingsCurrency,
+        }),
+      });
+      const pricingData = await pricingRes.json();
+      if (pricingData.error) throw new Error(pricingData.error);
+
+      const profileRes = await fetch(`${API_BASE}/api/update-celebrity-profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user.id,
+          website: websiteUrl.trim(),
+        }),
+      });
+      const profileData = await profileRes.json();
+      if (profileData.error) throw new Error(profileData.error);
+
+      showAlert(t('settingsSaved' as any) || 'Paramètres enregistrés !', '');
+    } catch (err: any) {
+      console.error('Save settings error:', err);
+      showAlert('Error', err.message || 'Failed to save');
+    } finally {
+      setSettingsSaving(false);
+    }
   };
 
   const handleUpdateBookingStatus = async (bookingId: string, status: string) => {
@@ -789,6 +880,16 @@ export default function MySpaceScreen() {
             </View>
           )}
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.celSubTabItem, celTab === 'settings' && styles.celSubTabItemActive]}
+          onPress={() => setCelTab('settings')}
+          activeOpacity={0.7}
+        >
+          <Settings size={16} color={celTab === 'settings' ? '#10b981' : '#6b7280'} />
+          <Text style={[styles.celSubTabLabel, celTab === 'settings' && styles.celSubTabLabelActive]}>
+            {t('celDashSettings' as any) || 'Tarifs'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {celTab === 'dashboard' ? (
@@ -889,6 +990,135 @@ export default function MySpaceScreen() {
             </View>
             <ChevronRight size={18} color="rgba(255,255,255,0.4)" />
           </TouchableOpacity>
+        </>
+      ) : celTab === 'settings' ? (
+        <>
+          {settingsLoading ? (
+            <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+              <ActivityIndicator size="large" color="#10b981" />
+            </View>
+          ) : (
+            <>
+              <Text style={styles.settingsSectionTitle}>
+                <Video size={16} color="#10b981" /> {t('settingsVideoCall' as any) || 'Appel vidéo'}
+              </Text>
+              <View style={styles.settingsCard}>
+                <View style={styles.settingsField}>
+                  <Text style={styles.settingsLabel}>{t('settingsVideoPrice' as any) || 'Prix (€)'}</Text>
+                  <TextInput
+                    style={styles.settingsInput}
+                    value={videoCallPriceEur}
+                    onChangeText={setVideoCallPriceEur}
+                    keyboardType="decimal-pad"
+                    placeholder="0"
+                    placeholderTextColor="#4b5563"
+                  />
+                </View>
+                <View style={styles.settingsField}>
+                  <Text style={styles.settingsLabel}>{t('settingsDuration' as any) || 'Durée (min)'}</Text>
+                  <TextInput
+                    style={styles.settingsInput}
+                    value={videoCallDuration}
+                    onChangeText={setVideoCallDuration}
+                    keyboardType="number-pad"
+                    placeholder="15"
+                    placeholderTextColor="#4b5563"
+                  />
+                </View>
+                <View style={styles.settingsField}>
+                  <Text style={styles.settingsLabel}>{t('settingsUnit' as any) || 'Tarification'}</Text>
+                  <View style={styles.settingsUnitRow}>
+                    <TouchableOpacity
+                      style={[styles.settingsUnitBtn, videoCallUnit === 'session' && styles.settingsUnitBtnActive]}
+                      onPress={() => setVideoCallUnit('session')}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.settingsUnitText, videoCallUnit === 'session' && styles.settingsUnitTextActive]}>
+                        {t('perSession' as any) || '/session'}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.settingsUnitBtn, videoCallUnit === 'minute' && styles.settingsUnitBtnActive]}
+                      onPress={() => setVideoCallUnit('minute')}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.settingsUnitText, videoCallUnit === 'minute' && styles.settingsUnitTextActive]}>
+                        {t('perMinute' as any) || '/min'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+
+              <Text style={styles.settingsSectionTitle}>
+                <Sparkles size={16} color="#a855f7" /> {t('settingsDedication' as any) || 'Session Live Dédicace'}
+              </Text>
+              <View style={styles.settingsCard}>
+                <View style={styles.settingsField}>
+                  <Text style={styles.settingsLabel}>{t('settingsDedicationPrice' as any) || 'Prix (€)'}</Text>
+                  <TextInput
+                    style={styles.settingsInput}
+                    value={dedicationPriceEur}
+                    onChangeText={setDedicationPriceEur}
+                    keyboardType="decimal-pad"
+                    placeholder="0"
+                    placeholderTextColor="#4b5563"
+                  />
+                </View>
+              </View>
+
+              <Text style={styles.settingsSectionTitle}>
+                <PenTool size={16} color="#f59e0b" /> {t('settingsAutograph' as any) || 'Autographe'}
+              </Text>
+              <View style={styles.settingsCard}>
+                <View style={styles.settingsField}>
+                  <Text style={styles.settingsLabel}>{t('settingsAutographPrice' as any) || 'Prix (€)'}</Text>
+                  <TextInput
+                    style={styles.settingsInput}
+                    value={autographPriceEur}
+                    onChangeText={setAutographPriceEur}
+                    keyboardType="decimal-pad"
+                    placeholder="0"
+                    placeholderTextColor="#4b5563"
+                  />
+                </View>
+              </View>
+
+              <Text style={styles.settingsSectionTitle}>
+                <Globe size={16} color="#3b82f6" /> {t('settingsWebsite' as any) || 'Site web'}
+              </Text>
+              <View style={styles.settingsCard}>
+                <View style={styles.settingsField}>
+                  <Text style={styles.settingsLabel}>URL</Text>
+                  <TextInput
+                    style={styles.settingsInput}
+                    value={websiteUrl}
+                    onChangeText={setWebsiteUrl}
+                    keyboardType="url"
+                    autoCapitalize="none"
+                    placeholder="https://..."
+                    placeholderTextColor="#4b5563"
+                  />
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.settingsSaveBtn, settingsSaving && { opacity: 0.6 }]}
+                onPress={saveSettings}
+                disabled={settingsSaving}
+                activeOpacity={0.8}
+              >
+                {settingsSaving ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Save size={18} color="#fff" />
+                    <Text style={styles.settingsSaveBtnText}>{t('settingsSave' as any) || 'Enregistrer'}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </>
+          )}
         </>
       ) : (
         <>
@@ -1951,5 +2181,79 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
+  },
+  settingsSectionTitle: {
+    color: '#e5e7eb',
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  settingsCard: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    padding: 16,
+    gap: 16,
+  },
+  settingsField: {
+    gap: 6,
+  },
+  settingsLabel: {
+    color: '#9ca3af',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  settingsInput: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    color: '#fff',
+    fontSize: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  settingsUnitRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  settingsUnitBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    alignItems: 'center',
+  },
+  settingsUnitBtnActive: {
+    backgroundColor: 'rgba(16,185,129,0.15)',
+    borderColor: '#10b981',
+  },
+  settingsUnitText: {
+    color: '#6b7280',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  settingsUnitTextActive: {
+    color: '#10b981',
+  },
+  settingsSaveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#10b981',
+    borderRadius: 14,
+    paddingVertical: 16,
+    marginTop: 24,
+    marginBottom: 20,
+  },
+  settingsSaveBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

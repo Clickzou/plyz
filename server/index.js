@@ -2296,6 +2296,55 @@ app.post('/api/upsert-celebrity-pricing', async (req, res) => {
   }
 });
 
+app.post('/api/update-celebrity-profile', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { user_id, website } = req.body;
+    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+
+    const updates = { updated_at: new Date().toISOString() };
+    if (website !== undefined) updates.website = website;
+
+    const { data, error } = await db
+      .from('celebrity_profiles')
+      .update(updates)
+      .eq('user_id', user_id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ profile: data });
+  } catch (error) {
+    console.error('[Update Celebrity Profile] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/my-celebrity-pricing', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { user_id } = req.query;
+    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+
+    const { data: pricing } = await db
+      .from('celebrity_pricing')
+      .select('*')
+      .eq('user_id', user_id)
+      .single();
+
+    const { data: profile } = await db
+      .from('celebrity_profiles')
+      .select('website')
+      .eq('user_id', user_id)
+      .single();
+
+    res.json({ pricing: pricing || null, website: profile?.website || '' });
+  } catch (error) {
+    console.error('[My Celebrity Pricing] Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/wikidata/search', async (req, res) => {
   try {
     const { query: q, lang } = req.query;

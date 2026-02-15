@@ -1379,4 +1379,17 @@ export default {
   declineBookingMsg: 'The payment will be cancelled and the fan will be refunded.',
   declineAutographTitle: 'Decline this request?',
   declineAutographMsg: 'The payment will be cancelled and the fan will be refunded.',
+
+  celDashSettings: 'Pricing',
+  settingsVideoCall: 'Video Call',
+  settingsVideoPrice: 'Price (€)',
+  settingsDuration: 'Duration (min)',
+  settingsUnit: 'Pricing model',
+  settingsDedication: 'Live Dedication Session',
+  settingsDedicationPrice: 'Price (€)',
+  settingsAutograph: 'Autograph',
+  settingsAutographPrice: 'Price (€)',
+  settingsWebsite: 'Website',
+  settingsSave: 'Save',
+  settingsSaved: 'Settings saved!',
 };

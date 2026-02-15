@@ -1364,4 +1364,17 @@ export default {
   declineBookingMsg: 'Le paiement sera annulé et le fan sera remboursé.',
   declineAutographTitle: 'Refuser cette demande ?',
   declineAutographMsg: 'Le paiement sera annulé et le fan sera remboursé.',
+
+  celDashSettings: 'Tarifs',
+  settingsVideoCall: 'Appel vidéo',
+  settingsVideoPrice: 'Prix (€)',
+  settingsDuration: 'Durée (min)',
+  settingsUnit: 'Tarification',
+  settingsDedication: 'Session Live Dédicace',
+  settingsDedicationPrice: 'Prix (€)',
+  settingsAutograph: 'Autographe',
+  settingsAutographPrice: 'Prix (€)',
+  settingsWebsite: 'Site web',
+  settingsSave: 'Enregistrer',
+  settingsSaved: 'Paramètres enregistrés !',
 };
