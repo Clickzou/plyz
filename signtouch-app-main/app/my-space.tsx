@@ -19,6 +19,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
+import StripeConnectModal from '@/components/StripeConnectModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getStripeAccountId } from '@/utils/userProfile';
+import { Shield } from 'lucide-react-native';
 import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount } from '@/utils/eventSessionStorage';
 const QRCodeSvg = require('react-native-qrcode-svg').default;
 
@@ -112,6 +116,9 @@ export default function MySpaceScreen() {
   const [dedicationPriceEur, setDedicationPriceEur] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [settingsCurrency, setSettingsCurrency] = useState('eur');
+
+  const [showStripeConnect, setShowStripeConnect] = useState(false);
+  const [stripeConnected, setStripeConnected] = useState(false);
 
   const scrollViewRef = useRef<ScrollView>(null);
   const bookingsSectionY = useRef(0);
@@ -282,10 +289,22 @@ export default function MySpaceScreen() {
     }
   }, []);
 
+  const checkStripeStatus = useCallback(async () => {
+    try {
+      if (user?.id) {
+        const acctId = await getStripeAccountId(user.id);
+        if (acctId) { setStripeConnected(true); return; }
+      }
+      const local = await AsyncStorage.getItem('stripe_connect_account_id');
+      setStripeConnected(!!local);
+    } catch { setStripeConnected(false); }
+  }, [user?.id]);
+
   useFocusEffect(
     useCallback(() => {
       loadMyEvents();
-    }, [loadMyEvents])
+      if (isCelebrity) checkStripeStatus();
+    }, [loadMyEvents, isCelebrity, checkStripeStatus])
   );
 
   const isEventLiveCheck = (event: EventSession) => {
@@ -792,6 +811,35 @@ export default function MySpaceScreen() {
       contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: BOTTOM_NAV_HEIGHT + 20 }}
       showsVerticalScrollIndicator={false}
     >
+      <View style={styles.celIntroBox}>
+        <Text style={styles.celIntroText}>
+          {t('celIntroText' as any) || 'Le mode Célébrité vous permet de créer des sessions live vidéo et des événements dédicaces pour interagir avec vos fans. Connectez votre compte Stripe pour certifier votre identité et être rémunéré directement.'}
+        </Text>
+      </View>
+
+      <TouchableOpacity
+        style={[styles.celVerifyBtn, stripeConnected && styles.celVerifyBtnConnected]}
+        onPress={() => {
+          if (!stripeConnected) setShowStripeConnect(true);
+        }}
+        activeOpacity={stripeConnected ? 1 : 0.8}
+      >
+        <Shield size={20} color={stripeConnected ? '#10b981' : '#f59e0b'} />
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={[styles.celVerifyTitle, stripeConnected && { color: '#10b981' }]}>
+            {stripeConnected
+              ? (t('celStripeConnected' as any) || 'Compte certifié ✓')
+              : (t('celStripeVerify' as any) || 'Certifier mon compte célébrité')}
+          </Text>
+          <Text style={styles.celVerifySub}>
+            {stripeConnected
+              ? (t('celStripeConnectedSub' as any) || 'Stripe Connect actif — vous êtes vérifié et pouvez être rémunéré')
+              : (t('celStripeVerifySub' as any) || 'Connectez Stripe pour être vérifié et recevoir vos paiements')}
+          </Text>
+        </View>
+        {!stripeConnected && <ChevronRight size={18} color="#f59e0b" />}
+      </TouchableOpacity>
+
       <TouchableOpacity
         style={styles.publishBtn}
         onPress={() => router.push('/create-post' as any)}
@@ -1402,11 +1450,61 @@ export default function MySpaceScreen() {
       )}
 
       <BottomNav />
+
+      <StripeConnectModal
+        visible={showStripeConnect}
+        onClose={() => setShowStripeConnect(false)}
+        onConnected={() => {
+          setStripeConnected(true);
+          setShowStripeConnect(false);
+        }}
+        celebrityName={''}
+        userId={user?.id}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  celIntroBox: {
+    backgroundColor: 'rgba(99,102,241,0.08)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.2)',
+    padding: 14,
+    marginBottom: 12,
+    marginTop: 4,
+  },
+  celIntroText: {
+    color: '#c7d2fe',
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  celVerifyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(245,158,11,0.08)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.25)',
+    padding: 14,
+    marginBottom: 14,
+  },
+  celVerifyBtnConnected: {
+    backgroundColor: 'rgba(16,185,129,0.08)',
+    borderColor: 'rgba(16,185,129,0.25)',
+  },
+  celVerifyTitle: {
+    color: '#f59e0b',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  celVerifySub: {
+    color: '#9ca3af',
+    fontSize: 12,
+    marginTop: 2,
+    lineHeight: 17,
+  },
   container: { flex: 1, backgroundColor: '#0a1628' },
   header: {
     flexDirection: 'row',
