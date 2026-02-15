@@ -363,11 +363,7 @@ export default function ActivityScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <LinearGradient colors={['#0a1628', '#0f2035', '#0a1628']} style={StyleSheet.absoluteFill} />
       <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <Image source={require('@/assets/favicon.png')} style={styles.headerLogo} />
-          <Text style={styles.title}>{t('activityTitle')}</Text>
-          <View style={styles.headerLogoPlaceholder} />
-        </View>
+        <Text style={styles.title}>{t('activityTitle')}</Text>
         <Text style={styles.subtitle}>{t('activitySubtitle')}</Text>
       </View>
 
@@ -527,10 +523,7 @@ export default function ActivityScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a1628' },
   header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 5 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerLogo: { width: 32, height: 32, borderRadius: 8 },
-  headerLogoPlaceholder: { width: 32 },
-  title: { color: '#fff', fontSize: 22, fontWeight: '700', textAlign: 'center', flex: 1 },
+  title: { color: '#fff', fontSize: 22, fontWeight: '700', textAlign: 'center' },
   subtitle: { color: '#9ca3af', fontSize: 14, marginTop: 2, textAlign: 'center' },
   filterRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 8, marginTop: 12, marginBottom: 8 },
   filterChip: {
