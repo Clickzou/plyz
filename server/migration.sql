@@ -179,5 +179,37 @@ DO $$ BEGIN CREATE POLICY wikidata_select ON wikidata_entities FOR SELECT USING 
 
 DO $$ BEGIN CREATE POLICY reports_insert ON reports FOR INSERT WITH CHECK (auth.uid() = reporter_id); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
+-- 9) organization_verification_requests
+CREATE TABLE IF NOT EXISTS organization_verification_requests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+  org_name text NOT NULL,
+  org_type text NOT NULL CHECK (org_type IN ('sports_club', 'brand', 'association', 'media', 'label', 'agency', 'other')),
+  official_website text,
+  contact_email text NOT NULL,
+  representative_name text NOT NULL,
+  representative_role text,
+  proof_description text,
+  proof_url text,
+  social_links jsonb DEFAULT '{}',
+  status text DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'more_info')),
+  admin_notes text,
+  reviewed_at timestamptz,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_org_verif_user ON organization_verification_requests(user_id);
+CREATE INDEX IF NOT EXISTS idx_org_verif_status ON organization_verification_requests(status);
+
+ALTER TABLE organization_verification_requests ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN CREATE POLICY org_verif_select ON organization_verification_requests FOR SELECT USING (auth.uid() = user_id); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY org_verif_insert ON organization_verification_requests FOR INSERT WITH CHECK (auth.uid() = user_id); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- Add account_type column to celebrity_profiles (individual or organization)
+ALTER TABLE celebrity_profiles ADD COLUMN IF NOT EXISTS account_type text DEFAULT 'individual' CHECK (account_type IN ('individual', 'organization'));
+ALTER TABLE celebrity_profiles ADD COLUMN IF NOT EXISTS org_verified boolean DEFAULT false;
+
 -- Allow service role to bypass RLS for server-side operations
 -- (service_role key already bypasses RLS by default in Supabase)

@@ -2461,6 +2461,112 @@ app.get('/api/verify-booking-payment', async (req, res) => {
   }
 });
 
+// ============================================================
+// Organization Verification Endpoints
+// ============================================================
+
+app.post('/api/org-verification-request', async (req, res) => {
+  try {
+    const {
+      user_id, org_name, org_type, official_website,
+      contact_email, representative_name, representative_role,
+      proof_description, proof_url, social_links
+    } = req.body;
+
+    if (!user_id || !org_name || !org_type || !contact_email || !representative_name) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const validTypes = ['sports_club', 'brand', 'association', 'media', 'label', 'agency', 'other'];
+    if (!validTypes.includes(org_type)) {
+      return res.status(400).json({ error: 'Invalid organization type' });
+    }
+
+    const supabase = getSupabase();
+
+    const { data: existing } = await supabase
+      .from('organization_verification_requests')
+      .select('id, status')
+      .eq('user_id', user_id)
+      .in('status', ['pending', 'approved'])
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      const req = existing[0];
+      if (req.status === 'approved') {
+        return res.status(409).json({ error: 'already_verified', message: 'Your organization is already verified' });
+      }
+      return res.status(409).json({ error: 'request_pending', message: 'A verification request is already pending' });
+    }
+
+    const { data, error } = await supabase
+      .from('organization_verification_requests')
+      .insert({
+        user_id,
+        org_name,
+        org_type,
+        official_website: official_website || null,
+        contact_email,
+        representative_name,
+        representative_role: representative_role || null,
+        proof_description: proof_description || null,
+        proof_url: proof_url || null,
+        social_links: social_links || {},
+        status: 'pending',
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await supabase
+      .from('celebrity_profiles')
+      .update({ account_type: 'organization' })
+      .eq('user_id', user_id);
+
+    res.json({ success: true, request: data });
+  } catch (error) {
+    console.error('[org-verification-request]', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/org-verification-status', async (req, res) => {
+  try {
+    const { user_id } = req.query;
+    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+
+    const supabase = getSupabase();
+
+    const { data, error } = await supabase
+      .from('organization_verification_requests')
+      .select('*')
+      .eq('user_id', user_id)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      return res.json({ has_request: false, status: null });
+    }
+
+    const request = data[0];
+    res.json({
+      has_request: true,
+      status: request.status,
+      org_name: request.org_name,
+      org_type: request.org_type,
+      admin_notes: request.admin_notes,
+      created_at: request.created_at,
+      reviewed_at: request.reviewed_at,
+    });
+  } catch (error) {
+    console.error('[org-verification-status]', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const EXPO_PORT = 19006;
 const PORT = 5000;
 
