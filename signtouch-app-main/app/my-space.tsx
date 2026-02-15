@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Inbox, Video, PenTool, Clock, CheckCircle, XCircle, ChevronRight,
-  Star, Users, DollarSign, Plus, FileText, Eye, TrendingUp,
+  Star, Users, DollarSign, Plus, FileText, Eye, TrendingUp, Sparkles, Radio,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -378,6 +378,29 @@ export default function MySpaceScreen() {
         <ChevronRight size={20} color="#10b981" />
       </TouchableOpacity>
 
+      <View style={styles.eventActionsRow}>
+        <TouchableOpacity
+          style={styles.eventActionBtn}
+          onPress={() => router.push('/create-live-session' as any)}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.eventActionIcon, { backgroundColor: 'rgba(239,68,68,0.15)' }]}>
+            <Radio size={20} color="#ef4444" />
+          </View>
+          <Text style={styles.eventActionText}>{t('celDashCreateLive' as any) || 'Session Live'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.eventActionBtn}
+          onPress={() => router.push('/create-event' as any)}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.eventActionIcon, { backgroundColor: 'rgba(168,85,247,0.15)' }]}>
+            <Sparkles size={20} color="#a855f7" />
+          </View>
+          <Text style={styles.eventActionText}>{t('celDashCreateDedication' as any) || 'Dédicace Live'}</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <View style={[styles.statIconWrap, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
@@ -585,6 +608,34 @@ const styles = StyleSheet.create({
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   statusText: { fontSize: 11, fontWeight: '600' },
 
+  eventActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  eventActionBtn: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
+    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  eventActionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  eventActionText: {
+    color: '#d1d5db',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   publishBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -595,7 +646,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(16,185,129,0.25)',
     marginTop: 12,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   publishIconWrap: {
     width: 44,

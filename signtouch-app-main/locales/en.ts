@@ -33,6 +33,8 @@ export default {
   celDashPendingAutographs: 'Autograph requests',
   celDashNoPendingBookings: 'No pending bookings',
   celDashNoPendingAutographs: 'No pending requests',
+  celDashCreateLive: 'Live Session',
+  celDashCreateDedication: 'Live Dedication',
   celDashFan: 'Fan',
   celOnboardTitle: 'Celebrity Mode',
   celOnboardHeroTitle: 'Welcome to Celebrity Mode',
