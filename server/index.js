@@ -2687,7 +2687,7 @@ app.post('/api/org-verification-request', async (req, res) => {
       return res.status(400).json({ error: 'Invalid organization type' });
     }
 
-    const supabase = getSupabase();
+    const supabase = getSupabaseAdmin();
 
     const { data: existing } = await supabase
       .from('organization_verification_requests')
@@ -2741,7 +2741,7 @@ app.get('/api/org-verification-status', async (req, res) => {
     const { user_id } = req.query;
     if (!user_id) return res.status(400).json({ error: 'user_id required' });
 
-    const supabase = getSupabase();
+    const supabase = getSupabaseAdmin();
 
     const { data, error } = await supabase
       .from('organization_verification_requests')
@@ -2792,7 +2792,7 @@ app.post('/api/creator-verification-request', async (req, res) => {
       return res.status(400).json({ error: 'At least one platform link is required' });
     }
 
-    const supabase = getSupabase();
+    const supabase = getSupabaseAdmin();
 
     const { data: existing } = await supabase
       .from('creator_verification_requests')
@@ -2838,7 +2838,7 @@ app.get('/api/creator-verification-status', async (req, res) => {
     const { user_id } = req.query;
     if (!user_id) return res.status(400).json({ error: 'user_id required' });
 
-    const supabase = getSupabase();
+    const supabase = getSupabaseAdmin();
 
     const { data, error } = await supabase
       .from('creator_verification_requests')
