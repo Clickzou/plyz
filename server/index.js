@@ -1746,6 +1746,7 @@ app.get('/api/celebrity/:id', async (req, res) => {
               wikidata_types: types.length > 0 ? types : celeb.wikidata_types,
               wikidata_confidence: 100,
               wikidata_last_sync: new Date().toISOString(),
+              official_verified: true,
               updated_at: new Date().toISOString(),
             };
 
@@ -2622,12 +2623,14 @@ app.post('/api/wikidata/sync-celebrity', async (req, res) => {
         wikidata_types: ent.types,
         wikidata_confidence: 100,
         wikidata_last_sync: new Date().toISOString(),
+        official_verified: true,
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', celebrity_id);
 
     if (error) throw error;
-    res.json({ success: true, entity: ent });
+    console.log(`[Wikidata Sync] Auto-verified celebrity ${celebrity_id} (found on Wikidata: ${ent.wikidata_id})`);
+    res.json({ success: true, entity: ent, auto_verified: true });
   } catch (error) {
     console.error('[Wikidata Sync] Error:', error.message);
     res.status(500).json({ error: error.message });
@@ -2774,6 +2777,11 @@ app.get('/api/org-verification-status', async (req, res) => {
 
 app.post('/api/creator-verification-request', async (req, res) => {
   try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
     const {
       user_id, display_name, primary_platform, platform_links,
       follower_count, content_category, additional_info
@@ -2781,6 +2789,10 @@ app.post('/api/creator-verification-request', async (req, res) => {
 
     if (!user_id || !display_name || !primary_platform) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (user_id !== authUser.id) {
+      return res.status(403).json({ error: 'user_id does not match authenticated user' });
     }
 
     const validPlatforms = ['twitch', 'youtube', 'tiktok', 'instagram', 'x'];
@@ -2809,6 +2821,12 @@ app.post('/api/creator-verification-request', async (req, res) => {
       return res.status(409).json({ error: 'request_pending', message: 'A verification request is already pending' });
     }
 
+    const validLinkPattern = /^https?:\/\/(www\.)?(twitch\.tv|youtube\.com|tiktok\.com|instagram\.com|x\.com|twitter\.com)\//i;
+    const hasValidLinks = Object.values(platform_links).some(link => validLinkPattern.test(link));
+    const followerNum = parseInt(follower_count, 10) || 0;
+    const autoApproved = hasValidLinks && followerNum >= 10000;
+    const assignedStatus = autoApproved ? 'approved' : 'pending';
+
     const { data, error } = await supabase
       .from('creator_verification_requests')
       .insert({
@@ -2819,14 +2837,23 @@ app.post('/api/creator-verification-request', async (req, res) => {
         follower_count: follower_count || null,
         content_category: content_category || null,
         additional_info: additional_info || null,
-        status: 'pending',
+        status: assignedStatus,
+        ...(autoApproved ? { reviewed_at: new Date().toISOString(), admin_notes: 'Auto-approved: valid social links + 10,000+ followers' } : {}),
       })
       .select()
       .single();
 
     if (error) throw error;
 
-    res.json({ success: true, request: data });
+    if (autoApproved) {
+      await supabase
+        .from('celebrity_profiles')
+        .update({ official_verified: true, updated_at: new Date().toISOString() })
+        .eq('user_id', user_id);
+      console.log(`[Creator Verification] Auto-approved ${display_name} (${followerNum} followers)`);
+    }
+
+    res.json({ success: true, request: data, auto_approved: autoApproved });
   } catch (error) {
     console.error('[creator-verification-request]', error);
     res.status(500).json({ error: error.message });

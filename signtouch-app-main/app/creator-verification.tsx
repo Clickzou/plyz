@@ -29,7 +29,7 @@ export default function CreatorVerificationScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -101,9 +101,13 @@ export default function CreatorVerificationScreen() {
 
     setSubmitting(true);
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
       const res = await fetch(`${API_BASE}/api/creator-verification-request`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           user_id: user?.id,
           display_name: displayName.trim(),
@@ -129,11 +133,19 @@ export default function CreatorVerificationScreen() {
         return;
       }
 
-      Alert.alert(
-        t('creatorVerifSubmittedTitle' as any) || 'Demande envoy\u00e9e !',
-        t('creatorVerifSubmittedMsg' as any) || 'Votre demande de v\u00e9rification cr\u00e9ateur a \u00e9t\u00e9 soumise. Nous examinerons votre profil sous 48h.',
-        [{ text: 'OK', onPress: () => checkStatus() }]
-      );
+      if (data.auto_approved) {
+        Alert.alert(
+          t('creatorVerifApprovedTitle' as any) || 'Profil vérifié !',
+          t('creatorVerifApprovedMsg' as any) || 'Félicitations ! Votre profil créateur a été vérifié automatiquement. Votre badge officiel est maintenant actif.',
+          [{ text: 'OK', onPress: () => checkStatus() }]
+        );
+      } else {
+        Alert.alert(
+          t('creatorVerifSubmittedTitle' as any) || 'Demande envoyée !',
+          t('creatorVerifSubmittedMsg' as any) || 'Votre demande de vérification créateur a été soumise. Nous examinerons votre profil sous 48h.',
+          [{ text: 'OK', onPress: () => checkStatus() }]
+        );
+      }
     } catch (e: any) {
       Alert.alert('Erreur', e.message);
     }
