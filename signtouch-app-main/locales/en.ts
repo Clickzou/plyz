@@ -1217,7 +1217,7 @@ export default {
   fromPrice: 'From',
   perSession: '/session',
   perMinute: '/min',
-  bookCall: 'Live Video Face to Face',
+  bookCall: 'Live Video',
   requestAutograph: 'Autograph',
   viewProfile: 'View Profile',
 
