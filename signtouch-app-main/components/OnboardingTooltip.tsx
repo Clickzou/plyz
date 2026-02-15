@@ -92,10 +92,11 @@ export default function OnboardingOverlay() {
   const tooltipW = Math.min(300, width - 32);
   const tooltipLeft = Math.max(16, Math.min(highlightX - tooltipW / 2, width - tooltipW - 16));
   const arrowLeft = highlightX - tooltipLeft - 8;
+  const navBarHeight = Platform.OS === 'ios' ? 85 : 65;
 
   return (
     <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
-      <Pressable onPress={nextStep} style={styles.touchBlocker}>
+      <Pressable onPress={nextStep} style={styles.topSection}>
           <View style={styles.skipContainer}>
             <TouchableOpacity onPress={skipOnboarding} style={styles.skipBtn} activeOpacity={0.7}>
               <X size={16} color="#fff" />
@@ -108,7 +109,7 @@ export default function OnboardingOverlay() {
           </View>
       </Pressable>
 
-      <View style={styles.bottomSection} pointerEvents="box-none">
+      <View style={[styles.bottomSection, { height: navBarHeight + 10 }]}>
         <Animated.View
           style={[
             styles.tooltipCard,
@@ -118,6 +119,7 @@ export default function OnboardingOverlay() {
               borderColor: currentStepData.color + '40',
               left: tooltipLeft,
               width: tooltipW,
+              bottom: navBarHeight + 16,
             },
           ]}
         >
@@ -129,7 +131,7 @@ export default function OnboardingOverlay() {
               {t(currentStepData.titleKey as any) || currentStepData.titleFallback}
             </Text>
           </View>
-          <Text style={styles.tooltipDesc}>
+          <Text style={styles.tooltipDesc} numberOfLines={3}>
             {t(currentStepData.descKey as any) || currentStepData.descFallback}
           </Text>
 
@@ -158,9 +160,9 @@ export default function OnboardingOverlay() {
           </View>
         </Animated.View>
 
-        <View style={[styles.arrowDown, { left: arrowLeft + tooltipLeft, borderTopColor: '#1a1a2e' }]} />
+        <View style={[styles.arrowDown, { left: arrowLeft + tooltipLeft, borderTopColor: '#1a1a2e', bottom: navBarHeight + 8 }]} />
 
-        <View style={styles.highlightArea}>
+        <View style={[styles.highlightArea, { height: navBarHeight }]}>
           <Animated.View
             style={[
               styles.highlightDot,
@@ -196,7 +198,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     zIndex: 9999,
   },
-  touchBlocker: {
+  topSection: {
     flex: 1,
   },
   skipContainer: {
@@ -231,11 +233,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   bottomSection: {
-    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+    position: 'relative',
   },
   tooltipCard: {
     position: 'absolute',
-    bottom: 100,
     backgroundColor: '#1a1a2e',
     borderRadius: 16,
     padding: 16,
@@ -308,7 +309,6 @@ const styles = StyleSheet.create({
   },
   arrowDown: {
     position: 'absolute',
-    bottom: 90,
     width: 0,
     height: 0,
     borderLeftWidth: 8,
@@ -319,8 +319,10 @@ const styles = StyleSheet.create({
     zIndex: 10001,
   },
   highlightArea: {
-    height: 80,
-    position: 'relative',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   highlightDot: {
     position: 'absolute',
