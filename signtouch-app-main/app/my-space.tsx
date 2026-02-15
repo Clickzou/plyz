@@ -529,8 +529,8 @@ export default function MySpaceScreen() {
             <Video size={20} color="#ef4444" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.fanJoinTitle}>{t('fanJoinLive' as any) || 'Rejoindre un Live'}</Text>
-            <Text style={styles.fanJoinSub}>{t('fanJoinLiveSub' as any) || 'Session vidéo avec une célébrité'}</Text>
+            <Text style={styles.fanJoinTitle}>{t('fanJoinLive' as any) || 'Rejoindre Session Live Vidéo'}</Text>
+            <Text style={styles.fanJoinSub}>{t('fanJoinLiveSub' as any) || 'Entrez un code pour rejoindre un appel vidéo en direct avec votre célébrité préférée'}</Text>
           </View>
           <ChevronRight size={18} color="#6b7280" />
         </TouchableOpacity>
@@ -543,45 +543,10 @@ export default function MySpaceScreen() {
             <Sparkles size={20} color="#a855f7" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.fanJoinTitle}>{t('fanJoinDedication' as any) || 'Rejoindre une Dédicace'}</Text>
-            <Text style={styles.fanJoinSub}>{t('fanJoinDedicationSub' as any) || 'Événement dédicace en direct'}</Text>
+            <Text style={styles.fanJoinTitle}>{t('fanJoinDedication' as any) || 'Rejoindre Session Live Dédicace'}</Text>
+            <Text style={styles.fanJoinSub}>{t('fanJoinDedicationSub' as any) || 'Scannez un QR code ou entrez un code pour recevoir une dédicace personnalisée de votre célébrité'}</Text>
           </View>
           <ChevronRight size={18} color="#6b7280" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.fanPublishBtn}
-          onPress={() => {
-            if (isCelebrity) {
-              router.push('/create-post' as any);
-            } else {
-              showAlert(
-                t('fanPublishTitle' as any) || 'Publier un post',
-                t('fanPublishExplain' as any) || 'Pour publier des posts et partager du contenu avec vos fans, vous devez d\'abord activer le mode Célébrité depuis les réglages de votre compte.'
-              );
-            }
-          }}
-          activeOpacity={0.8}
-        >
-          <View style={[styles.fanJoinIcon, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
-            <FileText size={20} color="#10b981" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.fanJoinTitle}>{t('fanPublishTitle' as any) || 'Publier un post'}</Text>
-            <Text style={styles.fanJoinSub}>
-              {isCelebrity
-                ? (t('fanPublishSubReady' as any) || 'Partagez du contenu avec vos fans')
-                : (t('fanPublishSubLocked' as any) || 'Activez le mode Célébrité pour publier')
-              }
-            </Text>
-          </View>
-          {isCelebrity ? (
-            <ChevronRight size={18} color="#10b981" />
-          ) : (
-            <View style={styles.fanPublishLockBadge}>
-              <Star size={12} color="#f59e0b" fill="#f59e0b" />
-            </View>
-          )}
         </TouchableOpacity>
       </View>
 
@@ -1296,24 +1261,6 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     fontSize: 11,
     marginTop: 2,
-  },
-  fanPublishBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: 'rgba(16,185,129,0.06)',
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(16,185,129,0.15)',
-  },
-  fanPublishLockBadge: {
-    backgroundColor: 'rgba(245,158,11,0.15)',
-    borderRadius: 10,
-    width: 28,
-    height: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   publishBtn: {
     flexDirection: 'row',
