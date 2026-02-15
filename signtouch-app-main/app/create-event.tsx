@@ -746,6 +746,26 @@ export default function CreateEventScreen() {
                 {t('eventIntro') || 'Programmez votre événement QR à l\'avance ou lancez-le immédiatement en cochant le bouton Live.'}
               </Text>
 
+              <View style={styles.stepsContainer}>
+                <Text style={styles.stepsTitle}>{t('dedicationStepsTitle' as any) || 'Comment ça marche ?'}</Text>
+                <View style={styles.stepRow}>
+                  <View style={styles.stepNumber}><Text style={styles.stepNumberText}>1</Text></View>
+                  <Text style={styles.stepText}>{t('dedicationStep1' as any) || 'Créez votre événement et ajoutez votre signature'}</Text>
+                </View>
+                <View style={styles.stepRow}>
+                  <View style={styles.stepNumber}><Text style={styles.stepNumberText}>2</Text></View>
+                  <Text style={styles.stepText}>{t('dedicationStep2' as any) || 'Partagez le QR code sur place ou en ligne'}</Text>
+                </View>
+                <View style={styles.stepRow}>
+                  <View style={styles.stepNumber}><Text style={styles.stepNumberText}>3</Text></View>
+                  <Text style={styles.stepText}>{t('dedicationStep3' as any) || 'Les fans scannent le QR code et reçoivent votre dédicace'}</Text>
+                </View>
+                <View style={styles.stepRow}>
+                  <View style={styles.stepNumber}><Text style={styles.stepNumberText}>4</Text></View>
+                  <Text style={styles.stepText}>{t('dedicationStep4' as any) || 'Publiez photos et selfies pendant l\'événement pour vos fans'}</Text>
+                </View>
+              </View>
+
               <View style={styles.section}>
                 <View style={styles.sectionHeaderRow}>
                   <Text style={styles.sectionTitle}>{t('eventName') || 'Event Name'}</Text>
@@ -1427,6 +1447,47 @@ export default function CreateEventScreen() {
 }
 
 const styles = StyleSheet.create({
+  stepsContainer: {
+    backgroundColor: 'rgba(16,185,129,0.08)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.25)',
+    padding: 16,
+    marginBottom: 20,
+    marginHorizontal: 20,
+  },
+  stepsTitle: {
+    color: '#10b981',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  stepNumber: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    marginTop: 1,
+  },
+  stepNumberText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  stepText: {
+    color: '#d1d5db',
+    fontSize: 13,
+    flex: 1,
+    lineHeight: 20,
+  },
   container: { flex: 1 },
   header: {
     flexDirection: 'row',
