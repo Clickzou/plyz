@@ -79,4 +79,4 @@ STRIPE_SERVER_PORT = "3001"
 EXPO_PUBLIC_STRIPE_SERVER_URL = "https://3aa55d0d-178c-4720-bdee-f8cea294f71b-00-3sqzk84ygwh7z.picard.replit.dev"
 
 [userenv.development]
-MOCK_MODE = "true"
+MOCK_MODE = "false"
