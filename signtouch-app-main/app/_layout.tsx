@@ -37,6 +37,8 @@ import { initRevenueCat } from '@/utils/revenueCat';
 import CustomAlert from '@/components/CustomAlert';
 import { CelebrityModeProvider } from '@/contexts/CelebrityModeContext';
 import { FollowProvider } from '@/contexts/FollowContext';
+import { OnboardingProvider } from '@/contexts/OnboardingContext';
+import OnboardingOverlay from '@/components/OnboardingTooltip';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -114,6 +116,7 @@ function AppContent() {
       />
 
       <CustomAlert />
+      <OnboardingOverlay />
     </>
   );
 }
@@ -165,7 +168,9 @@ export default function RootLayout() {
           <SubscriptionProvider>
             <CelebrityModeProvider>
               <FollowProvider>
-                <AppContent />
+                <OnboardingProvider>
+                  <AppContent />
+                </OnboardingProvider>
               </FollowProvider>
             </CelebrityModeProvider>
           </SubscriptionProvider>

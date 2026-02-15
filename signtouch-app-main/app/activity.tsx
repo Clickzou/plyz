@@ -14,13 +14,11 @@ import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import { FeedSkeleton } from '@/components/SkeletonLoader';
-import OnboardingTooltip from '@/components/OnboardingTooltip';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 const LIKES_KEY = '@signtouch_post_likes';
 const COMMENTS_KEY = '@signtouch_post_comments';
 const LOCAL_POSTS_KEY = '@signtouch_local_posts';
-const ONBOARDING_KEY = '@signtouch_onboarding_done';
 
 const DEMO_FEED: FeedPost[] = [
   { id: 'post-001', kind: 'post', title: 'Nouveau chapitre', body: "Très heureux d'annoncer une nouvelle aventure. Restez connectés !", media_url: null, event_date: null, created_at: '2025-12-10T14:30:00Z', celebrity: { user_id: 'mock-005', stage_name: 'Omar Sy', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg', official_verified: true, stripe_verified: true } },
@@ -117,8 +115,6 @@ export default function ActivityScreen() {
   const [page, setPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [allComments, setAllComments] = useState<Record<string, Comment[]>>({});
   const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
@@ -128,11 +124,6 @@ export default function ActivityScreen() {
   useEffect(() => {
     AsyncStorage.getItem(BANNER_DISMISSED_KEY).then(val => {
       setBannerDismissed(val === 'true');
-    });
-    AsyncStorage.getItem(ONBOARDING_KEY).then(val => {
-      if (val !== 'true') {
-        setShowOnboarding(true);
-      }
     });
     loadLikes();
     loadComments();
@@ -525,11 +516,6 @@ export default function ActivityScreen() {
       </Modal>
 
       <BottomNav />
-
-      <OnboardingTooltip
-        visible={showOnboarding}
-        onDone={() => setShowOnboarding(false)}
-      />
     </View>
   );
 }

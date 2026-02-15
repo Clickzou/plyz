@@ -29,6 +29,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { getStripeAccountId, saveStripeAccountId } from '@/utils/userProfile';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 import { Star } from 'lucide-react-native';
 import { FanBadgeCard } from '@/components/FanBadge';
 
@@ -55,6 +56,7 @@ export default function AccountScreen() {
   const { user, signOut, sendOtpCode, verifyOtpCode } = useAuth();
   const { status } = useSubscription();
   const { isCelebrity, toggleCelebrityMode } = useCelebrityMode();
+  const { startOnboarding } = useOnboarding();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [promoCode, setPromoCode] = useState('');
@@ -204,7 +206,7 @@ export default function AccountScreen() {
       router.push('/legal');
     } else if (action === 'replayTutorial') {
       AsyncStorage.removeItem('@signtouch_onboarding_done').then(() => {
-        router.push('/activity');
+        startOnboarding();
       });
     } else {
       console.log('Action:', action);
