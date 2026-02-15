@@ -679,26 +679,34 @@ export default function MySpaceScreen() {
         <ChevronRight size={20} color="#10b981" />
       </TouchableOpacity>
 
-      <View style={styles.eventActionsRow}>
+      <View style={styles.celCreateRow}>
         <TouchableOpacity
-          style={styles.eventActionBtn}
+          style={styles.celCreateBtn}
           onPress={() => router.push('/create-live-session' as any)}
           activeOpacity={0.8}
         >
-          <View style={[styles.eventActionIcon, { backgroundColor: 'rgba(239,68,68,0.15)' }]}>
+          <View style={[styles.celCreateIcon, { backgroundColor: 'rgba(239,68,68,0.15)' }]}>
             <Radio size={20} color="#ef4444" />
           </View>
-          <Text style={styles.eventActionText}>{t('celDashCreateLive' as any) || 'Session Live'}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.celCreateTitle}>{t('celDashCreateLive' as any) || 'Session Live Vidéo'}</Text>
+            <Text style={styles.celCreateSub}>{t('celDashCreateLiveSub' as any) || 'Appel vidéo en direct avec vos fans'}</Text>
+          </View>
+          <ChevronRight size={18} color="#6b7280" />
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.eventActionBtn}
+          style={styles.celCreateBtn}
           onPress={() => router.push('/create-event' as any)}
           activeOpacity={0.8}
         >
-          <View style={[styles.eventActionIcon, { backgroundColor: 'rgba(168,85,247,0.15)' }]}>
+          <View style={[styles.celCreateIcon, { backgroundColor: 'rgba(168,85,247,0.15)' }]}>
             <Sparkles size={20} color="#a855f7" />
           </View>
-          <Text style={styles.eventActionText}>{t('celDashCreateDedication' as any) || 'Dédicace Live'}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.celCreateTitle}>{t('celDashCreateDedication' as any) || 'Session Live Dédicace'}</Text>
+            <Text style={styles.celCreateSub}>{t('celDashCreateDedicationSub' as any) || 'Signez des autographes pour vos fans'}</Text>
+          </View>
+          <ChevronRight size={18} color="#6b7280" />
         </TouchableOpacity>
       </View>
 
@@ -1226,33 +1234,36 @@ const styles = StyleSheet.create({
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   statusText: { fontSize: 11, fontWeight: '600' },
 
-  eventActionsRow: {
-    flexDirection: 'row',
+  celCreateRow: {
     gap: 10,
     marginBottom: 16,
   },
-  eventActionBtn: {
-    flex: 1,
+  celCreateBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 14,
-    paddingVertical: 16,
+    padding: 14,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
   },
-  eventActionIcon: {
+  celCreateIcon: {
     width: 44,
     height: 44,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  eventActionText: {
-    color: '#d1d5db',
-    fontSize: 12,
+  celCreateTitle: {
+    color: '#e5e7eb',
+    fontSize: 14,
     fontWeight: '600',
-    textAlign: 'center',
+  },
+  celCreateSub: {
+    color: '#6b7280',
+    fontSize: 11,
+    marginTop: 2,
   },
   fanJoinRow: {
     paddingHorizontal: 16,
