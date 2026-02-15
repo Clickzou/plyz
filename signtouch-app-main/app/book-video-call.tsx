@@ -173,11 +173,24 @@ export default function BookVideoCallScreen() {
           </View>
         </View>
 
-        <View style={styles.securityNote}>
-          <Shield size={16} color="#6b7280" />
-          <Text style={styles.securityText}>
-            {t('bookingSecurityNote') || 'Payment is pre-authorized only. You will only be charged after the call takes place.'}
-          </Text>
+        <View style={styles.preAuthBanner}>
+          <Text style={styles.preAuthTitle}>{t('bookingPreAuthTitle' as any) || 'Comment fonctionne le pré-paiement ?'}</Text>
+          <View style={styles.preAuthStep}>
+            <View style={styles.preAuthDot}><Text style={styles.preAuthDotText}>1</Text></View>
+            <Text style={styles.preAuthStepText}>{t('bookingPreAuthStep1' as any) || 'Votre carte est pré-autorisée mais vous n\'êtes pas débité immédiatement'}</Text>
+          </View>
+          <View style={styles.preAuthStep}>
+            <View style={styles.preAuthDot}><Text style={styles.preAuthDotText}>2</Text></View>
+            <Text style={styles.preAuthStepText}>{t('bookingPreAuthStep2' as any) || 'La célébrité recevra votre demande et vous proposera un créneau horaire'}</Text>
+          </View>
+          <View style={styles.preAuthStep}>
+            <View style={styles.preAuthDot}><Text style={styles.preAuthDotText}>3</Text></View>
+            <Text style={styles.preAuthStepText}>{t('bookingPreAuthStep3' as any) || 'Vous serez débité uniquement après la session live vidéo terminée'}</Text>
+          </View>
+          <View style={styles.preAuthNote}>
+            <Shield size={14} color="#10b981" />
+            <Text style={styles.preAuthNoteText}>{t('bookingPreAuthNote' as any) || 'Si l\'appel n\'a pas lieu, l\'autorisation expire et vous ne payez rien.'}</Text>
+          </View>
         </View>
       </ScrollView>
 
@@ -257,6 +270,62 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: 14,
   },
   securityText: { color: '#6b7280', fontSize: 13, flex: 1, lineHeight: 18 },
+  preAuthBanner: {
+    backgroundColor: 'rgba(16,185,129,0.06)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.2)',
+    padding: 16,
+    marginTop: 4,
+  },
+  preAuthTitle: {
+    color: '#10b981',
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  preAuthStep: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  preAuthDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    marginTop: 1,
+  },
+  preAuthDotText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  preAuthStepText: {
+    color: '#d1d5db',
+    fontSize: 13,
+    flex: 1,
+    lineHeight: 19,
+  },
+  preAuthNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 6,
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    borderRadius: 8,
+    padding: 10,
+  },
+  preAuthNoteText: {
+    color: '#10b981',
+    fontSize: 12,
+    flex: 1,
+    fontWeight: '600',
+    lineHeight: 17,
+  },
   footer: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     paddingHorizontal: 16, paddingTop: 12,
