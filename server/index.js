@@ -1653,6 +1653,88 @@ app.get('/api/celebrity/:id', async (req, res) => {
     if (celebError) throw celebError;
     if (!celeb) return res.status(404).json({ error: 'Celebrity not found' });
 
+    if (celeb.wikidata_id) {
+      const SYNC_INTERVAL = 24 * 60 * 60 * 1000;
+      const lastSync = celeb.wikidata_last_sync ? new Date(celeb.wikidata_last_sync).getTime() : 0;
+      if (Date.now() - lastSync > SYNC_INTERVAL) {
+        (async () => {
+          try {
+            console.log(`[Wikidata Auto-Sync] Refreshing ${celeb.stage_name} (${celeb.wikidata_id})`);
+            const entityRes = await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${celeb.wikidata_id}&props=labels|descriptions|claims|sitelinks&languages=en|fr&format=json`);
+            const entityData = await entityRes.json();
+            const entity = entityData.entities?.[celeb.wikidata_id];
+            if (!entity) return;
+
+            const label = entity.labels?.en?.value || entity.labels?.fr?.value || celeb.wikidata_id;
+            const description = entity.descriptions?.en?.value || entity.descriptions?.fr?.value || '';
+
+            let image_url = null;
+            const imageClaimValues = entity.claims?.P18;
+            if (imageClaimValues && imageClaimValues.length > 0) {
+              const fileName = imageClaimValues[0].mainsnak?.datavalue?.value;
+              if (fileName) {
+                const encodedName = encodeURIComponent(fileName.replace(/ /g, '_'));
+                image_url = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodedName}?width=400`;
+              }
+            }
+
+            let wikipedia_url = null;
+            if (entity.sitelinks?.enwiki) {
+              wikipedia_url = `https://en.wikipedia.org/wiki/${encodeURIComponent(entity.sitelinks.enwiki.title)}`;
+            } else if (entity.sitelinks?.frwiki) {
+              wikipedia_url = `https://fr.wikipedia.org/wiki/${encodeURIComponent(entity.sitelinks.frwiki.title)}`;
+            }
+
+            const occupations = [];
+            const occupationClaims = entity.claims?.P106 || [];
+            for (const claim of occupationClaims.slice(0, 5)) {
+              const occId = claim.mainsnak?.datavalue?.value?.id;
+              if (occId) occupations.push(occId);
+            }
+
+            const types = [];
+            const instanceOfClaims = entity.claims?.P31 || [];
+            for (const claim of instanceOfClaims.slice(0, 5)) {
+              const typeId = claim.mainsnak?.datavalue?.value?.id;
+              if (typeId) types.push(typeId);
+            }
+
+            const updateData = {
+              wikidata_label: label,
+              wikipedia_url: wikipedia_url || celeb.wikipedia_url,
+              wikidata_image_url: image_url || celeb.wikidata_image_url,
+              wikidata_occupations: occupations.length > 0 ? occupations : celeb.wikidata_occupations,
+              wikidata_types: types.length > 0 ? types : celeb.wikidata_types,
+              wikidata_confidence: 100,
+              wikidata_last_sync: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            };
+
+            if (description && description.length > 0) {
+              updateData.bio = description;
+            }
+
+            await db.from('celebrity_profiles').update(updateData).eq('user_id', id);
+
+            await db.from('wikidata_entities').upsert({
+              wikidata_id: celeb.wikidata_id,
+              label,
+              description,
+              image_url,
+              wikipedia_url,
+              occupations,
+              types,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'wikidata_id' });
+
+            console.log(`[Wikidata Auto-Sync] Updated ${celeb.stage_name} successfully`);
+          } catch (syncErr) {
+            console.error(`[Wikidata Auto-Sync] Error for ${celeb.stage_name}:`, syncErr.message);
+          }
+        })();
+      }
+    }
+
     const { data: recentPosts } = await db
       .from('posts')
       .select('*')
