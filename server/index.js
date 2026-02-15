@@ -277,11 +277,30 @@ app.post('/api/create-session', async (req, res) => {
 
     console.log('[create-session] Inserting session with code:', code);
 
-    const { data, error } = await supabase
+    if (scheduled_at) {
+      insertData.scheduled_at = scheduled_at;
+    }
+
+    let { data, error } = await supabase
       .from('live_sessions')
       .insert(insertData)
       .select()
       .single();
+
+    if (error && scheduled_at && error.message.includes('scheduled_at')) {
+      console.warn('[create-session] scheduled_at column missing in DB, retrying without it');
+      delete insertData.scheduled_at;
+      insertData.status = 'waiting';
+      ({ data, error } = await supabase
+        .from('live_sessions')
+        .insert(insertData)
+        .select()
+        .single());
+      if (!error && data) {
+        data._scheduled_at_unsaved = scheduled_at;
+        console.warn('[create-session] Session created but scheduled_at was not saved — add the column to live_sessions via: ALTER TABLE live_sessions ADD COLUMN scheduled_at timestamptz;');
+      }
+    }
 
     if (error) {
       console.error('[create-session] Supabase error:', JSON.stringify(error));
@@ -1948,12 +1967,23 @@ app.get('/api/celebrity-events', async (req, res) => {
     const { celebrity_id } = req.query;
     if (!celebrity_id) return res.status(400).json({ error: 'celebrity_id required' });
 
-    const { data, error } = await db
+    let query = db
       .from('live_sessions')
       .select('*')
       .eq('celebrity_id', celebrity_id)
-      .in('status', ['scheduled', 'waiting', 'active'])
-      .order('scheduled_at', { ascending: true, nullsFirst: false });
+      .in('status', ['scheduled', 'waiting', 'active']);
+
+    let { data, error } = await query.order('scheduled_at', { ascending: true, nullsFirst: false });
+
+    if (error && error.message.includes('scheduled_at') && error.message.includes('does not exist')) {
+      console.log('[Celebrity Events] scheduled_at column missing, falling back to created_at ordering');
+      ({ data, error } = await db
+        .from('live_sessions')
+        .select('*')
+        .eq('celebrity_id', celebrity_id)
+        .in('status', ['scheduled', 'waiting', 'active'])
+        .order('created_at', { ascending: true }));
+    }
 
     if (error) throw error;
     res.json({ events: data || [] });
@@ -2912,8 +2942,33 @@ app.use(
   })
 );
 
+async function runStartupMigrations() {
+  try {
+    const db = getSupabaseAdmin();
+    const columns = [
+      { name: 'scheduled_at', type: 'timestamptz' },
+      { name: 'celebrity_push_token', type: 'text' },
+      { name: 'dedication_photo_url', type: 'text' },
+      { name: 'dedication_signature_svg', type: 'text' },
+    ];
+    for (const col of columns) {
+      const { error } = await db
+        .from('live_sessions')
+        .select(col.name)
+        .limit(0);
+      if (error && error.message.includes('does not exist')) {
+        console.log(`[Migration] Column live_sessions.${col.name} missing — will use fallback ordering`);
+      }
+    }
+    console.log('[Migration] Startup check complete');
+  } catch (err) {
+    console.warn('[Migration] Startup migration check skipped:', err.message);
+  }
+}
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`[Server] Running on port ${PORT} (API + proxy to Expo on ${EXPO_PORT})`);
+  runStartupMigrations();
   getStripe()
     .then(() => console.log('[Server] Stripe credentials loaded successfully'))
     .catch((err) => console.warn('[Server] Warning: Stripe credentials will be loaded on first request:', err.message));
