@@ -222,7 +222,11 @@ export default function DiscoverScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <LinearGradient colors={['#0a1628', '#0f2035', '#0a1628']} style={StyleSheet.absoluteFill} />
       <View style={styles.header}>
-        <Text style={styles.title}>{t('discoverTitle')}</Text>
+        <View style={styles.headerRow}>
+          <Image source={require('@/assets/favicon.png')} style={styles.headerLogo} />
+          <Text style={styles.title}>{t('discoverTitle')}</Text>
+          <View style={styles.headerLogoPlaceholder} />
+        </View>
         <Text style={styles.subtitle}>{t('discoverSubtitle')}</Text>
       </View>
 
@@ -324,8 +328,11 @@ export default function DiscoverScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a1628' },
   header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 5 },
-  title: { color: '#fff', fontSize: 24, fontWeight: '700' },
-  subtitle: { color: '#9ca3af', fontSize: 14, marginTop: 2 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerLogo: { width: 32, height: 32, borderRadius: 8 },
+  headerLogoPlaceholder: { width: 32 },
+  title: { color: '#fff', fontSize: 22, fontWeight: '700', textAlign: 'center', flex: 1 },
+  subtitle: { color: '#9ca3af', fontSize: 14, marginTop: 2, textAlign: 'center' },
   searchRow: { paddingHorizontal: 16, marginTop: 12, marginBottom: 4 },
   searchBox: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.08)',

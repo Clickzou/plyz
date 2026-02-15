@@ -1124,7 +1124,7 @@ export default {
   reportReason: 'Raison du signalement',
   reportSubmitted: 'Signalement envoyé',
   noPosts: 'Aucune publication',
-  activityTitle: 'Activité',
+  activityTitle: "Fil d'actualité",
   activitySubtitle: 'Dernières nouvelles des célébrités',
   filterAll: 'Tout',
   filterPosts: 'Posts',

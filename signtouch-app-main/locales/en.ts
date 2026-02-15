@@ -1129,7 +1129,7 @@ export default {
   noPosts: 'No posts yet',
 
   // Marketplace - Activity Feed
-  activityTitle: 'Activity',
+  activityTitle: 'News Feed',
   activitySubtitle: 'Latest from celebrities',
   filterAll: 'All',
   filterPosts: 'Posts',
