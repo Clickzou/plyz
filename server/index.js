@@ -1500,7 +1500,7 @@ const MOCK_FEED = [
     celebrity: { user_id: 'mock-005', stage_name: 'Omar Sy', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg', official_verified: true, stripe_verified: true },
   },
   {
-    id: 'post-002', kind: 'event', title: 'Session Live Exclusive', body: 'Rejoignez-moi pour une session live exclusive ce week-end. On parlera football, souvenirs et avenir.', media_url: null, event_date: '2026-02-20T18:00:00Z', created_at: '2025-12-08T10:00:00Z',
+    id: 'post-002', kind: 'event', title: 'Session Live Exclusive', body: 'Rejoignez-moi pour une session live exclusive ce week-end. On parlera football, souvenirs et avenir.', media_url: null, event_date: '2026-02-20T18:00:00Z', price_cents: 15000, location: 'Paris, France', created_at: '2025-12-08T10:00:00Z',
     celebrity: { user_id: 'mock-001', stage_name: 'Zinedine Zidane', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg/440px-Zinedine_Zidane_by_Tasnim_03.jpg', official_verified: true, stripe_verified: true },
   },
   {
@@ -1508,7 +1508,7 @@ const MOCK_FEED = [
     celebrity: { user_id: 'mock-004', stage_name: 'Aya Nakamura', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Tierra_Whack_%2848631292083%29_%28cropped%29.jpg/440px-Tierra_Whack_%2848631292083%29_%28cropped%29.jpg', official_verified: true, stripe_verified: true },
   },
   {
-    id: 'post-004', kind: 'event', title: 'Dédicace en Live', body: 'Réservez votre créneau pour une dédicace personnalisée en vidéo. Places limitées !', media_url: null, event_date: '2026-03-01T15:00:00Z', created_at: '2025-12-03T09:00:00Z',
+    id: 'post-004', kind: 'event', title: 'Dédicace en Live', body: 'Réservez votre créneau pour une dédicace personnalisée en vidéo. Places limitées !', media_url: null, event_date: '2026-03-01T15:00:00Z', price_cents: 20000, location: 'Cannes, France', created_at: '2025-12-03T09:00:00Z',
     celebrity: { user_id: 'mock-002', stage_name: 'Marion Cotillard', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Marion_Cotillard_2019.jpg/440px-Marion_Cotillard_2019.jpg', official_verified: true, stripe_verified: true },
   },
   {
@@ -1764,7 +1764,7 @@ app.get('/api/celebrity/:id', async (req, res) => {
     const mock = MOCK_CELEBRITIES.find(c => c.user_id === id);
     if (!mock) return res.status(404).json({ error: 'Celebrity not found' });
     const mockPosts = MOCK_FEED.filter(p => p.celebrity.user_id === id).map(p => ({
-      id: p.id, kind: p.kind, title: p.title, body: p.body, media_url: p.media_url, event_date: p.event_date, created_at: p.created_at,
+      id: p.id, kind: p.kind, title: p.title, body: p.body, media_url: p.media_url, event_date: p.event_date, price_cents: p.price_cents || 0, location: p.location || null, created_at: p.created_at,
     }));
     res.json({
       celebrity: {
@@ -1891,6 +1891,32 @@ app.post('/api/upload-post-image', upload.single('image'), async (req, res) => {
   } catch (error) {
     console.error('[Upload] Error:', error.message);
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/celebrity-events', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { celebrity_id } = req.query;
+    if (!celebrity_id) return res.status(400).json({ error: 'celebrity_id required' });
+
+    const { data, error } = await db
+      .from('live_sessions')
+      .select('*')
+      .eq('celebrity_id', celebrity_id)
+      .in('status', ['scheduled', 'waiting', 'active'])
+      .order('scheduled_at', { ascending: true, nullsFirst: false });
+
+    if (error) throw error;
+    res.json({ events: data || [] });
+  } catch (error) {
+    console.error('[Celebrity Events] Error:', error.message);
+    const { celebrity_id } = req.query;
+    const demoEvents = [
+      { id: 'evt-001', celebrity_id: celebrity_id || 'mock-001', celebrity_name: 'Zinedine Zidane', code: 'ZZ2026', status: 'scheduled', price_cents: 15000, duration_minutes: 30, max_slots: 20, location: 'Paris, France', scheduled_at: '2026-03-15T18:00:00Z', created_at: '2026-02-01T10:00:00Z' },
+      { id: 'evt-002', celebrity_id: celebrity_id || 'mock-001', celebrity_name: 'Zinedine Zidane', code: 'ZZ2026B', status: 'active', price_cents: 20000, duration_minutes: 45, max_slots: 10, location: 'Lyon, France', scheduled_at: '2026-02-20T15:00:00Z', created_at: '2026-01-28T14:00:00Z' },
+    ].filter(e => e.celebrity_id === celebrity_id);
+    res.json({ events: demoEvents });
   }
 });
 

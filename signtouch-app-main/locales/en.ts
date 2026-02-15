@@ -1392,4 +1392,17 @@ export default {
   settingsWebsite: 'Website',
   settingsSave: 'Save',
   settingsSaved: 'Settings saved!',
+
+  upcomingEvents: 'Current & Scheduled Events',
+  noEvents: 'No events at the moment',
+  eventActive: 'Active',
+  eventWaiting: 'Waiting',
+  eventScheduled: 'Scheduled',
+  liveSession: 'Live Session',
+  slots: 'slots',
+  registerEvent: 'Register',
+  registerAndPay: 'Register & Pre-pay',
+  registerEventConfirm: 'Do you want to register for this event?',
+  registerEventSuccess: 'Registration confirmed!',
+  eventLabel: 'Event',
 };

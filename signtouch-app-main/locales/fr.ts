@@ -1377,4 +1377,17 @@ export default {
   settingsWebsite: 'Site web',
   settingsSave: 'Enregistrer',
   settingsSaved: 'Paramètres enregistrés !',
+
+  upcomingEvents: 'Événements en cours ou programmés',
+  noEvents: 'Aucun événement pour le moment',
+  eventActive: 'En cours',
+  eventWaiting: 'En attente',
+  eventScheduled: 'Programmé',
+  liveSession: 'Session Live',
+  slots: 'places',
+  registerEvent: "S'inscrire",
+  registerAndPay: "S'inscrire & Pré-payer",
+  registerEventConfirm: 'Voulez-vous vous inscrire à cet événement ?',
+  registerEventSuccess: 'Inscription confirmée !',
+  eventLabel: 'Événement',
 };
