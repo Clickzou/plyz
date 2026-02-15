@@ -30,6 +30,7 @@ Preferred communication style: Simple, everyday language.
 - **Scheduled Sessions**: Live video sessions can be started immediately (LIVE mode) or scheduled for a future date and time, with calendar and time pickers. Scheduled sessions use `status: 'scheduled'` and store the planned start in `scheduled_at` column.
 - **Dynamic Queue System**: Manages real-time queues for live video sessions, including fan queuing, push notifications for turn alerts, and celebrity dashboards for queue management with automatic fan skipping and re-queueing.
 - **Personalized Dedication System**: A hybrid system where celebrities provide a selfie and signature, which are then used to generate unique, personalized dedications for fans after video calls, featuring interactive signature manipulation and localization.
+- **Content Moderation**: Server-side AI-powered image moderation using NSFW.js (TensorFlow.js MobileNetV2 model). All uploaded images are analyzed for inappropriate content (pornography, hentai, explicit content) before publication. Images are checked both at selection time (immediate feedback) and at upload time (double protection). Blocked images return a 403 response with `content_rejected` error. Thresholds: Porn > 30%, Hentai > 30%, or Sexy > 60% combined with Porn+Hentai > 20%.
 - **Legal Documents**: Multi-language support for CGV, CGU, Privacy Policy, and Legal Notices, dynamically displayed based on user's language with a French fallback.
 
 ## External Dependencies

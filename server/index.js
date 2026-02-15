@@ -5,8 +5,61 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const { createClient } = require('@supabase/supabase-js');
 const multer = require('multer');
 const path = require('path');
+const tf = require('@tensorflow/tfjs-node');
+const nsfw = require('nsfwjs');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+
+let nsfwModel = null;
+async function loadNsfwModel() {
+  if (!nsfwModel) {
+    try {
+      nsfwModel = await nsfw.load();
+      console.log('[Moderation] NSFW model loaded successfully');
+    } catch (err) {
+      console.error('[Moderation] Failed to load NSFW model:', err.message);
+    }
+  }
+  return nsfwModel;
+}
+
+async function moderateImage(imageBuffer) {
+  const model = await loadNsfwModel();
+  if (!model) {
+    console.warn('[Moderation] Model not available, skipping moderation');
+    return { safe: true, skipped: true };
+  }
+
+  try {
+    const imageTensor = tf.node.decodeImage(imageBuffer, 3);
+    const predictions = await model.classify(imageTensor);
+    imageTensor.dispose();
+
+    const result = {};
+    for (const p of predictions) {
+      result[p.className] = p.probability;
+    }
+
+    const pornScore = result['Porn'] || 0;
+    const hentaiScore = result['Hentai'] || 0;
+    const sexyScore = result['Sexy'] || 0;
+
+    const isUnsafe = pornScore > 0.3 || hentaiScore > 0.3 || (sexyScore > 0.6 && (pornScore + hentaiScore) > 0.2);
+
+    console.log(`[Moderation] Scores - Porn: ${(pornScore * 100).toFixed(1)}%, Hentai: ${(hentaiScore * 100).toFixed(1)}%, Sexy: ${(sexyScore * 100).toFixed(1)}% → ${isUnsafe ? 'BLOCKED' : 'OK'}`);
+
+    return {
+      safe: !isUnsafe,
+      scores: result,
+      reason: isUnsafe ? 'inappropriate_content' : null,
+    };
+  } catch (err) {
+    console.error('[Moderation] Classification error:', err.message);
+    return { safe: true, skipped: true, error: err.message };
+  }
+}
+
+loadNsfwModel();
 
 const app = express();
 
@@ -1700,9 +1753,38 @@ app.get('/api/feed', async (req, res) => {
   }
 });
 
+app.post('/api/moderate-image', upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No image provided' });
+
+    const result = await moderateImage(req.file.buffer);
+    if (!result.safe) {
+      return res.status(403).json({
+        error: 'content_rejected',
+        reason: result.reason,
+        message: 'Image contains inappropriate content and cannot be published.',
+      });
+    }
+
+    res.json({ safe: true });
+  } catch (error) {
+    console.error('[Moderation] Error:', error.message);
+    res.json({ safe: true, skipped: true });
+  }
+});
+
 app.post('/api/upload-post-image', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });
+
+    const modResult = await moderateImage(req.file.buffer);
+    if (!modResult.safe) {
+      return res.status(403).json({
+        error: 'content_rejected',
+        reason: modResult.reason,
+        message: 'Image contains inappropriate content and cannot be published.',
+      });
+    }
 
     const db = getSupabaseAdmin();
     const timestamp = Date.now();

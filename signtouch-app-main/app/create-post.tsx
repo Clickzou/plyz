@@ -30,7 +30,41 @@ async function compressImage(uri: string): Promise<string> {
   }
 }
 
-async function uploadImageToServer(uri: string): Promise<string | null> {
+async function moderateImageOnServer(uri: string): Promise<{ safe: boolean; error?: string }> {
+  try {
+    const formData = new FormData();
+    if (Platform.OS === 'web') {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      formData.append('image', blob, 'photo.jpg');
+    } else {
+      formData.append('image', {
+        uri,
+        type: 'image/jpeg',
+        name: 'photo.jpg',
+      } as any);
+    }
+
+    const res = await fetch(`${API_BASE}/api/moderate-image`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (res.status === 403) {
+      return { safe: false, error: 'content_rejected' };
+    }
+    if (!res.ok) {
+      return { safe: true };
+    }
+    const data = await res.json();
+    return { safe: data.safe !== false };
+  } catch (err) {
+    console.warn('[Moderation] Check failed, allowing:', err);
+    return { safe: true };
+  }
+}
+
+async function uploadImageToServer(uri: string): Promise<{ url: string | null; rejected?: boolean }> {
   try {
     const formData = new FormData();
 
@@ -51,12 +85,15 @@ async function uploadImageToServer(uri: string): Promise<string | null> {
       body: formData,
     });
 
+    if (res.status === 403) {
+      return { url: null, rejected: true };
+    }
     if (!res.ok) throw new Error('Upload failed');
     const data = await res.json();
-    return data.url || null;
+    return { url: data.url || null };
   } catch (err) {
     console.warn('[Upload] Failed:', err);
-    return null;
+    return { url: null };
   }
 }
 
@@ -68,6 +105,7 @@ export default function CreatePostScreen() {
   const [body, setBody] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
+  const [moderating, setModerating] = useState(false);
 
   const pickImage = async (fromCamera = false) => {
     try {
@@ -91,9 +129,23 @@ export default function CreatePostScreen() {
       }
       if (!result.canceled && result.assets[0]) {
         const compressed = await compressImage(result.assets[0].uri);
+
+        setModerating(true);
+        const modResult = await moderateImageOnServer(compressed);
+        setModerating(false);
+
+        if (!modResult.safe) {
+          showAlert(
+            t('contentRejected' as any) || 'Content Rejected',
+            t('contentRejectedMessage' as any) || 'This image contains inappropriate content and cannot be published. Please choose a different photo.'
+          );
+          return;
+        }
+
         setImageUri(compressed);
       }
     } catch (err) {
+      setModerating(false);
       console.error('Image pick error:', err);
     }
   };
@@ -110,7 +162,16 @@ export default function CreatePostScreen() {
       let mediaUrl: string | null = null;
 
       if (imageUri) {
-        mediaUrl = await uploadImageToServer(imageUri);
+        const uploadResult = await uploadImageToServer(imageUri);
+        if (uploadResult.rejected) {
+          showAlert(
+            t('contentRejected' as any) || 'Content Rejected',
+            t('contentRejectedMessage' as any) || 'This image contains inappropriate content and cannot be published. Please choose a different photo.'
+          );
+          setPublishing(false);
+          return;
+        }
+        mediaUrl = uploadResult.url;
         if (!mediaUrl) {
           mediaUrl = imageUri;
         }
@@ -232,7 +293,14 @@ export default function CreatePostScreen() {
             maxLength={2000}
           />
 
-          {imageUri ? (
+          {moderating ? (
+            <View style={styles.moderatingWrap}>
+              <ActivityIndicator size="large" color="#f59e0b" />
+              <Text style={styles.moderatingText}>
+                {t('moderatingImage' as any) || 'Checking image content...'}
+              </Text>
+            </View>
+          ) : imageUri ? (
             <View style={styles.imagePreviewWrap}>
               <Image source={{ uri: imageUri }} style={styles.imagePreview} />
               <TouchableOpacity
@@ -247,17 +315,19 @@ export default function CreatePostScreen() {
 
           <View style={styles.mediaRow}>
             <TouchableOpacity
-              style={styles.mediaBtn}
+              style={[styles.mediaBtn, moderating && { opacity: 0.4 }]}
               onPress={() => pickImage(false)}
               activeOpacity={0.7}
+              disabled={moderating}
             >
               <ImagePlus size={22} color="#10b981" />
               <Text style={styles.mediaBtnText}>{t('addPhoto' as any)}</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.mediaBtn}
+              style={[styles.mediaBtn, moderating && { opacity: 0.4 }]}
               onPress={() => pickImage(true)}
               activeOpacity={0.7}
+              disabled={moderating}
             >
               <Camera size={22} color="#3b82f6" />
               <Text style={styles.mediaBtnText}>{t('camera' as any)}</Text>
@@ -335,6 +405,22 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     minHeight: 120,
     paddingVertical: 8,
+  },
+  moderatingWrap: {
+    marginTop: 16,
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.2)',
+  },
+  moderatingText: {
+    color: '#f59e0b',
+    fontSize: 14,
+    marginTop: 12,
+    fontWeight: '500',
   },
   imagePreviewWrap: {
     marginTop: 16,
