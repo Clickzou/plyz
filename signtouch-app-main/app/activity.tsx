@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 5 },
   title: { color: '#fff', fontSize: 22, fontWeight: '700', textAlign: 'center' },
   subtitle: { color: '#9ca3af', fontSize: 14, marginTop: 2, textAlign: 'center' },
-  filterRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 8, marginTop: 12, marginBottom: 8 },
+  filterRow: { flexDirection: 'row', justifyContent: 'center', paddingHorizontal: 16, gap: 8, marginTop: 12, marginBottom: 8 },
   filterChip: {
     paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.06)',
