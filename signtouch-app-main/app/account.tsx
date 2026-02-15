@@ -580,18 +580,30 @@ export default function AccountScreen() {
                 </View>
               </TouchableOpacity>
               <View style={styles.accountCardInfo}>
-                <Text style={styles.accountCardName}>
-                  {isCelebrity ? (t('celebrityModeActive')) : (t('celebrityModeInactive'))}
-                </Text>
+                <View style={styles.nameRow}>
+                  <Text style={styles.accountCardName}>
+                    {isCelebrity ? (t('celebrityModeActive')) : (t('celebrityModeInactive'))}
+                  </Text>
+                  {isCelebrity && stripeLinked && (
+                    <View style={styles.verifiedBadgeSmall}>
+                      <Check size={10} color="#fff" />
+                    </View>
+                  )}
+                </View>
                 <Text style={styles.accountCardSubtitle}>
                   {isCelebrity ? (t('celebrityModeActiveDesc')) : (t('celebrityModeInactiveDesc'))}
                 </Text>
+                {isCelebrity && stripeLinked && (
+                  <Text style={styles.verifiedText}>
+                    {t('celVerifiedStripe' as any) || 'Stripe Connect vérifié'}
+                  </Text>
+                )}
               </View>
             </View>
 
             {isCelebrity && (
               <TouchableOpacity
-                style={styles.activateButton}
+                style={[styles.activateButton, stripeLinked && styles.activateButtonDone]}
                 onPress={() => {
                   if (Platform.OS !== 'web') {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -600,11 +612,18 @@ export default function AccountScreen() {
                 }}
                 activeOpacity={0.8}
               >
-                <Star size={18} color="#000" fill="#000" />
-                <Text style={styles.activateButtonText}>
-                  {t('celOnboardActivate' as any) || 'Activer'}
+                {stripeLinked ? (
+                  <Check size={18} color="#fff" />
+                ) : (
+                  <Star size={18} color="#000" fill="#000" />
+                )}
+                <Text style={[styles.activateButtonText, stripeLinked && { color: '#fff' }]}>
+                  {stripeLinked
+                    ? (t('celOnboardActivated' as any) || 'Activé')
+                    : (t('celOnboardActivate' as any) || 'Activer')
+                  }
                 </Text>
-                <ArrowRight size={18} color="#000" />
+                <ArrowRight size={18} color={stripeLinked ? '#fff' : '#000'} />
               </TouchableOpacity>
             )}
 
@@ -1269,11 +1288,31 @@ const styles = StyleSheet.create({
   accountCardInfo: {
     flex: 1,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   accountCardName: {
     fontSize: 16,
     fontWeight: '600',
     color: '#ffffff',
     marginBottom: 4,
+  },
+  verifiedBadgeSmall: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#10b981',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  verifiedText: {
+    color: '#10b981',
+    fontSize: 11,
+    fontWeight: '500',
+    marginTop: 2,
   },
   accountBadge: {
     flexDirection: 'row',
@@ -1337,6 +1376,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     marginBottom: 10,
+  },
+  activateButtonDone: {
+    backgroundColor: '#10b981',
   },
   activateButtonText: {
     fontSize: 15,

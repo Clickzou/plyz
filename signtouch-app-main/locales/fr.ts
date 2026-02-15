@@ -20,6 +20,8 @@ export default {
   permissionRequired: 'Permission requise',
   galleryPermission: 'Veuillez autoriser l\'accès à votre galerie photos.',
   celOnboardActivate: 'Activer',
+  celOnboardActivated: 'Activé',
+  celVerifiedStripe: 'Stripe Connect vérifié',
   celOnboardTitle: 'Mode Célébrité',
   celOnboardHeroTitle: 'Bienvenue dans le Mode Célébrité',
   celOnboardHeroSubtitle: 'Monétisez votre notoriété et connectez-vous avec vos fans de manière unique.',
