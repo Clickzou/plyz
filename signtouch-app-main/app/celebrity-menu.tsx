@@ -12,7 +12,7 @@ import {
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye } from 'lucide-react-native';
+import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye, PenSquare } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
@@ -550,6 +550,21 @@ export default function CelebrityMenuScreen() {
           <>
             <Text style={styles.title}>{t('celebrityMenuTitle')}</Text>
             <Text style={styles.subtitle}>{t('celebrityMenuSubtitle')}</Text>
+
+            <TouchableOpacity
+              style={styles.newPostCard}
+              onPress={() => router.push('/create-post')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.newPostIcon}>
+                <PenSquare size={24} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.newPostTitle}>{t('newPost' as any)}</Text>
+                <Text style={styles.newPostDesc}>{t('newPostDesc' as any)}</Text>
+              </View>
+              <Play size={16} color="rgba(255,255,255,0.4)" />
+            </TouchableOpacity>
 
             <View style={styles.optionsContainer}>
               <TouchableOpacity
@@ -1194,5 +1209,34 @@ const styles = StyleSheet.create({
   earningsCardSubtitle: {
     fontSize: 12,
     color: 'rgba(255,255,255,0.5)',
+  },
+  newPostCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    gap: 12,
+  },
+  newPostIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#10b981',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  newPostTitle: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#fff',
+    marginBottom: 2,
+  },
+  newPostDesc: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
   },
 });

@@ -3,6 +3,10 @@ const cors = require('cors');
 const Stripe = require('stripe');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const { createClient } = require('@supabase/supabase-js');
+const multer = require('multer');
+const path = require('path');
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 const app = express();
 
@@ -1693,6 +1697,36 @@ app.get('/api/feed', async (req, res) => {
       page: 1,
       per_page: 20,
     });
+  }
+});
+
+app.post('/api/upload-post-image', upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No image provided' });
+
+    const db = getSupabaseAdmin();
+    const timestamp = Date.now();
+    const ext = path.extname(req.file.originalname) || '.jpg';
+    const fileName = `posts/${timestamp}${ext}`;
+
+    const { data, error } = await db.storage
+      .from('memories')
+      .upload(fileName, req.file.buffer, {
+        contentType: req.file.mimetype || 'image/jpeg',
+        upsert: false,
+      });
+
+    if (error) {
+      console.error('[Upload] Storage error:', error.message);
+      return res.status(500).json({ error: 'Upload failed: ' + error.message });
+    }
+
+    const { data: urlData } = db.storage.from('memories').getPublicUrl(data.path);
+    console.log('[Upload] Image uploaded:', urlData.publicUrl);
+    res.json({ url: urlData.publicUrl });
+  } catch (error) {
+    console.error('[Upload] Error:', error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 

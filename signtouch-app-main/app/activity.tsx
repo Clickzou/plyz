@@ -18,6 +18,7 @@ import { FeedSkeleton } from '@/components/SkeletonLoader';
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 const LIKES_KEY = '@signtouch_post_likes';
 const COMMENTS_KEY = '@signtouch_post_comments';
+const LOCAL_POSTS_KEY = '@signtouch_local_posts';
 
 const DEMO_FEED: FeedPost[] = [
   { id: 'post-001', kind: 'post', title: 'Nouveau chapitre', body: "Très heureux d'annoncer une nouvelle aventure. Restez connectés !", media_url: null, event_date: null, created_at: '2025-12-10T14:30:00Z', celebrity: { user_id: 'mock-005', stage_name: 'Omar Sy', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg', official_verified: true, stripe_verified: true } },
@@ -213,6 +214,14 @@ export default function ActivityScreen() {
     toggleCelebrityMode();
   };
 
+  const loadLocalPosts = async (): Promise<FeedPost[]> => {
+    try {
+      const stored = await AsyncStorage.getItem(LOCAL_POSTS_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return [];
+  };
+
   const fetchFeed = useCallback(async (p = 1, reset = false) => {
     try {
       if (reset && posts.length === 0) setLoading(true);
@@ -226,23 +235,37 @@ export default function ActivityScreen() {
       clearTimeout(timeoutId);
       const data = await res.json();
 
-      if (data.posts && data.posts.length > 0) {
-        if (reset || p === 1) {
-          setPosts(data.posts);
-        } else {
-          setPosts(prev => [...prev, ...data.posts]);
-        }
-        setPage(p);
+      let feedPosts = data.posts && data.posts.length > 0 ? data.posts : null;
+      if (!feedPosts) throw new Error('No data');
+
+      const localPosts = await loadLocalPosts();
+      const filteredLocal = filter === 'all' ? localPosts : localPosts.filter(lp => lp.kind === filter);
+
+      if (reset || p === 1) {
+        const merged = [...filteredLocal, ...feedPosts].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        setPosts(merged);
       } else {
-        throw new Error('No data');
+        setPosts(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const newPosts = feedPosts.filter((fp: FeedPost) => !existingIds.has(fp.id));
+          return [...prev, ...newPosts];
+        });
       }
+      setPage(p);
     } catch (err) {
       console.warn('Using demo feed:', err);
       let demo = [...DEMO_FEED];
       if (filter !== 'all') {
         demo = demo.filter(p => p.kind === filter);
       }
-      setPosts(demo);
+      const localPosts = await loadLocalPosts();
+      const filteredLocal = filter === 'all' ? localPosts : localPosts.filter(lp => lp.kind === filter);
+      const merged = [...filteredLocal, ...demo].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setPosts(merged);
       setPage(1);
     } finally {
       setLoading(false);
