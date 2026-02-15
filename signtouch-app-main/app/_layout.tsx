@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { useFonts } from 'expo-font';
+import SplashOverlay from '@/components/SplashOverlay';
 import { ShadowsIntoLight_400Regular } from '@expo-google-fonts/shadows-into-light';
 import { AlexBrush_400Regular } from '@expo-google-fonts/alex-brush';
 import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
@@ -161,6 +162,8 @@ export default function RootLayout() {
     initRevenueCat().catch(console.warn);
   }, []);
 
+  const [showSplash, setShowSplash] = useState(true);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
@@ -170,6 +173,7 @@ export default function RootLayout() {
               <FollowProvider>
                 <OnboardingProvider>
                   <AppContent />
+                  {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
                 </OnboardingProvider>
               </FollowProvider>
             </CelebrityModeProvider>
