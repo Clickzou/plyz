@@ -590,42 +590,22 @@ export default function AccountScreen() {
             </View>
 
             {isCelebrity && (
-              <View style={styles.profilePhotoSection}>
-                <TouchableOpacity
-                  style={styles.profilePhotoPickerLarge}
-                  onPress={pickProfilePhoto}
-                  activeOpacity={0.7}
-                >
-                  {profilePhoto ? (
-                    <Image source={{ uri: profilePhoto }} style={styles.profilePhotoLarge} />
-                  ) : (
-                    <View style={styles.profilePhotoPlaceholder}>
-                      <Camera size={32} color="#6b7280" />
-                      <Text style={styles.profilePhotoPlaceholderText}>
-                        {t('addProfilePhoto' as any) || 'Add photo'}
-                      </Text>
-                    </View>
-                  )}
-                  <View style={styles.profilePhotoEditBadge}>
-                    <Camera size={14} color="#fff" />
-                  </View>
-                </TouchableOpacity>
-                <Text style={styles.profilePhotoHint}>
-                  {t('profilePhotoHint' as any) || 'Tap to add or change your profile photo'}
+              <TouchableOpacity
+                style={styles.activateButton}
+                onPress={() => {
+                  if (Platform.OS !== 'web') {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                  router.push('/celebrity-onboarding' as any);
+                }}
+                activeOpacity={0.8}
+              >
+                <Star size={18} color="#000" fill="#000" />
+                <Text style={styles.activateButtonText}>
+                  {t('celOnboardActivate' as any) || 'Activer'}
                 </Text>
-                {profilePhoto && (
-                  <TouchableOpacity
-                    style={styles.removePhotoBtn}
-                    onPress={removeProfilePhoto}
-                    activeOpacity={0.7}
-                  >
-                    <X size={14} color="#ef4444" />
-                    <Text style={styles.removePhotoBtnText}>
-                      {t('removePhoto' as any) || 'Remove photo'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+                <ArrowRight size={18} color="#000" />
+              </TouchableOpacity>
             )}
 
             <TouchableOpacity
@@ -1347,6 +1327,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ef4444',
     fontWeight: '500',
+  },
+  activateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#f59e0b',
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginBottom: 10,
+  },
+  activateButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#000000',
   },
   createAccountButton: {
     flexDirection: 'row',
