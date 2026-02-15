@@ -425,13 +425,6 @@ export default function CelebrityDetailScreen() {
                 <ExternalLink size={14} color="#10b981" />
               </TouchableOpacity>
             )}
-            {celebrity.wikipedia_url && (
-              <TouchableOpacity style={styles.linkRow} onPress={() => Linking.openURL(celebrity.wikipedia_url!)}>
-                <Globe size={16} color="#6366f1" />
-                <Text style={[styles.linkText, { color: '#6366f1' }]}>{t('viewOnWikipedia')}</Text>
-                <ExternalLink size={14} color="#6366f1" />
-              </TouchableOpacity>
-            )}
 
             <Text style={styles.sectionSubTitle}>
               <Calendar size={16} color="#10b981" /> {t('upcomingEvents' as any) || 'Événements en cours ou programmés'}
