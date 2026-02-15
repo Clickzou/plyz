@@ -732,32 +732,16 @@ export default function MySpaceScreen() {
 
       <View style={styles.tabBar}>
         <TouchableOpacity
-          style={[styles.tabItem, tab === 'bookings' && styles.tabItemActive]}
-          onPress={() => setTab('bookings')}
+          style={[styles.tabItem, styles.tabItemActive]}
           activeOpacity={0.7}
         >
-          <Video size={15} color={tab === 'bookings' ? '#10b981' : '#6b7280'} />
-          <Text style={[styles.tabLabel, tab === 'bookings' && styles.tabLabelActive]}>
+          <Video size={15} color="#10b981" />
+          <Text style={[styles.tabLabel, styles.tabLabelActive]}>
             {t('myBookings')}
           </Text>
           {bookings.length > 0 && (
-            <View style={[styles.tabCountBadge, tab === 'bookings' && styles.tabCountBadgeActive]}>
-              <Text style={[styles.tabCountText, tab === 'bookings' && styles.tabCountTextActive]}>{bookings.length}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabItem, tab === 'autographs' && styles.tabItemActive]}
-          onPress={() => setTab('autographs')}
-          activeOpacity={0.7}
-        >
-          <PenTool size={15} color={tab === 'autographs' ? '#f59e0b' : '#6b7280'} />
-          <Text style={[styles.tabLabel, tab === 'autographs' && styles.tabLabelActive]}>
-            {t('myAutographs')}
-          </Text>
-          {autographs.length > 0 && (
-            <View style={[styles.tabCountBadge, tab === 'autographs' && styles.tabCountBadgeAutograph]}>
-              <Text style={[styles.tabCountText, tab === 'autographs' && styles.tabCountTextActive]}>{autographs.length}</Text>
+            <View style={[styles.tabCountBadge, styles.tabCountBadgeActive]}>
+              <Text style={[styles.tabCountText, styles.tabCountTextActive]}>{bookings.length}</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -767,7 +751,7 @@ export default function MySpaceScreen() {
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#10b981" />
         </View>
-      ) : tab === 'bookings' ? (
+      ) : (
         bookings.length === 0 ? (
           <View style={styles.center}>
             <Video size={48} color="#374151" />
@@ -778,22 +762,6 @@ export default function MySpaceScreen() {
           <FlatList
             data={bookings}
             renderItem={renderBooking}
-            keyExtractor={item => item.id}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: BOTTOM_NAV_HEIGHT + 20 }}
-            ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-          />
-        )
-      ) : (
-        autographs.length === 0 ? (
-          <View style={styles.center}>
-            <PenTool size={48} color="#374151" />
-            <Text style={styles.emptyText}>{t('noAutographs')}</Text>
-            <Text style={styles.emptyHint}>{t('noAutographsHint')}</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={autographs}
-            renderItem={renderAutograph}
             keyExtractor={item => item.id}
             contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: BOTTOM_NAV_HEIGHT + 20 }}
             ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
