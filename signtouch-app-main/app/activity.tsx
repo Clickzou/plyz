@@ -368,10 +368,14 @@ export default function ActivityScreen() {
             </Text>
           </View>
           {item.kind === 'event' && (
-            <View style={styles.eventBadge}>
+            <TouchableOpacity
+              style={styles.eventBadge}
+              onPress={() => router.push('/fan-choice')}
+              activeOpacity={0.7}
+            >
               <Calendar size={12} color="#fff" />
               <Text style={styles.eventBadgeText}>Event</Text>
-            </View>
+            </TouchableOpacity>
           )}
         </TouchableOpacity>
 
@@ -381,12 +385,16 @@ export default function ActivityScreen() {
           <Image source={{ uri: item.media_url }} style={styles.postImage} />
         )}
         {item.kind === 'event' && item.event_date && (
-          <View style={styles.eventDateRow}>
+          <TouchableOpacity
+            style={styles.eventDateRow}
+            onPress={() => router.push('/fan-choice')}
+            activeOpacity={0.7}
+          >
             <Calendar size={14} color="#f59e0b" />
             <Text style={styles.eventDateText}>
               {t('eventOn')} {new Date(item.event_date).toLocaleDateString()}
             </Text>
-          </View>
+          </TouchableOpacity>
         )}
 
         <View style={styles.actionsRow}>
