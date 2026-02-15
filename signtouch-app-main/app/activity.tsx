@@ -21,12 +21,12 @@ const COMMENTS_KEY = '@signtouch_post_comments';
 const LOCAL_POSTS_KEY = '@signtouch_local_posts';
 
 const DEMO_FEED: FeedPost[] = [
-  { id: 'post-001', kind: 'post', title: 'Nouveau chapitre', body: "Très heureux d'annoncer une nouvelle aventure. Restez connectés !", media_url: null, event_date: null, created_at: '2025-12-10T14:30:00Z', celebrity: { user_id: 'mock-005', stage_name: 'Omar Sy', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg', official_verified: true, stripe_verified: true } },
-  { id: 'post-002', kind: 'event', title: 'Session Live Exclusive', body: 'Rejoignez-moi pour une session live exclusive. On parlera football et souvenirs.', media_url: null, event_date: '2026-02-20T18:00:00Z', created_at: '2025-12-08T10:00:00Z', celebrity: { user_id: 'mock-001', stage_name: 'Zinedine Zidane', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg/440px-Zinedine_Zidane_by_Tasnim_03.jpg', official_verified: true, stripe_verified: true } },
-  { id: 'post-003', kind: 'post', title: null, body: 'Merci à tous les fans pour votre énergie incroyable au concert de Paris !', media_url: null, event_date: null, created_at: '2025-12-05T20:00:00Z', celebrity: { user_id: 'mock-004', stage_name: 'Aya Nakamura', avatar_url: null, official_verified: true, stripe_verified: true } },
-  { id: 'post-004', kind: 'event', title: 'Dédicace en Live', body: 'Réservez votre créneau pour une dédicace personnalisée en vidéo. Places limitées !', media_url: null, event_date: '2026-03-01T15:00:00Z', created_at: '2025-12-03T09:00:00Z', celebrity: { user_id: 'mock-002', stage_name: 'Marion Cotillard', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Marion_Cotillard_2019.jpg/440px-Marion_Cotillard_2019.jpg', official_verified: true, stripe_verified: true } },
-  { id: 'post-005', kind: 'post', title: 'Allez Madrid !', body: 'Quel match incroyable hier soir ! On ne lâche rien.', media_url: null, event_date: null, created_at: '2025-11-28T22:00:00Z', celebrity: { user_id: 'mock-003', stage_name: 'Kylian Mbappé', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg/440px-2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg', official_verified: true, stripe_verified: true } },
-  { id: 'post-006', kind: 'post', title: 'Retour au dojo', body: "La préparation pour les championnats a commencé. Le judo c'est ma vie.", media_url: null, event_date: null, created_at: '2025-11-25T08:00:00Z', celebrity: { user_id: 'mock-006', stage_name: 'Teddy Riner', avatar_url: null, official_verified: true, stripe_verified: true } },
+  { id: 'post-001', kind: 'post', title: 'Nouveau chapitre', body: "Très heureux d'annoncer une nouvelle aventure. Restez connectés ! Merci pour votre soutien incroyable.", media_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg', event_date: null, created_at: '2025-12-10T14:30:00Z', like_count: 12453, celebrity: { user_id: 'mock-005', stage_name: 'Omar Sy', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg', official_verified: true, stripe_verified: true } },
+  { id: 'post-002', kind: 'event', title: 'Session Live Exclusive', body: 'Rejoignez-moi pour une session live exclusive ce week-end. On parlera football, souvenirs et avenir.', media_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg/440px-Zinedine_Zidane_by_Tasnim_03.jpg', event_date: '2026-02-20T18:00:00Z', created_at: '2025-12-08T10:00:00Z', like_count: 34210, celebrity: { user_id: 'mock-001', stage_name: 'Zinedine Zidane', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg/440px-Zinedine_Zidane_by_Tasnim_03.jpg', official_verified: true, stripe_verified: true } },
+  { id: 'post-003', kind: 'post', title: null, body: 'Merci à tous les fans pour votre énergie incroyable au concert de Paris ! Vous êtes les meilleurs. On se retrouve bientôt sur scène.', media_url: null, event_date: null, created_at: '2025-12-05T20:00:00Z', like_count: 8920, celebrity: { user_id: 'mock-004', stage_name: 'Aya Nakamura', avatar_url: null, official_verified: true, stripe_verified: true } },
+  { id: 'post-004', kind: 'event', title: 'Dédicace en Live', body: 'Réservez votre créneau pour une dédicace personnalisée en vidéo. Places limitées !', media_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Marion_Cotillard_2019.jpg/440px-Marion_Cotillard_2019.jpg', event_date: '2026-03-01T15:00:00Z', created_at: '2025-12-03T09:00:00Z', like_count: 5632, celebrity: { user_id: 'mock-002', stage_name: 'Marion Cotillard', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Marion_Cotillard_2019.jpg/440px-Marion_Cotillard_2019.jpg', official_verified: true, stripe_verified: true } },
+  { id: 'post-005', kind: 'post', title: 'Allez Madrid !', body: 'Quel match incroyable hier soir ! On ne lâche rien. Merci aux supporters, vous êtes incroyables !', media_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg/440px-2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg', event_date: null, created_at: '2025-11-28T22:00:00Z', like_count: 45780, celebrity: { user_id: 'mock-003', stage_name: 'Kylian Mbappé', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg/440px-2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg', official_verified: true, stripe_verified: true } },
+  { id: 'post-006', kind: 'post', title: 'Retour au dojo', body: "La préparation pour les championnats a commencé. Le judo c'est ma vie. On vise l'or !", media_url: null, event_date: null, created_at: '2025-11-25T08:00:00Z', like_count: 7340, celebrity: { user_id: 'mock-006', stage_name: 'Teddy Riner', avatar_url: null, official_verified: true, stripe_verified: true } },
 ];
 
 interface FeedPost {
@@ -37,6 +37,7 @@ interface FeedPost {
   media_url: string | null;
   event_date: string | null;
   created_at: string;
+  like_count?: number;
   celebrity: {
     user_id: string;
     stage_name: string;
@@ -61,6 +62,44 @@ const FILTERS = [
 ] as const;
 
 const BANNER_DISMISSED_KEY = '@signtouch_celebrity_banner_dismissed';
+
+const INITIAL_COMMENTS: Record<string, Comment[]> = {
+  'post-001': [
+    { id: 'ic-001', postId: 'post-001', text: 'Trop hâte de voir ça ! 🔥', author: 'Lucas M.', createdAt: '2025-12-10T15:10:00Z' },
+    { id: 'ic-002', postId: 'post-001', text: 'Omar tu es le meilleur, on te soutient !', author: 'Sophie R.', createdAt: '2025-12-10T16:22:00Z' },
+    { id: 'ic-003', postId: 'post-001', text: 'Légende 🙌', author: 'Karim B.', createdAt: '2025-12-10T18:05:00Z' },
+  ],
+  'post-002': [
+    { id: 'ic-004', postId: 'post-002', text: 'Zizou en live !! Je réserve direct 🤩', author: 'Mehdi A.', createdAt: '2025-12-08T11:30:00Z' },
+    { id: 'ic-005', postId: 'post-002', text: 'La classe, vivement le 20 !', author: 'Julie P.', createdAt: '2025-12-08T12:15:00Z' },
+    { id: 'ic-006', postId: 'post-002', text: 'Tu nous manques sur le terrain Zizou ❤️', author: 'Antoine D.', createdAt: '2025-12-08T14:00:00Z' },
+    { id: 'ic-007', postId: 'post-002', text: 'Le GOAT tout simplement', author: 'Fatima Z.', createdAt: '2025-12-08T15:45:00Z' },
+    { id: 'ic-008', postId: 'post-002', text: 'Je vais demander un autographe !', author: 'Thomas L.', createdAt: '2025-12-08T17:20:00Z' },
+  ],
+  'post-003': [
+    { id: 'ic-009', postId: 'post-003', text: 'Le concert était incroyable !! 💃', author: 'Amina K.', createdAt: '2025-12-05T21:00:00Z' },
+    { id: 'ic-010', postId: 'post-003', text: 'Djadja en live, frissons garantis', author: 'Emma V.', createdAt: '2025-12-05T22:30:00Z' },
+  ],
+  'post-005': [
+    { id: 'ic-011', postId: 'post-005', text: 'ALLEZ KYLIAN 🇫🇷⚽', author: 'Maxime G.', createdAt: '2025-11-28T22:30:00Z' },
+    { id: 'ic-012', postId: 'post-005', text: 'Quel but hier soir, chapeau !', author: 'Nicolas F.', createdAt: '2025-11-28T23:00:00Z' },
+    { id: 'ic-013', postId: 'post-005', text: 'Tu fais rêver tout un pays 💪', author: 'Léa C.', createdAt: '2025-11-29T08:00:00Z' },
+    { id: 'ic-014', postId: 'post-005', text: 'Hala Madrid y nada más !', author: 'Carlos R.', createdAt: '2025-11-29T09:15:00Z' },
+    { id: 'ic-015', postId: 'post-005', text: 'J\'ai réservé une dédicace, trop content', author: 'Yanis M.', createdAt: '2025-11-29T10:45:00Z' },
+    { id: 'ic-016', postId: 'post-005', text: 'Le meilleur joueur du monde 🌍', author: 'Sarah B.', createdAt: '2025-11-29T12:00:00Z' },
+    { id: 'ic-017', postId: 'post-005', text: 'On est derrière toi Kylian !', author: 'Pierre H.', createdAt: '2025-11-29T14:30:00Z' },
+  ],
+  'post-006': [
+    { id: 'ic-018', postId: 'post-006', text: 'Champion olympique 3 fois, respect total 🥋', author: 'David W.', createdAt: '2025-11-25T10:00:00Z' },
+    { id: 'ic-019', postId: 'post-006', text: 'Le dojo te va si bien Teddy !', author: 'Marine L.', createdAt: '2025-11-25T12:30:00Z' },
+  ],
+};
+
+function formatCount(n: number): string {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return n.toString();
+}
 
 function formatTimeAgo(dateStr: string): string {
   const now = new Date();
@@ -139,8 +178,19 @@ export default function ActivityScreen() {
   const loadComments = async () => {
     try {
       const stored = await AsyncStorage.getItem(COMMENTS_KEY);
-      if (stored) setAllComments(JSON.parse(stored));
-    } catch {}
+      const userComments = stored ? JSON.parse(stored) : {};
+      const merged: Record<string, Comment[]> = { ...INITIAL_COMMENTS };
+      for (const postId of Object.keys(userComments)) {
+        const userList = userComments[postId] || [];
+        const initialList = INITIAL_COMMENTS[postId] || [];
+        const initialIds = new Set(initialList.map((c: Comment) => c.id));
+        const newUserComments = userList.filter((c: Comment) => !initialIds.has(c.id));
+        merged[postId] = [...(merged[postId] || []), ...newUserComments];
+      }
+      setAllComments(merged);
+    } catch {
+      setAllComments({ ...INITIAL_COMMENTS });
+    }
   };
 
   const toggleLike = async (postId: string) => {
@@ -333,11 +383,9 @@ export default function ActivityScreen() {
         <View style={styles.actionsRow}>
           <View style={styles.actionGroup}>
             <LikeButton postId={item.id} likedPosts={likedPosts} onToggle={toggleLike} />
-            {isLiked && (
-              <Text style={[styles.actionCount, { color: '#ef4444' }]}>
-                {t('liked' as any)}
-              </Text>
-            )}
+            <Text style={[styles.actionCount, isLiked && { color: '#ef4444' }]}>
+              {formatCount((item.like_count || 0) + (isLiked ? 1 : 0))}
+            </Text>
           </View>
           <TouchableOpacity
             style={styles.actionGroup}
@@ -348,7 +396,7 @@ export default function ActivityScreen() {
               <MessageCircle size={20} color={commentCount > 0 ? '#3b82f6' : '#6b7280'} />
             </View>
             <Text style={[styles.actionCount, commentCount > 0 && { color: '#3b82f6' }]}>
-              {commentCount > 0 ? commentCount : t('comment' as any)}
+              {commentCount > 0 ? formatCount(commentCount) : t('comment' as any)}
             </Text>
           </TouchableOpacity>
         </View>
