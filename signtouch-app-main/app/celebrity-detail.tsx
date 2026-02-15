@@ -380,8 +380,7 @@ export default function CelebrityDetailScreen() {
                   <View>
                     <Text style={styles.mainActionText}>{t('bookCall')}</Text>
                     <Text style={styles.mainActionPrice}>
-                      {formatPrice(p.video_call_price_cents, p.currency)}
-                      {p.video_call_unit === 'minute' ? t('perMinute') : t('perSession')}
+                      {formatPrice(p.video_call_price_cents, p.currency)}/{p.video_call_duration_minutes}min
                     </Text>
                   </View>
                 </>
