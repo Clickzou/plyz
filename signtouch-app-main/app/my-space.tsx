@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   Image, ActivityIndicator, ScrollView, Platform, Share,
@@ -101,6 +101,45 @@ export default function MySpaceScreen() {
   const [eventViews, setEventViews] = useState<Record<string, number>>({});
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  const bookingsSectionY = useRef(0);
+  const autographsSectionY = useRef(0);
+  const scrollToBookingsRef = useRef<(() => void) | null>(null);
+  const scrollToAutographsRef = useRef<(() => void) | null>(null);
+
+  scrollToBookingsRef.current = () => {
+    scrollViewRef.current?.scrollTo({ y: bookingsSectionY.current, animated: true });
+  };
+  scrollToAutographsRef.current = () => {
+    scrollViewRef.current?.scrollTo({ y: autographsSectionY.current, animated: true });
+  };
+
+  const handleUpdateBookingStatus = async (bookingId: string, status: string) => {
+    try {
+      await fetch(`${API_BASE}/api/update-booking-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: bookingId, status }),
+      });
+      fetchData();
+    } catch (err) {
+      console.error('Update booking status error:', err);
+    }
+  };
+
+  const handleUpdateAutographStatus = async (autographId: string, status: string) => {
+    try {
+      await fetch(`${API_BASE}/api/update-autograph-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ autograph_id: autographId, status }),
+      });
+      fetchData();
+    } catch (err) {
+      console.error('Update autograph status error:', err);
+    }
+  };
 
   const fetchData = useCallback(async () => {
     if (!user?.id) return;
@@ -402,6 +441,7 @@ export default function MySpaceScreen() {
 
   const renderCelBooking = ({ item }: { item: Booking }) => {
     const fan = item.profiles;
+    const isPaid = item.status === 'paid';
     return (
       <View style={styles.itemCard}>
         <View style={styles.itemIcon}>
@@ -415,6 +455,30 @@ export default function MySpaceScreen() {
           <Text style={styles.itemDate}>
             {new Date(item.created_at).toLocaleDateString()}
           </Text>
+          {isPaid && (
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.acceptBtn]}
+                onPress={() => handleUpdateBookingStatus(item.id, 'confirmed')}
+                activeOpacity={0.7}
+              >
+                <Check size={14} color="#fff" />
+                <Text style={styles.actionBtnText}>{t('accept' as any) || 'Accepter'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.declineBtn]}
+                onPress={() => showConfirm(
+                  t('declineBookingTitle' as any) || 'Refuser cette réservation ?',
+                  t('declineBookingMsg' as any) || 'Le paiement sera annulé et le fan sera remboursé.',
+                  () => handleUpdateBookingStatus(item.id, 'cancelled')
+                )}
+                activeOpacity={0.7}
+              >
+                <X size={14} color="#ef4444" />
+                <Text style={[styles.actionBtnText, { color: '#ef4444' }]}>{t('decline' as any) || 'Refuser'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
         <View style={[styles.statusBadge, { backgroundColor: `${STATUS_COLORS[item.status] || '#6b7280'}20` }]}>
           <Text style={[styles.statusText, { color: STATUS_COLORS[item.status] || '#6b7280' }]}>
@@ -456,6 +520,7 @@ export default function MySpaceScreen() {
 
   const renderCelAutograph = ({ item }: { item: Autograph }) => {
     const fan = item.profiles;
+    const isPaid = item.status === 'paid';
     return (
       <View style={styles.itemCard}>
         <View style={[styles.itemIcon, { backgroundColor: 'rgba(245,158,11,0.15)' }]}>
@@ -469,6 +534,30 @@ export default function MySpaceScreen() {
           <Text style={styles.itemDate}>
             {formatPrice(item.price_cents, item.currency)} · {new Date(item.created_at).toLocaleDateString()}
           </Text>
+          {isPaid && (
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.acceptBtn]}
+                onPress={() => handleUpdateAutographStatus(item.id, 'in_progress')}
+                activeOpacity={0.7}
+              >
+                <Check size={14} color="#fff" />
+                <Text style={styles.actionBtnText}>{t('accept' as any) || 'Accepter'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.declineBtn]}
+                onPress={() => showConfirm(
+                  t('declineAutographTitle' as any) || 'Refuser cette demande ?',
+                  t('declineAutographMsg' as any) || 'Le paiement sera annulé et le fan sera remboursé.',
+                  () => handleUpdateAutographStatus(item.id, 'cancelled')
+                )}
+                activeOpacity={0.7}
+              >
+                <X size={14} color="#ef4444" />
+                <Text style={[styles.actionBtnText, { color: '#ef4444' }]}>{t('decline' as any) || 'Refuser'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
         <View style={[styles.statusBadge, { backgroundColor: `${STATUS_COLORS[item.status] || '#6b7280'}20` }]}>
           <Text style={[styles.statusText, { color: STATUS_COLORS[item.status] || '#6b7280' }]}>
@@ -625,6 +714,7 @@ export default function MySpaceScreen() {
 
   const renderCelebrityView = () => (
     <ScrollView
+      ref={scrollViewRef}
       style={{ flex: 1 }}
       contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: BOTTOM_NAV_HEIGHT + 20 }}
       showsVerticalScrollIndicator={false}
@@ -704,35 +794,49 @@ export default function MySpaceScreen() {
       {celTab === 'dashboard' ? (
         <>
           <View style={styles.statsRow}>
-            <View style={styles.statCard}>
+            <TouchableOpacity
+              style={styles.statCard}
+              onPress={() => { setCelTab('dashboard'); scrollToBookingsRef.current?.(); }}
+              activeOpacity={0.7}
+            >
               <View style={[styles.statIconWrap, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
                 <Video size={18} color="#10b981" />
               </View>
               <Text style={styles.statValue}>{celBookings.length}</Text>
               <Text style={styles.statLabel}>{t('celDashTotalBookings' as any) || 'Réservations'}</Text>
-            </View>
-            <View style={styles.statCard}>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.statCard}
+              onPress={() => { setCelTab('dashboard'); scrollToAutographsRef.current?.(); }}
+              activeOpacity={0.7}
+            >
               <View style={[styles.statIconWrap, { backgroundColor: 'rgba(245,158,11,0.15)' }]}>
                 <PenTool size={18} color="#f59e0b" />
               </View>
               <Text style={styles.statValue}>{celAutographs.length}</Text>
               <Text style={styles.statLabel}>{t('celDashTotalAutographs' as any) || 'Autographes'}</Text>
-            </View>
-            <View style={styles.statCard}>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.statCard}
+              onPress={() => router.push('/my-earnings' as any)}
+              activeOpacity={0.7}
+            >
               <View style={[styles.statIconWrap, { backgroundColor: 'rgba(59,130,246,0.15)' }]}>
                 <TrendingUp size={18} color="#3b82f6" />
               </View>
               <Text style={styles.statValue}>{formatPrice(Math.round(totalEarningsCents * 0.85), mainCurrency)}</Text>
               <Text style={styles.statLabel}>{t('celDashEarnings' as any) || 'Revenus'}</Text>
-            </View>
+            </TouchableOpacity>
           </View>
 
+          <View onLayout={(e) => { bookingsSectionY.current = e.nativeEvent.layout.y; }}>
           <Text style={styles.sectionTitle}>
             {t('celDashPendingBookings' as any) || 'Réservations en attente'}
             {pendingBookings.length > 0 && (
               <Text style={styles.sectionCount}> ({pendingBookings.length})</Text>
             )}
           </Text>
+          </View>
           {loading ? (
             <ActivityIndicator size="small" color="#10b981" style={{ marginVertical: 20 }} />
           ) : pendingBookings.length === 0 ? (
@@ -748,12 +852,14 @@ export default function MySpaceScreen() {
             ))
           )}
 
+          <View onLayout={(e) => { autographsSectionY.current = e.nativeEvent.layout.y; }}>
           <Text style={styles.sectionTitle}>
             {t('celDashPendingAutographs' as any) || 'Demandes d\'autographes'}
             {pendingAutographs.length > 0 && (
               <Text style={styles.sectionCount}> ({pendingAutographs.length})</Text>
             )}
           </Text>
+          </View>
           {loading ? (
             <ActivityIndicator size="small" color="#f59e0b" style={{ marginVertical: 20 }} />
           ) : pendingAutographs.length === 0 ? (
@@ -1819,5 +1925,31 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  acceptBtn: {
+    backgroundColor: '#10b981',
+  },
+  declineBtn: {
+    backgroundColor: 'rgba(239,68,68,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.3)',
+  },
+  actionBtnText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

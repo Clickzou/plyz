@@ -52,8 +52,8 @@ export default function CelebrityDetailScreen() {
   const { isFollowing, toggleFollow } = useFollow();
   const [celebrity, setCelebrity] = useState<CelebrityDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [bookingLoading, setBookingLoading] = useState(false);
-  const [autographLoading, setAutographLoading] = useState(false);
+  const bookingLoading = false;
+  const autographLoading = false;
   const [showReport, setShowReport] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [activeTab, setActiveTab] = useState<'about' | 'pricing' | 'posts'>('about');
@@ -97,75 +97,50 @@ export default function CelebrityDetailScreen() {
     return `${amount}${symbols[currency] || currency}`;
   };
 
-  const handleBookCall = async () => {
+  const handleBookCall = () => {
     if (!user) {
-      Alert.alert('', 'Please sign in first');
+      Alert.alert('', t('mySpaceSignInTitle') || 'Please sign in first');
       return;
     }
     if (!celebrity?.stripe_account_id) {
-      Alert.alert('', 'This celebrity has not set up payments yet');
+      Alert.alert('', t('celebrityNoPayments') || 'This celebrity has not set up payments yet');
       return;
     }
-    try {
-      setBookingLoading(true);
-      const res = await fetch(`${API_BASE}/api/book-video`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fan_id: user.id,
-          celebrity_id: celebrity.user_id,
-        }),
-      });
-      const data = await res.json();
-      if (data.checkout_url) {
-        if (Platform.OS === 'web') {
-          window.open(data.checkout_url, '_blank');
-        } else {
-          Linking.openURL(data.checkout_url);
-        }
-      }
-    } catch (err) {
-      console.error('Booking error:', err);
-      Alert.alert('Error', 'Failed to create booking');
-    } finally {
-      setBookingLoading(false);
-    }
+    const p = celebrity.pricing;
+    if (!p) return;
+    router.push({
+      pathname: '/book-video-call',
+      params: {
+        celebrityId: celebrity.user_id,
+        celebrityName: celebrity.stage_name,
+        priceCents: String(p.video_call_price_cents),
+        currency: p.currency,
+        durationMinutes: String(p.video_call_duration_minutes),
+        unit: p.video_call_unit,
+      },
+    } as any);
   };
 
-  const handleAutograph = async () => {
+  const handleAutograph = () => {
     if (!user) {
-      Alert.alert('', 'Please sign in first');
+      Alert.alert('', t('mySpaceSignInTitle') || 'Please sign in first');
       return;
     }
     if (!celebrity?.stripe_account_id) {
-      Alert.alert('', 'This celebrity has not set up payments yet');
+      Alert.alert('', t('celebrityNoPayments') || 'This celebrity has not set up payments yet');
       return;
     }
-    try {
-      setAutographLoading(true);
-      const res = await fetch(`${API_BASE}/api/autograph`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fan_id: user.id,
-          celebrity_id: celebrity.user_id,
-          message: '',
-        }),
-      });
-      const data = await res.json();
-      if (data.checkout_url) {
-        if (Platform.OS === 'web') {
-          window.open(data.checkout_url, '_blank');
-        } else {
-          Linking.openURL(data.checkout_url);
-        }
-      }
-    } catch (err) {
-      console.error('Autograph error:', err);
-      Alert.alert('Error', 'Failed to create autograph request');
-    } finally {
-      setAutographLoading(false);
-    }
+    const p = celebrity.pricing;
+    if (!p) return;
+    router.push({
+      pathname: '/request-autograph',
+      params: {
+        celebrityId: celebrity.user_id,
+        celebrityName: celebrity.stage_name,
+        priceCents: String(p.autograph_price_cents),
+        currency: p.currency,
+      },
+    } as any);
   };
 
   const handleReport = async () => {
