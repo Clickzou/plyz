@@ -66,6 +66,39 @@ const app = express();
 const MOCK_MODE = process.env.MOCK_MODE === 'true' || process.env.ENABLE_MOCK_CELEBS === 'true';
 console.log(`[Server] Mock mode: ${MOCK_MODE ? 'ENABLED' : 'DISABLED'}`);
 
+const SCHEMA_CAPS = { profilesHasDisplayName: false, profilesHasRole: false, liveSessionsHasScheduledAt: false };
+
+async function detectSchema() {
+  try {
+    const db = getSupabaseAdmin();
+    for (const [col, key] of [['display_name', 'profilesHasDisplayName'], ['role', 'profilesHasRole']]) {
+      const { error } = await db.from('profiles').select(col).limit(0);
+      SCHEMA_CAPS[key] = !error;
+    }
+    const { error: lse } = await db.from('live_sessions').select('scheduled_at').limit(0);
+    SCHEMA_CAPS.liveSessionsHasScheduledAt = !lse;
+    console.log('[Schema] Detected capabilities:', JSON.stringify(SCHEMA_CAPS));
+    if (!SCHEMA_CAPS.profilesHasDisplayName) {
+      console.warn('[Schema] profiles.display_name missing — run server/fix-profiles-columns.sql in Supabase SQL Editor');
+    }
+  } catch (e) {
+    console.warn('[Schema] Detection failed:', e.message);
+  }
+}
+
+function profilesSelect() {
+  if (SCHEMA_CAPS.profilesHasDisplayName) return 'display_name, avatar_url';
+  return 'avatar_url';
+}
+
+function profilesJoinInner() {
+  return `profiles!inner(${profilesSelect()})`;
+}
+
+function profilesJoin() {
+  return `profiles(${profilesSelect()})`;
+}
+
 const MOCK_CELEBS = {
   'mock-001': { stage_name: 'Zinedine Zidane', pricing: { video_call_price_cents: 15000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 5000, currency: 'eur' } },
   'mock-002': { stage_name: 'Marion Cotillard', pricing: { video_call_price_cents: 20000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 7500, currency: 'eur' } },
@@ -277,8 +310,11 @@ app.post('/api/create-session', async (req, res) => {
 
     console.log('[create-session] Inserting session with code:', code);
 
-    if (scheduled_at) {
+    if (scheduled_at && SCHEMA_CAPS.liveSessionsHasScheduledAt) {
       insertData.scheduled_at = scheduled_at;
+    } else if (scheduled_at) {
+      console.warn('[create-session] scheduled_at requested but column missing, session will be created as waiting');
+      insertData.status = 'waiting';
     }
 
     let { data, error } = await supabase
@@ -286,21 +322,6 @@ app.post('/api/create-session', async (req, res) => {
       .insert(insertData)
       .select()
       .single();
-
-    if (error && scheduled_at && error.message.includes('scheduled_at')) {
-      console.warn('[create-session] scheduled_at column missing in DB, retrying without it');
-      delete insertData.scheduled_at;
-      insertData.status = 'waiting';
-      ({ data, error } = await supabase
-        .from('live_sessions')
-        .insert(insertData)
-        .select()
-        .single());
-      if (!error && data) {
-        data._scheduled_at_unsaved = scheduled_at;
-        console.warn('[create-session] Session created but scheduled_at was not saved — add the column to live_sessions via: ALTER TABLE live_sessions ADD COLUMN scheduled_at timestamptz;');
-      }
-    }
 
     if (error) {
       console.error('[create-session] Supabase error:', JSON.stringify(error));
@@ -1605,7 +1626,7 @@ app.get('/api/celebrities', async (req, res) => {
         stripe_verified, official_verified, is_listed,
         wikidata_image_url, wikidata_occupations, wikidata_types,
         popularity_score, created_at,
-        profiles!inner(display_name, avatar_url),
+        ${profilesJoinInner()},
         celebrity_pricing(video_call_price_cents, autograph_price_cents, live_dedication_price_cents, currency)
       `, { count: 'exact' })
       .eq('is_listed', true);
@@ -1702,7 +1723,7 @@ app.get('/api/celebrity/:id', async (req, res) => {
       .from('celebrity_profiles')
       .select(`
         *, 
-        profiles(display_name, avatar_url),
+        ${profilesJoin()},
         celebrity_pricing(*)
       `)
       .eq('user_id', id)
@@ -1853,7 +1874,7 @@ app.get('/api/feed', async (req, res) => {
       .select(`
         *,
         celebrity_profiles!inner(stage_name, wikidata_image_url, official_verified, stripe_verified, user_id,
-          profiles(avatar_url, display_name)
+          ${profilesJoin()}
         )
       `, { count: 'exact' })
       .order('created_at', { ascending: false })
@@ -1973,17 +1994,13 @@ app.get('/api/celebrity-events', async (req, res) => {
       .eq('celebrity_id', celebrity_id)
       .in('status', ['scheduled', 'waiting', 'active']);
 
-    let { data, error } = await query.order('scheduled_at', { ascending: true, nullsFirst: false });
-
-    if (error && error.message.includes('scheduled_at') && error.message.includes('does not exist')) {
-      console.log('[Celebrity Events] scheduled_at column missing, falling back to created_at ordering');
-      ({ data, error } = await db
-        .from('live_sessions')
-        .select('*')
-        .eq('celebrity_id', celebrity_id)
-        .in('status', ['scheduled', 'waiting', 'active'])
-        .order('created_at', { ascending: true }));
+    if (SCHEMA_CAPS.liveSessionsHasScheduledAt) {
+      query = query.order('scheduled_at', { ascending: true, nullsFirst: false });
+    } else {
+      query = query.order('created_at', { ascending: true });
     }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     res.json({ events: data || [] });
@@ -2333,9 +2350,9 @@ app.get('/api/my-bookings', async (req, res) => {
       .select(`
         *,
         celebrity_profiles!booking_requests_celebrity_id_fkey(stage_name, wikidata_image_url,
-          profiles(avatar_url, display_name)
+          ${profilesJoin()}
         ),
-        profiles!booking_requests_fan_id_fkey(display_name, avatar_url)
+        profiles!booking_requests_fan_id_fkey(${profilesSelect()})
       `)
       .eq(column, user_id)
       .order('created_at', { ascending: false });
@@ -2360,9 +2377,9 @@ app.get('/api/my-autographs', async (req, res) => {
       .select(`
         *,
         celebrity_profiles!autograph_requests_celebrity_id_fkey(stage_name, wikidata_image_url,
-          profiles(avatar_url, display_name)
+          ${profilesJoin()}
         ),
-        profiles!autograph_requests_fan_id_fkey(display_name, avatar_url)
+        profiles!autograph_requests_fan_id_fkey(${profilesSelect()})
       `)
       .eq(column, user_id)
       .order('created_at', { ascending: false });
@@ -2942,33 +2959,10 @@ app.use(
   })
 );
 
-async function runStartupMigrations() {
-  try {
-    const db = getSupabaseAdmin();
-    const columns = [
-      { name: 'scheduled_at', type: 'timestamptz' },
-      { name: 'celebrity_push_token', type: 'text' },
-      { name: 'dedication_photo_url', type: 'text' },
-      { name: 'dedication_signature_svg', type: 'text' },
-    ];
-    for (const col of columns) {
-      const { error } = await db
-        .from('live_sessions')
-        .select(col.name)
-        .limit(0);
-      if (error && error.message.includes('does not exist')) {
-        console.log(`[Migration] Column live_sessions.${col.name} missing — will use fallback ordering`);
-      }
-    }
-    console.log('[Migration] Startup check complete');
-  } catch (err) {
-    console.warn('[Migration] Startup migration check skipped:', err.message);
-  }
-}
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`[Server] Running on port ${PORT} (API + proxy to Expo on ${EXPO_PORT})`);
-  runStartupMigrations();
+  detectSchema();
   getStripe()
     .then(() => console.log('[Server] Stripe credentials loaded successfully'))
     .catch((err) => console.warn('[Server] Warning: Stripe credentials will be loaded on first request:', err.message));
