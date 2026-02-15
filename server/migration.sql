@@ -109,6 +109,7 @@ CREATE TABLE IF NOT EXISTS posts (
   media_url text,
   event_date timestamptz,
   price_cents integer DEFAULT 0,
+  location text,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -210,6 +211,33 @@ DO $$ BEGIN CREATE POLICY org_verif_insert ON organization_verification_requests
 -- Add account_type column to celebrity_profiles (individual or organization)
 ALTER TABLE celebrity_profiles ADD COLUMN IF NOT EXISTS account_type text DEFAULT 'individual' CHECK (account_type IN ('individual', 'organization'));
 ALTER TABLE celebrity_profiles ADD COLUMN IF NOT EXISTS org_verified boolean DEFAULT false;
+
+-- 10) event_payment_configs
+CREATE TABLE IF NOT EXISTS event_payment_configs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_session_id text NOT NULL UNIQUE,
+  price_cents integer NOT NULL DEFAULT 0,
+  currency text DEFAULT 'eur',
+  celebrity_stripe_account_id text,
+  celebrity_id uuid,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_event_payment_session ON event_payment_configs(event_session_id);
+
+ALTER TABLE event_payment_configs ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN CREATE POLICY event_payment_select ON event_payment_configs FOR SELECT USING (true); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY event_payment_insert ON event_payment_configs FOR INSERT WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY event_payment_update ON event_payment_configs FOR UPDATE USING (true); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- ============================================================
+-- SAFE ALTER STATEMENTS (for existing databases)
+-- These add missing columns without breaking existing data
+-- ============================================================
+
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS location text;
 
 -- Allow service role to bypass RLS for server-side operations
 -- (service_role key already bypasses RLS by default in Supabase)
