@@ -371,20 +371,33 @@ export default function CelebrityDetailScreen() {
               style={[styles.mainAction, styles.videoAction]}
               onPress={handleBookCall}
               disabled={bookingLoading}
+              activeOpacity={0.85}
             >
-              {bookingLoading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <>
-                  <Video size={18} color="#fff" />
-                  <View>
-                    <Text style={styles.mainActionText}>{t('bookCall')}</Text>
-                    <Text style={styles.mainActionPrice}>
-                      {formatPrice(p.video_call_price_cents, p.currency)}/{p.video_call_duration_minutes}min
-                    </Text>
-                  </View>
-                </>
-              )}
+              <LinearGradient
+                colors={['#10b981', '#059669']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.mainActionGradient}
+              >
+                {bookingLoading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <View style={styles.mainActionIconCircle}>
+                      <Video size={20} color="#fff" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.mainActionText}>{t('bookCall')}</Text>
+                      <Text style={styles.mainActionPrice}>
+                        {formatPrice(p.video_call_price_cents, p.currency)}/{p.video_call_duration_minutes}min
+                      </Text>
+                    </View>
+                    <View style={styles.mainActionArrow}>
+                      <Text style={styles.mainActionArrowText}>→</Text>
+                    </View>
+                  </>
+                )}
+              </LinearGradient>
             </TouchableOpacity>
           )}
           {p && p.autograph_price_cents > 0 && celebrity.stripe_account_id && (
@@ -392,20 +405,33 @@ export default function CelebrityDetailScreen() {
               style={[styles.mainAction, styles.autographAction]}
               onPress={handleAutograph}
               disabled={autographLoading}
+              activeOpacity={0.85}
             >
-              {autographLoading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <>
-                  <PenTool size={18} color="#fff" />
-                  <View>
-                    <Text style={styles.mainActionText}>{t('requestAutograph')}</Text>
-                    <Text style={styles.mainActionPrice}>
-                      {formatPrice(p.autograph_price_cents, p.currency)}
-                    </Text>
-                  </View>
-                </>
-              )}
+              <LinearGradient
+                colors={['#f59e0b', '#d97706']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.mainActionGradient}
+              >
+                {autographLoading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <View style={[styles.mainActionIconCircle, { backgroundColor: 'rgba(255,255,255,0.25)' }]}>
+                      <PenTool size={20} color="#fff" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.mainActionText}>{t('requestAutograph')}</Text>
+                      <Text style={styles.mainActionPrice}>
+                        {formatPrice(p.autograph_price_cents, p.currency)}
+                      </Text>
+                    </View>
+                    <View style={styles.mainActionArrow}>
+                      <Text style={styles.mainActionArrowText}>→</Text>
+                    </View>
+                  </>
+                )}
+              </LinearGradient>
             </TouchableOpacity>
           )}
         </View>
@@ -651,12 +677,49 @@ const styles = StyleSheet.create({
   stripeBadge: { backgroundColor: 'rgba(99,102,241,0.85)' },
   badgeText: { color: '#fff', fontSize: 11, fontWeight: '600' },
   sessionsCount: { color: '#9ca3af', fontSize: 13, marginTop: 4 },
-  actionRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 10, marginTop: 16 },
-  mainAction: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 14 },
-  videoAction: { backgroundColor: '#10b981' },
-  autographAction: { backgroundColor: '#f59e0b' },
-  mainActionText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-  mainActionPrice: { color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 1 },
+  actionRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 12, marginTop: 18 },
+  mainAction: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  mainActionGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    gap: 12,
+  },
+  mainActionIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mainActionArrow: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mainActionArrowText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  videoAction: {},
+  autographAction: {},
+  mainActionText: { color: '#fff', fontSize: 15, fontWeight: '800', letterSpacing: 0.3 },
+  mainActionPrice: { color: 'rgba(255,255,255,0.9)', fontSize: 13, marginTop: 2, fontWeight: '600' },
   tabs: { flexDirection: 'row', marginTop: 20, marginHorizontal: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.1)' },
   tab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
   tabActive: { borderBottomWidth: 2, borderBottomColor: '#10b981' },
