@@ -35,6 +35,8 @@ export default {
   celDashNoPendingAutographs: 'Aucune demande en attente',
   celDashCreateLive: 'Session Live',
   celDashCreateDedication: 'Dédicace Live',
+  celDashDashboard: 'Tableau de bord',
+  celDashMyEvents: 'Mes événements',
   celDashFan: 'Fan',
   celOnboardTitle: 'Mode Célébrité',
   celOnboardHeroTitle: 'Bienvenue dans le Mode Célébrité',
