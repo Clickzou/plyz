@@ -14,7 +14,7 @@ import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import { FeedSkeleton } from '@/components/SkeletonLoader';
-import OnboardingTutorial from '@/components/OnboardingTutorial';
+import OnboardingTooltip from '@/components/OnboardingTooltip';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 const LIKES_KEY = '@signtouch_post_likes';
@@ -526,7 +526,7 @@ export default function ActivityScreen() {
 
       <BottomNav />
 
-      <OnboardingTutorial
+      <OnboardingTooltip
         visible={showOnboarding}
         onDone={() => setShowOnboarding(false)}
       />
