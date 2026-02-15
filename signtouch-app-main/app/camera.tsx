@@ -52,7 +52,11 @@ export default function CameraScreen() {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    router.push('/');
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/activity' as any);
+    }
   };
 
   const toggleCameraFacing = () => {
