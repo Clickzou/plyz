@@ -8,9 +8,11 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
+    "@tensorflow/tfjs-node": "^4.22.0",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "multer": "^2.0.2",
+    "nsfwjs": "^4.2.1",
     "stripe": "^14.0.0"
   }
 }
