@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft, Star, Camera as CameraIcon, Video, QrCode,
   DollarSign, Users, Shield, CreditCard, ArrowRight,
-  CheckCircle, Zap, TrendingUp, Globe,
+  CheckCircle, Zap, TrendingUp, Globe, Building2,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
@@ -295,6 +295,32 @@ export default function CelebrityOnboardingScreen() {
           </View>
         </View>
 
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            {t('celOnboardOrgSection' as any) || 'COMPTE ORGANISATION'}
+          </Text>
+          <TouchableOpacity
+            style={styles.orgCard}
+            onPress={() => router.push('/org-verification')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.orgCardInner}>
+              <View style={styles.orgIconWrap}>
+                <Building2 size={24} color="#8b5cf6" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.orgCardTitle}>
+                  {t('celOnboardOrgTitle' as any) || 'Vous êtes une organisation ?'}
+                </Text>
+                <Text style={styles.orgCardDesc}>
+                  {t('celOnboardOrgDesc' as any) || 'Clubs sportifs, marques, associations... Faites vérifier votre compte pour un badge spécial.'}
+                </Text>
+              </View>
+              <ArrowRight size={18} color="#8b5cf6" />
+            </View>
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity
           style={styles.startButton}
           onPress={() => {
@@ -477,6 +503,22 @@ const styles = StyleSheet.create({
     paddingVertical: 14, marginTop: 16, gap: 8,
   },
   stripeButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+
+  orgCard: {
+    backgroundColor: 'rgba(139,92,246,0.08)',
+    borderRadius: 16, borderWidth: 1, borderColor: 'rgba(139,92,246,0.2)',
+    overflow: 'hidden',
+  },
+  orgCardInner: {
+    flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12,
+  },
+  orgIconWrap: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: 'rgba(139,92,246,0.15)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  orgCardTitle: { color: '#fff', fontSize: 15, fontWeight: '600', marginBottom: 3 },
+  orgCardDesc: { color: '#94a3b8', fontSize: 12, lineHeight: 17 },
 
   startButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
