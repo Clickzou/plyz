@@ -2955,6 +2955,13 @@ app.use(
     logLevel: 'warn',
     onProxyReq: (proxyReq) => {
       proxyReq.removeHeader('origin');
+      proxyReq.removeHeader('referer');
+      proxyReq.setHeader('host', `localhost:${EXPO_PORT}`);
+    },
+    onProxyReqWs: (proxyReq) => {
+      proxyReq.removeHeader('origin');
+      proxyReq.removeHeader('referer');
+      proxyReq.setHeader('host', `localhost:${EXPO_PORT}`);
     },
   })
 );
