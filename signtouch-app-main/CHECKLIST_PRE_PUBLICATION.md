@@ -1,6 +1,6 @@
-# Checklist pré-publication SignTouch
+# Checklist pré-publication Plyz
 
-Cette checklist te guide étape par étape pour t'assurer que tout est prêt avant de publier SignTouch.
+Cette checklist te guide étape par étape pour t'assurer que tout est prêt avant de publier Plyz.
 
 ---
 
@@ -15,13 +15,13 @@ Actuellement, le lien de confirmation d'email redirige vers `localhost:3000`. Il
 - [ ] Va dans **Authentication** → **URL Configuration**
 - [ ] Ajoute ces URLs dans **Redirect URLs** :
   ```
-  signtouch://auth-callback
+  plyz://auth-callback
   https://ton-domaine.com/auth-callback
   ```
 - [ ] **Supprime** les URLs de développement (`exp://...`) avant la publication
 - [ ] Clique sur **Save**
 
-**Important** : En production, les URLs Expo Go (`exp://...`) ne fonctionneront plus. Tu dois utiliser le scheme de l'app : `signtouch://`
+**Important** : En production, les URLs Expo Go (`exp://...`) ne fonctionneront plus. Tu dois utiliser le scheme de l'app : `plyz://`
 
 ### Tester l'authentification en production
 
@@ -35,74 +35,7 @@ Actuellement, le lien de confirmation d'email redirige vers `localhost:3000`. Il
 
 ---
 
-## Étape 2 : Configurer RevenueCat
-
-### Créer le compte RevenueCat
-
-- [ ] Inscris-toi sur [revenuecat.com](https://www.revenuecat.com)
-- [ ] Crée un nouveau projet : "SignTouch"
-- [ ] Note l'ID du projet
-
-### Ajouter l'app iOS
-
-- [ ] Dans RevenueCat Dashboard → **Apps** → **Add App** → **iOS**
-- [ ] Entre les informations :
-  - App name: SignTouch
-  - Bundle ID: `com.signtouch.app`
-- [ ] Copie la clé API iOS : `rcb_...`
-
-### Ajouter l'app Android
-
-- [ ] Dans RevenueCat Dashboard → **Apps** → **Add App** → **Android**
-- [ ] Entre les informations :
-  - App name: SignTouch
-  - Package name: `com.signtouch.app`
-- [ ] Copie la clé API Android : `rcb_...`
-
-### Mettre à jour le fichier .env
-
-- [ ] Ouvre le fichier `.env`
-- [ ] Décommente et remplis :
-  ```bash
-  EXPO_PUBLIC_REVENUECAT_IOS_KEY=rcb_ta_cle_ios_ici
-  EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=rcb_ta_cle_android_ici
-  ```
-- [ ] Sauvegarde le fichier
-
-### Créer les produits d'abonnement
-
-#### Dans RevenueCat
-
-- [ ] Va dans **Products** → **Create Product**
-- [ ] Crée un produit :
-  - Identifier: `signtouch_premium_monthly`
-  - Type: Subscription
-  - Duration: 1 month
-
-- [ ] Va dans **Offerings** → **Create Offering**
-- [ ] Crée un offering :
-  - Identifier: `default`
-  - Package: Monthly (`signtouch_premium_monthly`)
-
-#### Dans App Store Connect (iOS)
-
-Tu devras créer les produits dans App Store Connect après avoir créé l'app (voir étape 7).
-
-#### Dans Play Console (Android)
-
-Tu devras créer les produits dans Play Console après avoir créé l'app (voir étape 8).
-
-### Tester RevenueCat
-
-- [ ] Build l'app en mode development
-- [ ] Ouvre l'app
-- [ ] Va dans "Mon abonnement"
-- [ ] Vérifie que les offres s'affichent
-- [ ] Note : Les vrais achats ne fonctionneront qu'en production
-
----
-
-## Étape 3 : Préparer les assets
+## Étape 2 : Préparer les assets
 
 ### Icône de l'app
 
@@ -117,7 +50,7 @@ Tu as déjà une icône dans `assets/images/icon.png`.
 - [ ] Crée une image **1024x500px**
 - [ ] Design suggestion :
   - Logo de l'app à gauche
-  - Texte "SignTouch - Signez vos photos" à droite
+  - Texte "Plyz - Signez vos photos" à droite
   - Fond dégradé noir/vert
 - [ ] Sauvegarde dans `assets/images/feature-graphic.png`
 
@@ -173,20 +106,20 @@ Screenshots nécessaires : **Minimum 2** (idéalement 5)
 
 ---
 
-## Étape 4 : Préparer les textes
+## Étape 3 : Préparer les textes
 
 ### Description de l'app
 
 #### Version courte (80 caractères pour Play Store)
 
 ```
-Signez vos photos facilement avec SignTouch
+Signez vos photos facilement avec Plyz
 ```
 
 #### Version longue (pour les deux stores)
 
 ```
-SignTouch vous permet de signer vos photos facilement et rapidement.
+Plyz vous permet de signer vos photos facilement et rapidement.
 
 ✨ FONCTIONNALITÉS
 
@@ -207,19 +140,15 @@ En quelques secondes, ajoutez votre signature à n'importe quelle photo. Parfait
 
 Toutes vos photos restent sur votre appareil. Aucune donnée n'est envoyée vers des serveurs externes. Votre vie privée est respectée.
 
-⭐ GRATUIT AVEC OPTION PREMIUM
+⭐ TOTALEMENT GRATUIT
 
-Utilisez gratuitement les fonctionnalités de base. Passez en Premium pour débloquer :
-• Toutes les polices de caractères
-• Pas de limite de créations
-• Support prioritaire
-• Nouvelles fonctionnalités en exclusivité
+Toutes les fonctionnalités sont accessibles gratuitement, sans abonnement.
 
 💬 SUPPORT
 
-Une question ? Un problème ? Contactez-nous à : support@signtouch.app
+Une question ? Un problème ? Contactez-nous à : support@plyz.app
 
-SignTouch est développé avec passion pour vous offrir la meilleure expérience de signature photo.
+Plyz est développé avec passion pour vous offrir la meilleure expérience de signature photo.
 ```
 
 ### Mots-clés (App Store uniquement)
@@ -233,7 +162,7 @@ signature,photo,watermark,filigrane,image,photographer,photographie,sign,marque,
 ### Notes de version
 
 ```
-🎉 Première version de SignTouch !
+🎉 Première version de Plyz !
 
 • Signature de photos en quelques taps
 • 50+ polices de caractères
@@ -242,25 +171,25 @@ signature,photo,watermark,filigrane,image,photographer,photographie,sign,marque,
 • Mode sombre
 • Totalement gratuit
 
-Merci d'avoir téléchargé SignTouch ! N'hésitez pas à nous laisser un avis.
+Merci d'avoir téléchargé Plyz ! N'hésitez pas à nous laisser un avis.
 ```
 
 ### Créer un email de support
 
-- [ ] Crée un email dédié : `support@signtouch.app` (ou utilise ton email perso)
+- [ ] Crée un email dédié : `support@plyz.app` (ou utilise ton email perso)
 - [ ] Configure les réponses automatiques si nécessaire
 
 ---
 
-## Étape 5 : Créer la politique de confidentialité
+## Étape 4 : Créer la politique de confidentialité
 
 ### Option 1 : Utiliser un générateur (recommandé)
 
 - [ ] Va sur [Termly](https://termly.io/products/privacy-policy-generator/) ou [PrivacyPolicies](https://www.privacypolicies.com/privacy-policy-generator/)
 - [ ] Remplis le formulaire :
-  - App name: SignTouch
+  - App name: Plyz
   - Données collectées: Email (pour l'authentification)
-  - Services tiers: Supabase, RevenueCat
+  - Services tiers: Supabase, Stripe
 - [ ] Génère la politique
 - [ ] Copie le HTML généré
 
@@ -272,7 +201,7 @@ Crée un fichier `privacy-policy.html` avec ce contenu minimum :
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SignTouch - Politique de Confidentialité</title>
+  <title>Plyz - Politique de Confidentialité</title>
   <meta charset="UTF-8">
   <style>
     body { font-family: Arial; max-width: 800px; margin: 50px auto; padding: 20px; }
@@ -281,11 +210,11 @@ Crée un fichier `privacy-policy.html` avec ce contenu minimum :
   </style>
 </head>
 <body>
-  <h1>SignTouch - Politique de Confidentialité</h1>
+  <h1>Plyz - Politique de Confidentialité</h1>
   <p>Date de mise à jour : [DATE]</p>
 
   <h2>1. Données collectées</h2>
-  <p>SignTouch collecte uniquement votre adresse email pour l'authentification.</p>
+  <p>Plyz collecte uniquement votre adresse email pour l'authentification.</p>
 
   <h2>2. Utilisation des données</h2>
   <p>Votre email est utilisé uniquement pour vous permettre de vous connecter et sauvegarder vos préférences.</p>
@@ -297,7 +226,7 @@ Crée un fichier `privacy-policy.html` avec ce contenu minimum :
   <p>Nous utilisons :</p>
   <ul>
     <li>Supabase pour l'authentification sécurisée</li>
-    <li>RevenueCat pour la gestion des abonnements</li>
+    <li>Stripe pour le traitement des paiements</li>
   </ul>
 
   <h2>5. Vos droits</h2>
@@ -307,10 +236,10 @@ Crée un fichier `privacy-policy.html` avec ce contenu minimum :
     <li>Demander l'accès à vos données</li>
     <li>Demander la suppression de vos données</li>
   </ul>
-  <p>Contactez-nous à : support@signtouch.app</p>
+  <p>Contactez-nous à : support@plyz.app</p>
 
   <h2>6. Contact</h2>
-  <p>Pour toute question sur cette politique : support@signtouch.app</p>
+  <p>Pour toute question sur cette politique : support@plyz.app</p>
 </body>
 </html>
 ```
@@ -318,10 +247,10 @@ Crée un fichier `privacy-policy.html` avec ce contenu minimum :
 ### Héberger la politique
 
 **Option A : GitHub Pages (gratuit)** :
-- [ ] Crée un repo GitHub : `signtouch-privacy`
+- [ ] Crée un repo GitHub : `plyz-privacy`
 - [ ] Upload `privacy-policy.html`
 - [ ] Active GitHub Pages dans Settings
-- [ ] URL finale : `https://ton-username.github.io/signtouch-privacy/privacy-policy.html`
+- [ ] URL finale : `https://ton-username.github.io/plyz-privacy/privacy-policy.html`
 
 **Option B : Ton propre site** :
 - [ ] Upload sur ton hébergement web
@@ -334,7 +263,7 @@ Crée un fichier `privacy-policy.html` avec ce contenu minimum :
 
 ---
 
-## Étape 6 : Créer les comptes développeur
+## Étape 5 : Créer les comptes développeur
 
 ### Apple Developer Program
 
@@ -355,7 +284,7 @@ Crée un fichier `privacy-policy.html` avec ce contenu minimum :
 
 ---
 
-## Étape 7 : Builder l'app
+## Étape 6 : Builder l'app
 
 ### Installer les outils
 
@@ -428,7 +357,7 @@ Crée un fichier `privacy-policy.html` avec ce contenu minimum :
 
 ---
 
-## Étape 8 : Préparer App Store Connect (iOS)
+## Étape 7 : Préparer App Store Connect (iOS)
 
 ### Créer l'app
 
@@ -436,28 +365,15 @@ Crée un fichier `privacy-policy.html` avec ce contenu minimum :
 - [ ] Clique sur "My Apps" → "+" → "New App"
 - [ ] Remplis :
   - Platform: iOS
-  - Name: SignTouch
+  - Name: Plyz
   - Primary Language: Français
-  - Bundle ID: com.signtouch.app
-  - SKU: signtouch-2024
-
-### Configurer les In-App Purchases
-
-- [ ] Va dans Features → In-App Purchases
-- [ ] Clique sur "+" → "Auto-Renewable Subscription"
-- [ ] Crée un Subscription Group : "Premium Subscriptions"
-- [ ] Crée le produit :
-  - Product ID: `signtouch_premium_monthly`
-  - Reference Name: SignTouch Premium Monthly
-  - Subscription Duration: 1 month
-  - Price: 4.99€ (ou ton prix)
-- [ ] Ajoute des localisations (FR, EN minimum)
-- [ ] Soumets pour review
+  - Bundle ID: com.plyz.app
+  - SKU: plyz-2024
 
 ### Remplir les informations
 
 - [ ] **App Information** :
-  - Name: SignTouch
+  - Name: Plyz
   - Subtitle: Signez vos photos facilement
   - Category: Photo & Video
   - Privacy Policy URL: [ton URL]
@@ -484,29 +400,18 @@ Crée un fichier `privacy-policy.html` avec ce contenu minimum :
 
 ---
 
-## Étape 9 : Préparer Play Console (Android)
+## Étape 8 : Préparer Play Console (Android)
 
 ### Créer l'app
 
 - [ ] Va sur [Play Console](https://play.google.com/console)
 - [ ] Clique sur "Create app"
 - [ ] Remplis :
-  - App name: SignTouch
+  - App name: Plyz
   - Default language: Français
   - App or game: App
   - Free or paid: Free
   - Declarations: Accepte les termes
-
-### Configurer les In-App Products
-
-- [ ] Va dans Monetization → Products → Subscriptions
-- [ ] Crée un produit :
-  - Product ID: `signtouch_premium_monthly`
-  - Name: SignTouch Premium
-  - Description: Accès à toutes les fonctionnalités premium
-  - Billing period: 1 month
-  - Price: 4.99€
-  - Free trial: 7 jours (optionnel)
 
 ### Remplir le Store Listing
 
@@ -540,7 +445,7 @@ Réponds aux questions sur les données collectées :
 
 ---
 
-## Étape 10 : Soumettre pour review
+## Étape 9 : Soumettre pour review
 
 ### iOS (App Store)
 
@@ -564,7 +469,7 @@ Réponds aux questions sur les données collectées :
 
 ---
 
-## Étape 11 : Pendant la review
+## Étape 10 : Pendant la review
 
 ### Surveiller le statut
 
@@ -588,7 +493,7 @@ Réponds aux questions sur les données collectées :
 
 ---
 
-## Étape 12 : Après l'acceptation
+## Étape 11 : Après l'acceptation
 
 ### Le jour du lancement
 
@@ -632,15 +537,10 @@ Réponds aux questions sur les données collectées :
 **Cause** : Erreur dans le code ou configuration manquante
 **Solution** : Teste avec TestFlight/Internal Testing avant de soumettre
 
-### "In-App Purchases not working"
-
-**Cause** : Configuration RevenueCat incorrecte ou produits non créés
-**Solution** : Vérifie que les Product IDs correspondent partout
-
 ### "Redirect URL not working" (authentification)
 
 **Cause** : URLs Supabase mal configurées
-**Solution** : Utilise `signtouch://auth-callback` en production, pas `exp://`
+**Solution** : Utilise `plyz://auth-callback` en production, pas `exp://`
 
 ---
 
@@ -650,11 +550,10 @@ Réponds aux questions sur les données collectées :
 
 - **Jour 1-2** : Création des comptes développeur (attente de validation)
 - **Jour 3** : Préparation des assets (screenshots, descriptions)
-- **Jour 4** : Configuration RevenueCat et création des produits
-- **Jour 5** : Builds et tests avec TestFlight/Internal Testing
-- **Jour 6** : Corrections des bugs trouvés
-- **Jour 7** : Soumission aux stores
-- **Jour 8-10** : Attente de la review et publication
+- **Jour 4** : Builds et tests avec TestFlight/Internal Testing
+- **Jour 5** : Corrections des bugs trouvés
+- **Jour 6** : Soumission aux stores
+- **Jour 7-9** : Attente de la review et publication
 
 ### Si tu travailles à temps partiel
 
@@ -667,8 +566,8 @@ Compte environ 2-3 semaines du début à la fin.
 ### Support technique
 
 - **Expo** : https://chat.expo.dev
-- **RevenueCat** : support@revenuecat.com
 - **Supabase** : https://supabase.com/dashboard/support
+- **Stripe** : https://support.stripe.com
 
 ### Documentations
 
@@ -682,4 +581,4 @@ Compte environ 2-3 semaines du début à la fin.
 
 **Ne te précipite pas !** Prends le temps de bien tester l'app avant de soumettre. Une première impression négative est difficile à rattraper.
 
-Bonne chance avec le lancement de SignTouch ! 🚀
+Bonne chance avec le lancement de Plyz ! 🚀

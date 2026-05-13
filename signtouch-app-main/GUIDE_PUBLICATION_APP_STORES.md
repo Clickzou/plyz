@@ -1,6 +1,6 @@
-# Guide complet : Publier SignTouch sur Apple App Store et Google Play Store
+# Guide complet : Publier Plyz sur Apple App Store et Google Play Store
 
-Ce guide te accompagne pas à pas pour publier ton app SignTouch sur les stores mobiles.
+Ce guide te accompagne pas à pas pour publier ton app Plyz sur les stores mobiles.
 
 ## Table des matières
 
@@ -8,25 +8,23 @@ Ce guide te accompagne pas à pas pour publier ton app SignTouch sur les stores 
 2. [Prérequis](#prérequis)
 3. [Préparation de l'app](#préparation-de-lapp)
 4. [Configuration des comptes développeur](#configuration-des-comptes-développeur)
-5. [Configuration RevenueCat](#configuration-revenuecat)
-6. [Build de l'app](#build-de-lapp)
-7. [Soumission App Store (iOS)](#soumission-app-store-ios)
-8. [Soumission Play Store (Android)](#soumission-play-store-android)
-9. [Après la publication](#après-la-publication)
-10. [Checklist finale](#checklist-finale)
+5. [Build de l'app](#build-de-lapp)
+6. [Soumission App Store (iOS)](#soumission-app-store-ios)
+7. [Soumission Play Store (Android)](#soumission-play-store-android)
+8. [Après la publication](#après-la-publication)
+9. [Checklist finale](#checklist-finale)
 
 ---
 
 ## Vue d'ensemble
 
-Pour publier SignTouch, tu vas devoir :
+Pour publier Plyz, tu vas devoir :
 
 1. **Créer des comptes développeur** (Apple et Google) - Coût : 99€/an (Apple) + 25€ unique (Google)
-2. **Configurer RevenueCat** pour les abonnements
-3. **Préparer les assets** (icônes, screenshots, descriptions)
-4. **Builder l'app** avec Expo EAS
-5. **Soumettre l'app** aux stores
-6. **Attendre la validation** (1-3 jours Apple, quelques heures Google)
+2. **Préparer les assets** (icônes, screenshots, descriptions)
+3. **Builder l'app** avec Expo EAS
+4. **Soumettre l'app** aux stores
+5. **Attendre la validation** (1-3 jours Apple, quelques heures Google)
 
 **Temps estimé total** : 2-3 jours de travail
 
@@ -39,7 +37,7 @@ Pour publier SignTouch, tu vas devoir :
 - [ ] Compte Apple Developer (99€/an)
 - [ ] Compte Google Play Console (25€ unique)
 - [ ] Compte Expo (gratuit)
-- [ ] Compte RevenueCat (gratuit jusqu'à 10k$/mois)
+- [ ] Compte Stripe (pour les paiements via Stripe Connect)
 
 ### Outils nécessaires
 
@@ -50,7 +48,7 @@ Pour publier SignTouch, tu vas devoir :
 
 ### Informations à préparer
 
-- [ ] Nom de l'app dans les stores (peut être différent de "SignTouch")
+- [ ] Nom de l'app dans les stores (peut être différent de "Plyz")
 - [ ] Description courte (80 caractères max)
 - [ ] Description longue (4000 caractères max)
 - [ ] Mots-clés pour l'App Store
@@ -93,21 +91,21 @@ Modifie `app.json` :
 ```json
 {
   "expo": {
-    "name": "SignTouch",
-    "slug": "signtouch",
+    "name": "Plyz",
+    "slug": "plyz",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "signtouch",
+    "scheme": "plyz",
 
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.signtouch.app",
+      "bundleIdentifier": "com.plyz.app",
       "buildNumber": "1"
     },
 
     "android": {
-      "package": "com.signtouch.app",
+      "package": "com.plyz.app",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
@@ -118,7 +116,7 @@ Modifie `app.json` :
 }
 ```
 
-**Important** : Change `com.signtouch.app` par un identifiant unique si nécessaire.
+**Important** : Change `com.plyz.app` par un identifiant unique si nécessaire.
 
 ### 3. Créer les assets pour les stores
 
@@ -171,7 +169,7 @@ Crée un fichier `privacy-policy.html` et héberge-le sur :
 
 Exemple de structure :
 ```
-SignTouch - Politique de Confidentialité
+Plyz - Politique de Confidentialité
 
 1. Données collectées
    - Adresse email (pour l'authentification)
@@ -186,8 +184,8 @@ SignTouch - Politique de Confidentialité
    - Aucune autre donnée n'est partagée avec des tiers
 
 4. Droits des utilisateurs
-   - Suppression du compte : contact@signtouch.app
-   - Accès aux données : contact@signtouch.app
+   - Suppression du compte : contact@plyz.app
+   - Accès aux données : contact@plyz.app
 
 Date de mise à jour : [Date]
 ```
@@ -210,87 +208,6 @@ Date de mise à jour : [Date]
 2. **Crée un compte développeur** (25€ unique)
 3. **Remplis les informations** (nom, adresse, etc.)
 4. **Accepte les accords développeur**
-
----
-
-## Configuration RevenueCat
-
-RevenueCat gère les abonnements in-app. C'est **essentiel** car ton app utilise déjà le code RevenueCat.
-
-### 1. Créer un compte RevenueCat
-
-1. **Va sur [revenuecat.com](https://www.revenuecat.com)**
-2. **Inscris-toi gratuitement**
-3. **Crée un nouveau projet** : "SignTouch"
-
-### 2. Configurer iOS
-
-1. **Dans RevenueCat Dashboard** → Apps → Add App → iOS
-2. **Entre les informations** :
-   - App name: SignTouch
-   - Bundle ID: `com.signtouch.app`
-3. **Shared Secret** :
-   - Va sur [App Store Connect](https://appstoreconnect.apple.com)
-   - Users and Access → Shared Secret → Generate
-   - Copie le secret dans RevenueCat
-
-### 3. Configurer Android
-
-1. **Dans RevenueCat Dashboard** → Apps → Add App → Android
-2. **Entre les informations** :
-   - App name: SignTouch
-   - Package name: `com.signtouch.app`
-3. **Service Credentials** :
-   - Suis le guide RevenueCat pour créer un service account
-   - Upload le fichier JSON dans RevenueCat
-
-### 4. Créer les produits d'abonnement
-
-Dans RevenueCat → Products :
-
-1. **Crée un produit** : "SignTouch Premium"
-   - Product ID: `signtouch_premium_monthly`
-   - Type: Subscription
-   - Duration: 1 month
-   - Price: (à définir, ex: 4.99€)
-
-2. **Crée les offerings** :
-   - Default offering: Premium
-   - Package: Monthly
-
-### 5. Créer les produits dans les stores
-
-#### App Store Connect
-
-1. **Va sur App Store Connect** → My Apps → (ton app) → Features → In-App Purchases
-2. **Crée un Auto-Renewable Subscription**
-3. **Entre les infos** :
-   - Product ID: `signtouch_premium_monthly` (même que RevenueCat)
-   - Reference Name: SignTouch Premium Monthly
-   - Subscription Group: Premium Subscriptions
-   - Duration: 1 month
-   - Price: 4.99€
-
-#### Google Play Console
-
-1. **Va sur Play Console** → (ton app) → Monetization → Subscriptions
-2. **Crée un produit d'abonnement**
-3. **Entre les infos** :
-   - Product ID: `signtouch_premium_monthly`
-   - Name: SignTouch Premium
-   - Billing period: 1 month
-   - Price: 4.99€
-
-### 6. Mettre à jour le code
-
-Dans `.env`, ajoute ta clé RevenueCat :
-
-```bash
-EXPO_PUBLIC_REVENUECAT_API_KEY_IOS=rcb_your_ios_key_here
-EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID=rcb_your_android_key_here
-```
-
-**Important** : Tu dois récupérer ces clés dans RevenueCat Dashboard → API Keys
 
 ---
 
@@ -366,15 +283,15 @@ Une fois terminé, tu auras un fichier `.aab` (Android App Bundle) que tu pourra
 2. **Clique sur "My Apps"** → "+" → "New App"
 3. **Remplis les informations** :
    - Platform: iOS
-   - Name: SignTouch
+   - Name: Plyz
    - Primary Language: Français
-   - Bundle ID: com.signtouch.app
-   - SKU: signtouch-001
+   - Bundle ID: com.plyz.app
+   - SKU: plyz-001
 
 ### 2. Remplir les informations de l'app
 
 Dans l'onglet **App Information** :
-- **Name** : SignTouch
+- **Name** : Plyz
 - **Subtitle** : Signez vos photos facilement
 - **Category** : Photo & Video
 - **Privacy Policy URL** : [ton URL]
@@ -391,7 +308,7 @@ Dans **Version 1.0** → **Prepare for Submission** :
 1. **Screenshots** : Upload tes screenshots
 2. **Description** :
    ```
-   SignTouch vous permet de signer vos photos facilement et rapidement.
+   Plyz vous permet de signer vos photos facilement et rapidement.
 
    FONCTIONNALITÉS :
    • Prenez une photo ou importez-en une depuis votre galerie
@@ -452,7 +369,7 @@ Dans **Version 1.0** → **Prepare for Submission** :
 1. **Va sur [Play Console](https://play.google.com/console)**
 2. **Clique sur "Create app"**
 3. **Remplis les informations** :
-   - App name: SignTouch
+   - App name: Plyz
    - Default language: Français
    - App or game: App
    - Free or paid: Free
@@ -472,12 +389,12 @@ Dans **Store presence** → **Main store listing** :
 
 1. **Short description** (80 caractères) :
    ```
-   Signez vos photos facilement avec SignTouch
+   Signez vos photos facilement avec Plyz
    ```
 
 2. **Full description** (4000 caractères) :
    ```
-   SignTouch vous permet de signer vos photos facilement et rapidement.
+   Plyz vous permet de signer vos photos facilement et rapidement.
 
    FONCTIONNALITÉS :
    • Prenez une photo ou importez-en une depuis votre galerie
@@ -530,7 +447,7 @@ Dans **Release** → **Production** → **Create new release** :
 1. **Upload ton fichier .aab**
 2. **Entre les Release notes** :
    ```
-   Première version de SignTouch !
+   Première version de Plyz !
 
    • Signature de photos
    • 50+ polices de caractères
@@ -592,8 +509,7 @@ Pour publier une mise à jour :
 - [ ] Tous les tests passent
 - [ ] L'authentification fonctionne
 - [ ] Les URLs de redirection Supabase sont configurées
-- [ ] RevenueCat est configuré
-- [ ] Les clés API sont dans `.env`
+- [ ] Les clés API Stripe sont dans `.env` (le cas échéant)
 - [ ] Les icônes sont à 1024x1024px
 - [ ] La version est correcte dans `app.json`
 
@@ -610,8 +526,7 @@ Pour publier une mise à jour :
 
 - [ ] Apple Developer Program (payé)
 - [ ] Google Play Console (payé)
-- [ ] RevenueCat configuré
-- [ ] Produits d'abonnement créés
+- [ ] Compte Stripe configuré (pour Stripe Connect)
 - [ ] Service accounts configurés
 
 ### Informations prêtes
@@ -648,7 +563,6 @@ Pour publier une mise à jour :
 - Politique de confidentialité manquante ou non accessible
 - Bugs ou crashes
 - Fonctionnalités non documentées
-- In-App Purchases mal configurés
 
 #### Google
 
@@ -688,7 +602,7 @@ Après la publication :
 
 - **Expo** : https://docs.expo.dev
 - **EAS Build** : https://docs.expo.dev/build/introduction/
-- **RevenueCat** : https://docs.revenuecat.com
+- **Stripe** : https://docs.stripe.com
 - **App Store Connect** : https://help.apple.com/app-store-connect/
 - **Play Console** : https://support.google.com/googleplay/android-developer
 
@@ -701,7 +615,7 @@ Après la publication :
 ### Support
 
 - **Expo Discord** : https://chat.expo.dev
-- **RevenueCat Discord** : https://www.revenuecat.com/community
+- **Stripe Support** : https://support.stripe.com
 
 ---
 
@@ -709,11 +623,10 @@ Après la publication :
 
 1. **Crée les comptes développeur** (commence par là car la validation prend du temps)
 2. **Prépare les assets** (screenshots, icônes, descriptions)
-3. **Configure RevenueCat**
-4. **Fais un build de test** avec EAS
-5. **Teste sur TestFlight (iOS) et Internal Testing (Android)**
-6. **Corrige les bugs trouvés**
-7. **Soumets aux stores**
-8. **Prépare ton plan marketing**
+3. **Fais un build de test** avec EAS
+4. **Teste sur TestFlight (iOS) et Internal Testing (Android)**
+5. **Corrige les bugs trouvés**
+6. **Soumets aux stores**
+7. **Prépare ton plan marketing**
 
-Bonne chance avec le lancement de SignTouch ! 🚀
+Bonne chance avec le lancement de Plyz ! 🚀
