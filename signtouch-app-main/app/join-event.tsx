@@ -34,7 +34,6 @@ try {
 }
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import AccountModal from '@/components/AccountModal';
 import { getEventByCode, LiveEvent } from '@/utils/liveEventStorage';
 import { getSessionByCode, getSessionById, LiveSession } from '@/utils/liveSessionStorage';
@@ -60,7 +59,7 @@ import {
 import BarCodeScannerWrapper, { requestCameraPermissionAsync, isBarCodeScannerAvailable } from '@/components/BarCodeScannerWrapper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const SAVED_SIGNATURES_KEY = '@signtouch_event_signatures';
+const SAVED_SIGNATURES_KEY = '@plyz_event_signatures';
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 const playNotificationChime = () => {
@@ -197,7 +196,6 @@ export default function JoinEventScreen() {
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
   const { user } = useAuth();
-  const { status } = useSubscription();
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [pendingJoinQueue, setPendingJoinQueue] = useState(false);
 
@@ -386,7 +384,7 @@ export default function JoinEventScreen() {
       const csId = String(params.checkoutSessionId);
       setCheckoutSessionId(csId);
       setPaymentAuthorized(true);
-      AsyncStorage.setItem('@signtouch_pending_checkout', JSON.stringify({
+      AsyncStorage.setItem('@plyz_pending_checkout', JSON.stringify({
         checkoutSessionId: csId,
         sessionId: String(params.sessionId),
         fanName: String(params.fanName || ''),
@@ -421,12 +419,12 @@ export default function JoinEventScreen() {
     const checkPendingCheckout = async () => {
       if (params.paymentAuthorized) return;
       try {
-        const pending = await AsyncStorage.getItem('@signtouch_pending_checkout');
+        const pending = await AsyncStorage.getItem('@plyz_pending_checkout');
         if (pending) {
           const data = JSON.parse(pending);
           const ageMs = Date.now() - (data.timestamp || 0);
           if (ageMs > 7 * 24 * 60 * 60 * 1000) {
-            await AsyncStorage.removeItem('@signtouch_pending_checkout');
+            await AsyncStorage.removeItem('@plyz_pending_checkout');
             return;
           }
           if (data.checkoutSessionId && data.sessionId) {
@@ -442,7 +440,7 @@ export default function JoinEventScreen() {
                 const session = await getSessionById(data.sessionId);
                 if (session) setFoundLiveSession(session);
               } else {
-                await AsyncStorage.removeItem('@signtouch_pending_checkout');
+                await AsyncStorage.removeItem('@plyz_pending_checkout');
               }
             } catch (e) {
               console.error('[JoinEvent] Error checking pending checkout:', e);
@@ -620,7 +618,7 @@ export default function JoinEventScreen() {
   const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
     setShowScanner(false);
     
-    const codeMatch = data.match(/signtouch:\/\/event\/([A-Z0-9]+)/i);
+    const codeMatch = data.match(/plyz:\/\/event\/([A-Z0-9]+)/i);
     if (codeMatch) {
       const scannedCode = codeMatch[1].toUpperCase();
       setCode(scannedCode);
@@ -682,7 +680,7 @@ export default function JoinEventScreen() {
 
     try {
       const viewerId = await getOrCreateDeviceId();
-      const origin = Platform.OS === 'web' ? window.location.origin : 'https://signtouch.app';
+      const origin = Platform.OS === 'web' ? window.location.origin : 'https://plyz.app';
 
       if (Platform.OS !== 'web') {
         await AsyncStorage.setItem('@event_pending_payment_session', foundSession.id);
@@ -828,7 +826,7 @@ export default function JoinEventScreen() {
       const data = await response.json();
       if (data.canceled) {
         console.log('[JoinEvent] Pre-authorization canceled successfully');
-        AsyncStorage.removeItem('@signtouch_pending_checkout').catch(() => {});
+        AsyncStorage.removeItem('@plyz_pending_checkout').catch(() => {});
         setCheckoutSessionId('');
         showAlert(
           t('paymentCanceled') || 'Paiement annulé',
@@ -934,7 +932,7 @@ export default function JoinEventScreen() {
       if (entry) {
         setQueueEntry(entry);
         setHasJoinedQueue(true);
-        AsyncStorage.removeItem('@signtouch_pending_checkout').catch(() => {});
+        AsyncStorage.removeItem('@plyz_pending_checkout').catch(() => {});
 
         if (promoApplied && promoResult?.promo_id) {
           try {
@@ -1059,7 +1057,7 @@ export default function JoinEventScreen() {
 
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: `${foundLiveSession.celebrity_name} - SignTouch`,
+          title: `${foundLiveSession.celebrity_name} - Plyz`,
           body: t('yourTurnIn2Min') || 'Your turn is coming up in about 2 minutes! Open the app now.',
           data: { sessionCode: foundLiveSession.code, sessionId: foundLiveSession.id },
           sound: true,

@@ -4,16 +4,15 @@ import { supabase } from '@/utils/supabase';
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { setRevenueCatUserId } from '@/utils/revenueCat';
 
 const POST_AUTH_REDIRECT_KEY = '@post_auth_redirect';
 
 const getAuthRedirectUrl = () => {
   const isDev = __DEV__ || Constants.appOwnership === 'expo';
   if (isDev) {
-    return 'exp+signtouch://auth-callback';
+    return 'exp+plyz://auth-callback';
   }
-  return 'signtouch://auth-callback';
+  return 'plyz://auth-callback';
 };
 
 interface AuthContextType {
@@ -48,13 +47,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      (async () => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user?.id) {
-          setRevenueCatUserId(session.user.id).catch(console.warn);
-        }
-      })();
+      setSession(session);
+      setUser(session?.user ?? null);
     });
 
     return () => subscription.unsubscribe();

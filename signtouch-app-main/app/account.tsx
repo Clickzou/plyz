@@ -13,8 +13,7 @@ import {
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { router } from 'expo-router';
-import { Crown, Info, Heart, Share2, Globe, Check, FileText, LogOut, Gift, X, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle, Camera } from 'lucide-react-native';
-import { SUBSCRIPTION_ENABLED } from '@/contexts/SubscriptionContext';
+import { Info, Heart, Share2, Globe, Check, FileText, LogOut, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle, Camera, Images, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import * as Clipboard from 'expo-clipboard';
@@ -23,11 +22,7 @@ import BottomNav from '@/components/BottomNav';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Language } from '@/locales';
-import { showAccountModal } from '@/utils/postPurchaseAccount';
-import { validatePromoCode, getPromoPremiumStatus } from '@/utils/promoCodeStorage';
-import { clearTrialData } from '@/utils/trialStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import { getStripeAccountId, saveStripeAccountId } from '@/utils/userProfile';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
@@ -56,15 +51,9 @@ const LANGUAGES: { code: Language; name: string; flag: string }[] = [
 export default function AccountScreen() {
   const { t, language, setLanguage, isRTL } = useTranslation();
   const { user, signOut, sendOtpCode, verifyOtpCode } = useAuth();
-  const { status } = useSubscription();
   const { isCelebrity, toggleCelebrityMode, profilePhoto, setProfilePhoto } = useCelebrityMode();
   const { startOnboarding } = useOnboarding();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const [showPromoModal, setShowPromoModal] = useState(false);
-  const [promoCode, setPromoCode] = useState('');
-  const [promoLoading, setPromoLoading] = useState(false);
-  const [promoMessage, setPromoMessage] = useState<{ text: string; success: boolean } | null>(null);
-  const [promoPremiumExpires, setPromoPremiumExpires] = useState<string | null>(null);
 
   const [loginEmail, setLoginEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
@@ -74,10 +63,6 @@ export default function AccountScreen() {
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [stripeLoading, setStripeLoading] = useState(false);
-
-  useEffect(() => {
-    checkPromoPremium();
-  }, []);
 
   useEffect(() => {
     checkLocalStripeConnect();
@@ -159,34 +144,6 @@ export default function AccountScreen() {
     }
   };
 
-  const checkPromoPremium = async () => {
-    const promoStatus = await getPromoPremiumStatus();
-    if (promoStatus.isActive && promoStatus.expiresAt) {
-      setPromoPremiumExpires(promoStatus.expiresAt);
-    }
-  };
-
-  const handlePromoSubmit = async () => {
-    if (!promoCode.trim()) return;
-    
-    setPromoLoading(true);
-    setPromoMessage(null);
-    
-    const result = await validatePromoCode(promoCode);
-    
-    setPromoMessage({ text: result.message, success: result.success });
-    setPromoLoading(false);
-    
-    if (result.success && result.expiresAt) {
-      setPromoPremiumExpires(result.expiresAt);
-      setTimeout(() => {
-        setShowPromoModal(false);
-        setPromoCode('');
-        setPromoMessage(null);
-      }, 2000);
-    }
-  };
-
   const handlePress = (action: string) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -194,12 +151,6 @@ export default function AccountScreen() {
 
     if (action === 'about') {
       router.push('/about');
-    } else if (action === 'subscription') {
-      if (user) {
-        router.push('/paywall?fromAccount=true');
-      } else {
-        showAccountModal();
-      }
     } else if (action === 'share') {
       router.push('/share');
     } else if (action === 'language') {
@@ -207,7 +158,7 @@ export default function AccountScreen() {
     } else if (action === 'legal') {
       router.push('/legal');
     } else if (action === 'replayTutorial') {
-      AsyncStorage.removeItem('@signtouch_onboarding_done').then(() => {
+      AsyncStorage.removeItem('@plyz_onboarding_done').then(() => {
         startOnboarding();
       });
     } else {
@@ -278,41 +229,12 @@ export default function AccountScreen() {
     await setProfilePhoto(null);
   };
 
-  const handleResetTrial = async () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    
-    await signOut();
-    
-    await clearTrialData();
-    await AsyncStorage.removeItem('@signtouch_device_id');
-    await AsyncStorage.removeItem('@create_event_form_data');
-    await AsyncStorage.removeItem('@create_event_pending');
-    await AsyncStorage.removeItem('@post_auth_redirect');
-    await AsyncStorage.removeItem('@signtouch_promo_premium');
-    await AsyncStorage.removeItem('stripe_connect_account_id');
-    
-    setPromoPremiumExpires(null);
-    
-    if (Platform.OS === 'web') {
-      localStorage.removeItem('subscription_status');
-      alert('Compte déconnecté et données réinitialisées! Rafraîchissez la page pour tester comme nouvel utilisateur.');
-    } else {
-      await AsyncStorage.removeItem('subscription_status');
-      showAlert(
-        'Réinitialisation complète',
-        'Compte déconnecté et données effacées. Redémarrez l\'app pour tester le flux nouvel utilisateur.'
-      );
-    }
-  };
-
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>{t('account')}</Text>
-          <Text style={styles.subtitle}>SignTouch</Text>
+          <Text style={styles.subtitle}>Plyz</Text>
         </View>
 
         <View style={styles.section}>
@@ -552,6 +474,23 @@ export default function AccountScreen() {
         </View>
 
         <View style={styles.section}>
+          <TouchableOpacity
+            style={styles.galleryShortcut}
+            onPress={() => router.push('/gallery' as any)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.galleryShortcutIcon}>
+              <Images size={22} color="#3b82f6" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.galleryShortcutTitle}>{t('myGallery') || 'Mes créations'}</Text>
+              <Text style={styles.galleryShortcutSub}>{t('myGalleryDesc') || 'Retrouvez toutes vos photos signées et dédicaces sauvegardées.'}</Text>
+            </View>
+            <ChevronRight size={18} color="#6b7280" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
           <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>
             FAN STATUS
           </Text>
@@ -669,18 +608,6 @@ export default function AccountScreen() {
                 </Text>
               </>
             )}
-            <TouchableOpacity
-              style={[styles.debugButton, { backgroundColor: '#ef4444', marginTop: 12 }]}
-              onPress={handleResetTrial}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.debugButtonText}>
-                Réinitialiser le trial (test nouvel utilisateur)
-              </Text>
-            </TouchableOpacity>
-            <Text style={styles.debugHint}>
-              Efface les données de trial pour tester le flux d'un nouvel utilisateur
-            </Text>
           </View>
         )}
 
@@ -704,39 +631,6 @@ export default function AccountScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>{t('application')}</Text>
-
-          {SUBSCRIPTION_ENABLED && (
-            <TouchableOpacity
-              style={[styles.menuItem, isRTL && styles.menuItemRTL]}
-              onPress={() => handlePress('subscription')}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
-                <Crown size={24} color="#10b981" strokeWidth={2} />
-              </View>
-              <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('mySubscription')}</Text>
-            </TouchableOpacity>
-          )}
-
-          {SUBSCRIPTION_ENABLED && (
-            <TouchableOpacity
-              style={[styles.menuItem, isRTL && styles.menuItemRTL]}
-              onPress={() => setShowPromoModal(true)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
-                <Gift size={24} color="#f59e0b" strokeWidth={2} />
-              </View>
-              <View style={styles.menuTextContainer}>
-                <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('promoCode') || 'Code promo'}</Text>
-                {promoPremiumExpires && (
-                  <Text style={[styles.menuSubtextGreen, isRTL && styles.menuSubtextRTL]}>
-                    Premium jusqu'au {new Date(promoPremiumExpires).toLocaleDateString()}
-                  </Text>
-                )}
-              </View>
-            </TouchableOpacity>
-          )}
 
           <TouchableOpacity
             style={[styles.menuItem, isRTL && styles.menuItemRTL]}
@@ -803,72 +697,12 @@ export default function AccountScreen() {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>SignTouch v1.0.0</Text>
+          <Text style={styles.footerText}>Plyz v1.0.0</Text>
           <Text style={styles.footerSubtext}>
             {t('offlineApp')}
           </Text>
         </View>
       </ScrollView>
-
-      <Modal
-        visible={showPromoModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowPromoModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity
-            style={styles.modalBackdrop}
-            activeOpacity={1}
-            onPress={() => setShowPromoModal(false)}
-          />
-          <View style={styles.promoModalContent}>
-            <TouchableOpacity
-              style={styles.promoCloseBtn}
-              onPress={() => setShowPromoModal(false)}
-            >
-              <X size={24} color="#6b7280" />
-            </TouchableOpacity>
-            
-            <Gift size={48} color="#f59e0b" style={{ marginBottom: 16 }} />
-            <Text style={styles.promoTitle}>{t('promoCode') || 'Code promo'}</Text>
-            <Text style={styles.promoSubtitle}>
-              {t('enterPromoCode') || 'Entrez votre code promotionnel'}
-            </Text>
-            
-            <TextInput
-              style={styles.promoInput}
-              placeholder="XXXXXX"
-              placeholderTextColor="#9ca3af"
-              value={promoCode}
-              onChangeText={setPromoCode}
-              autoCapitalize="characters"
-              maxLength={20}
-            />
-            
-            {promoMessage && (
-              <Text style={[
-                styles.promoMessage,
-                promoMessage.success ? styles.promoMessageSuccess : styles.promoMessageError
-              ]}>
-                {promoMessage.text}
-              </Text>
-            )}
-            
-            <TouchableOpacity
-              style={[styles.promoButton, promoLoading && styles.promoButtonDisabled]}
-              onPress={handlePromoSubmit}
-              disabled={promoLoading}
-            >
-              {promoLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.promoButtonText}>{t('validate') || 'Valider'}</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
 
       <Modal
         visible={showLanguageModal}
@@ -952,6 +786,34 @@ const styles = StyleSheet.create({
   section: {
     paddingHorizontal: 20,
     marginBottom: 30,
+  },
+  galleryShortcut: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  galleryShortcutIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(59,130,246,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  galleryShortcutTitle: {
+    color: '#e5e7eb',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  galleryShortcutSub: {
+    color: '#6b7280',
+    fontSize: 11,
+    marginTop: 2,
   },
   sectionTitle: {
     fontSize: 14,
@@ -1107,77 +969,6 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     opacity: 0.8,
     lineHeight: 16,
-  },
-  menuSubtextGreen: {
-    fontSize: 12,
-    color: '#10b981',
-    marginTop: 2,
-  },
-  promoModalContent: {
-    width: '85%',
-    maxWidth: 360,
-    backgroundColor: '#1f2937',
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    position: 'relative' as const,
-  },
-  promoCloseBtn: {
-    position: 'absolute' as const,
-    top: 12,
-    right: 12,
-    padding: 4,
-  },
-  promoTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  promoSubtitle: {
-    fontSize: 14,
-    color: '#9ca3af',
-    textAlign: 'center' as const,
-    marginBottom: 20,
-  },
-  promoInput: {
-    width: '100%',
-    backgroundColor: '#374151',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    fontSize: 18,
-    color: '#fff',
-    textAlign: 'center' as const,
-    letterSpacing: 2,
-    marginBottom: 16,
-  },
-  promoMessage: {
-    fontSize: 14,
-    textAlign: 'center' as const,
-    marginBottom: 12,
-    paddingHorizontal: 12,
-  },
-  promoMessageSuccess: {
-    color: '#10b981',
-  },
-  promoMessageError: {
-    color: '#ef4444',
-  },
-  promoButton: {
-    width: '100%',
-    backgroundColor: '#f59e0b',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center' as const,
-  },
-  promoButtonDisabled: {
-    opacity: 0.6,
-  },
-  promoButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
   },
   accountCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',

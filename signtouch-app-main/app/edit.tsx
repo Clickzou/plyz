@@ -17,9 +17,7 @@ import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Memory, SignatureOverlay as StoredSignatureOverlay } from '@/utils/memoriesStorage';
 import * as StorageService from '@/utils/storageService';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
-import PremiumModal from '@/components/PremiumModal';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { captureRef } from 'react-native-view-shot';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -328,14 +326,12 @@ export default function EditScreen() {
   const [isSignatureMode, setIsSignatureMode] = useState(false);
   const [signaturePaths, setSignaturePaths] = useState<{ path: string }[]>([]);
   const [currentPath, setCurrentPath] = useState('');
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showTooltip, setShowTooltip] = useState(true);
   const startPointRef = useRef<{ x: number; y: number } | null>(null);
   const viewShotRef = useRef<View>(null);
   const signatureViewRef = useRef<View>(null);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { status } = useSubscription();
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -1246,17 +1242,6 @@ export default function EditScreen() {
           </TouchableOpacity>
         </View>
       )}
-
-      <PremiumModal
-        visible={showPremiumModal}
-        onClose={() => setShowPremiumModal(false)}
-        onUpgrade={() => {
-          setShowPremiumModal(false);
-          router.push('/paywall');
-        }}
-        title={t('premiumSubscription')}
-        message={t('signatureLimitEditMessage')}
-      />
 
     </View>
   );

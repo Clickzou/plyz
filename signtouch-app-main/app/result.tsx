@@ -23,16 +23,13 @@ import MetadataModal from '@/components/MetadataModal';
 import * as StorageService from '@/utils/storageService';
 import SocialShareModal from '@/components/SocialShareModal';
 import AdModal from '@/components/AdModal';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { captureRef } from 'react-native-view-shot';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, runOnJS } from 'react-native-reanimated';
 import Svg, { Path, Defs, Filter, FeColorMatrix, Image as SvgImage } from 'react-native-svg';
-import PremiumModal from '@/components/PremiumModal';
 import AccountModal from '@/components/AccountModal';
 import { useTranslation } from '@/contexts/LanguageContext';
-import { maybeShowSubscriptionOffer } from '@/utils/subscriptionOffer';
 import Slider from '@react-native-community/slider';
 import { useFonts } from 'expo-font';
 import { ShadowsIntoLight_400Regular } from '@expo-google-fonts/shadows-into-light';
@@ -1247,9 +1244,8 @@ export default function ResultScreen() {
   const [showAdModal, setShowAdModal] = useState(false);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { status, isPremium } = useSubscription();
   const { t } = useTranslation();
-  const { user, setPostAuthRedirect } = useAuth();
+  const { user } = useAuth();
 
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
@@ -1268,9 +1264,7 @@ export default function ResultScreen() {
   const [showTooltip, setShowTooltip] = useState(false);
   const [showSignatureMode, setShowSignatureMode] = useState(false);
   const [showEffectsPanel, setShowEffectsPanel] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
-  const [limitType, setLimitType] = useState<'signature' | 'text' | null>(null);
   const [showMetadataModal, setShowMetadataModal] = useState(false);
 
   // Welcome message state
@@ -1909,19 +1903,12 @@ export default function ResultScreen() {
 
   // Save function
   const handleSaveEdits = async () => {
-    console.log('🔒 handleSaveEdits appelé, user:', user?.id, 'status:', status);
+    console.log('🔒 handleSaveEdits appelé, user:', user?.id);
     if (!memory || !memoryId) return;
 
-    // Vérifier si l'utilisateur est connecté et abonné
     if (!user) {
       console.log('🔒 Pas de user, affichage du modal de compte');
       setShowAccountModal(true);
-      return;
-    }
-    
-    if (status !== 'paid') {
-      await setPostAuthRedirect('/gallery');
-      router.push('/paywall');
       return;
     }
 
@@ -2006,14 +1993,8 @@ export default function ResultScreen() {
 
   // Save and return to gallery
   const saveAndReturn = async () => {
-    console.log('saveAndReturn appelé, user:', user?.id, 'status:', status, 'isPremium:', isPremium);
-    
-    if (!isPremium) {
-      await setPostAuthRedirect('/gallery');
-      router.push('/paywall');
-      return;
-    }
-    
+    console.log('saveAndReturn appelé, user:', user?.id);
+
     if (!user) {
       setShowAccountModal(true);
       return;
@@ -2797,22 +2778,6 @@ export default function ResultScreen() {
           onSave={handleMetadataSave}
           onSkip={handleMetadataSkip}
           initialMetadata={memory?.metadata}
-        />
-
-        <PremiumModal
-          visible={showPremiumModal}
-          onClose={() => setShowPremiumModal(false)}
-          onUpgrade={async () => {
-            setShowPremiumModal(false);
-            await setPostAuthRedirect('/gallery');
-            router.push('/paywall');
-          }}
-          title={t('limitReached')}
-          message={
-            limitType === 'signature'
-              ? t('limitReachedSignatureMessage')
-              : t('limitReachedTextMessage')
-          }
         />
 
         <AccountModal

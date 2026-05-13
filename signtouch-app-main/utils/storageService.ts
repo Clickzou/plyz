@@ -1,7 +1,6 @@
 import { Memory, SignatureOverlay, TextOverlay, PhotoAdjustments, MemoryMetadata } from './memoriesStorage';
 import * as LocalStorage from './memoriesStorage';
 import * as CloudStorage from './cloudStorage';
-import { markFirstPhotoSaved } from './trialStorage';
 
 export const saveMemory = async (
   imageUri: string,
@@ -15,10 +14,6 @@ export const saveMemory = async (
     isEdited?: boolean;
   }
 ): Promise<Memory> => {
-  console.log('[StorageService] saveMemory called, marking first photo...');
-  await markFirstPhotoSaved(userId);
-  console.log('[StorageService] markFirstPhotoSaved completed');
-  
   if (userId) {
     return await CloudStorage.saveMemoryToCloud(imageUri, userId, metadata);
   } else {

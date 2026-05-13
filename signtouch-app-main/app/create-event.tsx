@@ -26,7 +26,6 @@ import Svg, { Path, G } from 'react-native-svg';
 import { GestureHandlerRootView, PanGestureHandler, TapGestureHandler, State } from 'react-native-gesture-handler';
 const QRCode = require('react-native-qrcode-svg').default;
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import AccountModal from '@/components/AccountModal';
 import { EventType } from '@/utils/memoriesStorage';
 
@@ -54,7 +53,7 @@ import {
   saveEventPrice
 } from '@/utils/eventSessionStorage';
 
-const MY_EVENT_IDS_KEY = '@signtouch_my_event_ids';
+const MY_EVENT_IDS_KEY = '@plyz_my_event_ids';
 const saveEventIdLocally = async (eventId: string) => {
   try {
     const stored = await AsyncStorage.getItem(MY_EVENT_IDS_KEY);
@@ -117,8 +116,7 @@ export default function CreateEventScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
-  const { user, setPostAuthRedirect } = useAuth();
-  const { status, isPremium } = useSubscription();
+  const { user } = useAuth();
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const [step, setStep] = useState<'config' | 'signers' | 'success'>('config');
@@ -222,24 +220,15 @@ export default function CreateEventScreen() {
       setSigners(formData.signers || [{ name: '', paths: [] }]);
       setActiveSignerIndex(formData.activeSignerIndex || 0);
       
-      // Si l'utilisateur est abonné (paid ou trial), créer l'événement et nettoyer
-      if (status === 'paid' || status === 'trial') {
-        console.log('[RestoreAndContinue] User is subscribed, creating event automatically');
-        // Nettoyer les données sauvegardées MAINTENANT car on va créer l'événement
-        await AsyncStorage.removeItem(EVENT_PENDING_CREATE_KEY);
-        await AsyncStorage.removeItem(EVENT_FORM_STORAGE_KEY);
-        // Attendre que les states soient mis à jour, puis créer l'événement
-        setTimeout(() => {
-          handleCreateEventAfterRestore(formData);
-        }, 100);
-      } else {
-        console.log('[RestoreAndContinue] User not subscribed yet, keeping data for later');
-        // Ne PAS supprimer les données - l'utilisateur doit encore s'abonner
-      }
+      await AsyncStorage.removeItem(EVENT_PENDING_CREATE_KEY);
+      await AsyncStorage.removeItem(EVENT_FORM_STORAGE_KEY);
+      setTimeout(() => {
+        handleCreateEventAfterRestore(formData);
+      }, 100);
     } catch (error) {
       console.error('Error restoring form data:', error);
     }
-  }, [user, status]);
+  }, [user]);
 
   // Fonction pour créer l'événement après restauration
   const handleCreateEventAfterRestore = async (formData: any) => {
@@ -529,21 +518,14 @@ export default function CreateEventScreen() {
   };
 
   const handleCreateEvent = async () => {
-    console.log('[handleCreateEvent] Called, user:', user?.id, 'isPremium:', isPremium);
-    
-    if (!isPremium) {
-      await saveFormData();
-      await setPostAuthRedirect('/create-event');
-      router.push('/paywall');
-      return;
-    }
-    
+    console.log('[handleCreateEvent] Called, user:', user?.id);
+
     if (!user) {
       await saveFormData();
       setShowAccountModal(true);
       return;
     }
-    
+
     await performCreateEvent();
   };
 
@@ -637,7 +619,7 @@ export default function CreateEventScreen() {
     if (createdSession) {
       try {
         await Share.share({
-          message: `${t('joinMyEvent') || 'Join my event'} "${createdSession.title}"!\n\n${t('eventCode') || 'Code'}: ${createdSession.join_code}\n\n${t('openSignTouch') || 'Open SignTouch and enter this code!'}`,
+          message: `${t('joinMyEvent') || 'Join my event'} "${createdSession.title}"!\n\n${t('eventCode') || 'Code'}: ${createdSession.join_code}\n\n${t('openPlyz') || 'Open Plyz and enter this code!'}`,
         });
       } catch (error) {
         console.error('Error sharing:', error);
@@ -709,7 +691,7 @@ export default function CreateEventScreen() {
 
   const WEEKDAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
-  const WEB_BASE_URL = 'https://signtouch.app';
+  const WEB_BASE_URL = 'https://plyz.app';
   const qrValue = createdSession 
     ? `${WEB_BASE_URL}/join?code=${createdSession.join_code}` 
     : '';

@@ -4,7 +4,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { useFonts } from 'expo-font';
 import SplashOverlay from '@/components/SplashOverlay';
@@ -24,36 +23,27 @@ import { Montserrat_700Bold, Montserrat_800ExtraBold } from '@expo-google-fonts/
 import { Satisfy_400Regular } from '@expo-google-fonts/satisfy';
 import { CedarvilleCursive_400Regular } from '@expo-google-fonts/cedarville-cursive';
 import * as SplashScreen from 'expo-splash-screen';
-import SubscriptionOfferModal from '@/components/SubscriptionOfferModal';
 import PostPurchaseAccountModal from '@/components/PostPurchaseAccountModal';
-import { setSubscriptionOfferCallback } from '@/utils/subscriptionOffer';
-import { SUBSCRIPTION_ENABLED } from '@/contexts/SubscriptionContext';
 import {
   setPostPurchaseAccountCallback,
   setManualAccountModalCallback,
   maybeShowPostPurchaseAccountModal,
 } from '@/utils/postPurchaseAccount';
 import { setAccountPromptSnooze } from '@/utils/postPurchaseAccountStorage';
-import { initRevenueCat } from '@/utils/revenueCat';
 import CustomAlert from '@/components/CustomAlert';
 import { CelebrityModeProvider } from '@/contexts/CelebrityModeContext';
 import { FollowProvider } from '@/contexts/FollowContext';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
-import OnboardingOverlay from '@/components/OnboardingTooltip';
+import OnboardingTutorial from '@/components/OnboardingTutorial';
 
 SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
-  const [showSubscriptionOffer, setShowSubscriptionOffer] = useState(false);
   const [showPostPurchaseAccount, setShowPostPurchaseAccount] = useState(false);
   const [isPostPurchaseContext, setIsPostPurchaseContext] = useState(false);
   const { user, session } = useAuth();
 
   useEffect(() => {
-    setSubscriptionOfferCallback(() => {
-      setShowSubscriptionOffer(true);
-    });
-
     setPostPurchaseAccountCallback(() => {
       setShowPostPurchaseAccount(true);
     });
@@ -103,21 +93,13 @@ function AppContent() {
 
       <StatusBar style="auto" />
 
-      {SUBSCRIPTION_ENABLED && (
-        <SubscriptionOfferModal
-          visible={showSubscriptionOffer}
-          onClose={() => setShowSubscriptionOffer(false)}
-          onPurchaseSuccess={handlePurchaseSuccess}
-        />
-      )}
-
       <PostPurchaseAccountModal
         visible={showPostPurchaseAccount}
         onClose={handleClosePostPurchaseAccount}
       />
 
       <CustomAlert />
-      <OnboardingOverlay />
+      <OnboardingTutorial />
     </>
   );
 }
@@ -158,26 +140,20 @@ export default function RootLayout() {
     SplashScreen.hideAsync();
   }, [fontsLoaded, fontError]);
 
-  useEffect(() => {
-    initRevenueCat().catch(console.warn);
-  }, []);
-
   const [showSplash, setShowSplash] = useState(true);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
         <LanguageProvider>
-          <SubscriptionProvider>
-            <CelebrityModeProvider>
-              <FollowProvider>
-                <OnboardingProvider>
-                  <AppContent />
-                  {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
-                </OnboardingProvider>
-              </FollowProvider>
-            </CelebrityModeProvider>
-          </SubscriptionProvider>
+          <CelebrityModeProvider>
+            <FollowProvider>
+              <OnboardingProvider>
+                <AppContent />
+                {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
+              </OnboardingProvider>
+            </FollowProvider>
+          </CelebrityModeProvider>
         </LanguageProvider>
       </AuthProvider>
     </GestureHandlerRootView>

@@ -17,10 +17,10 @@ import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
+import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { Memory, MemoryMetadata, EventType } from '@/utils/memoriesStorage';
 import MetadataModal from '@/components/MetadataModal';
 import * as StorageService from '@/utils/storageService';
-import { useSubscription, SUBSCRIPTION_ENABLED } from '@/contexts/SubscriptionContext';
 import { useTranslation } from '@/contexts/LanguageContext';
 
 type GalleryTab = 'photos' | 'collector';
@@ -28,9 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import AdModal from '@/components/AdModal';
 import SocialShareModal from '@/components/SocialShareModal';
 import { CollectorLiveItem, getAllCollectorLive, deleteCollectorLive, downloadImageWeb } from '@/utils/collectorLiveStorage';
-import TrialModal from '@/components/TrialModal';
 import AccountModal from '@/components/AccountModal';
-import { getTrialStatus, hasFirstPhotoBeenSaved } from '@/utils/trialStorage';
 
 const EVENT_TYPE_ICONS: Record<EventType, any> = {
   concert: Music,
@@ -70,15 +68,11 @@ export default function GalleryScreen() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedMemories, setSelectedMemories] = useState<Set<string>>(new Set());
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
-  const [showTrialModal, setShowTrialModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
-  const [trialDaysRemaining, setTrialDaysRemaining] = useState(7);
-  const [hasCheckedFirstPhoto, setHasCheckedFirstPhoto] = useState(false);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { status, isPremium } = useSubscription();
   const { t } = useTranslation();
-  const { user, setPostAuthRedirect } = useAuth();
+  const { user } = useAuth();
 
   const filteredMemories = selectedFilter === 'all' 
     ? memories 
@@ -194,28 +188,7 @@ export default function GalleryScreen() {
     useCallback(() => {
       loadMemories();
       loadCollectorData();
-
-      const checkAndShowModals = async () => {
-        const firstPhotoSaved = await hasFirstPhotoBeenSaved();
-        console.log('[Trial] First photo saved:', firstPhotoSaved, 'Already checked:', hasCheckedFirstPhoto);
-        
-        if (!firstPhotoSaved) return;
-        if (hasCheckedFirstPhoto) return;
-        
-        setHasCheckedFirstPhoto(true);
-        
-        if (status === 'paid') {
-          console.log('[Trial] User is paid, skipping modal');
-          return;
-        }
-        
-        const trialStatus = await getTrialStatus(user?.id || null);
-        console.log('[Trial] Trial status:', trialStatus);
-        setTrialDaysRemaining(trialStatus.daysRemaining);
-      };
-
-      checkAndShowModals();
-    }, [user, status, hasCheckedFirstPhoto])
+    }, [user])
   );
 
   const openMemory = (memory: Memory) => {
@@ -368,13 +341,7 @@ export default function GalleryScreen() {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    
-    if (!isPremium) {
-      await setPostAuthRedirect('/gallery');
-      router.push('/paywall');
-      return;
-    }
-    
+
     performEditMemory();
   };
 
@@ -938,19 +905,6 @@ export default function GalleryScreen() {
         initialMetadata={selectionMode ? undefined : selectedMemory?.metadata}
       />
 
-      {SUBSCRIPTION_ENABLED && (
-        <TrialModal
-          visible={showTrialModal}
-          daysRemaining={trialDaysRemaining}
-          isExpired={false}
-          onSubscribe={() => {
-            setShowTrialModal(false);
-            router.push('/paywall');
-          }}
-          onLater={() => setShowTrialModal(false)}
-        />
-      )}
-
       <AccountModal
         visible={showAccountModal}
         onClose={() => setShowAccountModal(false)}
@@ -990,6 +944,7 @@ export default function GalleryScreen() {
         </View>
       )}
 
+      <AccountAvatarButton />
       <BottomNav />
     </View>
   );

@@ -12,8 +12,6 @@ import { Eraser, Check, ArrowLeft, Plus, Pencil, Type } from 'lucide-react-nativ
 import { Modal, TextInput, ScrollView, Text } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSubscription } from '@/contexts/SubscriptionContext';
-import PremiumModal from '@/components/PremiumModal';
 import * as SplashScreen from 'expo-splash-screen';
 import { useTranslation } from '@/contexts/LanguageContext';
 
@@ -40,7 +38,6 @@ export default function SignatureScreen() {
   const [savedSignatures, setSavedSignatures] = useState<string[]>(
     existingSignatures ? JSON.parse(existingSignatures as string) : []
   );
-  const [showPremiumModal, setShowPremiumModal] = useState<boolean>(false);
   const [showTextModal, setShowTextModal] = useState<boolean>(false);
   const [textInput, setTextInput] = useState<string>('');
   const [selectedFont, setSelectedFont] = useState<string>('SpaceMono');
@@ -620,19 +617,6 @@ export default function SignatureScreen() {
           </Animated.Text>
         </View>
       </View>
-
-      <PremiumModal
-        visible={showPremiumModal}
-        onClose={() => {
-          setShowPremiumModal(false);
-        }}
-        onUpgrade={() => {
-          setShowPremiumModal(false);
-          router.push('/paywall');
-        }}
-        title={t('limitReached')}
-        message={t('signatureLimitMessage')}
-      />
 
       <Modal
         visible={showTextModal}

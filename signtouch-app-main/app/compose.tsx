@@ -11,7 +11,6 @@ import {
   ScrollView,
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
-import { markFirstPhotoSaved } from '@/utils/trialStorage';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
   GestureDetector,
@@ -32,9 +31,7 @@ import Svg, { Path } from 'react-native-svg';
 import { Memory, SignatureOverlay, TextOverlay } from '@/utils/memoriesStorage';
 import { Modal, TextInput } from 'react-native';
 import * as StorageService from '@/utils/storageService';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
-import PremiumModal from '@/components/PremiumModal';
 import AccountModal from '@/components/AccountModal';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useFonts } from 'expo-font';
@@ -799,7 +796,6 @@ export default function ComposeScreen() {
   const [showStrokePicker, setShowStrokePicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
   const [showTextModal, setShowTextModal] = useState(false);
@@ -812,7 +808,6 @@ export default function ComposeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const viewShotRef = useRef<View>(null);
-  const { status } = useSubscription();
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -1424,8 +1419,6 @@ export default function ComposeScreen() {
             throw quotaError;
           }
         }
-        // Mark first photo saved for trial tracking (web)
-        await markFirstPhotoSaved(user?.id || null);
       } else {
         // Mobile: utiliser StorageService avec AsyncStorage ou cloud
         // baseUri = image originale sans overlays, uri = image avec overlays
@@ -1792,17 +1785,6 @@ export default function ComposeScreen() {
           </View>
         )}
       </View>
-
-      <PremiumModal
-        visible={showPremiumModal}
-        onClose={() => setShowPremiumModal(false)}
-        onUpgrade={() => {
-          setShowPremiumModal(false);
-          router.push('/paywall');
-        }}
-        title={t('limitReached')}
-        message={t('limitReachedSignatureMessage')}
-      />
 
       <AccountModal
         visible={showAccountModal}

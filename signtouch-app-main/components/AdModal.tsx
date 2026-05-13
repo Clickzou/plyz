@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
-import { X, Sparkles } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { X } from 'lucide-react-native';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AdModalProps {
@@ -12,7 +11,6 @@ interface AdModalProps {
 
 export default function AdModal({ visible, onClose, onAdWatched }: AdModalProps) {
   const [watchingAd, setWatchingAd] = useState(false);
-  const router = useRouter();
   const { t } = useLanguage();
 
   const handleWatchAd = async () => {
@@ -22,13 +20,6 @@ export default function AdModal({ visible, onClose, onAdWatched }: AdModalProps)
       onClose();
       onAdWatched();
     }, 3000);
-  };
-
-  const handleUpgrade = () => {
-    onClose();
-    setTimeout(() => {
-      router.push('/paywall');
-    }, 200);
   };
 
   return (
@@ -67,25 +58,6 @@ export default function AdModal({ visible, onClose, onAdWatched }: AdModalProps)
                 >
                   <Text style={styles.adButtonText}>{t('watchAdButton')}</Text>
                 </TouchableOpacity>
-
-                <View style={styles.divider}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>{t('or')}</Text>
-                  <View style={styles.dividerLine} />
-                </View>
-
-                <TouchableOpacity
-                  style={styles.premiumButton}
-                  onPress={handleUpgrade}
-                  activeOpacity={0.8}
-                >
-                  <Sparkles size={20} color="#ffffff" strokeWidth={2} />
-                  <Text style={styles.premiumButtonText}>{t('premiumInfoButton')}</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.premiumDescription}>
-                  {t('disableAdsAndUnlock')}
-                </Text>
               </View>
             </>
           )}
@@ -154,42 +126,6 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#333',
-  },
-  dividerText: {
-    color: '#666',
-    fontSize: 14,
-    marginHorizontal: 15,
-  },
-  premiumButton: {
-    backgroundColor: '#8b5cf6',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 10,
-  },
-  premiumButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  premiumDescription: {
-    fontSize: 13,
-    color: '#888',
-    textAlign: 'center',
-    marginTop: 5,
   },
   adContent: {
     alignItems: 'center',
