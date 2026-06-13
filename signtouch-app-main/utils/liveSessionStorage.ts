@@ -95,7 +95,7 @@ const saveDedicationMetadata = async (sessionId: string, metadata: Record<string
         const text = await existingData.text();
         existing = JSON.parse(text);
       }
-    } catch (e) {}
+    } catch {}
 
     const merged = { ...existing, ...metadata, updatedAt: Date.now() };
     const blob = new Blob([JSON.stringify(merged)], { type: 'application/json' });
@@ -119,7 +119,7 @@ const loadDedicationMetadata = async (sessionId: string): Promise<Record<string,
 
     const text = await data.text();
     return JSON.parse(text);
-  } catch (e) {
+  } catch {
     return null;
   }
 };
@@ -272,7 +272,7 @@ export const getDedicationAssets = async (
     if (localSig) localSignatureSvg = localSig;
     const localPhoto = await AsyncStorage.getItem(`dedication_photo_${sessionId}`);
     if (localPhoto) localPhotoUri = localPhoto;
-  } catch (e) {}
+  } catch {}
 
   const photoUrl = dbPhotoUrl || storageMeta?.photoUrl || localPhotoUri || null;
   const signatureSvg = queueSignatureSvg || storageMeta?.signatureSvg || localSignatureSvg || null;
@@ -387,7 +387,7 @@ export const getCelebrityPushToken = async (
 
     if (error || !data) return null;
     return data.celebrity_push_token || null;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -566,7 +566,7 @@ export const joinSessionQueue = async (
         dedicationSig = meta.signatureSvg;
         console.log('[Queue] Found dedication signature in storage metadata');
       }
-    } catch (e) {}
+    } catch {}
     if (!dedicationSig) {
       try {
         const { data: existingEntry } = await supabase
@@ -580,7 +580,7 @@ export const joinSessionQueue = async (
           dedicationSig = existingEntry.signature_svg;
           console.log('[Queue] Found dedication signature from existing queue entry');
         }
-      } catch (e) {}
+      } catch {}
     }
 
     const insertData: any = {
@@ -729,7 +729,7 @@ export const callNextFan = async (sessionId: string): Promise<QueueEntry | null>
     let dedicationSig: string | null = null;
     try {
       dedicationSig = await AsyncStorage.getItem(`dedication_signature_${sessionId}`);
-    } catch (e) {}
+    } catch {}
 
     const updateData: any = { status: 'current', called_at: new Date().toISOString() };
     if (dedicationSig && !nextFan.signature_svg) {
@@ -872,7 +872,7 @@ export const uploadFanPhoto = async (
     
     const fileName = `${sessionId}/${fanId}_${Date.now()}.jpg`;
     
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('session_photos')
       .upload(fileName, blob, {
         contentType: 'image/jpeg',

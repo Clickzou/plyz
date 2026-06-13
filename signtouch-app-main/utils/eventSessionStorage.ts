@@ -3,8 +3,8 @@ import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const DEVICE_ID_KEY = '@signtouch_device_id';
-const MY_EVENT_IDS_KEY = '@signtouch_my_event_ids';
+const DEVICE_ID_KEY = '@plyz_device_id';
+const MY_EVENT_IDS_KEY = '@plyz_my_event_ids';
 
 const addLocalEventId = async (eventId: string) => {
   try {
@@ -29,7 +29,7 @@ const getLocalEventIds = async (): Promise<string[]> => {
   }
 };
 
-const EVENT_PRICE_PREFIX = '@signtouch_event_price_';
+const EVENT_PRICE_PREFIX = '@plyz_event_price_';
 
 export const saveEventPrice = async (eventId: string, priceCents: number) => {
   try {
@@ -43,7 +43,7 @@ export const getEventPrice = async (eventId: string): Promise<number | null> => 
   try {
     const val = await AsyncStorage.getItem(`${EVENT_PRICE_PREFIX}${eventId}`);
     return val ? parseInt(val, 10) : null;
-  } catch (e) {
+  } catch {
     return null;
   }
 };
@@ -400,7 +400,7 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
 };
 
 // Local storage key for deleted events (workaround for RLS restrictions)
-const DELETED_EVENTS_KEY = 'signtouch_deleted_events';
+const DELETED_EVENTS_KEY = 'plyz_deleted_events';
 
 // In-memory cache for deleted events (loaded from storage on first access)
 let deletedEventsCache: string[] | null = null;
@@ -419,7 +419,7 @@ const getLocallyDeletedEvents = (): string[] => {
     } else {
       deletedEventsCache = [];
     }
-    return deletedEventsCache;
+    return deletedEventsCache ?? [];
   } catch {
     deletedEventsCache = [];
     return [];
@@ -490,7 +490,7 @@ export const deleteEventSession = async (sessionId: string): Promise<void> => {
     return;
   }
   
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('event_sessions')
     .update({ status: 'deleted' })
     .eq('id', sessionId)
@@ -861,7 +861,7 @@ export const getEventPublishedCount = async (eventId: string): Promise<number> =
   return count || 0;
 };
 
-const ACTIVE_FAN_EVENT_KEY = '@signtouch_active_fan_event';
+const ACTIVE_FAN_EVENT_KEY = '@plyz_active_fan_event';
 
 export interface ActiveFanEvent {
   sessionId: string;

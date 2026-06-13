@@ -2,7 +2,7 @@
 
 ## Statut actuel
 
-Pour l'instant, l'application utilise la **police système par défaut** pour le logo "SignTouch".
+Pour l'instant, l'application utilise la **police système par défaut** pour le logo "Plyz".
 
 Pour activer la police **Pumpkind Custard**, suivez les étapes ci-dessous.
 
@@ -65,7 +65,7 @@ useEffect(() => {
 
 ## Vérification
 
-Le logo "SignTouch" devrait maintenant s'afficher avec la police Pumpkind Custard.
+Le logo "Plyz" devrait maintenant s'afficher avec la police Pumpkind Custard.
 
 Le style appliqué est :
 

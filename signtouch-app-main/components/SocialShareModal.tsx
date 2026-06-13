@@ -42,7 +42,7 @@ export default function SocialShareModal({ visible, onClose, imageUri, onSave }:
       } else {
         const link = document.createElement('a');
         link.href = imageUri;
-        link.download = `signtouch-${Date.now()}.png`;
+        link.download = `plyz-${Date.now()}.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -79,7 +79,7 @@ export default function SocialShareModal({ visible, onClose, imageUri, onSave }:
       } else {
         const link = document.createElement('a');
         link.href = imageUri;
-        link.download = `signtouch-${Date.now()}.png`;
+        link.download = `plyz-${Date.now()}.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

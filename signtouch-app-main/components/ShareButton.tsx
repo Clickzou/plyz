@@ -12,9 +12,9 @@ interface ShareButtonProps {
 }
 
 const defaultConfig: ShareConfig = {
-  appName: 'SignTouch',
+  appName: 'Plyz',
   appDescription: 'Créez vos souvenirs avec des signatures personnalisées',
-  appUrl: 'https://signtouch.app',
+  appUrl: 'https://plyz.app',
 };
 
 export default function ShareButton({

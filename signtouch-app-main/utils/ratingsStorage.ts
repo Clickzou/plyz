@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const DEVICE_ID_KEY = '@signtouch_device_id';
+const DEVICE_ID_KEY = '@plyz_device_id';
 
 export interface UserProfile {
   id: string;
@@ -35,7 +35,7 @@ export const getOrCreateDeviceId = async (): Promise<string> => {
       await AsyncStorage.setItem(DEVICE_ID_KEY, deviceId);
     }
     return deviceId;
-  } catch (error) {
+  } catch {
     return `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 };
@@ -186,7 +186,7 @@ export const isUserBanned = async (deviceId: string): Promise<boolean> => {
   try {
     const profile = await getUserProfile(deviceId);
     return profile?.is_banned || false;
-  } catch (error) {
+  } catch {
     return false;
   }
 };

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
-} from 'react-native';
+ Modal, TextInput } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
@@ -18,18 +18,17 @@ import {
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
   makeMutable,
   runOnJS,
 } from 'react-native-reanimated';
-import { Type, Minus, CreditCard as Edit3, Check, RotateCw, ChevronLeft, ChevronRight, Palette, Pencil, Plus, Trash2 } from 'lucide-react-native';
+import { Type, Check, ChevronLeft, ChevronRight, Palette, Pencil, Plus, Trash2 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { captureRef } from 'react-native-view-shot';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { Memory, SignatureOverlay, TextOverlay } from '@/utils/memoriesStorage';
-import { Modal, TextInput } from 'react-native';
+
 import * as StorageService from '@/utils/storageService';
 import { useAuth } from '@/contexts/AuthContext';
 import AccountModal from '@/components/AccountModal';
@@ -57,17 +56,6 @@ const triggerHapticLight = () => {
   }
 };
 
-const triggerHapticMedium = () => {
-  if (Platform.OS !== 'web') {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-  }
-};
-
-const triggerHapticSuccess = () => {
-  if (Platform.OS !== 'web') {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-  }
-};
 
 interface AnimatedSignatureProps {
   uri: string;
@@ -83,7 +71,7 @@ interface AnimatedSignatureProps {
 function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelected, gesture, onSelect }: AnimatedSignatureProps) {
   const [imageDimensions, setImageDimensions] = useState({ width: 150, height: 80 });
   const [svgData, setSvgData] = useState<any>(null);
-  const [parsedPaths, setParsedPaths] = useState<Array<{ d: string; isDot: boolean }>>([]);
+  const [parsedPaths, setParsedPaths] = useState<{ d: string; isDot: boolean }[]>([]);
   const [viewBox, setViewBox] = useState<{ width: number; height: number } | null>(null);
   const [colorizedSvgUri, setColorizedSvgUri] = useState<string | null>(null);
 
@@ -140,7 +128,7 @@ function AnimatedSignature({ uri, transform, index, strokeScale, color, isSelect
         const displayH = displayW / aspectRatio;
         setImageDimensions({ width: displayW, height: displayH });
 
-        const paths: Array<{ d: string; isDot: boolean }> = [];
+        const paths: { d: string; isDot: boolean }[] = [];
         const pathRegex = /<path\s+([^>]*?)\/>/g;
         let match;
         while ((match = pathRegex.exec(svgString)) !== null) {
@@ -457,7 +445,6 @@ function AnimatedText({ overlay, transform, isSelected, gesture, onFontPress, on
   const mobileFontFamily = getMobileFontFamily(overlay.fontFamily);
   const [buttonOnLeft, setButtonOnLeft] = useState(false);
 
-  const webTextPosRef = useRef({ x: transform.translateX.value, y: transform.translateY.value });
   const [webTextPos, setWebTextPos] = useState({ x: transform.translateX.value, y: transform.translateY.value });
   const [webTextScale, setWebTextScale] = useState(transform.scale.value);
   const [webTextRotation, setWebTextRotation] = useState(transform.rotation.value);
@@ -1111,8 +1098,6 @@ export default function ComposeScreen() {
     if (selectedSignatureIndex !== null) {
       // Supprimer la signature sélectionnée
       const newSignatureUris = signatureUris.filter((_: string, index: number) => index !== selectedSignatureIndex);
-      const newColors = signatureColors.filter((_: string, index: number) => index !== selectedSignatureIndex);
-      const newStrokeScales = signatureStrokeScales.filter((_: number, index: number) => index !== selectedSignatureIndex);
 
       router.replace({
         pathname: '/compose',
@@ -1192,7 +1177,7 @@ export default function ComposeScreen() {
                       baseW = Math.min(svgW, 200);
                       baseH = baseW / ar;
                     }
-                  } catch (e) {}
+                  } catch {}
                 }
 
                 ctx.save();
@@ -1278,7 +1263,7 @@ export default function ComposeScreen() {
                   const svgBlob = new Blob([svgContent], { type: 'image/svg+xml' });
                   const svgUrl = URL.createObjectURL(svgBlob);
                   signatureImg.src = svgUrl;
-                } catch (error) {
+                } catch {
                   loadedSignatures++;
                   if (loadedSignatures === totalSignatures) finishCapture();
                 }
@@ -1367,7 +1352,7 @@ export default function ComposeScreen() {
             baseImg.onerror = () => res(finalPhotoUri as string);
             baseImg.src = finalPhotoUri as string;
           });
-        } catch (e) {
+        } catch {
           console.warn('BaseUri compression failed, using original');
         }
         console.log('[Save] compressedBaseUri starts:', compressedBaseUri?.substring(0, 80));
@@ -1407,7 +1392,7 @@ export default function ComposeScreen() {
                 t('storageWarning') || 'Stockage limité',
                 t('storageWarningMessage') || 'Certaines anciennes photos ont été supprimées pour libérer de l\'espace. Connectez-vous pour sauvegarder vos photos dans le cloud.'
               );
-            } catch (e) {
+            } catch {
               // En dernier recours, ne garder que la nouvelle photo
               localStorage.setItem('memories', JSON.stringify([newMemory]));
               showAlert(
@@ -1422,7 +1407,7 @@ export default function ComposeScreen() {
       } else {
         // Mobile: utiliser StorageService avec AsyncStorage ou cloud
         // baseUri = image originale sans overlays, uri = image avec overlays
-        const savedMemory = await StorageService.saveMemory(
+        await StorageService.saveMemory(
           uri,
           user?.id || null,
           {
@@ -1470,14 +1455,6 @@ export default function ComposeScreen() {
     setShowStrokePicker(false);
   };
 
-  const toggleStrokePicker = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setShowStrokePicker(!showStrokePicker);
-    setShowColorPicker(false);
-  };
-
   const selectColor = (color: string) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -1503,17 +1480,6 @@ export default function ComposeScreen() {
       setSignatureStrokeScales(newStrokeScales);
     }
     setShowStrokePicker(false);
-  };
-
-  const rotateSelected = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    if (selectedSignatureIndex !== null) {
-      const transform = getOrCreateSignatureTransform(selectedSignatureIndex);
-      transform.rotation.value = transform.rotation.value + Math.PI / 2;
-      transform.savedRotation.value = transform.rotation.value;
-    }
   };
 
   const buttonBottom = insets.bottom + 20;

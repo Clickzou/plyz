@@ -1,8 +1,8 @@
-# SignTouch
+# Plyz
 
 ## Overview
 
-SignTouch is a mobile-first photo memory application designed for users to capture, personalize, and organize visual memories. It allows adding personalized signatures, text overlays, and applying visual adjustments to photos. The platform supports a freemium model and multi-language capabilities. Beyond personal use, SignTouch facilitates unique interactions between celebrities and fans through live events, video calls, and personalized dedications, aiming to create a new way for public figures to engage with their audience.
+Plyz is a mobile-first photo memory application designed for users to capture, personalize, and organize visual memories. It allows adding personalized signatures, text overlays, and applying visual adjustments to photos. The platform supports a freemium model and multi-language capabilities. Beyond personal use, Plyz facilitates unique interactions between celebrities and fans through live events, video calls, and personalized dedications, aiming to create a new way for public figures to engage with their audience.
 
 ## User Preferences
 
@@ -56,7 +56,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Payment Processing
 - **Stripe Checkout (Live Sessions)**: Direct credit card payments for live sessions using manual capture.
-  - **Stripe Connect**: Used for celebrity onboarding, creating Express accounts, generating onboarding links, and facilitating automatic payment splitting (SignTouch fee + celebrity payout).
+  - **Stripe Connect**: Used for celebrity onboarding, creating Express accounts, generating onboarding links, and facilitating automatic payment splitting (Plyz fee + celebrity payout).
   - **Express Backend**: Custom Node.js Express server (`server/index.js`) handles Stripe API interactions for creating Connect accounts, managing checkout sessions, capturing/canceling payments, verifying payments, calculating earnings, launching scheduled sessions, and validating/using promo codes.
 - **RevenueCat (Subscriptions)**: Integrated for in-app purchases and subscription management on iOS and Android.
 

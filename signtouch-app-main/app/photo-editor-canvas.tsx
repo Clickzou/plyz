@@ -16,6 +16,7 @@ import { PHOTO_EDITOR_HTML } from '@/utils/photoEditorHtml';
 let fabric: any = null;
 if (Platform.OS === 'web') {
   // @ts-ignore
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   fabric = require('fabric').fabric;
 }
 

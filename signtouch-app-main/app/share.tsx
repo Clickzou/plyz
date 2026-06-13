@@ -28,9 +28,9 @@ export default function ShareScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
 
-  const appName = 'SignTouch';
+  const appName = 'Plyz';
   const appDescription = t('appDescriptionShare');
-  const appUrl = 'https://signtouch.app';
+  const appUrl = 'https://plyz.app';
   const shareMessage = t('shareMessageTemplate')
     .replace('{{appName}}', appName)
     .replace('{{description}}', appDescription)

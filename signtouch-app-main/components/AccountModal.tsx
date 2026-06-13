@@ -99,14 +99,6 @@ export default function AccountModal({
     onClose();
   };
 
-  const handleSkip = () => {
-    setStep('email');
-    setEmail('');
-    setCode('');
-    setError('');
-    onSkip();
-  };
-
   const renderEmailForm = () => (
     <>
       <View style={styles.iconContainer}>

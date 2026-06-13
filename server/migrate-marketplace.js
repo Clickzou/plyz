@@ -20,7 +20,7 @@ async function checkTable(tableName) {
 }
 
 async function checkMigration() {
-  console.log('\n=== SignTouch Marketplace - Table Check ===\n');
+  console.log('\n=== Plyz Marketplace - Table Check ===\n');
   
   const tables = [
     'profiles',

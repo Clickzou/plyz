@@ -1,18 +1,20 @@
 {
-  "name": "signtouch-stripe-server",
+  "name": "plyz-stripe-server",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node index.js",
-    "dev": "node index.js"
+    "start": "node ./scripts/sync-root-env.cjs && node --env-file=.env.local index.js",
+    "dev": "node ./scripts/sync-root-env.cjs && node --env-file=.env.local index.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
-    "@tensorflow/tfjs-node": "^4.22.0",
-    "cors": "^2.8.5",
-    "express": "^4.21.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "multer": "^2.0.2",
     "nsfwjs": "^4.2.1",
-    "stripe": "^14.0.0"
+    "stripe": "^20.3.1"
+  },
+  "optionalDependencies": {
+    "@tensorflow/tfjs-node": "^4.22.0"
   }
 }

@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const FOLLOWS_KEY = '@signtouch_followed_celebrities';
-const INTERACTIONS_KEY = '@signtouch_fan_interactions';
+const FOLLOWS_KEY = '@plyz_followed_celebrities';
+const INTERACTIONS_KEY = '@plyz_fan_interactions';
 
 export type FanTier = 'newcomer' | 'bronze' | 'silver' | 'gold' | 'diamond';
 

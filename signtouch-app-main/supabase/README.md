@@ -1,4 +1,4 @@
-# SignTouch Supabase Configuration
+# Plyz Supabase Configuration
 
 ## Deployment Instructions
 

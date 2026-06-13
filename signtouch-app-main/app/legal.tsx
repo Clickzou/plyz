@@ -22,7 +22,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: 'Politique de Confidentialité',
     mentions: 'Mentions Légales',
     header: 'Documents Légaux',
-    intro: 'Consultez nos documents légaux pour comprendre comment fonctionne SignTouch et comment nous protégeons vos données.',
+    intro: 'Consultez nos documents légaux pour comprendre comment fonctionne Plyz et comment nous protégeons vos données.',
     contact: 'Pour toute question, contactez-nous :',
   },
   en: {
@@ -31,7 +31,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: 'Privacy Policy',
     mentions: 'Legal Notices',
     header: 'Legal Documents',
-    intro: 'Review our legal documents to understand how SignTouch works and how we protect your data.',
+    intro: 'Review our legal documents to understand how Plyz works and how we protect your data.',
     contact: 'For any questions, contact us:',
   },
   es: {
@@ -40,7 +40,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: 'Política de Privacidad',
     mentions: 'Aviso Legal',
     header: 'Documentos Legales',
-    intro: 'Consulte nuestros documentos legales para entender cómo funciona SignTouch y cómo protegemos sus datos.',
+    intro: 'Consulte nuestros documentos legales para entender cómo funciona Plyz y cómo protegemos sus datos.',
     contact: 'Para cualquier pregunta, contáctenos:',
   },
   de: {
@@ -49,7 +49,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: 'Datenschutzrichtlinie',
     mentions: 'Impressum',
     header: 'Rechtliche Dokumente',
-    intro: 'Lesen Sie unsere rechtlichen Dokumente, um zu verstehen, wie SignTouch funktioniert und wie wir Ihre Daten schützen.',
+    intro: 'Lesen Sie unsere rechtlichen Dokumente, um zu verstehen, wie Plyz funktioniert und wie wir Ihre Daten schützen.',
     contact: 'Bei Fragen kontaktieren Sie uns:',
   },
   it: {
@@ -58,7 +58,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: 'Informativa sulla Privacy',
     mentions: 'Note Legali',
     header: 'Documenti Legali',
-    intro: 'Consulta i nostri documenti legali per capire come funziona SignTouch e come proteggiamo i tuoi dati.',
+    intro: 'Consulta i nostri documenti legali per capire come funziona Plyz e come proteggiamo i tuoi dati.',
     contact: 'Per qualsiasi domanda, contattaci:',
   },
   pt: {
@@ -67,7 +67,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: 'Política de Privacidade',
     mentions: 'Avisos Legais',
     header: 'Documentos Legais',
-    intro: 'Consulte os nossos documentos legais para entender como o SignTouch funciona e como protegemos os seus dados.',
+    intro: 'Consulte os nossos documentos legais para entender como o Plyz funciona e como protegemos os seus dados.',
     contact: 'Para qualquer dúvida, contacte-nos:',
   },
   ru: {
@@ -76,7 +76,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: 'Политика конфиденциальности',
     mentions: 'Юридическая информация',
     header: 'Юридические документы',
-    intro: 'Ознакомьтесь с нашими юридическими документами, чтобы понять, как работает SignTouch и как мы защищаем ваши данные.',
+    intro: 'Ознакомьтесь с нашими юридическими документами, чтобы понять, как работает Plyz и как мы защищаем ваши данные.',
     contact: 'По любым вопросам свяжитесь с нами:',
   },
   ja: {
@@ -85,7 +85,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: 'プライバシーポリシー',
     mentions: '法的通知',
     header: '法的文書',
-    intro: 'SignTouchの仕組みと、お客様のデータをどのように保護しているかを理解するために、法的文書をご確認ください。',
+    intro: 'Plyzの仕組みと、お客様のデータをどのように保護しているかを理解するために、法的文書をご確認ください。',
     contact: 'ご質問はこちらまで：',
   },
   zh: {
@@ -94,7 +94,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: '隐私政策',
     mentions: '法律声明',
     header: '法律文件',
-    intro: '查看我们的法律文件，了解SignTouch如何运作以及我们如何保护您的数据。',
+    intro: '查看我们的法律文件，了解Plyz如何运作以及我们如何保护您的数据。',
     contact: '如有任何问题，请联系我们：',
   },
   ar: {
@@ -103,7 +103,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: 'سياسة الخصوصية',
     mentions: 'إشعارات قانونية',
     header: 'المستندات القانونية',
-    intro: 'اطلع على مستنداتنا القانونية لفهم كيفية عمل SignTouch وكيف نحمي بياناتك.',
+    intro: 'اطلع على مستنداتنا القانونية لفهم كيفية عمل Plyz وكيف نحمي بياناتك.',
     contact: 'لأي استفسار، تواصل معنا:',
   },
   hi: {
@@ -112,7 +112,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: 'गोपनीयता नीति',
     mentions: 'कानूनी सूचनाएं',
     header: 'कानूनी दस्तावेज़',
-    intro: 'SignTouch कैसे काम करता है और हम आपके डेटा की कैसे सुरक्षा करते हैं, यह समझने के लिए हमारे कानूनी दस्तावेज़ देखें।',
+    intro: 'Plyz कैसे काम करता है और हम आपके डेटा की कैसे सुरक्षा करते हैं, यह समझने के लिए हमारे कानूनी दस्तावेज़ देखें।',
     contact: 'किसी भी प्रश्न के लिए, हमसे संपर्क करें:',
   },
   bn: {
@@ -121,7 +121,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: 'গোপনীয়তা নীতি',
     mentions: 'আইনি বিজ্ঞপ্তি',
     header: 'আইনি নথি',
-    intro: 'SignTouch কীভাবে কাজ করে এবং আমরা কীভাবে আপনার ডেটা রক্ষা করি তা বুঝতে আমাদের আইনি নথি পর্যালোচনা করুন।',
+    intro: 'Plyz কীভাবে কাজ করে এবং আমরা কীভাবে আপনার ডেটা রক্ষা করি তা বুঝতে আমাদের আইনি নথি পর্যালোচনা করুন।',
     contact: 'যেকোনো প্রশ্নের জন্য, আমাদের সাথে যোগাযোগ করুন:',
   },
   ur: {
@@ -130,7 +130,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: 'رازداری کی پالیسی',
     mentions: 'قانونی نوٹس',
     header: 'قانونی دستاویزات',
-    intro: 'SignTouch کیسے کام کرتا ہے اور ہم آپ کے ڈیٹا کی حفاظت کیسے کرتے ہیں، یہ سمجھنے کے لیے ہماری قانونی دستاویزات دیکھیں۔',
+    intro: 'Plyz کیسے کام کرتا ہے اور ہم آپ کے ڈیٹا کی حفاظت کیسے کرتے ہیں، یہ سمجھنے کے لیے ہماری قانونی دستاویزات دیکھیں۔',
     contact: 'کسی بھی سوال کے لیے، ہم سے رابطہ کریں:',
   },
   ms: {
@@ -139,7 +139,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: 'Dasar Privasi',
     mentions: 'Notis Undang-undang',
     header: 'Dokumen Undang-undang',
-    intro: 'Semak dokumen undang-undang kami untuk memahami cara SignTouch berfungsi dan cara kami melindungi data anda.',
+    intro: 'Semak dokumen undang-undang kami untuk memahami cara Plyz berfungsi dan cara kami melindungi data anda.',
     contact: 'Untuk sebarang pertanyaan, hubungi kami:',
   },
   id: {
@@ -148,7 +148,7 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
     privacy: 'Kebijakan Privasi',
     mentions: 'Pemberitahuan Hukum',
     header: 'Dokumen Hukum',
-    intro: 'Tinjau dokumen hukum kami untuk memahami cara kerja SignTouch dan cara kami melindungi data Anda.',
+    intro: 'Tinjau dokumen hukum kami untuk memahami cara kerja Plyz dan cara kami melindungi data Anda.',
     contact: 'Untuk pertanyaan apa pun, hubungi kami:',
   },
 };
@@ -156,10 +156,10 @@ const DOCUMENT_TITLES: { [key: string]: { [doc: string]: string } } = {
 export default function LegalScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { currentLanguage } = useLanguage();
+  const { language } = useLanguage();
   const [selectedDoc, setSelectedDoc] = useState<LegalDocument>(null);
 
-  const lang = currentLanguage || 'fr';
+  const lang = language || 'fr';
   const titles = DOCUMENT_TITLES[lang] || DOCUMENT_TITLES.fr;
 
   const getDocumentContent = (docId: 'cgv' | 'cgu' | 'privacy' | 'mentions'): string => {

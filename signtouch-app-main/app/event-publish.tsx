@@ -8,18 +8,29 @@ import {
   Image,
   Platform,
   ActivityIndicator,
-  TextInput,
-  Dimensions,
   PanResponder,
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, Move, ZoomIn, ZoomOut, RotateCcw, Palette, QrCode, X, Copy, Share2, Plus, UserPlus, Calendar, Clock, Video, MapPin, Euro } from 'lucide-react-native';
+import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, ZoomIn, ZoomOut, RotateCcw, Palette, QrCode, X, Copy, Share2, Plus, Calendar, Clock, Video, MapPin, Euro } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
 import { SvgUri, SvgXml } from 'react-native-svg';
+import * as ImagePicker from 'expo-image-picker';
+import * as Clipboard from 'expo-clipboard';
+import { useLanguage } from '@/contexts/LanguageContext';
+import BottomNav from '@/components/BottomNav';
+import {
+  EventSigner,
+  SignatureMetadata,
+  getEventSigners,
+  publishEventAsset,
+  getActiveViewerCount,
+  fetchEventAssets,
+} from '@/utils/eventSessionStorage';
+import QRCodeSvg from 'react-native-qrcode-svg';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -51,19 +62,6 @@ const getColorFilter = (hexColor: string): string => {
   };
   return colorFilters[hexColor] || 'brightness(0) invert(1)';
 };
-import * as ImagePicker from 'expo-image-picker';
-import * as Clipboard from 'expo-clipboard';
-import { useLanguage } from '@/contexts/LanguageContext';
-import BottomNav from '@/components/BottomNav';
-const QRCodeSvg = require('react-native-qrcode-svg').default;
-import {
-  EventSigner,
-  SignatureMetadata,
-  getEventSigners,
-  publishEventAsset,
-  getActiveViewerCount,
-  fetchEventAssets,
-} from '@/utils/eventSessionStorage';
 
 export default function EventPublishScreen() {
   const router = useRouter();
@@ -104,7 +102,7 @@ export default function EventPublishScreen() {
   const [publishedCount, setPublishedCount] = useState(0);
   const [publishedAssets, setPublishedAssets] = useState<any[]>([]);
   const [realNetCents, setRealNetCents] = useState<number | null>(null);
-  const [paidFanCount, setPaidFanCount] = useState(0);
+  const [, setPaidFanCount] = useState(0);
   
   const [signaturePosition, setSignaturePosition] = useState({ x: 0, y: 0 });
   const [signatureScale, setSignatureScale] = useState(1);
@@ -125,8 +123,10 @@ export default function EventPublishScreen() {
     }
     
     const fetchAndColorSvg = async () => {
+      const signatureUrl = selectedSigner?.signature_url;
+      if (!signatureUrl) return;
       try {
-        const response = await fetch(selectedSigner.signature_url);
+        const response = await fetch(signatureUrl);
         let svgText = await response.text();
         
         // Simple approach: replace stroke colors but keep fill="none"
@@ -149,7 +149,6 @@ export default function EventPublishScreen() {
   const [copied, setCopied] = useState(false);
   
   const viewShotRef = useRef<ViewShot>(null);
-  const previewContainerRef = useRef<View>(null);
   const [containerLayout, setContainerLayout] = useState({ width: 0, height: 0 });
   const lastPanOffset = useRef({ x: 0, y: 0 });
   const isDragging = useRef(false);
@@ -371,11 +370,15 @@ export default function EventPublishScreen() {
 
   const handleShareCode = async () => {
     try {
-      await navigator.share?.({
-        title: sessionTitle,
-        text: `Rejoignez mon événement SignTouch avec le code: ${joinCode}`,
-      }) || showAlert(t('share'), `Code: ${joinCode}`);
-    } catch (e) {
+      if (navigator.share) {
+        await navigator.share({
+          title: sessionTitle,
+          text: `Rejoignez mon événement Plyz avec le code: ${joinCode}`,
+        });
+      } else {
+        showAlert(t('share'), `Code: ${joinCode}`);
+      }
+    } catch {
       showAlert(t('share'), `Code: ${joinCode}`);
     }
   };
@@ -462,8 +465,6 @@ export default function EventPublishScreen() {
 
   const takePhoto = async () => {
     if (Platform.OS === 'web') {
-      const message = (t('cameraNotAvailable') || 'Camera not available') + '\n\n' + 
-        (t('useMobileOrGallery') || 'Camera is not available on web. Please use the gallery or try on a mobile device.');
       showAlert(t('cameraNotAvailable') || 'Camera not available', t('useMobileOrGallery') || 'Camera is not available on web.');
       return;
     }
@@ -911,7 +912,7 @@ export default function EventPublishScreen() {
             
             <View style={styles.qrCodeContainer}>
               <QRCodeSvg
-                value={`signtouch://join/${joinCode}`}
+                value={`plyz://join/${joinCode}`}
                 size={200}
                 backgroundColor="#ffffff"
                 color="#1a1a2e"

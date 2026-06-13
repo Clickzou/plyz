@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const CELEBRITY_MODE_KEY = '@signtouch_celebrity_mode';
-const PROFILE_PHOTO_KEY = '@signtouch_profile_photo';
+const CELEBRITY_MODE_KEY = '@plyz_celebrity_mode';
+const PROFILE_PHOTO_KEY = '@plyz_profile_photo';
 
 interface CelebrityModeContextType {
   isCelebrity: boolean;

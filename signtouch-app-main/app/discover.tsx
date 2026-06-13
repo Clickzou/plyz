@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput,
-  Image, ActivityIndicator, Platform, ScrollView, Linking, ImageErrorEventData, NativeSyntheticEvent,
+  Image, Platform, ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFollow } from '@/contexts/FollowContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
+import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { DiscoverSkeleton } from '@/components/SkeletonLoader';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
@@ -61,7 +62,7 @@ export default function DiscoverScreen() {
   const [sort, setSort] = useState('popular');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [, setTotal] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchCelebrities = useCallback(async (p = 1, reset = false) => {
@@ -316,6 +317,7 @@ export default function DiscoverScreen() {
         />
       )}
 
+      <AccountAvatarButton />
       <BottomNav />
     </View>
   );

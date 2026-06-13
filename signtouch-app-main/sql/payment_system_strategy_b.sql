@@ -1,5 +1,5 @@
 -- =============================================
--- SignTouch Payment System - Stratégie B
+-- Plyz Payment System - Stratégie B
 -- =============================================
 -- À exécuter dans Supabase SQL Editor
 -- =============================================

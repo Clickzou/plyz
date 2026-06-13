@@ -1,6 +1,6 @@
 import { View, TouchableOpacity, StyleSheet, Platform, Text } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
-import { Search, Newspaper, Inbox, Camera, Images } from 'lucide-react-native';
+import { Search, Newspaper, Images, Camera, Calendar } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -89,16 +89,16 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
 
       <TouchableOpacity
         style={styles.navButton}
-        onPress={() => handleNavigation('/gallery')}
+        onPress={() => handleNavigation('/fan-choice')}
         activeOpacity={0.7}
       >
-        <Images
+        <Calendar
           size={22}
-          color={isActiveMulti('/gallery') ? '#10b981' : '#ffffff'}
+          color={isActiveMulti('/fan-choice', '/create-event', '/create-live-session', '/join-event', '/join-live-session', '/event-publish', '/event-gallery', '/event-photo-editor', '/live-session-dashboard', '/add-signer', '/fan-live-view', '/purchase-session') ? '#10b981' : '#ffffff'}
           strokeWidth={2}
         />
-        <Text style={[styles.navLabel, isActiveMulti('/gallery') && styles.navLabelActive]}>
-          {t('gallery')}
+        <Text style={[styles.navLabel, isActiveMulti('/fan-choice', '/create-event', '/create-live-session', '/join-event', '/join-live-session', '/event-publish', '/event-gallery', '/event-photo-editor', '/live-session-dashboard', '/add-signer', '/fan-live-view', '/purchase-session') && styles.navLabelActive]}>
+          {t('eventsTab')}
         </Text>
       </TouchableOpacity>
 
@@ -107,12 +107,12 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
         onPress={() => handleNavigation('/my-space')}
         activeOpacity={0.7}
       >
-        <Inbox
+        <Images
           size={22}
-          color={isActiveMulti('/my-space', '/create-event', '/create-live-session', '/join-event', '/join-live-session', '/account') ? '#10b981' : '#ffffff'}
+          color={isActiveMulti('/my-space', '/gallery', '/account') ? '#10b981' : '#ffffff'}
           strokeWidth={2}
         />
-        <Text style={[styles.navLabel, isActiveMulti('/my-space', '/create-event', '/create-live-session', '/join-event', '/join-live-session', '/account') && styles.navLabelActive]}>
+        <Text style={[styles.navLabel, isActiveMulti('/my-space', '/gallery', '/account') && styles.navLabelActive]}>
           {t('mySpace')}
         </Text>
       </TouchableOpacity>

@@ -18,7 +18,6 @@ import {
   ArrowLeft,
   Camera,
   Send,
-  Users,
   Clock,
   Check,
   QrCode,
@@ -33,7 +32,6 @@ import {
   QueueEntry,
   getSessionByCode,
   joinSessionQueue,
-  getQueueEntryByFanId,
   uploadFanPhoto,
   subscribeToSession,
   subscribeToQueueEntry,
@@ -55,7 +53,7 @@ export default function JoinLiveSessionScreen() {
   const [queueEntry, setQueueEntry] = useState<QueueEntry | null>(null);
   const [queuePosition, setQueuePosition] = useState(0);
   const [showScanner, setShowScanner] = useState(false);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [, setHasPermission] = useState<boolean | null>(null);
 
   const fanId = useMemo(() => `fan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, []);
   const sessionChannelRef = useRef<RealtimeChannel | null>(null);
@@ -532,6 +530,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#fff',
+  },
+  primaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#fff',
+    borderRadius: 30,
+    paddingVertical: 16,
+    marginTop: 8,
+  },
+  primaryButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#6366f1',
   },
   scrollContent: {
     paddingBottom: 40,

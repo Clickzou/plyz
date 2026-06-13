@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -22,13 +22,13 @@ import { Memory, MemoryMetadata, EventType } from '@/utils/memoriesStorage';
 import MetadataModal from '@/components/MetadataModal';
 import * as StorageService from '@/utils/storageService';
 import { useTranslation } from '@/contexts/LanguageContext';
-
-type GalleryTab = 'photos' | 'collector';
 import { useAuth } from '@/contexts/AuthContext';
 import AdModal from '@/components/AdModal';
 import SocialShareModal from '@/components/SocialShareModal';
 import { CollectorLiveItem, getAllCollectorLive, deleteCollectorLive, downloadImageWeb } from '@/utils/collectorLiveStorage';
 import AccountModal from '@/components/AccountModal';
+
+type GalleryTab = 'photos' | 'collector';
 
 const EVENT_TYPE_ICONS: Record<EventType, any> = {
   concert: Music,
@@ -247,7 +247,7 @@ export default function GalleryScreen() {
     try {
       if (Platform.OS === 'web') {
         const response = await fetch(selectedMemory.uri);
-        const blob = await response.blob();
+        await response.blob();
         const link = document.createElement('a');
         link.href = selectedMemory.uri;
         link.download = `souvenir_${Date.now()}.png`;
@@ -859,14 +859,21 @@ export default function GalleryScreen() {
                 showConfirm(
                   t('confirmDelete') || 'Delete',
                   t('confirmDeleteMessage') || 'Delete this dedication?',
-                  async () => {
-                    await deleteCollectorLive(selectedCollectorItem.id);
-                    setSelectedCollectorItem(null);
-                    await loadCollectorData();
-                    if (Platform.OS !== 'web') {
-                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                    }
-                  }
+                  [
+                    { text: t('cancel') || 'Annuler', style: 'cancel' },
+                    {
+                      text: t('confirmDelete') || 'Delete',
+                      style: 'destructive',
+                      onPress: async () => {
+                        await deleteCollectorLive(selectedCollectorItem.id);
+                        setSelectedCollectorItem(null);
+                        await loadCollectorData();
+                        if (Platform.OS !== 'web') {
+                          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                        }
+                      },
+                    },
+                  ]
                 );
               }}
               disabled={isDeleting}

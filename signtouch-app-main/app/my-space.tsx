@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  Image, ActivityIndicator, ScrollView, Platform, Share,
-} from 'react-native';
+  ActivityIndicator, ScrollView, Platform, Share,
+ TextInput } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Inbox, Video, PenTool, Clock, CheckCircle, XCircle, ChevronRight, User,
-  Star, Users, DollarSign, Plus, FileText, Eye, TrendingUp, Sparkles, Radio,
-  QrCode, Trash2, Copy, Share2, X, Check, Edit3, Play, Calendar, Settings, Globe, Save,
-} from 'lucide-react-native';
-import { TextInput } from 'react-native';
+  Inbox, Video, PenTool, Clock, ChevronRight, User,
+  Star, Plus, Eye, TrendingUp, Sparkles, Radio,
+  QrCode, Trash2, Copy, Share2, X, Check, Edit3, Play, Calendar, Settings, Globe, Save, Images,
+ Shield } from 'lucide-react-native';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import * as Clipboard from 'expo-clipboard';
@@ -19,16 +19,16 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
+import AccountAvatarButton from '@/components/AccountAvatarButton';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStripeAccountId } from '@/utils/userProfile';
-import { Shield } from 'lucide-react-native';
+
 import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount } from '@/utils/eventSessionStorage';
-const QRCodeSvg = require('react-native-qrcode-svg').default;
+import QRCodeSvg from 'react-native-qrcode-svg';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
-type TabType = 'bookings' | 'autographs';
 type ModeType = 'fan' | 'celebrity';
 type CelTabType = 'dashboard' | 'events' | 'settings';
 type FilterType = 'all' | 'live' | 'ended' | 'scheduled';
@@ -79,7 +79,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function MySpaceScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { isCelebrity } = useCelebrityMode();
   const [mode, setMode] = useState<ModeType>(isCelebrity ? 'celebrity' : 'fan');
@@ -89,9 +89,8 @@ export default function MySpaceScreen() {
       setMode('fan');
     }
   }, [isCelebrity]);
-  const [tab, setTab] = useState<TabType>('bookings');
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [autographs, setAutographs] = useState<Autograph[]>([]);
+  const [, setAutographs] = useState<Autograph[]>([]);
   const [celBookings, setCelBookings] = useState<Booking[]>([]);
   const [celAutographs, setCelAutographs] = useState<Autograph[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,7 +110,7 @@ export default function MySpaceScreen() {
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [videoCallPriceEur, setVideoCallPriceEur] = useState('');
   const [videoCallDuration, setVideoCallDuration] = useState('15');
-  const [videoCallUnit, setVideoCallUnit] = useState<'session' | 'minute'>('session');
+  const [, setVideoCallUnit] = useState<'session' | 'minute'>('session');
   const [autographPriceEur, setAutographPriceEur] = useState('');
   const [dedicationPriceEur, setDedicationPriceEur] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
@@ -373,7 +372,7 @@ export default function MySpaceScreen() {
     if (!selectedEvent) return;
     try {
       await Share.share({
-        message: `Rejoignez mon événement SignTouch "${selectedEvent.title}" avec le code: ${selectedEvent.join_code}`,
+        message: `Rejoignez mon événement Plyz "${selectedEvent.title}" avec le code: ${selectedEvent.join_code}`,
       });
     } catch (e) {
       console.error('Share failed:', e);
@@ -580,7 +579,10 @@ export default function MySpaceScreen() {
                 onPress={() => showConfirm(
                   t('declineBookingTitle' as any) || 'Refuser cette réservation ?',
                   t('declineBookingMsg' as any) || 'Le paiement sera annulé et le fan sera remboursé.',
-                  () => handleUpdateBookingStatus(item.id, 'cancelled')
+                  [
+                    { text: t('cancel') || 'Annuler', style: 'cancel' },
+                    { text: t('decline' as any) || 'Refuser', style: 'destructive', onPress: () => handleUpdateBookingStatus(item.id, 'cancelled') },
+                  ]
                 )}
                 activeOpacity={0.7}
               >
@@ -596,35 +598,6 @@ export default function MySpaceScreen() {
           </Text>
         </View>
       </View>
-    );
-  };
-
-  const renderAutograph = ({ item }: { item: Autograph }) => {
-    const celeb = item.celebrity_profiles;
-    return (
-      <TouchableOpacity
-        style={styles.itemCard}
-        onPress={() => celeb && router.push(`/celebrity-detail?id=${item.id}` as any)}
-        activeOpacity={0.8}
-      >
-        <View style={[styles.itemIcon, { backgroundColor: 'rgba(245,158,11,0.15)' }]}>
-          <PenTool size={20} color="#f59e0b" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.itemTitle}>{celeb?.stage_name || 'Celebrity'}</Text>
-          {item.message && (
-            <Text style={styles.itemSub} numberOfLines={1}>{item.message}</Text>
-          )}
-          <Text style={styles.itemDate}>
-            {formatPrice(item.price_cents, item.currency)} · {new Date(item.created_at).toLocaleDateString()}
-          </Text>
-        </View>
-        <View style={[styles.statusBadge, { backgroundColor: `${STATUS_COLORS[item.status] || '#6b7280'}20` }]}>
-          <Text style={[styles.statusText, { color: STATUS_COLORS[item.status] || '#6b7280' }]}>
-            {getStatusLabel(item.status)}
-          </Text>
-        </View>
-      </TouchableOpacity>
     );
   };
 
@@ -659,7 +632,10 @@ export default function MySpaceScreen() {
                 onPress={() => showConfirm(
                   t('declineAutographTitle' as any) || 'Refuser cette demande ?',
                   t('declineAutographMsg' as any) || 'Le paiement sera annulé et le fan sera remboursé.',
-                  () => handleUpdateAutographStatus(item.id, 'cancelled')
+                  [
+                    { text: t('cancel') || 'Annuler', style: 'cancel' },
+                    { text: t('decline' as any) || 'Refuser', style: 'destructive', onPress: () => handleUpdateAutographStatus(item.id, 'cancelled') },
+                  ]
                 )}
                 activeOpacity={0.7}
               >
@@ -710,7 +686,27 @@ export default function MySpaceScreen() {
               <ChevronRight size={18} color="#fff" />
             </TouchableOpacity>
           </View>
+          <View style={styles.orSeparatorRow}>
+            <View style={styles.orSeparatorLine} />
+            <Text style={styles.orSeparatorText}>{t('orSeparator') || 'OU'}</Text>
+            <View style={styles.orSeparatorLine} />
+          </View>
+          <TouchableOpacity
+            style={styles.guestGalleryBtn}
+            onPress={() => router.push('/gallery' as any)}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.fanJoinIcon, { backgroundColor: 'rgba(59,130,246,0.15)' }]}>
+              <Images size={20} color="#3b82f6" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.fanJoinTitle}>{t('continueWithoutAccount') || 'Continuer sans compte'}</Text>
+              <Text style={styles.fanJoinSub}>{t('continueWithoutAccountDesc') || 'Accédez à vos créations sauvegardées localement sur votre téléphone.'}</Text>
+            </View>
+            <ChevronRight size={18} color="#6b7280" />
+          </TouchableOpacity>
         </View>
+        <AccountAvatarButton />
         <BottomNav />
       </View>
     );
@@ -749,6 +745,20 @@ export default function MySpaceScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.fanJoinTitle}>{t('fanJoinDedication' as any) || 'Rejoindre Session Live Dédicace'}</Text>
             <Text style={styles.fanJoinSub}>{t('fanJoinDedicationSub' as any) || 'Scannez un QR code ou entrez un code pour recevoir une dédicace personnalisée de votre célébrité'}</Text>
+          </View>
+          <ChevronRight size={18} color="#6b7280" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.fanJoinBtn}
+          onPress={() => router.push('/gallery' as any)}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.fanJoinIcon, { backgroundColor: 'rgba(59,130,246,0.15)' }]}>
+            <Images size={20} color="#3b82f6" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.fanJoinTitle}>{t('myGallery') || 'Mes créations'}</Text>
+            <Text style={styles.fanJoinSub}>{t('myGalleryDesc') || 'Retrouvez toutes vos photos signées et dédicaces sauvegardées.'}</Text>
           </View>
           <ChevronRight size={18} color="#6b7280" />
         </TouchableOpacity>
@@ -1431,7 +1441,7 @@ export default function MySpaceScreen() {
 
             <View style={styles.qrContainer}>
               <QRCodeSvg
-                value={`signtouch://join/${selectedEvent.join_code}`}
+                value={`plyz://join/${selectedEvent.join_code}`}
                 size={200}
                 backgroundColor="#ffffff"
                 color="#1a1a2e"
@@ -1454,6 +1464,7 @@ export default function MySpaceScreen() {
         </View>
       )}
 
+      <AccountAvatarButton />
       <BottomNav />
 
       <StripeConnectModal
@@ -1671,6 +1682,36 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
+  },
+  guestGalleryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    marginHorizontal: 20,
+  },
+  orSeparatorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 16,
+    marginHorizontal: 20,
+    gap: 12,
+  },
+  orSeparatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  orSeparatorText: {
+    color: '#6b7280',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1,
   },
   fanJoinIcon: {
     width: 44,

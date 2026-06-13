@@ -42,9 +42,9 @@ export default function BookVideoCallScreen() {
     : [defaultDuration];
 
   const totalCents = unit === 'minute' ? priceCents * duration : priceCents;
-  const signTouchFee = Math.round(totalCents * 0.15);
+  const plyzFee = Math.round(totalCents * 0.15);
   const stripeFee = Math.round(totalCents * 0.029) + 30;
-  const celebrityReceives = totalCents - signTouchFee - stripeFee;
+  const celebrityReceives = totalCents - plyzFee - stripeFee;
 
   const formatPrice = (cents: number) => {
     const amount = (cents / 100).toFixed(2);
@@ -165,7 +165,7 @@ export default function BookVideoCallScreen() {
 
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabelSmall}>{t('platformFee') || 'Platform fee (15%)'}</Text>
-            <Text style={styles.summaryValueSmall}>-{formatPrice(signTouchFee)}</Text>
+            <Text style={styles.summaryValueSmall}>-{formatPrice(plyzFee)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabelSmall}>{t('marketplaceStripeFee') || 'Stripe fee'}</Text>

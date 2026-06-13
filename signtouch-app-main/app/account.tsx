@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { router } from 'expo-router';
-import { Info, Heart, Share2, Globe, Check, FileText, LogOut, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle, Camera, Images, ChevronRight } from 'lucide-react-native';
+import { Info, Heart, Share2, Globe, Check, FileText, LogOut, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle, Camera, Images, ChevronRight , Star } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import * as Clipboard from 'expo-clipboard';
@@ -27,7 +27,7 @@ import { getStripeAccountId, saveStripeAccountId } from '@/utils/userProfile';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
-import { Star } from 'lucide-react-native';
+
 import { FanBadgeCard } from '@/components/FanBadge';
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
@@ -62,7 +62,7 @@ export default function AccountScreen() {
   const [stripeLinked, setStripeLinked] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
-  const [stripeLoading, setStripeLoading] = useState(false);
+  const [, setStripeLoading] = useState(false);
 
   useEffect(() => {
     checkLocalStripeConnect();
@@ -220,13 +220,6 @@ export default function AccountScreen() {
     if (!result.canceled && result.assets[0]) {
       await setProfilePhoto(result.assets[0].uri);
     }
-  };
-
-  const removeProfilePhoto = async () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    await setProfilePhoto(null);
   };
 
   return (

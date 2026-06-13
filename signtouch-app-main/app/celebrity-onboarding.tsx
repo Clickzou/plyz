@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Platform, Image, ActivityIndicator,
+  Platform, Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft, Star, Camera as CameraIcon, Video, QrCode,
-  DollarSign, Users, Shield, CreditCard, ArrowRight,
+  DollarSign, Users, CreditCard, ArrowRight,
   CheckCircle, Zap, TrendingUp, Globe, Building2,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -28,7 +28,7 @@ export default function CelebrityOnboardingScreen() {
   const { profilePhoto, setProfilePhoto } = useCelebrityMode();
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [stripeLinked, setStripeLinked] = useState(false);
-  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  const [, setStripeAccountId] = useState<string | null>(null);
 
   useEffect(() => {
     checkStripeStatus();
@@ -39,7 +39,7 @@ export default function CelebrityOnboardingScreen() {
       const id = await AsyncStorage.getItem('stripe_connect_account_id');
       setStripeLinked(!!id);
       setStripeAccountId(id);
-    } catch (e) {}
+    } catch {}
   };
 
   const pickProfilePhoto = async () => {
@@ -206,7 +206,7 @@ export default function CelebrityOnboardingScreen() {
                   {t('celOnboardRevenueTitle' as any) || 'Gardez 85% de vos revenus'}
                 </Text>
                 <Text style={styles.revenueDesc}>
-                  {t('celOnboardRevenueDesc' as any) || 'SignTouch prélève seulement 15% de commission. Les frais Stripe (2.9% + 0.30€) sont déduits séparément. Aucune commission Apple/Google.'}
+                  {t('celOnboardRevenueDesc' as any) || 'Plyz prélève seulement 15% de commission. Les frais Stripe (2.9% + 0.30€) sont déduits séparément. Aucune commission Apple/Google.'}
                 </Text>
               </View>
             </View>

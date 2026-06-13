@@ -9,10 +9,11 @@ import {
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { QrCode, Video } from 'lucide-react-native';
+import { QrCode, Video, Plus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
+import AccountAvatarButton from '@/components/AccountAvatarButton';
 
 export default function FanChoiceScreen() {
   const router = useRouter();
@@ -71,9 +72,27 @@ export default function FanChoiceScreen() {
               <Text style={styles.cardDescription}>{t('fanChoiceVideoDesc')}</Text>
             </LinearGradient>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => handleChoice('/create-event')}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['rgba(245, 158, 11, 0.15)', 'rgba(245, 158, 11, 0.05)']}
+              style={styles.cardGradient}
+            >
+              <View style={styles.iconContainerCreate}>
+                <Plus size={48} color="#f59e0b" strokeWidth={1.5} />
+              </View>
+              <Text style={styles.cardTitle}>{t('fanChoiceCreate')}</Text>
+              <Text style={styles.cardDescription}>{t('fanChoiceCreateDesc')}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
       </View>
 
+      <AccountAvatarButton />
       <BottomNav />
     </View>
   );
@@ -129,6 +148,15 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  iconContainerCreate: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,

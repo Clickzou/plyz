@@ -6,19 +6,19 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Newspaper, CheckCircle, Calendar, Heart, MessageCircle, Star, X, Send, Share2 } from 'lucide-react-native';
+import { Newspaper, CheckCircle, Calendar, Heart, MessageCircle, Send, Share2 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
+import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { FeedSkeleton } from '@/components/SkeletonLoader';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
-const LIKES_KEY = '@signtouch_post_likes';
-const COMMENTS_KEY = '@signtouch_post_comments';
-const LOCAL_POSTS_KEY = '@signtouch_local_posts';
+const LIKES_KEY = '@plyz_post_likes';
+const COMMENTS_KEY = '@plyz_post_comments';
+const LOCAL_POSTS_KEY = '@plyz_local_posts';
 
 const DEMO_FEED: FeedPost[] = [
   { id: 'post-001', kind: 'post', title: 'Nouveau chapitre', body: "Très heureux d'annoncer une nouvelle aventure. Restez connectés ! Merci pour votre soutien incroyable.", media_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg', event_date: null, created_at: '2025-12-10T14:30:00Z', like_count: 12453, celebrity: { user_id: 'mock-005', stage_name: 'Omar Sy', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg', official_verified: true, stripe_verified: true } },
@@ -61,7 +61,7 @@ const FILTERS = [
   { key: 'event', label: 'filterEvents' },
 ] as const;
 
-const BANNER_DISMISSED_KEY = '@signtouch_celebrity_banner_dismissed';
+const BANNER_DISMISSED_KEY = '@plyz_celebrity_banner_dismissed';
 
 const INITIAL_COMMENTS: Record<string, Comment[]> = {
   'post-001': [
@@ -147,13 +147,12 @@ export default function ActivityScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const { isCelebrity, toggleCelebrityMode } = useCelebrityMode();
   const [posts, setPosts] = useState<FeedPost[]>(DEMO_FEED);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
-  const [bannerDismissed, setBannerDismissed] = useState(true);
+  const [, setBannerDismissed] = useState(true);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [allComments, setAllComments] = useState<Record<string, Comment[]>>({});
   const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
@@ -252,24 +251,10 @@ export default function ActivityScreen() {
   const sharePost = async (item: FeedPost) => {
     try {
       const message = item.title
-        ? `${item.celebrity.stage_name} - ${item.title}\n\n${item.body || ''}\n\nVia SignTouch`
-        : `${item.celebrity.stage_name}\n\n${item.body || ''}\n\nVia SignTouch`;
+        ? `${item.celebrity.stage_name} - ${item.title}\n\n${item.body || ''}\n\nVia Plyz`
+        : `${item.celebrity.stage_name}\n\n${item.body || ''}\n\nVia Plyz`;
       await Share.share({ message });
     } catch {}
-  };
-
-  const showBanner = !isCelebrity && !bannerDismissed;
-
-  const dismissBanner = async () => {
-    setBannerDismissed(true);
-    await AsyncStorage.setItem(BANNER_DISMISSED_KEY, 'true');
-  };
-
-  const handleActivateCelebrity = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    toggleCelebrityMode();
   };
 
   const loadLocalPosts = async (): Promise<FeedPost[]> => {
@@ -567,6 +552,7 @@ export default function ActivityScreen() {
         </View>
       </Modal>
 
+      <AccountAvatarButton />
       <BottomNav />
     </View>
   );

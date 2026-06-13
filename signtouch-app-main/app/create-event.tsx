@@ -10,24 +10,32 @@ import {
   Platform,
   ActivityIndicator,
   Share,
-  GestureResponderEvent,
   Modal,
   Pressable,
-  Animated,
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Sparkles, QrCode, Copy, Share2, Check, Plus, X, Clock, Users, MapPin, Calendar, Music, Trophy, Palette, Star, User, Euro, Send } from 'lucide-react-native';
+import { ArrowLeft, Sparkles, Copy, Share2, Check, Plus, X, Clock, Users, MapPin, Calendar, Music, Trophy, Palette, Star, User, Euro, Send } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import Svg, { Path, G } from 'react-native-svg';
-import { GestureHandlerRootView, PanGestureHandler, TapGestureHandler, State } from 'react-native-gesture-handler';
-const QRCode = require('react-native-qrcode-svg').default;
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useLanguage } from '@/contexts/LanguageContext';
 import AccountModal from '@/components/AccountModal';
 import { EventType } from '@/utils/memoriesStorage';
+import { useAuth } from '@/contexts/AuthContext';
+import { scheduleCelebrityReminders } from '@/utils/scheduleReminders';
+import BottomNav from '@/components/BottomNav';
+import {
+  createEventSession,
+  addEventSigner,
+  EventSession,
+  EventSigner,
+  saveEventPrice
+} from '@/utils/eventSessionStorage';
+import QRCode from 'react-native-qrcode-svg';
 
 const EVENT_TYPES: { type: EventType; icon: any; color: string; labelKey: string }[] = [
   { type: 'concert', icon: Music, color: '#8b5cf6', labelKey: 'eventConcert' },
@@ -39,19 +47,6 @@ const EVENT_TYPES: { type: EventType; icon: any; color: string; labelKey: string
   { type: 'amis', icon: Users, color: '#f472b6', labelKey: 'eventAmis' },
   { type: 'autre', icon: Calendar, color: '#6b7280', labelKey: 'eventAutre' },
 ];
-import { useAuth } from '@/contexts/AuthContext';
-import { scheduleCelebrityReminders } from '@/utils/scheduleReminders';
-import BottomNav from '@/components/BottomNav';
-import { 
-  createEventSession, 
-  addEventSigner, 
-  startScheduledEvent,
-  getMyScheduledEvents,
-  EventSession,
-  EventSigner,
-  removeLocalEventId,
-  saveEventPrice
-} from '@/utils/eventSessionStorage';
 
 const MY_EVENT_IDS_KEY = '@plyz_my_event_ids';
 const saveEventIdLocally = async (eventId: string) => {
@@ -148,20 +143,10 @@ export default function CreateEventScreen() {
   const strokeWidth = 3;
 
   const canvasRef = useRef<View>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
+  const [, setIsDrawing] = useState(false);
   const isDrawingRef = useRef(false);
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const canvasLayoutRef = useRef<{ x: number; y: number; width: number; height: number }>({ x: 0, y: 0, width: 300, height: 200 });
-
-  const getPointerPosition = useCallback((event: GestureResponderEvent) => {
-    const { locationX, locationY } = event.nativeEvent;
-    const scaleX = 300 / canvasLayoutRef.current.width;
-    const scaleY = 200 / canvasLayoutRef.current.height;
-    return {
-      x: Math.max(0, Math.min(300, locationX * scaleX)),
-      y: Math.max(0, Math.min(200, locationY * scaleY)),
-    };
-  }, []);
 
   const startPointRef = useRef<{ x: number; y: number } | null>(null);
   const hasMoved = useRef(false);
@@ -324,79 +309,6 @@ export default function CreateEventScreen() {
       y: Math.max(0, Math.min(200, y * scaleY)),
     };
   }, []);
-
-  // Handler pour les taps (react-native-gesture-handler)
-  const onTapGestureEvent = useCallback((event: any) => {
-    if (event.nativeEvent.state === State.ACTIVE) {
-      const { x, y } = event.nativeEvent;
-      const scaleX = 300 / canvasLayoutRef.current.width;
-      const scaleY = 200 / canvasLayoutRef.current.height;
-      const scaledX = Math.max(0, Math.min(300, x * scaleX));
-      const scaledY = Math.max(0, Math.min(200, y * scaleY));
-      
-      // Créer un petit point visible pour le tap
-      const pathData = `M${scaledX.toFixed(1)},${scaledY.toFixed(1)} L${(scaledX + 2).toFixed(1)},${(scaledY + 2).toFixed(1)} L${scaledX.toFixed(1)},${(scaledY + 2).toFixed(1)}`;
-      
-      const newPath: PathData = {
-        id: Date.now().toString(),
-        d: pathData,
-        color: signatureColor,
-        strokeWidth,
-      };
-      setSigners(prev => {
-        const updated = [...prev];
-        updated[activeSignerIndex] = {
-          ...updated[activeSignerIndex],
-          paths: [...updated[activeSignerIndex].paths, newPath],
-        };
-        return updated;
-      });
-    }
-  }, [activeSignerIndex]);
-
-  // Handler pour le pan/dessin (react-native-gesture-handler)
-  const onPanGestureEvent = useCallback((event: any) => {
-    const { x, y } = event.nativeEvent;
-    const scaleX = 300 / canvasLayoutRef.current.width;
-    const scaleY = 200 / canvasLayoutRef.current.height;
-    const scaledX = Math.max(0, Math.min(300, x * scaleX));
-    const scaledY = Math.max(0, Math.min(200, y * scaleY));
-    
-    if (event.nativeEvent.state === State.BEGAN) {
-      setScrollEnabled(false);
-      currentPathRef.current = `M${scaledX.toFixed(1)},${scaledY.toFixed(1)}`;
-      setCurrentPath(currentPathRef.current);
-      isDrawingRef.current = true;
-      setIsDrawing(true);
-    } else if (event.nativeEvent.state === State.ACTIVE) {
-      if (isDrawingRef.current) {
-        currentPathRef.current += ` L${scaledX.toFixed(1)},${scaledY.toFixed(1)}`;
-        setCurrentPath(currentPathRef.current);
-      }
-    } else if (event.nativeEvent.state === State.END || event.nativeEvent.state === State.CANCELLED) {
-      if (currentPathRef.current && isDrawingRef.current) {
-        const newPath: PathData = {
-          id: Date.now().toString(),
-          d: currentPathRef.current,
-          color: signatureColor,
-          strokeWidth,
-        };
-        setSigners(prev => {
-          const updated = [...prev];
-          updated[activeSignerIndex] = {
-            ...updated[activeSignerIndex],
-            paths: [...updated[activeSignerIndex].paths, newPath],
-          };
-          return updated;
-        });
-        currentPathRef.current = '';
-        setCurrentPath('');
-      }
-      isDrawingRef.current = false;
-      setIsDrawing(false);
-      setScrollEnabled(true);
-    }
-  }, [activeSignerIndex]);
 
   // Ancien handler pour web (souris)
   const handleTouchStart = useCallback((event: any) => {
@@ -639,11 +551,6 @@ export default function CreateEventScreen() {
         }
       });
     }
-  };
-
-  const formatDuration = (minutes: number): string => {
-    const endsAt = new Date(Date.now() + minutes * 60 * 1000);
-    return endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const getCalendarDays = () => {
@@ -1308,10 +1215,10 @@ export default function CreateEventScreen() {
 
               <View style={styles.daysGrid}>
                 {getCalendarDays().map((day, index) => {
-                  const isSelected = day && eventDate === 
+                  const isSelected = !!day && eventDate ===
                     `${calendarMonth.getFullYear()}-${String(calendarMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                   const today = new Date();
-                  const isToday = day && 
+                  const isToday = !!day &&
                     today.getDate() === day && 
                     today.getMonth() === calendarMonth.getMonth() && 
                     today.getFullYear() === calendarMonth.getFullYear();
@@ -1615,26 +1522,6 @@ const styles = StyleSheet.create({
   },
   liveToggleTextActive: {
     color: '#ef4444',
-  },
-  toggleSwitch: {
-    width: 50,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    padding: 2,
-  },
-  toggleSwitchActive: {
-    backgroundColor: '#ef4444',
-  },
-  toggleKnob: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-  },
-  toggleKnobActive: {
-    alignSelf: 'flex-end',
   },
   signerTabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
   signerTab: {

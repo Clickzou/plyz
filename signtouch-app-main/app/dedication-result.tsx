@@ -28,10 +28,8 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { getDedicationAssets } from '@/utils/liveSessionStorage';
 import { saveCollectorLive, downloadImageWeb } from '@/utils/collectorLiveStorage';
-import ViewShot from 'react-native-view-shot';
 
 const captureWebView = async (element: HTMLElement): Promise<string | null> => {
   if (Platform.OS !== 'web') return null;
@@ -50,7 +48,7 @@ const captureWebView = async (element: HTMLElement): Promise<string | null> => {
   }
 };
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const PHOTO_WIDTH = SCREEN_WIDTH - 40;
 const PHOTO_HEIGHT = PHOTO_WIDTH * (4 / 3);
 
@@ -63,7 +61,6 @@ export default function DedicationResultScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
-  const { user } = useAuth();
   const viewShotRef = useRef<any>(null);
   const webCaptureRef = useRef<any>(null);
 
@@ -174,7 +171,6 @@ export default function DedicationResultScreen() {
     ],
   }));
 
-  const webPhotoTouchRef = useRef<View>(null);
   const webTouchState = useRef<{
     startX: number; startY: number;
     baseTX: number; baseTY: number;
@@ -199,9 +195,10 @@ export default function DedicationResultScreen() {
       domEl = node;
     } else {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const findDOMNode = require('react-dom').findDOMNode;
         domEl = findDOMNode(node) as HTMLElement;
-      } catch (e) {}
+      } catch {}
     }
     if (!domEl) return;
 
@@ -337,9 +334,9 @@ export default function DedicationResultScreen() {
           el = node;
         } else {
           try {
-            const { findDOMNode } = await import('react-dom');
+            const { findDOMNode } = (await import('react-dom')) as any;
             el = findDOMNode(ref) as HTMLElement;
-          } catch (e) {}
+          } catch {}
         }
       }
       if (el) {
@@ -410,11 +407,11 @@ export default function DedicationResultScreen() {
             const file = new File([blob], `dedication_${celebrityName}.png`, { type: 'image/png' });
             await navigator.share({
               title: `${getDedicationFor()} - ${celebrityName}`,
-              text: `${getDedicationFor()} - ${celebrityName} #SignTouch`,
+              text: `${getDedicationFor()} - ${celebrityName} #Plyz`,
               files: [file],
             });
             return;
-          } catch (shareErr) {
+          } catch {
             console.log('[Dedication] Web Share API failed, fallback to download');
           }
         }
@@ -425,11 +422,11 @@ export default function DedicationResultScreen() {
         if (uri) {
           await Share.share({
             url: uri,
-            message: `${getDedicationFor()} - ${celebrityName} #SignTouch`,
+            message: `${getDedicationFor()} - ${celebrityName} #Plyz`,
           });
         } else {
           await Share.share({
-            message: `${getDedicationFor()} - ${celebrityName} #SignTouch`,
+            message: `${getDedicationFor()} - ${celebrityName} #Plyz`,
           });
         }
       }
@@ -536,7 +533,7 @@ export default function DedicationResultScreen() {
           )}
 
           <View style={[styles.watermark, Platform.OS === 'web' && { pointerEvents: 'none' } as any]}>
-            <Text style={styles.watermarkText}>SignTouch</Text>
+            <Text style={styles.watermarkText}>Plyz</Text>
           </View>
         </View>
       </View>

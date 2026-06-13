@@ -8,7 +8,7 @@ interface FanBadgeProps {
 }
 
 export default function FanBadge({ size = 'medium', showLabel = true }: FanBadgeProps) {
-  const { fanTier, interactions, followCount } = useFollow();
+  const { fanTier, followCount } = useFollow();
   const config = FAN_TIER_CONFIG[fanTier];
 
   const iconSize = size === 'small' ? 16 : size === 'large' ? 28 : 22;

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SignTouch - Rejoindre l'événement</title>
+  <title>Plyz - Rejoindre l'événement</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -105,8 +105,8 @@
 <body>
   <div class="container">
     <div class="logo">✨</div>
-    <h1>SignTouch</h1>
-    <p class="message">Vous avez été invité à rejoindre un événement SignTouch</p>
+    <h1>Plyz</h1>
+    <p class="message">Vous avez été invité à rejoindre un événement Plyz</p>
     
     <div class="code" id="eventCode">------</div>
     
@@ -116,7 +116,7 @@
     </div>
     
     <div id="storeButtons" style="display: none;">
-      <p class="message">L'application SignTouch n'est pas installée. Téléchargez-la pour rejoindre l'événement :</p>
+      <p class="message">L'application Plyz n'est pas installée. Téléchargez-la pour rejoindre l'événement :</p>
       <div class="store-buttons">
         <a href="#" id="iosLink" class="store-btn ios">
           <span>🍎</span> App Store
@@ -133,8 +133,8 @@
   </div>
 
   <script>
-    const APP_STORE_URL = 'https://apps.apple.com/app/signtouch/id0000000000';
-    const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.signtouch.app';
+    const APP_STORE_URL = 'https://apps.apple.com/app/plyz/id0000000000';
+    const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.plyz.app';
     
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code') || window.location.pathname.split('/').pop() || '';
@@ -142,7 +142,7 @@
     document.getElementById('eventCode').textContent = code || '------';
     document.getElementById('manualCode').textContent = code || '------';
     
-    const deepLink = `signtouch://join-event?code=${code}`;
+    const deepLink = `plyz://join-event?code=${code}`;
     
     function isIOS() {
       return /iPad|iPhone|iPod/.test(navigator.userAgent);

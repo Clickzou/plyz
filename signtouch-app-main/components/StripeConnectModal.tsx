@@ -45,7 +45,7 @@ export default function StripeConnectModal({
   const [adminAccountIdInput, setAdminAccountIdInput] = React.useState('');
   const [adminInputError, setAdminInputError] = React.useState(false);
   const [isVerified, setIsVerified] = React.useState(false);
-  const [isPolling, setIsPolling] = React.useState(false);
+  const [, setIsPolling] = React.useState(false);
   const pollingRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopPolling = () => {
@@ -408,7 +408,7 @@ export default function StripeConnectModal({
                   <View style={styles.infoBox}>
                     <Shield size={14} color="#10B981" />
                     <Text style={styles.infoText}>
-                      {t('stripeConnectInfoBox') || 'SignTouch ne stocke jamais vos données bancaires. Tout est géré par Stripe, certifié PCI DSS niveau 1.'}
+                      {t('stripeConnectInfoBox') || 'Plyz ne stocke jamais vos données bancaires. Tout est géré par Stripe, certifié PCI DSS niveau 1.'}
                     </Text>
                   </View>
                 </>

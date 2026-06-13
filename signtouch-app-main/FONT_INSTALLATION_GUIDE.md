@@ -41,7 +41,7 @@ Après avoir placé la police :
 
 ### 5. Vérification
 
-Le logo "SignTouch" sur l'écran d'accueil devrait s'afficher avec la police Pumpkind Custard.
+Le logo "Plyz" sur l'écran d'accueil devrait s'afficher avec la police Pumpkind Custard.
 
 Si la police n'est pas trouvée, l'application utilisera la police système par défaut sans crasher.
 

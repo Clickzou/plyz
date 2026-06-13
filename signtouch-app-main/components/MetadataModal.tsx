@@ -8,14 +8,11 @@ import {
   TextInput,
   ScrollView,
   Platform,
-  Dimensions,
 } from 'react-native';
 import { X, User, MapPin, Calendar, Music, Trophy, Palette, Users, Star, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { EventType, MemoryMetadata } from '@/utils/memoriesStorage';
 import { useTranslation } from '@/contexts/LanguageContext';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface MetadataModalProps {
   visible: boolean;

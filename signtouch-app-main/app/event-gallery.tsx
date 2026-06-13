@@ -23,7 +23,7 @@ import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Download, Users, Clock, Image as ImageIcon, Pen, Copy, Info } from 'lucide-react-native';
+import { ArrowLeft, Download, Users, Clock, Image as ImageIcon, Pen, Info } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -44,8 +44,9 @@ import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
 let Notifications: any = null;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   Notifications = require('expo-notifications');
-} catch (e) {}
+} catch {}
 
 type TabType = 'all' | 'official' | 'signed';
 
@@ -78,12 +79,12 @@ const playNewPhotoChime = () => {
         osc.start(ctx.currentTime + start);
         osc.stop(ctx.currentTime + start + dur + 0.05);
       });
-    } catch (e) {}
+    } catch {}
   }
   if (Platform.OS !== 'web') {
     try {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (e) {}
+    } catch {}
   }
 };
 
@@ -183,7 +184,7 @@ export default function EventGalleryScreen() {
   const { t } = useLanguage();
   const { user } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<TabType>('all');
+  const [activeTab] = useState<TabType>('all');
   const [assets, setAssets] = useState<EventAsset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -446,7 +447,7 @@ export default function EventGalleryScreen() {
       let imageUri = asset.asset_url;
       
       if (Platform.OS !== 'web') {
-        const localUri = FileSystem.documentDirectory + `signtouch-${Date.now()}.png`;
+        const localUri = FileSystem.documentDirectory + `plyz-${Date.now()}.png`;
         const downloadResult = await FileSystem.downloadAsync(asset.asset_url, localUri);
         imageUri = downloadResult.uri;
       }
@@ -456,28 +457,12 @@ export default function EventGalleryScreen() {
       });
       showAlert(
         t('done') || 'Done', 
-        (t as any)('savedToGallery') || 'Photo saved to your SignTouch gallery!'
+        (t as any)('savedToGallery') || 'Photo saved to your Plyz gallery!'
       );
     } catch (error) {
       console.error('Download error:', error);
       showAlert(t('error') || 'Error', t('downloadFailed') || 'Download failed');
     }
-  };
-
-  const handleClone = (asset: EventAsset) => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    router.push({
-      pathname: '/',
-      params: {
-        cloneSignatureUrl: asset.signer?.signature_url || '',
-        cloneSignerName: asset.signer?.display_name || '',
-        eventLocation: params.eventLocation || '',
-        eventDate: params.eventDate || '',
-        eventType: params.eventType || '',
-      }
-    });
   };
 
   const renderAsset = ({ item }: { item: EventAsset }) => (

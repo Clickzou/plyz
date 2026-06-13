@@ -25,7 +25,7 @@ Si tu vois cette erreur quand tu cliques sur le lien de confirmation d'email, c'
 ```
 exp://*:8081/--/auth-callback
 exp://*.exp.direct/--/auth-callback
-signtouch://auth-callback
+plyz://auth-callback
 http://localhost:3000/auth-callback
 ```
 
@@ -64,14 +64,14 @@ Ajoutez ces URLs dans la section **Redirect URLs** :
 ```
 exp://*:8081/--/auth-callback
 exp://*.exp.direct/--/auth-callback
-signtouch://auth-callback
+plyz://auth-callback
 http://localhost:3000/auth-callback
 ```
 
 **Explication** :
 - `exp://*:8081/--/auth-callback` : Pour Expo Go sur réseau local (l'IP peut changer, le `*` accepte toutes les IPs)
 - `exp://*.exp.direct/--/auth-callback` : Pour Expo Go avec tunnel
-- `signtouch://auth-callback` : Pour l'app en production (après build)
+- `plyz://auth-callback` : Pour l'app en production (après build)
 - `http://localhost:3000/auth-callback` : Pour tester sur le web
 
 ### Pourquoi être précis avec les URLs ?
@@ -87,7 +87,7 @@ Voici la liste complète des URLs de redirection à ajouter :
 ```
 exp://*:8081/--/auth-callback
 exp://*.exp.direct/--/auth-callback
-signtouch://auth-callback
+plyz://auth-callback
 http://localhost:3000/auth-callback
 ```
 
@@ -101,7 +101,7 @@ Dans le dashboard Supabase, la section devrait ressembler à :
 ├──────────────────────────────────────────────────┤
 │ exp://*:8081/--/auth-callback                    │
 │ exp://*.exp.direct/--/auth-callback              │
-│ signtouch://auth-callback                        │
+│ plyz://auth-callback                        │
 │ http://localhost:3000/auth-callback              │
 └──────────────────────────────────────────────────┘
 ```
@@ -121,7 +121,7 @@ Dans le dashboard Supabase, la section devrait ressembler à :
 2. Inspectez le lien (sans cliquer)
 3. Il doit contenir l'une de ces URLs :
    - En dev : `exp://...`
-   - En prod : `signtouch://...`
+   - En prod : `plyz://...`
 
 ### Test 3 : Ouverture de l'app
 1. Cliquez sur le lien dans l'email
@@ -144,7 +144,7 @@ Dans le dashboard Supabase, la section devrait ressembler à :
 
 ### Template personnalisé (optionnel)
 
-Vous pouvez personnaliser le template pour SignTouch :
+Vous pouvez personnaliser le template pour Plyz :
 
 ```html
 <!DOCTYPE html>
@@ -166,7 +166,7 @@ Vous pouvez personnaliser le template pour SignTouch :
 </head>
 <body>
   <div class="container">
-    <h1>Connexion à SignTouch</h1>
+    <h1>Connexion à Plyz</h1>
     <p>Cliquez sur le bouton ci-dessous pour vous connecter :</p>
     <a href="{{ .ConfirmationURL }}" class="button">
       Se connecter
@@ -231,7 +231,7 @@ Si vous voulez activer la confirmation :
 
 **Solution** :
 1. Vérifier dans **URL Configuration** que l'URL est bien ajoutée
-2. Ajouter le pattern avec wildcard : `exp://*` ou `signtouch://*`
+2. Ajouter le pattern avec wildcard : `exp://*` ou `plyz://*`
 3. Sauvegarder et attendre 1-2 minutes
 
 ### Les emails ne sont pas reçus
@@ -268,7 +268,7 @@ Si vous voulez activer la confirmation :
 
 - [ ] URLs de redirection ajoutées dans Supabase
 - [ ] Pattern `exp://*` pour Expo Go
-- [ ] Pattern `signtouch://*` pour production
+- [ ] Pattern `plyz://*` pour production
 - [ ] Template d'email vérifié
 - [ ] Rate limiting configuré
 - [ ] Expiration des liens configurée (60 min par défaut)

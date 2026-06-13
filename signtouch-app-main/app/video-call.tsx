@@ -10,27 +10,28 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, PhoneOff, Clock, Video, Users } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
 import { sendDedicationNotification, callNextFan } from '@/utils/sessionQueueStorage';
 import { markPaymentCaptured } from '@/utils/liveSessionStorage';
 import { recordTransaction } from '@/utils/transactionStorage';
-import { showAlert, showConfirm } from '@/utils/alertHelper';
+import { showConfirm } from '@/utils/alertHelper';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 let WebView: any = null;
 if (Platform.OS !== 'web') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   WebView = require('react-native-webview').WebView;
 }
 
 let ScreenOrientation: any = null;
 if (Platform.OS !== 'web') {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     ScreenOrientation = require('expo-screen-orientation');
-  } catch (e) {}
+  } catch {}
 }
 
 const DAILY_SUPPORTED_LANGS: Record<string, string> = {
@@ -48,7 +49,6 @@ export default function VideoCallScreen() {
   const router = useRouter();
   const { t, language } = useLanguage();
   const webViewRef = useRef<any>(null);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const dailyCallFrameRef = useRef<any>(null);
   const params = useLocalSearchParams<{
     roomUrl: string;
@@ -69,7 +69,7 @@ export default function VideoCallScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fanTimeRemaining, setFanTimeRemaining] = useState<string>('--:--');
-  const [timeProgress, setTimeProgress] = useState(1);
+  const [, setTimeProgress] = useState(0);
   const [timeWarning, setTimeWarning] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hasLeftCall, setHasLeftCall] = useState(false);
@@ -165,7 +165,7 @@ export default function VideoCallScreen() {
       } else if (data.action === 'participant-joined') {
         setOtherParticipantJoined(true);
       }
-    } catch (e) {
+    } catch {
     }
   };
 
@@ -186,7 +186,7 @@ export default function VideoCallScreen() {
         try {
           dailyCallFrameRef.current.leave().catch(() => {});
           dailyCallFrameRef.current.destroy().catch(() => {});
-        } catch (e) {}
+        } catch {}
         dailyCallFrameRef.current = null;
       }
 
@@ -274,7 +274,7 @@ export default function VideoCallScreen() {
           try {
             dailyCallFrameRef.current.leave().catch(() => {});
             dailyCallFrameRef.current.destroy().catch(() => {});
-          } catch (e) {}
+          } catch {}
           dailyCallFrameRef.current = null;
         }
         setHasLeftCall(true);
@@ -296,7 +296,7 @@ export default function VideoCallScreen() {
         try {
           dailyCallFrameRef.current.leave().catch(() => {});
           dailyCallFrameRef.current.destroy().catch(() => {});
-        } catch (e) {}
+        } catch {}
         dailyCallFrameRef.current = null;
       }
       setHasLeftCall(true);
@@ -322,7 +322,7 @@ export default function VideoCallScreen() {
           try {
             dailyCallFrameRef.current.leave().catch(() => {});
             dailyCallFrameRef.current.destroy().catch(() => {});
-          } catch (e) {}
+          } catch {}
           dailyCallFrameRef.current = null;
         }
         setHasLeftCall(true);
@@ -555,11 +555,11 @@ export default function VideoCallScreen() {
                     });
                     callFrame.on('participant-joined', () => {
                       setOtherParticipantJoined(true);
-                      try { callFrame.setActiveSpeakerMode(true); } catch (e) {}
+                      try { callFrame.setActiveSpeakerMode(true); } catch {}
                     });
                     callFrame.on('active-speaker-mode-change', (evt: any) => {
                       if (!evt.enabled) {
-                        try { callFrame.setActiveSpeakerMode(true); } catch (e) {}
+                        try { callFrame.setActiveSpeakerMode(true); } catch {}
                       }
                     });
                     callFrame.on('participant-left', () => {
@@ -574,7 +574,7 @@ export default function VideoCallScreen() {
                     });
                     dailyCallFrameRef.current = callFrame;
                     (el as any)._dailyCallFrame = callFrame;
-                  } catch (e) {
+                  } catch {
                     setError(t('videoCallError'));
                     setIsLoading(false);
                   }
@@ -854,7 +854,6 @@ const styles = StyleSheet.create({
   fanConnectingBanner: {
     position: 'absolute',
     top: 150,
-    zIndex: 20,
     left: 20,
     right: 20,
     flexDirection: 'row',

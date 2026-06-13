@@ -5,13 +5,24 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const { createClient } = require('@supabase/supabase-js');
 const multer = require('multer');
 const path = require('path');
-const tf = require('@tensorflow/tfjs-node');
 const nsfw = require('nsfwjs');
+
+let tf = null;
+try {
+  tf = require('@tensorflow/tfjs-node');
+} catch (err) {
+  console.warn('[Moderation] @tensorflow/tfjs-node unavailable, moderation disabled:', err.message);
+}
+const canModerateImages = !!(tf && tf.node && typeof tf.node.decodeImage === 'function');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 let nsfwModel = null;
 async function loadNsfwModel() {
+  if (!canModerateImages) {
+    return null;
+  }
+
   if (!nsfwModel) {
     try {
       nsfwModel = await nsfw.load();
@@ -24,6 +35,10 @@ async function loadNsfwModel() {
 }
 
 async function moderateImage(imageBuffer) {
+  if (!canModerateImages) {
+    return { safe: true, skipped: true, reason: 'moderation_unavailable' };
+  }
+
   const model = await loadNsfwModel();
   if (!model) {
     console.warn('[Moderation] Model not available, skipping moderation');
@@ -59,7 +74,9 @@ async function moderateImage(imageBuffer) {
   }
 }
 
-loadNsfwModel();
+if (canModerateImages) {
+  loadNsfwModel();
+}
 
 const app = express();
 
@@ -1406,7 +1423,7 @@ app.get('/stripe/return', (req, res) => {
   const appUrl = `https://${req.headers.host || req.hostname}/create-live-session`;
   res.send(`<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SignTouch - Inscription terminée</title>
+<title>Plyz - Inscription terminée</title>
 <style>
   body{background:#0a1628;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
   .container{text-align:center;padding:20px}
@@ -1417,7 +1434,7 @@ app.get('/stripe/return', (req, res) => {
 </head><body>
 <div class="container">
   <h2>✅ Inscription terminée !</h2>
-  <p>Redirection vers SignTouch...</p>
+  <p>Redirection vers Plyz...</p>
   <div class="spinner"></div>
   <p style="margin-top:30px;font-size:14px;opacity:0.7">Si la redirection ne fonctionne pas :</p>
   <a class="btn" href="${appUrl}">Retourner dans l'app</a>

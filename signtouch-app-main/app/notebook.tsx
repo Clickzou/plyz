@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Dimensions,
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -19,8 +18,6 @@ import * as StorageService from '@/utils/storageService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/contexts/LanguageContext';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
 const EVENT_TYPE_ICONS: Record<EventType, any> = {
   concert: Music,
   match: Trophy,
@@ -28,6 +25,7 @@ const EVENT_TYPE_ICONS: Record<EventType, any> = {
   salon: Users,
   dedicace: Star,
   rencontre: User,
+  amis: Users,
   autre: Calendar,
 };
 
@@ -38,6 +36,7 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
   salon: '#3b82f6',
   dedicace: '#ec4899',
   rencontre: '#14b8a6',
+  amis: '#f472b6',
   autre: '#6b7280',
 };
 
@@ -93,7 +92,6 @@ export default function NotebookScreen() {
     memories.forEach(memory => {
       const date = memory.metadata?.eventDate ? new Date(memory.metadata.eventDate) : new Date(memory.timestamp);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      const monthLabel = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
       if (!groups[monthKey]) {
         groups[monthKey] = [];
       }
@@ -130,7 +128,7 @@ export default function NotebookScreen() {
     router.back();
   };
 
-  const eventTypes: (EventType | 'all')[] = ['all', 'concert', 'match', 'expo', 'salon', 'dedicace', 'rencontre', 'autre'];
+  const eventTypes: (EventType | 'all')[] = ['all', 'concert', 'match', 'expo', 'salon', 'dedicace', 'rencontre', 'amis', 'autre'];
 
   const getEventTypeLabel = (type: EventType | 'all') => {
     const labels: Record<EventType | 'all', string> = {
@@ -141,6 +139,7 @@ export default function NotebookScreen() {
       salon: t('eventSalon') || 'Salon',
       dedicace: t('eventDedicace') || 'Dédicace',
       rencontre: t('eventRencontre') || 'Rencontre',
+      amis: t('eventAmis') || 'Amis',
       autre: t('eventAutre') || 'Autre',
     };
     return labels[type];

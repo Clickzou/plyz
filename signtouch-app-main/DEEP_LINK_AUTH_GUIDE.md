@@ -6,7 +6,7 @@ L'authentification par lien email permet aux utilisateurs de se connecter sans m
 
 1. **Utilisateur entre son email** → Écran Account
 2. **Clique sur "Recevoir un lien de connexion"** → Email envoyé par Supabase
-3. **Ouvre l'email et clique sur le lien** → L'app SignTouch s'ouvre automatiquement
+3. **Ouvre l'email et clique sur le lien** → L'app Plyz s'ouvre automatiquement
 4. **Écran "Connexion en cours..."** s'affiche 1-2 secondes
 5. **Redirection automatique vers /account** → Utilisateur connecté
 
@@ -15,15 +15,15 @@ L'authentification par lien email permet aux utilisateurs de se connecter sans m
 ## Configuration technique
 
 ### 1. Deep Link Scheme
-- **Scheme configuré** : `signtouch://`
+- **Scheme configuré** : `plyz://`
 - **Fichier** : `app.json` ligne 8
-- L'URL générée est : `signtouch://auth-callback?token_hash=xxx&type=magiclink`
+- L'URL générée est : `plyz://auth-callback?token_hash=xxx&type=magiclink`
 
 ### 2. AuthContext
 - **Fonction** : `sendMagicLink(email)`
 - **URL de redirection** : Utilise `Linking.createURL('auth-callback')` qui génère :
   - En dev Expo Go : `exp://192.168.x.x:8081/--/auth-callback`
-  - En production : `signtouch://auth-callback`
+  - En production : `plyz://auth-callback`
 - **Fichier** : `contexts/AuthContext.tsx` lignes 78-97
 
 ### 3. Auth Callback
@@ -41,7 +41,7 @@ L'authentification par lien email permet aux utilisateurs de se connecter sans m
 
 ### Prérequis
 - Expo Go installé sur votre téléphone (iOS ou Android)
-- L'app SignTouch en cours d'exécution (`npm run dev`)
+- L'app Plyz en cours d'exécution (`npm run dev`)
 - Accès à votre boîte email sur le même téléphone
 
 ### Étapes de test
@@ -71,7 +71,7 @@ npm run dev
 3. Cliquer sur le lien de connexion dans l'email
 
 **Étape C : Redirection automatique**
-1. L'app SignTouch devrait s'ouvrir automatiquement dans Expo Go
+1. L'app Plyz devrait s'ouvrir automatiquement dans Expo Go
 2. Observer l'écran "Connexion en cours..." (1-2 secondes)
 3. Être redirigé vers l'écran Account
 4. Vérifier que votre email est affiché
@@ -99,7 +99,7 @@ npm run dev
 
 **Solution** :
 - En dev, Expo Go utilise des URLs spéciales du type `exp://...`
-- Le lien doit pointer vers l'URL Expo, pas vers `signtouch://`
+- Le lien doit pointer vers l'URL Expo, pas vers `plyz://`
 - Vérifier que `Linking.createURL()` génère la bonne URL pour l'environnement
 
 ### L'app s'ouvre mais la connexion échoue
@@ -173,7 +173,7 @@ import * as Linking from 'expo-linking';
 ```
 exp://*:8081/--/auth-callback
 exp://*.exp.direct/--/auth-callback
-signtouch://auth-callback
+plyz://auth-callback
 http://localhost:3000/auth-callback
 ```
 
@@ -183,7 +183,7 @@ http://localhost:3000/auth-callback
 
 - `exp://*:8081/--/auth-callback` : Pour Expo Go sur ton réseau local (l'IP peut changer)
 - `exp://*.exp.direct/--/auth-callback` : Pour Expo Go avec tunnel
-- `signtouch://auth-callback` : Pour l'app en production (après build)
+- `plyz://auth-callback` : Pour l'app en production (après build)
 - `http://localhost:3000/auth-callback` : Pour tester sur le web
 
 ### Étape 3 : Re-tester
@@ -215,9 +215,9 @@ Vérifier que le template d'email contient le bon lien :
 npx expo run:ios  # ou run:android
 ```
 
-2. **Dans ce cas, le scheme `signtouch://` sera utilisé**
+2. **Dans ce cas, le scheme `plyz://` sera utilisé**
 
-3. **Tester le même flow** mais le lien pointera vers `signtouch://auth-callback`
+3. **Tester le même flow** mais le lien pointera vers `plyz://auth-callback`
 
 ### Notes importantes
 - Le deep linking fonctionne différemment entre Expo Go et les builds natifs

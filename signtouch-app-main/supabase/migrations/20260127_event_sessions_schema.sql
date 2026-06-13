@@ -1,4 +1,4 @@
--- Event Sessions Schema for SignTouch
+-- Event Sessions Schema for Plyz
 -- Migration: Create tables, indexes, and atomic join_event RPC function
 
 -- ============================================

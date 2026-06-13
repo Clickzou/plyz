@@ -26,7 +26,7 @@ app.post("/auth/send-magic-link", async (req, res) => {
     const { email } = req.body || {};
     if (!email) return res.status(400).json({ error: "Missing email" });
 
-    const redirectTo = "https://signtouch.click/auth/callback";
+    const redirectTo = "https://plyz.click/auth/callback";
 
     const resp = await fetch(`${SUPABASE_URL}/auth/v1/admin/generate_link`, {
       method: "POST",
@@ -54,11 +54,11 @@ app.post("/auth/send-magic-link", async (req, res) => {
 
     const html = `
       <div style="text-align:center;font-family:Arial,Helvetica,sans-serif;">
-        <h2>Connexion à votre compte SignTouch</h2>
+        <h2>Connexion à votre compte Plyz</h2>
         <p style="margin:25px 0;">
           <a href="${actionLink}" target="_blank"
              style="background:#2FB88A;color:#fff;text-decoration:none;padding:14px 22px;border-radius:10px;display:inline-block;font-weight:700;">
-            👉 Se connecter à mon compte SignTouch
+            👉 Se connecter à mon compte Plyz
           </a>
         </p>
       </div>
@@ -67,7 +67,7 @@ app.post("/auth/send-magic-link", async (req, res) => {
     await transporter.sendMail({
       from: process.env.SMTP_FROM,
       to: email,
-      subject: "SignTouch – Connexion sécurisée à votre compte",
+      subject: "Plyz – Connexion sécurisée à votre compte",
       html,
     });
 

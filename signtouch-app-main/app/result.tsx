@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { Download, Trash2, Share2, Palette, Pencil, Plus, Sparkles, X, RotateCw, Check, Save, Eraser, Type, BookOpen } from 'lucide-react-native';
+import { Trash2, Share2, Palette, Pencil, Plus, Sparkles, X, RotateCw, Check, Save, Eraser, Type, BookOpen } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,7 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { captureRef } from 'react-native-view-shot';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, runOnJS } from 'react-native-reanimated';
-import Svg, { Path, Defs, Filter, FeColorMatrix, Image as SvgImage } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import AccountModal from '@/components/AccountModal';
 import { useTranslation } from '@/contexts/LanguageContext';
 import Slider from '@react-native-community/slider';
@@ -116,8 +116,8 @@ function FilteredImage({ uri, brightness, contrast, saturation, style }: Filtere
 }
 
 // Types
-interface SignatureOverlay extends StoredSignatureOverlay {}
-interface TextOverlay extends StoredTextOverlay {}
+type SignatureOverlay = StoredSignatureOverlay;
+type TextOverlay = StoredTextOverlay;
 
 // Font families - mêmes polices que compose.tsx pour cohérence
 const FONT_FAMILIES = [
@@ -189,6 +189,7 @@ interface StaticSignatureProps {
   overlay: SignatureOverlay;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function StaticSignature({ overlay }: StaticSignatureProps) {
   const signatureColor = overlay.color || '#ffffff';
   const isJsonData = overlay.uri.startsWith('data:application/json;base64,');
@@ -204,7 +205,7 @@ function StaticSignature({ overlay }: StaticSignatureProps) {
         const svgData = JSON.parse(jsonString);
         const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgData.width}" height="${svgData.height}">${svgData.paths.map((p: string) => `<path d="${p}" stroke="${signatureColor}" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
         webImgUri = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
-      } catch (e) {}
+      } catch {}
     } else if (isSvgData) {
       try {
         const base64Data = overlay.uri.split(',')[1];
@@ -213,7 +214,7 @@ function StaticSignature({ overlay }: StaticSignatureProps) {
           .replace(/stroke="#[a-fA-F0-9]+"/g, `stroke="${signatureColor}"`)
           .replace(/fill="#[a-fA-F0-9]+"/g, `fill="${signatureColor}"`);
         webImgUri = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(recolored)))}`;
-      } catch (e) {}
+      } catch {}
     }
 
     let displayWidth = 150;
@@ -230,7 +231,7 @@ function StaticSignature({ overlay }: StaticSignatureProps) {
         displayWidth = Math.min(w, 200);
         displayHeight = displayWidth / ar;
       }
-    } catch (e) {}
+    } catch {}
 
     return (
       <div
@@ -682,6 +683,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
     };
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const renderSvgContent = () => {
     if (svgInfo.svgData) {
       return (
@@ -748,7 +750,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
           .replace(/stroke="#[a-fA-F0-9]+"/g, `stroke="${signatureColor}"`)
           .replace(/fill="#[a-fA-F0-9]+"/g, `fill="${signatureColor}"`);
         webImgUri = `data:image/svg+xml;base64,${btoa(recolored)}`;
-      } catch (e) {}
+      } catch {}
     }
 
     return (
@@ -888,6 +890,7 @@ interface StaticTextProps {
   overlay: TextOverlay;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function StaticText({ overlay }: StaticTextProps) {
   const mobileFontFamily = getMobileFontFamily(overlay.fontFamily);
   return (
@@ -1107,6 +1110,8 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
       }
     };
 
+    // Platform.OS est constant au runtime : l'ordre des hooks reste stable.
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
       const el = textDivRef.current;
       if (!el) return;
@@ -1238,7 +1243,7 @@ export default function ResultScreen() {
   const params = useLocalSearchParams<{ imageUri?: string; memoryId?: string }>();
   const { imageUri, memoryId } = params;
   const [memory, setMemory] = useState<Memory | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const [, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
@@ -1315,9 +1320,9 @@ export default function ResultScreen() {
 
   // Signature state
   const [signaturePaths, setSignaturePaths] = useState<string[]>([]);
-  const [signatureColor, setSignatureColor] = useState('#ffffff');
+  const [signatureColor] = useState('#ffffff');
   const [currentPath, setCurrentPath] = useState('');
-  const [isDrawing, setIsDrawing] = useState(false);
+  const [, setIsDrawing] = useState(false);
   const signatureCanvasRef = useRef<View>(null);
   const currentPathRef = useRef('');
   const signaturePathsRef = useRef<string[]>([]);
@@ -1806,6 +1811,7 @@ export default function ResultScreen() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const toggleColorPicker = () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -2144,6 +2150,7 @@ export default function ResultScreen() {
   };
 
   // Download, delete, share functions (same as before)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const validateAndSave = async () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -2255,7 +2262,6 @@ export default function ResultScreen() {
       setIsSaving(false);
     } catch (error) {
       console.error('❌ Erreur lors du téléchargement:', error);
-      const errorMessage = (error as Error).message;
 
       showAlert(t('error'), t('cannotDownloadImage'));
 

@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter, usePathname } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
-const ONBOARDING_KEY = '@signtouch_onboarding_done';
+const ONBOARDING_KEY = '@plyz_onboarding_done';
 
 interface OnboardingStep {
   route: string;
@@ -52,9 +52,9 @@ const STEPS: OnboardingStep[] = [
     route: '/fan-choice',
     titleKey: 'onboardingLiveTitle',
     descKey: 'onboardingLiveDesc',
-    titleFallback: 'Live Sessions',
-    descFallback: 'Join live video calls with celebrities, get personalized dedications, and collect exclusive autographs in real time.',
-    tabLabel: 'Live',
+    titleFallback: 'Events',
+    descFallback: 'Join live video calls and dedication events, or create your own event and invite your fans.',
+    tabLabel: 'Events',
     highlightPosition: 3,
     color: '#6366f1',
   },
@@ -103,7 +103,7 @@ const OnboardingContext = createContext<OnboardingContextType>({
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const [isOnboarding, setIsOnboarding] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [hasChecked, setHasChecked] = useState(false);
+  const [, setHasChecked] = useState(false);
   const router = useRouter();
 
   useEffect(() => {

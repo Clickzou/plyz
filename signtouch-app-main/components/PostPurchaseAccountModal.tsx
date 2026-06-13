@@ -62,7 +62,7 @@ export default function PostPurchaseAccountModal({ visible, onClose }: PostPurch
       } else {
         setStep('code');
       }
-    } catch (err) {
+    } catch {
       setError(t('emailLinkError') || 'Une erreur est survenue');
     } finally {
       setLoading(false);
@@ -89,7 +89,7 @@ export default function PostPurchaseAccountModal({ visible, onClose }: PostPurch
           onClose();
         }, 2000);
       }
-    } catch (err) {
+    } catch {
       setError(t('invalidCode') || 'Code invalide');
     } finally {
       setLoading(false);

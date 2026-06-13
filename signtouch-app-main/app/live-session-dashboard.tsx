@@ -28,13 +28,9 @@ import {
   AlertTriangle,
   Camera,
   Image as ImageIcon,
-  Pen,
   Trash,
-  ChevronRight,
-  DollarSign,
   TrendingUp,
   Calendar,
-  Bell,
   ArrowLeft,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -45,7 +41,6 @@ import {
   LiveSession,
   QueueEntry,
   getSessionById,
-  startSession,
   pauseSession,
   resumeSession,
   endSession,
@@ -74,7 +69,6 @@ import {
   getFullQueue, 
   notifyUpcomingFans,
   sendQueueNotification,
-  notifyCelebrityFanJoined,
   notifyCelebrityQueueFull,
   QueueEntry as SessionQueueEntry,
 } from '@/utils/sessionQueueStorage';
@@ -82,9 +76,10 @@ import {
 let Notifications: any = null;
 try {
   if (Platform.OS !== 'web') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     Notifications = require('expo-notifications');
   }
-} catch (e) {}
+} catch {}
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CANVAS_SIZE = SCREEN_WIDTH - 80;
@@ -99,7 +94,7 @@ export default function LiveSessionDashboardScreen() {
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [currentFan, setCurrentFan] = useState<QueueEntry | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>('--:--');
-  const [fanTimeRemaining, setFanTimeRemaining] = useState<string>('--:--');
+  const [, setFanTimeRemaining] = useState<string>('--:--');
   const [showQR, setShowQR] = useState(true);
   const [copied, setCopied] = useState(false);
   const [isCreatingVideoRoom, setIsCreatingVideoRoom] = useState(false);
@@ -111,7 +106,7 @@ export default function LiveSessionDashboardScreen() {
   const [dedicationCurrentPath, setDedicationCurrentPath] = useState<string>('');
   const dedicationPathRef = useRef<string>('');
   const [isUploadingDedication, setIsUploadingDedication] = useState(false);
-  const [isDrawingDedication, setIsDrawingDedication] = useState(false);
+  const [, setIsDrawingDedication] = useState(false);
   const isDrawingDedicationRef = useRef(false);
   const scrollRef = useRef<ScrollView>(null);
   const dedicationCanvasRef = useRef<any>(null);
@@ -132,8 +127,8 @@ export default function LiveSessionDashboardScreen() {
   const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
   const hasPlayedQueueFullChime = useRef(false);
   const hasPlayedFirstFanChime = useRef(false);
-  const [queueFull, setQueueFull] = useState(false);
-  const [firstFanJoined, setFirstFanJoined] = useState(false);
+  const [, setQueueFull] = useState(false);
+  const [, setFirstFanJoined] = useState(false);
   const [scheduledCountdown, setScheduledCountdown] = useState<string>('');
 
   useEffect(() => {
@@ -338,12 +333,12 @@ export default function LiveSessionDashboardScreen() {
               osc.start(ctx.currentTime + start);
               osc.stop(ctx.currentTime + start + dur + 0.05);
             });
-          } catch (e) {}
+          } catch {}
         }
         if (Platform.OS !== 'web') {
           try {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          } catch (e) {}
+          } catch {}
         }
         const fanName = fullQueue.find((e) => e.status === 'waiting' || e.status === 'called' || e.status === 'in_call')?.fan_name || '';
         showAlert(
@@ -379,12 +374,12 @@ export default function LiveSessionDashboardScreen() {
                 osc.start(ctx.currentTime + start);
                 osc.stop(ctx.currentTime + start + dur + 0.05);
               });
-            } catch (e) {}
+            } catch {}
           }
           if (Platform.OS !== 'web') {
             try {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            } catch (e) {}
+            } catch {}
           }
           showAlert(
             t('queueFullTitle') || 'File d\'attente complète !',
@@ -464,7 +459,7 @@ export default function LiveSessionDashboardScreen() {
       if (nextFan.push_token) {
         await sendQueueNotification(
           nextFan.push_token,
-          `${session.celebrity_name} - SignTouch`,
+          `${session.celebrity_name} - Plyz`,
           "C'est votre tour ! Rejoignez l'appel maintenant.",
           { sessionId, action: 'your_turn' }
         );
@@ -486,7 +481,7 @@ export default function LiveSessionDashboardScreen() {
           if (calledFanPushToken) {
             await sendQueueNotification(
               calledFanPushToken,
-              `${session.celebrity_name} - SignTouch`,
+              `${session.celebrity_name} - Plyz`,
               "Vous avez manqué votre tour. Vous êtes maintenant à la fin de la file d'attente.",
               { sessionId, action: 'missed_turn' }
             );
@@ -513,21 +508,6 @@ export default function LiveSessionDashboardScreen() {
         t('queueEmpty') || 'Queue Empty', 
         t('noFansWaiting') || 'No fans are waiting in the queue.'
       );
-    }
-  };
-
-  const handleStart = async () => {
-    if (!sessionId) return;
-    console.log('[Dashboard] Starting session:', sessionId);
-    const result = await startSession(sessionId);
-    console.log('[Dashboard] Start session result:', result);
-    if (result) {
-      setShowQR(false);
-      const updatedSession = await getSessionById(sessionId);
-      if (updatedSession) {
-        setSession(updatedSession);
-        console.log('[Dashboard] Session updated:', updatedSession.status);
-      }
     }
   };
 
@@ -747,9 +727,10 @@ export default function LiveSessionDashboardScreen() {
       }
       if (!parent) {
         try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
           const { findDOMNode } = require('react-dom');
           parent = findDOMNode(containerNode) as HTMLElement;
-        } catch (e) {
+        } catch {
           return;
         }
       }
@@ -844,7 +825,7 @@ export default function LiveSessionDashboardScreen() {
         if (nextFan.push_token) {
           await sendQueueNotification(
             nextFan.push_token,
-            `${session.celebrity_name} - SignTouch`,
+            `${session.celebrity_name} - Plyz`,
             "C'est votre tour ! Rejoignez l'appel maintenant.",
             { sessionId: session.id, action: 'your_turn' }
           );
@@ -994,7 +975,7 @@ export default function LiveSessionDashboardScreen() {
           </Text>
 
           <View style={{ backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 16 }}>
-            <QRCode value={`signtouch://live/${session.code}`} size={160} />
+            <QRCode value={`plyz://live/${session.code}`} size={160} />
           </View>
 
           <TouchableOpacity 
@@ -1087,7 +1068,7 @@ export default function LiveSessionDashboardScreen() {
           <View style={styles.qrSection}>
             <Text style={styles.qrTitle}>{t('liveSessionShareCode')}</Text>
             <View style={[styles.qrContainer, { padding: 12 }]}>
-              <QRCode value={`signtouch://live/${session.code}`} size={120} />
+              <QRCode value={`plyz://live/${session.code}`} size={120} />
             </View>
             <TouchableOpacity style={[styles.codeContainer, { marginTop: 8, paddingVertical: 8, paddingHorizontal: 14 }]} onPress={copyCode}>
               <Text style={[styles.codeText, { fontSize: 18 }]}>{session.code}</Text>
@@ -1448,7 +1429,7 @@ export default function LiveSessionDashboardScreen() {
             {showQR && (
               <View style={styles.qrSection}>
                 <View style={styles.qrContainer}>
-                  <QRCode value={`signtouch://live/${session.code}`} size={120} />
+                  <QRCode value={`plyz://live/${session.code}`} size={120} />
                 </View>
                 <TouchableOpacity style={styles.codeContainer} onPress={copyCode}>
                   <Text style={styles.codeText}>{session.code}</Text>

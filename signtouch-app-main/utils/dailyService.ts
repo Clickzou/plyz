@@ -53,7 +53,7 @@ export const createDailyRoom = async (options: CreateRoomOptions = {}): Promise<
   }
 
   const {
-    name = `signtouch-${Date.now()}`,
+    name = `plyz-${Date.now()}`,
     expiryMinutes = 120,
     maxParticipants = 50,
     isPrivate = true,

@@ -25,12 +25,12 @@ interface JoinEventResponse {
     ends_at: string;
     viewer_soft_limit: number;
   };
-  signers?: Array<{
+  signers?: {
     id: string;
     display_name: string;
     avatar_url: string | null;
     signature_url: string | null;
-  }>;
+  }[];
 }
 
 serve(async (req: Request) => {

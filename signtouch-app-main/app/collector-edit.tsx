@@ -21,7 +21,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  runOnJS,
 } from 'react-native-reanimated';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -188,9 +187,9 @@ export default function CollectorEditScreen() {
           el = node;
         } else {
           try {
-            const { findDOMNode } = await import('react-dom');
+            const { findDOMNode } = (await import('react-dom')) as any;
             el = findDOMNode(ref) as HTMLElement;
-          } catch (e) {}
+          } catch {}
         }
       }
       if (el) {
@@ -364,7 +363,7 @@ export default function CollectorEditScreen() {
               </GestureDetector>
 
               <View style={styles.watermark}>
-                <Text style={styles.watermarkText}>SignTouch</Text>
+                <Text style={styles.watermarkText}>Plyz</Text>
               </View>
             </View>
           </ViewShot>

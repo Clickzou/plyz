@@ -2,7 +2,7 @@
 
 ## Objectif
 
-Modifier l'email d'authentification pour remplacer "Magic Link" par "Lien de récupération SignTouch".
+Modifier l'email d'authentification pour remplacer "Magic Link" par "Lien de récupération Plyz".
 
 ## Instructions étape par étape
 
@@ -19,14 +19,14 @@ Modifier l'email d'authentification pour remplacer "Magic Link" par "Lien de ré
 Remplacez le contenu actuel par ce template en anglais :
 
 ```html
-<h2>SignTouch Recovery Link</h2>
+<h2>Plyz Recovery Link</h2>
 
 <p>Follow this link to log in to your account:</p>
 <p><a href="{{ .ConfirmationURL }}">Log In</a></p>
 
 <p>If you didn't request this email, you can safely ignore it.</p>
 
-<p>Best regards,<br>SignTouch Team</p>
+<p>Best regards,<br>Plyz Team</p>
 ```
 
 ### 3. Modifier l'objet de l'email
@@ -34,7 +34,7 @@ Remplacez le contenu actuel par ce template en anglais :
 Dans le champ **Subject**, remplacez par :
 
 ```
-SignTouch Recovery Link
+Plyz Recovery Link
 ```
 
 ### 4. Sauvegarder
@@ -45,10 +45,10 @@ Cliquez sur **Save** en bas de la page.
 
 Les utilisateurs recevront maintenant des emails avec :
 
-**Objet :** SignTouch Recovery Link
+**Objet :** Plyz Recovery Link
 
 **Corps :**
-> SignTouch Recovery Link
+> Plyz Recovery Link
 >
 > Follow this link to log in to your account:
 >
@@ -57,24 +57,24 @@ Les utilisateurs recevront maintenant des emails avec :
 > If you didn't request this email, you can safely ignore it.
 >
 > Best regards,
-> SignTouch Team
+> Plyz Team
 
 ## Version française (optionnel)
 
 Si la majorité de vos utilisateurs sont francophones, vous pouvez utiliser ce template français :
 
 ```html
-<h2>Lien de récupération SignTouch</h2>
+<h2>Lien de récupération Plyz</h2>
 
 <p>Suivez ce lien pour vous connecter à votre compte :</p>
 <p><a href="{{ .ConfirmationURL }}">Se connecter</a></p>
 
 <p>Si vous n'avez pas demandé cet email, vous pouvez l'ignorer en toute sécurité.</p>
 
-<p>Cordialement,<br>L'équipe SignTouch</p>
+<p>Cordialement,<br>L'équipe Plyz</p>
 ```
 
-**Objet (français) :** Lien de récupération SignTouch
+**Objet (français) :** Lien de récupération Plyz
 
 ## Notes importantes
 
@@ -97,10 +97,10 @@ Dans les templates Supabase, vous pouvez utiliser ces variables :
 
 Pour tester le nouveau template :
 
-1. Ouvrez l'application SignTouch
+1. Ouvrez l'application Plyz
 2. Allez sur l'écran **Account**
 3. Entrez votre email
 4. Cliquez sur "Recevoir un lien de connexion"
 5. Vérifiez votre boîte email
 
-Vous devriez recevoir un email avec le nouveau texte "SignTouch Recovery Link".
+Vous devriez recevoir un email avec le nouveau texte "Plyz Recovery Link".

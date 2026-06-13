@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Dimensions, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -91,7 +91,7 @@ export default function SplashOverlay({ onFinish }: { onFinish: () => void }) {
           ]}
         >
           <Image
-            source={require('../assets/logo-signtouch.png')}
+            source={require('../assets/logo-plyz.png')}
             style={styles.logoImage}
             resizeMode="contain"
           />

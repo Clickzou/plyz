@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   Image,
   ScrollView,
-  Modal,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -24,24 +23,17 @@ import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, QrCode, Search, Check, Download, Camera, Video, Users, Clock, Calendar, Bell, X, AlertTriangle } from 'lucide-react-native';
+import { ArrowLeft, QrCode, Search, Check, Download, Video, Users, Clock, Calendar, Bell } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-let Notifications: any = null;
-try {
-  Notifications = require('expo-notifications');
-} catch (e) {
-  console.log('expo-notifications not available');
-}
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import AccountModal from '@/components/AccountModal';
-import { getEventByCode, LiveEvent } from '@/utils/liveEventStorage';
+import { LiveEvent } from '@/utils/liveEventStorage';
 import { getSessionByCode, getSessionById, LiveSession } from '@/utils/liveSessionStorage';
 import { 
   joinQueue, 
   getQueuePosition, 
   getMyQueueEntry,
-  updatePushToken,
   QueueEntry,
   QueueStats,
 } from '@/utils/sessionQueueStorage';
@@ -58,6 +50,13 @@ import {
 } from '@/utils/eventSessionStorage';
 import BarCodeScannerWrapper, { requestCameraPermissionAsync, isBarCodeScannerAvailable } from '@/components/BarCodeScannerWrapper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+let Notifications: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  Notifications = require('expo-notifications');
+} catch {
+  console.log('expo-notifications not available');
+}
 
 const SAVED_SIGNATURES_KEY = '@plyz_event_signatures';
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -91,12 +90,12 @@ const playNotificationChime = () => {
         osc.start(ctx.currentTime + start);
         osc.stop(ctx.currentTime + start + dur + 0.05);
       });
-    } catch (e) {}
+    } catch {}
   }
   if (Platform.OS !== 'web') {
     try {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (e) {}
+    } catch {}
   }
 };
 
@@ -214,7 +213,7 @@ export default function JoinEventScreen() {
   const [notificationSet, setNotificationSet] = useState(false);
 
   const [showScanner, setShowScanner] = useState(false);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [, setHasPermission] = useState<boolean | null>(null);
 
   const [queueEntry, setQueueEntry] = useState<QueueEntry | null>(null);
   const [queueStats, setQueueStats] = useState<QueueStats | null>(null);
@@ -447,7 +446,7 @@ export default function JoinEventScreen() {
             }
           }
         }
-      } catch (e) {}
+      } catch {}
     };
     checkPendingCheckout();
   }, []);
@@ -714,6 +713,7 @@ export default function JoinEventScreen() {
         if (Platform.OS === 'web') {
           window.location.href = data.url;
         } else {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
           const { Linking } = require('react-native');
           Linking.openURL(data.url);
         }
@@ -760,7 +760,7 @@ export default function JoinEventScreen() {
             await handleEventPayment();
             return;
           }
-        } catch (e) {
+        } catch {
           const storedPaid = await AsyncStorage.getItem(`@event_paid_${foundSession.id}`);
           if (storedPaid === 'true') {
             setEventPaid(true);
@@ -2072,7 +2072,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
   },
-  notifyButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
   notificationSetCard: {
     flexDirection: 'row',
     alignItems: 'center',

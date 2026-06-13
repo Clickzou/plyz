@@ -1,5 +1,5 @@
 -- ============================================================
--- SignTouch Marketplace Migration
+-- Plyz Marketplace Migration
 -- Run this in Supabase SQL Editor (Dashboard > SQL Editor)
 -- ============================================================
 

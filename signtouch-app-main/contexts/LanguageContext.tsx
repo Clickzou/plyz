@@ -19,7 +19,6 @@ const LANGUAGE_STORAGE_KEY = '@app_language';
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en');
-  const [isLoading, setIsLoading] = useState(true);
 
   const isRTL = RTL_LANGUAGES.includes(language);
 
@@ -52,8 +51,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('Error loading language:', error);
         setLanguageState('en');
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -75,7 +72,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   };
 
   const t = (key: TranslationKeys, params?: Record<string, string | number>): string => {
-    const translation = translations[language];
+    const translation = translations[language] as typeof translations.en;
     let value = translation[key];
 
     // Handle nested keys (e.g., 'freePlanFeatures.feature1')
@@ -119,10 +116,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
     return String(value);
   };
-
-  if (isLoading) {
-    return null; // or a loading screen
-  }
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t, isRTL }}>

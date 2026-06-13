@@ -226,9 +226,9 @@ export default function EventPhotoEditorScreen() {
           el = node;
         } else {
           try {
-            const { findDOMNode } = await import('react-dom');
+            const { findDOMNode } = (await import('react-dom')) as any;
             el = findDOMNode(ref) as HTMLElement;
-          } catch (e) {}
+          } catch {}
         }
       }
       if (el) {
@@ -309,7 +309,7 @@ export default function EventPhotoEditorScreen() {
       await saveMemory(uri, user?.id || null, { isEdited: true });
 
       if (Platform.OS === 'web') {
-        downloadImageWeb(uri, `signtouch_${signerName}_${Date.now()}.png`);
+        downloadImageWeb(uri, `plyz_${signerName}_${Date.now()}.png`);
       }
 
       if (Platform.OS !== 'web') {
@@ -332,16 +332,16 @@ export default function EventPhotoEditorScreen() {
           try {
             const response = await fetch(uri);
             const blob = await response.blob();
-            const file = new File([blob], `signtouch_${signerName}.png`, { type: 'image/png' });
+            const file = new File([blob], `plyz_${signerName}.png`, { type: 'image/png' });
             await navigator.share({
-              title: `${signerName} - SignTouch`,
+              title: `${signerName} - Plyz`,
               files: [file],
             });
             return;
-          } catch (e) {}
+          } catch {}
         }
         if (uri) {
-          downloadImageWeb(uri, `signtouch_${signerName}_${Date.now()}.png`);
+          downloadImageWeb(uri, `plyz_${signerName}_${Date.now()}.png`);
         }
       }
     } catch (error) {

@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput, Dimensions, Platform, ActivityIndicator } from 'react-native';
-import Slider from '@react-native-community/slider';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Sparkles, Film, Layers, Share2, Download, Play, Zap, Heart, Move, RotateCw, Wind, Activity } from 'lucide-react-native';
+import { ArrowLeft, Sparkles, Film, Layers, Share2, Play, Zap, Heart, Move, RotateCw, Wind, Activity } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { 
   useSharedValue, 
@@ -21,18 +20,17 @@ import {
 } from 'react-native-gesture-handler';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ViewShot from 'react-native-view-shot';
-import * as MediaLibrary from 'expo-media-library';
-import * as Sharing from 'expo-sharing';
-
-// html2canvas is web-only, import conditionally
-let html2canvas: any = null;
-if (Platform.OS === 'web') {
-  html2canvas = require('html2canvas');
-}
 import { SignatureOverlay, TextOverlay, getAllMemories } from '@/utils/memoriesStorage';
 import { saveStory, getStories } from '@/utils/storiesStorage';
 import SocialShareModal from '@/components/SocialShareModal';
 import Svg, { Path } from 'react-native-svg';
+
+// html2canvas is web-only, import conditionally
+let html2canvas: any = null;
+if (Platform.OS === 'web') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  html2canvas = require('html2canvas');
+}
 
 interface StorySignatureProps {
   overlay: SignatureOverlay;
@@ -516,7 +514,7 @@ function SignatureSvgContent({ overlay, color }: { overlay: SignatureOverlay; co
   );
 }
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const STORY_WIDTH = SCREEN_WIDTH * 0.7;
 const STORY_HEIGHT = STORY_WIDTH * (16 / 9);
 
@@ -707,6 +705,7 @@ function StoryPreview({
     if (onTextChange) onTextChange(s, y);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const signatureGesture = useMemo(() => {
     if (!interactive) return Gesture.Tap();
     
@@ -748,6 +747,7 @@ function StoryPreview({
     return Gesture.Simultaneous(pinch, rotate, pan);
   }, [interactive]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const textGesture = useMemo(() => {
     if (!interactive) return Gesture.Tap();
     
@@ -784,6 +784,7 @@ function StoryPreview({
     return Gesture.Simultaneous(pinch, rotate, pan);
   }, [interactive]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const sigAnimatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: sigTranslateX.value },
@@ -793,6 +794,7 @@ function StoryPreview({
     ],
   }));
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const txtAnimatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: txtTranslateX.value },
@@ -1027,6 +1029,7 @@ function StoryPreview({
     ],
   }));
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const bgImageStyle = useAnimatedStyle(() => ({
     transform: [
       { scale: bgScale.value },
@@ -1143,7 +1146,7 @@ function StoryPreview({
         ))}
 
         <View style={styles.watermark}>
-          <Text style={styles.watermarkText}>SignTouch</Text>
+          <Text style={styles.watermarkText}>Plyz</Text>
         </View>
       </LinearGradient>
     </View>
@@ -1167,8 +1170,8 @@ export default function StoryScreen() {
   const [selectedAnimation, setSelectedAnimation] = useState<Animation>(ANIMATIONS[0]);
   const [customText, setCustomText] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsExporting] = useState(false);
+  const [, setIsLoading] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareImageUri, setShareImageUri] = useState<string | null>(null);
   
@@ -1185,7 +1188,6 @@ export default function StoryScreen() {
   const [selectedSignatureIndex, setSelectedSignatureIndex] = useState<number | null>(0);
   const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(null);
   
-  const COLORS = ['#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#10B981'];
 
   useEffect(() => {
     const loadData = async () => {
@@ -1285,6 +1287,7 @@ export default function StoryScreen() {
     setIsAnimating(false);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleExport = async () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

@@ -10,18 +10,18 @@ import {
   Dimensions,
   ScrollView,
 } from 'react-native';
-import { showAlert, showConfirm } from '@/utils/alertHelper';
+import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { X, FileSliders as Sliders, Check, Save, Move, Pencil, RotateCw, ChevronLeft, ChevronRight, Palette, Trash2, Sparkles, Eraser, Plus } from 'lucide-react-native';
+import { X, Check, Pencil, ChevronLeft, ChevronRight, Palette, Trash2, Eraser, Plus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Memory, SignatureOverlay as StoredSignatureOverlay } from '@/utils/memoriesStorage';
+import { Memory } from '@/utils/memoriesStorage';
 import * as StorageService from '@/utils/storageService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { captureRef } from 'react-native-view-shot';
 import * as ImageManipulator from 'expo-image-manipulator';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { useFonts } from 'expo-font';
@@ -44,7 +44,7 @@ const safeHaptics = {
     if (Platform.OS === 'web') return;
     try {
       await Haptics.impactAsync(style);
-    } catch (e) {
+    } catch {
       // Haptics not available
     }
   },
@@ -52,7 +52,7 @@ const safeHaptics = {
     if (Platform.OS === 'web') return;
     try {
       await Haptics.notificationAsync(type);
-    } catch (e) {
+    } catch {
       // Haptics not available
     }
   }
@@ -321,7 +321,7 @@ export default function EditScreen() {
   const [saving, setSaving] = useState(false);
   const [overlays, setOverlays] = useState<OverlayElement[]>([]);
   const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null);
-  const [showEditPanel, setShowEditPanel] = useState(false);
+  const [, setShowEditPanel] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [isSignatureMode, setIsSignatureMode] = useState(false);
   const [signaturePaths, setSignaturePaths] = useState<{ path: string }[]>([]);
@@ -334,8 +334,6 @@ export default function EditScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { user } = useAuth();
-
-  const COLORS = SIGNATURE_COLORS;
 
   const loadOverlaysFromMemory = useCallback((signatures: SignatureOverlay[]) => {
     const newOverlays: OverlayElement[] = signatures.map(s => ({
@@ -744,26 +742,6 @@ export default function EditScreen() {
     return overlays.find(o => o.id === selectedOverlayId);
   }, [selectedOverlayId, overlays]);
 
-  const rotateSelectedOverlay = (delta: number = 90) => {
-    const overlay = getSelectedOverlay();
-    if (!overlay) {
-      console.warn('rotateSelectedOverlay: no overlay selected');
-      return;
-    }
-
-    setOverlays(prevOverlays =>
-      prevOverlays.map(o =>
-        o.id === selectedOverlayId
-          ? { ...o, rotation: (o.rotation + delta) % 360 }
-          : o
-      )
-    );
-
-    if (Platform.OS !== 'web') {
-      safeHaptics.impact(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
-
   const toggleColorPicker = () => {
     if (Platform.OS !== 'web') {
       safeHaptics.impact(Haptics.ImpactFeedbackStyle.Light);
@@ -970,25 +948,6 @@ export default function EditScreen() {
       console.error('❌ Erreur lors de la sauvegarde:', error);
       setSaving(false);
       showAlert(t('error'), `${(error as Error).message}`);
-    }
-  };
-
-  const handleClose = () => {
-    if (Platform.OS !== 'web') {
-      safeHaptics.impact(Haptics.ImpactFeedbackStyle.Light);
-    }
-
-    if (overlays.length > 0) {
-      showConfirm(
-        t('unsavedChanges'),
-        t('unsavedChangesMessage'),
-        [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Quitter', style: 'destructive', onPress: () => router.back() },
-        ]
-      );
-    } else {
-      router.back();
     }
   };
 

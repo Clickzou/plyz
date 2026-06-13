@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 
 let Notifications: any = null;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   Notifications = require('expo-notifications');
 } catch {}
 
@@ -31,7 +32,7 @@ export async function scheduleCelebrityReminders(options: ReminderOptions): Prom
     if (oneHourBefore > now) {
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: `${options.eventName} - SignTouch`,
+          title: `${options.eventName} - Plyz`,
           body: options.type === 'live_session'
             ? 'Votre session live commence dans 1 heure ! Préparez-vous.'
             : 'Votre événement commence dans 1 heure ! Préparez-vous.',
@@ -49,7 +50,7 @@ export async function scheduleCelebrityReminders(options: ReminderOptions): Prom
     if (twoMinBefore > now) {
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: `${options.eventName} - SignTouch`,
+          title: `${options.eventName} - Plyz`,
           body: options.type === 'live_session'
             ? 'Votre session live commence dans 2 minutes ! Ouvrez l\'app maintenant.'
             : 'Votre événement commence dans 2 minutes ! Ouvrez l\'app maintenant.',

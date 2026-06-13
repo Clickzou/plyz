@@ -18,7 +18,6 @@ import {
   Calendar,
   Video,
   DollarSign,
-  ChevronRight,
   CreditCard,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

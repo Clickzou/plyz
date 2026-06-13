@@ -1,11 +1,11 @@
-# Documentation - Écran d'accueil SignTouch
+# Documentation - Écran d'accueil Plyz
 
 ## Vue d'ensemble
 
 L'écran d'accueil présente :
 - Un fond dégradé vert lumineux
 - 10 bulles animées contenant des silhouettes de sportifs (#2E7D32)
-- Le logo "SignTouch" en police Pumpkind Custard
+- Le logo "Plyz" en police Pumpkind Custard
 - Un bouton pour prendre une photo
 - Une barre de navigation en bas
 
@@ -109,7 +109,7 @@ L'ordre d'affichage des éléments :
 
 1. **Fond** : LinearGradient vert (z-index: auto)
 2. **Bulles** : Silhouettes animées (z-index: auto, pointerEvents: none)
-3. **Logo** : Texte "SignTouch" (z-index: 11)
+3. **Logo** : Texte "Plyz" (z-index: 11)
 4. **Bouton** : Bouton caméra (z-index: 12)
 5. **Navigation** : Barre de navigation (z-index: auto)
 

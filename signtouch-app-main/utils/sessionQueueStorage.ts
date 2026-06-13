@@ -25,7 +25,7 @@ export interface QueueStats {
   sessionStatus: string;
 }
 
-const DEVICE_ID_KEY = '@signtouch_device_id';
+const DEVICE_ID_KEY = '@plyz_device_id';
 
 export const getOrCreateFanId = async (): Promise<string> => {
   try {
@@ -35,7 +35,7 @@ export const getOrCreateFanId = async (): Promise<string> => {
       await AsyncStorage.setItem(DEVICE_ID_KEY, deviceId);
     }
     return deviceId;
-  } catch (error) {
+  } catch {
     return `fan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 };
@@ -100,7 +100,7 @@ export const joinQueue = async (
     try {
       const isFirstFan = newPosition === 1;
       notifyCelebrityFanJoined(sessionId, fanName, isFirstFan);
-    } catch (e) {}
+    } catch {}
 
     return entry;
   } catch (error) {
@@ -236,11 +236,11 @@ export const callNextFan = async (sessionId: string): Promise<QueueEntry | null>
       try {
         await sendQueueNotification(
           fan.push_token,
-          'SignTouch',
+          'Plyz',
           "C'est votre tour ! Rejoignez l'appel vidéo maintenant.",
           { sessionId, action: 'your_turn' }
         );
-      } catch (e) {}
+      } catch {}
     }
 
     return fan;
@@ -298,11 +298,11 @@ export const markFanAsMissed = async (queueEntryId: string): Promise<boolean> =>
       try {
         await sendQueueNotification(
           entry.push_token,
-          'SignTouch',
+          'Plyz',
           "Vous avez manqué votre tour. Vous avez été replacé dans la file d'attente.",
           { sessionId: entry.session_id, action: 'missed_turn' }
         );
-      } catch (e) {}
+      } catch {}
     }
 
     return !error;
@@ -423,7 +423,7 @@ export const sendDedicationNotification = async (
 
     return await sendQueueNotification(
       entry.push_token,
-      `${celebrityName} - SignTouch`,
+      `${celebrityName} - Plyz`,
       body,
       { sessionId, action: 'dedication_ready' }
     );
@@ -458,14 +458,14 @@ export const notifyUpcomingFans = async (
       if (waitMinutes <= 2) {
         await sendQueueNotification(
           fan.push_token,
-          `${celebrityName} - SignTouch`,
+          `${celebrityName} - Plyz`,
           "C'est bientôt votre tour ! Ouvrez l'app maintenant.",
           { sessionId, action: 'your_turn_soon' }
         );
       } else if (waitMinutes <= 5) {
         await sendQueueNotification(
           fan.push_token,
-          `${celebrityName} - SignTouch`,
+          `${celebrityName} - Plyz`,
           `Plus que ~${waitMinutes} minutes avant votre tour !`,
           { sessionId, action: 'upcoming' }
         );
@@ -486,8 +486,8 @@ export const notifyCelebrityFanJoined = async (
     if (!celebrityToken) return;
 
     const title = isFirstFan
-      ? 'SignTouch'
-      : 'SignTouch';
+      ? 'Plyz'
+      : 'Plyz';
     const body = isFirstFan
       ? `${fanName} a rejoint votre session !`
       : `${fanName} a rejoint la file d'attente.`;
@@ -512,7 +512,7 @@ export const notifyCelebrityQueueFull = async (
 
     await sendQueueNotification(
       celebrityToken,
-      'SignTouch',
+      'Plyz',
       'Tous les fans ont rejoint ! Vous pouvez lancer le live.',
       { sessionId, action: 'queue_full' }
     );

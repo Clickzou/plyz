@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle, AlertCircle, Shield } from 'lucide-react-native';
+import { AlertCircle, Shield } from 'lucide-react-native';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -21,7 +21,7 @@ export default function PaymentSuccessScreen() {
     celebrity_stripe_account_id: string;
   }>();
 
-  const [verified, setVerified] = useState(false);
+  const [, setVerified] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {

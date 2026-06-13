@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft, Building2, Shield, CheckCircle, Clock,
+  ArrowLeft, Building2, CheckCircle, Clock,
   XCircle, AlertTriangle, ChevronDown, Send,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';

@@ -19,7 +19,7 @@ export interface CollectorLiveItem {
   imageUri?: string;
 }
 
-const STORAGE_KEY = '@signtouch_collector_live';
+const STORAGE_KEY = '@plyz_collector_live';
 const MAX_ITEMS_WEB = 10;
 
 const compressImageDataUrl = async (dataUrl: string, maxWidth: number = 800, quality: number = 0.6): Promise<string> => {
@@ -84,7 +84,7 @@ export const saveCollectorLive = async (
   if (Platform.OS === 'web' && imageUri.startsWith('data:')) {
     try {
       finalUri = await compressImageDataUrl(imageUri, 800, 0.6);
-    } catch (e) {
+    } catch {
       console.warn('[CollectorLive] Compression failed, using original');
     }
   }

@@ -1,4 +1,4 @@
-# Guide de Build de Production - SignTouch
+# Guide de Build de Production - Plyz
 
 ## Prérequis
 

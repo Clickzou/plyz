@@ -19,7 +19,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import BottomNav from '@/components/BottomNav';
 import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount } from '@/utils/eventSessionStorage';
-const QRCodeSvg = require('react-native-qrcode-svg').default;
+import QRCodeSvg from 'react-native-qrcode-svg';
 
 type TabType = 'create' | 'events';
 type FilterType = 'all' | 'live' | 'ended' | 'scheduled';
@@ -66,7 +66,7 @@ export default function CelebrityMenuScreen() {
   const isEventLiveCheck = (event: EventSession) => {
     if (event.status === 'ended') return false;
     if (event.ends_at && new Date(event.ends_at) < new Date()) return false;
-    return event.status === 'live' || event.status === 'active';
+    return event.status === 'live';
   };
 
   const loadEventViews = useCallback(async () => {
@@ -129,7 +129,7 @@ export default function CelebrityMenuScreen() {
     if (!selectedEvent) return;
     try {
       await Share.share({
-        message: `Rejoignez mon événement SignTouch "${selectedEvent.title}" avec le code: ${selectedEvent.join_code}`,
+        message: `Rejoignez mon événement Plyz "${selectedEvent.title}" avec le code: ${selectedEvent.join_code}`,
       });
     } catch (e) {
       console.error('Share failed:', e);
@@ -192,12 +192,12 @@ export default function CelebrityMenuScreen() {
   
   const isEventLive = (event: EventSession) => {
     if (isEventEnded(event)) return false;
-    return event.status === 'live' || event.status === 'active';
+    return event.status === 'live';
   };
   
   const getEventStatus = (event: EventSession) => {
     if (isEventEnded(event)) return 'ended';
-    if (event.status === 'live' || event.status === 'active') return 'live';
+    if (event.status === 'live') return 'live';
     return 'scheduled';
   };
 
@@ -625,7 +625,7 @@ export default function CelebrityMenuScreen() {
             
             <View style={styles.qrContainer}>
               <QRCodeSvg
-                value={`signtouch://join/${selectedEvent.join_code}`}
+                value={`plyz://join/${selectedEvent.join_code}`}
                 size={200}
                 backgroundColor="#ffffff"
                 color="#1a1a2e"

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform, useWindowDimensions, ActivityIndicator, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform, useWindowDimensions, ActivityIndicator, Image , Modal, TextInput, ScrollView, Text } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
   GestureDetector,
@@ -8,8 +8,8 @@ import {
 } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withSequence, withTiming, runOnJS } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
-import { Eraser, Check, ArrowLeft, Plus, Pencil, Type } from 'lucide-react-native';
-import { Modal, TextInput, ScrollView, Text } from 'react-native';
+import { Eraser, Check, ArrowLeft, Plus, Pencil } from 'lucide-react-native';
+
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
@@ -41,7 +41,7 @@ export default function SignatureScreen() {
   const [showTextModal, setShowTextModal] = useState<boolean>(false);
   const [textInput, setTextInput] = useState<string>('');
   const [selectedFont, setSelectedFont] = useState<string>('SpaceMono');
-  const [savedTexts, setSavedTexts] = useState<Array<{ text: string; fontFamily: string }>>([]);
+  const [savedTexts, setSavedTexts] = useState<{ text: string; fontFamily: string }[]>([]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();

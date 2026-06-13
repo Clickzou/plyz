@@ -8,7 +8,7 @@ import * as Linking from 'expo-linking';
 export default function AuthCallbackScreen() {
   const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
-  const [verifying, setVerifying] = useState(true);
+  const [, setVerifying] = useState(true);
   const [debugInfo, setDebugInfo] = useState<string>('');
   const params = useLocalSearchParams<{ token_hash?: string; type?: string; access_token?: string; refresh_token?: string }>();
 

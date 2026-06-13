@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Clock, Users, DollarSign, Play, Star, Camera, RotateCcw, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy, Send } from 'lucide-react-native';
+import { ArrowLeft, Clock, Users, DollarSign, Play, Camera, RotateCcw, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy, Send } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
@@ -29,7 +29,7 @@ import { getStripeAccountId } from '@/utils/userProfile';
 import { scheduleCelebrityReminders } from '@/utils/scheduleReminders';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
-const QRCodeSvg = require('react-native-qrcode-svg').default;
+import QRCodeSvg from 'react-native-qrcode-svg';
 
 const formatDuration = (minutes: number): string => {
   if (minutes < 1) {
@@ -55,7 +55,7 @@ const PRICE_OPTIONS = [
   { label: '100€', value: 10000 },
 ];
 
-const SIGNTOUCH_FEES = 0.15; // 15% SignTouch
+const PLYZ_FEES = 0.15; // 15% Plyz
 const STRIPE_PERCENT = 0.029; // 2.9% Stripe
 const STRIPE_FIXED = 30; // 0.30€ par transaction (en centimes)
 
@@ -77,7 +77,7 @@ export default function CreateLiveSessionScreen() {
   const [coverPhotoUri, setCoverPhotoUri] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState(false);
   const [showStripeConnect, setShowStripeConnect] = useState(false);
-  const [stripeConnected, setStripeConnected] = useState(false);
+  const [, setStripeConnected] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(true);
   const [sessionDate, setSessionDate] = useState(new Date().toISOString().split('T')[0]);
@@ -430,7 +430,7 @@ export default function CreateLiveSessionScreen() {
           </Text>
 
           <View style={{ backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 16 }}>
-            <QRCodeSvg value={`signtouch://join/${scheduledConfirmation.code}`} size={180} />
+            <QRCodeSvg value={`plyz://join/${scheduledConfirmation.code}`} size={180} />
           </View>
 
           <Text style={{ fontSize: 28, fontWeight: '800', color: '#10B981', letterSpacing: 6, marginBottom: 8 }}>
@@ -799,12 +799,12 @@ export default function CreateLiveSessionScreen() {
           <Text style={styles.summaryTitle}>{t('yourEarnings') || 'Vos revenus'}</Text>
           {(() => {
             const grossCents = price * calculatedMaxFans;
-            const signTouchFeesCents = grossCents * SIGNTOUCH_FEES;
-            const afterSignTouchCents = grossCents - signTouchFeesCents;
-            const stripePercentCents = afterSignTouchCents * STRIPE_PERCENT;
+            const plyzFeesCents = grossCents * PLYZ_FEES;
+            const afterPlyzCents = grossCents - plyzFeesCents;
+            const stripePercentCents = afterPlyzCents * STRIPE_PERCENT;
             const stripeFixedCents = STRIPE_FIXED * calculatedMaxFans;
             const stripeTotalCents = stripePercentCents + stripeFixedCents;
-            const netCents = afterSignTouchCents - stripeTotalCents;
+            const netCents = afterPlyzCents - stripeTotalCents;
             
             return (
               <Text style={styles.revenueAmount}>
@@ -891,10 +891,10 @@ export default function CreateLiveSessionScreen() {
 
             <View style={styles.daysGrid}>
               {getCalendarDays().map((day, index) => {
-                const isSelected = day && sessionDate === 
+                const isSelected = !!day && sessionDate ===
                   `${calendarMonth.getFullYear()}-${String(calendarMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const today = new Date();
-                const isToday = day && 
+                const isToday = !!day &&
                   today.getDate() === day && 
                   today.getMonth() === calendarMonth.getMonth() && 
                   today.getFullYear() === calendarMonth.getFullYear();

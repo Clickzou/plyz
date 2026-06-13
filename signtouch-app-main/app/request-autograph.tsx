@@ -32,9 +32,9 @@ export default function RequestAutographScreen() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const signTouchFee = Math.round(priceCents * 0.15);
+  const plyzFee = Math.round(priceCents * 0.15);
   const stripeFee = Math.round(priceCents * 0.029) + 30;
-  const celebrityReceives = priceCents - signTouchFee - stripeFee;
+  const celebrityReceives = priceCents - plyzFee - stripeFee;
 
   const formatPrice = (cents: number) => {
     const amount = (cents / 100).toFixed(2);
@@ -139,7 +139,7 @@ export default function RequestAutographScreen() {
 
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabelSmall}>{t('platformFee') || 'Platform fee (15%)'}</Text>
-            <Text style={styles.summaryValueSmall}>-{formatPrice(signTouchFee)}</Text>
+            <Text style={styles.summaryValueSmall}>-{formatPrice(plyzFee)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabelSmall}>{t('marketplaceStripeFee') || 'Stripe fee'}</Text>

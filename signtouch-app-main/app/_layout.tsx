@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
@@ -27,7 +27,6 @@ import PostPurchaseAccountModal from '@/components/PostPurchaseAccountModal';
 import {
   setPostPurchaseAccountCallback,
   setManualAccountModalCallback,
-  maybeShowPostPurchaseAccountModal,
 } from '@/utils/postPurchaseAccount';
 import { setAccountPromptSnooze } from '@/utils/postPurchaseAccountStorage';
 import CustomAlert from '@/components/CustomAlert';
@@ -41,7 +40,7 @@ SplashScreen.preventAutoHideAsync();
 function AppContent() {
   const [showPostPurchaseAccount, setShowPostPurchaseAccount] = useState(false);
   const [isPostPurchaseContext, setIsPostPurchaseContext] = useState(false);
-  const { user, session } = useAuth();
+  useAuth();
 
   useEffect(() => {
     setPostPurchaseAccountCallback(() => {
@@ -53,12 +52,6 @@ function AppContent() {
       setShowPostPurchaseAccount(true);
     });
   }, []);
-
-  const handlePurchaseSuccess = async () => {
-    const isConnected = !!(user || session);
-    setIsPostPurchaseContext(true);
-    await maybeShowPostPurchaseAccountModal(true, isConnected);
-  };
 
   const handleClosePostPurchaseAccount = async () => {
     if (isPostPurchaseContext) {

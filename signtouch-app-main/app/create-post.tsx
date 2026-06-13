@@ -16,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { showAlert } from '@/utils/alertHelper';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
-const LOCAL_POSTS_KEY = '@signtouch_local_posts';
+const LOCAL_POSTS_KEY = '@plyz_local_posts';
 
 async function compressImage(uri: string): Promise<string> {
   try {
