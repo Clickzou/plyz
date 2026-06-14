@@ -189,7 +189,6 @@ interface StaticSignatureProps {
   overlay: SignatureOverlay;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function StaticSignature({ overlay }: StaticSignatureProps) {
   const signatureColor = overlay.color || '#ffffff';
   const isJsonData = overlay.uri.startsWith('data:application/json;base64,');
@@ -890,7 +889,6 @@ interface StaticTextProps {
   overlay: TextOverlay;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function StaticText({ overlay }: StaticTextProps) {
   const mobileFontFamily = getMobileFontFamily(overlay.fontFamily);
   return (
@@ -1246,6 +1244,7 @@ export default function ResultScreen() {
   const [, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [shareUri, setShareUri] = useState<string | null>(null);
   const [showAdModal, setShowAdModal] = useState(false);
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -1457,8 +1456,12 @@ export default function ResultScreen() {
   };
 
   const hasBaseUri = memory ? !!(memory.baseUri && memory.baseUri !== memory.uri) : false;
+  // Sur le web, aucune image fusionnée ("baked") n'est produite à la sauvegarde :
+  // on redessine donc les signatures/textes par-dessus la photo de base, même en mode vue.
+  const showStaticOverlays = Platform.OS === 'web' && !isEditMode && !saving
+    && (signatureOverlays.length > 0 || textOverlays.length > 0);
   const displayUri = memory
-    ? (isEditMode && hasBaseUri ? memory.baseUri! : memory.uri)
+    ? ((isEditMode || showStaticOverlays) && hasBaseUri ? memory.baseUri! : memory.uri)
     : imageUri;
 
   if (memory) {
@@ -2199,6 +2202,35 @@ export default function ResultScreen() {
     }
   };
 
+  // Sur le web, captureRef (natif) n'est pas disponible : on capture la vue
+  // (photo + signatures/textes) en une image PNG fusionnée via html2canvas.
+  const captureWebComposite = async (): Promise<string | null> => {
+    if (Platform.OS !== 'web') return null;
+    try {
+      const ref: any = viewShotRef.current;
+      if (!ref) return null;
+      let el: any = ref instanceof HTMLElement
+        ? ref
+        : (ref._nativeTag || ref.getInnerViewNode?.() || ref);
+      if (!(el instanceof HTMLElement)) {
+        const { findDOMNode } = (await import('react-dom')) as any;
+        el = findDOMNode(ref);
+      }
+      if (!(el instanceof HTMLElement)) return null;
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(el, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null,
+        scale: 2,
+      });
+      return canvas.toDataURL('image/png');
+    } catch (e) {
+      console.error('captureWebComposite failed:', e);
+      return null;
+    }
+  };
+
   const downloadToDevice = async () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -2217,8 +2249,8 @@ export default function ResultScreen() {
       let uri: string | null = null;
 
       if (Platform.OS === 'web') {
-        // Web : on ne passe pas par captureRef, on télécharge simplement l'image affichée
-        uri = displayUri || null;
+        // Web : on capture la vue (photo + signature) en une image fusionnée
+        uri = (await captureWebComposite()) || displayUri || null;
       } else {
         if (viewShotRef.current) {
           uri = await captureRef(viewShotRef.current, {
@@ -2325,10 +2357,16 @@ export default function ResultScreen() {
     }
   };
 
-  const openShareModal = () => {
+  const openShareModal = async () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setShareUri(null);
+      setShowShareModal(true);
+      return;
     }
+    // Web : on partage la version fusionnée (photo + signature)
+    const composite = await captureWebComposite();
+    setShareUri(composite);
     setShowShareModal(true);
   };
 
@@ -2407,6 +2445,13 @@ export default function ResultScreen() {
                 isSelected={selectedElementId === overlay.id}
                 onFontPress={() => setShowFontPicker(!showFontPicker)}
               />
+            ))}
+            {/* Overlays statiques en mode vue (web) : aucune image fusionnée n'est générée sur web */}
+            {showStaticOverlays && signatureOverlays.map(overlay => (
+              <StaticSignature key={`static-sig-${overlay.id}`} overlay={overlay} />
+            ))}
+            {showStaticOverlays && textOverlays.map(overlay => (
+              <StaticText key={`static-txt-${overlay.id}`} overlay={overlay} />
             ))}
           </View>
         </View>
@@ -2768,7 +2813,7 @@ export default function ResultScreen() {
         <SocialShareModal
           visible={showShareModal}
           onClose={() => setShowShareModal(false)}
-          imageUri={displayUri}
+          imageUri={shareUri || displayUri}
           onSave={downloadToDevice}
         />
 
