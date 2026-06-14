@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Platform, Image,
+  Platform, Image, Modal, TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft, Star, Camera as CameraIcon, Video, QrCode,
   DollarSign, Users, CreditCard, ArrowRight,
-  CheckCircle, Zap, TrendingUp, Globe, Building2,
+  CheckCircle, Zap, TrendingUp, Globe, Building2, Lock, FileText,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
@@ -17,6 +17,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import StripeConnectModal from '@/components/StripeConnectModal';
+import { getUserProfile, upsertUserProfile } from '@/utils/userProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
@@ -29,10 +30,33 @@ export default function CelebrityOnboardingScreen() {
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [stripeLinked, setStripeLinked] = useState(false);
   const [, setStripeAccountId] = useState<string | null>(null);
+  const [bio, setBio] = useState('');
+  const [showBioModal, setShowBioModal] = useState(false);
+  const [bioInput, setBioInput] = useState('');
 
   useEffect(() => {
     checkStripeStatus();
+    (async () => {
+      if (user?.id) {
+        const profile = await getUserProfile(user.id);
+        if (profile?.bio) setBio(profile.bio);
+      }
+    })();
   }, []);
+
+  const openBioModal = () => {
+    setBioInput(bio);
+    setShowBioModal(true);
+  };
+
+  const saveBio = async () => {
+    const v = bioInput.trim();
+    setBio(v);
+    setShowBioModal(false);
+    if (user?.id) {
+      await upsertUserProfile(user.id, { bio: v });
+    }
+  };
 
   const checkStripeStatus = async () => {
     try {
@@ -82,21 +106,31 @@ export default function CelebrityOnboardingScreen() {
     },
   ];
 
+  const photoDone = !!profilePhoto;
+  const bioDone = !!bio.trim();
+  const stripeDone = stripeLinked;
+
   const steps = [
     {
       num: '1',
       title: t('celOnboardStep1' as any) || 'Ajoutez votre photo de profil',
-      done: !!profilePhoto,
+      done: photoDone,
+      locked: false,
+      onPress: pickProfilePhoto,
     },
     {
       num: '2',
-      title: t('celOnboardStep2' as any) || 'Connectez votre compte Stripe',
-      done: stripeLinked,
+      title: t('celOnboardStep2' as any) || 'Ajoutez votre texte de présentation',
+      done: bioDone,
+      locked: !photoDone,
+      onPress: openBioModal,
     },
     {
       num: '3',
-      title: t('celOnboardStep3' as any) || 'Créez votre première session ou événement',
-      done: false,
+      title: t('celOnboardStep3' as any) || 'Créez ou connectez votre compte Stripe pour recevoir les paiements',
+      done: stripeDone,
+      locked: !bioDone,
+      onPress: () => setShowStripeModal(true),
     },
   ];
 
@@ -248,51 +282,26 @@ export default function CelebrityOnboardingScreen() {
             {t('celOnboardStepsSection' as any) || 'ÉTAPES POUR COMMENCER'}
           </Text>
           {steps.map((s, i) => (
-            <View key={i} style={styles.stepRow}>
+            <TouchableOpacity
+              key={i}
+              style={[styles.stepRow, s.locked && { opacity: 0.4 }]}
+              onPress={s.onPress}
+              disabled={s.locked || s.done}
+              activeOpacity={0.7}
+            >
               <View style={[styles.stepNum, s.done && styles.stepNumDone]}>
                 {s.done ? (
                   <CheckCircle size={18} color="#fff" />
+                ) : s.locked ? (
+                  <Lock size={14} color="#9ca3af" />
                 ) : (
                   <Text style={styles.stepNumText}>{s.num}</Text>
                 )}
               </View>
               <Text style={[styles.stepTitle, s.done && styles.stepTitleDone]}>{s.title}</Text>
-            </View>
+              {!s.locked && !s.done && <ArrowRight size={16} color="#6b7280" />}
+            </TouchableOpacity>
           ))}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t('celOnboardStripeSection' as any) || 'PAIEMENTS'}
-          </Text>
-          <View style={styles.stripeCard}>
-            <View style={styles.stripeHeader}>
-              <CreditCard size={24} color={stripeLinked ? '#10b981' : '#6366f1'} />
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.stripeTitle}>Stripe Connect</Text>
-                <Text style={styles.stripeDesc}>
-                  {stripeLinked
-                    ? (t('celOnboardStripeLinked' as any) || 'Votre compte Stripe est connecté. Vous pouvez recevoir des paiements.')
-                    : (t('celOnboardStripeNotLinked' as any) || 'Connectez votre compte Stripe pour recevoir les paiements de vos fans.')
-                  }
-                </Text>
-              </View>
-              {stripeLinked && <CheckCircle size={20} color="#10b981" />}
-            </View>
-            {!stripeLinked && (
-              <TouchableOpacity
-                style={styles.stripeButton}
-                onPress={() => setShowStripeModal(true)}
-                activeOpacity={0.8}
-              >
-                <CreditCard size={18} color="#fff" />
-                <Text style={styles.stripeButtonText}>
-                  {t('celOnboardStripeConnect' as any) || 'Connecter Stripe'}
-                </Text>
-                <ArrowRight size={18} color="#fff" />
-              </TouchableOpacity>
-            )}
-          </View>
         </View>
 
         <View style={styles.section}>
@@ -375,6 +384,39 @@ export default function CelebrityOnboardingScreen() {
         celebrityName=""
         userId={user?.id}
       />
+
+      <Modal visible={showBioModal} transparent animationType="fade" onRequestClose={() => setShowBioModal(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+          <View style={{ width: '100%', maxWidth: 440, backgroundColor: '#0f1e30', borderRadius: 20, padding: 22, borderWidth: 1, borderColor: 'rgba(16,185,129,0.2)' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <FileText size={22} color="#10b981" />
+              <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700' }}>{t('celOnboardBioTitle' as any) || 'Texte de présentation'}</Text>
+            </View>
+            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginBottom: 14, lineHeight: 19 }}>
+              {t('celOnboardBioSub' as any) || 'Ce texte apparaîtra dans le « À propos » de votre profil public.'}
+            </Text>
+            <TextInput
+              style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, padding: 14, color: '#fff', fontSize: 15, minHeight: 120, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
+              value={bioInput}
+              onChangeText={setBioInput}
+              placeholder={t('celOnboardBioPlaceholder' as any) || 'Ex : Acteur et humoriste français, connu pour...'}
+              placeholderTextColor="#6b7280"
+              multiline
+              maxLength={300}
+              textAlignVertical="top"
+            />
+            <Text style={{ color: '#6b7280', fontSize: 12, textAlign: 'right', marginTop: 6 }}>{bioInput.length}/300</Text>
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
+              <TouchableOpacity style={{ flex: 1, paddingVertical: 13, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center' }} onPress={() => setShowBioModal(false)} activeOpacity={0.7}>
+                <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>{t('cancel') || 'Annuler'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={{ flex: 1, paddingVertical: 13, borderRadius: 12, backgroundColor: '#10b981', alignItems: 'center' }} onPress={saveBio} activeOpacity={0.8}>
+                <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>{t('save' as any) || 'Enregistrer'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

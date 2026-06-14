@@ -5,6 +5,7 @@ export interface UserProfile {
   id: string;
   user_id: string;
   celebrity_name: string | null;
+  bio: string | null;
   stripe_connect_account_id: string | null;
   created_at: string;
   updated_at: string;
@@ -35,7 +36,7 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
 
 export const upsertUserProfile = async (
   userId: string,
-  updates: { celebrity_name?: string; stripe_connect_account_id?: string }
+  updates: { celebrity_name?: string; bio?: string; stripe_connect_account_id?: string }
 ): Promise<UserProfile | null> => {
   try {
     const { data, error } = await supabase
