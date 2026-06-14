@@ -2960,6 +2960,104 @@ app.get('/api/creator-verification-status', async (req, res) => {
   }
 });
 
+// --- Vérification "personnalité publique" (sportif / acteur / chanteur / artiste) ---
+app.post('/api/celebrity-verification-request', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const { user_id, display_name, category, proof_links, additional_info } = req.body;
+
+    if (!user_id || !display_name || !category) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (user_id !== authUser.id) {
+      return res.status(403).json({ error: 'user_id does not match authenticated user' });
+    }
+
+    const validCategories = ['athlete', 'actor', 'singer', 'artist', 'other'];
+    if (!validCategories.includes(category)) {
+      return res.status(400).json({ error: 'Invalid category' });
+    }
+
+    const supabase = getSupabaseAdmin();
+
+    const { data: existing } = await supabase
+      .from('celebrity_verification_requests')
+      .select('id, status')
+      .eq('user_id', user_id)
+      .in('status', ['pending', 'approved'])
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      const r = existing[0];
+      if (r.status === 'approved') {
+        return res.status(409).json({ error: 'already_verified', message: 'Your profile is already verified' });
+      }
+      return res.status(409).json({ error: 'request_pending', message: 'A verification request is already pending' });
+    }
+
+    const { data, error } = await supabase
+      .from('celebrity_verification_requests')
+      .insert({
+        user_id,
+        display_name,
+        category,
+        proof_links: proof_links || {},
+        additional_info: additional_info || null,
+        status: 'pending',
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({ success: true, request: data });
+  } catch (error) {
+    console.error('[celebrity-verification-request]', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/celebrity-verification-status', async (req, res) => {
+  try {
+    const { user_id } = req.query;
+    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+
+    const supabase = getSupabaseAdmin();
+
+    const { data, error } = await supabase
+      .from('celebrity_verification_requests')
+      .select('*')
+      .eq('user_id', user_id)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      return res.json({ has_request: false, status: null });
+    }
+
+    const request = data[0];
+    res.json({
+      has_request: true,
+      status: request.status,
+      display_name: request.display_name,
+      category: request.category,
+      admin_notes: request.admin_notes,
+      created_at: request.created_at,
+      reviewed_at: request.reviewed_at,
+    });
+  } catch (error) {
+    console.error('[celebrity-verification-status]', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const EXPO_PORT = 19006;
 const PORT = 5000;
 
