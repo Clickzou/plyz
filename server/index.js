@@ -2520,18 +2520,41 @@ app.post('/api/upsert-celebrity-pricing', async (req, res) => {
 app.post('/api/update-celebrity-profile', async (req, res) => {
   try {
     const db = getSupabaseAdmin();
-    const { user_id, website } = req.body;
+    const { user_id, website, bio, stage_name } = req.body;
     if (!user_id) return res.status(400).json({ error: 'user_id required' });
 
-    const updates = { updated_at: new Date().toISOString() };
-    if (website !== undefined) updates.website = website;
+    // Ne met à jour que les champs réellement fournis (mise à jour partielle).
+    const fields = { updated_at: new Date().toISOString() };
+    if (website !== undefined) fields.website = website;
+    if (bio !== undefined) fields.bio = bio;
+    if (stage_name !== undefined) fields.stage_name = stage_name;
 
-    const { data, error } = await db
+    const { data: existing } = await db
       .from('celebrity_profiles')
-      .update(updates)
+      .select('user_id')
       .eq('user_id', user_id)
-      .select()
-      .single();
+      .maybeSingle();
+
+    let data, error;
+    if (existing) {
+      ({ data, error } = await db
+        .from('celebrity_profiles')
+        .update(fields)
+        .eq('user_id', user_id)
+        .select()
+        .single());
+    } else {
+      // Pas encore de profil célébrité : on le crée (nécessite un nom public).
+      if (!stage_name) return res.status(400).json({ error: 'stage_name required to create profile' });
+      await db
+        .from('profiles')
+        .upsert({ id: user_id, role: 'celebrity', updated_at: new Date().toISOString() }, { onConflict: 'id' });
+      ({ data, error } = await db
+        .from('celebrity_profiles')
+        .insert({ user_id, ...fields })
+        .select()
+        .single());
+    }
 
     if (error) throw error;
     res.json({ profile: data });

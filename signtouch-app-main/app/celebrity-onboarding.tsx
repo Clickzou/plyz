@@ -21,6 +21,8 @@ import { getUserProfile, upsertUserProfile } from '@/utils/userProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
+const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+
 export default function CelebrityOnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -53,8 +55,20 @@ export default function CelebrityOnboardingScreen() {
     const v = bioInput.trim();
     setBio(v);
     setShowBioModal(false);
-    if (user?.id) {
+    if (!user?.id) return;
+    try {
+      // 1. Sauvegarde interne (source d'édition dans l'app)
       await upsertUserProfile(user.id, { bio: v });
+      // 2. Publication sur le profil public : le « À propos » est lu depuis celebrity_profiles.bio
+      const prof = await getUserProfile(user.id);
+      const stageName = (prof?.celebrity_name || '').trim();
+      await fetch(`${API_BASE}/api/update-celebrity-profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id, bio: v, ...(stageName ? { stage_name: stageName } : {}) }),
+      });
+    } catch (e) {
+      console.warn('[saveBio] publication sur le profil public échouée', e);
     }
   };
 
