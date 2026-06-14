@@ -666,17 +666,6 @@ export default function AccountScreen() {
             </View>
             <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('about')}</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
-            onPress={() => handlePress('replayTutorial')}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
-              <HelpCircle size={24} color="#10b981" strokeWidth={2} />
-            </View>
-            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('replayTutorial') || 'Replay Tutorial'}</Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
