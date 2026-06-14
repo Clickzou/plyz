@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft, Star, Camera as CameraIcon, Video, QrCode,
   DollarSign, Users, CreditCard, ArrowRight,
-  CheckCircle, Zap, TrendingUp, Globe, Building2, Lock, FileText,
+  CheckCircle, Zap, TrendingUp, Globe, Building2, Lock, FileText, Award,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
@@ -347,6 +347,27 @@ export default function CelebrityOnboardingScreen() {
                 </Text>
               </View>
               <ArrowRight size={18} color="#8b5cf6" />
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.orgCard, { marginTop: 10 }]}
+            onPress={() => router.push('/celebrity-verification' as any)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.orgCardInner}>
+              <View style={[styles.orgIconWrap, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
+                <Award size={24} color="#10b981" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.orgCardTitle}>
+                  {t('celOnboardCelebTitle' as any) || 'Sportif, artiste, chanteur ?'}
+                </Text>
+                <Text style={styles.orgCardDesc}>
+                  {t('celOnboardCelebDesc' as any) || 'Acteurs, sportifs, musiciens... Faites vérifier votre profil pour obtenir un badge « Officiel ».'}
+                </Text>
+              </View>
+              <ArrowRight size={18} color="#10b981" />
             </View>
           </TouchableOpacity>
         </View>
