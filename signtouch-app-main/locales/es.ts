@@ -1445,4 +1445,5 @@ export default {
   confirm: 'Confirmar',
   creatorVerifApprovedTitle: '¡Perfil verificado!',
   creatorVerifApprovedMsg: '¡Felicidades! Tu perfil de creador se ha verificado automáticamente. Tu insignia oficial ya está activa.',
+  legalDocuments: 'Documentos legales',
 };

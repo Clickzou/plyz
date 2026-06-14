@@ -1451,4 +1451,5 @@ export default {
   confirm: 'নিশ্চিত করুন',
   creatorVerifApprovedTitle: 'প্রোফাইল যাচাই হয়েছে!',
   creatorVerifApprovedMsg: 'অভিনন্দন! আপনার ক্রিয়েটর প্রোফাইল স্বয়ংক্রিয়ভাবে যাচাই করা হয়েছে। আপনার অফিশিয়াল ব্যাজ এখন সক্রিয়।',
+  legalDocuments: 'আইনি নথি',
 };

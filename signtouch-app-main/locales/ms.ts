@@ -1451,4 +1451,5 @@ export default {
   confirm: 'Sahkan',
   creatorVerifApprovedTitle: 'Profil disahkan!',
   creatorVerifApprovedMsg: 'Tahniah! Profil pencipta anda telah disahkan secara automatik. Lencana rasmi anda kini aktif.',
+  legalDocuments: 'Dokumen undang-undang',
 };

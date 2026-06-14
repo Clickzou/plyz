@@ -599,7 +599,7 @@ export default function PhotoEditorCanvas() {
 
       <div style={styles.adjustmentsBar}>
         <div style={styles.adjustmentRow}>
-          <label style={styles.adjustmentLabel}>Luminosité</label>
+          <label style={styles.adjustmentLabel}>{t('brightness')}</label>
           <div style={styles.adjustmentControls}>
             <button
               onClick={() => setBrightness(Math.max(-100, brightness - 5))}
@@ -629,7 +629,7 @@ export default function PhotoEditorCanvas() {
         </div>
 
         <div style={styles.adjustmentRow}>
-          <label style={styles.adjustmentLabel}>Contraste</label>
+          <label style={styles.adjustmentLabel}>{t('contrast')}</label>
           <div style={styles.adjustmentControls}>
             <button
               onClick={() => setContrast(Math.max(-100, contrast - 5))}
@@ -659,7 +659,7 @@ export default function PhotoEditorCanvas() {
         </div>
 
         <div style={styles.adjustmentRow}>
-          <label style={styles.adjustmentLabel}>Saturation</label>
+          <label style={styles.adjustmentLabel}>{t('saturation')}</label>
           <div style={styles.adjustmentControls}>
             <button
               onClick={() => setSaturation(Math.max(-100, saturation - 5))}

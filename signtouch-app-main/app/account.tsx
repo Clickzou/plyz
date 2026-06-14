@@ -705,7 +705,7 @@ export default function AccountScreen() {
             <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
               <FileText size={24} color="#10b981" strokeWidth={2} />
             </View>
-            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>Documents Légaux</Text>
+            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('legalDocuments' as any) || 'Documents légaux'}</Text>
           </TouchableOpacity>
         </View>
 

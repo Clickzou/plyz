@@ -1446,4 +1446,5 @@ export default {
   confirm: 'Bestätigen',
   creatorVerifApprovedTitle: 'Profil verifiziert!',
   creatorVerifApprovedMsg: 'Glückwunsch! Dein Creator-Profil wurde automatisch verifiziert. Dein offizielles Abzeichen ist jetzt aktiv.',
+  legalDocuments: 'Rechtliche Dokumente',
 };

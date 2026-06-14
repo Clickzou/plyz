@@ -1458,4 +1458,5 @@ export default {
   confirm: 'Confirmer',
   creatorVerifApprovedTitle: 'Profil vérifié !',
   creatorVerifApprovedMsg: 'Félicitations ! Votre profil créateur a été vérifié automatiquement. Votre badge officiel est maintenant actif.',
+  legalDocuments: 'Documents légaux',
 };

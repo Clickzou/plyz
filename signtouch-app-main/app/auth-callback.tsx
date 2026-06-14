@@ -4,9 +4,11 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/utils/supabase';
 import * as Linking from 'expo-linking';
+import { useTranslation } from '@/contexts/LanguageContext';
 
 export default function AuthCallbackScreen() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [, setVerifying] = useState(true);
   const [debugInfo, setDebugInfo] = useState<string>('');
@@ -203,7 +205,7 @@ export default function AuthCallbackScreen() {
           style={styles.button}
           onPress={() => router.replace('/')}
         >
-          <Text style={styles.buttonText}>Retour à l'accueil</Text>
+          <Text style={styles.buttonText}>{t('backToHome' as any) || 'Retour à l\'accueil'}</Text>
         </TouchableOpacity>
       </View>
     );

@@ -1446,4 +1446,5 @@ export default {
   confirm: 'تأكيد',
   creatorVerifApprovedTitle: 'تم التحقق من الملف الشخصي!',
   creatorVerifApprovedMsg: 'تهانينا! تم التحقق تلقائيًا من ملفك الشخصي كصانع محتوى. شارتك الرسمية مفعّلة الآن.',
+  legalDocuments: 'المستندات القانونية',
 };

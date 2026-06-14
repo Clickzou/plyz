@@ -1446,4 +1446,5 @@ export default {
   confirm: '確認',
   creatorVerifApprovedTitle: 'プロフィールが認証されました！',
   creatorVerifApprovedMsg: 'おめでとうございます！あなたのクリエイタープロフィールは自動的に認証されました。公式バッジが有効になりました。',
+  legalDocuments: '法的文書',
 };
