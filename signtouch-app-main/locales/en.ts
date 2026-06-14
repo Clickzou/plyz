@@ -1452,4 +1452,16 @@ export default {
   textAdded: 'Text added!',
   selectFont: 'Font',
   add: 'Add',
+
+  // Stripe Connect modal
+  stripeModalSubtitle: 'To receive money from your live sessions, create or connect your Stripe Connect account.',
+  stripeModalSubtitleBold: 'It\'s quick, free and 100% secure.',
+  stripeModalCreateAccount: 'Create my Stripe Connect account',
+  stripeModalHaveAccount: 'I already have a Stripe Connect account',
+  stripeModalNoAccountTitle: 'No account found',
+  stripeModalNoAccountDesc: 'No Stripe Connect account is linked to this profile. Tap "Create my Stripe Connect account" to get started.',
+  stripeModalAdminToggle: 'Admin mode',
+  stripeModalAdminLabel: 'Stripe Connect ID (acct_...)',
+  stripeModalAdminError: 'The ID must start with "acct_"',
+  stripeModalAdminConnect: 'Connect this account',
 };

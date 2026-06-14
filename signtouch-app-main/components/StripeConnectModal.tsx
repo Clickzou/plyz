@@ -345,9 +345,9 @@ export default function StripeConnectModal({
                   {t('stripeConnectTitle') || 'Recevez vos paiements'}
                 </Text>
                 <Text style={styles.subtitle}>
-                  Pour recevoir l'argent de vos sessions live, créez ou connectez votre compte Stripe Connect.
+                  {t('stripeModalSubtitle') || 'Pour recevoir l\'argent de vos sessions live, créez ou connectez votre compte Stripe Connect.'}
                   {'\n'}
-                  <Text style={styles.subtitleBold}>C'est rapide, gratuit et 100% sécurisé.</Text>
+                  <Text style={styles.subtitleBold}>{t('stripeModalSubtitleBold') || 'C\'est rapide, gratuit et 100% sécurisé.'}</Text>
                 </Text>
               </View>
 
@@ -387,7 +387,7 @@ export default function StripeConnectModal({
                     ) : (
                       <>
                         <Text style={styles.connectButtonText}>
-                          Créer mon compte Stripe Connect
+                          {t('stripeModalCreateAccount') || 'Créer mon compte Stripe Connect'}
                         </Text>
                         <ArrowRight size={20} color="#ffffff" />
                       </>
@@ -401,7 +401,7 @@ export default function StripeConnectModal({
                   >
                     <ExternalLink size={16} color="#635BFF" />
                     <Text style={styles.existingAccountText}>
-                      J'ai déjà un compte Stripe Connect
+                      {t('stripeModalHaveAccount') || 'J\'ai déjà un compte Stripe Connect'}
                     </Text>
                   </TouchableOpacity>
 
@@ -417,10 +417,10 @@ export default function StripeConnectModal({
                   <View style={styles.onboardingInfo}>
                     <CreditCard size={32} color="#fbbf24" />
                     <Text style={styles.onboardingTitle}>
-                      Aucun compte trouvé
+                      {t('stripeModalNoAccountTitle') || 'Aucun compte trouvé'}
                     </Text>
                     <Text style={styles.onboardingDesc}>
-                      Aucun compte Stripe Connect n'est associé à ce profil. Cliquez sur « Créer mon compte Stripe Connect » pour commencer.
+                      {t('stripeModalNoAccountDesc') || 'Aucun compte Stripe Connect n\'est associé à ce profil. Cliquez sur « Créer mon compte Stripe Connect » pour commencer.'}
                     </Text>
                   </View>
 
@@ -437,7 +437,7 @@ export default function StripeConnectModal({
                     disabled={isConnecting}
                   >
                     <Text style={styles.connectButtonText}>
-                      Créer mon compte Stripe Connect
+                      {t('stripeModalCreateAccount') || 'Créer mon compte Stripe Connect'}
                     </Text>
                     <ArrowRight size={20} color="#ffffff" />
                   </TouchableOpacity>
@@ -447,14 +447,14 @@ export default function StripeConnectModal({
                     onPress={() => setShowAdminInput(!showAdminInput)}
                   >
                     <Text style={styles.adminToggleText}>
-                      {showAdminInput ? '▼ Mode admin' : '▶ Mode admin'}
+                      {(showAdminInput ? '▼ ' : '▶ ') + (t('stripeModalAdminToggle') || 'Mode admin')}
                     </Text>
                   </TouchableOpacity>
 
                   {showAdminInput && (
                     <View style={styles.adminSection}>
                       <Text style={styles.adminLabel}>
-                        Identifiant Stripe Connect (acct_...)
+                        {t('stripeModalAdminLabel') || 'Identifiant Stripe Connect (acct_...)'}
                       </Text>
                       <View style={[styles.adminInputContainer, adminInputError && styles.adminInputError]}>
                         <CreditCard size={18} color="rgba(255,255,255,0.4)" />
@@ -474,7 +474,7 @@ export default function StripeConnectModal({
                       </View>
                       {adminInputError && (
                         <Text style={styles.errorText}>
-                          L'identifiant doit commencer par "acct_"
+                          {t('stripeModalAdminError') || 'L\'identifiant doit commencer par « acct_ »'}
                         </Text>
                       )}
                       <TouchableOpacity
@@ -486,7 +486,7 @@ export default function StripeConnectModal({
                           <ActivityIndicator color="#ffffff" />
                         ) : (
                           <Text style={styles.adminConnectButtonText}>
-                            Connecter ce compte
+                            {t('stripeModalAdminConnect') || 'Connecter ce compte'}
                           </Text>
                         )}
                       </TouchableOpacity>
