@@ -1464,4 +1464,14 @@ export default {
   stripeModalAdminLabel: 'Stripe Connect ID (acct_...)',
   stripeModalAdminError: 'The ID must start with "acct_"',
   stripeModalAdminConnect: 'Connect this account',
+
+  // Celebrity profile / verification
+  celOnboardBioTitle: 'Bio',
+  celOnboardBioSub: 'This text will appear in the "About" section of your public profile.',
+  celOnboardBioPlaceholder: 'E.g. French actor and comedian, known for...',
+  celebrityPublicName: 'Public name',
+  celebrityPublicNamePlaceholder: 'Your stage name (e.g. Omar Sy)',
+  confirm: 'Confirm',
+  creatorVerifApprovedTitle: 'Profile verified!',
+  creatorVerifApprovedMsg: 'Congratulations! Your creator profile has been automatically verified. Your official badge is now active.',
 };

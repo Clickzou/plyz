@@ -1438,4 +1438,12 @@ export default {
   stripeModalAdminLabel: 'معرّف Stripe Connect (acct_...)',
   stripeModalAdminError: 'يجب أن يبدأ المعرّف بـ "acct_"',
   stripeModalAdminConnect: 'ربط هذا الحساب',
+  celOnboardBioTitle: 'نبذة',
+  celOnboardBioSub: 'سيظهر هذا النص في قسم "نبذة عني" من ملفك الشخصي العام.',
+  celOnboardBioPlaceholder: 'مثال: ممثل وكوميدي فرنسي، معروف بـ...',
+  celebrityPublicName: 'الاسم العلني',
+  celebrityPublicNamePlaceholder: 'اسمك الفني (مثال: Omar Sy)',
+  confirm: 'تأكيد',
+  creatorVerifApprovedTitle: 'تم التحقق من الملف الشخصي!',
+  creatorVerifApprovedMsg: 'تهانينا! تم التحقق تلقائيًا من ملفك الشخصي كصانع محتوى. شارتك الرسمية مفعّلة الآن.',
 };

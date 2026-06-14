@@ -1443,4 +1443,12 @@ export default {
   stripeModalAdminLabel: 'Stripe Connect ID (acct_...)',
   stripeModalAdminError: 'ID অবশ্যই "acct_" দিয়ে শুরু হতে হবে',
   stripeModalAdminConnect: 'এই অ্যাকাউন্ট সংযুক্ত করুন',
+  celOnboardBioTitle: 'বায়ো',
+  celOnboardBioSub: 'এই টেক্সটটি আপনার সর্বজনীন প্রোফাইলের "সম্পর্কে" বিভাগে প্রদর্শিত হবে।',
+  celOnboardBioPlaceholder: 'যেমন ফরাসি অভিনেতা ও কৌতুকশিল্পী, যিনি পরিচিত...',
+  celebrityPublicName: 'সর্বজনীন নাম',
+  celebrityPublicNamePlaceholder: 'আপনার মঞ্চ নাম (যেমন Omar Sy)',
+  confirm: 'নিশ্চিত করুন',
+  creatorVerifApprovedTitle: 'প্রোফাইল যাচাই হয়েছে!',
+  creatorVerifApprovedMsg: 'অভিনন্দন! আপনার ক্রিয়েটর প্রোফাইল স্বয়ংক্রিয়ভাবে যাচাই করা হয়েছে। আপনার অফিশিয়াল ব্যাজ এখন সক্রিয়।',
 };

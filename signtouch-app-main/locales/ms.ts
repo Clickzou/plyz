@@ -1443,4 +1443,12 @@ export default {
   stripeModalAdminLabel: 'ID Stripe Connect (acct_...)',
   stripeModalAdminError: 'ID mesti bermula dengan "acct_"',
   stripeModalAdminConnect: 'Hubungkan akaun ini',
+  celOnboardBioTitle: 'Bio',
+  celOnboardBioSub: 'Teks ini akan muncul di bahagian "Perihal" pada profil awam anda.',
+  celOnboardBioPlaceholder: 'Cth. Pelakon dan pelawak Perancis, terkenal kerana...',
+  celebrityPublicName: 'Nama awam',
+  celebrityPublicNamePlaceholder: 'Nama pentas anda (cth. Omar Sy)',
+  confirm: 'Sahkan',
+  creatorVerifApprovedTitle: 'Profil disahkan!',
+  creatorVerifApprovedMsg: 'Tahniah! Profil pencipta anda telah disahkan secara automatik. Lencana rasmi anda kini aktif.',
 };

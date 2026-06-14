@@ -1438,4 +1438,12 @@ export default {
   stripeModalAdminLabel: 'Идентификатор Stripe Connect (acct_...)',
   stripeModalAdminError: 'Идентификатор должен начинаться с «acct_»',
   stripeModalAdminConnect: 'Подключить этот аккаунт',
+  celOnboardBioTitle: 'Биография',
+  celOnboardBioSub: 'Этот текст появится в разделе «О себе» вашего публичного профиля.',
+  celOnboardBioPlaceholder: 'Напр.: Французский актёр и комик, известный по...',
+  celebrityPublicName: 'Публичное имя',
+  celebrityPublicNamePlaceholder: 'Ваш сценический псевдоним (напр., Omar Sy)',
+  confirm: 'Подтвердить',
+  creatorVerifApprovedTitle: 'Профиль подтверждён!',
+  creatorVerifApprovedMsg: 'Поздравляем! Ваш профиль автора был автоматически подтверждён. Ваш официальный значок теперь активен.',
 };

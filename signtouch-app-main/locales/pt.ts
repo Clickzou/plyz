@@ -1438,4 +1438,12 @@ export default {
   stripeModalAdminLabel: 'Identificador Stripe Connect (acct_...)',
   stripeModalAdminError: 'O identificador deve começar com «acct_»',
   stripeModalAdminConnect: 'Conectar esta conta',
+  celOnboardBioTitle: 'Texto de apresentação',
+  celOnboardBioSub: 'Este texto aparecerá na secção «Sobre» do seu perfil público.',
+  celOnboardBioPlaceholder: 'Ex.: Ator e humorista francês, conhecido por...',
+  celebrityPublicName: 'Nome público',
+  celebrityPublicNamePlaceholder: 'O seu nome artístico (ex.: Omar Sy)',
+  confirm: 'Confirmar',
+  creatorVerifApprovedTitle: 'Perfil verificado!',
+  creatorVerifApprovedMsg: 'Parabéns! O seu perfil de criador foi verificado automaticamente. O seu emblema oficial está agora ativo.',
 };

@@ -1438,4 +1438,12 @@ export default {
   stripeModalAdminLabel: 'Stripe Connect ID (acct_...)',
   stripeModalAdminError: 'IDは「acct_」で始まる必要があります',
   stripeModalAdminConnect: 'このアカウントを接続',
+  celOnboardBioTitle: 'プロフィール',
+  celOnboardBioSub: 'このテキストは公開プロフィールの「概要」セクションに表示されます。',
+  celOnboardBioPlaceholder: '例：フランスの俳優兼コメディアン、…で知られる',
+  celebrityPublicName: '公開名',
+  celebrityPublicNamePlaceholder: 'あなたの芸名（例：Omar Sy）',
+  confirm: '確認',
+  creatorVerifApprovedTitle: 'プロフィールが認証されました！',
+  creatorVerifApprovedMsg: 'おめでとうございます！あなたのクリエイタープロフィールは自動的に認証されました。公式バッジが有効になりました。',
 };

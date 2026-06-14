@@ -1438,4 +1438,12 @@ export default {
   stripeModalAdminLabel: 'Stripe Connect ID (acct_...)',
   stripeModalAdminError: 'ID "acct_" से शुरू होनी चाहिए',
   stripeModalAdminConnect: 'इस खाते को जोड़ें',
+  celOnboardBioTitle: 'बायो',
+  celOnboardBioSub: 'यह टेक्स्ट आपकी सार्वजनिक प्रोफ़ाइल के "बारे में" सेक्शन में दिखाई देगा।',
+  celOnboardBioPlaceholder: 'उदा. फ्रांसीसी अभिनेता और हास्य कलाकार, जिन्हें जाना जाता है...',
+  celebrityPublicName: 'सार्वजनिक नाम',
+  celebrityPublicNamePlaceholder: 'आपका मंच नाम (उदा. Omar Sy)',
+  confirm: 'पुष्टि करें',
+  creatorVerifApprovedTitle: 'प्रोफ़ाइल सत्यापित!',
+  creatorVerifApprovedMsg: 'बधाई हो! आपकी क्रिएटर प्रोफ़ाइल स्वचालित रूप से सत्यापित हो गई है। आपका आधिकारिक बैज अब सक्रिय है।',
 };
