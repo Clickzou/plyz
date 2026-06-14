@@ -254,6 +254,17 @@ export default function CelebrityDetailScreen() {
     }
   };
 
+  const openPostDetail = (post: any) => {
+    router.push({
+      pathname: '/post-detail',
+      params: {
+        post: JSON.stringify(post),
+        celebrityName: celebrity?.display_name || celebrity?.stage_name || '',
+        celebrityAvatar: celebrity?.avatar_url || '',
+      },
+    } as any);
+  };
+
   const handleReport = async () => {
     if (!reportReason.trim()) return;
     try {
@@ -560,6 +571,7 @@ export default function CelebrityDetailScreen() {
             ) : (
               celebrity.posts.map(post => (
                 <View key={post.id} style={styles.postCard}>
+                  <TouchableOpacity activeOpacity={0.7} onPress={() => openPostDetail(post)}>
                   {post.kind === 'event' && (
                     <View style={styles.postEventBadge}>
                       <Calendar size={12} color="#6366f1" />
@@ -571,6 +583,7 @@ export default function CelebrityDetailScreen() {
                   {post.media_url && (
                     <Image source={{ uri: post.media_url }} style={styles.postImage} />
                   )}
+                  </TouchableOpacity>
 
                   {post.kind === 'event' && (
                     <View style={styles.postEventDetails}>

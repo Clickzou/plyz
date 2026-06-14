@@ -107,15 +107,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const router = useRouter();
 
   useEffect(() => {
-    AsyncStorage.getItem(ONBOARDING_KEY).then(val => {
-      if (val !== 'true') {
-        setTimeout(() => {
-          setIsOnboarding(true);
-          setCurrentStep(0);
-        }, 500);
-      }
-      setHasChecked(true);
-    });
+    // Démo désactivée au premier lancement : le tutoriel guidé ne démarre plus
+    // automatiquement. Il reste lançable manuellement via startOnboarding()
+    // (ex. bouton « Revoir le tutoriel » dans le compte).
+    setHasChecked(true);
   }, []);
 
   const startOnboarding = useCallback(() => {
