@@ -23,7 +23,7 @@ import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Language } from '@/locales';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getStripeAccountId, saveStripeAccountId } from '@/utils/userProfile';
+import { getStripeAccountId, saveStripeAccountId, getUserProfile, upsertUserProfile } from '@/utils/userProfile';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
@@ -63,6 +63,16 @@ export default function AccountScreen() {
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [, setStripeLoading] = useState(false);
+  const [celebrityName, setCelebrityName] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      if (user?.id) {
+        const profile = await getUserProfile(user.id);
+        if (profile?.celebrity_name) setCelebrityName(profile.celebrity_name);
+      }
+    })();
+  }, [user?.id]);
 
   useEffect(() => {
     checkLocalStripeConnect();
@@ -220,6 +230,11 @@ export default function AccountScreen() {
     if (!result.canceled && result.assets[0]) {
       await setProfilePhoto(result.assets[0].uri);
     }
+  };
+
+  const saveCelebrityName = async () => {
+    if (!user?.id) return;
+    await upsertUserProfile(user.id, { celebrity_name: celebrityName.trim() });
   };
 
   return (
@@ -532,6 +547,22 @@ export default function AccountScreen() {
                 )}
               </View>
             </View>
+
+            {isCelebrity && (
+              <View style={{ marginTop: 12, marginBottom: 4 }}>
+                <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginBottom: 6, fontWeight: '600' }}>
+                  {t('celebrityPublicName' as any) || 'Nom public'}
+                </Text>
+                <TextInput
+                  style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: '#fff', fontSize: 15, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
+                  value={celebrityName}
+                  onChangeText={setCelebrityName}
+                  onBlur={saveCelebrityName}
+                  placeholder={t('celebrityPublicNamePlaceholder' as any) || 'Votre nom de scène (ex : Omar Sy)'}
+                  placeholderTextColor="#6b7280"
+                />
+              </View>
+            )}
 
             {isCelebrity && (
               <TouchableOpacity
