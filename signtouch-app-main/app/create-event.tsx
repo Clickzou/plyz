@@ -24,6 +24,8 @@ import Svg, { Path, G } from 'react-native-svg';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useLanguage } from '@/contexts/LanguageContext';
 import AccountModal from '@/components/AccountModal';
+import StripeConnectModal from '@/components/StripeConnectModal';
+import { getStripeAccountId } from '@/utils/userProfile';
 import { EventType } from '@/utils/memoriesStorage';
 import { useAuth } from '@/contexts/AuthContext';
 import { scheduleCelebrityReminders } from '@/utils/scheduleReminders';
@@ -113,6 +115,8 @@ export default function CreateEventScreen() {
   const { t, language } = useLanguage();
   const { user } = useAuth();
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showStripeConnect, setShowStripeConnect] = useState(false);
+  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
 
   const [step, setStep] = useState<'config' | 'signers' | 'success'>('config');
   const [eventName, setEventName] = useState('');
@@ -220,6 +224,19 @@ export default function CreateEventScreen() {
     const validSigners = (formData.signers || []).filter((s: SignerEntry) => s.name.trim() && s.paths.length > 0);
     if (validSigners.length === 0) return;
 
+    // Un événement payant nécessite un compte Stripe pour percevoir l'argent
+    let effectiveStripeAccount: string | null = stripeAccountId;
+    if ((formData.selectedPriceCents || 0) > 0) {
+      if (!effectiveStripeAccount) {
+        effectiveStripeAccount = await checkStripeConnectStatus();
+      }
+      if (!effectiveStripeAccount) {
+        setShowStripeConnect(true);
+        return;
+      }
+      if (effectiveStripeAccount !== stripeAccountId) setStripeAccountId(effectiveStripeAccount);
+    }
+
     setIsCreating(true);
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -254,7 +271,7 @@ export default function CreateEventScreen() {
       setStep('success');
 
       if (session && priceCents && priceCents > 0 && STRIPE_SERVER_URL) {
-        const stripeAccountId = await AsyncStorage.getItem('stripe_connect_account_id');
+        const acctForPayment = effectiveStripeAccount || await AsyncStorage.getItem('stripe_connect_account_id');
         try {
           await fetch(`${STRIPE_SERVER_URL}/api/set-event-payment-config`, {
             method: 'POST',
@@ -262,7 +279,7 @@ export default function CreateEventScreen() {
             body: JSON.stringify({
               eventSessionId: session.id,
               priceCents: priceCents,
-              celebrityStripeAccountId: stripeAccountId,
+              celebrityStripeAccountId: acctForPayment,
               celebrityName: validSigners[0]?.name || 'Célébrité',
               creatorId: user?.id,
             }),
@@ -441,12 +458,42 @@ export default function CreateEventScreen() {
     await performCreateEvent();
   };
 
-  const performCreateEvent = async () => {
-    
+  const checkStripeConnectStatus = async (): Promise<string | null> => {
+    try {
+      if (user?.id) {
+        return await getStripeAccountId(user.id);
+      }
+      return await AsyncStorage.getItem('stripe_connect_account_id');
+    } catch {
+      return null;
+    }
+  };
+
+  const handleStripeConnected = async (accountId: string) => {
+    setStripeAccountId(accountId);
+    setShowStripeConnect(false);
+    await performCreateEvent(accountId);
+  };
+
+  const performCreateEvent = async (connectedAccountId?: string) => {
+
     const validSigners = signers.filter(s => s.name.trim() && s.paths.length > 0);
     if (validSigners.length === 0) {
       showAlert(t('error') || 'Error', t('atLeastOneSigner') || 'Add at least one signature');
       return;
+    }
+
+    // Un événement payant nécessite un compte Stripe pour percevoir l'argent
+    let effectiveStripeAccount: string | null = connectedAccountId || stripeAccountId;
+    if (selectedPriceCents > 0) {
+      if (!effectiveStripeAccount) {
+        effectiveStripeAccount = await checkStripeConnectStatus();
+      }
+      if (!effectiveStripeAccount) {
+        setShowStripeConnect(true);
+        return;
+      }
+      if (effectiveStripeAccount !== stripeAccountId) setStripeAccountId(effectiveStripeAccount);
     }
 
     setIsCreating(true);
@@ -477,7 +524,7 @@ export default function CreateEventScreen() {
 
       const effectivePriceCents = selectedPriceCents > 0 ? selectedPriceCents : 0;
       if (session && effectivePriceCents > 0 && STRIPE_SERVER_URL) {
-        const stripeAccountId = await AsyncStorage.getItem('stripe_connect_account_id');
+        const acctForPayment = effectiveStripeAccount || await AsyncStorage.getItem('stripe_connect_account_id');
         try {
           await fetch(`${STRIPE_SERVER_URL}/api/set-event-payment-config`, {
             method: 'POST',
@@ -485,7 +532,7 @@ export default function CreateEventScreen() {
             body: JSON.stringify({
               eventSessionId: session.id,
               priceCents: effectivePriceCents,
-              celebrityStripeAccountId: stripeAccountId,
+              celebrityStripeAccountId: acctForPayment,
               celebrityName: validSigners[0]?.name || 'Célébrité',
               creatorId: user?.id,
             }),
@@ -1323,11 +1370,17 @@ export default function CreateEventScreen() {
         <AccountModal
           visible={showAccountModal}
           onClose={() => setShowAccountModal(false)}
-          onSkip={() => {
-            setShowAccountModal(false);
-            performCreateEvent();
-          }}
+          onSkip={() => setShowAccountModal(false)}
           returnPath="/create-event"
+          allowSkip={false}
+        />
+
+        <StripeConnectModal
+          visible={showStripeConnect}
+          onClose={() => setShowStripeConnect(false)}
+          onConnected={handleStripeConnected}
+          celebrityName={signers[0]?.name || eventName}
+          userId={user?.id}
         />
       </LinearGradient>
       <BottomNav />

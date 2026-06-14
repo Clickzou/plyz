@@ -290,6 +290,7 @@ export default function CreateLiveSessionScreen() {
     }
     setNameError(false);
 
+    // Une session vidéo est toujours payante : un compte Stripe est requis
     const existingAccountId = stripeAccountId || await checkStripeConnectStatus();
     if (!existingAccountId) {
       setShowStripeConnect(true);

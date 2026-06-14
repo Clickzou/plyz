@@ -9,13 +9,15 @@ interface AccountModalProps {
   onClose: () => void;
   onSkip: () => void;
   returnPath?: string;
+  allowSkip?: boolean;
 }
 
-export default function AccountModal({ 
-  visible, 
+export default function AccountModal({
+  visible,
   onClose,
   onSkip,
-  returnPath 
+  returnPath,
+  allowSkip = true,
 }: AccountModalProps) {
   const { t } = useTranslation();
   const { sendOtpCode, verifyOtpCode } = useAuth();
@@ -244,14 +246,14 @@ export default function AccountModal({
       visible={visible}
       transparent={true}
       animationType="fade"
-      onRequestClose={onSkip}
+      onRequestClose={allowSkip ? onSkip : onClose}
     >
       <View style={styles.overlay}>
         <View style={styles.container}>
           {step !== 'success' && (
             <TouchableOpacity
               style={styles.closeButton}
-              onPress={onSkip}
+              onPress={allowSkip ? onSkip : onClose}
               activeOpacity={0.7}
             >
               <X size={22} color="#9ca3af" />
