@@ -2457,11 +2457,75 @@ app.post('/api/update-autograph-status', async (req, res) => {
   }
 });
 
+// --- Contrôle de sécurité des liens de site web saisis par les célébrités ---
+// Bloque les liens vers du contenu interdit (mots-clés) + vérifie via Google Safe
+// Browsing (arnaques, virus, phishing) si la clé GOOGLE_SAFE_BROWSING_KEY est définie.
+const BLOCKED_SITE_KEYWORDS = [
+  'porn', 'porno', 'xxx', 'xnxx', 'xvideos', 'pornhub', 'redtube', 'youporn',
+  'brazzers', 'onlyfans', 'camgirl', 'camsex', 'hentai', 'rule34', 'escort',
+  'adultwork', 'nsfw', 'fuckbook', 'pedo', 'childporn', 'lolita', 'jailbait',
+  'underage', 'preteen', 'inceste', 'rape',
+];
+
+async function checkWebsiteSafety(rawUrl) {
+  if (!rawUrl || !String(rawUrl).trim()) return { ok: true };
+  let url = String(rawUrl).trim();
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+
+  let parsed;
+  try { parsed = new URL(url); } catch {
+    return { ok: false, reason: 'invalid_url', message: "L'adresse du site n'est pas valide." };
+  }
+  if (!/^https?:$/.test(parsed.protocol)) {
+    return { ok: false, reason: 'invalid_url', message: 'Le lien doit commencer par http:// ou https://.' };
+  }
+
+  const haystack = (parsed.hostname + parsed.pathname + parsed.search).toLowerCase();
+  for (const kw of BLOCKED_SITE_KEYWORDS) {
+    if (haystack.includes(kw)) {
+      return { ok: false, reason: 'blocked_content', message: 'Ce lien a été refusé : il semble pointer vers un contenu interdit.' };
+    }
+  }
+
+  const key = process.env.GOOGLE_SAFE_BROWSING_KEY;
+  if (key) {
+    try {
+      const resp = await fetch('https://safebrowsing.googleapis.com/v4/threatMatches:find?key=' + key, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client: { clientId: 'plyz', clientVersion: '1.0' },
+          threatInfo: {
+            threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING', 'UNWANTED_SOFTWARE', 'POTENTIALLY_HARMFUL_APPLICATION'],
+            platformTypes: ['ANY_PLATFORM'],
+            threatEntryTypes: ['URL'],
+            threatEntries: [{ url }],
+          },
+        }),
+      });
+      const data = await resp.json();
+      if (data && Array.isArray(data.matches) && data.matches.length > 0) {
+        return { ok: false, reason: 'unsafe_site', message: 'Ce lien a été signalé comme dangereux (arnaque ou virus) par Google et a été refusé.' };
+      }
+    } catch (e) {
+      console.warn('[SafeBrowsing] vérification ignorée:', e.message);
+    }
+  }
+  return { ok: true, normalized: url };
+}
+
 app.post('/api/upsert-celebrity-profile', async (req, res) => {
   try {
     const db = getSupabaseAdmin();
     const { user_id, stage_name, bio, website } = req.body;
     if (!user_id || !stage_name) return res.status(400).json({ error: 'user_id and stage_name required' });
+
+    let safeWebsite = website || null;
+    if (website && String(website).trim()) {
+      const check = await checkWebsiteSafety(website);
+      if (!check.ok) return res.status(400).json({ error: check.reason, message: check.message });
+      safeWebsite = check.normalized || website;
+    }
 
     const { error: profileError } = await db
       .from('profiles')
@@ -2474,7 +2538,7 @@ app.post('/api/upsert-celebrity-profile', async (req, res) => {
         user_id,
         stage_name,
         bio: bio || null,
-        website: website || null,
+        website: safeWebsite,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id' })
       .select()
@@ -2525,7 +2589,15 @@ app.post('/api/update-celebrity-profile', async (req, res) => {
 
     // Ne met à jour que les champs réellement fournis (mise à jour partielle).
     const fields = { updated_at: new Date().toISOString() };
-    if (website !== undefined) fields.website = website;
+    if (website !== undefined) {
+      if (website && String(website).trim()) {
+        const check = await checkWebsiteSafety(website);
+        if (!check.ok) return res.status(400).json({ error: check.reason, message: check.message });
+        fields.website = check.normalized || website;
+      } else {
+        fields.website = website; // vide/null = la célébrité efface son site (autorisé)
+      }
+    }
     if (bio !== undefined) fields.bio = bio;
     if (stage_name !== undefined) fields.stage_name = stage_name;
 

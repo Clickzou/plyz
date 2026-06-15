@@ -201,7 +201,7 @@ export default function MySpaceScreen() {
         }),
       });
       const profileData = await profileRes.json();
-      if (profileData.error) throw new Error(profileData.error);
+      if (profileData.error) throw new Error(profileData.message || profileData.error);
 
       showAlert(t('settingsSaved' as any) || 'Paramètres enregistrés !', '');
     } catch (err: any) {
