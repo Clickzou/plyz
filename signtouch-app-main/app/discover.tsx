@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFollow } from '@/contexts/FollowContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
+import PlyzHeader from '@/components/PlyzHeader';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { DiscoverSkeleton } from '@/components/SkeletonLoader';
 
@@ -221,6 +222,7 @@ export default function DiscoverScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <PlyzHeader />
       <LinearGradient colors={['#0a1628', '#0f2035', '#0a1628']} style={StyleSheet.absoluteFill} />
       <View style={styles.header}>
         <Text style={styles.title}>{t('discoverTitle')}</Text>

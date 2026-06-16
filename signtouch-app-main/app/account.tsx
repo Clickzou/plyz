@@ -19,6 +19,7 @@ import * as Linking from 'expo-linking';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import BottomNav from '@/components/BottomNav';
+import PlyzHeader from '@/components/PlyzHeader';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Language } from '@/locales';
@@ -240,6 +241,7 @@ export default function AccountScreen() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content}>
+        <PlyzHeader />
         <View style={styles.header}>
           <Text style={styles.title}>{t('account')}</Text>
           <Text style={styles.subtitle}>Plyz</Text>

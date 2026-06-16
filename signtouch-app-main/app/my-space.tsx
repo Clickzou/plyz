@@ -12,6 +12,7 @@ import {
  Shield } from 'lucide-react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import PlyzHeader from '@/components/PlyzHeader';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
@@ -666,6 +667,7 @@ export default function MySpaceScreen() {
   if (!user) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        <PlyzHeader />
         <LinearGradient colors={['#0a1628', '#0f2035', '#0a1628']} style={StyleSheet.absoluteFill} />
         <View style={styles.header}>
           <Text style={styles.title}>{t('mySpaceTitle')}</Text>
@@ -1399,6 +1401,7 @@ export default function MySpaceScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+        <PlyzHeader />
       <LinearGradient colors={['#0a1628', '#0f2035', '#0a1628']} style={StyleSheet.absoluteFill} />
       <View style={styles.header}>
         <Text style={styles.title}>{t('mySpaceTitle')}</Text>

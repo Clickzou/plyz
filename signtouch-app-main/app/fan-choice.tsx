@@ -9,6 +9,7 @@ import {
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import PlyzHeader from '@/components/PlyzHeader';
 import { Calendar, Video, Plus, LogIn } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -69,6 +70,7 @@ export default function FanChoiceScreen() {
       <LinearGradient colors={['#0f172a', '#1e293b', '#0f172a']} style={StyleSheet.absoluteFill} />
 
       <View style={[styles.content, { paddingTop: insets.top + 20, paddingBottom: BOTTOM_NAV_HEIGHT + 20 }]}>
+        <PlyzHeader />
         <Text style={styles.title}>{t('fanChoiceTitle')}</Text>
         <Text style={styles.subtitle}>{t('fanChoiceSubtitle')}</Text>
 
