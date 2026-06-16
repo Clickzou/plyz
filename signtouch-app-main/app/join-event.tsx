@@ -197,6 +197,7 @@ export default function JoinEventScreen() {
   const { user } = useAuth();
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [pendingJoinQueue, setPendingJoinQueue] = useState(false);
+  const [pendingSearchCode, setPendingSearchCode] = useState('');
 
   const [code, setCode] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -593,6 +594,31 @@ export default function JoinEventScreen() {
     }
   };
 
+  // Compte Plyz OBLIGATOIRE avant de rejoindre un événement (saisie du code ou scan QR).
+  const attemptJoin = (searchCode?: string) => {
+    const codeToSearch = (searchCode ?? code).trim().toUpperCase();
+    if (codeToSearch.length < 4) {
+      showAlert(t('error') || 'Error', t('invalidCode') || 'Please enter a valid code');
+      return;
+    }
+    if (!user) {
+      setPendingSearchCode(codeToSearch);
+      setShowAccountModal(true);
+      return;
+    }
+    handleSearch(codeToSearch);
+  };
+
+  // Dès que le compte est créé/connecté, on relance automatiquement la recherche mémorisée.
+  useEffect(() => {
+    if (user && pendingSearchCode) {
+      const c = pendingSearchCode;
+      setPendingSearchCode('');
+      setShowAccountModal(false);
+      handleSearch(c);
+    }
+  }, [user, pendingSearchCode]);
+
   const requestCameraPermission = async () => {
     if (!isBarCodeScannerAvailable()) {
       showAlert(
@@ -621,7 +647,7 @@ export default function JoinEventScreen() {
     if (codeMatch) {
       const scannedCode = codeMatch[1].toUpperCase();
       setCode(scannedCode);
-      handleSearch(scannedCode);
+      attemptJoin(scannedCode);
     } else {
       showAlert(
         t('invalidQR') || 'Invalid QR',
@@ -1516,7 +1542,7 @@ export default function JoinEventScreen() {
               />
               <TouchableOpacity
                 style={[styles.searchButtonFull, isSearching && styles.searchButtonDisabled]}
-                onPress={() => handleSearch()}
+                onPress={() => attemptJoin()}
                 disabled={isSearching}
               >
                 {isSearching ? (
@@ -1826,13 +1852,16 @@ export default function JoinEventScreen() {
 
       <AccountModal
         visible={showAccountModal}
+        allowSkip={false}
         onClose={() => {
           setShowAccountModal(false);
           setPendingJoinQueue(false);
+          setPendingSearchCode('');
         }}
         onSkip={() => {
           setShowAccountModal(false);
           setPendingJoinQueue(false);
+          setPendingSearchCode('');
         }}
         returnPath="/join-event"
       />
