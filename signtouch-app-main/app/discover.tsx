@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     borderRadius: 12, paddingHorizontal: 14, paddingVertical: Platform.OS === 'web' ? 10 : 0, height: 44,
   },
   searchInput: { flex: 1, color: '#fff', fontSize: 15, marginLeft: 10 },
-  sortRow: { marginTop: 8, maxHeight: 44 },
+  sortRow: { marginTop: 8, marginBottom: 6, maxHeight: 56 },
   sortRowContent: { paddingHorizontal: 16, gap: 8 },
   sortChip: {
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
