@@ -2636,6 +2636,45 @@ app.post('/api/update-celebrity-profile', async (req, res) => {
   }
 });
 
+// Upload de la photo de profil célébrité -> Storage + profiles.avatar_url (servi au profil public)
+app.post('/api/upload-celebrity-avatar', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+
+    const { user_id, image_base64, content_type } = req.body;
+    if (!user_id || !image_base64) return res.status(400).json({ error: 'Missing required fields' });
+    if (user_id !== authUser.id) return res.status(403).json({ error: 'user_id does not match authenticated user' });
+
+    const db = getSupabaseAdmin();
+    const isPng = (content_type || '').includes('png');
+    const ext = isPng ? 'png' : 'jpg';
+    const cleanB64 = String(image_base64).replace(/^data:[^;]+;base64,/, '');
+    const buffer = Buffer.from(cleanB64, 'base64');
+    const path = `avatars/${user_id}-${Date.now()}.${ext}`;
+
+    const { error: upErr } = await db.storage.from('events').upload(path, buffer, {
+      contentType: content_type || 'image/jpeg',
+      upsert: true,
+    });
+    if (upErr) throw upErr;
+
+    const { data: pub } = db.storage.from('events').getPublicUrl(path);
+    const avatarUrl = pub.publicUrl;
+
+    // Le profil public lit profiles.avatar_url -> on l'y enregistre.
+    const { error: profErr } = await db
+      .from('profiles')
+      .upsert({ id: user_id, avatar_url: avatarUrl, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+    if (profErr) throw profErr;
+
+    res.json({ success: true, avatar_url: avatarUrl });
+  } catch (error) {
+    console.error('[upload-celebrity-avatar]', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/my-celebrity-pricing', async (req, res) => {
   try {
     const db = getSupabaseAdmin();

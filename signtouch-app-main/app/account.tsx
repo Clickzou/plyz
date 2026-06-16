@@ -30,6 +30,9 @@ import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 
 import { FanBadgeCard } from '@/components/FanBadge';
+import { supabase } from '@/utils/supabase';
+
+const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -213,6 +216,27 @@ export default function AccountScreen() {
     );
   };
 
+  const uploadAvatarToServer = async (base64?: string | null, contentType?: string | null) => {
+    if (!base64 || !user?.id) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) return;
+      const res = await fetch(`${API_BASE}/api/upload-celebrity-avatar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ user_id: user.id, image_base64: base64, content_type: contentType || 'image/jpeg' }),
+      });
+      const data = await res.json();
+      if (data?.avatar_url) {
+        // Remplace l'URI locale par l'URL publique -> visible sur le profil public.
+        await setProfilePhoto(data.avatar_url);
+      }
+    } catch (e) {
+      console.warn('[avatar upload] failed', e);
+    }
+  };
+
   const pickProfilePhoto = async () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -226,10 +250,14 @@ export default function AccountScreen() {
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.8,
+      quality: 0.7,
+      base64: true,
     });
     if (!result.canceled && result.assets[0]) {
-      await setProfilePhoto(result.assets[0].uri);
+      const asset = result.assets[0];
+      await setProfilePhoto(asset.uri);
+      // Publie la photo sur le profil public (upload + profiles.avatar_url).
+      uploadAvatarToServer(asset.base64, asset.mimeType);
     }
   };
 
