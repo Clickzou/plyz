@@ -22,6 +22,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 6,
     paddingBottom: 10,
+    position: 'relative',
+    zIndex: 10,
+    elevation: 10,
   },
   pill: {
     backgroundColor: '#ffffff',
