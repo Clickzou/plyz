@@ -30,9 +30,13 @@
         "NSPhotoLibraryUsageDescription": "Plyz a besoin d'accéder à votre galerie pour sauvegarder vos photos signées.",
         "NSPhotoLibraryAddUsageDescription": "Plyz a besoin d'accéder à votre galerie pour sauvegarder vos photos signées.",
         "NSMicrophoneUsageDescription": "Plyz a besoin d'accéder à votre microphone pour les appels vidéo en direct.",
-        "UIBackgroundModes": ["voip"]
+        "UIBackgroundModes": [
+          "voip"
+        ]
       },
-      "associatedDomains": ["applinks:plyz.app"]
+      "associatedDomains": [
+        "applinks:plyz.app"
+      ]
     },
     "android": {
       "permissions": [
@@ -67,7 +71,10 @@
               "pathPrefix": "/join"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -93,7 +100,9 @@
           "savePhotosPermission": "Plyz a besoin d'accéder à votre galerie pour sauvegarder vos photos signées.",
           "isAccessMediaLocationEnabled": true
         }
-      ]
+      ],
+      "expo-video",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
