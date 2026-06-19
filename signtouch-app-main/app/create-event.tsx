@@ -192,7 +192,7 @@ export default function CreateEventScreen() {
       const savedData = await AsyncStorage.getItem(EVENT_FORM_STORAGE_KEY);
       if (!savedData) return;
       
-      console.log('[RestoreAndContinue] Restoring form data for user:', user.id, 'status:', status);
+      console.log('[RestoreAndContinue] Restoring form data for user:', user.id);
       const formData = JSON.parse(savedData);
       hasRestoredRef.current = true;
       
@@ -313,7 +313,7 @@ export default function CreateEventScreen() {
   // Vérifier au montage si on doit restaurer
   useEffect(() => {
     restoreAndContinue();
-  }, [user, status]);
+  }, [user]);
 
   const getPointerPositionFromNative = useCallback((nativeEvent: any) => {
     const { locationX, locationY, offsetX, offsetY } = nativeEvent;
