@@ -1060,10 +1060,14 @@ app.post('/api/use-event-promo-code', async (req, res) => {
 app.post('/api/stripe/express/create-and-onboard', async (req, res) => {
   try {
     const stripe = await getStripe();
-    const { celebrityName, celebrityId, returnPath } = req.body;
+    const { celebrityName, celebrityId, returnPath, lang } = req.body;
     const baseUrl = `https://${req.headers.host || req.hostname}`;
-    // Écran de l'app vers lequel revenir après l'onboarding (transmis tel quel à la page /stripe/return)
-    const destQuery = returnPath ? `?dest=${encodeURIComponent(returnPath)}` : '';
+    // Destination (écran de retour) + langue, transmises aux pages /stripe/return et /stripe/refresh
+    const returnQs = [
+      returnPath ? `dest=${encodeURIComponent(returnPath)}` : '',
+      lang ? `lang=${encodeURIComponent(lang)}` : '',
+    ].filter(Boolean).join('&');
+    const refreshQs = lang ? `lang=${encodeURIComponent(lang)}` : '';
 
     console.log('[Connect Express] Creating account with key prefix:', (process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '').substring(0, 12) + '...');
 
@@ -1087,8 +1091,8 @@ app.post('/api/stripe/express/create-and-onboard', async (req, res) => {
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
       type: 'account_onboarding',
-      refresh_url: `${baseUrl}/stripe/refresh`,
-      return_url: `${baseUrl}/stripe/return${destQuery}`,
+      refresh_url: `${baseUrl}/stripe/refresh${refreshQs ? '?' + refreshQs : ''}`,
+      return_url: `${baseUrl}/stripe/return${returnQs ? '?' + returnQs : ''}`,
     });
 
     console.log('[Connect Express] Onboarding link created:', accountLink.url);
@@ -1417,8 +1421,35 @@ app.post('/api/record-free-event-access', async (req, res) => {
   }
 });
 
+// Traductions des pages de retour Stripe (servies par le serveur, hors app) \u2014 15 langues
+const STRIPE_PAGE_I18N = {
+  fr: { done: "Inscription termin\u00e9e !", redirecting: "Redirection vers Plyz...", ifNot: "Si la redirection ne fonctionne pas :", back: "Retourner dans l'app", expired: "Session expir\u00e9e", retry: "Veuillez retourner dans l'app et r\u00e9essayer." },
+  en: { done: "Registration complete!", redirecting: "Redirecting to Plyz...", ifNot: "If the redirect doesn't work:", back: "Back to the app", expired: "Session expired", retry: "Please return to the app and try again." },
+  es: { done: "\u00a1Registro completado!", redirecting: "Redirigiendo a Plyz...", ifNot: "Si la redirecci\u00f3n no funciona:", back: "Volver a la app", expired: "Sesi\u00f3n expirada", retry: "Vuelve a la app e int\u00e9ntalo de nuevo." },
+  de: { done: "Registrierung abgeschlossen!", redirecting: "Weiterleitung zu Plyz...", ifNot: "Falls die Weiterleitung nicht funktioniert:", back: "Zur\u00fcck zur App", expired: "Sitzung abgelaufen", retry: "Bitte kehre zur App zur\u00fcck und versuche es erneut." },
+  it: { done: "Registrazione completata!", redirecting: "Reindirizzamento a Plyz...", ifNot: "Se il reindirizzamento non funziona:", back: "Torna all'app", expired: "Sessione scaduta", retry: "Torna all'app e riprova." },
+  pt: { done: "Inscri\u00e7\u00e3o conclu\u00edda!", redirecting: "Redirecionando para o Plyz...", ifNot: "Se o redirecionamento n\u00e3o funcionar:", back: "Voltar ao app", expired: "Sess\u00e3o expirada", retry: "Volte ao app e tente novamente." },
+  ru: { done: "\u0420\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u044f \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0430!", redirecting: "\u041f\u0435\u0440\u0435\u043d\u0430\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u0432 Plyz...", ifNot: "\u0415\u0441\u043b\u0438 \u043f\u0435\u0440\u0435\u043d\u0430\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u043d\u0435 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442:", back: "\u0412\u0435\u0440\u043d\u0443\u0442\u044c\u0441\u044f \u0432 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435", expired: "\u0421\u0435\u0441\u0441\u0438\u044f \u0438\u0441\u0442\u0435\u043a\u043b\u0430", retry: "\u0412\u0435\u0440\u043d\u0438\u0442\u0435\u0441\u044c \u0432 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435 \u0438 \u043f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0441\u043d\u043e\u0432\u0430." },
+  ar: { done: "\u0627\u0643\u062a\u0645\u0644 \u0627\u0644\u062a\u0633\u062c\u064a\u0644!", redirecting: "\u062c\u0627\u0631\u064d \u0627\u0644\u062a\u062d\u0648\u064a\u0644 \u0625\u0644\u0649 Plyz...", ifNot: "\u0625\u0630\u0627 \u0644\u0645 \u064a\u0639\u0645\u0644 \u0627\u0644\u062a\u062d\u0648\u064a\u0644:", back: "\u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 \u0627\u0644\u062a\u0637\u0628\u064a\u0642", expired: "\u0627\u0646\u062a\u0647\u062a \u0627\u0644\u062c\u0644\u0633\u0629", retry: "\u064a\u0631\u062c\u0649 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 \u0627\u0644\u062a\u0637\u0628\u064a\u0642 \u0648\u0627\u0644\u0645\u062d\u0627\u0648\u0644\u0629 \u0645\u0631\u0629 \u0623\u062e\u0631\u0649." },
+  zh: { done: "\u6ce8\u518c\u5b8c\u6210\uff01", redirecting: "\u6b63\u5728\u8df3\u8f6c\u5230 Plyz...", ifNot: "\u5982\u679c\u8df3\u8f6c\u65e0\u6548\uff1a", back: "\u8fd4\u56de\u5e94\u7528", expired: "\u4f1a\u8bdd\u5df2\u8fc7\u671f", retry: "\u8bf7\u8fd4\u56de\u5e94\u7528\u5e76\u91cd\u8bd5\u3002" },
+  ja: { done: "\u767b\u9332\u304c\u5b8c\u4e86\u3057\u307e\u3057\u305f\uff01", redirecting: "Plyz \u306b\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\u3057\u3066\u3044\u307e\u3059...", ifNot: "\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\u304c\u6a5f\u80fd\u3057\u306a\u3044\u5834\u5408\uff1a", back: "\u30a2\u30d7\u30ea\u306b\u623b\u308b", expired: "\u30bb\u30c3\u30b7\u30e7\u30f3\u306e\u6709\u52b9\u671f\u9650\u304c\u5207\u308c\u307e\u3057\u305f", retry: "\u30a2\u30d7\u30ea\u306b\u623b\u3063\u3066\u3082\u3046\u4e00\u5ea6\u304a\u8a66\u3057\u304f\u3060\u3055\u3044\u3002" },
+  hi: { done: "\u092a\u0902\u091c\u0940\u0915\u0930\u0923 \u092a\u0942\u0930\u094d\u0923 \u0939\u0941\u0906!", redirecting: "Plyz \u092a\u0930 \u0930\u0940\u0921\u093e\u092f\u0930\u0947\u0915\u094d\u091f \u0939\u094b \u0930\u0939\u093e \u0939\u0948...", ifNot: "\u092f\u0926\u093f \u0930\u0940\u0921\u093e\u092f\u0930\u0947\u0915\u094d\u091f \u0915\u093e\u092e \u0928 \u0915\u0930\u0947:", back: "\u0910\u092a \u092a\u0930 \u0935\u093e\u092a\u0938 \u091c\u093e\u090f\u0901", expired: "\u0938\u0924\u094d\u0930 \u0938\u092e\u093e\u092a\u094d\u0924 \u0939\u094b \u0917\u092f\u093e", retry: "\u0915\u0943\u092a\u092f\u093e \u0910\u092a \u092a\u0930 \u0932\u094c\u091f\u0947\u0902 \u0914\u0930 \u092a\u0941\u0928\u0903 \u092a\u094d\u0930\u092f\u093e\u0938 \u0915\u0930\u0947\u0902\u0964" },
+  bn: { done: "\u09a8\u09bf\u09ac\u09a8\u09cd\u09a7\u09a8 \u09b8\u09ae\u09cd\u09aa\u09a8\u09cd\u09a8 \u09b9\u09af\u09bc\u09c7\u099b\u09c7!", redirecting: "Plyz-\u098f \u09b0\u09bf\u09a1\u09be\u0987\u09b0\u09c7\u0995\u09cd\u099f \u0995\u09b0\u09be \u09b9\u099a\u09cd\u099b\u09c7...", ifNot: "\u09b0\u09bf\u09a1\u09be\u0987\u09b0\u09c7\u0995\u09cd\u099f \u0995\u09be\u099c \u09a8\u09be \u0995\u09b0\u09b2\u09c7:", back: "\u0985\u09cd\u09af\u09be\u09aa\u09c7 \u09ab\u09bf\u09b0\u09c7 \u09af\u09be\u09a8", expired: "\u09b8\u09c7\u09b6\u09a8\u09c7\u09b0 \u09ae\u09c7\u09af\u09bc\u09be\u09a6 \u09b6\u09c7\u09b7 \u09b9\u09af\u09bc\u09c7\u099b\u09c7", retry: "\u0985\u09a8\u09c1\u0997\u09cd\u09b0\u09b9 \u0995\u09b0\u09c7 \u0985\u09cd\u09af\u09be\u09aa\u09c7 \u09ab\u09bf\u09b0\u09c7 \u0997\u09bf\u09af\u09bc\u09c7 \u0986\u09ac\u09be\u09b0 \u099a\u09c7\u09b7\u09cd\u099f\u09be \u0995\u09b0\u09c1\u09a8\u0964" },
+  ur: { done: "\u0631\u062c\u0633\u0679\u0631\u06cc\u0634\u0646 \u0645\u06a9\u0645\u0644 \u06c1\u0648 \u06af\u0626\u06cc!", redirecting: "Plyz \u067e\u0631 \u0631\u06cc \u0688\u0627\u0626\u0631\u06cc\u06a9\u0679 \u06c1\u0648 \u0631\u06c1\u0627 \u06c1\u06d2...", ifNot: "\u0627\u06af\u0631 \u0631\u06cc \u0688\u0627\u0626\u0631\u06cc\u06a9\u0679 \u06a9\u0627\u0645 \u0646\u06c1 \u06a9\u0631\u06d2:", back: "\u0627\u06cc\u067e \u067e\u0631 \u0648\u0627\u067e\u0633 \u062c\u0627\u0626\u06cc\u06ba", expired: "\u0633\u06cc\u0634\u0646 \u062e\u062a\u0645 \u06c1\u0648 \u06af\u06cc\u0627", retry: "\u0628\u0631\u0627\u06c1 \u06a9\u0631\u0645 \u0627\u06cc\u067e \u067e\u0631 \u0648\u0627\u067e\u0633 \u062c\u0627\u0626\u06cc\u06ba \u0627\u0648\u0631 \u062f\u0648\u0628\u0627\u0631\u06c1 \u06a9\u0648\u0634\u0634 \u06a9\u0631\u06cc\u06ba\u06d4" },
+  id: { done: "Pendaftaran selesai!", redirecting: "Mengalihkan ke Plyz...", ifNot: "Jika pengalihan tidak berfungsi:", back: "Kembali ke aplikasi", expired: "Sesi kedaluwarsa", retry: "Silakan kembali ke aplikasi dan coba lagi." },
+  ms: { done: "Pendaftaran selesai!", redirecting: "Mengalihkan ke Plyz...", ifNot: "Jika pengalihan tidak berfungsi:", back: "Kembali ke apl", expired: "Sesi tamat tempoh", retry: "Sila kembali ke apl dan cuba lagi." },
+};
+const STRIPE_RTL_LANGS = ['ar', 'ur'];
+function stripePageLang(req) {
+  const l = (req.query.lang || '').toString();
+  return STRIPE_PAGE_I18N[l] ? l : 'fr';
+}
+
 app.get('/stripe/refresh', (req, res) => {
-  res.send('<html><body style="background:#0a1628;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div style="text-align:center"><h2>Session expir\u00e9e</h2><p>Veuillez retourner dans l\'app et r\u00e9essayer.</p></div></body></html>');
+  const lang = stripePageLang(req);
+  const tr = STRIPE_PAGE_I18N[lang];
+  const dir = STRIPE_RTL_LANGS.includes(lang) ? 'rtl' : 'ltr';
+  res.send(`<html lang="${lang}" dir="${dir}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="background:#0a1628;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div style="text-align:center"><h2>${tr.expired}</h2><p>${tr.retry}</p></div></body></html>`);
 });
 
 app.get('/stripe/return', (req, res) => {
@@ -1429,9 +1460,12 @@ app.get('/stripe/return', (req, res) => {
   const allowedDest = ['create-event', 'create-live-session'];
   const dest = allowedDest.includes(req.query.dest) ? req.query.dest : 'create-live-session';
   const appUrl = `plyz://${dest}?stripe_return=1`;
+  const lang = stripePageLang(req);
+  const tr = STRIPE_PAGE_I18N[lang];
+  const dir = STRIPE_RTL_LANGS.includes(lang) ? 'rtl' : 'ltr';
   res.send(`<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Plyz - Inscription terminée</title>
+<html lang="${lang}" dir="${dir}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plyz - ${tr.done}</title>
 <style>
   body{background:#0a1628;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
   .container{text-align:center;padding:20px}
@@ -1441,11 +1475,11 @@ app.get('/stripe/return', (req, res) => {
 </style>
 </head><body>
 <div class="container">
-  <h2>✅ Inscription terminée !</h2>
-  <p>Redirection vers Plyz...</p>
+  <h2>✅ ${tr.done}</h2>
+  <p>${tr.redirecting}</p>
   <div class="spinner"></div>
-  <p style="margin-top:30px;font-size:14px;opacity:0.7">Si la redirection ne fonctionne pas :</p>
-  <a class="btn" href="${appUrl}">Retourner dans l'app</a>
+  <p style="margin-top:30px;font-size:14px;opacity:0.7">${tr.ifNot}</p>
+  <a class="btn" href="${appUrl}">${tr.back}</a>
 </div>
 <script>setTimeout(function(){window.location.href="${appUrl}";},2000);</script>
 </body></html>`);

@@ -1385,6 +1385,7 @@ export default function CreateEventScreen() {
           celebrityName={signers[0]?.name || eventName}
           userId={user?.id}
           returnPath="create-event"
+          lang={language}
         />
       </LinearGradient>
       <BottomNav />

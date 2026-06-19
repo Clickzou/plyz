@@ -1011,6 +1011,7 @@ export default function CreateLiveSessionScreen() {
         celebrityName={celebrityName}
         userId={user?.id}
         returnPath="create-live-session"
+        lang={language}
       />
     </View>
   );

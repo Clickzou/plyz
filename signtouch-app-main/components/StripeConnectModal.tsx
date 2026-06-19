@@ -30,6 +30,9 @@ interface StripeConnectModalProps {
   // (ex: 'create-event' ou 'create-live-session'). Transmis au serveur
   // pour construire le lien profond de retour.
   returnPath?: string;
+  // Langue de l'utilisateur (ex: 'fr', 'en') pour traduire la page de
+  // confirmation servie par le serveur après l'onboarding.
+  lang?: string;
 }
 
 export default function StripeConnectModal({
@@ -40,6 +43,7 @@ export default function StripeConnectModal({
   celebrityId,
   userId,
   returnPath,
+  lang,
 }: StripeConnectModalProps) {
   const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = React.useState(false);
@@ -144,6 +148,7 @@ export default function StripeConnectModal({
           celebrityName: celebrityName || '',
           celebrityId: celebrityId || '',
           returnPath: returnPath || '',
+          lang: lang || '',
         }),
       });
 
