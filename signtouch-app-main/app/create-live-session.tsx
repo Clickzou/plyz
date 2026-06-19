@@ -1010,6 +1010,7 @@ export default function CreateLiveSessionScreen() {
         onConnected={handleStripeConnected}
         celebrityName={celebrityName}
         userId={user?.id}
+        returnPath="create-live-session"
       />
     </View>
   );

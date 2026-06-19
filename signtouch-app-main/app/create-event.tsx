@@ -490,6 +490,9 @@ export default function CreateEventScreen() {
         effectiveStripeAccount = await checkStripeConnectStatus();
       }
       if (!effectiveStripeAccount) {
+        // Sauvegarde la saisie avant d'envoyer vers Stripe : au retour
+        // (lien profond plyz://create-event), restoreAndContinue reprend tout.
+        await saveFormData();
         setShowStripeConnect(true);
         return;
       }
@@ -1381,6 +1384,7 @@ export default function CreateEventScreen() {
           onConnected={handleStripeConnected}
           celebrityName={signers[0]?.name || eventName}
           userId={user?.id}
+          returnPath="create-event"
         />
       </LinearGradient>
       <BottomNav />

@@ -26,6 +26,10 @@ interface StripeConnectModalProps {
   celebrityName?: string;
   celebrityId?: string;
   userId?: string;
+  // Écran de l'app vers lequel revenir après l'onboarding Stripe
+  // (ex: 'create-event' ou 'create-live-session'). Transmis au serveur
+  // pour construire le lien profond de retour.
+  returnPath?: string;
 }
 
 export default function StripeConnectModal({
@@ -35,6 +39,7 @@ export default function StripeConnectModal({
   celebrityName,
   celebrityId,
   userId,
+  returnPath,
 }: StripeConnectModalProps) {
   const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = React.useState(false);
@@ -138,6 +143,7 @@ export default function StripeConnectModal({
         body: JSON.stringify({
           celebrityName: celebrityName || '',
           celebrityId: celebrityId || '',
+          returnPath: returnPath || '',
         }),
       });
 

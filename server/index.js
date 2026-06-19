@@ -1060,8 +1060,10 @@ app.post('/api/use-event-promo-code', async (req, res) => {
 app.post('/api/stripe/express/create-and-onboard', async (req, res) => {
   try {
     const stripe = await getStripe();
-    const { celebrityName, celebrityId } = req.body;
+    const { celebrityName, celebrityId, returnPath } = req.body;
     const baseUrl = `https://${req.headers.host || req.hostname}`;
+    // Écran de l'app vers lequel revenir après l'onboarding (transmis tel quel à la page /stripe/return)
+    const destQuery = returnPath ? `?dest=${encodeURIComponent(returnPath)}` : '';
 
     console.log('[Connect Express] Creating account with key prefix:', (process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '').substring(0, 12) + '...');
 
@@ -1086,7 +1088,7 @@ app.post('/api/stripe/express/create-and-onboard', async (req, res) => {
       account: account.id,
       type: 'account_onboarding',
       refresh_url: `${baseUrl}/stripe/refresh`,
-      return_url: `${baseUrl}/stripe/return`,
+      return_url: `${baseUrl}/stripe/return${destQuery}`,
     });
 
     console.log('[Connect Express] Onboarding link created:', accountLink.url);
@@ -1421,9 +1423,12 @@ app.get('/stripe/refresh', (req, res) => {
 
 app.get('/stripe/return', (req, res) => {
   // Lien profond vers l'app mobile (scheme plyz://) pour revenir directement
-  // dans l'écran de création de session ; le param stripe_return permet à
+  // sur l'écran d'où venait l'utilisateur ; le param stripe_return permet à
   // l'app de re-vérifier le statut du compte Stripe au retour.
-  const appUrl = 'plyz://create-live-session?stripe_return=1';
+  // Liste blanche pour éviter toute redirection arbitraire.
+  const allowedDest = ['create-event', 'create-live-session'];
+  const dest = allowedDest.includes(req.query.dest) ? req.query.dest : 'create-live-session';
+  const appUrl = `plyz://${dest}?stripe_return=1`;
   res.send(`<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Plyz - Inscription terminée</title>
