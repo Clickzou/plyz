@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -69,30 +70,36 @@ export default function FanChoiceScreen() {
     <View style={styles.container}>
       <LinearGradient colors={['#0f172a', '#1e293b', '#0f172a']} style={StyleSheet.absoluteFill} />
 
-      <View style={[styles.content, { paddingTop: insets.top + 20, paddingBottom: BOTTOM_NAV_HEIGHT + 20 }]}>
+      <View style={[styles.content, { paddingTop: insets.top }]}>
         <PlyzHeader />
-        <Text style={styles.title}>{t('fanChoiceTitle')}</Text>
-        <Text style={styles.subtitle}>{t('fanChoiceSubtitle')}</Text>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: BOTTOM_NAV_HEIGHT + 20 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.title}>{t('fanChoiceTitle')}</Text>
+          <Text style={styles.subtitle}>{t('fanChoiceSubtitle')}</Text>
 
-        <View style={styles.cardsContainer}>
-          {renderCard(
-            '#10b981',
-            <Calendar size={40} color="#10b981" strokeWidth={1.5} />,
-            t('fanChoiceEventTitle'),
-            t('fanChoiceEventDesc'),
-            '/create-event',
-            '/join-event',
-          )}
+          <View style={styles.cardsContainer}>
+            {renderCard(
+              '#10b981',
+              <Calendar size={40} color="#10b981" strokeWidth={1.5} />,
+              t('fanChoiceEventTitle'),
+              t('fanChoiceEventDesc'),
+              '/create-event',
+              '/join-event',
+            )}
 
-          {renderCard(
-            '#6366f1',
-            <Video size={40} color="#6366f1" strokeWidth={1.5} />,
-            t('fanChoiceVideoTitle'),
-            t('fanChoiceVideoDesc2'),
-            '/create-live-session',
-            '/join-live-session',
-          )}
-        </View>
+            {renderCard(
+              '#6366f1',
+              <Video size={40} color="#6366f1" strokeWidth={1.5} />,
+              t('fanChoiceVideoTitle'),
+              t('fanChoiceVideoDesc2'),
+              '/create-live-session',
+              '/join-live-session',
+            )}
+          </View>
+        </ScrollView>
       </View>
 
       <AccountAvatarButton />
@@ -108,6 +115,12 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     justifyContent: 'center',
   },
