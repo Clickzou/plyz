@@ -911,7 +911,7 @@ export default {
   enterCode: 'Enter your code',
   codeSentTo: 'We sent a 6-digit code to your email. Copy and paste it below.',
   verify: 'Verify',
-  codeSentToEmail: 'We sent an 8-digit code to your email. Copy and paste it below.',
+  codeSentToEmail: 'We sent a 6-digit code to your email. Copy and paste it below.',
   sendCode: 'Send code',
   resendCode: 'Resend code',
   changeEmail: 'Change email address',

@@ -184,20 +184,20 @@ export default function PostPurchaseAccountModal({ visible, onClose }: PostPurch
 
       <Text style={styles.title}>{t('enterCode') || 'Entrez le code'}</Text>
       <Text style={styles.description}>
-        {t('codeSentToEmail') || `Nous avons envoyé un code à 8 chiffres à ${email}. Copiez-collez le code ci-dessous.`}
+        {t('codeSentToEmail') || `Nous avons envoyé un code à 6 chiffres à ${email}. Copiez-collez le code ci-dessous.`}
       </Text>
 
       <TextInput
         style={[styles.input, styles.codeInput, error && styles.inputError]}
-        placeholder="12345678"
+        placeholder="123456"
         placeholderTextColor="#666666"
         value={code}
         onChangeText={(text) => {
-          setCode(text.replace(/[^0-9]/g, ''));
+          setCode(text.replace(/[^0-9]/g, '').slice(0, 6));
           setError('');
         }}
         keyboardType="number-pad"
-        maxLength={8}
+        maxLength={6}
         editable={!loading}
       />
 

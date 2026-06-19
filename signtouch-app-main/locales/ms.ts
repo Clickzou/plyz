@@ -846,7 +846,7 @@ export default {
   secureCodeExplanation: 'Anda akan menerima kod 6 digit melalui emel.',
   enterCode: 'Masukkan kod anda',
   codeSentTo: 'Kami telah menghantar kod 6 digit ke emel anda. Salin dan tampal di bawah.',
-  codeSentToEmail: 'Kami menghantar kod 8 digit ke e-mel anda. Salin dan tampal di bawah.',
+  codeSentToEmail: 'Kami menghantar kod 6 digit ke e-mel anda. Salin dan tampal di bawah.',
   sendCode: 'Hantar kod',
   verify: 'Sahkan',
   resendCode: 'Hantar semula kod',

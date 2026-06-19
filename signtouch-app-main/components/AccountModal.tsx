@@ -51,7 +51,7 @@ export default function AccountModal({
   };
 
   const handleVerifyCode = async () => {
-    if (!code.trim() || code.trim().length < 8) {
+    if (!code.trim() || code.trim().length < 6) {
       setError(t('invalidCode') || 'Code invalide');
       return;
     }
@@ -150,7 +150,7 @@ export default function AccountModal({
         {t('noPasswordRequired') || 'Aucun mot de passe requis'}
       </Text>
       <Text style={styles.secureEmailText}>
-        {t('secureCodeExplanation') || 'Vous recevrez un code à 8 chiffres par email.'}
+        {t('secureCodeExplanation') || 'Vous recevrez un code à 6 chiffres par email.'}
       </Text>
     </>
   );
@@ -166,18 +166,18 @@ export default function AccountModal({
       </Text>
 
       <Text style={styles.subtitle}>
-        {t('codeSentTo') || `Nous avons envoyé un code à 8 chiffres à ${email}. Copiez-collez le code ci-dessous.`}
+        {t('codeSentTo') || `Nous avons envoyé un code à 6 chiffres à ${email}. Copiez-collez le code ci-dessous.`}
       </Text>
 
       <TextInput
         style={[styles.input, styles.codeInput]}
-        placeholder="00000000"
+        placeholder="000000"
         placeholderTextColor="#6b7280"
         value={code}
-        onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, 8))}
+        onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, 6))}
         keyboardType="number-pad"
         autoCapitalize="none"
-        maxLength={8}
+        maxLength={6}
         editable={!loading}
       />
 
@@ -189,7 +189,7 @@ export default function AccountModal({
         style={[styles.sendButton, loading && styles.buttonDisabled]}
         onPress={handleVerifyCode}
         activeOpacity={0.8}
-        disabled={loading || code.length < 8}
+        disabled={loading || code.length < 6}
       >
         {loading ? (
           <ActivityIndicator color="#fff" size="small" />

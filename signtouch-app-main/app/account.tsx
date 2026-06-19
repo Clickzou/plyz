@@ -416,7 +416,7 @@ export default function AccountScreen() {
                 {t('enterYourEmail') || 'Entrez votre email'}
               </Text>
               <Text style={styles.loginSubtitle}>
-                {t('secureCodeExplanation') || 'Vous recevrez un code a 8 chiffres par email.'}
+                {t('secureCodeExplanation') || 'Vous recevrez un code a 6 chiffres par email.'}
               </Text>
 
               <TextInput
@@ -465,18 +465,18 @@ export default function AccountScreen() {
                 {t('checkYourEmail') || 'Verifiez votre email'}
               </Text>
               <Text style={styles.loginSubtitle}>
-                {t('codeSentToEmail') || 'Nous avons envoye un code a 8 chiffres a votre email.'}
+                {t('codeSentToEmail') || 'Nous avons envoye un code a 6 chiffres a votre email.'}
               </Text>
               <Text style={styles.loginEmailDisplay}>{loginEmail}</Text>
 
               <TextInput
                 style={[styles.loginInput, { textAlign: 'center', letterSpacing: 4, fontSize: 22 }]}
-                placeholder="12345678"
+                placeholder="123456"
                 placeholderTextColor="#666"
                 value={otpCode}
-                onChangeText={(text) => { setOtpCode(text); setLoginError(null); }}
+                onChangeText={(text) => { setOtpCode(text.replace(/[^0-9]/g, '').slice(0, 6)); setLoginError(null); }}
                 keyboardType="number-pad"
-                maxLength={8}
+                maxLength={6}
                 editable={loginStep !== 'verifying'}
               />
 
