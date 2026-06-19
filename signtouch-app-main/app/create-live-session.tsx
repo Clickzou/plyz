@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   Pressable,
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Clock, Users, DollarSign, Play, Camera, RotateCcw, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy, Send } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -61,6 +61,7 @@ const STRIPE_FIXED = 30; // 0.30€ par transaction (en centimes)
 
 export default function CreateLiveSessionScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
   const { user } = useAuth();
@@ -252,6 +253,23 @@ export default function CreateLiveSessionScreen() {
       console.error('[CreateSession] Error saving Stripe status:', error);
     }
   };
+
+  // Retour depuis l'onboarding Stripe (lien profond plyz://...?stripe_return=1) :
+  // on récupère le compte fraîchement créé et on le mémorise, sans créer de session.
+  useEffect(() => {
+    if (!params?.stripe_return) return;
+    (async () => {
+      const id = await checkStripeConnectStatus();
+      if (id) {
+        setStripeAccountId(id);
+        showAlert(
+          t('stripeConnectVerifiedTitle') || 'Compte Stripe connecté',
+          t('stripeConnectVerifiedDesc') || 'Votre compte Stripe est connecté. Vous pouvez maintenant créer votre session.'
+        );
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params?.stripe_return]);
 
   const handleCreateSession = async () => {
     console.log('[CreateSession] Button pressed, name:', celebrityName, 'photo:', coverPhotoUri ? 'YES' : 'NO');

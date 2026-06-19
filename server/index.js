@@ -1420,7 +1420,10 @@ app.get('/stripe/refresh', (req, res) => {
 });
 
 app.get('/stripe/return', (req, res) => {
-  const appUrl = `https://${req.headers.host || req.hostname}/create-live-session`;
+  // Lien profond vers l'app mobile (scheme plyz://) pour revenir directement
+  // dans l'écran de création de session ; le param stripe_return permet à
+  // l'app de re-vérifier le statut du compte Stripe au retour.
+  const appUrl = 'plyz://create-live-session?stripe_return=1';
   res.send(`<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Plyz - Inscription terminée</title>
