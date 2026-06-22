@@ -396,10 +396,11 @@ interface DraggableSignatureProps {
   onScaleChange: (id: string, scale: number) => void;
   onLongPress: () => void;
   onPress: () => void;
+  onDelete: () => void;
   isSelected: boolean;
 }
 
-function DraggableSignature({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, isSelected }: DraggableSignatureProps) {
+function DraggableSignature({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, onDelete, isSelected }: DraggableSignatureProps) {
   console.log('🔄 [DraggableSignature] Rendering signature:', {
     id: overlay.id,
     color: overlay.color,
@@ -810,6 +811,40 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
               pointerEvents: 'none' as const,
             }}
           />
+          {/* Badge de suppression : toujours visible en mode édition (les Draggable
+              ne sont rendus qu'en édition). onMouseDown/onTouchStart stoppent la
+              propagation pour ne PAS démarrer le drag de la signature. */}
+          <div
+            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onTouchStart={(e) => { e.stopPropagation(); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(); }}
+            style={{
+              position: 'absolute',
+              top: -12,
+              right: -12,
+              width: 40,
+              height: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 1002,
+            }}
+          >
+            <div style={{
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              backgroundColor: '#ef4444',
+              border: '2px solid #ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
+            }}>
+              <span style={{ color: '#ffffff', fontSize: 16, fontWeight: 700, lineHeight: '16px' }}>×</span>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -882,6 +917,19 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
             )}
         </Animated.View>
       </GestureDetector>
+      {/* Badge de suppression : rendu APRÈS le GestureDetector => il est au-dessus
+          dans l'ordre de pile et son onPress capte le toucher avant le pan.
+          Toujours visible en mode édition (Draggable = édition uniquement). */}
+      <TouchableOpacity
+        style={styles.deleteBadge}
+        onPress={onDelete}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        activeOpacity={0.7}
+      >
+        <View style={styles.deleteBadgeCircle}>
+          <X size={16} color="#ffffff" strokeWidth={3} />
+        </View>
+      </TouchableOpacity>
     </Animated.View>
   );
 }
@@ -984,11 +1032,12 @@ interface DraggableTextProps {
   onScaleChange: (id: string, scale: number) => void;
   onLongPress: () => void;
   onPress: () => void;
+  onDelete: () => void;
   isSelected: boolean;
   onFontPress?: () => void;
 }
 
-function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, isSelected, onFontPress }: DraggableTextProps) {
+function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, onDelete, isSelected, onFontPress }: DraggableTextProps) {
   const mobileFontFamily = getMobileFontFamily(overlay.fontFamily);
   const translateX = useSharedValue(overlay.x);
   const translateY = useSharedValue(overlay.y);
@@ -1240,6 +1289,39 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
             <span style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>Aa</span>
           </div>
         )}
+        {/* Badge de suppression : toujours visible en mode édition. stopPropagation
+            sur mousedown/touchstart pour ne pas démarrer le drag du texte. */}
+        <div
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          onTouchStart={(e) => { e.stopPropagation(); }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(); }}
+          style={{
+            position: 'absolute',
+            top: -16,
+            right: -16,
+            width: 40,
+            height: 40,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 1002,
+          }}
+        >
+          <div style={{
+            width: 26,
+            height: 26,
+            borderRadius: 13,
+            backgroundColor: '#ef4444',
+            border: '2px solid #ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
+          }}>
+            <span style={{ color: '#ffffff', fontSize: 16, fontWeight: 700, lineHeight: '16px' }}>×</span>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1269,6 +1351,18 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
           <Text style={styles.inlineFontButtonText}>Aa</Text>
         </TouchableOpacity>
       )}
+      {/* Badge de suppression : APRÈS le GestureDetector => au-dessus, onPress
+          capte avant le pan. Toujours visible en mode édition. */}
+      <TouchableOpacity
+        style={styles.deleteBadge}
+        onPress={onDelete}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        activeOpacity={0.7}
+      >
+        <View style={styles.deleteBadgeCircle}>
+          <X size={16} color="#ffffff" strokeWidth={3} />
+        </View>
+      </TouchableOpacity>
     </Animated.View>
   );
 }
@@ -2617,6 +2711,7 @@ export default function ResultScreen() {
                 onScaleChange={updateSignatureScale}
                 onLongPress={() => removeSignatureOverlay(overlay.id)}
                 onPress={() => selectElement(overlay.id, 'signature')}
+                onDelete={() => removeSignatureOverlay(overlay.id)}
                 isSelected={selectedElementId === overlay.id}
               />
             ))}
@@ -2630,6 +2725,7 @@ export default function ResultScreen() {
                 onScaleChange={updateTextScale}
                 onLongPress={() => removeTextOverlay(overlay.id)}
                 onPress={() => selectElement(overlay.id, 'text')}
+                onDelete={() => removeTextOverlay(overlay.id)}
                 isSelected={selectedElementId === overlay.id}
                 onFontPress={() => setShowFontPicker(!showFontPicker)}
               />
@@ -3808,6 +3904,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     pointerEvents: 'none',
+  },
+  // Badge de suppression (croix) ancré en haut-droite de chaque overlay éditable.
+  // La zone tactile (40x40) est plus grande que le cercle visible (26px) pour un
+  // appui confortable au doigt.
+  deleteBadge: {
+    position: 'absolute',
+    top: -20,
+    right: -20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1002,
+  },
+  deleteBadgeCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#ef4444',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.4,
+    shadowRadius: 2,
+    elevation: 4,
   },
   welcomeMessageOverlay: {
     position: 'absolute',
