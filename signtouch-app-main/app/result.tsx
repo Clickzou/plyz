@@ -1521,8 +1521,7 @@ export default function ResultScreen() {
   // capture (saving) pour qu'ils soient "cuits" dans l'image (sinon le texte
   // ajouté disparaît à l'enregistrement car non capturé).
   const showStaticOverlays = (
-    (Platform.OS === 'web' && !isEditMode && !saving) ||
-    (Platform.OS !== 'web' && saving)
+    Platform.OS === 'web' && !isEditMode && !saving
   ) && (signatureOverlays.length > 0 || textOverlays.length > 0);
   // En ré-édition, le fond DOIT être l'image vierge (baseUri) dès qu'elle existe,
   // sinon les overlays "cuits" dans memory.uri réapparaissent EN DOUBLE sous les
@@ -1991,15 +1990,17 @@ export default function ResultScreen() {
     try {
       setSaving(true);
 
-      // Exit edit mode before capturing to show static overlays
-      setIsEditMode(false);
+      // Web : pas de capture (on sauve les métadonnées) -> on passe en mode vue tout
+      // de suite. Mobile : on RESTE en mode édition pour capturer les éléments déjà
+      // dessinés (sinon image sans calques) ; on quitte le mode édition APRÈS la capture.
+      if (Platform.OS === 'web') setIsEditMode(false);
       setSelectedElementId(null);
       setSelectedElementType(null);
       setShowColorPicker(false);
       setShowEffectsPanel(false);
 
       // Wait for UI to update
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 150));
 
       if (Platform.OS === 'web') {
         // Sur le web : on ne fait PAS de captureRef (findNodeHandle non supporté)
@@ -2067,6 +2068,8 @@ export default function ResultScreen() {
         await updateMemory(updatedMemory);
       }
 
+      // La capture est faite : on peut passer en mode vue (affiche l'image aplatie).
+      setIsEditMode(false);
       setSaving(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
@@ -2096,15 +2099,19 @@ export default function ResultScreen() {
     try {
       setSaving(true);
 
-      // Exit edit mode before capturing to show static overlays
-      setIsEditMode(false);
+      // On reste EN MODE ÉDITION pour la capture (les éléments déplaçables sont
+      // déjà dessinés à la bonne position) : on masque juste la sélection. Quitter
+      // le mode édition avant la capture affichait des calques statiques pas encore
+      // peints -> image sans signature/texte. On désélectionne seulement.
+      // (Web : pas de capture -> on quitte le mode édition tout de suite.)
+      if (Platform.OS === 'web') setIsEditMode(false);
       setSelectedElementId(null);
       setSelectedElementType(null);
       setShowColorPicker(false);
       setShowEffectsPanel(false);
 
       // Wait for UI to update
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 150));
 
       // Capture the final image with all overlays
       if (viewShotRef.current) {
@@ -2503,7 +2510,7 @@ export default function ResultScreen() {
                 aplati). Signatures ET textes sont gérés à l'identique pour rester
                 cohérents (l'ancien code gérait les signatures différemment du texte,
                 d'où signatures figées + texte en double en ré-édition). */}
-            {isEditMode && !saving && signatureOverlays.map(overlay => (
+            {isEditMode && signatureOverlays.map(overlay => (
               <DraggableSignature
                 key={overlay.id}
                 overlay={overlay}
@@ -2516,7 +2523,7 @@ export default function ResultScreen() {
               />
             ))}
             {/* Draggable text overlays (editable) - only in edit mode */}
-            {isEditMode && !saving && textOverlays.map(overlay => (
+            {isEditMode && textOverlays.map(overlay => (
               <DraggableText
                 key={overlay.id}
                 overlay={overlay}
