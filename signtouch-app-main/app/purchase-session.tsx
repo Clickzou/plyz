@@ -17,6 +17,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { showAlert } from '@/utils/alertHelper';
 import { ensureCanPay } from '@/utils/banGuard';
+import { isAgeCertified, certifyAge } from '@/utils/ageCertification';
+import AgeCertificationModal from '@/components/AgeCertificationModal';
 import AccountModal from '@/components/AccountModal';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -39,6 +41,7 @@ export default function PurchaseSessionScreen() {
   const [purchasing, setPurchasing] = useState(false);
   const [purchaseComplete, setPurchaseComplete] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showAgeModal, setShowAgeModal] = useState(false);
 
   const priceCents = parseInt(params.priceCents || '0', 10);
   const priceEuros = (priceCents / 100).toFixed(2);
@@ -82,6 +85,11 @@ export default function PurchaseSessionScreen() {
       return;
     }
     if (!ensureCanPay(isBanned, banUntil)) return;
+    // Certification de majorité obligatoire avant tout paiement.
+    if (!(await isAgeCertified())) {
+      setShowAgeModal(true);
+      return;
+    }
     setPurchasing(true);
     try {
       const currentOrigin = Platform.OS === 'web'
@@ -227,6 +235,16 @@ export default function PurchaseSessionScreen() {
         visible={showAccountModal}
         onClose={() => setShowAccountModal(false)}
         onSkip={() => setShowAccountModal(false)}
+      />
+
+      <AgeCertificationModal
+        visible={showAgeModal}
+        onClose={() => setShowAgeModal(false)}
+        onConfirm={async () => {
+          await certifyAge(user?.id || null, user?.email || null);
+          setShowAgeModal(false);
+          handleStripeCheckout();
+        }}
       />
     </View>
   );

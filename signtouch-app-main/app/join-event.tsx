@@ -21,6 +21,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { showAlert } from '@/utils/alertHelper';
 import { ensureCanPay } from '@/utils/banGuard';
+import { isAgeCertified, certifyAge } from '@/utils/ageCertification';
+import AgeCertificationModal from '@/components/AgeCertificationModal';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -236,6 +238,7 @@ export default function JoinEventScreen() {
   const [eventPromoApplied, setEventPromoApplied] = useState(false);
   const [eventPaymentConfig, setEventPaymentConfig] = useState<{priceCents: number, celebrityStripeAccountId?: string, celebrityName?: string} | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [showAgeModal, setShowAgeModal] = useState(false);
   const [eventPaid, setEventPaid] = useState(false);
   const [activeFanEvent, setActiveFanEvent] = useState<ActiveFanEvent | null>(null);
   const signatureClipWidth = useSharedValue(0);
@@ -719,6 +722,10 @@ export default function JoinEventScreen() {
   const handleEventPayment = async () => {
     if (!foundSession || !eventPaymentConfig) return;
     if (!ensureCanPay(isBanned, banUntil)) return;
+    if (!(await isAgeCertified())) {
+      setShowAgeModal(true);
+      return;
+    }
     setIsProcessingPayment(true);
 
     try {
@@ -1884,6 +1891,16 @@ export default function JoinEventScreen() {
         returnPath="/join-event"
       />
       
+      <AgeCertificationModal
+        visible={showAgeModal}
+        onClose={() => setShowAgeModal(false)}
+        onConfirm={async () => {
+          await certifyAge(user?.id || null, user?.email || null);
+          setShowAgeModal(false);
+          handleEventPayment();
+        }}
+      />
+
       <BottomNav />
     </View>
   );

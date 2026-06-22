@@ -305,7 +305,7 @@ export default function AccountScreen() {
                 </View>
               </View>
 
-              {stripeLinked && (
+              {isCelebrity && stripeLinked && (
                 <View style={styles.stripeLinkedBadge}>
                   <CreditCard size={14} color="#635BFF" />
                   <Text style={styles.stripeLinkedText}>
@@ -325,7 +325,7 @@ export default function AccountScreen() {
             </View>
           ) : loginStep === 'idle' ? (
             <View style={styles.accountCard}>
-              {stripeLinked ? (
+              {isCelebrity && stripeLinked ? (
                 <>
                   <View style={styles.accountCardHeader}>
                     <View style={styles.accountAvatar}>
