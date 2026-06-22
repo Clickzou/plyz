@@ -2644,7 +2644,7 @@ export default function ResultScreen() {
           <View style={[styles.tooltipContainer, { top: insets.top + 90 }]}>
             <View style={styles.tooltip}>
               <Text style={styles.tooltipText}>
-                🟢 MAJ OK — {t('selectElementTooltip')}
+                {t('selectElementTooltip')}
               </Text>
             </View>
           </View>
