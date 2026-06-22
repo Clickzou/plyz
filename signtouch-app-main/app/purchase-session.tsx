@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { showAlert } from '@/utils/alertHelper';
+import { ensureCanPay } from '@/utils/banGuard';
 import AccountModal from '@/components/AccountModal';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -24,7 +25,7 @@ export default function PurchaseSessionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, isBanned, banUntil } = useAuth();
   const params = useLocalSearchParams<{
     celebrityId: string;
     celebrityName: string;
@@ -80,6 +81,7 @@ export default function PurchaseSessionScreen() {
       setShowAccountModal(true);
       return;
     }
+    if (!ensureCanPay(isBanned, banUntil)) return;
     setPurchasing(true);
     try {
       const currentOrigin = Platform.OS === 'web'

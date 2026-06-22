@@ -20,6 +20,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { showAlert } from '@/utils/alertHelper';
+import { ensureCanPay } from '@/utils/banGuard';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -194,7 +195,7 @@ export default function JoinEventScreen() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
-  const { user } = useAuth();
+  const { user, isBanned, banUntil } = useAuth();
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [pendingJoinQueue, setPendingJoinQueue] = useState(false);
   const [pendingSearchCode, setPendingSearchCode] = useState('');
@@ -717,6 +718,7 @@ export default function JoinEventScreen() {
 
   const handleEventPayment = async () => {
     if (!foundSession || !eventPaymentConfig) return;
+    if (!ensureCanPay(isBanned, banUntil)) return;
     setIsProcessingPayment(true);
 
     try {
