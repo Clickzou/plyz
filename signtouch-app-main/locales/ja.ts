@@ -845,6 +845,8 @@ export default {
   receiveCode: 'ログインコードを取得',
   secureCodeExplanation: 'メールで6桁のコードが届きます。',
 
+  myVideoSessionsHistory: '進行中・過去のビデオセッション',
+
   myEventsHistory: '進行中・過去のイベント',
 
   enterNameBeforeSign: '先に有名人の名前を入力してから、ここに署名してください。',

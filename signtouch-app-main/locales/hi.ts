@@ -845,6 +845,8 @@ export default {
   receiveCode: 'लॉगिन कोड प्राप्त करें',
   secureCodeExplanation: 'आपको ईमेल द्वारा 6 अंकों का कोड प्राप्त होगा।',
 
+  myVideoSessionsHistory: 'मौजूदा और पिछले वीडियो सत्र',
+
   myEventsHistory: 'मौजूदा और पिछले इवेंट',
 
   enterNameBeforeSign: 'पहले सेलिब्रिटी का नाम दर्ज करें, फिर यहाँ हस्ताक्षर करें।',

@@ -845,6 +845,8 @@ export default {
   receiveCode: 'احصل على رمز تسجيل الدخول',
   secureCodeExplanation: 'ستتلقى رمزاً مكوناً من 6 أرقام عبر البريد الإلكتروني.',
 
+  myVideoSessionsHistory: 'جلسات الفيديو الحالية والسابقة',
+
   myEventsHistory: 'الفعاليات الحالية والسابقة',
 
   enterNameBeforeSign: 'أدخل اسم المشهور أولاً، ثم وقّع هنا.',

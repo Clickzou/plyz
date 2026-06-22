@@ -845,6 +845,8 @@ export default {
   receiveCode: 'لاگ ان کوڈ حاصل کریں',
   secureCodeExplanation: 'آپ کو ای میل کے ذریعے 6 ہندسوں کا کوڈ موصول ہوگا۔',
 
+  myVideoSessionsHistory: 'موجودہ اور سابقہ ویڈیو سیشنز',
+
   myEventsHistory: 'موجودہ اور سابقہ ایونٹس',
 
   enterNameBeforeSign: 'پہلے مشہور شخصیت کا نام درج کریں، پھر یہاں دستخط کریں۔',

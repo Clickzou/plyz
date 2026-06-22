@@ -845,6 +845,8 @@ export default {
   receiveCode: 'Получить код для входа',
   secureCodeExplanation: 'Вы получите 6-значный код по email.',
 
+  myVideoSessionsHistory: 'Текущие и прошедшие видеосессии',
+
   myEventsHistory: 'Текущие и прошедшие мероприятия',
 
   enterNameBeforeSign: 'Сначала введите имя знаменитости, затем подпишите здесь.',

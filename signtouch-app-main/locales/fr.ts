@@ -912,6 +912,8 @@ export default {
   receiveCode: 'Recevoir un code de connexion',
   secureCodeExplanation: 'Vous recevrez un code à 6 chiffres par email.',
 
+  myVideoSessionsHistory: 'Sessions vidéo en cours et passées',
+
   myEventsHistory: 'Événements en cours et passés',
 
   enterNameBeforeSign: 'Entrez d’abord le nom de la célébrité, puis signez ici.',

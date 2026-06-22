@@ -845,6 +845,8 @@ export default {
   receiveCode: 'Receber um código de login',
   secureCodeExplanation: 'Você receberá um código de 6 dígitos por email.',
 
+  myVideoSessionsHistory: 'Sessões de vídeo atuais e passadas',
+
   myEventsHistory: 'Eventos atuais e passados',
 
   enterNameBeforeSign: 'Insira primeiro o nome da celebridade e depois assine aqui.',

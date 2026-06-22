@@ -909,6 +909,8 @@ export default {
   receiveCode: 'Get a login code',
   secureCodeExplanation: 'You will receive a 6-digit code by email.',
 
+  myVideoSessionsHistory: 'Current and past video sessions',
+
   myEventsHistory: 'Current and past events',
 
   enterNameBeforeSign: 'Enter the celebrity’s name first, then sign here.',

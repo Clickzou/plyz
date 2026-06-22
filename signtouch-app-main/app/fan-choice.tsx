@@ -23,15 +23,20 @@ export default function FanChoiceScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const [ongoingCount, setOngoingCount] = useState(0);
+  const [ongoingVideoCount, setOngoingVideoCount] = useState(0);
 
-  // Recharge le nombre d'événements en cours à chaque fois qu'on revient sur l'écran
+  // Recharge le nombre d'événements / sessions vidéo en cours à chaque retour sur l'écran
   useFocusEffect(
     useCallback(() => {
       let active = true;
       (async () => {
         try {
-          const events = await getMyScheduledEvents();
-          if (active) setOngoingCount(events.filter((e: any) => e?.status !== 'ended').length);
+          const items = await getMyScheduledEvents();
+          if (!active) return;
+          const isOngoing = (e: any) => e?.status !== 'ended';
+          const isVideo = (e: any) => e?.event_type === 'live_video';
+          setOngoingCount(items.filter((e: any) => isOngoing(e) && !isVideo(e)).length);
+          setOngoingVideoCount(items.filter((e: any) => isOngoing(e) && isVideo(e)).length);
         } catch {
           /* silencieux : pas bloquant */
         }
@@ -132,6 +137,22 @@ export default function FanChoiceScreen() {
               '/create-live-session',
               '/join-live-session',
             )}
+
+            <TouchableOpacity
+              style={[styles.historyBtn, styles.historyBtnVideo]}
+              onPress={() => handleChoice('/celebrity-menu')}
+              activeOpacity={0.85}
+            >
+              <CalendarClock size={18} color="#6366f1" strokeWidth={2.2} />
+              <Text style={[styles.historyBtnText, styles.historyBtnTextVideo]}>
+                {t('myVideoSessionsHistory' as any) || 'Sessions vidéo en cours et passées'}
+              </Text>
+              {ongoingVideoCount > 0 && (
+                <View style={styles.historyBadge}>
+                  <Text style={styles.historyBadgeText}>{ongoingVideoCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </View>
@@ -192,6 +213,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     textAlign: 'center',
+  },
+  historyBtnVideo: {
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    borderColor: 'rgba(99, 102, 241, 0.3)',
+    marginTop: 0,
+  },
+  historyBtnTextVideo: {
+    color: '#6366f1',
   },
   historyBadge: {
     backgroundColor: '#ef4444',

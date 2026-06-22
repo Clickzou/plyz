@@ -845,6 +845,8 @@ export default {
   receiveCode: 'Anmeldecode erhalten',
   secureCodeExplanation: 'Sie erhalten einen 6-stelligen Code per E-Mail.',
 
+  myVideoSessionsHistory: 'Aktuelle und vergangene Video-Sessions',
+
   myEventsHistory: 'Aktuelle und vergangene Events',
 
   enterNameBeforeSign: 'Gib zuerst den Namen des Stars ein und unterschreibe dann hier.',

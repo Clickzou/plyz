@@ -845,6 +845,8 @@ export default {
   receiveCode: 'Dapatkan kode masuk',
   secureCodeExplanation: 'Anda akan menerima kode 6 digit melalui email.',
 
+  myVideoSessionsHistory: 'Sesi video saat ini dan lampau',
+
   myEventsHistory: 'Acara saat ini dan lampau',
 
   enterNameBeforeSign: 'Masukkan dulu nama selebriti, lalu tanda tangani di sini.',
