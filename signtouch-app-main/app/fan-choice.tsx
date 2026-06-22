@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,20 +7,38 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PlyzHeader from '@/components/PlyzHeader';
-import { Calendar, Video, Plus, LogIn } from 'lucide-react-native';
+import { Calendar, Video, Plus, LogIn, CalendarClock } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
+import { getMyScheduledEvents } from '@/utils/eventSessionStorage';
 
 export default function FanChoiceScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const [ongoingCount, setOngoingCount] = useState(0);
+
+  // Recharge le nombre d'événements en cours à chaque fois qu'on revient sur l'écran
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        try {
+          const events = await getMyScheduledEvents();
+          if (active) setOngoingCount(events.filter((e: any) => e?.status !== 'ended').length);
+        } catch {
+          /* silencieux : pas bloquant */
+        }
+      })();
+      return () => { active = false; };
+    }, [])
+  );
 
   const handleChoice = (path: string) => {
     if (Platform.OS !== 'web') {
@@ -90,6 +108,22 @@ export default function FanChoiceScreen() {
               '/join-event',
             )}
 
+            <TouchableOpacity
+              style={styles.historyBtn}
+              onPress={() => handleChoice('/celebrity-menu')}
+              activeOpacity={0.85}
+            >
+              <CalendarClock size={18} color="#10b981" strokeWidth={2.2} />
+              <Text style={styles.historyBtnText}>
+                {t('myEventsHistory' as any) || 'Événements en cours et passés'}
+              </Text>
+              {ongoingCount > 0 && (
+                <View style={styles.historyBadge}>
+                  <Text style={styles.historyBadgeText}>{ongoingCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
             {renderCard(
               '#6366f1',
               <Video size={40} color="#6366f1" strokeWidth={1.5} />,
@@ -139,6 +173,39 @@ const styles = StyleSheet.create({
   },
   cardsContainer: {
     gap: 20,
+  },
+  historyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginTop: -4,
+  },
+  historyBtnText: {
+    color: '#10b981',
+    fontSize: 15,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  historyBadge: {
+    backgroundColor: '#ef4444',
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    paddingHorizontal: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  historyBadgeText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '800',
   },
   card: {
     borderRadius: 16,

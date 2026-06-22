@@ -845,6 +845,8 @@ export default {
   receiveCode: 'Dapatkan kod log masuk',
   secureCodeExplanation: 'Anda akan menerima kod 6 digit melalui emel.',
 
+  myEventsHistory: 'Acara semasa dan lepas',
+
   enterNameBeforeSign: 'Masukkan nama selebriti dahulu, kemudian tandatangan di sini.',
   enterCode: 'Masukkan kod anda',
   codeSentTo: 'Kami telah menghantar kod 6 digit ke emel anda. Salin dan tampal di bawah.',

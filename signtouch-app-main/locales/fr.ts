@@ -912,6 +912,8 @@ export default {
   receiveCode: 'Recevoir un code de connexion',
   secureCodeExplanation: 'Vous recevrez un code à 6 chiffres par email.',
 
+  myEventsHistory: 'Événements en cours et passés',
+
   enterNameBeforeSign: 'Entrez d’abord le nom de la célébrité, puis signez ici.',
   enterCode: 'Entrez votre code',
   codeSentTo: 'Nous avons envoyé un code à 6 chiffres à votre email. Copiez-collez le code ci-dessous.',

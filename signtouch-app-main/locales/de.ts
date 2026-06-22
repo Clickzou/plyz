@@ -845,6 +845,8 @@ export default {
   receiveCode: 'Anmeldecode erhalten',
   secureCodeExplanation: 'Sie erhalten einen 6-stelligen Code per E-Mail.',
 
+  myEventsHistory: 'Aktuelle und vergangene Events',
+
   enterNameBeforeSign: 'Gib zuerst den Namen des Stars ein und unterschreibe dann hier.',
   enterCode: 'Geben Sie Ihren Code ein',
   codeSentTo: 'Wir haben einen 6-stelligen Code an Ihre E-Mail gesendet. Kopieren Sie ihn und fügen Sie ihn unten ein.',

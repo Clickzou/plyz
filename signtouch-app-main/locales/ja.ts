@@ -845,6 +845,8 @@ export default {
   receiveCode: 'ログインコードを取得',
   secureCodeExplanation: 'メールで6桁のコードが届きます。',
 
+  myEventsHistory: '進行中・過去のイベント',
+
   enterNameBeforeSign: '先に有名人の名前を入力してから、ここに署名してください。',
   enterCode: 'コードを入力',
   codeSentTo: 'メールに6桁のコードを送信しました。以下にコピーして貼り付けてください。',

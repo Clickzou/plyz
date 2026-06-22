@@ -845,6 +845,8 @@ export default {
   receiveCode: 'Ricevi un codice di accesso',
   secureCodeExplanation: 'Riceverai un codice a 6 cifre via email.',
 
+  myEventsHistory: 'Eventi in corso e passati',
+
   enterNameBeforeSign: 'Inserisci prima il nome della celebrità, poi firma qui.',
   enterCode: 'Inserisci il tuo codice',
   codeSentTo: 'Abbiamo inviato un codice a 6 cifre alla tua email. Copialo e incollalo qui sotto.',
