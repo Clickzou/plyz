@@ -7,6 +7,35 @@ const multer = require('multer');
 const path = require('path');
 const nsfw = require('nsfwjs');
 
+// nodemailer en require optionnel : si le module n'est pas encore installé
+// (npm install pas fait après un pull), le serveur démarre quand même.
+let nodemailer = null;
+try {
+  nodemailer = require('nodemailer');
+} catch (err) {
+  console.warn('[Mail] nodemailer indisponible (faire npm install) :', err.message);
+}
+
+// Transporteur e-mail (SMTP). Configuré via les secrets Replit :
+// SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, (optionnel) SMTP_FROM.
+let mailTransporter = null;
+function getMailTransporter() {
+  if (!nodemailer) return null;
+  if (mailTransporter) return mailTransporter;
+  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null;
+  const port = parseInt(SMTP_PORT || '587', 10);
+  mailTransporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port,
+    secure: port === 465, // 465 = SSL, sinon STARTTLS
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
+  });
+  return mailTransporter;
+}
+
+const SUPPORT_EMAIL = 'jc@clickzou.fr';
+
 let tf = null;
 try {
   tf = require('@tensorflow/tfjs-node');
@@ -297,6 +326,35 @@ app.post('/api/create-session', async (req, res) => {
 
     if (!celebrity_id || !celebrity_name || !duration_minutes || !max_slots) {
       return res.status(400).json({ error: 'Missing required fields: celebrity_id, celebrity_name, duration_minutes, max_slots' });
+    }
+
+    // Sécurité : seul un compte vérifié (célébrité, créateur ou club) peut créer une session vidéo.
+    // En cas d'erreur de vérification, on ne bloque pas (pour ne pas casser le service).
+    try {
+      const adminClient = getSupabaseAdmin();
+      const verifTables = [
+        'celebrity_verification_requests',
+        'creator_verification_requests',
+        'organization_verification_requests',
+      ];
+      let isVerified = false;
+      for (const table of verifTables) {
+        const { data: vr } = await adminClient
+          .from(table)
+          .select('status')
+          .eq('user_id', celebrity_id)
+          .eq('status', 'approved')
+          .limit(1);
+        if (vr && vr.length > 0) { isVerified = true; break; }
+      }
+      if (!isVerified) {
+        return res.status(403).json({
+          error: 'not_verified',
+          message: 'Votre compte doit être vérifié (célébrité, créateur ou club) pour créer une session.',
+        });
+      }
+    } catch (verifErr) {
+      console.error('[create-session] verification check failed (allowing through):', verifErr);
     }
 
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -3230,6 +3288,47 @@ app.get('/api/celebrity-verification-status', async (req, res) => {
     });
   } catch (error) {
     console.error('[celebrity-verification-status]', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Signalement d'un problème : envoie un e-mail au support (jc@clickzou.fr).
+app.post('/api/report-problem', async (req, res) => {
+  try {
+    const { subject, message, userEmail, platform, appVersion } = req.body || {};
+    if (!message || !String(message).trim()) {
+      return res.status(400).json({ error: 'message_required' });
+    }
+
+    const transporter = getMailTransporter();
+    if (!transporter) {
+      // SMTP non configuré sur le serveur : l'app basculera sur le mailto de secours.
+      return res.status(503).json({ error: 'email_not_configured' });
+    }
+
+    const subjectLine = subject && String(subject).trim()
+      ? `[Plyz] ${String(subject).trim()}`
+      : '[Plyz] Signalement d\'un problème';
+
+    const body =
+      `${String(message).trim()}\n\n` +
+      `------------------------------\n` +
+      `Envoyé depuis l'application Plyz\n` +
+      `Compte : ${userEmail || 'non connecté'}\n` +
+      `Plateforme : ${platform || 'inconnue'}\n` +
+      `Version : ${appVersion || '1.0.0'}`;
+
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: SUPPORT_EMAIL,
+      replyTo: userEmail || undefined,
+      subject: subjectLine,
+      text: body,
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[report-problem]', error);
     res.status(500).json({ error: error.message });
   }
 });

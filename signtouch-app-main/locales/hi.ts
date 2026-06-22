@@ -135,7 +135,7 @@ export default {
   selectFromGallery: 'फोटो चुनें',
 
   // Gallery Screen
-  myMemories: 'मेरी यादें',
+  myMemories: 'मेरी गैलरी',
   galleryPhotos: 'फ़ोटो',
   galleryStories: 'स्टोरीज़',
   noStories: 'अभी कोई स्टोरी नहीं',

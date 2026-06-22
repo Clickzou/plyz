@@ -171,6 +171,10 @@ export default function AccountScreen() {
       setShowLanguageModal(true);
     } else if (action === 'legal') {
       router.push('/legal');
+    } else if (action === 'faq') {
+      router.push('/faq' as any);
+    } else if (action === 'report') {
+      router.push('/report-problem' as any);
     } else if (action === 'replayTutorial') {
       AsyncStorage.removeItem('@plyz_onboarding_done').then(() => {
         startOnboarding();
@@ -530,13 +534,6 @@ export default function AccountScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>
-            FAN STATUS
-          </Text>
-          <FanBadgeCard />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>
             {t('celebrityModeSection')}
           </Text>
 
@@ -643,28 +640,6 @@ export default function AccountScreen() {
           </View>
         </View>
 
-        {__DEV__ && (
-          <View style={styles.debugSection}>
-            <Text style={styles.debugTitle}>Mode Debug</Text>
-            {Platform.OS !== 'web' && (
-              <>
-                <TouchableOpacity
-                  style={styles.debugButton}
-                  onPress={handleTestDeepLink}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.debugButtonText}>
-                    Obtenir l'URL de redirection Supabase
-                  </Text>
-                </TouchableOpacity>
-                <Text style={styles.debugHint}>
-                  Si le lien de confirmation d'email ne fonctionne pas, clique ici pour obtenir l'URL à ajouter dans Supabase Dashboard
-                </Text>
-              </>
-            )}
-          </View>
-        )}
-
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>{t('preferences')}</Text>
 
@@ -721,6 +696,32 @@ export default function AccountScreen() {
               <Share2 size={24} color="#10b981" strokeWidth={2} />
             </View>
             <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('shareApp')}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>{t('helpSection' as any) || 'Aide'}</Text>
+
+          <TouchableOpacity
+            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
+            onPress={() => handlePress('faq')}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
+              <HelpCircle size={24} color="#10b981" strokeWidth={2} />
+            </View>
+            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('faqTitle' as any) || 'FAQ - Questions fréquentes'}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
+            onPress={() => handlePress('report')}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
+              <Mail size={24} color="#10b981" strokeWidth={2} />
+            </View>
+            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('reportProblem' as any) || 'Signaler un problème'}</Text>
           </TouchableOpacity>
         </View>
 

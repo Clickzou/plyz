@@ -30,7 +30,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { saveMemory } from '@/utils/storageService';
 import { downloadImageWeb } from '@/utils/collectorLiveStorage';
 import ViewShot from 'react-native-view-shot';
-import { SvgUri, SvgXml } from 'react-native-svg';
+import { SvgUri, SvgXml, default as Svg, Path } from 'react-native-svg';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const PREVIEW_WIDTH = SCREEN_WIDTH - 32;
@@ -119,6 +119,8 @@ export default function EventPhotoEditorScreen() {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [coloredSvgXml, setColoredSvgXml] = useState<string | null>(null);
+  const [svgPaths, setSvgPaths] = useState<string[]>([]);
+  const [svgViewBox, setSvgViewBox] = useState<{ width: number; height: number } | null>(null);
   const [containerLayout, setContainerLayout] = useState({ width: PREVIEW_WIDTH, height: PREVIEW_HEIGHT });
 
   const signatureUrl = params.signatureUrl || '';
@@ -129,8 +131,32 @@ export default function EventPhotoEditorScreen() {
     if (Platform.OS === 'web') return;
     if (!signatureUrl) {
       setColoredSvgXml(null);
+      setSvgPaths([]);
+      setSvgViewBox(null);
       return;
     }
+
+    // Format mobile reel : la signature est stockee en JSON ({ paths, width, height }),
+    // pas en SVG. On reconstruit les paths comme dans compose.tsx.
+    if (signatureUrl.startsWith('data:application/json;base64,')) {
+      try {
+        const base64Data = signatureUrl.split(',')[1];
+        const jsonString = decodeURIComponent(escape(atob(base64Data)));
+        const parsed = JSON.parse(jsonString);
+        setSvgPaths(Array.isArray(parsed.paths) ? parsed.paths : []);
+        setSvgViewBox({ width: parsed.width, height: parsed.height });
+        setColoredSvgXml(null);
+      } catch (error) {
+        console.error('Error parsing signature JSON:', error);
+        setSvgPaths([]);
+        setSvgViewBox(null);
+      }
+      return;
+    }
+
+    // Anciens formats : SVG brut recupere par fetch.
+    setSvgPaths([]);
+    setSvgViewBox(null);
     const fetchAndColorSvg = async () => {
       try {
         const response = await fetch(signatureUrl);
@@ -450,7 +476,25 @@ export default function EventPhotoEditorScreen() {
                     },
                   ]}
                 >
-                  {coloredSvgXml ? (
+                  {svgPaths.length > 0 && svgViewBox ? (
+                    <Svg
+                      width={200}
+                      height={100}
+                      viewBox={`0 0 ${svgViewBox.width} ${svgViewBox.height}`}
+                    >
+                      {svgPaths.map((d, idx) => (
+                        <Path
+                          key={idx}
+                          d={d}
+                          stroke={signatureColor}
+                          strokeWidth={8}
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      ))}
+                    </Svg>
+                  ) : coloredSvgXml ? (
                     <SvgXml xml={coloredSvgXml} width={200} height={100} />
                   ) : (
                     <SvgUri uri={signatureUrl} width={200} height={100} />

@@ -11,9 +11,11 @@ interface SocialShareModalProps {
   onClose: () => void;
   imageUri: string;
   onSave?: () => Promise<void>;
+  // Masque le bouton "Enregistrer" (ex: dans l'editeur ou la validation suffit deja a sauvegarder)
+  showSave?: boolean;
 }
 
-export default function SocialShareModal({ visible, onClose, imageUri, onSave }: SocialShareModalProps) {
+export default function SocialShareModal({ visible, onClose, imageUri, onSave, showSave = true }: SocialShareModalProps) {
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
 
@@ -110,14 +112,16 @@ export default function SocialShareModal({ visible, onClose, imageUri, onSave }:
             <Text style={styles.description}>{t('socialShareDescription')}</Text>
 
             <View style={styles.buttonsRow}>
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={handleSave}
-                activeOpacity={0.8}
-              >
-                <Download size={24} color="#ffffff" strokeWidth={2} />
-                <Text style={styles.buttonText}>{t('save')}</Text>
-              </TouchableOpacity>
+              {showSave && (
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={handleSave}
+                  activeOpacity={0.8}
+                >
+                  <Download size={24} color="#ffffff" strokeWidth={2} />
+                  <Text style={styles.buttonText}>{t('save')}</Text>
+                </TouchableOpacity>
+              )}
 
               <TouchableOpacity
                 style={styles.shareButton}

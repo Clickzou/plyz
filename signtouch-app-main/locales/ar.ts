@@ -135,7 +135,7 @@ export default {
   selectFromGallery: 'اختر صورة',
 
   // Gallery Screen
-  myMemories: 'ذكرياتي',
+  myMemories: 'معرضي',
   galleryPhotos: 'الصور',
   galleryStories: 'القصص',
   noStories: 'لا توجد قصص بعد',

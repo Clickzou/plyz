@@ -135,7 +135,7 @@ export default {
   selectFromGallery: 'Foto auswählen',
 
   // Gallery Screen
-  myMemories: 'Meine Erinnerungen',
+  myMemories: 'Meine Galerie',
   galleryPhotos: 'Fotos',
   galleryStories: 'Stories',
   noStories: 'Noch keine Stories',

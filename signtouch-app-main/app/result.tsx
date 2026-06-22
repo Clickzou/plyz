@@ -753,38 +753,36 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
     }
 
     return (
-      <div
-        ref={sigDivRef as any}
-        onMouseDown={handleWebDragStart}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: Math.max(svgInfo.displayWidth, 80),
-          height: Math.max(svgInfo.displayHeight, 60),
-          padding: 15,
-          transform: `translate(${webPos.x}px, ${webPos.y}px) scale(${webScaleVal}) rotate(${webRotVal}deg)`,
-          cursor: 'grab',
-          zIndex: isSelected ? 1000 : 100,
-          userSelect: 'none' as const,
-          touchAction: 'none' as const,
-          border: isSelected ? '2px solid #10b981' : '2px solid transparent',
-          borderRadius: 4,
-          pointerEvents: 'auto' as const,
-          boxSizing: 'content-box' as const,
-        }}
-      >
-        <img
-          src={webImgUri}
-          draggable={false}
+      <div style={{ position: 'absolute', top: 0, left: 0, zIndex: isSelected ? 1000 : 100 }}>
+        <div
+          ref={sigDivRef as any}
+          onMouseDown={handleWebDragStart}
           style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain' as any,
-            display: 'block',
-            pointerEvents: 'none' as const,
+            width: Math.max(svgInfo.displayWidth, 80),
+            height: Math.max(svgInfo.displayHeight, 60),
+            padding: 15,
+            transform: `translate(${webPos.x}px, ${webPos.y}px) scale(${webScaleVal}) rotate(${webRotVal}deg)`,
+            cursor: 'grab',
+            userSelect: 'none' as const,
+            touchAction: 'none' as const,
+            border: isSelected ? '2px solid #10b981' : '2px solid transparent',
+            borderRadius: 4,
+            pointerEvents: 'auto' as const,
+            boxSizing: 'content-box' as const,
           }}
-        />
+        >
+          <img
+            src={webImgUri}
+            draggable={false}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain' as any,
+              display: 'block',
+              pointerEvents: 'none' as const,
+            }}
+          />
+        </div>
       </div>
     );
   }
@@ -891,10 +889,43 @@ interface StaticTextProps {
 
 function StaticText({ overlay }: StaticTextProps) {
   const mobileFontFamily = getMobileFontFamily(overlay.fontFamily);
+
+  // WEB : on reproduit EXACTEMENT le rendu de l'editeur (DraggableText branche web)
+  // = un conteneur absolu en (0,0) puis un enfant deplace par transform translate/scale/rotate.
+  // L'ancien rendu RN-View (left/top + transform array) ne se positionnait pas comme l'editeur
+  // -> apres enregistrement le texte s'affichait hors cadre et semblait "disparaitre".
+  // La signature statique marche justement parce qu'elle a deja sa propre branche web identique.
+  if (Platform.OS === 'web') {
+    return (
+      <div style={{ position: 'absolute' as any, top: 0, left: 0, zIndex: 10, pointerEvents: 'none' as any }}>
+        <div
+          style={{
+            transform: `translate(${overlay.x}px, ${overlay.y}px) scale(${overlay.scale}) rotate(${overlay.rotation}deg)`,
+            padding: 10,
+          }}
+        >
+          <span style={{
+            fontFamily: mobileFontFamily,
+            fontSize: overlay.fontSize,
+            color: overlay.color,
+            fontWeight: 'bold',
+            textShadow: '2px 2px 5px rgba(0,0,0,0.75)',
+            whiteSpace: 'nowrap' as const,
+          }}>
+            {overlay.text}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <View style={[styles.textWrapper, {
       left: overlay.x,
       top: overlay.y,
+      // zIndex aligne sur StaticSignature : sans lui, le texte passe derriere la
+      // photo en mode vue (apres enregistrement) et "disparait".
+      zIndex: 10,
       transform: [
         { rotate: `${overlay.rotation}deg` },
         { scale: overlay.scale }
@@ -2815,6 +2846,7 @@ export default function ResultScreen() {
           onClose={() => setShowShareModal(false)}
           imageUri={shareUri || displayUri}
           onSave={downloadToDevice}
+          showSave={false}
         />
 
         <AdModal

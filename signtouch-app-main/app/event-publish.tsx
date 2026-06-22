@@ -21,6 +21,8 @@ import { SvgUri, SvgXml } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
 import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { saveMemory } from '@/utils/storageService';
 import BottomNav from '@/components/BottomNav';
 import {
   EventSigner,
@@ -68,6 +70,7 @@ export default function EventPublishScreen() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   const sessionId = params.sessionId as string;
   const sessionTitle = params.sessionTitle as string;
@@ -111,17 +114,25 @@ export default function EventPublishScreen() {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [coloredSvgXml, setColoredSvgXml] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [sortByName, setSortByName] = useState(false);
   
   const selectedSigner = signers.find((s) => s.id === selectedSignerId);
-  
+
+  // Une signature est un SVG (cote web) ou un PNG (capture mobile via ViewShot).
+  // On ne traite en SVG que les vraies signatures SVG, sinon on affiche le PNG.
+  const signatureIsSvg = !!selectedSigner?.signature_url &&
+    (selectedSigner.signature_url.includes('.svg') ||
+     selectedSigner.signature_url.startsWith('data:image/svg'));
+
   // Fetch and colorize SVG for mobile
   useEffect(() => {
     if (Platform.OS === 'web') return;
-    if (!selectedSigner?.signature_url) {
+    if (!selectedSigner?.signature_url || !signatureIsSvg) {
+      // PNG (ou pas de signature) : pas de SVG a parser, on colorise via <Image tintColor>.
       setColoredSvgXml(null);
       return;
     }
-    
+
     const fetchAndColorSvg = async () => {
       const signatureUrl = selectedSigner?.signature_url;
       if (!signatureUrl) return;
@@ -144,7 +155,7 @@ export default function EventPublishScreen() {
     };
     
     fetchAndColorSvg();
-  }, [selectedSigner?.signature_url, signatureColor]);
+  }, [selectedSigner?.signature_url, signatureColor, signatureIsSvg]);
   const [showQrModal, setShowQrModal] = useState(false);
   const [copied, setCopied] = useState(false);
   
@@ -521,6 +532,14 @@ export default function EventPublishScreen() {
         publishOptions
       );
 
+      // Sauvegarde automatique de la dedicace dans "Ma Galerie" de l'app
+      // (la celebrite retrouve ainsi chaque photo publiee dans sa galerie).
+      try {
+        await saveMemory(imageToPublish, user?.id || null, { isEdited: true });
+      } catch (saveErr) {
+        console.error('Erreur sauvegarde dans Ma Galerie:', saveErr);
+      }
+
       setPublishedCount((prev) => prev + 1);
       setSelectedImage(null);
       resetSignatureTransform();
@@ -675,16 +694,18 @@ export default function EventPublishScreen() {
         <View style={styles.photoSection}>
           {selectedImage ? (
             <>
-              <ViewShot 
-                ref={viewShotRef} 
+              {/* Cadre arrondi pour l'apercu a l'ecran uniquement (hors capture). */}
+              <View style={styles.previewFrame}>
+              <ViewShot
+                ref={viewShotRef}
                 options={{ format: 'png', quality: 1 }}
                 style={styles.viewShotContainer}
               >
-                <View 
+                <View
                   style={styles.previewContainer}
-                  onLayout={(e) => setContainerLayout({ 
-                    width: e.nativeEvent.layout.width, 
-                    height: e.nativeEvent.layout.height 
+                  onLayout={(e) => setContainerLayout({
+                    width: e.nativeEvent.layout.width,
+                    height: e.nativeEvent.layout.height
                   })}
                 >
                   <Image source={{ uri: selectedImage }} style={styles.previewImage} resizeMode="cover" />
@@ -732,16 +753,23 @@ export default function EventPublishScreen() {
                         ]}
                       >
                         {coloredSvgXml ? (
-                          <SvgXml 
+                          <SvgXml
                             xml={coloredSvgXml}
                             width={200}
                             height={100}
                           />
-                        ) : (
-                          <SvgUri 
+                        ) : signatureIsSvg ? (
+                          <SvgUri
                             uri={selectedSigner.signature_url}
                             width={200}
                             height={100}
+                          />
+                        ) : (
+                          <Image
+                            source={{ uri: selectedSigner.signature_url }}
+                            style={{ width: 200, height: 100 }}
+                            resizeMode="contain"
+                            tintColor={signatureColor}
                           />
                         )}
                       </View>
@@ -749,7 +777,8 @@ export default function EventPublishScreen() {
                   )}
                 </View>
               </ViewShot>
-              
+              </View>
+
               {selectedSigner?.signature_url && (
                 <View style={styles.editControls}>
                   <View style={styles.editRow}>
@@ -839,37 +868,68 @@ export default function EventPublishScreen() {
           )}
         </TouchableOpacity>
 
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
-          {t('publishedPhotos') || 'Published Photos'} ({publishedAssets.length})
-        </Text>
+        <View style={styles.publishedHeaderRow}>
+          <Text style={[styles.sectionTitle, { marginTop: 0, marginBottom: 0 }]}>
+            {t('publishedPhotos') || 'Published Photos'} ({publishedAssets.length})
+          </Text>
+          {publishedAssets.length > 1 && (
+            <TouchableOpacity
+              style={[styles.sortBtn, sortByName && styles.sortBtnActive]}
+              onPress={() => setSortByName((prev) => !prev)}
+            >
+              <Text style={[styles.sortBtnText, sortByName && styles.sortBtnTextActive]}>
+                {sortByName ? (t('sortRecent') || 'Récentes') : (t('sortByName') || 'Par nom')}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
         {publishedAssets.length > 0 ? (
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.publishedCarousel}
             style={{ marginBottom: 20 }}
           >
-            {publishedAssets.map((asset) => (
-              <View key={asset.id} style={[styles.publishedCarouselItem, { backgroundColor: '#374151' }]}>
-                {asset.asset_url ? (
-                  <Image 
-                    source={{ uri: asset.asset_url }} 
-                    style={styles.publishedImage} 
-                    resizeMode="cover"
-                    onError={(e) => console.log('Image load error:', asset.asset_url, e.nativeEvent.error)}
-                  />
-                ) : (
-                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ImageIcon size={24} color="#9ca3af" />
+            {(sortByName
+              ? [...publishedAssets].sort((a, b) => {
+                  const nameA = (signers.find((s) => s.id === a.signer_id)?.display_name || '').toLowerCase();
+                  const nameB = (signers.find((s) => s.id === b.signer_id)?.display_name || '').toLowerCase();
+                  return nameA.localeCompare(nameB);
+                })
+              : publishedAssets
+            ).map((asset) => {
+              const signerName = signers.find((s) => s.id === asset.signer_id)?.display_name || '';
+              const truncatedName =
+                signerName.length > 15 ? `${signerName.slice(0, 15)}...` : signerName;
+              return (
+                <View key={asset.id} style={styles.publishedCarouselCell}>
+                  <View style={[styles.publishedCarouselItem, { backgroundColor: '#374151' }]}>
+                    {asset.asset_url ? (
+                      <Image
+                        source={{ uri: asset.asset_url }}
+                        style={styles.publishedImage}
+                        resizeMode="cover"
+                        onError={(e) => console.log('Image load error:', asset.asset_url, e.nativeEvent.error)}
+                      />
+                    ) : (
+                      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        <ImageIcon size={24} color="#9ca3af" />
+                      </View>
+                    )}
+                    {asset.asset_type === 'photo_signed' && (
+                      <View style={styles.signedBadge}>
+                        <Check size={10} color="#fff" />
+                      </View>
+                    )}
                   </View>
-                )}
-                {asset.asset_type === 'photo_signed' && (
-                  <View style={styles.signedBadge}>
-                    <Check size={10} color="#fff" />
-                  </View>
-                )}
-              </View>
-            ))}
+                  {truncatedName ? (
+                    <Text style={styles.publishedSignerName} numberOfLines={1}>
+                      {truncatedName}
+                    </Text>
+                  ) : null}
+                </View>
+              );
+            })}
           </ScrollView>
         ) : (
           <Text style={{ color: '#9ca3af', fontSize: 14, marginBottom: 20, fontStyle: 'italic' }}>
@@ -1100,16 +1160,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   photoButtonText: { fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '500' },
-  viewShotContainer: { 
-    overflow: 'hidden',
+  // Cadre arrondi pour l'apercu a l'ecran (n'est PAS inclus dans la capture).
+  previewFrame: {
     borderRadius: 16,
+    overflow: 'hidden',
   },
-  previewContainer: { 
+  // Le contenu capture par ViewShot reste un rectangle plein (pas d'arrondi),
+  // sinon les coins transparents apparaissent en noir sur la photo partagee.
+  viewShotContainer: {},
+  previewContainer: {
     position: 'relative',
-    overflow: 'hidden',
-    borderRadius: 16,
   },
-  previewImage: { width: '100%', aspectRatio: 3 / 4, borderRadius: 16 },
+  previewImage: { width: '100%', aspectRatio: 3 / 4 },
   signatureOverlay: {
     position: 'absolute',
     bottom: 80,
@@ -1214,6 +1276,37 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 8,
   },
+  publishedHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  sortBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  sortBtnActive: {
+    backgroundColor: 'rgba(16,185,129,0.2)',
+    borderColor: '#10B981',
+  },
+  sortBtnText: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '600',
+  },
+  sortBtnTextActive: {
+    color: '#10B981',
+  },
+  publishedCarouselCell: {
+    width: 100,
+    alignItems: 'center',
+  },
   publishedCarouselItem: {
     width: 100,
     height: 130,
@@ -1222,6 +1315,14 @@ const styles = StyleSheet.create({
     position: 'relative',
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.2)',
+  },
+  publishedSignerName: {
+    width: 100,
+    marginTop: 6,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   publishedGrid: {
     flexDirection: 'row',

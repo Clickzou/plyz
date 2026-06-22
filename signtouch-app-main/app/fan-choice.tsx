@@ -14,16 +14,72 @@ import PlyzHeader from '@/components/PlyzHeader';
 import { Calendar, Video, Plus, LogIn, CalendarClock } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { showConfirm } from '@/utils/alertHelper';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { getMyScheduledEvents } from '@/utils/eventSessionStorage';
+
+// Base API serveur (vérification de compte). Sur web on passe par le proxy local.
+const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
 export default function FanChoiceScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [ongoingCount, setOngoingCount] = useState(0);
   const [ongoingVideoCount, setOngoingVideoCount] = useState(0);
+  // null = en cours de vérification ; true = compte vérifié (peut créer) ; false = bloqué
+  const [canCreate, setCanCreate] = useState<boolean | null>(null);
+
+  // Un compte peut créer un événement/session s'il a AU MOINS une vérification
+  // approuvée (célébrité, créateur ou club/organisation).
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        if (!user?.id) {
+          if (active) setCanCreate(false);
+          return;
+        }
+        try {
+          const types = ['celebrity', 'creator', 'org'];
+          const results = await Promise.all(
+            types.map((type) =>
+              fetch(`${API_BASE}/api/${type}-verification-status?user_id=${user.id}`)
+                .then((r) => r.json())
+                .catch(() => null)
+            )
+          );
+          if (!active) return;
+          const approved = results.some((d: any) => d?.status === 'approved');
+          setCanCreate(approved);
+        } catch {
+          if (active) setCanCreate(false);
+        }
+      })();
+      return () => { active = false; };
+    }, [user?.id])
+  );
+
+  const handleLockedCreate = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    }
+    showConfirm(
+      t('createLockedTitle' as any) || 'Réservé aux comptes vérifiés',
+      t('createLockedMsg' as any) ||
+        'La création d\'événements et de sessions vidéo est réservée aux célébrités, créateurs et clubs vérifiés. Souhaitez-vous faire vérifier votre compte ?',
+      [
+        { text: t('later' as any) || 'Plus tard', style: 'cancel' },
+        {
+          text: t('getVerified' as any) || 'Faire vérifier mon compte',
+          onPress: () => router.push('/celebrity-onboarding' as any),
+        },
+      ]
+    );
+  };
 
   // Recharge le nombre d'événements / sessions vidéo en cours à chaque retour sur l'écran
   useFocusEffect(
@@ -69,7 +125,7 @@ export default function FanChoiceScreen() {
         <View style={styles.btnRow}>
           <TouchableOpacity
             style={[styles.btn, { backgroundColor: accent }]}
-            onPress={() => handleChoice(createPath)}
+            onPress={() => (canCreate === true ? handleChoice(createPath) : handleLockedCreate())}
             activeOpacity={0.85}
           >
             <Plus size={18} color="#ffffff" strokeWidth={2.5} />

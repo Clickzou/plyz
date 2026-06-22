@@ -135,7 +135,7 @@ export default {
   selectFromGallery: 'Pilih foto',
 
   // Gallery Screen
-  myMemories: 'Kenangan Saya',
+  myMemories: 'Galeri Saya',
   galleryPhotos: 'Foto',
   galleryStories: 'Cerita',
   noStories: 'Belum ada cerita',

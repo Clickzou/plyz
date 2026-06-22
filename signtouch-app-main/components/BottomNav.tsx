@@ -104,15 +104,15 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
 
       <TouchableOpacity
         style={styles.navButton}
-        onPress={() => handleNavigation('/my-space')}
+        onPress={() => handleNavigation('/gallery')}
         activeOpacity={0.7}
       >
         <Images
           size={22}
-          color={isActiveMulti('/my-space', '/gallery', '/account') ? '#10b981' : '#ffffff'}
+          color={isActiveMulti('/gallery', '/my-space', '/account') ? '#10b981' : '#ffffff'}
           strokeWidth={2}
         />
-        <Text style={[styles.navLabel, isActiveMulti('/my-space', '/gallery', '/account') && styles.navLabelActive]}>
+        <Text style={[styles.navLabel, isActiveMulti('/gallery', '/my-space', '/account') && styles.navLabelActive]}>
           {t('mySpace')}
         </Text>
       </TouchableOpacity>

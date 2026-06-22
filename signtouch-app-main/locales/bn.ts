@@ -135,7 +135,7 @@ export default {
   selectFromGallery: 'ছবি নির্বাচন করুন',
 
   // Gallery Screen
-  myMemories: 'আমার স্মৃতি',
+  myMemories: 'আমার গ্যালারি',
   galleryPhotos: 'ফটো',
   galleryStories: 'স্টোরিজ',
   noStories: 'এখনো কোন স্টোরি নেই',

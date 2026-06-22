@@ -135,7 +135,7 @@ export default {
   selectFromGallery: 'تصویر منتخب کریں',
 
   // Gallery Screen
-  myMemories: 'میری یادیں',
+  myMemories: 'میری گیلری',
   galleryPhotos: 'تصاویر',
   galleryStories: 'کہانیاں',
   noStories: 'ابھی کوئی کہانی نہیں',

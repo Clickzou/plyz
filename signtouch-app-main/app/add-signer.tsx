@@ -168,19 +168,12 @@ export default function AddSignerScreen() {
       setIsSaving(true);
       console.log('[AddSigner] Starting save, sessionId:', sessionId);
 
-      let signatureUri: string | undefined;
-
-      if (Platform.OS === 'web') {
-        console.log('[AddSigner] Web: Converting SVG to data URI...');
-        signatureUri = convertSvgToDataUri();
-        console.log('[AddSigner] SVG Data URI created, length:', signatureUri?.length);
-      } else {
-        if (viewShotRef.current) {
-          console.log('[AddSigner] Mobile: Capturing signature...');
-          signatureUri = await (viewShotRef.current as any).capture();
-          console.log('[AddSigner] Captured URI length:', signatureUri?.length);
-        }
-      }
+      // On enregistre la signature en SVG vectoriel (fond transparent, trait blanc
+      // colorisable), aussi bien sur web que sur mobile. Une capture PNG aurait un
+      // fond noir opaque -> carre blanc une fois colorise via tintColor.
+      console.log('[AddSigner] Converting signature to SVG data URI...');
+      const signatureUri = convertSvgToDataUri();
+      console.log('[AddSigner] SVG Data URI created, length:', signatureUri?.length);
 
       console.log('[AddSigner] Calling addEventSigner...');
       await addEventSigner(sessionId, displayName.trim(), signatureUri);

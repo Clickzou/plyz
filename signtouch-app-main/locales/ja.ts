@@ -135,7 +135,7 @@ export default {
   selectFromGallery: '写真を選択',
 
   // Gallery Screen
-  myMemories: 'マイメモリー',
+  myMemories: 'マイギャラリー',
   galleryPhotos: '写真',
   galleryStories: 'ストーリー',
   noStories: 'まだストーリーがありません',

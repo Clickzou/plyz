@@ -135,7 +135,7 @@ export default {
   selectFromGallery: '选择照片',
 
   // Gallery Screen
-  myMemories: '我的回忆',
+  myMemories: '我的图库',
   galleryPhotos: '照片',
   galleryStories: '故事',
   noStories: '暂无故事',

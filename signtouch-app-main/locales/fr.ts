@@ -191,7 +191,7 @@ export default {
   selectFromGallery: 'Choisir une photo',
 
   // Gallery Screen
-  myMemories: 'Mes souvenirs',
+  myMemories: 'Ma Galerie',
   galleryPhotos: 'Photos',
   galleryStories: 'Stories',
   noStories: 'Aucune story',
@@ -676,6 +676,13 @@ export default {
   fanChoiceVideoDesc2: 'Lancez un appel vidéo privé avec vos fans, ou rejoignez celui de votre célébrité.',
   fanChoiceCreateBtn: 'Créer',
   fanChoiceJoinBtn: 'Rejoindre',
+  createLockedTitle: 'Réservé aux comptes vérifiés',
+  createLockedMsg: 'La création d\'événements et de sessions vidéo est réservée aux célébrités, créateurs et clubs vérifiés. Souhaitez-vous faire vérifier votre compte ?',
+  createLockedNotice: 'La création est réservée aux comptes vérifiés (célébrité, créateur, club). Touchez pour faire vérifier votre compte.',
+  getVerified: 'Faire vérifier mon compte',
+  helpSection: 'Aide',
+  faqTitle: 'FAQ - Questions fréquentes',
+  reportProblem: 'Signaler un problème',
   notAvailable: 'Non disponible',
   scannerNotOnWeb: 'Le scanner QR n\'est pas disponible sur le web. Veuillez entrer le code manuellement.',
 
@@ -838,6 +845,8 @@ export default {
   deleteEventConfirm: 'Êtes-vous sûr de vouloir supprimer cet événement ? Cette action est irréversible.',
   deleteFailed: 'Échec de la suppression',
   publishedPhotos: 'Photos publiées',
+  sortByName: 'Par nom',
+  sortRecent: 'Récentes',
   selectSigner: 'Sélectionner un signataire',
   selectPhoto: 'Sélectionner une photo',
   fromGallery: 'Depuis la galerie',
