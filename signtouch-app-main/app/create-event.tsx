@@ -1027,6 +1027,11 @@ export default function CreateEventScreen() {
                   }}
                   onStartShouldSetResponder={() => true}
                   onMoveShouldSetResponder={() => true}
+                  onStartShouldSetResponderCapture={() => true}
+                  onMoveShouldSetResponderCapture={() => true}
+                  // Empêche le ScrollView parent de "voler" le geste en plein tracé
+                  // (sinon le trait est coupé en petits segments saccadés).
+                  onResponderTerminationRequest={() => false}
                   onResponderGrant={handleTouchStart}
                   onResponderMove={handleTouchMove}
                   onResponderRelease={handleTouchEnd}
