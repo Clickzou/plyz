@@ -48,10 +48,24 @@ export default function ReportProblemScreen() {
 
     // 1) Envoi automatique via le serveur (e-mail direct au support).
     try {
+      // Contexte technique ajouté au corps du message.
+      const fullDescription =
+        `${message.trim()}\n\n` +
+        `------------------------------\n` +
+        `Compte : ${user?.email || 'non connecté'}\n` +
+        `Plateforme : ${Platform.OS}\n` +
+        `Version : 1.0.0`;
+
       const res = await fetch(`${API_BASE}/api/report-problem`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // On envoie les DEUX conventions de champs pour être compatible quelle que
+        // soit la version du serveur (category/description/reporter_email ou
+        // subject/message/userEmail).
         body: JSON.stringify({
+          category: subject.trim() || 'Signalement',
+          description: fullDescription,
+          reporter_email: user?.email || null,
           subject: subject.trim(),
           message: message.trim(),
           userEmail: user?.email || null,
@@ -59,11 +73,11 @@ export default function ReportProblemScreen() {
           appVersion: '1.0.0',
         }),
       });
-      // On exige une vraie réponse JSON {success:true} : si le serveur renvoie du
-      // HTML (endpoint absent / proxy) ou une erreur, on bascule sur le mailto.
+      // Succès = réponse JSON 2xx sans champ "error". Si le serveur renvoie du HTML
+      // (endpoint absent / proxy), res.json() échoue -> on bascule sur le mailto.
       let data: any = null;
       try { data = await res.json(); } catch { /* réponse non-JSON */ }
-      if (res.ok && data && data.success === true) {
+      if (res.ok && data && !data.error) {
         setSending(false);
         showAlert(
           t('reportSentTitle' as any) || 'Message envoyé',
