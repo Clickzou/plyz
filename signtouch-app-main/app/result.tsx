@@ -2181,10 +2181,17 @@ export default function ResultScreen() {
         });
 
         if (memoryId && memory) {
+          // On conserve le baseUri VIERGE existant (pour pouvoir ré-éditer ensuite)
+          // et on enregistre AUSSI bien les signatures QUE les textes.
+          const cleanBaseUri = (memory.baseUri && memory.baseUri !== memory.uri)
+            ? memory.baseUri
+            : undefined;
           const updatedMemory: Memory = {
             ...memory,
             uri: capturedUri,
+            ...(cleanBaseUri ? { baseUri: cleanBaseUri } : {}),
             signatureOverlays,
+            textOverlays,
             adjustments:
               brightness !== 0 || contrast !== 0 || saturation !== 0
                 ? { brightness, contrast, saturation }
@@ -2206,7 +2213,20 @@ export default function ResultScreen() {
           }, 300);
         } else if (imageUri) {
           console.log('💾 Sauvegarde du nouveau souvenir dans l\'app...');
-          await saveMemory(capturedUri);
+          // Nouvelle photo : on garde l'image VIERGE (imageUri) comme baseUri + les
+          // overlays, pour que la photo reste ré-éditable depuis la galerie.
+          const saved = await saveMemory(capturedUri);
+          await updateMemory({
+            ...saved,
+            baseUri: imageUri,
+            signatureOverlays,
+            textOverlays,
+            adjustments:
+              brightness !== 0 || contrast !== 0 || saturation !== 0
+                ? { brightness, contrast, saturation }
+                : undefined,
+            isEdited: true,
+          });
           console.log('✅ Souvenir sauvegardé dans l\'app');
 
           if (Platform.OS !== 'web') {
