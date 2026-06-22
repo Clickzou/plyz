@@ -1477,7 +1477,12 @@ export default function ResultScreen() {
       const found = memories.find(m => m.id === memoryId);
       if (found) {
         setMemory(found);
-        if (found.baseUri) {
+        // On ne charge les overlays ÉDITABLES que si la memory possède un baseUri
+        // réellement VIERGE (≠ image aplatie). Sinon, les overlays sont déjà "cuits"
+        // dans found.uri : les recharger en composants éditables produirait des
+        // doublons (texte en double) et des signatures figées non déplaçables.
+        const cleanBase = !!(found.baseUri && found.baseUri !== found.uri);
+        if (cleanBase) {
           setSignatureOverlays(found.signatureOverlays || []);
           setTextOverlays(found.textOverlays || []);
         } else {
@@ -1501,7 +1506,15 @@ export default function ResultScreen() {
     }
   };
 
-  const hasBaseUri = memory ? !!(memory.baseUri && memory.baseUri !== memory.uri) : false;
+  // Un baseUri est exploitable comme fond VIERGE dès qu'il existe.
+  // L'ancien test `baseUri !== uri` était piégeux : certaines memories ont été
+  // enregistrées avec baseUri == uri (image aplatie) ; on ne peut alors PAS
+  // redessiner des overlays éditables par-dessus (doublons + signatures figées).
+  // On distingue donc :
+  //  - hasBaseUri : un baseUri est présent (overlays => séparés du fond)
+  //  - hasCleanBaseUri : ce baseUri est réellement VIERGE (différent de l'image aplatie)
+  const hasBaseUri = memory ? !!memory.baseUri : false;
+  const hasCleanBaseUri = memory ? !!(memory.baseUri && memory.baseUri !== memory.uri) : false;
   // Sur le web, aucune image fusionnée ("baked") n'est produite à la sauvegarde :
   // on redessine donc les signatures/textes par-dessus la photo de base, même en mode vue.
   // Web : calques statiques affichés en mode vue. Mobile : affichés PENDANT la
@@ -1511,8 +1524,11 @@ export default function ResultScreen() {
     (Platform.OS === 'web' && !isEditMode && !saving) ||
     (Platform.OS !== 'web' && saving)
   ) && (signatureOverlays.length > 0 || textOverlays.length > 0);
+  // En ré-édition, le fond DOIT être l'image vierge (baseUri) dès qu'elle existe,
+  // sinon les overlays "cuits" dans memory.uri réapparaissent EN DOUBLE sous les
+  // composants éditables. On utilise donc hasCleanBaseUri (baseUri réellement vierge).
   const displayUri = memory
-    ? ((isEditMode || showStaticOverlays) && hasBaseUri ? memory.baseUri! : memory.uri)
+    ? ((isEditMode || showStaticOverlays) && hasCleanBaseUri ? memory.baseUri! : memory.uri)
     : imageUri;
 
   if (memory) {
@@ -2028,10 +2044,19 @@ export default function ResultScreen() {
           quality: 1.0,
         });
 
+        // baseUri doit TOUJOURS rester l'image VIERGE (sans overlays).
+        // - Si la memory possède déjà un baseUri vierge (≠ image aplatie), on le conserve.
+        // - Sinon, on NE remplace PAS par displayUri : pendant la capture displayUri
+        //   peut pointer sur l'image aplatie (overlays "cuits"), ce qui corromprait
+        //   les ré-éditions suivantes (doublons). On préfère ne pas écrire de baseUri
+        //   dans ce cas (la memory reste consultable, sans ré-édition des overlays).
+        const cleanBaseUri = (memory.baseUri && memory.baseUri !== memory.uri)
+          ? memory.baseUri
+          : undefined;
         const updatedMemory: Memory = {
           ...memory,
           uri: capturedUri,
-          baseUri: memory.baseUri || displayUri,
+          ...(cleanBaseUri ? { baseUri: cleanBaseUri } : {}),
           signatureOverlays,
           textOverlays,
           adjustments: (brightness !== 0 || contrast !== 0 || saturation !== 0) ? { brightness, contrast, saturation } : undefined,
@@ -2470,8 +2495,15 @@ export default function ResultScreen() {
                 />
               </TouchableOpacity>
             </View>
-            {/* Draggable overlays (editable) - only in edit mode */}
-            {isEditMode && !saving && hasBaseUri && signatureOverlays.map(overlay => (
+            {/* Draggable overlays (editable) - only in edit mode.
+                Les overlays présents en mode édition sont soit chargés depuis une
+                memory à baseUri VIERGE (loadMemory ne les charge que dans ce cas),
+                soit fraîchement ajoutés dans la session : dans les deux cas ils sont
+                sûrs à rendre comme composants éditables (pas de doublon avec un fond
+                aplati). Signatures ET textes sont gérés à l'identique pour rester
+                cohérents (l'ancien code gérait les signatures différemment du texte,
+                d'où signatures figées + texte en double en ré-édition). */}
+            {isEditMode && !saving && signatureOverlays.map(overlay => (
               <DraggableSignature
                 key={overlay.id}
                 overlay={overlay}
