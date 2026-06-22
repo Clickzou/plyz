@@ -1417,6 +1417,12 @@ export default function ResultScreen() {
 
   const params = useLocalSearchParams<{ imageUri?: string; memoryId?: string }>();
   const { imageUri, memoryId } = params;
+  // RÉ-ÉDITION : photo ouverte depuis la galerie (memoryId défini). Dans ce cas,
+  // l'image est traitée comme une IMAGE FIXE : on ne propose plus d'ajouter/éditer
+  // des overlays (signatures/textes/dessin) car captureRef n'aplatit pas ces calques
+  // de façon fiable sur Android. Seuls restent : effets (luminosité/contraste/
+  // saturation, sauvegardés en métadonnées), partager et supprimer.
+  const isReEdit = !!memoryId;
   const [memory, setMemory] = useState<Memory | null>(null);
   const [, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -1619,14 +1625,12 @@ export default function ResultScreen() {
         // réellement VIERGE (≠ image aplatie). Sinon, les overlays sont déjà "cuits"
         // dans found.uri : les recharger en composants éditables produirait des
         // doublons (texte en double) et des signatures figées non déplaçables.
-        const cleanBase = !!(found.baseUri && found.baseUri !== found.uri);
-        if (cleanBase) {
-          setSignatureOverlays(found.signatureOverlays || []);
-          setTextOverlays(found.textOverlays || []);
-        } else {
-          setSignatureOverlays([]);
-          setTextOverlays([]);
-        }
+        // En RÉ-ÉDITION, on ne charge JAMAIS d'overlays éditables : la photo est une
+        // image fixe (memory.uri déjà aplatie). On laisse les listes vides pour ne
+        // pas entrer dans le mode "fond vierge + overlays" (qui ferait apparaître
+        // l'image SANS ses éléments d'origine une fois les Draggables masqués).
+        setSignatureOverlays([]);
+        setTextOverlays([]);
         if (found.adjustments) {
           setBrightness(found.adjustments.brightness || 0);
           setContrast(found.adjustments.contrast || 0);
@@ -1670,8 +1674,14 @@ export default function ResultScreen() {
   // composants éditables. On utilise donc hasCleanBaseUri (baseUri réellement vierge).
   // Pendant la capture mobile (capturingStatic), même règle : fond = baseUri vierge
   // si dispo, et on dessine les Static* par-dessus -> image aplatie correcte.
+  // En RÉ-ÉDITION (memory chargée depuis la galerie), l'image affichée est TOUJOURS
+  // l'image finale déjà aplatie (memory.uri), JAMAIS le fond vierge (baseUri) :
+  // l'utilisateur doit voir sa photo avec ses éléments d'origine. On n'entre donc
+  // pas dans le mode "fond vierge + overlays" (réservé à la création, memoryId null).
   const displayUri = memory
-    ? ((isEditMode || showStaticOverlays) && hasCleanBaseUri ? memory.baseUri! : memory.uri)
+    ? (isReEdit
+        ? memory.uri
+        : ((isEditMode || showStaticOverlays) && hasCleanBaseUri ? memory.baseUri! : memory.uri))
     : imageUri;
 
   if (memory) {
@@ -2125,6 +2135,37 @@ export default function ResultScreen() {
     console.log('🔒 handleSaveEdits appelé, user:', user?.id);
     if (!memory || !memoryId) return;
 
+    // RÉ-ÉDITION : pas d'overlays à aplatir, donc AUCUN captureRef. On ne sauvegarde
+    // que les ajustements (luminosité/contraste/saturation) dans les métadonnées de
+    // la memory — fiable et indépendant de la capture d'image (qui échoue sur Android).
+    if (isReEdit) {
+      try {
+        setSaving(true);
+        const updatedMemory: Memory = {
+          ...memory,
+          adjustments:
+            brightness !== 0 || contrast !== 0 || saturation !== 0
+              ? { brightness, contrast, saturation }
+              : undefined,
+          updatedAt: Date.now(),
+          isEdited: true,
+        };
+        await updateMemory(updatedMemory);
+        setMemory(updatedMemory);
+        setIsEditMode(false);
+        setShowEffectsPanel(false);
+        setSaving(false);
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+      } catch (error) {
+        console.error('❌ Erreur sauvegarde ajustements (ré-édition):', error);
+        setSaving(false);
+        showAlert(t('error'), `${(error as Error).message}`);
+      }
+      return;
+    }
+
     // La sauvegarde dans la galerie LOCALE marche sans compte (StorageService gère
     // user=null). On ne bloque donc plus : la photo est toujours sauvegardée. Si
     // l'utilisateur n'a pas de compte, on lui proposera (sans bloquer) d'en créer un.
@@ -2191,10 +2232,6 @@ export default function ResultScreen() {
 
       // Native : on peut utiliser captureRef normalement
       if (viewShotRef.current) {
-        console.log('🟢 [CAPTURE v2] isEditMode=', isEditMode, 'saving= true',
-          'capturingStatic= true',
-          'sigs=', signatureOverlays.length, 'texts=', textOverlays.length,
-          'displayUri=', displayUri?.slice(-40));
         const capturedUri = await captureRef(viewShotRef.current, {
           format: 'png',
           quality: 1.0,
@@ -2252,6 +2289,25 @@ export default function ResultScreen() {
 
     try {
       setSaving(true);
+
+      // RÉ-ÉDITION : image fixe (déjà aplatie). On NE recapture PAS (captureRef
+      // re-aplatirait inutilement memory.uri et dégraderait la qualité). On sauvegarde
+      // uniquement les ajustements via les métadonnées, puis retour galerie.
+      if (isReEdit && memory) {
+        const updatedMemory: Memory = {
+          ...memory,
+          adjustments:
+            brightness !== 0 || contrast !== 0 || saturation !== 0
+              ? { brightness, contrast, saturation }
+              : undefined,
+          updatedAt: Date.now(),
+          isEdited: true,
+        };
+        await updateMemory(updatedMemory);
+        setSaving(false);
+        router.replace('/gallery');
+        return;
+      }
 
       // CAPTURE MOBILE : on quitte le mode édition (retire les Draggables reanimated,
       // mal captés par captureRef) ET on active les overlays STATIQUES (capturingStatic)
@@ -2338,9 +2394,6 @@ export default function ResultScreen() {
         }
 
         // Native : captureRef comme avant
-        console.log('🟢 [CAPTURE v2] isEditMode=', isEditMode, 'saving= true',
-          'sigs=', signatureOverlays.length, 'texts=', textOverlays.length,
-          'displayUri=', displayUri?.slice(-40));
         const capturedUri = await captureRef(viewShotRef.current, {
           format: 'png',
           quality: 1.0,
@@ -2702,7 +2755,7 @@ export default function ResultScreen() {
                 aplati). Signatures ET textes sont gérés à l'identique pour rester
                 cohérents (l'ancien code gérait les signatures différemment du texte,
                 d'où signatures figées + texte en double en ré-édition). */}
-            {isEditMode && signatureOverlays.map(overlay => (
+            {!isReEdit && isEditMode && signatureOverlays.map(overlay => (
               <DraggableSignature
                 key={overlay.id}
                 overlay={overlay}
@@ -2716,7 +2769,7 @@ export default function ResultScreen() {
               />
             ))}
             {/* Draggable text overlays (editable) - only in edit mode */}
-            {isEditMode && textOverlays.map(overlay => (
+            {!isReEdit && isEditMode && textOverlays.map(overlay => (
               <DraggableText
                 key={overlay.id}
                 overlay={overlay}
@@ -2746,6 +2799,9 @@ export default function ResultScreen() {
 
         {/* Top left - Edit mode toggle and Eraser */}
         <View style={[styles.topLeft, { top: insets.top + 20, left: 20 }]}>
+          {/* Crayon (mode édition) masqué en ré-édition : depuis la galerie on ne
+              peut que partager ou supprimer la photo, pas la ré-éditer. */}
+          {!isReEdit && (
           <Animated.View style={editButtonAnimatedStyle}>
             <TouchableOpacity
               style={[styles.editModeButton, isEditMode && styles.editModeButtonActive]}
@@ -2755,9 +2811,21 @@ export default function ResultScreen() {
               <Pencil size={20} color="#ffffff" strokeWidth={2} />
             </TouchableOpacity>
           </Animated.View>
+          )}
 
-          {/* Eraser button - visible only when element is selected */}
-          {isEditMode && selectedElementId && (
+          {/* Bouton retour vers la galerie en ré-édition (crayon + Save masqués) */}
+          {isReEdit && (
+            <TouchableOpacity
+              style={styles.editModeButton}
+              onPress={() => router.replace('/gallery')}
+              activeOpacity={0.8}
+            >
+              <X size={22} color="#ffffff" strokeWidth={2} />
+            </TouchableOpacity>
+          )}
+
+          {/* Eraser button - visible only when element is selected (jamais en ré-édition) */}
+          {!isReEdit && isEditMode && selectedElementId && (
             <TouchableOpacity
               style={styles.eraserButton}
               onPress={deleteSelectedElement}
@@ -2768,8 +2836,9 @@ export default function ResultScreen() {
           )}
         </View>
 
-        {/* Top right - Save button (visible when not in edit mode) */}
-        {!isEditMode && (
+        {/* Top right - Save button (visible when not in edit mode).
+            Masqué en ré-édition : rien à sauvegarder (photo en lecture seule). */}
+        {!isEditMode && !isReEdit && (
           <View style={[styles.topRight, { top: insets.top + 20, right: 20 }]}>
             <TouchableOpacity
               style={styles.saveButton}
@@ -2786,42 +2855,50 @@ export default function ResultScreen() {
           </View>
         )}
 
-        {/* Top right - Edit buttons (visible only in edit mode) */}
+        {/* Top right - Edit buttons (visible only in edit mode).
+            En RÉ-ÉDITION : seuls les EFFETS restent (palette/dessin, signature+ et
+            texte+ retirés car non aplatissables de façon fiable sur Android). */}
         {isEditMode && (
           <View style={[styles.topRight, { top: insets.top + 20, right: 20 }]}>
-            <TouchableOpacity
-              style={[styles.editActionButton, styles.paletteButton, showTooltip && styles.paletteButtonActive]}
-              onPress={togglePaletteMode}
-              activeOpacity={0.8}
-            >
-              <Palette size={20} color="#ffffff" strokeWidth={2} />
-            </TouchableOpacity>
+            {!isReEdit && (
+              <TouchableOpacity
+                style={[styles.editActionButton, styles.paletteButton, showTooltip && styles.paletteButtonActive]}
+                onPress={togglePaletteMode}
+                activeOpacity={0.8}
+              >
+                <Palette size={20} color="#ffffff" strokeWidth={2} />
+              </TouchableOpacity>
+            )}
 
-            <TouchableOpacity
-              style={[styles.editActionButton, styles.signaturePlusButton]}
-              onPress={addSignatureOverlay}
-              activeOpacity={0.8}
-            >
-              <View style={styles.iconWithBadge}>
-                <Pencil size={20} color="#ffffff" strokeWidth={2} />
-                <View style={styles.plusBadgeSmall}>
-                  <Plus size={10} color="#ffffff" strokeWidth={3} />
+            {!isReEdit && (
+              <TouchableOpacity
+                style={[styles.editActionButton, styles.signaturePlusButton]}
+                onPress={addSignatureOverlay}
+                activeOpacity={0.8}
+              >
+                <View style={styles.iconWithBadge}>
+                  <Pencil size={20} color="#ffffff" strokeWidth={2} />
+                  <View style={styles.plusBadgeSmall}>
+                    <Plus size={10} color="#ffffff" strokeWidth={3} />
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            )}
 
-            <TouchableOpacity
-              style={[styles.editActionButton, styles.textPlusButton]}
-              onPress={addTextOverlay}
-              activeOpacity={0.8}
-            >
-              <View style={styles.iconWithBadge}>
-                <Type size={20} color="#ffffff" strokeWidth={2} />
-                <View style={styles.plusBadgeSmall}>
-                  <Plus size={10} color="#ffffff" strokeWidth={3} />
+            {!isReEdit && (
+              <TouchableOpacity
+                style={[styles.editActionButton, styles.textPlusButton]}
+                onPress={addTextOverlay}
+                activeOpacity={0.8}
+              >
+                <View style={styles.iconWithBadge}>
+                  <Type size={20} color="#ffffff" strokeWidth={2} />
+                  <View style={styles.plusBadgeSmall}>
+                    <Plus size={10} color="#ffffff" strokeWidth={3} />
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={[styles.editActionButton, styles.effectsButton, showEffectsPanel && styles.effectsButtonActive]}
@@ -2833,8 +2910,8 @@ export default function ResultScreen() {
           </View>
         )}
 
-        {/* Edit mode instructions */}
-        {isEditMode && !selectedElementId && !showColorPicker && !showSignatureMode && !showEffectsPanel && (
+        {/* Edit mode instructions (masquées en ré-édition : plus d'overlays à modifier) */}
+        {!isReEdit && isEditMode && !selectedElementId && !showColorPicker && !showSignatureMode && !showEffectsPanel && (
           <View style={[styles.tooltipContainer, { top: insets.top + 90 }]}>
             <View style={styles.tooltip}>
               <Text style={styles.tooltipText}>
@@ -3071,7 +3148,7 @@ export default function ResultScreen() {
                 </TouchableOpacity>
               )}
 
-              {memoryId && (
+              {memoryId && !isReEdit && (
                 <TouchableOpacity
                   style={styles.notebookButton}
                   onPress={() => setShowMetadataModal(true)}
