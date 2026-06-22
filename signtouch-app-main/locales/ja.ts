@@ -844,6 +844,8 @@ export default {
   later: '後で',
   receiveCode: 'ログインコードを取得',
   secureCodeExplanation: 'メールで6桁のコードが届きます。',
+
+  enterNameBeforeSign: '先に有名人の名前を入力してから、ここに署名してください。',
   enterCode: 'コードを入力',
   codeSentTo: 'メールに6桁のコードを送信しました。以下にコピーして貼り付けてください。',
   codeSentToEmail: '8桁のコードをメールに送信しました。以下にコピーして貼り付けてください。',

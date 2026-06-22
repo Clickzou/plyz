@@ -844,6 +844,8 @@ export default {
   later: 'Nanti',
   receiveCode: 'Dapatkan kode masuk',
   secureCodeExplanation: 'Anda akan menerima kode 6 digit melalui email.',
+
+  enterNameBeforeSign: 'Masukkan dulu nama selebriti, lalu tanda tangani di sini.',
   enterCode: 'Masukkan kode Anda',
   codeSentTo: 'Kami mengirimkan kode 6 digit ke email Anda. Salin dan tempel di bawah.',
   codeSentToEmail: 'Kami mengirim kode 6 digit ke email Anda. Salin dan tempel di bawah.',

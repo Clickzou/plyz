@@ -844,6 +844,8 @@ export default {
   later: '稍后',
   receiveCode: '获取登录代码',
   secureCodeExplanation: '您将通过电子邮件收到一个6位代码。',
+
+  enterNameBeforeSign: '请先输入名人姓名，然后在此签名。',
   enterCode: '输入您的代码',
   codeSentTo: '我们已向您的邮箱发送了6位代码。请复制并粘贴到下方。',
   codeSentToEmail: '我们已向您的邮箱发送了8位数代码。请复制并粘贴到下方。',

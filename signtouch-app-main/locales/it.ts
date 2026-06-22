@@ -844,6 +844,8 @@ export default {
   later: 'Più tardi',
   receiveCode: 'Ricevi un codice di accesso',
   secureCodeExplanation: 'Riceverai un codice a 6 cifre via email.',
+
+  enterNameBeforeSign: 'Inserisci prima il nome della celebrità, poi firma qui.',
   enterCode: 'Inserisci il tuo codice',
   codeSentTo: 'Abbiamo inviato un codice a 6 cifre alla tua email. Copialo e incollalo qui sotto.',
   codeSentToEmail: 'Ti abbiamo inviato un codice di 8 cifre via email. Copialo e incollalo qui sotto.',
