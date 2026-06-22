@@ -201,11 +201,11 @@ export default function VideoCallScreen() {
     handleCallEnded();
   };
 
-  const handleSubmitRating = async (rating: number) => {
+  const handleSubmitRating = async (rating: number, comment: string) => {
     try {
       const myDeviceId = await getOrCreateDeviceId();
       const otherUserId = params.otherUserId || (isHost ? 'fan_unknown' : params.sessionId || 'celebrity_unknown');
-      
+
       await submitRating(
         params.sessionId || '',
         params.queueEntryId || null,
@@ -213,7 +213,8 @@ export default function VideoCallScreen() {
         isHost ? 'celebrity' : 'fan',
         otherUserId,
         isHost ? 'fan' : 'celebrity',
-        rating
+        rating,
+        comment
       );
     } catch (error) {
       console.error('Error submitting rating:', error);

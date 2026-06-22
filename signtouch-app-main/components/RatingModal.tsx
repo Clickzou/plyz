@@ -6,6 +6,7 @@ import {
   Modal,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Star, X, Shield, Heart } from 'lucide-react-native';
@@ -14,7 +15,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 interface RatingModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (rating: number) => Promise<void>;
+  onSubmit: (rating: number, comment: string) => Promise<void>;
   userName: string;
   isCelebrity: boolean;
 }
@@ -28,15 +29,17 @@ export default function RatingModal({
 }: RatingModalProps) {
   const { t } = useLanguage();
   const [selectedRating, setSelectedRating] = useState<number>(0);
+  const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     if (selectedRating === 0) return;
-    
+
     setIsSubmitting(true);
     try {
-      await onSubmit(selectedRating);
+      await onSubmit(selectedRating, comment.trim());
       setSelectedRating(0);
+      setComment('');
       onClose();
     } catch (error) {
       console.error('Error submitting rating:', error);
@@ -47,6 +50,7 @@ export default function RatingModal({
 
   const handleSkip = () => {
     setSelectedRating(0);
+    setComment('');
     onClose();
   };
 
@@ -141,6 +145,19 @@ export default function RatingModal({
               <Text style={styles.tapHint}>
                 {t('tapToRate') || 'Tap a star to rate'}
               </Text>
+            )}
+
+            {selectedRating > 0 && (
+              <TextInput
+                style={styles.commentInput}
+                value={comment}
+                onChangeText={setComment}
+                placeholder={t('ratingCommentPlaceholder') || 'Laisser un commentaire (facultatif)…'}
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                multiline
+                maxLength={300}
+                textAlignVertical="top"
+              />
             )}
 
             <View style={styles.divider} />
@@ -275,6 +292,19 @@ const styles = StyleSheet.create({
     minHeight: 32,
     textAlignVertical: 'center',
     lineHeight: 32,
+  },
+  commentInput: {
+    width: '100%',
+    minHeight: 70,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    color: '#fff',
+    fontSize: 14,
+    marginTop: 12,
   },
   divider: {
     width: 48,

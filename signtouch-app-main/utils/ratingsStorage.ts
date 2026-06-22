@@ -95,7 +95,8 @@ export const submitRating = async (
   raterType: 'fan' | 'celebrity',
   ratedId: string,
   ratedType: 'fan' | 'celebrity',
-  rating: number
+  rating: number,
+  comment?: string
 ): Promise<boolean> => {
   try {
     const { data: existingRating } = await supabase
@@ -121,6 +122,7 @@ export const submitRating = async (
         rated_id: ratedId,
         rated_type: ratedType,
         rating,
+        comment: comment || null,
       });
 
     if (error) {

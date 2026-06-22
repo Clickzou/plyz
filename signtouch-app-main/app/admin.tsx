@@ -47,6 +47,7 @@ export default function AdminScreen() {
   const [verifFilter, setVerifFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [revenue, setRevenue] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
+  const [lowRatings, setLowRatings] = useState<any[]>([]);
   const [searchQ, setSearchQ] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
@@ -72,8 +73,12 @@ export default function AdminScreen() {
 
   const loadReports = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc('admin_list_reports');
-    if (!error) setReports(data || []);
+    const [rep, low] = await Promise.all([
+      supabase.rpc('admin_list_reports'),
+      supabase.rpc('admin_list_low_ratings'),
+    ]);
+    if (!rep.error) setReports(rep.data || []);
+    if (!low.error) setLowRatings(low.data || []);
     setLoading(false);
   }, []);
 
@@ -350,20 +355,44 @@ export default function AdminScreen() {
         {/* ---- SIGNALEMENTS ---- */}
         {tab === 'reports' && (
           <View>
-            {loading ? <ActivityIndicator color="#10b981" style={{ marginTop: 30 }} /> :
-              reports.length === 0 ? <Text style={styles.empty}>Aucun problème signalé.</Text> :
-              reports.map((r) => (
-                <View key={r.id} style={styles.itemCard}>
-                  <View style={styles.itemRow}>
-                    <Text style={styles.itemName}>{r.subject || 'Signalement'}</Text>
-                    <Text style={styles.itemDate}>{fmtDate(r.created_at)}</Text>
+            {loading && <ActivityIndicator color="#10b981" style={{ marginTop: 30 }} />}
+
+            {/* Notes basses (1-2 étoiles) remontées comme signalements */}
+            {lowRatings.length > 0 && (
+              <>
+                <Text style={styles.sectionLabel}>⭐ Notes basses (1-2 étoiles)</Text>
+                {lowRatings.map((r) => (
+                  <View key={r.id} style={[styles.itemCard, { borderColor: 'rgba(239,68,68,0.3)' }]}>
+                    <View style={styles.itemRow}>
+                      <Text style={styles.itemName}>
+                        {'⭐'.repeat(r.rating)} · {r.rated_name || (r.rated_type === 'celebrity' ? 'Célébrité' : 'Fan')}
+                      </Text>
+                      <Text style={styles.itemDate}>{fmtDate(r.created_at)}</Text>
+                    </View>
+                    {!!r.comment && <Text style={styles.reportMsg}>« {r.comment} »</Text>}
+                    <Text style={styles.itemSub}>Noté par un {r.rater_type === 'celebrity' ? 'célébrité' : 'fan'}</Text>
                   </View>
-                  <Text style={styles.reportMsg}>{r.message}</Text>
-                  <Text style={styles.itemSub}>
-                    {(r.reporter_name ? r.reporter_name + ' · ' : '')}{r.reporter_email || 'e-mail inconnu'}{r.platform ? ' · ' + r.platform : ''}
-                  </Text>
+                ))}
+                <Text style={[styles.sectionLabel, { marginTop: 18 }]}>🐛 Problèmes signalés</Text>
+              </>
+            )}
+
+            {!loading && reports.length === 0 && lowRatings.length === 0 && (
+              <Text style={styles.empty}>Aucun signalement ni note basse.</Text>
+            )}
+
+            {reports.map((r) => (
+              <View key={r.id} style={styles.itemCard}>
+                <View style={styles.itemRow}>
+                  <Text style={styles.itemName}>{r.subject || 'Signalement'}</Text>
+                  <Text style={styles.itemDate}>{fmtDate(r.created_at)}</Text>
                 </View>
-              ))}
+                <Text style={styles.reportMsg}>{r.message}</Text>
+                <Text style={styles.itemSub}>
+                  {(r.reporter_name ? r.reporter_name + ' · ' : '')}{r.reporter_email || 'e-mail inconnu'}{r.platform ? ' · ' + r.platform : ''}
+                </Text>
+              </View>
+            ))}
           </View>
         )}
       </ScrollView>
