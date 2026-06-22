@@ -59,7 +59,11 @@ export default function ReportProblemScreen() {
           appVersion: '1.0.0',
         }),
       });
-      if (res.ok) {
+      // On exige une vraie réponse JSON {success:true} : si le serveur renvoie du
+      // HTML (endpoint absent / proxy) ou une erreur, on bascule sur le mailto.
+      let data: any = null;
+      try { data = await res.json(); } catch { /* réponse non-JSON */ }
+      if (res.ok && data && data.success === true) {
         setSending(false);
         showAlert(
           t('reportSentTitle' as any) || 'Message envoyé',
