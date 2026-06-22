@@ -19,6 +19,7 @@ import {
   Download,
   Share2,
   RotateCcw,
+  RotateCw,
   ZoomIn,
   ZoomOut,
   Palette,
@@ -150,13 +151,16 @@ export default function EventPhotoEditorScreen() {
   const lastPanOffset = useRef({ x: 0, y: 0 });
   const isDragging = useRef(false);
   const positionAtDragStart = useRef({ x: 0, y: 0 });
+  // Référence toujours à jour de la position de la signature (le PanResponder
+  // étant créé une seule fois, il ne doit pas lire une valeur figée).
+  const signaturePositionRef = useRef({ x: 0, y: 0 });
 
   const handleWebDragStart = useCallback((e: React.MouseEvent) => {
     if (Platform.OS !== 'web') return;
     e.preventDefault();
     isDragging.current = true;
     lastPanOffset.current = { x: e.clientX, y: e.clientY };
-    positionAtDragStart.current = { ...signaturePosition };
+    positionAtDragStart.current = { ...signaturePositionRef.current };
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       if (!isDragging.current) return;
@@ -177,7 +181,7 @@ export default function EventPhotoEditorScreen() {
   }, [signaturePosition]);
 
   useEffect(() => {
-    positionAtDragStart.current = { ...signaturePosition };
+    signaturePositionRef.current = { ...signaturePosition };
   }, [signaturePosition]);
 
   const panResponder = useRef(
@@ -185,7 +189,7 @@ export default function EventPhotoEditorScreen() {
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
-        lastPanOffset.current = { ...signaturePosition };
+        lastPanOffset.current = { ...signaturePositionRef.current };
       },
       onPanResponderMove: (_, gestureState) => {
         setSignaturePosition({
@@ -470,7 +474,7 @@ export default function EventPhotoEditorScreen() {
             <RotateCcw size={20} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.controlBtn} onPress={() => adjustRotation(15)}>
-            <RotateCcw size={20} color="#fff" style={{ transform: [{ scaleX: -1 }] }} />
+            <RotateCw size={20} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.controlBtn, showColorPicker && styles.controlBtnActive]}
