@@ -260,41 +260,52 @@ function StaticSignature({ overlay }: StaticSignatureProps) {
     );
   }
 
+  // IMPORTANT (parité capture mobile) : la version statique DOIT se positionner
+  // EXACTEMENT comme DraggableSignature, sinon l'image capturée place la signature
+  // au mauvais endroit. On reproduit donc le MÊME conteneur (draggableTextContainer
+  // left:0/top:0) + le MÊME ordre de transform [translateX, translateY, rotate, scale]
+  // + le MÊME wrapper interne (signatureTouchable, padding:25/margin:-25) que le
+  // composant déplaçable. (L'ancien rendu left/top + [rotate,scale] décalait le pivot.)
+  const sigStaticTransform = [
+    { translateX: overlay.x },
+    { translateY: overlay.y },
+    { rotate: `${overlay.rotation}deg` },
+    { scale: overlay.scale },
+  ];
+
   if (isJsonData) {
     try {
       const base64Data = overlay.uri.split(',')[1];
       const jsonString = decodeURIComponent(escape(atob(base64Data)));
       const svgData = JSON.parse(jsonString);
+      const dw = svgData.width || 150;
+      const dh = svgData.height || 80;
 
       return (
-        <View style={[styles.signatureWrapper, {
-          left: overlay.x,
-          top: overlay.y,
-          width: svgData.width,
-          height: svgData.height,
-          transform: [
-            { rotate: `${overlay.rotation}deg` },
-            { scale: overlay.scale }
-          ]
-        }]}>
-          <Svg
-            key={`${overlay.id}-${signatureColor}`}
-            width={svgData.width}
-            height={svgData.height}
-            style={styles.signature}
-          >
-            {svgData.paths.map((pathData: string, index: number) => (
-              <Path
-                key={`${index}-${signatureColor}`}
-                d={pathData}
-                stroke={signatureColor}
-                strokeWidth={8}
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            ))}
-          </Svg>
+        <View style={[styles.draggableTextContainer, { transform: sigStaticTransform }]}>
+          <View style={styles.signatureTouchable}>
+            <View style={{ width: dw, height: dh }}>
+              <Svg
+                key={`${overlay.id}-${signatureColor}`}
+                width={svgData.width}
+                height={svgData.height}
+                viewBox={`0 0 ${svgData.width} ${svgData.height}`}
+                style={styles.signature}
+              >
+                {svgData.paths.map((pathData: string, index: number) => (
+                  <Path
+                    key={`${index}-${signatureColor}`}
+                    d={pathData}
+                    stroke={signatureColor}
+                    strokeWidth={8}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                ))}
+              </Svg>
+            </View>
+          </View>
         </View>
       );
     } catch (error) {
@@ -316,40 +327,47 @@ function StaticSignature({ overlay }: StaticSignatureProps) {
       const heightMatch = svgString.match(/height="([^"]+)"/);
       const width = widthMatch ? parseFloat(widthMatch[1]) : 300;
       const height = heightMatch ? parseFloat(heightMatch[1]) : 150;
+      // viewBox détermine la mise à l'échelle interne du tracé : on le reprend de
+      // façon identique à DraggableSignature (sinon le tracé serait à une autre taille).
+      const viewBoxMatch = svgString.match(/viewBox="([^"]+)"/);
+      let viewBoxWidth = width;
+      let viewBoxHeight = height;
+      if (viewBoxMatch) {
+        const parts = viewBoxMatch[1].split(/\s+/);
+        if (parts.length >= 4) {
+          viewBoxWidth = parseFloat(parts[2]);
+          viewBoxHeight = parseFloat(parts[3]);
+        }
+      }
       const ar = width / height;
       const dw = Math.min(width, 200);
       const dh = dw / ar;
 
       return (
-        <View style={[styles.signatureWrapper, {
-          left: overlay.x,
-          top: overlay.y,
-          width: dw,
-          height: dh,
-          transform: [
-            { rotate: `${overlay.rotation}deg` },
-            { scale: overlay.scale }
-          ]
-        }]}>
-          <Svg
-            key={`${overlay.id}-${signatureColor}`}
-            width={width}
-            height={height}
-            viewBox={`0 0 ${width} ${height}`}
-            style={styles.signature}
-          >
-            {paths.map((pathData, index) => (
-              <Path
-                key={`${index}-${signatureColor}`}
-                d={pathData}
-                stroke={signatureColor}
-                strokeWidth={3}
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            ))}
-          </Svg>
+        <View style={[styles.draggableTextContainer, { transform: sigStaticTransform }]}>
+          <View style={styles.signatureTouchable}>
+            <View style={{ width: dw, height: dh }}>
+              <Svg
+                key={`${overlay.id}-${signatureColor}`}
+                width={dw}
+                height={dh}
+                viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
+                style={styles.signature}
+              >
+                {paths.map((pathData, index) => (
+                  <Path
+                    key={`${index}-${signatureColor}`}
+                    d={pathData}
+                    stroke={signatureColor}
+                    strokeWidth={4}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                ))}
+              </Svg>
+            </View>
+          </View>
         </View>
       );
     } catch (error) {
@@ -358,14 +376,7 @@ function StaticSignature({ overlay }: StaticSignatureProps) {
   }
 
   return (
-    <View style={[styles.draggableTextContainer, {
-      left: overlay.x,
-      top: overlay.y,
-      transform: [
-        { rotate: `${overlay.rotation}deg` },
-        { scale: overlay.scale }
-      ]
-    }]}>
+    <View style={[styles.draggableTextContainer, { transform: sigStaticTransform }]}>
       <View style={styles.signatureTouchable}>
         <Image
           source={{ uri: overlay.uri }}
@@ -934,25 +945,33 @@ function StaticText({ overlay }: StaticTextProps) {
     );
   }
 
+  // Parité capture mobile : on reproduit EXACTEMENT le rendu de DraggableText
+  // (conteneur textWrapper left:0/top:0 + transform [translateX, translateY, rotate,
+  // scale] + wrapper interne textTouchable padding:25/margin:-25). L'ancien rendu
+  // left/top + [rotate,scale] décalait le pivot -> texte mal placé dans l'image capturée.
   return (
     <View style={[styles.textWrapper, {
-      left: overlay.x,
-      top: overlay.y,
+      left: 0,
+      top: 0,
       // zIndex aligne sur StaticSignature : sans lui, le texte passe derriere la
       // photo en mode vue (apres enregistrement) et "disparait".
       zIndex: 10,
       transform: [
+        { translateX: overlay.x },
+        { translateY: overlay.y },
         { rotate: `${overlay.rotation}deg` },
         { scale: overlay.scale }
       ]
     }]}>
-      <Text style={{
-        fontFamily: mobileFontFamily,
-        fontSize: overlay.fontSize,
-        color: overlay.color,
-      }}>
-        {overlay.text}
-      </Text>
+      <View style={styles.textTouchable}>
+        <Text style={{
+          fontFamily: mobileFontFamily,
+          fontSize: overlay.fontSize,
+          color: overlay.color,
+        }}>
+          {overlay.text}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -1254,6 +1273,24 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
   );
 }
 
+// Attend que React ait COMMITTÉ et PEINT le nouveau rendu (overlays statiques)
+// avant captureRef. Un simple setTimeout(150) ne garantit pas la peinture des SVG ;
+// on attend plusieurs frames via requestAnimationFrame puis un court délai filet.
+const waitForPaint = (frames = 3): Promise<void> =>
+  new Promise((resolve) => {
+    let remaining = frames;
+    const tick = () => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        // Délai filet supplémentaire pour la rastérisation des <Svg> sur Android.
+        setTimeout(resolve, 120);
+      } else {
+        requestAnimationFrame(tick);
+      }
+    };
+    requestAnimationFrame(tick);
+  });
+
 export default function ResultScreen() {
   const [fontsLoaded] = useFonts({
     ShadowsIntoLight_400Regular,
@@ -1305,6 +1342,13 @@ export default function ResultScreen() {
   const [selectedElementType, setSelectedElementType] = useState<'signature' | 'text' | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Phase de CAPTURE mobile : on bascule en overlays STATIQUES (non animés) le temps
+  // du captureRef. Les Animated.View reanimated ne sont pas captés de façon fiable
+  // (transforms appliqués côté UI-thread, lus trop tôt par le snapshot natif) ->
+  // les calques fraîchement ajoutés disparaissaient de l'image aplatie. Les Static*
+  // écrivent leur transform directement dans le style React (committé de façon
+  // synchrone), donc captureRef les voit toujours.
+  const [capturingStatic, setCapturingStatic] = useState(false);
 
   // UI States
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -1521,11 +1565,17 @@ export default function ResultScreen() {
   // capture (saving) pour qu'ils soient "cuits" dans l'image (sinon le texte
   // ajouté disparaît à l'enregistrement car non capturé).
   const showStaticOverlays = (
-    Platform.OS === 'web' && !isEditMode && !saving
+    // Web : calques statiques affichés en mode vue (pas de capture).
+    (Platform.OS === 'web' && !isEditMode && !saving) ||
+    // Mobile : calques statiques affichés UNIQUEMENT pendant la phase de capture,
+    // à la place des Draggables (qui sont retirés en même temps via isEditMode=false).
+    (Platform.OS !== 'web' && capturingStatic)
   ) && (signatureOverlays.length > 0 || textOverlays.length > 0);
   // En ré-édition, le fond DOIT être l'image vierge (baseUri) dès qu'elle existe,
   // sinon les overlays "cuits" dans memory.uri réapparaissent EN DOUBLE sous les
   // composants éditables. On utilise donc hasCleanBaseUri (baseUri réellement vierge).
+  // Pendant la capture mobile (capturingStatic), même règle : fond = baseUri vierge
+  // si dispo, et on dessine les Static* par-dessus -> image aplatie correcte.
   const displayUri = memory
     ? ((isEditMode || showStaticOverlays) && hasCleanBaseUri ? memory.baseUri! : memory.uri)
     : imageUri;
@@ -1990,17 +2040,27 @@ export default function ResultScreen() {
     try {
       setSaving(true);
 
-      // Web : pas de capture (on sauve les métadonnées) -> on passe en mode vue tout
-      // de suite. Mobile : on RESTE en mode édition pour capturer les éléments déjà
-      // dessinés (sinon image sans calques) ; on quitte le mode édition APRÈS la capture.
-      if (Platform.OS === 'web') setIsEditMode(false);
+      // CAPTURE MOBILE (bouton vert ✓ en mode édition) : on quitte le mode édition
+      // (retire les Draggables reanimated, mal captés par captureRef) ET on active les
+      // overlays STATIQUES (capturingStatic) qui se dessinent à la place avec un
+      // transform écrit directement dans le style React (fiablement capturé).
+      // Position/échelle/rotation des Static* IDENTIQUES aux Draggables.
+      // (Web : pas de capture -> on quitte simplement le mode édition.)
+      setIsEditMode(false);
+      if (Platform.OS !== 'web') {
+        setCapturingStatic(true);
+      }
       setSelectedElementId(null);
       setSelectedElementType(null);
       setShowColorPicker(false);
       setShowEffectsPanel(false);
 
-      // Wait for UI to update
-      await new Promise(resolve => setTimeout(resolve, 150));
+      // Attendre que les overlays statiques soient COMMITTÉS ET PEINTS avant capture.
+      if (Platform.OS === 'web') {
+        await new Promise(resolve => setTimeout(resolve, 150));
+      } else {
+        await waitForPaint(3);
+      }
 
       if (Platform.OS === 'web') {
         // Sur le web : on ne fait PAS de captureRef (findNodeHandle non supporté)
@@ -2040,10 +2100,17 @@ export default function ResultScreen() {
 
       // Native : on peut utiliser captureRef normalement
       if (viewShotRef.current) {
+        console.log('🟢 [CAPTURE v2] isEditMode=', isEditMode, 'saving= true',
+          'capturingStatic= true',
+          'sigs=', signatureOverlays.length, 'texts=', textOverlays.length,
+          'displayUri=', displayUri?.slice(-40));
         const capturedUri = await captureRef(viewShotRef.current, {
           format: 'png',
           quality: 1.0,
         });
+
+        // Capture terminée : on retire les overlays statiques (déjà cuits dans l'image).
+        setCapturingStatic(false);
 
         // baseUri doit TOUJOURS rester l'image VIERGE (sans overlays).
         // - Si la memory possède déjà un baseUri vierge (≠ image aplatie), on le conserve.
@@ -2068,12 +2135,13 @@ export default function ResultScreen() {
         await updateMemory(updatedMemory);
       }
 
-      // La capture est faite : on peut passer en mode vue (affiche l'image aplatie).
-      setIsEditMode(false);
+      // La capture est faite : on est déjà en mode vue (affiche l'image aplatie).
+      setCapturingStatic(false);
       setSaving(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
       console.error('❌ Erreur lors de la sauvegarde:', error);
+      setCapturingStatic(false);
       setSaving(false);
       showAlert(t('error'), `${(error as Error).message}`);
     }
@@ -2099,19 +2167,28 @@ export default function ResultScreen() {
     try {
       setSaving(true);
 
-      // On reste EN MODE ÉDITION pour la capture (les éléments déplaçables sont
-      // déjà dessinés à la bonne position) : on masque juste la sélection. Quitter
-      // le mode édition avant la capture affichait des calques statiques pas encore
-      // peints -> image sans signature/texte. On désélectionne seulement.
-      // (Web : pas de capture -> on quitte le mode édition tout de suite.)
-      if (Platform.OS === 'web') setIsEditMode(false);
+      // CAPTURE MOBILE : on quitte le mode édition (retire les Draggables reanimated,
+      // mal captés par captureRef) ET on active les overlays STATIQUES (capturingStatic)
+      // qui se dessinent à la place, avec un transform écrit directement dans le style
+      // React (donc fiablement capturé). Les Static* ont une position/échelle/rotation
+      // IDENTIQUE aux Draggables (même conteneur + même ordre de transform).
+      // (Web : pas de capture -> on quitte simplement le mode édition.)
+      setIsEditMode(false);
+      if (Platform.OS !== 'web') {
+        setCapturingStatic(true);
+      }
       setSelectedElementId(null);
       setSelectedElementType(null);
       setShowColorPicker(false);
       setShowEffectsPanel(false);
 
-      // Wait for UI to update
-      await new Promise(resolve => setTimeout(resolve, 150));
+      // Attendre que les overlays statiques soient COMMITTÉS ET PEINTS avant capture
+      // (plusieurs frames + délai filet) sinon l'image sort sans les calques.
+      if (Platform.OS === 'web') {
+        await new Promise(resolve => setTimeout(resolve, 150));
+      } else {
+        await waitForPaint(3);
+      }
 
       // Capture the final image with all overlays
       if (viewShotRef.current) {
@@ -2182,6 +2259,10 @@ export default function ResultScreen() {
           format: 'png',
           quality: 1.0,
         });
+
+        // Capture terminée : on peut retirer les overlays statiques (l'image aplatie
+        // capturedUri contient désormais les calques). On reviendra à l'image aplatie.
+        setCapturingStatic(false);
 
         if (memoryId && memory) {
           // On conserve le baseUri VIERGE existant (pour pouvoir ré-éditer ensuite)
@@ -2254,6 +2335,8 @@ export default function ResultScreen() {
         showAlert(t('error'), errorMessage);
       }
 
+      // Filet de sécurité : ne pas rester bloqué en mode capture statique si erreur.
+      setCapturingStatic(false);
       setSaving(false);
     }
   };
@@ -2516,7 +2599,7 @@ export default function ResultScreen() {
                 style={StyleSheet.absoluteFillObject}
               >
                 <FilteredImage
-                  key={isEditMode ? 'edit-base' : 'view-baked'}
+                  key={(isEditMode || capturingStatic) ? 'edit-base' : 'view-baked'}
                   uri={displayUri}
                   brightness={showEffectsPanel ? tempBrightness : brightness}
                   contrast={showEffectsPanel ? tempContrast : contrast}
@@ -2559,7 +2642,11 @@ export default function ResultScreen() {
                 onFontPress={() => setShowFontPicker(!showFontPicker)}
               />
             ))}
-            {/* Overlays statiques en mode vue (web) : aucune image fusionnée n'est générée sur web */}
+            {/* Overlays STATIQUES (non animés) :
+                - Web : affichés en mode vue (aucune image fusionnée générée sur web).
+                - Mobile : affichés UNIQUEMENT pendant la capture (capturingStatic) à la
+                  place des Draggables, pour que captureRef les "cuise" dans l'image
+                  aplatie de façon fiable (les Animated.View reanimated ne l'étaient pas). */}
             {showStaticOverlays && signatureOverlays.map(overlay => (
               <StaticSignature key={`static-sig-${overlay.id}`} overlay={overlay} />
             ))}
