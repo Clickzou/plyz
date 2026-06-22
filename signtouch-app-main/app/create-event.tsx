@@ -1070,7 +1070,9 @@ export default function CreateEventScreen() {
                   {activeSigner.paths.length === 0 && !currentPath && (
                     <View style={styles.signaturePlaceholder}>
                       <Text style={styles.signaturePlaceholderText}>
-                        {t('drawSignatureHere') || 'Draw signature here'}
+                        {activeSigner.name.trim().length === 0
+                          ? (t('enterNameBeforeSign' as any) || "Entrez d'abord le nom de la célébrité, puis signez ici.")
+                          : (t('drawSignatureHere') || 'Draw signature here')}
                       </Text>
                     </View>
                   )}
