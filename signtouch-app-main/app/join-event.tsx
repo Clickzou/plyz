@@ -556,6 +556,22 @@ export default function JoinEventScreen() {
             const paymentRes = await fetch(`${STRIPE_SERVER_URL}/api/get-event-payment-config?event_session_id=${sessionResult.session.id}`);
             const paymentConfig = await paymentRes.json();
             setEventPaymentConfig(paymentConfig);
+            // Événement payant : vérifier si ce fan a DÉJÀ payé, pour ne pas redemander le paiement
+            if (paymentConfig && paymentConfig.priceCents > 0) {
+              const localPaid = await AsyncStorage.getItem(`@event_paid_${sessionResult.session.id}`);
+              if (localPaid === 'true') {
+                setEventPaid(true);
+              } else {
+                try {
+                  const checkRes = await fetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${sessionResult.session.id}&fan_id=${viewerId}`);
+                  const checkData = await checkRes.json();
+                  if (checkData.paid) {
+                    await AsyncStorage.setItem(`@event_paid_${sessionResult.session.id}`, 'true');
+                    setEventPaid(true);
+                  }
+                } catch { /* pas bloquant : on laissera payer si la vérif échoue */ }
+              }
+            }
           } catch (e) {
             console.warn('Failed to fetch payment config:', e);
             setEventPaymentConfig({ priceCents: 0 });
