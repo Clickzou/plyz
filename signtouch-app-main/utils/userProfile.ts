@@ -1,25 +1,40 @@
 import { supabase } from './supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Le profil célébrité est stocké dans la table `celebrity_profiles`
+// (la table `user_profiles` sert au système de notes/modération, schéma différent).
+// Mapping conservé pour ne pas changer les écrans appelants :
+//   celebrity_name      <-> stage_name
+//   stripe_connect_account_id <-> stripe_account_id
+
 export interface UserProfile {
-  id: string;
   user_id: string;
   celebrity_name: string | null;
   bio: string | null;
   stripe_connect_account_id: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
+
+const mapRow = (row: any): UserProfile => ({
+  user_id: row.user_id,
+  celebrity_name: row.stage_name ?? null,
+  bio: row.bio ?? null,
+  stripe_connect_account_id: row.stripe_account_id ?? null,
+  created_at: row.created_at,
+  updated_at: row.updated_at,
+});
 
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
     const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
+      .from('celebrity_profiles')
+      .select('user_id, stage_name, bio, stripe_account_id, created_at, updated_at')
       .eq('user_id', userId)
       .single();
 
     if (error) {
+      // PGRST116 = aucune ligne (profil inexistant ou non listé via RLS) : cas normal, pas une erreur
       if (error.code === 'PGRST116') {
         return null;
       }
@@ -27,7 +42,7 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
       return null;
     }
 
-    return data as UserProfile;
+    return mapRow(data);
   } catch (error) {
     console.error('[UserProfile] Exception fetching profile:', error);
     return null;
@@ -37,34 +52,41 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
 export const upsertUserProfile = async (
   userId: string,
   updates: { celebrity_name?: string; bio?: string; stripe_connect_account_id?: string }
-): Promise<UserProfile | null> => {
+): Promise<boolean> => {
   try {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .upsert(
-        {
-          user_id: userId,
-          ...updates,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id' }
-      )
-      .select()
-      .single();
+    const payload: Record<string, any> = { updated_at: new Date().toISOString() };
+    if (updates.celebrity_name !== undefined) payload.stage_name = updates.celebrity_name;
+    if (updates.bio !== undefined) payload.bio = updates.bio;
+    if (updates.stripe_connect_account_id !== undefined) payload.stripe_account_id = updates.stripe_connect_account_id;
+
+    let error;
+    if (payload.stage_name !== undefined) {
+      // stage_name est fourni : on peut créer la ligne au besoin (stage_name est NOT NULL)
+      ({ error } = await supabase
+        .from('celebrity_profiles')
+        .upsert({ user_id: userId, ...payload }, { onConflict: 'user_id' }));
+    } else {
+      // pas de stage_name : mise à jour de la ligne existante uniquement
+      // (évite de violer la contrainte NOT NULL sur stage_name)
+      ({ error } = await supabase
+        .from('celebrity_profiles')
+        .update(payload)
+        .eq('user_id', userId));
+    }
 
     if (error) {
       console.error('[UserProfile] Error upserting profile:', error);
-      return null;
+      return false;
     }
 
     if (updates.stripe_connect_account_id) {
       await AsyncStorage.setItem('stripe_connect_account_id', updates.stripe_connect_account_id);
     }
 
-    return data as UserProfile;
+    return true;
   } catch (error) {
     console.error('[UserProfile] Exception upserting profile:', error);
-    return null;
+    return false;
   }
 };
 
@@ -92,12 +114,7 @@ export const getStripeAccountId = async (userId: string): Promise<string | null>
 export const saveStripeAccountId = async (userId: string, stripeAccountId: string): Promise<boolean> => {
   try {
     await AsyncStorage.setItem('stripe_connect_account_id', stripeAccountId);
-
-    const result = await upsertUserProfile(userId, {
-      stripe_connect_account_id: stripeAccountId,
-    });
-
-    return result !== null;
+    return await upsertUserProfile(userId, { stripe_connect_account_id: stripeAccountId });
   } catch (error) {
     console.error('[UserProfile] Error saving Stripe account:', error);
     return false;
