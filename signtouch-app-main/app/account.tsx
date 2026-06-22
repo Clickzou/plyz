@@ -20,6 +20,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import BottomNav from '@/components/BottomNav';
 import PlyzHeader from '@/components/PlyzHeader';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Language } from '@/locales';
@@ -57,6 +58,7 @@ export default function AccountScreen() {
   const { user, signOut, sendOtpCode, verifyOtpCode } = useAuth();
   const { isCelebrity, toggleCelebrityMode, profilePhoto, setProfilePhoto } = useCelebrityMode();
   const { startOnboarding } = useOnboarding();
+  const insets = useSafeAreaInsets();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
 
   const [loginEmail, setLoginEmail] = useState('');
@@ -274,7 +276,7 @@ export default function AccountScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.content}>
+      <ScrollView style={[styles.content, { paddingTop: insets.top }]}>
         <PlyzHeader />
         <View style={styles.header}>
           <Text style={styles.title}>{t('account')}</Text>
