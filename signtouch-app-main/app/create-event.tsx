@@ -1013,13 +1013,6 @@ export default function CreateEventScreen() {
                     </TouchableOpacity>
                   )}
                 </View>
-                {activeSigner.name.trim().length === 0 ? (
-                  <View style={styles.signatureLocked}>
-                    <Text style={styles.signatureLockedText}>
-                      {t('enterNameBeforeSign' as any) || "Entrez d'abord le nom de la célébrité, puis signez ici."}
-                    </Text>
-                  </View>
-                ) : (
                 <View
                   style={styles.signatureContainer}
                   ref={canvasRef}
@@ -1034,6 +1027,7 @@ export default function CreateEventScreen() {
                   }}
                   onStartShouldSetResponder={() => true}
                   onMoveShouldSetResponder={() => true}
+                  onResponderTerminationRequest={() => false}
                   onResponderGrant={handleTouchStart}
                   onResponderMove={handleTouchMove}
                   onResponderRelease={handleTouchEnd}
@@ -1081,7 +1075,6 @@ export default function CreateEventScreen() {
                     </View>
                   )}
                 </View>
-                )}
               </View>
 
               <View style={styles.signersSummary}>
