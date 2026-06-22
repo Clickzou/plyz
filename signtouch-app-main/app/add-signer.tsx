@@ -217,7 +217,7 @@ export default function AddSignerScreen() {
           <View style={{ width: 40 }} />
         </View>
 
-        <View style={styles.content}>
+        <View style={[styles.content, { paddingBottom: insets.bottom + 16 }]}>
           <View style={styles.inputSection}>
             <Text style={styles.label}>Nom du signataire</Text>
             <TextInput
@@ -353,7 +353,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.2)',
   },
   signatureSection: {
-    flex: 1,
     marginBottom: 24,
   },
   signatureHeader: {
@@ -376,7 +375,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
     borderRadius: 16,
     overflow: 'hidden',
-    flex: 1,
+    height: 320,
   },
   signatureCanvas: {
     flex: 1,
