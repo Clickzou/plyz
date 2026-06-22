@@ -18,6 +18,10 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  isBanned: boolean;
+  banReason: string | null;
+  banUntil: string | null;
+  refreshBanStatus: () => Promise<void>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -35,6 +39,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [banInfo, setBanInfo] = useState<{ banned: boolean; reason: string | null; until: string | null }>(
+    { banned: false, reason: null, until: null }
+  );
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -52,6 +59,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Vérifie si le compte connecté est banni (fonction Supabase sécurisée).
+  const refreshBanStatus = async () => {
+    if (!user?.id) {
+      setBanInfo({ banned: false, reason: null, until: null });
+      return;
+    }
+    try {
+      const { data } = await supabase.rpc('am_i_banned');
+      if (data) {
+        setBanInfo({ banned: !!data.banned, reason: data.reason ?? null, until: data.until ?? null });
+      }
+    } catch {
+      /* en cas d'erreur réseau, on ne bloque pas */
+    }
+  };
+
+  useEffect(() => {
+    refreshBanStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // ✅ SIGN UP (Confirm sign-up) + redirection vers l’app
   const signUp = async (email: string, password: string) => {
@@ -187,6 +215,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         session,
         user,
         loading,
+        isBanned: banInfo.banned,
+        banReason: banInfo.reason,
+        banUntil: banInfo.until,
+        refreshBanStatus,
         signUp,
         signIn,
         signOut,

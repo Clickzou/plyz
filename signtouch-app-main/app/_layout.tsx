@@ -30,6 +30,7 @@ import {
 } from '@/utils/postPurchaseAccount';
 import { setAccountPromptSnooze } from '@/utils/postPurchaseAccountStorage';
 import CustomAlert from '@/components/CustomAlert';
+import BannedScreen from '@/components/BannedScreen';
 import { CelebrityModeProvider } from '@/contexts/CelebrityModeContext';
 import { FollowProvider } from '@/contexts/FollowContext';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
@@ -40,7 +41,7 @@ SplashScreen.preventAutoHideAsync();
 function AppContent() {
   const [showPostPurchaseAccount, setShowPostPurchaseAccount] = useState(false);
   const [isPostPurchaseContext, setIsPostPurchaseContext] = useState(false);
-  useAuth();
+  const { isBanned } = useAuth();
 
   useEffect(() => {
     setPostPurchaseAccountCallback(() => {
@@ -60,6 +61,11 @@ function AppContent() {
     setShowPostPurchaseAccount(false);
     setIsPostPurchaseContext(false);
   };
+
+  // Blocage des comptes bannis : on remplace toute l'app par l'écran de suspension.
+  if (isBanned) {
+    return <BannedScreen />;
+  }
 
   return (
     <>
