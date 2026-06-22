@@ -808,6 +808,12 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
     <Animated.View style={[styles.draggableTextContainer, animatedStyle]} pointerEvents="box-none">
       <GestureDetector gesture={composedGesture}>
         <Animated.View collapsable={false} style={styles.signatureTouchable}>
+            {/* Surface tactile PLEINE : un <Svg> Android ne capte le toucher que
+                sur ses traits opaques, laissant les espaces transparents non
+                captés -> le pan ne démarrait pas. Cette View remplit toute la
+                bounding box et absorbe le geste partout (comme le fait le bloc
+                <Text> pour le texte). */}
+            <View style={styles.signatureHitArea} />
             {svgInfo.svgData ? (
               <View style={{ width: svgInfo.displayWidth, height: svgInfo.displayHeight }}>
                 <Svg
@@ -3608,14 +3614,23 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   signatureTouchable: {
-    padding: 0,
-    margin: 0,
+    // Comme `textTouchable` : un padding crée une zone tactile PLEINE autour de
+    // la signature. Sans lui, seuls les traits fins du SVG captent le geste et
+    // le pan ne démarre pas entre les traits (espaces transparents).
+    padding: 25,
+    margin: -25,
     backgroundColor: 'transparent',
     position: 'relative',
   },
   signatureImage: {
     width: 150,
     height: 75,
+    backgroundColor: 'transparent',
+  },
+  // Remplit toute la zone tactile (padding inclus) pour que le pan démarre
+  // n'importe où sur la signature, pas seulement sur les traits du SVG.
+  signatureHitArea: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'transparent',
   },
   selectionBorder: {
