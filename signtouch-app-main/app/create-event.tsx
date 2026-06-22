@@ -1013,6 +1013,13 @@ export default function CreateEventScreen() {
                     </TouchableOpacity>
                   )}
                 </View>
+                {activeSigner.name.trim().length === 0 ? (
+                  <View style={styles.signatureLocked}>
+                    <Text style={styles.signatureLockedText}>
+                      {t('enterNameBeforeSign' as any) || "Entrez d'abord le nom de la célébrité, puis signez ici."}
+                    </Text>
+                  </View>
+                ) : (
                 <View
                   style={styles.signatureContainer}
                   ref={canvasRef}
@@ -1079,6 +1086,7 @@ export default function CreateEventScreen() {
                     </View>
                   )}
                 </View>
+                )}
               </View>
 
               <View style={styles.signersSummary}>
@@ -1614,6 +1622,8 @@ const styles = StyleSheet.create({
   signatureSvg: { flex: 1 },
   signaturePlaceholder: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', pointerEvents: 'none' },
   signaturePlaceholderText: { fontSize: 16, color: 'rgba(255,255,255,0.4)' },
+  signatureLocked: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 16, height: 250, marginTop: 8, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', borderStyle: 'dashed' },
+  signatureLockedText: { fontSize: 15, color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 22 },
   signersSummary: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20, justifyContent: 'center' },
   signersSummaryText: { color: 'rgba(255,255,255,0.7)', fontSize: 14 },
   createButton: {
