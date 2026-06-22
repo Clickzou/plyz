@@ -2031,12 +2031,9 @@ export default function ResultScreen() {
     console.log('🔒 handleSaveEdits appelé, user:', user?.id);
     if (!memory || !memoryId) return;
 
-    if (!user) {
-      console.log('🔒 Pas de user, affichage du modal de compte');
-      setShowAccountModal(true);
-      return;
-    }
-
+    // La sauvegarde dans la galerie LOCALE marche sans compte (StorageService gère
+    // user=null). On ne bloque donc plus : la photo est toujours sauvegardée. Si
+    // l'utilisateur n'a pas de compte, on lui proposera (sans bloquer) d'en créer un.
     try {
       setSaving(true);
 
@@ -2150,12 +2147,7 @@ export default function ResultScreen() {
   // Save and return to gallery
   const saveAndReturn = async () => {
     console.log('saveAndReturn appelé, user:', user?.id);
-
-    if (!user) {
-      setShowAccountModal(true);
-      return;
-    }
-
+    // Sauvegarde locale possible sans compte : on ne bloque plus.
     await performSave();
   };
 
