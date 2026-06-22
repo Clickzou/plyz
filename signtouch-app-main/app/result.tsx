@@ -2175,6 +2175,9 @@ export default function ResultScreen() {
         }
 
         // Native : captureRef comme avant
+        console.log('🟢 [CAPTURE v2] isEditMode=', isEditMode, 'saving= true',
+          'sigs=', signatureOverlays.length, 'texts=', textOverlays.length,
+          'displayUri=', displayUri?.slice(-40));
         const capturedUri = await captureRef(viewShotRef.current, {
           format: 'png',
           quality: 1.0,
