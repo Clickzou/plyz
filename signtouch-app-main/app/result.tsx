@@ -469,7 +469,24 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
       runOnJS(onScaleChange)(overlay.id, scale.value);
     });
 
-  const composedGesture = Gesture.Simultaneous(panGesture, rotationGesture, pinchGesture);
+  // Tap (sélection) et appui long (suppression) gérés par GESTES, comme pour le
+  // texte. Indispensable : un TouchableOpacity interne bloquerait le déplacement.
+  const tapGesture = Gesture.Tap()
+    .onEnd(() => {
+      runOnJS(onPress)();
+    });
+
+  const longPressGesture = Gesture.LongPress()
+    .minDuration(500)
+    .onEnd(() => {
+      runOnJS(onLongPress)();
+    });
+
+  const composedGesture = Gesture.Race(
+    Gesture.Simultaneous(panGesture, rotationGesture, pinchGesture),
+    longPressGesture,
+    tapGesture
+  );
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -790,14 +807,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
   return (
     <Animated.View style={[styles.draggableTextContainer, animatedStyle]} pointerEvents="box-none">
       <GestureDetector gesture={composedGesture}>
-        <Animated.View collapsable={false}>
-          <TouchableOpacity
-            onLongPress={onLongPress}
-            onPress={onPress}
-            activeOpacity={0.9}
-            style={styles.signatureTouchable}
-            delayLongPress={500}
-          >
+        <Animated.View collapsable={false} style={styles.signatureTouchable}>
             {svgInfo.svgData ? (
               <View style={{ width: svgInfo.displayWidth, height: svgInfo.displayHeight }}>
                 <Svg
@@ -853,7 +863,6 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
             {isSelected && (
               <View style={styles.selectionBorder} pointerEvents="none" />
             )}
-          </TouchableOpacity>
         </Animated.View>
       </GestureDetector>
     </Animated.View>
@@ -1489,8 +1498,13 @@ export default function ResultScreen() {
   const hasBaseUri = memory ? !!(memory.baseUri && memory.baseUri !== memory.uri) : false;
   // Sur le web, aucune image fusionnée ("baked") n'est produite à la sauvegarde :
   // on redessine donc les signatures/textes par-dessus la photo de base, même en mode vue.
-  const showStaticOverlays = Platform.OS === 'web' && !isEditMode && !saving
-    && (signatureOverlays.length > 0 || textOverlays.length > 0);
+  // Web : calques statiques affichés en mode vue. Mobile : affichés PENDANT la
+  // capture (saving) pour qu'ils soient "cuits" dans l'image (sinon le texte
+  // ajouté disparaît à l'enregistrement car non capturé).
+  const showStaticOverlays = (
+    (Platform.OS === 'web' && !isEditMode && !saving) ||
+    (Platform.OS !== 'web' && saving)
+  ) && (signatureOverlays.length > 0 || textOverlays.length > 0);
   const displayUri = memory
     ? ((isEditMode || showStaticOverlays) && hasBaseUri ? memory.baseUri! : memory.uri)
     : imageUri;
