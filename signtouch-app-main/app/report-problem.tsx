@@ -19,6 +19,7 @@ import * as Haptics from 'expo-haptics';
 import { showAlert } from '@/utils/alertHelper';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/utils/supabase';
 
 const SUPPORT_EMAIL = 'jc@clickzou.fr';
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
@@ -45,6 +46,18 @@ export default function ReportProblemScreen() {
     }
 
     setSending(true);
+
+    // 0) Enregistrement en base pour le dashboard admin (meilleur effort).
+    try {
+      await supabase.from('problem_reports').insert({
+        user_id: user?.id || null,
+        reporter_email: user?.email || null,
+        subject: subject.trim() || null,
+        message: message.trim(),
+        platform: Platform.OS,
+        app_version: '1.0.0',
+      });
+    } catch { /* non bloquant */ }
 
     // 1) Envoi automatique via le serveur (e-mail direct au support).
     try {

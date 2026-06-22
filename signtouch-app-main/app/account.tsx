@@ -175,6 +175,8 @@ export default function AccountScreen() {
       router.push('/faq' as any);
     } else if (action === 'report') {
       router.push('/report-problem' as any);
+    } else if (action === 'admin') {
+      router.push('/admin' as any);
     } else if (action === 'replayTutorial') {
       AsyncStorage.removeItem('@plyz_onboarding_done').then(() => {
         startOnboarding();
@@ -724,6 +726,22 @@ export default function AccountScreen() {
             <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('reportProblem' as any) || 'Signaler un problème'}</Text>
           </TouchableOpacity>
         </View>
+
+        {(user?.email || '').toLowerCase() === 'jc@clickzou.fr' && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>Administration</Text>
+            <TouchableOpacity
+              style={[styles.menuItem, isRTL && styles.menuItemRTL]}
+              onPress={() => handlePress('admin')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
+                <Shield size={24} color="#f59e0b" strokeWidth={2} />
+              </View>
+              <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>Tableau de bord admin</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>{t('legal') || 'Légal'}</Text>
