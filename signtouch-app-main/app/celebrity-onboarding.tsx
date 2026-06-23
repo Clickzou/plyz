@@ -223,6 +223,33 @@ export default function CelebrityOnboardingScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
+            {t('celOnboardStepsSection' as any) || 'ÉTAPES POUR COMMENCER'}
+          </Text>
+          {steps.map((s, i) => (
+            <TouchableOpacity
+              key={i}
+              style={[styles.stepRow, s.locked && { opacity: 0.4 }]}
+              onPress={s.onPress}
+              disabled={s.locked || s.done}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.stepNum, s.done && styles.stepNumDone]}>
+                {s.done ? (
+                  <CheckCircle size={18} color="#fff" />
+                ) : s.locked ? (
+                  <Lock size={14} color="#9ca3af" />
+                ) : (
+                  <Text style={styles.stepNumText}>{s.num}</Text>
+                )}
+              </View>
+              <Text style={[styles.stepTitle, s.done && styles.stepTitleDone]}>{s.title}</Text>
+              {!s.locked && !s.done && <ArrowRight size={16} color="#6b7280" />}
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
             {t('celOnboardFeaturesSection' as any) || 'CE QUE VOUS POUVEZ FAIRE'}
           </Text>
           {features.map((f, i) => (
@@ -289,33 +316,6 @@ export default function CelebrityOnboardingScreen() {
               </View>
             </View>
           </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t('celOnboardStepsSection' as any) || 'ÉTAPES POUR COMMENCER'}
-          </Text>
-          {steps.map((s, i) => (
-            <TouchableOpacity
-              key={i}
-              style={[styles.stepRow, s.locked && { opacity: 0.4 }]}
-              onPress={s.onPress}
-              disabled={s.locked || s.done}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.stepNum, s.done && styles.stepNumDone]}>
-                {s.done ? (
-                  <CheckCircle size={18} color="#fff" />
-                ) : s.locked ? (
-                  <Lock size={14} color="#9ca3af" />
-                ) : (
-                  <Text style={styles.stepNumText}>{s.num}</Text>
-                )}
-              </View>
-              <Text style={[styles.stepTitle, s.done && styles.stepTitleDone]}>{s.title}</Text>
-              {!s.locked && !s.done && <ArrowRight size={16} color="#6b7280" />}
-            </TouchableOpacity>
-          ))}
         </View>
 
         <View style={styles.section}>
