@@ -28,6 +28,10 @@ export default function CelebrityOnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  // t() renvoie la CLÉ quand la traduction manque (ex: nouvelles clés celOnboard* pas
+  // encore dans les 15 locales) -> le `|| 'secours'` ne s'activait jamais. ct() renvoie
+  // undefined dans ce cas pour activer le texte de secours français écrit dans le JSX.
+  const ct = (key: any) => { const v = t(key); return v === key ? undefined : v; };
   const { user } = useAuth();
   const { profilePhoto, setProfilePhoto } = useCelebrityMode();
 
@@ -102,23 +106,23 @@ export default function CelebrityOnboardingScreen() {
   const features = [
     {
       icon: <Video size={24} color="#3b82f6" />,
-      title: t('celOnboardFeature1Title' as any) || 'Sessions live vidéo',
-      desc: t('celOnboardFeature1Desc' as any) || 'Organisez des appels vidéo en direct avec vos fans. Définissez votre prix et votre durée.',
+      title: ct('celOnboardFeature1Title' as any) || 'Sessions live vidéo',
+      desc: ct('celOnboardFeature1Desc' as any) || 'Organisez des appels vidéo en direct avec vos fans. Définissez votre prix et votre durée.',
     },
     {
       icon: <QrCode size={24} color="#10b981" />,
-      title: t('celOnboardFeature2Title' as any) || 'Événements dédicaces',
-      desc: t('celOnboardFeature2Desc' as any) || 'Créez des événements avec QR codes pour offrir des autographes personnalisés.',
+      title: ct('celOnboardFeature2Title' as any) || 'Événements dédicaces',
+      desc: ct('celOnboardFeature2Desc' as any) || 'Créez des événements avec QR codes pour offrir des autographes personnalisés.',
     },
     {
       icon: <Users size={24} color="#8b5cf6" />,
-      title: t('celOnboardFeature3Title' as any) || 'Fil d\'actualité',
-      desc: t('celOnboardFeature3Desc' as any) || 'Publiez des posts et des événements pour garder le contact avec votre communauté.',
+      title: ct('celOnboardFeature3Title' as any) || 'Fil d\'actualité',
+      desc: ct('celOnboardFeature3Desc' as any) || 'Publiez des posts et des événements pour garder le contact avec votre communauté.',
     },
     {
       icon: <Globe size={24} color="#f59e0b" />,
-      title: t('celOnboardFeature4Title' as any) || 'Profil public',
-      desc: t('celOnboardFeature4Desc' as any) || 'Votre profil enrichi par Wikidata est visible par tous les fans sur Discover.',
+      title: ct('celOnboardFeature4Title' as any) || 'Profil public',
+      desc: ct('celOnboardFeature4Desc' as any) || 'Votre profil enrichi par Wikidata est visible par tous les fans sur Discover.',
     },
   ];
 
@@ -138,11 +142,11 @@ export default function CelebrityOnboardingScreen() {
 
   const blockedHint = (): string | null => {
     if (step === 1 && !photoDone) {
-      return t('celOnboardHintPhoto' as any) || 'Ajoute une photo pour continuer';
+      return ct('celOnboardHintPhoto' as any) || 'Ajoute une photo pour continuer';
     }
     if (step === 2 && !canContinue()) {
-      if (!nameDone) return t('celOnboardHintName' as any) || 'Renseigne ton nom public pour continuer';
-      if (!bioDone) return t('celOnboardHintBio' as any) || 'Ajoute une présentation pour continuer';
+      if (!nameDone) return ct('celOnboardHintName' as any) || 'Renseigne ton nom public pour continuer';
+      if (!bioDone) return ct('celOnboardHintBio' as any) || 'Ajoute une présentation pour continuer';
     }
     return null;
   };
@@ -194,7 +198,7 @@ export default function CelebrityOnboardingScreen() {
         </TouchableOpacity>
         <View style={styles.progressWrap}>
           <Text style={styles.progressLabel}>
-            {`${t('celOnboardStepLabel' as any) || 'Étape'} ${step + 1}/${TOTAL_STEPS}`}
+            {`${ct('celOnboardStepLabel' as any) || 'Étape'} ${step + 1}/${TOTAL_STEPS}`}
           </Text>
           <View style={styles.progressTrack}>
             <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
@@ -216,16 +220,16 @@ export default function CelebrityOnboardingScreen() {
                 <Star size={40} color="#f59e0b" fill="#f59e0b" />
               </View>
               <Text style={styles.heroTitle}>
-                {t('celOnboardHeroTitle' as any) || 'Bienvenue dans le Mode Célébrité'}
+                {ct('celOnboardHeroTitle' as any) || 'Bienvenue dans le Mode Célébrité'}
               </Text>
               <Text style={styles.heroSubtitle}>
-                {t('celOnboardHeroSubtitle' as any) || 'Monétisez votre notoriété et connectez-vous avec vos fans de manière unique.'}
+                {ct('celOnboardHeroSubtitle' as any) || 'Monétisez votre notoriété et connectez-vous avec vos fans de manière unique.'}
               </Text>
             </View>
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
-                {t('celOnboardFeaturesSection' as any) || 'CE QUE VOUS POUVEZ FAIRE'}
+                {ct('celOnboardFeaturesSection' as any) || 'CE QUE VOUS POUVEZ FAIRE'}
               </Text>
               {features.map((f, i) => (
                 <View key={i} style={styles.featureCard}>
@@ -240,7 +244,7 @@ export default function CelebrityOnboardingScreen() {
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
-                {t('celOnboardRevenueSection' as any) || 'VOS REVENUS'}
+                {ct('celOnboardRevenueSection' as any) || 'VOS REVENUS'}
               </Text>
               <View style={styles.revenueCard}>
                 <LinearGradient
@@ -253,10 +257,10 @@ export default function CelebrityOnboardingScreen() {
                   <DollarSign size={28} color="#f59e0b" />
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text style={styles.revenueTitle}>
-                      {t('celOnboardRevenueTitle' as any) || 'Gardez 85% de vos revenus'}
+                      {ct('celOnboardRevenueTitle' as any) || 'Gardez 85% de vos revenus'}
                     </Text>
                     <Text style={styles.revenueDesc}>
-                      {t('celOnboardRevenueDesc' as any) || 'Plyz prélève seulement 15% de commission. Les frais Stripe (2.9% + 0.30€) sont déduits séparément. Aucune commission Apple/Google.'}
+                      {ct('celOnboardRevenueDesc' as any) || 'Plyz prélève seulement 15% de commission. Les frais Stripe (2.9% + 0.30€) sont déduits séparément. Aucune commission Apple/Google.'}
                     </Text>
                   </View>
                 </View>
@@ -264,29 +268,29 @@ export default function CelebrityOnboardingScreen() {
                 <View style={styles.revenueExamples}>
                   <View style={styles.revenueExample}>
                     <Text style={styles.revenueExampleLabel}>
-                      {t('celOnboardVideoCall' as any) || 'Appel vidéo'}
+                      {ct('celOnboardVideoCall' as any) || 'Appel vidéo'}
                     </Text>
                     <Text style={styles.revenueExamplePrice}>150€</Text>
                     <Text style={styles.revenueExampleNet}>
-                      → ~123€ {t('celOnboardNet' as any) || 'net'}
+                      → ~123€ {ct('celOnboardNet' as any) || 'net'}
                     </Text>
                   </View>
                   <View style={styles.revenueExample}>
                     <Text style={styles.revenueExampleLabel}>
-                      {t('celOnboardAutograph' as any) || 'Autographe'}
+                      {ct('celOnboardAutograph' as any) || 'Autographe'}
                     </Text>
                     <Text style={styles.revenueExamplePrice}>50€</Text>
                     <Text style={styles.revenueExampleNet}>
-                      → ~41€ {t('celOnboardNet' as any) || 'net'}
+                      → ~41€ {ct('celOnboardNet' as any) || 'net'}
                     </Text>
                   </View>
                   <View style={styles.revenueExample}>
                     <Text style={styles.revenueExampleLabel}>
-                      {t('celOnboardDedication' as any) || 'Dédicace'}
+                      {ct('celOnboardDedication' as any) || 'Dédicace'}
                     </Text>
                     <Text style={styles.revenueExamplePrice}>80€</Text>
                     <Text style={styles.revenueExampleNet}>
-                      → ~66€ {t('celOnboardNet' as any) || 'net'}
+                      → ~66€ {ct('celOnboardNet' as any) || 'net'}
                     </Text>
                   </View>
                 </View>
@@ -299,10 +303,10 @@ export default function CelebrityOnboardingScreen() {
         {step === 1 && (
           <View style={styles.stepContent}>
             <Text style={styles.stepHeadline}>
-              {t('celOnboardPhotoHeadline' as any) || 'Ta photo de profil'}
+              {ct('celOnboardPhotoHeadline' as any) || 'Ta photo de profil'}
             </Text>
             <Text style={styles.stepSubtitle}>
-              {t('celOnboardPhotoSubtitle' as any) || 'Choisis une belle photo : c\'est la première chose que tes fans verront.'}
+              {ct('celOnboardPhotoSubtitle' as any) || 'Choisis une belle photo : c\'est la première chose que tes fans verront.'}
             </Text>
 
             <View style={styles.bigPhotoWrap}>
@@ -331,8 +335,8 @@ export default function CelebrityOnboardingScreen() {
               <CameraIcon size={18} color="#f59e0b" />
               <Text style={styles.secondaryBtnText}>
                 {profilePhoto
-                  ? (t('celOnboardChangePhoto' as any) || 'Changer la photo')
-                  : (t('celOnboardAddPhoto' as any) || 'Ajouter une photo')}
+                  ? (ct('celOnboardChangePhoto' as any) || 'Changer la photo')
+                  : (ct('celOnboardAddPhoto' as any) || 'Ajouter une photo')}
               </Text>
             </TouchableOpacity>
 
@@ -340,7 +344,7 @@ export default function CelebrityOnboardingScreen() {
               <View style={styles.photoStatus}>
                 <CheckCircle size={16} color="#10b981" />
                 <Text style={styles.photoStatusText}>
-                  {t('celOnboardPhotoDone' as any) || 'Photo ajoutée !'}
+                  {ct('celOnboardPhotoDone' as any) || 'Photo ajoutée !'}
                 </Text>
               </View>
             )}
@@ -351,32 +355,32 @@ export default function CelebrityOnboardingScreen() {
         {step === 2 && (
           <View style={styles.stepContent}>
             <Text style={styles.stepHeadline}>
-              {t('celOnboardNameHeadline' as any) || 'Ton nom public et ta présentation'}
+              {ct('celOnboardNameHeadline' as any) || 'Ton nom public et ta présentation'}
             </Text>
             <Text style={styles.stepSubtitle}>
-              {t('celOnboardNameSubtitle' as any) || 'C\'est ce qui apparaîtra sur ton profil public visible par les fans.'}
+              {ct('celOnboardNameSubtitle' as any) || 'C\'est ce qui apparaîtra sur ton profil public visible par les fans.'}
             </Text>
 
             <Text style={styles.fieldLabel}>
-              {t('celOnboardPublicName' as any) || 'Nom public'}
+              {ct('celOnboardPublicName' as any) || 'Nom public'}
             </Text>
             <TextInput
               style={styles.fieldInput}
               value={celebrityName}
               onChangeText={setCelebrityName}
-              placeholder={t('celOnboardPublicNamePlaceholder' as any) || 'Votre nom de scène (ex : Omar Sy)'}
+              placeholder={ct('celOnboardPublicNamePlaceholder' as any) || 'Votre nom de scène (ex : Omar Sy)'}
               placeholderTextColor="#6b7280"
               maxLength={60}
             />
 
             <Text style={[styles.fieldLabel, { marginTop: 18 }]}>
-              {t('celOnboardBioTitle' as any) || 'Présentation / À propos'}
+              {ct('celOnboardBioTitle' as any) || 'Présentation / À propos'}
             </Text>
             <TextInput
               style={[styles.fieldInput, styles.fieldInputMultiline]}
               value={bioInput}
               onChangeText={setBioInput}
-              placeholder={t('celOnboardBioPlaceholder' as any) || 'Ex : Acteur et humoriste français, connu pour...'}
+              placeholder={ct('celOnboardBioPlaceholder' as any) || 'Ex : Acteur et humoriste français, connu pour...'}
               placeholderTextColor="#6b7280"
               multiline
               maxLength={300}
@@ -393,17 +397,17 @@ export default function CelebrityOnboardingScreen() {
               <CreditCard size={40} color="#6366f1" />
             </View>
             <Text style={styles.stepHeadline}>
-              {t('celOnboardStripeHeadline' as any) || 'Recevoir les paiements'}
+              {ct('celOnboardStripeHeadline' as any) || 'Recevoir les paiements'}
             </Text>
             <Text style={styles.stepSubtitle}>
-              {t('celOnboardStripeSubtitle' as any) || 'Pour recevoir l\'argent de tes fans, connecte un compte Stripe sécurisé. C\'est gratuit et tu peux le faire en 2 minutes.'}
+              {ct('celOnboardStripeSubtitle' as any) || 'Pour recevoir l\'argent de tes fans, connecte un compte Stripe sécurisé. C\'est gratuit et tu peux le faire en 2 minutes.'}
             </Text>
 
             {stripeLinked ? (
               <View style={styles.stripeConnectedBox}>
                 <CheckCircle size={22} color="#10b981" />
                 <Text style={styles.stripeConnectedText}>
-                  {t('celOnboardStripeConnected' as any) || 'Compte connecté'}
+                  {ct('celOnboardStripeConnected' as any) || 'Compte connecté'}
                 </Text>
               </View>
             ) : (
@@ -415,7 +419,7 @@ export default function CelebrityOnboardingScreen() {
                 >
                   <CreditCard size={20} color="#fff" />
                   <Text style={styles.stripeButtonText}>
-                    {t('celOnboardConnectStripe' as any) || 'Connecter mon compte Stripe'}
+                    {ct('celOnboardConnectStripe' as any) || 'Connecter mon compte Stripe'}
                   </Text>
                 </TouchableOpacity>
 
@@ -425,7 +429,7 @@ export default function CelebrityOnboardingScreen() {
                   activeOpacity={0.7}
                 >
                   <Text style={styles.laterLinkText}>
-                    {t('celOnboardStripeLater' as any) || 'Je le ferai plus tard'}
+                    {ct('celOnboardStripeLater' as any) || 'Je le ferai plus tard'}
                   </Text>
                 </TouchableOpacity>
               </>
@@ -440,23 +444,23 @@ export default function CelebrityOnboardingScreen() {
               <CheckCircle size={44} color="#10b981" />
             </View>
             <Text style={styles.stepHeadline}>
-              {t('celOnboardDoneHeadline' as any) || 'C\'est prêt !'}
+              {ct('celOnboardDoneHeadline' as any) || 'C\'est prêt !'}
             </Text>
             <Text style={styles.stepSubtitle}>
-              {t('celOnboardDoneSubtitle' as any) || 'Ton Mode Célébrité est activé. Voici un récapitulatif :'}
+              {ct('celOnboardDoneSubtitle' as any) || 'Ton Mode Célébrité est activé. Voici un récapitulatif :'}
             </Text>
 
             <View style={styles.recapBox}>
               <View style={styles.recapRow}>
                 <CheckCircle size={18} color="#10b981" />
                 <Text style={styles.recapText}>
-                  {t('celOnboardRecapPhoto' as any) || 'Photo de profil'}
+                  {ct('celOnboardRecapPhoto' as any) || 'Photo de profil'}
                 </Text>
               </View>
               <View style={styles.recapRow}>
                 <CheckCircle size={18} color="#10b981" />
                 <Text style={styles.recapText}>
-                  {t('celOnboardRecapProfile' as any) || 'Nom public et présentation'}
+                  {ct('celOnboardRecapProfile' as any) || 'Nom public et présentation'}
                 </Text>
               </View>
               <View style={styles.recapRow}>
@@ -467,18 +471,18 @@ export default function CelebrityOnboardingScreen() {
                 )}
                 <Text style={styles.recapText}>
                   {stripeLinked
-                    ? (t('celOnboardRecapStripeOk' as any) || 'Paiements configurés')
-                    : (t('celOnboardRecapStripeTodo' as any) || 'Paiements à configurer (depuis Mon Compte)')}
+                    ? (ct('celOnboardRecapStripeOk' as any) || 'Paiements configurés')
+                    : (ct('celOnboardRecapStripeTodo' as any) || 'Paiements à configurer (depuis Mon Compte)')}
                 </Text>
               </View>
             </View>
 
             <View style={[styles.section, { paddingHorizontal: 0, marginTop: 20 }]}>
               <Text style={styles.sectionTitle}>
-                {t('celOnboardVerifSection' as any) || 'VÉRIFICATION (FACULTATIF)'}
+                {ct('celOnboardVerifSection' as any) || 'VÉRIFICATION (FACULTATIF)'}
               </Text>
               <Text style={styles.verifIntro}>
-                {t('celOnboardVerifIntro' as any) || 'Facultatif : fais vérifier ton profil pour obtenir un badge officiel.'}
+                {ct('celOnboardVerifIntro' as any) || 'Facultatif : fais vérifier ton profil pour obtenir un badge officiel.'}
               </Text>
 
               <TouchableOpacity
@@ -492,10 +496,10 @@ export default function CelebrityOnboardingScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.orgCardTitle}>
-                      {t('celOnboardCreatorTitle' as any) || 'Streamer / Créateur de contenu ?'}
+                      {ct('celOnboardCreatorTitle' as any) || 'Streamer / Créateur de contenu ?'}
                     </Text>
                     <Text style={styles.orgCardDesc}>
-                      {t('celOnboardCreatorDesc' as any) || 'Twitch, YouTube, TikTok, Instagram... Faites vérifier votre profil pour obtenir un badge vérifié.'}
+                      {ct('celOnboardCreatorDesc' as any) || 'Twitch, YouTube, TikTok, Instagram... Faites vérifier votre profil pour obtenir un badge vérifié.'}
                     </Text>
                   </View>
                   <ArrowRight size={18} color="#3b82f6" />
@@ -513,10 +517,10 @@ export default function CelebrityOnboardingScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.orgCardTitle}>
-                      {t('celOnboardOrgTitle' as any) || 'Vous êtes une organisation ?'}
+                      {ct('celOnboardOrgTitle' as any) || 'Vous êtes une organisation ?'}
                     </Text>
                     <Text style={styles.orgCardDesc}>
-                      {t('celOnboardOrgDesc' as any) || 'Clubs sportifs, marques, associations... Faites vérifier votre compte pour un badge spécial.'}
+                      {ct('celOnboardOrgDesc' as any) || 'Clubs sportifs, marques, associations... Faites vérifier votre compte pour un badge spécial.'}
                     </Text>
                   </View>
                   <ArrowRight size={18} color="#8b5cf6" />
@@ -534,10 +538,10 @@ export default function CelebrityOnboardingScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.orgCardTitle}>
-                      {t('celOnboardCelebTitle' as any) || 'Vous êtes une célébrité / personnalité publique ?'}
+                      {ct('celOnboardCelebTitle' as any) || 'Vous êtes une célébrité / personnalité publique ?'}
                     </Text>
                     <Text style={styles.orgCardDesc}>
-                      {t('celOnboardCelebDesc' as any) || 'Acteur, musicien, sportif… Faites vérifier votre profil pour un badge officiel.'}
+                      {ct('celOnboardCelebDesc' as any) || 'Acteur, musicien, sportif… Faites vérifier votre profil pour un badge officiel.'}
                     </Text>
                   </View>
                   <ArrowRight size={18} color="#10b981" />
@@ -558,7 +562,7 @@ export default function CelebrityOnboardingScreen() {
           <TouchableOpacity style={styles.primaryButton} onPress={goNext} activeOpacity={0.85}>
             <Zap size={20} color="#000" />
             <Text style={styles.primaryButtonText}>
-              {t('celOnboardBegin' as any) || 'Commencer'}
+              {ct('celOnboardBegin' as any) || 'Commencer'}
             </Text>
           </TouchableOpacity>
         )}
@@ -571,7 +575,7 @@ export default function CelebrityOnboardingScreen() {
             activeOpacity={0.85}
           >
             <Text style={[styles.primaryButtonText, !canContinue() && styles.primaryButtonTextDisabled]}>
-              {saving ? (t('celOnboardSaving' as any) || 'Enregistrement…') : (t('celOnboardContinue' as any) || 'Continuer')}
+              {saving ? (ct('celOnboardSaving' as any) || 'Enregistrement…') : (ct('celOnboardContinue' as any) || 'Continuer')}
             </Text>
             {!saving && <ArrowRight size={20} color={canContinue() ? '#000' : '#6b7280'} />}
           </TouchableOpacity>
@@ -580,7 +584,7 @@ export default function CelebrityOnboardingScreen() {
         {step === 4 && (
           <TouchableOpacity style={styles.primaryButton} onPress={finish} activeOpacity={0.85}>
             <Text style={styles.primaryButtonText}>
-              {t('celOnboardFinish' as any) || 'Accéder à mon profil'}
+              {ct('celOnboardFinish' as any) || 'Accéder à mon profil'}
             </Text>
             <ArrowRight size={20} color="#000" />
           </TouchableOpacity>
