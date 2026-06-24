@@ -522,23 +522,6 @@ export default function AccountScreen() {
         </View>
 
         <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.galleryShortcut}
-            onPress={() => router.push('/gallery' as any)}
-            activeOpacity={0.8}
-          >
-            <View style={styles.galleryShortcutIcon}>
-              <Images size={22} color="#3b82f6" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.galleryShortcutTitle}>{t('myGallery') || 'Mes créations'}</Text>
-              <Text style={styles.galleryShortcutSub}>{t('myGalleryDesc') || 'Retrouvez toutes vos photos signées et dédicaces sauvegardées.'}</Text>
-            </View>
-            <ChevronRight size={18} color="#6b7280" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
           <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>
             {t('celebrityModeSection')}
           </Text>
@@ -546,16 +529,16 @@ export default function AccountScreen() {
           <View style={styles.accountCard}>
             <View style={styles.accountCardHeader}>
               <TouchableOpacity
-                style={[styles.accountAvatar, { backgroundColor: isCelebrity ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.08)' }]}
+                style={[styles.accountAvatar, { backgroundColor: isCelebrity ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.08)' }]}
                 onPress={pickProfilePhoto}
                 activeOpacity={0.7}
               >
                 {profilePhoto ? (
                   <Image source={{ uri: profilePhoto }} style={styles.profilePhotoImage} />
                 ) : (
-                  <Star size={28} color={isCelebrity ? '#f59e0b' : '#888'} fill={isCelebrity ? '#f59e0b' : 'transparent'} />
+                  <Star size={28} color={isCelebrity ? '#10b981' : '#888'} fill={isCelebrity ? '#10b981' : 'transparent'} />
                 )}
-                <View style={styles.profilePhotoBadge}>
+                <View style={[styles.profilePhotoBadge, isCelebrity && { backgroundColor: '#10b981' }]}>
                   <Camera size={10} color="#fff" />
                 </View>
               </TouchableOpacity>
@@ -564,9 +547,12 @@ export default function AccountScreen() {
                   <Text style={styles.accountCardName}>
                     {isCelebrity ? (t('celebrityModeActive')) : (t('celebrityModeInactive'))}
                   </Text>
-                  {isCelebrity && stripeLinked && (
-                    <View style={styles.verifiedBadgeSmall}>
-                      <Check size={10} color="#fff" />
+                  {isCelebrity && (
+                    <View style={styles.celebrityActiveBadge}>
+                      <Check size={11} color="#10b981" strokeWidth={3} />
+                      <Text style={styles.celebrityActiveBadgeText}>
+                        {t('active' as any) || 'Actif'}
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -629,7 +615,7 @@ export default function AccountScreen() {
               style={[
                 styles.createAccountButton,
                 !isCelebrity && { backgroundColor: '#f59e0b' },
-                isCelebrity && { backgroundColor: '#374151' },
+                isCelebrity && styles.becomeFanButton,
               ]}
               onPress={() => {
                 if (Platform.OS !== 'web') {
@@ -646,13 +632,34 @@ export default function AccountScreen() {
               }}
               activeOpacity={0.7}
             >
-              <Star size={18} color={isCelebrity ? '#ffffff' : '#000000'} fill={isCelebrity ? 'transparent' : '#000000'} />
-              <Text style={[styles.createAccountButtonText, !isCelebrity && { color: '#000000' }]}>
+              {isCelebrity ? (
+                <Heart size={18} color="#e5e7eb" />
+              ) : (
+                <Star size={18} color="#000000" fill="#000000" />
+              )}
+              <Text style={[styles.createAccountButtonText, !isCelebrity && { color: '#000000' }, isCelebrity && { color: '#e5e7eb' }]}>
                 {isCelebrity ? (t('disableCelebrityMode')) : (t('enableCelebrityMode'))}
               </Text>
-              <ArrowRight size={18} color={isCelebrity ? '#ffffff' : '#000000'} />
+              <ArrowRight size={18} color={isCelebrity ? '#e5e7eb' : '#000000'} />
             </TouchableOpacity>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <TouchableOpacity
+            style={styles.galleryShortcut}
+            onPress={() => router.push('/gallery' as any)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.galleryShortcutIcon}>
+              <Images size={22} color="#3b82f6" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.galleryShortcutTitle}>{t('myGallery') || 'Mes créations'}</Text>
+              <Text style={styles.galleryShortcutSub}>{t('myGalleryDesc') || 'Retrouvez toutes vos photos signées et dédicaces sauvegardées.'}</Text>
+            </View>
+            <ChevronRight size={18} color="#6b7280" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
@@ -1173,6 +1180,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 4,
+  },
+  celebrityActiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    marginBottom: 4,
+  },
+  celebrityActiveBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#10b981',
+  },
+  becomeFanButton: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   verifiedText: {
     color: '#10b981',

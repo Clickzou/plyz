@@ -172,7 +172,7 @@ export default {
   creatorStatusMoreInfo: 'Informations complémentaires requises',
 
   enableCelebrityMode: 'Devenir Célébrité',
-  disableCelebrityMode: 'Repasser en mode Fan',
+  disableCelebrityMode: 'Devenir Fan',
   celebrityBannerTitle: 'Vous êtes une célébrité ?',
   celebrityBannerDesc: 'Créez des événements, des sessions live et connectez-vous avec vos fans.',
   celebrityBannerButton: 'Activer le mode Célébrité',
