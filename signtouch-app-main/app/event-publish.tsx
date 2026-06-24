@@ -13,6 +13,7 @@ import {
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, ZoomIn, ZoomOut, RotateCcw, RotateCw, Palette, QrCode, X, Copy, Share2, Plus, Calendar, Clock, Video, MapPin, Euro } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -101,6 +102,9 @@ export default function EventPublishScreen() {
   const [selectedSignerId, setSelectedSignerId] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+  // Toast informatif (rappel de vérifier la célébrité) affiché ~4s après le choix d'une photo.
+  const [signerReminderVisible, setSignerReminderVisible] = useState(false);
+  const [reminderDismissed, setReminderDismissed] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
   const [publishedCount, setPublishedCount] = useState(0);
   const [publishedAssets, setPublishedAssets] = useState<any[]>([]);
@@ -117,6 +121,28 @@ export default function EventPublishScreen() {
   const [sortByName, setSortByName] = useState(false);
   
   const selectedSigner = signers.find((s) => s.id === selectedSignerId);
+
+  // Préférence "ne plus afficher" (persistée).
+  useEffect(() => {
+    AsyncStorage.getItem('@plyz_signer_reminder_dismissed')
+      .then((v) => { if (v === 'true') setReminderDismissed(true); })
+      .catch(() => {});
+  }, []);
+
+  // Dès qu'une photo est choisie, on affiche un toast informatif ~4s (rappel de
+  // vérifier la bonne célébrité), sauf si l'utilisateur a coché "ne plus afficher".
+  useEffect(() => {
+    if (!selectedImage || reminderDismissed) return;
+    setSignerReminderVisible(true);
+    const timer = setTimeout(() => setSignerReminderVisible(false), 4000);
+    return () => clearTimeout(timer);
+  }, [selectedImage, reminderDismissed]);
+
+  const dismissReminderForever = () => {
+    setReminderDismissed(true);
+    setSignerReminderVisible(false);
+    AsyncStorage.setItem('@plyz_signer_reminder_dismissed', 'true').catch(() => {});
+  };
 
   // Une signature est un SVG (cote web) ou un PNG (capture mobile via ViewShot).
   // On ne traite en SVG que les vraies signatures SVG, sinon on affiche le PNG.
@@ -578,6 +604,28 @@ export default function EventPublishScreen() {
         </View>
       </View>
 
+      {signerReminderVisible && selectedSigner && (
+        <View style={[styles.signerToast, { top: insets.top + 64 }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.signerToastText}>
+              ⚠️ Au nom de « {selectedSigner.display_name} » — vérifie bien la célébrité avant de publier.
+            </Text>
+            <TouchableOpacity
+              onPress={dismissReminderForever}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            >
+              <Text style={styles.signerToastDismiss}>Ne plus afficher</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            onPress={() => setSignerReminderVisible(false)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <X size={18} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      )}
+
       <ScrollView
         style={styles.content}
         contentContainerStyle={[styles.contentContainer, { paddingBottom: Math.max(insets.bottom, 16) + 20 }]}
@@ -862,7 +910,7 @@ export default function EventPublishScreen() {
             <>
               <Send size={20} color="#fff" />
               <Text style={styles.publishBtnText}>
-                {(t as any)('sendDedication') || 'Send Dedication'}
+                {((t as any)('sendDedication') || 'Envoyer la dédicace')}{selectedSigner ? ` · ${selectedSigner.display_name}` : ''}
               </Text>
             </>
           )}
@@ -1248,6 +1296,36 @@ const styles = StyleSheet.create({
   },
   changePhotoBtnText: { fontSize: 13, color: '#fff', fontWeight: '500' },
   publishOptions: { gap: 12 },
+  signerToast: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    zIndex: 100,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: '#f59e0b',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  signerToastText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 18,
+  },
+  signerToastDismiss: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 12,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+    marginTop: 6,
+  },
   publishBtn: {
     flexDirection: 'row',
     alignItems: 'center',
