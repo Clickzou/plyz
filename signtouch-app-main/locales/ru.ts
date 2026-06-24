@@ -684,7 +684,7 @@ export default {
   liveSessionJoin: 'Присоединиться к сессии',
   liveSessionJoinSession: 'Живая видеосессия',
   liveSessionJoinError: 'Не удалось присоединиться к сессии',
-  liveSessionUploadHint: 'Добавьте фото и сообщение для знаменитости',
+  liveSessionUploadHint: 'Встаньте в очередь на ваш видеозвонок в прямом эфире.',
   liveSessionTakePhoto: 'Сделать фото',
   liveSessionChoosePhoto: 'Выбрать фото',
   liveSessionChangePhoto: 'Нажмите для изменения',

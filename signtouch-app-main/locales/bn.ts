@@ -684,7 +684,7 @@ export default {
   liveSessionJoin: 'সেশনে যোগ দিন',
   liveSessionJoinSession: 'লাইভ ভিডিও সেশন',
   liveSessionJoinError: 'সেশনে যোগ দিতে ব্যর্থ',
-  liveSessionUploadHint: 'সেলিব্রিটির জন্য একটি ফটো এবং বার্তা যোগ করুন',
+  liveSessionUploadHint: 'আপনার লাইভ ভিডিও কলের জন্য সারিতে যোগ দিন।',
   liveSessionTakePhoto: 'ছবি তুলুন',
   liveSessionChoosePhoto: 'ছবি নির্বাচন করুন',
   liveSessionChangePhoto: 'পরিবর্তন করতে ট্যাপ করুন',

@@ -757,7 +757,7 @@ export default {
   liveSessionJoin: 'Rejoindre',
   liveSessionJoinSession: 'Session Live Vidéo',
   liveSessionJoinError: 'Échec de la connexion à la session',
-  liveSessionUploadHint: 'Ajoutez une photo et un message pour la célébrité',
+  liveSessionUploadHint: 'Rejoins la file d\'attente pour ton appel vidéo en direct.',
   liveSessionTakePhoto: 'Prendre une Photo',
   liveSessionChoosePhoto: 'Choisir une Photo',
   liveSessionChangePhoto: 'Appuyez pour changer',

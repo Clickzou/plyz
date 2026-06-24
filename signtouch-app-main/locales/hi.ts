@@ -684,7 +684,7 @@ export default {
   liveSessionJoin: 'सत्र में शामिल हों',
   liveSessionJoinSession: 'लाइव वीडियो सेशन',
   liveSessionJoinError: 'सत्र में शामिल होने में विफल',
-  liveSessionUploadHint: 'सेलेब्रिटी के लिए एक फोटो और संदेश जोड़ें',
+  liveSessionUploadHint: 'अपनी लाइव वीडियो कॉल के लिए कतार में शामिल हों।',
   liveSessionTakePhoto: 'फोटो लें',
   liveSessionChoosePhoto: 'फोटो चुनें',
   liveSessionChangePhoto: 'बदलने के लिए टैप करें',

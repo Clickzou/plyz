@@ -684,7 +684,7 @@ export default {
   liveSessionJoin: 'Entrar na Sessão',
   liveSessionJoinSession: 'Sessão Live Vídeo',
   liveSessionJoinError: 'Falha ao entrar na sessão',
-  liveSessionUploadHint: 'Adicione uma foto e mensagem para a celebridade',
+  liveSessionUploadHint: 'Entre na fila para a sua videochamada ao vivo.',
   liveSessionTakePhoto: 'Tirar Foto',
   liveSessionChoosePhoto: 'Escolher Foto',
   liveSessionChangePhoto: 'Toque para alterar',

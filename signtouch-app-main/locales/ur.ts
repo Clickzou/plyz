@@ -684,7 +684,7 @@ export default {
   liveSessionJoin: 'سیشن میں شامل ہوں',
   liveSessionJoinSession: 'لائیو ویڈیو سیشن',
   liveSessionJoinError: 'سیشن میں شامل ہونے میں ناکام',
-  liveSessionUploadHint: 'مشہور شخصیت کے لیے تصویر اور پیغام شامل کریں',
+  liveSessionUploadHint: 'اپنی لائیو ویڈیو کال کے لیے قطار میں شامل ہوں۔',
   liveSessionTakePhoto: 'تصویر لیں',
   liveSessionChoosePhoto: 'تصویر منتخب کریں',
   liveSessionChangePhoto: 'تبدیل کرنے کے لیے ٹیپ کریں',

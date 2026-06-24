@@ -684,7 +684,7 @@ export default {
   liveSessionJoin: 'الانضمام للجلسة',
   liveSessionJoinSession: 'جلسة فيديو مباشرة',
   liveSessionJoinError: 'فشل في الانضمام للجلسة',
-  liveSessionUploadHint: 'أضف صورة ورسالة للمشهور',
+  liveSessionUploadHint: 'انضم إلى قائمة الانتظار لمكالمتك المرئية المباشرة.',
   liveSessionTakePhoto: 'التقط صورة',
   liveSessionChoosePhoto: 'اختر صورة',
   liveSessionChangePhoto: 'انقر للتغيير',

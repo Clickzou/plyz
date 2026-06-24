@@ -684,7 +684,7 @@ export default {
   liveSessionJoin: '加入会话',
   liveSessionJoinSession: '现场视频会话',
   liveSessionJoinError: '加入会话失败',
-  liveSessionUploadHint: '为明星添加照片和留言',
+  liveSessionUploadHint: '加入排队等候你的实时视频通话。',
   liveSessionTakePhoto: '拍照',
   liveSessionChoosePhoto: '选择照片',
   liveSessionChangePhoto: '点击更换',

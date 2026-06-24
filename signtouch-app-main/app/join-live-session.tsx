@@ -298,72 +298,25 @@ export default function JoinLiveSessionScreen() {
   );
 
   const renderUploadStep = () => (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.stepContainer}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>{session?.celebrity_name}</Text>
-        <Text style={styles.subtitle}>{t('liveSessionUploadHint')}</Text>
+    <View style={[styles.stepContainer, { justifyContent: 'center' }]}>
+      <Text style={styles.title}>{session?.celebrity_name}</Text>
+      <Text style={styles.subtitle}>{t('liveSessionUploadHint')}</Text>
 
-        <View style={styles.photoSection}>
-          {photoUri ? (
-            <TouchableOpacity onPress={handlePickPhoto}>
-              <Image source={{ uri: photoUri }} style={styles.photoPreview} />
-              <Text style={styles.changePhotoText}>{t('liveSessionChangePhoto')}</Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.photoButtons}>
-              <TouchableOpacity style={styles.photoButton} onPress={handleTakePhoto}>
-                <Camera size={32} color="#6366f1" />
-                <Text style={styles.photoButtonText}>{t('liveSessionTakePhoto')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.photoButton} onPress={handlePickPhoto}>
-                <Image
-                  source={require('@/assets/images/icon.png')}
-                  style={styles.galleryIcon}
-                />
-                <Text style={styles.photoButtonText}>{t('liveSessionChoosePhoto')}</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        <TextInput
-          style={styles.nameInput}
-          placeholder={t('liveSessionYourNameOptional')}
-          placeholderTextColor="rgba(255,255,255,0.5)"
-          value={fanName}
-          onChangeText={setFanName}
-          maxLength={50}
-        />
-
-        <TextInput
-          style={[styles.nameInput, styles.messageInput]}
-          placeholder={t('liveSessionMessageOptional')}
-          placeholderTextColor="rgba(255,255,255,0.5)"
-          value={message}
-          onChangeText={setMessage}
-          maxLength={100}
-          multiline
-        />
-
-        <TouchableOpacity
-          style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
-          onPress={handleJoinQueue}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="#6366f1" />
-          ) : (
-            <>
-              <Send size={20} color="#6366f1" />
-              <Text style={styles.primaryButtonText}>{t('liveSessionJoinQueue')}</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <TouchableOpacity
+        style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
+        onPress={handleJoinQueue}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="#6366f1" />
+        ) : (
+          <>
+            <Send size={20} color="#6366f1" />
+            <Text style={styles.primaryButtonText}>{t('liveSessionJoinQueue')}</Text>
+          </>
+        )}
+      </TouchableOpacity>
+    </View>
   );
 
   const renderQueueStep = () => (

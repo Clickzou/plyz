@@ -684,7 +684,7 @@ export default {
   liveSessionJoin: 'セッションに参加',
   liveSessionJoinSession: 'ライブビデオセッション',
   liveSessionJoinError: 'セッションへの参加に失敗しました',
-  liveSessionUploadHint: 'セレブのために写真とメッセージを追加',
+  liveSessionUploadHint: 'ライブビデオ通話の順番待ちに参加しましょう。',
   liveSessionTakePhoto: '写真を撮る',
   liveSessionChoosePhoto: '写真を選択',
   liveSessionChangePhoto: 'タップして変更',

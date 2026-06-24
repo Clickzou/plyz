@@ -684,7 +684,7 @@ export default {
   liveSessionJoin: 'Gabung Sesi',
   liveSessionJoinSession: 'Sesi Video Langsung',
   liveSessionJoinError: 'Gagal bergabung dengan sesi',
-  liveSessionUploadHint: 'Tambahkan foto dan pesan untuk selebriti',
+  liveSessionUploadHint: 'Bergabunglah ke antrean untuk panggilan video langsungmu.',
   liveSessionTakePhoto: 'Ambil Foto',
   liveSessionChoosePhoto: 'Pilih Foto',
   liveSessionChangePhoto: 'Ketuk untuk mengubah',

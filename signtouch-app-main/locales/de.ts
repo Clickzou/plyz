@@ -684,7 +684,7 @@ export default {
   liveSessionJoin: 'Session beitreten',
   liveSessionJoinSession: 'Live-Video-Session',
   liveSessionJoinError: 'Beitritt zur Session fehlgeschlagen',
-  liveSessionUploadHint: 'Fügen Sie ein Foto und eine Nachricht für den Promi hinzu',
+  liveSessionUploadHint: 'Reihe dich für deinen Live-Videoanruf in die Warteschlange ein.',
   liveSessionTakePhoto: 'Foto aufnehmen',
   liveSessionChoosePhoto: 'Foto auswählen',
   liveSessionChangePhoto: 'Tippen zum Ändern',

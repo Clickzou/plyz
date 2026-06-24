@@ -756,7 +756,7 @@ export default {
   liveSessionJoin: 'Join Session',
   liveSessionJoinSession: 'Live Video Session',
   liveSessionJoinError: 'Failed to join session',
-  liveSessionUploadHint: 'Add a photo and message for the celebrity',
+  liveSessionUploadHint: 'Join the queue for your live video call.',
   liveSessionTakePhoto: 'Take Photo',
   liveSessionChoosePhoto: 'Choose Photo',
   liveSessionChangePhoto: 'Tap to change',
