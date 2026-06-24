@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { Trash2, Share2, Palette, Pencil, Plus, Sparkles, X, RotateCw, Check, Save, Eraser, Type, BookOpen } from 'lucide-react-native';
+import { Trash2, Share2, Palette, Pencil, Plus, Sparkles, X, RotateCw, Check, Save, Eraser, Type, BookOpen, ArrowLeft } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -398,9 +398,10 @@ interface DraggableSignatureProps {
   onPress: () => void;
   onDelete: () => void;
   isSelected: boolean;
+  captureMode?: boolean;
 }
 
-function DraggableSignature({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, onDelete, isSelected }: DraggableSignatureProps) {
+function DraggableSignature({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, onDelete, isSelected, captureMode }: DraggableSignatureProps) {
   console.log('🔄 [DraggableSignature] Rendering signature:', {
     id: overlay.id,
     color: overlay.color,
@@ -794,7 +795,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
             cursor: 'grab',
             userSelect: 'none' as const,
             touchAction: 'none' as const,
-            border: isSelected ? '2px solid #10b981' : '2px solid transparent',
+            border: (isSelected && !captureMode) ? '2px solid #10b981' : '2px solid transparent',
             borderRadius: 4,
             pointerEvents: 'auto' as const,
             boxSizing: 'content-box' as const,
@@ -912,7 +913,7 @@ function DraggableSignature({ overlay, onPositionChange, onRotationChange, onSca
                 resizeMode="contain"
               />
             )}
-            {isSelected && (
+            {isSelected && !captureMode && (
               <View style={styles.selectionBorder} pointerEvents="none" />
             )}
         </Animated.View>
@@ -1035,9 +1036,10 @@ interface DraggableTextProps {
   onDelete: () => void;
   isSelected: boolean;
   onFontPress?: () => void;
+  captureMode?: boolean;
 }
 
-function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, onDelete, isSelected, onFontPress }: DraggableTextProps) {
+function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleChange, onLongPress, onPress, onDelete, isSelected, onFontPress, captureMode }: DraggableTextProps) {
   const mobileFontFamily = getMobileFontFamily(overlay.fontFamily);
   const translateX = useSharedValue(overlay.x);
   const translateY = useSharedValue(overlay.y);
@@ -1251,7 +1253,7 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
             userSelect: 'none' as const,
             touchAction: 'none' as const,
             pointerEvents: 'auto' as const,
-            border: isSelected ? '2px solid #10b981' : '2px solid transparent',
+            border: (isSelected && !captureMode) ? '2px solid #10b981' : '2px solid transparent',
             borderRadius: 4,
             padding: 10,
           }}
@@ -1337,7 +1339,7 @@ function DraggableText({ overlay, onPositionChange, onRotationChange, onScaleCha
           }}>
             {overlay.text}
           </Text>
-          {isSelected && (
+          {isSelected && !captureMode && (
             <View style={styles.selectionBorder} pointerEvents="none" />
           )}
         </Animated.View>
@@ -2766,6 +2768,7 @@ export default function ResultScreen() {
                 onPress={() => selectElement(overlay.id, 'signature')}
                 onDelete={() => removeSignatureOverlay(overlay.id)}
                 isSelected={selectedElementId === overlay.id}
+                captureMode={capturingStatic || saving}
               />
             ))}
             {/* Draggable text overlays (editable) - only in edit mode */}
@@ -2781,6 +2784,7 @@ export default function ResultScreen() {
                 onDelete={() => removeTextOverlay(overlay.id)}
                 isSelected={selectedElementId === overlay.id}
                 onFontPress={() => setShowFontPicker(!showFontPicker)}
+                captureMode={capturingStatic || saving}
               />
             ))}
             {/* Overlays STATIQUES (non animés) :
@@ -2820,7 +2824,7 @@ export default function ResultScreen() {
               onPress={() => router.replace('/gallery')}
               activeOpacity={0.8}
             >
-              <X size={22} color="#ffffff" strokeWidth={2} />
+              <ArrowLeft size={22} color="#ffffff" strokeWidth={2} />
             </TouchableOpacity>
           )}
 
