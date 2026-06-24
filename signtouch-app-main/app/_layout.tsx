@@ -29,7 +29,6 @@ import { CelebrityModeProvider } from '@/contexts/CelebrityModeContext';
 import { FollowProvider } from '@/contexts/FollowContext';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import { AuthPromptProvider } from '@/contexts/AuthPromptContext';
-import OnboardingTutorial from '@/components/OnboardingTutorial';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -63,7 +62,6 @@ function AppContent() {
       <StatusBar style="auto" />
 
       <CustomAlert />
-      <OnboardingTutorial />
       <BanBanner />
     </>
   );
