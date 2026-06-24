@@ -44,7 +44,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      // Session fantôme : le JWT en cache peut pointer vers un compte qui n'existe
+      // plus côté serveur (ex: compte supprimé). On le détecte via getUser() et on
+      // purge la session locale, sinon l'app reste « à moitié connectée » et toutes
+      // les actions échouent (FK profiles, 403 user_not_found...).
+      if (session?.user) {
+        const { error } = await supabase.auth.getUser();
+        if (error) {
+          console.warn('[Auth] Session invalide (compte inexistant) -> purge', error.message);
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+      }
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
