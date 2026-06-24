@@ -35,13 +35,14 @@ import { CelebrityModeProvider } from '@/contexts/CelebrityModeContext';
 import { FollowProvider } from '@/contexts/FollowContext';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import OnboardingTutorial from '@/components/OnboardingTutorial';
+import WelcomeAuthScreen from '@/components/WelcomeAuthScreen';
 
 SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
   const [showPostPurchaseAccount, setShowPostPurchaseAccount] = useState(false);
   const [isPostPurchaseContext, setIsPostPurchaseContext] = useState(false);
-  useAuth();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     setPostPurchaseAccountCallback(() => {
@@ -61,6 +62,12 @@ function AppContent() {
     setShowPostPurchaseAccount(false);
     setIsPostPurchaseContext(false);
   };
+
+  // Connexion obligatoire au démarrage : si le chargement est terminé et qu'aucun
+  // utilisateur n'est connecté, on affiche l'écran d'accueil/connexion plein écran.
+  if (!loading && !user) {
+    return <WelcomeAuthScreen />;
+  }
 
   return (
     <>
