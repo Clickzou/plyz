@@ -258,12 +258,15 @@ export default function WelcomeAuthScreen() {
 
           {step === 'email' && (
             <View style={styles.card}>
+              <View style={styles.freeBadge}>
+                <Text style={styles.freeBadgeText}>100% GRATUIT</Text>
+              </View>
               <View style={styles.iconCircle}>
                 <Mail size={40} color="#10b981" />
               </View>
               <Text style={styles.title}>Bienvenue sur Plyz</Text>
               <Text style={styles.subtitle}>
-                Connecte-toi ou crée ton compte gratuit en 30 secondes
+                Crée ton compte gratuit en 30 secondes (ou connecte-toi)
               </Text>
 
               <TextInput
@@ -477,6 +480,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(148, 163, 184, 0.15)',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  freeBadge: {
+    position: 'absolute',
+    top: 16,
+    right: -36,
+    backgroundColor: '#10b981',
+    paddingHorizontal: 42,
+    paddingVertical: 5,
+    transform: [{ rotate: '45deg' }],
+    zIndex: 10,
+  },
+  freeBadgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   iconCircle: {
     width: 80,
