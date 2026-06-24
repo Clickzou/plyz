@@ -362,43 +362,47 @@ export default function ActivityScreen() {
             <Text style={styles.postTime}>
               {new Date(item.created_at).toLocaleDateString()}
             </Text>
-          </View>
-          {user?.id !== item.celebrity.user_id && (
-            (() => {
-              const followed = isFollowing(item.celebrity.user_id);
-              return (
+            {/* Boutons Suivre + Event sur une ligne dédiée sous la date
+                (évite de serrer le nom quand il est long). */}
+            <View style={styles.headerActionsRow}>
+              {user?.id !== item.celebrity.user_id && (
+                (() => {
+                  const followed = isFollowing(item.celebrity.user_id);
+                  return (
+                    <TouchableOpacity
+                      style={[styles.followChip, followed && styles.followChipActive]}
+                      onPress={(e) => {
+                        e.stopPropagation?.();
+                        requireAuth(
+                          () => toggleFollow({
+                            user_id: item.celebrity.user_id,
+                            stage_name: item.celebrity.stage_name,
+                            avatar_url: item.celebrity.avatar_url,
+                          }),
+                          { reason: 'Crée un compte pour suivre cette célébrité' }
+                        );
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.followChipText, followed && styles.followChipTextActive]}>
+                        {followed ? 'Suivi ✓' : 'Suivre'}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })()
+              )}
+              {item.kind === 'event' && (
                 <TouchableOpacity
-                  style={[styles.followChip, followed && styles.followChipActive]}
-                  onPress={(e) => {
-                    e.stopPropagation?.();
-                    requireAuth(
-                      () => toggleFollow({
-                        user_id: item.celebrity.user_id,
-                        stage_name: item.celebrity.stage_name,
-                        avatar_url: item.celebrity.avatar_url,
-                      }),
-                      { reason: 'Crée un compte pour suivre cette célébrité' }
-                    );
-                  }}
+                  style={styles.eventBadge}
+                  onPress={() => router.push('/fan-choice')}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.followChipText, followed && styles.followChipTextActive]}>
-                    {followed ? 'Suivi ✓' : 'Suivre'}
-                  </Text>
+                  <Calendar size={12} color="#fff" />
+                  <Text style={styles.eventBadgeText}>Event</Text>
                 </TouchableOpacity>
-              );
-            })()
-          )}
-          {item.kind === 'event' && (
-            <TouchableOpacity
-              style={styles.eventBadge}
-              onPress={() => router.push('/fan-choice')}
-              activeOpacity={0.7}
-            >
-              <Calendar size={12} color="#fff" />
-              <Text style={styles.eventBadgeText}>Event</Text>
-            </TouchableOpacity>
-          )}
+              )}
+            </View>
+          </View>
         </TouchableOpacity>
 
         {item.title && <Text style={styles.postTitle}>{item.title}</Text>}
@@ -616,7 +620,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 16,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
   },
-  postHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  postHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 12 },
+  headerActionsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
   avatar: { width: 40, height: 40, borderRadius: 20 },
   avatarPlaceholder: {
     width: 40, height: 40, borderRadius: 20, backgroundColor: '#374151',
