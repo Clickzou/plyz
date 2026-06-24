@@ -503,7 +503,7 @@ export default function EventGalleryScreen() {
       ) : null}
       
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backButton} onPress={() => (router.canGoBack() ? router.back() : router.replace('/fan-choice' as any))}>
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
