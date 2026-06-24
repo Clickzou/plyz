@@ -298,7 +298,10 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
   res.status(200).json({ received: true });
 });
 
-app.use(express.json());
+// Limite relevée pour accepter les photos/avatars envoyés en base64 (sinon
+// PayloadTooLargeError : la limite par défaut d'express.json est ~100 ko).
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.get('/api/health', async (req, res) => {
   try {
