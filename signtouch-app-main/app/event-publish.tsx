@@ -608,7 +608,7 @@ export default function EventPublishScreen() {
         <View style={[styles.signerToast, { top: insets.top + 64 }]}>
           <View style={{ flex: 1 }}>
             <Text style={styles.signerToastText}>
-              ⚠️ Au nom de « {selectedSigner.display_name} » — vérifie bien la célébrité avant de publier.
+              ⚠️ Attention, sélectionnez le bon profil (signataire) avant d'envoyer la dédicace.
             </Text>
             <TouchableOpacity
               onPress={dismissReminderForever}
