@@ -563,14 +563,6 @@ export default function AccountScreen() {
                   <Text style={styles.accountCardName}>
                     {isCelebrity ? (t('celebrityModeActive')) : (t('celebrityModeInactive'))}
                   </Text>
-                  {isCelebrity && (
-                    <View style={styles.celebrityActiveBadge}>
-                      <Check size={11} color="#10b981" strokeWidth={3} />
-                      <Text style={styles.celebrityActiveBadgeText}>
-                        {t('active' as any) || 'Actif'}
-                      </Text>
-                    </View>
-                  )}
                 </View>
                 <Text style={styles.accountCardSubtitle}>
                   {isCelebrity ? (t('celebrityModeActiveDesc')) : (t('celebrityModeInactiveDesc'))}
@@ -599,9 +591,9 @@ export default function AccountScreen() {
               </View>
             )}
 
-            {isCelebrity && (
+            {isCelebrity && !stripeLinked && (
               <TouchableOpacity
-                style={[styles.activateButton, stripeLinked && styles.activateButtonDone]}
+                style={[styles.activateButton]}
                 onPress={() => {
                   if (Platform.OS !== 'web') {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
