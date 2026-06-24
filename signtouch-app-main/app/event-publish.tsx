@@ -14,7 +14,7 @@ import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, ZoomIn, ZoomOut, RotateCcw, Palette, QrCode, X, Copy, Share2, Plus, Calendar, Clock, Video, MapPin, Euro } from 'lucide-react-native';
+import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, ZoomIn, ZoomOut, RotateCcw, RotateCw, Palette, QrCode, X, Copy, Share2, Plus, Calendar, Clock, Video, MapPin, Euro } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
 import { SvgUri, SvgXml } from 'react-native-svg';
@@ -792,7 +792,7 @@ export default function EventPublishScreen() {
                       <RotateCcw size={20} color="#fff" />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.editBtn} onPress={() => adjustRotation(15)}>
-                      <RotateCcw size={20} color="#fff" style={{ transform: [{ scaleX: -1 }] }} />
+                      <RotateCw size={20} color="#fff" />
                     </TouchableOpacity>
                     <TouchableOpacity 
                       style={[styles.editBtn, showColorPicker && styles.editBtnActive]} 
