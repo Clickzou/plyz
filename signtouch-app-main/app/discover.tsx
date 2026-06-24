@@ -57,11 +57,12 @@ export default function DiscoverScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const { isFollowing, toggleFollow } = useFollow();
+  const { isFollowing, toggleFollow, followedCelebrities } = useFollow();
   const { requireAuth } = useAuthPrompt();
   const [celebrities, setCelebrities] = useState<Celebrity[]>(DEMO_CELEBRITIES);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<'all' | 'following'>('all');
   const [sort, setSort] = useState('popular');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -225,6 +226,54 @@ export default function DiscoverScreen() {
     );
   };
 
+  const followedFiltered = React.useMemo(() => {
+    const s = search.trim().toLowerCase();
+    return followedCelebrities
+      .filter(c => !s || (c.stage_name || '').toLowerCase().includes(s))
+      .sort((a, b) => (a.stage_name || '').localeCompare(b.stage_name || ''));
+  }, [followedCelebrities, search]);
+
+  const renderFollowed = ({ item }: { item: { user_id: string; stage_name: string; avatar_url: string | null } }) => {
+    const showAvatar = item.avatar_url && !failedImages.has(item.user_id);
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => router.push(`/celebrity-detail?id=${item.user_id}`)}
+        activeOpacity={0.8}
+      >
+        <View style={styles.cardImageContainer}>
+          {showAvatar ? (
+            <Image
+              source={{ uri: item.avatar_url! }}
+              style={styles.cardImage}
+              onError={() => handleImageError(item.user_id)}
+            />
+          ) : (
+            <LinearGradient colors={['#374151', '#1f2937']} style={styles.cardImage}>
+              <Text style={styles.cardInitial}>
+                {(item.stage_name || '?')[0].toUpperCase()}
+              </Text>
+            </LinearGradient>
+          )}
+        </View>
+        <View style={styles.cardBody}>
+          <Text style={styles.cardName} numberOfLines={1}>{item.stage_name}</Text>
+          <TouchableOpacity
+            style={styles.followingButton}
+            onPress={(e) => {
+              e.stopPropagation?.();
+              toggleFollow({ user_id: item.user_id, stage_name: item.stage_name, avatar_url: item.avatar_url });
+            }}
+            activeOpacity={0.7}
+          >
+            <Heart size={14} color="#ef4444" fill="#ef4444" strokeWidth={2} />
+            <Text style={styles.followingButtonText}>Suivi ✓</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <PlyzHeader />
@@ -232,6 +281,23 @@ export default function DiscoverScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>{t('discoverTitle')}</Text>
         <Text style={styles.subtitle}>{t('discoverSubtitle')}</Text>
+      </View>
+
+      <View style={styles.viewModeRow}>
+        <TouchableOpacity
+          style={[styles.viewModePill, viewMode === 'all' && styles.viewModePillActive]}
+          onPress={() => setViewMode('all')}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.viewModeText, viewMode === 'all' && styles.viewModeTextActive]}>Tous</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.viewModePill, viewMode === 'following' && styles.viewModePillActive]}
+          onPress={() => setViewMode('following')}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.viewModeText, viewMode === 'following' && styles.viewModeTextActive]}>Suivis</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.searchRow}>
@@ -252,7 +318,7 @@ export default function DiscoverScreen() {
         </View>
       </View>
 
-      {!search.trim() && (
+      {viewMode === 'all' && !search.trim() && (
         <View style={styles.trendingSection}>
           <View style={styles.trendingHeader}>
             <TrendingUp size={16} color="#f59e0b" />
@@ -280,21 +346,46 @@ export default function DiscoverScreen() {
         </View>
       )}
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sortRow} contentContainerStyle={styles.sortRowContent}>
-        {SORT_OPTIONS.map(opt => (
-          <TouchableOpacity
-            key={opt.key}
-            style={[styles.sortChip, sort === opt.key && styles.sortChipActive]}
-            onPress={() => setSort(opt.key)}
-          >
-            <Text style={[styles.sortChipText, sort === opt.key && styles.sortChipTextActive]}>
-              {t(opt.label as any)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      {viewMode === 'all' && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sortRow} contentContainerStyle={styles.sortRowContent}>
+          {SORT_OPTIONS.map(opt => (
+            <TouchableOpacity
+              key={opt.key}
+              style={[styles.sortChip, sort === opt.key && styles.sortChipActive]}
+              onPress={() => setSort(opt.key)}
+            >
+              <Text style={[styles.sortChipText, sort === opt.key && styles.sortChipTextActive]}>
+                {t(opt.label as any)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
 
-      {loading && celebrities.length === 0 ? (
+      {viewMode === 'following' ? (
+        followedFiltered.length === 0 ? (
+          <View style={styles.center}>
+            <Heart size={48} color="#374151" />
+            {search.trim() ? (
+              <Text style={styles.emptyText}>Aucun résultat</Text>
+            ) : (
+              <>
+                <Text style={styles.emptyText}>Tu ne suis aucune célébrité pour l'instant.</Text>
+                <Text style={styles.emptyHint}>Découvre-les dans l'onglet Tous.</Text>
+              </>
+            )}
+          </View>
+        ) : (
+          <FlatList
+            data={followedFiltered}
+            renderItem={renderFollowed}
+            keyExtractor={item => item.user_id}
+            numColumns={2}
+            columnWrapperStyle={styles.row}
+            contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 20, paddingHorizontal: 12 }}
+          />
+        )
+      ) : loading && celebrities.length === 0 ? (
         <ScrollView style={{ flex: 1 }}>
           <DiscoverSkeleton />
         </ScrollView>
@@ -335,6 +426,20 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 5 },
   title: { color: '#fff', fontSize: 22, fontWeight: '700', textAlign: 'center' },
   subtitle: { color: '#9ca3af', fontSize: 14, marginTop: 2, textAlign: 'center' },
+  viewModeRow: { flexDirection: 'row', justifyContent: 'center', gap: 8, paddingHorizontal: 16, marginTop: 12 },
+  viewModePill: {
+    paddingHorizontal: 18, paddingVertical: 9, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  viewModePillActive: { backgroundColor: '#10b981' },
+  viewModeText: { color: '#9ca3af', fontSize: 13, fontWeight: '600' },
+  viewModeTextActive: { color: '#fff' },
+  followingButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5,
+    marginTop: 10, paddingVertical: 8, borderRadius: 10,
+    backgroundColor: 'rgba(239,68,68,0.12)', borderWidth: 1, borderColor: 'rgba(239,68,68,0.35)',
+  },
+  followingButtonText: { color: '#ef4444', fontSize: 12, fontWeight: '700' },
   searchRow: { paddingHorizontal: 16, marginTop: 12, marginBottom: 4 },
   searchBox: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.08)',
