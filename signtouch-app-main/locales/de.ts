@@ -1449,6 +1449,8 @@ export default {
   videoSessionsUpcoming: 'Bevorstehende Videositzungen',
   videoSessionsOngoing: 'Laufende Videositzungen',
   videoSessionsPast: 'Vergangene Videositzungen',
+  eventTypeDedicace: 'Autogramm',
+  eventTypeLiveVideo: 'Live-Video',
   gallery_error_loading: 'Diese Erinnerung kann nicht geladen werden',
   invalidQRCode: 'Ungültiger QR-Code',
   or: 'oder',

@@ -1449,6 +1449,8 @@ export default {
   videoSessionsUpcoming: '今後のビデオセッション',
   videoSessionsOngoing: '開催中のビデオセッション',
   videoSessionsPast: '過去のビデオセッション',
+  eventTypeDedicace: 'サイン',
+  eventTypeLiveVideo: 'ライブ動画',
   gallery_error_loading: 'この思い出を読み込めません',
   invalidQRCode: '無効なQRコード',
   or: 'または',

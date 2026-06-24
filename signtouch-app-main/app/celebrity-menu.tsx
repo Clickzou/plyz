@@ -12,7 +12,7 @@ import {
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye, PenSquare, Ticket, LogIn, Users } from 'lucide-react-native';
+import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye, PenSquare, Ticket, LogIn, Users, PenTool } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
@@ -338,6 +338,25 @@ export default function CelebrityMenuScreen() {
     return isVideo ? t('videoSessionsPast' as any) : t('eventsPast' as any);
   };
 
+  // Badge « pill » indiquant le type d'événement : Live vidéo (violet) ou Dédicace (vert).
+  const renderEventTypeBadge = (eventType?: string) => {
+    const isVideo = eventType === 'live_video';
+    return (
+      <View style={[styles.typePill, isVideo ? styles.typePillVideo : styles.typePillDedicace]}>
+        {isVideo ? (
+          <Video size={12} color="#8b5cf6" />
+        ) : (
+          <PenTool size={12} color="#188661" />
+        )}
+        <Text style={[styles.typePillText, isVideo ? styles.typePillTextVideo : styles.typePillTextDedicace]}>
+          {isVideo
+            ? (t('eventTypeLiveVideo' as any) || 'Live vidéo')
+            : (t('eventTypeDedicace' as any) || 'Dédicace')}
+        </Text>
+      </View>
+    );
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <LinearGradient
@@ -394,6 +413,7 @@ export default function CelebrityMenuScreen() {
                 <View style={styles.fanEventBadgeRow}>
                   <Ticket size={14} color="#f59e0b" />
                   <Text style={styles.fanEventBadgeText}>{t('joinedEvent' as any) || 'Tu participes à'}</Text>
+                  {renderEventTypeBadge(activeFanEvent.event_type)}
                 </View>
                 <Text style={styles.fanEventTitle}>{activeFanEvent.sessionTitle}</Text>
                 <View style={styles.fanEventInfoRow}>
@@ -572,7 +592,11 @@ export default function CelebrityMenuScreen() {
                       </View>
                       
                       <Text style={styles.eventTitle}>{event.title}</Text>
-                      
+
+                      <View style={styles.typePillRow}>
+                        {renderEventTypeBadge(event.event_type)}
+                      </View>
+
                       <View style={styles.eventTime}>
                         <Clock size={14} color="#6b7280" />
                         <Text style={styles.eventTimeText}>
@@ -1094,6 +1118,35 @@ const styles = StyleSheet.create({
   },
   eventTitleEnded: {
     color: '#9ca3af',
+  },
+  typePillRow: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  typePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    alignSelf: 'flex-start',
+  },
+  typePillVideo: {
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+  },
+  typePillDedicace: {
+    backgroundColor: 'rgba(24, 134, 97, 0.15)',
+  },
+  typePillText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  typePillTextVideo: {
+    color: '#8b5cf6',
+  },
+  typePillTextDedicace: {
+    color: '#188661',
   },
   eventTime: {
     flexDirection: 'row',

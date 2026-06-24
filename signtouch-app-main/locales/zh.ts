@@ -1449,6 +1449,8 @@ export default {
   videoSessionsUpcoming: '即将开始的视频通话',
   videoSessionsOngoing: '进行中的视频通话',
   videoSessionsPast: '已结束的视频通话',
+  eventTypeDedicace: '签名',
+  eventTypeLiveVideo: '视频直播',
   gallery_error_loading: '无法加载此回忆',
   invalidQRCode: '二维码无效',
   or: '或',

@@ -693,6 +693,8 @@ export default {
   videoSessionsUpcoming: 'Sessions vidéo à venir',
   videoSessionsOngoing: 'Sessions vidéo en cours',
   videoSessionsPast: 'Sessions vidéo passées',
+  eventTypeDedicace: 'Dédicace',
+  eventTypeLiveVideo: 'Live vidéo',
   fanChoiceVideoDesc2: 'Lancez un appel vidéo privé avec vos fans, ou rejoignez celui de votre célébrité.',
   fanChoiceCreateBtn: 'Créer',
   fanChoiceJoinBtn: 'Rejoindre',

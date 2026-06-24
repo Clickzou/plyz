@@ -870,6 +870,8 @@ export interface ActiveFanEvent {
   endsAt: string;
   signers: string;
   savedAt: number;
+  /** Type d'événement : 'live_video' = session vidéo ; 'qr' ou absent = dédicace. */
+  event_type?: string;
 }
 
 export const saveActiveFanEvent = async (event: ActiveFanEvent): Promise<void> => {

@@ -1449,6 +1449,8 @@ export default {
   videoSessionsUpcoming: 'Предстоящие видеосессии',
   videoSessionsOngoing: 'Текущие видеосессии',
   videoSessionsPast: 'Прошедшие видеосессии',
+  eventTypeDedicace: 'Автограф',
+  eventTypeLiveVideo: 'Видео в эфире',
   gallery_error_loading: 'Не удалось загрузить это воспоминание',
   invalidQRCode: 'Недействительный QR-код',
   or: 'или',

@@ -692,6 +692,8 @@ export default {
   videoSessionsUpcoming: 'Upcoming video sessions',
   videoSessionsOngoing: 'Ongoing video sessions',
   videoSessionsPast: 'Past video sessions',
+  eventTypeDedicace: 'Autograph',
+  eventTypeLiveVideo: 'Live video',
   fanChoiceVideoDesc2: 'Start a private video call with your fans, or join your celebrity\'s.',
   fanChoiceCreateBtn: 'Create',
   fanChoiceJoinBtn: 'Join',

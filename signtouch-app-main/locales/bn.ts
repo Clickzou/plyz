@@ -1454,6 +1454,8 @@ export default {
   videoSessionsUpcoming: 'আসন্ন ভিডিও সেশন',
   videoSessionsOngoing: 'চলমান ভিডিও সেশন',
   videoSessionsPast: 'অতীত ভিডিও সেশন',
+  eventTypeDedicace: 'অটোগ্রাফ',
+  eventTypeLiveVideo: 'লাইভ ভিডিও',
   gallery_error_loading: 'এই স্মৃতিটি লোড করা যায়নি',
   invalidQRCode: 'অবৈধ QR কোড',
   or: 'অথবা',

@@ -1454,6 +1454,8 @@ export default {
   videoSessionsUpcoming: 'آنے والے ویڈیو سیشنز',
   videoSessionsOngoing: 'جاری ویڈیو سیشنز',
   videoSessionsPast: 'گزشتہ ویڈیو سیشنز',
+  eventTypeDedicace: 'آٹوگراف',
+  eventTypeLiveVideo: 'لائیو ویڈیو',
   gallery_error_loading: 'یہ یادگار لوڈ کرنے سے قاصر',
   invalidQRCode: 'غلط QR کوڈ',
   or: 'یا',

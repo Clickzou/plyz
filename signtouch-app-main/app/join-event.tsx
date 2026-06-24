@@ -803,6 +803,7 @@ export default function JoinEventScreen() {
         endsAt: foundSession.ends_at,
         signers: signersJson,
         savedAt: Date.now(),
+        event_type: foundSession.event_type || 'qr',
       });
       setActiveFanEvent(null);
       router.push({

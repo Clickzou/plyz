@@ -1449,6 +1449,8 @@ export default {
   videoSessionsUpcoming: 'جلسات الفيديو القادمة',
   videoSessionsOngoing: 'جلسات الفيديو الجارية',
   videoSessionsPast: 'جلسات الفيديو السابقة',
+  eventTypeDedicace: 'إهداء',
+  eventTypeLiveVideo: 'فيديو مباشر',
   gallery_error_loading: 'تعذر تحميل هذه الذكرى',
   invalidQRCode: 'رمز QR غير صالح',
   or: 'أو',

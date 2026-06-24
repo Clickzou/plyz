@@ -1449,6 +1449,8 @@ export default {
   videoSessionsUpcoming: 'Sessioni video imminenti',
   videoSessionsOngoing: 'Sessioni video in corso',
   videoSessionsPast: 'Sessioni video passate',
+  eventTypeDedicace: 'Dedica',
+  eventTypeLiveVideo: 'Video live',
   gallery_error_loading: 'Impossibile caricare questo ricordo',
   invalidQRCode: 'Codice QR non valido',
   or: 'o',

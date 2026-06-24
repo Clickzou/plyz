@@ -1449,6 +1449,8 @@ export default {
   videoSessionsUpcoming: 'Sessões de vídeo futuras',
   videoSessionsOngoing: 'Sessões de vídeo em andamento',
   videoSessionsPast: 'Sessões de vídeo passadas',
+  eventTypeDedicace: 'Dedicatória',
+  eventTypeLiveVideo: 'Vídeo ao vivo',
   gallery_error_loading: 'Não é possível carregar esta memória',
   invalidQRCode: 'QR code inválido',
   or: 'ou',

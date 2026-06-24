@@ -1449,6 +1449,8 @@ export default {
   videoSessionsUpcoming: 'आगामी वीडियो सत्र',
   videoSessionsOngoing: 'चल रहे वीडियो सत्र',
   videoSessionsPast: 'बीते वीडियो सत्र',
+  eventTypeDedicace: 'ऑटोग्राफ',
+  eventTypeLiveVideo: 'लाइव वीडियो',
   gallery_error_loading: 'इस स्मृति को लोड करने में असमर्थ',
   invalidQRCode: 'अमान्य QR कोड',
   or: 'या',

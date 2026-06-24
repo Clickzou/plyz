@@ -1454,6 +1454,8 @@ export default {
   videoSessionsUpcoming: 'Sesi video akan datang',
   videoSessionsOngoing: 'Sesi video sedang berlangsung',
   videoSessionsPast: 'Sesi video lepas',
+  eventTypeDedicace: 'Autograf',
+  eventTypeLiveVideo: 'Video langsung',
   gallery_error_loading: 'Tidak dapat memuatkan kenangan ini',
   invalidQRCode: 'Kod QR tidak sah',
   or: 'atau',
