@@ -605,15 +605,15 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    backgroundColor: '#0f172a',
+    backgroundColor: '#ffffff',
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#fff',
+    color: '#0f172a',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#cbd5e1',
   },
   codeInput: {
     fontSize: 26,
