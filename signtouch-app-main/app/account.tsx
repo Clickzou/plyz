@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { router } from 'expo-router';
-import { Info, Heart, Share2, Globe, Check, FileText, LogOut, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle, Camera, Images, ChevronRight , Star } from 'lucide-react-native';
+import { Info, Heart, Share2, Globe, Check, FileText, LogOut, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle, Camera, Images, ChevronRight , Star, Clock } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import * as Clipboard from 'expo-clipboard';
@@ -72,6 +72,22 @@ export default function AccountScreen() {
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [, setStripeLoading] = useState(false);
   const [celebrityName, setCelebrityName] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      if (!user?.id) {
+        setIsVerified(false);
+        return;
+      }
+      try {
+        const { data } = await supabase.rpc('is_user_verified', { uid: user.id });
+        setIsVerified(!!data);
+      } catch {
+        // Silencieux : ne bloque pas l'écran si la vérif échoue.
+      }
+    })();
+  }, [user?.id, isCelebrity]);
 
   useEffect(() => {
     (async () => {
@@ -611,37 +627,44 @@ export default function AccountScreen() {
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity
-              style={[
-                styles.createAccountButton,
-                !isCelebrity && { backgroundColor: '#f59e0b' },
-                isCelebrity && styles.becomeFanButton,
-              ]}
-              onPress={() => {
-                if (Platform.OS !== 'web') {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }
-                // Désactiver est toujours autorisé ; activer exige un compte.
-                if (isCelebrity) {
-                  toggleCelebrityMode();
-                } else {
+            {!isCelebrity && (
+              <TouchableOpacity
+                style={[styles.createAccountButton, { backgroundColor: '#f59e0b' }]}
+                onPress={() => {
+                  if (Platform.OS !== 'web') {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                  // Devenir célébrité est irréversible ; activer exige un compte.
                   requireAuth(() => toggleCelebrityMode(), {
                     reason: 'Crée ton compte pour passer en mode célébrité',
                   });
-                }
-              }}
-              activeOpacity={0.7}
-            >
-              {isCelebrity ? (
-                <Heart size={18} color="#e5e7eb" />
-              ) : (
+                }}
+                activeOpacity={0.7}
+              >
                 <Star size={18} color="#000000" fill="#000000" />
-              )}
-              <Text style={[styles.createAccountButtonText, !isCelebrity && { color: '#000000' }, isCelebrity && { color: '#e5e7eb' }]}>
-                {isCelebrity ? (t('disableCelebrityMode')) : (t('enableCelebrityMode'))}
-              </Text>
-              <ArrowRight size={18} color={isCelebrity ? '#e5e7eb' : '#000000'} />
-            </TouchableOpacity>
+                <Text style={[styles.createAccountButtonText, { color: '#000000' }]}>
+                  {t('enableCelebrityMode')}
+                </Text>
+                <ArrowRight size={18} color="#000000" />
+              </TouchableOpacity>
+            )}
+
+            {isCelebrity && (
+              isVerified ? (
+                <View style={styles.statusBadgeVerified}>
+                  <Check size={18} color="#10b981" />
+                  <Text style={styles.statusBadgeVerifiedText}>Mode Célébrité — Validé</Text>
+                </View>
+              ) : (
+                <View style={styles.statusBadgePending}>
+                  <Clock size={18} color="#f59e0b" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.statusBadgePendingText}>En cours de vérification</Text>
+                    <Text style={styles.statusBadgePendingSub}>Tu seras validé sous 5 à 10 min</Text>
+                  </View>
+                </View>
+              )
+            )}
           </View>
         </View>
 
@@ -1293,6 +1316,45 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#ffffff',
+  },
+  statusBadgeVerified: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(16,185,129,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.4)',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+  },
+  statusBadgeVerifiedText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#10b981',
+  },
+  statusBadgePending: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(245,158,11,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.4)',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+  },
+  statusBadgePendingText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#f59e0b',
+  },
+  statusBadgePendingSub: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(245,158,11,0.8)',
+    marginTop: 2,
   },
   loginTitle: {
     fontSize: 18,
