@@ -15,7 +15,10 @@ import { Calendar, Video, Plus, LogIn, CalendarClock } from 'lucide-react-native
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { showConfirm } from '@/utils/alertHelper';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
+import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
+import { supabase } from '@/utils/supabase';
+import { showAlert } from '@/utils/alertHelper';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { getMyScheduledEvents } from '@/utils/eventSessionStorage';
@@ -28,57 +31,75 @@ export default function FanChoiceScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { requireAuth } = useAuthPrompt();
+  const { enableCelebrityMode } = useCelebrityMode();
   const [ongoingCount, setOngoingCount] = useState(0);
   const [ongoingVideoCount, setOngoingVideoCount] = useState(0);
-  // null = en cours de vérification ; true = compte vérifié (peut créer) ; false = bloqué
-  const [canCreate, setCanCreate] = useState<boolean | null>(null);
 
-  // Un compte peut créer un événement/session s'il a AU MOINS une vérification
-  // approuvée (célébrité, créateur ou club/organisation).
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-      (async () => {
-        if (!user?.id) {
-          if (active) setCanCreate(false);
-          return;
-        }
-        try {
-          const types = ['celebrity', 'creator', 'org'];
-          const results = await Promise.all(
-            types.map((type) =>
-              fetch(`${API_BASE}/api/${type}-verification-status?user_id=${user.id}`)
-                .then((r) => r.json())
-                .catch(() => null)
-            )
-          );
-          if (!active) return;
-          const approved = results.some((d: any) => d?.status === 'approved');
-          setCanCreate(approved);
-        } catch {
-          if (active) setCanCreate(false);
-        }
-      })();
-      return () => { active = false; };
-    }, [user?.id])
-  );
-
-  const handleLockedCreate = () => {
+  // Cliquer « Créer » : exige un compte, puis bascule en mode célébrité et
+  // route selon le statut de vérification.
+  const handleCreate = (createPath: string) => {
     if (Platform.OS !== 'web') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    showConfirm(
-      t('createLockedTitle' as any) || 'Réservé aux comptes vérifiés',
-      t('createLockedMsg' as any) ||
-        'La création d\'événements et de sessions vidéo est réservée aux célébrités, créateurs et clubs vérifiés. Souhaitez-vous faire vérifier votre compte ?',
-      [
-        { text: t('later' as any) || 'Plus tard', style: 'cancel' },
-        {
-          text: t('getVerified' as any) || 'Faire vérifier mon compte',
-          onPress: () => router.push('/celebrity-onboarding' as any),
-        },
-      ]
-    );
+    requireAuth(() => proceedCreate(createPath), {
+      reason: t('createAuthReason' as any) || 'Crée ton compte pour organiser un événement',
+    });
+  };
+
+  const proceedCreate = async (createPath: string) => {
+    // a. Bascule automatique en mode célébrité.
+    await enableCelebrityMode();
+
+    if (!user?.id) {
+      // Sécurité : ne devrait pas arriver (requireAuth garantit un user).
+      router.push('/celebrity-onboarding' as any);
+      return;
+    }
+
+    // b. Le compte est-il déjà vérifié ?
+    let verified = false;
+    try {
+      const { data } = await supabase.rpc('is_user_verified', { uid: user.id });
+      verified = data === true;
+    } catch {
+      verified = false;
+    }
+
+    // c. Vérifié → accès direct au formulaire de création.
+    if (verified) {
+      router.push(createPath as any);
+      return;
+    }
+
+    // d. Sinon, regarde s'il a une demande EN COURS de vérification.
+    let pending = false;
+    try {
+      const types = ['celebrity', 'creator', 'org'];
+      const results = await Promise.all(
+        types.map((type) =>
+          fetch(`${API_BASE}/api/${type}-verification-status?user_id=${user.id}`)
+            .then((r) => r.json())
+            .catch(() => null)
+        )
+      );
+      pending = results.some((d: any) => d?.status === 'pending');
+    } catch {
+      pending = false;
+    }
+
+    if (pending) {
+      // Demande en cours : on patiente.
+      showAlert(
+        t('verificationPendingTitle' as any) || 'Compte en cours de vérification',
+        t('verificationPendingMsg' as any) ||
+          'Ton compte célébrité est en cours de vérification. Tu pourras créer tes événements dès qu\'il sera validé (sous 5 à 10 min).'
+      );
+      return;
+    }
+
+    // Aucune demande (ou rejetée) → onboarding (Stripe + demande de vérification).
+    router.push('/celebrity-onboarding' as any);
   };
 
   // Recharge le nombre d'événements / sessions vidéo en cours à chaque retour sur l'écran
@@ -125,7 +146,7 @@ export default function FanChoiceScreen() {
         <View style={styles.btnRow}>
           <TouchableOpacity
             style={[styles.btn, { backgroundColor: accent }]}
-            onPress={() => (canCreate === true ? handleChoice(createPath) : handleLockedCreate())}
+            onPress={() => handleCreate(createPath)}
             activeOpacity={0.85}
           >
             <Plus size={18} color="#ffffff" strokeWidth={2.5} />

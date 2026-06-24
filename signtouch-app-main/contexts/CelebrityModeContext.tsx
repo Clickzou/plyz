@@ -7,6 +7,7 @@ const PROFILE_PHOTO_KEY = '@plyz_profile_photo';
 interface CelebrityModeContextType {
   isCelebrity: boolean;
   toggleCelebrityMode: () => Promise<void>;
+  enableCelebrityMode: () => Promise<void>;
   loading: boolean;
   profilePhoto: string | null;
   setProfilePhoto: (uri: string | null) => Promise<void>;
@@ -15,6 +16,7 @@ interface CelebrityModeContextType {
 const CelebrityModeContext = createContext<CelebrityModeContextType>({
   isCelebrity: false,
   toggleCelebrityMode: async () => {},
+  enableCelebrityMode: async () => {},
   loading: true,
   profilePhoto: null,
   setProfilePhoto: async () => {},
@@ -52,6 +54,18 @@ export function CelebrityModeProvider({ children }: { children: React.ReactNode 
     }
   };
 
+  // Force le passage en mode célébrité (irréversible côté UI). Idempotent :
+  // ne fait rien si l'utilisateur est déjà célébrité.
+  const enableCelebrityMode = async () => {
+    if (isCelebrity) return;
+    setIsCelebrity(true);
+    try {
+      await AsyncStorage.setItem(CELEBRITY_MODE_KEY, 'true');
+    } catch (e) {
+      console.error('[CelebrityMode] Error enabling:', e);
+    }
+  };
+
   const setProfilePhoto = async (uri: string | null) => {
     setProfilePhotoState(uri);
     try {
@@ -66,7 +80,7 @@ export function CelebrityModeProvider({ children }: { children: React.ReactNode 
   };
 
   return (
-    <CelebrityModeContext.Provider value={{ isCelebrity, toggleCelebrityMode, loading, profilePhoto, setProfilePhoto }}>
+    <CelebrityModeContext.Provider value={{ isCelebrity, toggleCelebrityMode, enableCelebrityMode, loading, profilePhoto, setProfilePhoto }}>
       {children}
     </CelebrityModeContext.Provider>
   );
