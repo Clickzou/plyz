@@ -1,29 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Platform, Image, TextInput,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft, Star, Camera as CameraIcon, Video, QrCode,
+  ArrowLeft, Star, Video, QrCode,
   DollarSign, Users, CreditCard, ArrowRight,
   CheckCircle, Zap, TrendingUp, Globe, Building2, Award,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import * as ImagePicker from 'expo-image-picker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import StripeConnectModal from '@/components/StripeConnectModal';
-import { getUserProfile, upsertUserProfile } from '@/utils/userProfile';
+import { upsertUserProfile } from '@/utils/userProfile';
+import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
-const TOTAL_STEPS = 5; // étapes 0..4
+const TOTAL_STEPS = 3; // étapes 0..2
 
 export default function CelebrityOnboardingScreen() {
   const router = useRouter();
@@ -35,26 +35,46 @@ export default function CelebrityOnboardingScreen() {
   const ct = (key: any) => { const v = t(key); return v === key ? undefined : v; };
   const { user } = useAuth();
   const { requireAuth } = useAuthPrompt();
-  const { profilePhoto, setProfilePhoto } = useCelebrityMode();
+  const { setProfilePhoto } = useCelebrityMode();
 
   const [step, setStep] = useState(0);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [stripeLinked, setStripeLinked] = useState(false);
   const [, setStripeAccountId] = useState<string | null>(null);
+  // Nom public récupéré du profil de base (transmis à StripeConnectModal)
   const [celebrityName, setCelebrityName] = useState('');
-  const [bioInput, setBioInput] = useState('');
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     checkStripeStatus();
+  }, []);
+
+  // Synchronise le profil de base (pseudo / photo / description déjà saisis lors de
+  // la création de compte) vers le profil célébrité, pour que la fiche publique soit
+  // pré-remplie sans redemander ces infos. Ne bloque jamais en cas d'erreur.
+  useEffect(() => {
     (async () => {
-      if (user?.id) {
-        const profile = await getUserProfile(user.id);
-        if (profile?.bio) setBioInput(profile.bio);
-        if (profile?.celebrity_name) setCelebrityName(profile.celebrity_name);
+      if (!user?.id) return;
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('display_name, bio, avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (data?.display_name) {
+          setCelebrityName(data.display_name);
+          await upsertUserProfile(user.id, { celebrity_name: data.display_name, bio: data.bio || '' });
+          await fetch(`${API_BASE}/api/update-celebrity-profile`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: user.id, bio: data.bio || '', stage_name: data.display_name }),
+          }).catch(() => {});
+          if (data.avatar_url) setProfilePhoto(data.avatar_url);
+        }
+      } catch (e) {
+        console.warn('[celebrity-onboarding] sync profil de base échouée', e);
       }
     })();
-  }, []);
+  }, [user?.id]);
 
   const checkStripeStatus = async () => {
     try {
@@ -62,47 +82,6 @@ export default function CelebrityOnboardingScreen() {
       setStripeLinked(!!id);
       setStripeAccountId(id);
     } catch {}
-  };
-
-  const pickProfilePhoto = async () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') return;
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-    if (!result.canceled && result.assets[0]) {
-      await setProfilePhoto(result.assets[0].uri);
-    }
-  };
-
-  // Sauvegarde nom public + présentation (étape 2)
-  const saveNameAndBio = async (): Promise<boolean> => {
-    if (!user?.id) return false;
-    const name = celebrityName.trim();
-    const v = bioInput.trim();
-    setSaving(true);
-    try {
-      // 1. Sauvegarde interne (source d'édition dans l'app)
-      await upsertUserProfile(user.id, { celebrity_name: name, bio: v });
-      // 2. Publication sur le profil public
-      await fetch(`${API_BASE}/api/update-celebrity-profile`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: user.id, bio: v, stage_name: name }),
-      });
-      return true;
-    } catch (e) {
-      console.warn('[saveNameAndBio] publication sur le profil public échouée', e);
-      return true; // la sauvegarde interne a réussi, on n'empêche pas l'avancée
-    } finally {
-      setSaving(false);
-    }
   };
 
   const features = [
@@ -129,27 +108,15 @@ export default function CelebrityOnboardingScreen() {
   ];
 
   // --- Validation par étape ---
-  const photoDone = !!profilePhoto;
-  const nameDone = !!celebrityName.trim();
-  const bioDone = !!bioInput.trim();
   const stripeDone = stripeLinked;
 
   // Bouton « Continuer » : actif ? + hint si bloqué
   const canContinue = (): boolean => {
-    if (step === 1) return photoDone;
-    if (step === 2) return nameDone && bioDone && !saving;
-    if (step === 3) return stripeDone; // « Je le ferai plus tard » contourne ce blocage
+    if (step === 1) return stripeDone; // « Je le ferai plus tard » contourne ce blocage
     return true;
   };
 
   const blockedHint = (): string | null => {
-    if (step === 1 && !photoDone) {
-      return ct('celOnboardHintPhoto' as any) || 'Ajoute une photo pour continuer';
-    }
-    if (step === 2 && !canContinue()) {
-      if (!nameDone) return ct('celOnboardHintName' as any) || 'Renseigne ton nom public pour continuer';
-      if (!bioDone) return ct('celOnboardHintBio' as any) || 'Ajoute une présentation pour continuer';
-    }
     return null;
   };
 
@@ -157,17 +124,12 @@ export default function CelebrityOnboardingScreen() {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    // L'étape 2 sauvegarde le nom public / la présentation : un compte est requis.
-    if (step === 2 && !user) {
+    // L'activation du mode célébrité nécessite un compte.
+    if (step === 0 && !user) {
       requireAuth(() => goNext(), {
         reason: 'Crée ton compte pour passer en mode célébrité',
       });
       return;
-    }
-    // À l'étape 2, on sauvegarde avant d'avancer
-    if (step === 2) {
-      const ok = await saveNameAndBio();
-      if (!ok) return;
     }
     setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
   };
@@ -308,99 +270,8 @@ export default function CelebrityOnboardingScreen() {
           </>
         )}
 
-        {/* ===================== ÉTAPE 1 — PHOTO ===================== */}
+        {/* ===================== ÉTAPE 1 — STRIPE ===================== */}
         {step === 1 && (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepHeadline}>
-              {ct('celOnboardPhotoHeadline' as any) || 'Ta photo de profil'}
-            </Text>
-            <Text style={styles.stepSubtitle}>
-              {ct('celOnboardPhotoSubtitle' as any) || 'Choisis une belle photo : c\'est la première chose que tes fans verront.'}
-            </Text>
-
-            <View style={styles.bigPhotoWrap}>
-              <TouchableOpacity
-                style={styles.bigPhotoPicker}
-                onPress={pickProfilePhoto}
-                activeOpacity={0.8}
-              >
-                {profilePhoto ? (
-                  <Image source={{ uri: profilePhoto }} style={styles.bigPhotoImage} />
-                ) : (
-                  <View style={styles.bigPhotoPlaceholder}>
-                    <CameraIcon size={48} color="#6b7280" />
-                    <Text style={styles.photoPlaceholderText}>
-                      {t('addProfilePhoto' as any) || 'Ajouter photo'}
-                    </Text>
-                  </View>
-                )}
-                <View style={styles.bigPhotoEditBadge}>
-                  <CameraIcon size={18} color="#fff" />
-                </View>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity style={styles.secondaryBtn} onPress={pickProfilePhoto} activeOpacity={0.8}>
-              <CameraIcon size={18} color="#f59e0b" />
-              <Text style={styles.secondaryBtnText}>
-                {profilePhoto
-                  ? (ct('celOnboardChangePhoto' as any) || 'Changer la photo')
-                  : (ct('celOnboardAddPhoto' as any) || 'Ajouter une photo')}
-              </Text>
-            </TouchableOpacity>
-
-            {photoDone && (
-              <View style={styles.photoStatus}>
-                <CheckCircle size={16} color="#10b981" />
-                <Text style={styles.photoStatusText}>
-                  {ct('celOnboardPhotoDone' as any) || 'Photo ajoutée !'}
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* ===================== ÉTAPE 2 — NOM PUBLIC + PRÉSENTATION ===================== */}
-        {step === 2 && (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepHeadline}>
-              {ct('celOnboardNameHeadline' as any) || 'Ton nom public et ta présentation'}
-            </Text>
-            <Text style={styles.stepSubtitle}>
-              {ct('celOnboardNameSubtitle' as any) || 'C\'est ce qui apparaîtra sur ton profil public visible par les fans.'}
-            </Text>
-
-            <Text style={styles.fieldLabel}>
-              {ct('celOnboardPublicName' as any) || 'Nom public'}
-            </Text>
-            <TextInput
-              style={styles.fieldInput}
-              value={celebrityName}
-              onChangeText={setCelebrityName}
-              placeholder={ct('celOnboardPublicNamePlaceholder' as any) || 'Votre nom de scène (ex : Omar Sy)'}
-              placeholderTextColor="#6b7280"
-              maxLength={60}
-            />
-
-            <Text style={[styles.fieldLabel, { marginTop: 18 }]}>
-              {ct('celOnboardBioTitle' as any) || 'Présentation / À propos'}
-            </Text>
-            <TextInput
-              style={[styles.fieldInput, styles.fieldInputMultiline]}
-              value={bioInput}
-              onChangeText={setBioInput}
-              placeholder={ct('celOnboardBioPlaceholder' as any) || 'Ex : Acteur et humoriste français, connu pour...'}
-              placeholderTextColor="#6b7280"
-              multiline
-              maxLength={300}
-              textAlignVertical="top"
-            />
-            <Text style={styles.charCount}>{bioInput.length}/300</Text>
-          </View>
-        )}
-
-        {/* ===================== ÉTAPE 3 — STRIPE ===================== */}
-        {step === 3 && (
           <View style={styles.stepContent}>
             <View style={styles.stripeIconWrap}>
               <CreditCard size={40} color="#6366f1" />
@@ -446,8 +317,8 @@ export default function CelebrityOnboardingScreen() {
           </View>
         )}
 
-        {/* ===================== ÉTAPE 4 — C'EST PRÊT ===================== */}
-        {step === 4 && (
+        {/* ===================== ÉTAPE 2 — C'EST PRÊT ===================== */}
+        {step === 2 && (
           <View style={styles.stepContent}>
             <View style={styles.heroIconWrap}>
               <CheckCircle size={44} color="#10b981" />
@@ -576,7 +447,7 @@ export default function CelebrityOnboardingScreen() {
           </TouchableOpacity>
         )}
 
-        {(step === 1 || step === 2 || step === 3) && (
+        {step === 1 && (
           <TouchableOpacity
             style={[styles.primaryButton, !canContinue() && styles.primaryButtonDisabled]}
             onPress={goNext}
@@ -584,13 +455,13 @@ export default function CelebrityOnboardingScreen() {
             activeOpacity={0.85}
           >
             <Text style={[styles.primaryButtonText, !canContinue() && styles.primaryButtonTextDisabled]}>
-              {saving ? (ct('celOnboardSaving' as any) || 'Enregistrement…') : (ct('celOnboardContinue' as any) || 'Continuer')}
+              {ct('celOnboardContinue' as any) || 'Continuer'}
             </Text>
-            {!saving && <ArrowRight size={20} color={canContinue() ? '#000' : '#6b7280'} />}
+            <ArrowRight size={20} color={canContinue() ? '#000' : '#6b7280'} />
           </TouchableOpacity>
         )}
 
-        {step === 4 && (
+        {step === 2 && (
           <TouchableOpacity style={styles.primaryButton} onPress={finish} activeOpacity={0.85}>
             <Text style={styles.primaryButtonText}>
               {ct('celOnboardFinish' as any) || 'Accéder à mon profil'}
