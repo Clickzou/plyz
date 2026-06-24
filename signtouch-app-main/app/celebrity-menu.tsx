@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import BottomNav from '@/components/BottomNav';
 import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount, getActiveFanEvent, ActiveFanEvent } from '@/utils/eventSessionStorage';
 import QRCodeSvg from 'react-native-qrcode-svg';
@@ -28,9 +29,10 @@ export default function CelebrityMenuScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { isCelebrity } = useCelebrityMode();
   const [myEvents, setMyEvents] = useState<EventSession[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabType>('create');
+  const [activeTab, setActiveTab] = useState<TabType>(isCelebrity ? 'create' : 'events');
   const [selectedEvent, setSelectedEvent] = useState<EventSession | null>(null);
   const [showQrModal, setShowQrModal] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -97,6 +99,13 @@ export default function CelebrityMenuScreen() {
       loadActiveFanEvent();
     }, [loadMyEvents, loadActiveFanEvent])
   );
+
+  // Un fan ne doit jamais rester sur l'onglet "Création événement"
+  useEffect(() => {
+    if (!isCelebrity && activeTab === 'create') {
+      setActiveTab('events');
+    }
+  }, [isCelebrity, activeTab]);
 
   const isEventLiveCheck = (event: EventSession) => {
     if (event.status === 'ended') return false;
@@ -306,40 +315,42 @@ export default function CelebrityMenuScreen() {
         >
           <ArrowLeft size={24} color="#188661" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('celebrity')}</Text>
+        <Text style={styles.headerTitle}>{isCelebrity ? t('celebrity') : 'Mes événements'}</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <View style={styles.tabsContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'create' && styles.tabActive]}
-          onPress={() => setActiveTab('create')}
-        >
-          <Text style={[styles.tabText, activeTab === 'create' && styles.tabTextActive]}>
-            Création événement
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'events' && styles.tabActive]}
-          onPress={() => setActiveTab('events')}
-        >
-          <Text style={[styles.tabText, activeTab === 'events' && styles.tabTextActive]}>
-            Mes événements
-          </Text>
-          {myEvents.filter(e => getEventStatus(e) !== 'ended').length > 0 && (
-            <View style={styles.tabBadge}>
-              <Text style={styles.tabBadgeText}>{myEvents.filter(e => getEventStatus(e) !== 'ended').length}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
+      {isCelebrity && (
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'create' && styles.tabActive]}
+            onPress={() => setActiveTab('create')}
+          >
+            <Text style={[styles.tabText, activeTab === 'create' && styles.tabTextActive]}>
+              Création événement
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'events' && styles.tabActive]}
+            onPress={() => setActiveTab('events')}
+          >
+            <Text style={[styles.tabText, activeTab === 'events' && styles.tabTextActive]}>
+              Mes événements
+            </Text>
+            {myEvents.filter(e => getEventStatus(e) !== 'ended').length > 0 && (
+              <View style={styles.tabBadge}>
+                <Text style={styles.tabBadgeText}>{myEvents.filter(e => getEventStatus(e) !== 'ended').length}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
 
       <ScrollView 
         style={styles.content} 
         contentContainerStyle={[styles.contentContainer, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}
         showsVerticalScrollIndicator={false}
       >
-        {activeTab === 'events' ? (
+        {(!isCelebrity || activeTab === 'events') ? (
           <>
             {activeFanEvent && (
               <View style={styles.fanEventCard}>
@@ -373,13 +384,15 @@ export default function CelebrityMenuScreen() {
                 <QrCode size={64} color="rgba(255,255,255,0.3)" />
                 <Text style={styles.emptyTitle}>{t('noEvents') || 'Aucun événement'}</Text>
                 <Text style={styles.emptySubtitle}>{t('noEventsHint') || 'Créez votre premier événement pour partager votre signature avec vos fans'}</Text>
-                <TouchableOpacity
-                  style={styles.createBtn}
-                  onPress={() => setActiveTab('create')}
-                >
-                  <Plus size={20} color="#188661" />
-                  <Text style={styles.createBtnText}>{t('createEvent') || 'Créer un événement'}</Text>
-                </TouchableOpacity>
+                {isCelebrity && (
+                  <TouchableOpacity
+                    style={styles.createBtn}
+                    onPress={() => setActiveTab('create')}
+                  >
+                    <Plus size={20} color="#188661" />
+                    <Text style={styles.createBtnText}>{t('createEvent') || 'Créer un événement'}</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ) : (
               <>
