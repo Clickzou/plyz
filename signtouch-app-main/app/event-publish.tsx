@@ -15,7 +15,7 @@ import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, ZoomIn, ZoomOut, RotateCcw, RotateCw, Palette, QrCode, X, Copy, Share2, Plus, Calendar, Clock, Video, MapPin, Euro } from 'lucide-react-native';
+import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, ZoomIn, ZoomOut, RotateCcw, RotateCw, Palette, QrCode, X, Copy, Share2, Plus, Calendar, Clock, Video, MapPin, Euro, PenTool } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
 import { SvgUri, SvgXml } from 'react-native-svg';
@@ -591,11 +591,26 @@ export default function EventPublishScreen() {
       <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />
 
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/fan-choice' as any))}
+        >
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>{sessionTitle}</Text>
+          <View style={[styles.typeBadge, eventType === 'live_video' ? styles.typeBadgeVideo : styles.typeBadgeDedicace]}>
+            {eventType === 'live_video' ? (
+              <Video size={11} color="#fff" />
+            ) : (
+              <PenTool size={11} color="#fff" />
+            )}
+            <Text style={styles.typeBadgeText}>
+              {eventType === 'live_video'
+                ? (t('eventTypeLiveVideo' as any) || 'Live vidéo')
+                : (t('eventTypeDedicace' as any) || 'Dédicace')}
+            </Text>
+          </View>
           <Text style={styles.headerCodeLabel}>{t('eventCode') || 'Code'}: <Text style={styles.headerCodeValue}>{joinCode}</Text></Text>
         </View>
         <View style={styles.viewerBadge}>
@@ -1068,6 +1083,19 @@ const styles = StyleSheet.create({
   headerSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.6)' },
   headerCodeLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
   headerCodeValue: { fontSize: 14, color: '#10B981', fontWeight: '700', letterSpacing: 1 },
+  typeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 999,
+    marginTop: 4,
+  },
+  typeBadgeVideo: { backgroundColor: 'rgba(139, 92, 246, 0.9)' },
+  typeBadgeDedicace: { backgroundColor: 'rgba(24, 134, 97, 0.95)' },
+  typeBadgeText: { color: '#fff', fontSize: 12, fontWeight: '700' },
   viewerBadge: {
     flexDirection: 'row',
     alignItems: 'center',

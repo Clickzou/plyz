@@ -531,7 +531,7 @@ export default function CelebrityMenuScreen() {
                     <TouchableOpacity
                       key={event.id}
                       style={[styles.eventCard, eventFilter === 'ended' && selectedEventIds.has(event.id) && styles.eventCardSelected]}
-                      activeOpacity={eventFilter === 'ended' ? 0.7 : 1}
+                      activeOpacity={0.7}
                       onPress={() => {
                         if (eventFilter === 'ended') {
                           setSelectedEventIds(prev => {
@@ -540,6 +540,9 @@ export default function CelebrityMenuScreen() {
                             else next.add(event.id);
                             return next;
                           });
+                        } else {
+                          // Rouvre le bon dashboard (live vidéo ou dédicace) avec les bons params.
+                          handleContinueEvent(event);
                         }
                       }}
                     >

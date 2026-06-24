@@ -1019,8 +1019,18 @@ export default function LiveSessionDashboardScreen() {
       <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backHeaderButton}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/fan-choice' as any))}
+        >
+          <ArrowLeft size={24} color="#fff" />
+        </TouchableOpacity>
         <View style={styles.headerInfo}>
           <Text style={styles.sessionName}>{session.celebrity_name}</Text>
+          <View style={styles.typeBadge}>
+            <Video size={12} color="#fff" />
+            <Text style={styles.typeBadgeText}>{t('eventTypeLiveVideo' as any) || 'Live vidéo'}</Text>
+          </View>
           <View style={styles.statsRow}>
             <View style={styles.stat}>
               <Clock size={16} color="#fff" />
@@ -1501,6 +1511,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.2)',
   },
+  backHeaderButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
   headerInfo: {
     flex: 1,
   },
@@ -1508,6 +1527,22 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: '#fff',
+  },
+  typeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 5,
+    backgroundColor: 'rgba(139, 92, 246, 0.9)',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 999,
+    marginTop: 4,
+  },
+  typeBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
   },
   statsRow: {
     flexDirection: 'row',
