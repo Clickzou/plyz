@@ -296,9 +296,12 @@ export default function ActivityScreen() {
       const filteredLocal = filter === 'all' ? localPosts : localPosts.filter(lp => lp.kind === filter);
 
       if (reset || p === 1) {
-        const merged = [...filteredLocal, ...feedPosts].sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
+        const seenIds = new Set<string>();
+        const merged = [...filteredLocal, ...feedPosts]
+          .filter((it: FeedPost) => (seenIds.has(it.id) ? false : (seenIds.add(it.id), true)))
+          .sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
         setPosts(merged);
       } else {
         setPosts(prev => {
@@ -316,9 +319,12 @@ export default function ActivityScreen() {
       }
       const localPosts = await loadLocalPosts();
       const filteredLocal = filter === 'all' ? localPosts : localPosts.filter(lp => lp.kind === filter);
-      const merged = [...filteredLocal, ...demo].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
+      const seenIds = new Set<string>();
+      const merged = [...filteredLocal, ...demo]
+        .filter((it: FeedPost) => (seenIds.has(it.id) ? false : (seenIds.add(it.id), true)))
+        .sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
       setPosts(merged);
       setPage(1);
     } finally {
