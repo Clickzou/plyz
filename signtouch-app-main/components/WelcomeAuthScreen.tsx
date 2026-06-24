@@ -263,7 +263,7 @@ export default function WelcomeAuthScreen() {
               </View>
               <Text style={styles.title}>Bienvenue sur Plyz</Text>
               <Text style={styles.subtitle}>
-                Connecte-toi ou crée ton compte en 30 secondes
+                Connecte-toi ou crée ton compte gratuit en 30 secondes
               </Text>
 
               <TextInput
@@ -294,7 +294,7 @@ export default function WelcomeAuthScreen() {
               </TouchableOpacity>
 
               <Text style={styles.hint}>
-                Aucun mot de passe. Tu recevras un code à 6 chiffres par email.
+                100% gratuit, sans engagement. Aucun mot de passe : tu recevras un code à 6 chiffres par email.
               </Text>
             </View>
           )}
