@@ -1504,4 +1504,6 @@ export default {
   creatorVerifApprovedTitle: 'Profile verified!',
   creatorVerifApprovedMsg: 'Congratulations! Your creator profile has been automatically verified. Your official badge is now active.',
   legalDocuments: 'Legal documents',
+  joinedEvent: "You're attending",
+  resume: 'Resume',
 };

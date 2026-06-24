@@ -1473,4 +1473,6 @@ export default {
   creatorVerifApprovedTitle: '个人资料已验证！',
   creatorVerifApprovedMsg: '恭喜！您的创作者个人资料已自动验证。您的官方徽章现已激活。',
   legalDocuments: '法律文件',
+  joinedEvent: '你正在参加',
+  resume: '继续',
 };

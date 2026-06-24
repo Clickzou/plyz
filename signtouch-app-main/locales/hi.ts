@@ -1473,4 +1473,6 @@ export default {
   creatorVerifApprovedTitle: 'प्रोफ़ाइल सत्यापित!',
   creatorVerifApprovedMsg: 'बधाई हो! आपकी क्रिएटर प्रोफ़ाइल स्वचालित रूप से सत्यापित हो गई है। आपका आधिकारिक बैज अब सक्रिय है।',
   legalDocuments: 'कानूनी दस्तावेज़',
+  joinedEvent: 'आप शामिल हैं',
+  resume: 'फिर से शुरू करें',
 };

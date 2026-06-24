@@ -1473,4 +1473,6 @@ export default {
   creatorVerifApprovedTitle: 'Профиль подтверждён!',
   creatorVerifApprovedMsg: 'Поздравляем! Ваш профиль автора был автоматически подтверждён. Ваш официальный значок теперь активен.',
   legalDocuments: 'Юридические документы',
+  joinedEvent: 'Вы участвуете в',
+  resume: 'Продолжить',
 };

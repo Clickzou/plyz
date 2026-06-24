@@ -1473,4 +1473,6 @@ export default {
   creatorVerifApprovedTitle: 'Perfil verificado!',
   creatorVerifApprovedMsg: 'Parabéns! O seu perfil de criador foi verificado automaticamente. O seu emblema oficial está agora ativo.',
   legalDocuments: 'Documentos legais',
+  joinedEvent: 'Você participa de',
+  resume: 'Retomar',
 };

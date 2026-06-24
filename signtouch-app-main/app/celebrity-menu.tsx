@@ -379,11 +379,17 @@ export default function CelebrityMenuScreen() {
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#fff" />
               </View>
-            ) : myEvents.length === 0 ? (
+            ) : myEvents.length === 0 && !activeFanEvent ? (
               <View style={styles.emptyContainer}>
                 <QrCode size={64} color="rgba(255,255,255,0.3)" />
-                <Text style={styles.emptyTitle}>{t('noEvents') || 'Aucun événement'}</Text>
-                <Text style={styles.emptySubtitle}>{t('noEventsHint') || 'Créez votre premier événement pour partager votre signature avec vos fans'}</Text>
+                <Text style={styles.emptyTitle}>
+                  {isCelebrity ? (t('noEvents') || 'Aucun événement') : 'Aucun événement en cours'}
+                </Text>
+                <Text style={styles.emptySubtitle}>
+                  {isCelebrity
+                    ? (t('noEventsHint') || 'Créez votre premier événement pour partager votre signature avec vos fans')
+                    : 'Rejoins un événement avec un code QR pour le retrouver ici.'}
+                </Text>
                 {isCelebrity && (
                   <TouchableOpacity
                     style={styles.createBtn}
@@ -394,6 +400,8 @@ export default function CelebrityMenuScreen() {
                   </TouchableOpacity>
                 )}
               </View>
+            ) : myEvents.length === 0 ? (
+              null
             ) : (
               <>
                 <View style={styles.filterRow}>

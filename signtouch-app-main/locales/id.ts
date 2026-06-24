@@ -1478,4 +1478,6 @@ export default {
   creatorVerifApprovedTitle: 'Profil terverifikasi!',
   creatorVerifApprovedMsg: 'Selamat! Profil kreator Anda telah diverifikasi secara otomatis. Lencana resmi Anda kini aktif.',
   legalDocuments: 'Dokumen hukum',
+  joinedEvent: 'Kamu mengikuti',
+  resume: 'Lanjutkan',
 };

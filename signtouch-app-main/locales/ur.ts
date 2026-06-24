@@ -1478,4 +1478,6 @@ export default {
   creatorVerifApprovedTitle: 'پروفائل تصدیق شدہ!',
   creatorVerifApprovedMsg: 'مبارک ہو! آپ کا تخلیق کار پروفائل خود بخود تصدیق ہو گیا ہے۔ آپ کا آفیشل بیج اب فعال ہے۔',
   legalDocuments: 'قانونی دستاویزات',
+  joinedEvent: 'آپ شامل ہیں',
+  resume: 'دوبارہ شروع کریں',
 };

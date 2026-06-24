@@ -1473,4 +1473,6 @@ export default {
   creatorVerifApprovedTitle: 'Profil verifiziert!',
   creatorVerifApprovedMsg: 'Glückwunsch! Dein Creator-Profil wurde automatisch verifiziert. Dein offizielles Abzeichen ist jetzt aktiv.',
   legalDocuments: 'Rechtliche Dokumente',
+  joinedEvent: 'Du nimmst teil an',
+  resume: 'Fortsetzen',
 };
