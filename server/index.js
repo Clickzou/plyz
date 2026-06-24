@@ -335,26 +335,17 @@ app.post('/api/create-session', async (req, res) => {
     // En cas d'erreur de vérification, on ne bloque pas (pour ne pas casser le service).
     try {
       const adminClient = getSupabaseAdmin();
-      const verifTables = [
-        'celebrity_verification_requests',
-        'creator_verification_requests',
-        'organization_verification_requests',
-      ];
-      let isVerified = false;
-      for (const table of verifTables) {
-        const { data: vr } = await adminClient
-          .from(table)
-          .select('status')
-          .eq('user_id', celebrity_id)
-          .eq('status', 'approved')
-          .limit(1);
-        if (vr && vr.length > 0) { isVerified = true; break; }
-      }
-      if (!isVerified) {
+      // Même source de vérité que les événements dédicace : la fonction is_user_verified
+      // (3 tables *_verification_requests 'approved' + l'admin jc@clickzou.fr).
+      const { data: verified, error: vErr } = await adminClient.rpc('is_user_verified', { uid: celebrity_id });
+      if (!vErr && verified !== true) {
         return res.status(403).json({
           error: 'not_verified',
           message: 'Votre compte doit être vérifié (célébrité, créateur ou club) pour créer une session.',
         });
+      }
+      if (vErr) {
+        console.error('[create-session] is_user_verified RPC error (allowing through):', vErr.message);
       }
     } catch (verifErr) {
       console.error('[create-session] verification check failed (allowing through):', verifErr);
