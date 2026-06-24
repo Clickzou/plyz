@@ -840,7 +840,7 @@ export default {
   startTimeHint: 'L\'evento inizierà a quest\'ora',
   eventScheduled: 'Evento programmato!',
   startsAt: 'Inizia alle',
-  fanGalleryHint: 'Tocca per scaricare. Usa l\'icona copia per creare la tua foto con questa firma!',
+  fanGalleryHint: 'Attendi, riceverai le foto autografate in diretta.',
 
   // Trial System
   myAccount: 'Il mio account',

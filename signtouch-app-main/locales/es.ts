@@ -840,7 +840,7 @@ export default {
   startTimeHint: 'El evento comenzará a esta hora',
   eventScheduled: '¡Evento Programado!',
   startsAt: 'Comienza a las',
-  fanGalleryHint: '¡Toca para descargar. Usa el icono de copiar para crear tu propia foto con esta firma!',
+  fanGalleryHint: 'Espera, vas a recibir las fotos dedicadas en directo.',
 
   // Trial System
   myAccount: 'Mi cuenta',

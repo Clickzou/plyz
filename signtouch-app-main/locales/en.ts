@@ -913,7 +913,7 @@ export default {
   selectStartTime: 'Please select a start time',
   startTimeHint: 'Event will start at this time',
   startsAt: 'Starts at',
-  fanGalleryHint: 'Tap to download. Use the copy icon to create your own photo with this signature!',
+  fanGalleryHint: 'Please wait, you\'ll receive the autographed photos live.',
 
   // Trial System
   myAccount: 'My account',

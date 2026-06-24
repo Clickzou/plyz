@@ -840,7 +840,7 @@ export default {
   startTimeHint: 'Das Event beginnt zu dieser Zeit',
   eventScheduled: 'Event geplant!',
   startsAt: 'Beginnt um',
-  fanGalleryHint: 'Tippen zum Herunterladen. Verwenden Sie das Kopieren-Symbol, um Ihr eigenes Foto mit dieser Signatur zu erstellen!',
+  fanGalleryHint: 'Bitte warte, du erhältst die signierten Fotos live.',
 
   // Trial System
   myAccount: 'Mein Konto',

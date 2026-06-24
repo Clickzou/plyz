@@ -840,7 +840,7 @@ export default {
   startTimeHint: 'イベントはこの時間に開始されます',
   eventScheduled: 'イベントがスケジュールされました！',
   startsAt: '開始時間',
-  fanGalleryHint: 'タップしてダウンロード。コピーアイコンを使ってこの署名であなた自身の写真を作成！',
+  fanGalleryHint: 'お待ちください。サイン入り写真をライブで受け取れます。',
 
   // Trial System
   myAccount: 'マイアカウント',

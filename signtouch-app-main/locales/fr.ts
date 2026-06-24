@@ -916,7 +916,7 @@ export default {
   selectStartTime: 'Veuillez sélectionner une heure de début',
   startTimeHint: 'L\'événement commencera à cette heure',
   startsAt: 'Commence à',
-  fanGalleryHint: 'Touchez une photo signée pour la personnaliser. Utilisez l\'icône copier pour créer votre propre photo avec cette signature !',
+  fanGalleryHint: 'Veuillez patienter, vous allez recevoir les photos dédicacées en live.',
 
   // Trial System
   myAccount: 'Mon compte',

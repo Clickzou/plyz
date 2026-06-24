@@ -840,7 +840,7 @@ export default {
   startTimeHint: 'Acara akan bermula pada masa ini',
   eventScheduled: 'Acara Dijadualkan!',
   startsAt: 'Bermula pada',
-  fanGalleryHint: 'Ketik untuk muat turun. Gunakan ikon salin untuk mencipta foto anda sendiri dengan tandatangan ini!',
+  fanGalleryHint: 'Sila tunggu, anda akan menerima foto bertandatangan secara langsung.',
 
   // Trial System
   myAccount: 'Akaun saya',

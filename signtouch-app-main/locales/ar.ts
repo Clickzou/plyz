@@ -840,7 +840,7 @@ export default {
   startTimeHint: 'سيبدأ الحدث في هذا الوقت',
   eventScheduled: 'تم جدولة الحدث!',
   startsAt: 'يبدأ في',
-  fanGalleryHint: 'انقر للتنزيل. استخدم أيقونة النسخ لإنشاء صورتك الخاصة بهذا التوقيع!',
+  fanGalleryHint: 'يرجى الانتظار، ستتلقى الصور الموقعة مباشرة.',
 
   // Trial System
   myAccount: 'حسابي',

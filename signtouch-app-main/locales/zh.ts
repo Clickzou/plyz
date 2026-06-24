@@ -840,7 +840,7 @@ export default {
   startTimeHint: '活动将在此时间开始',
   eventScheduled: '活动已安排！',
   startsAt: '开始于',
-  fanGalleryHint: '点击下载。使用复制图标用此签名创建您自己的照片！',
+  fanGalleryHint: '请稍候，您将实时收到签名照片。',
 
   // Trial System
   myAccount: '我的账户',
