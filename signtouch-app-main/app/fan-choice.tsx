@@ -32,7 +32,7 @@ export default function FanChoiceScreen() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { requireAuth } = useAuthPrompt();
-  const { enableCelebrityMode } = useCelebrityMode();
+  const { enableCelebrityMode, isCelebrity } = useCelebrityMode();
   // 6 compteurs : à venir / en cours / passés × événements / vidéo
   const [eventUpcomingCount, setEventUpcomingCount] = useState(0);
   const [eventOngoingCount, setEventOngoingCount] = useState(0);
@@ -177,19 +177,34 @@ export default function FanChoiceScreen() {
   ) => {
     const isVideo = kind === 'video';
     const accent = isVideo ? '#6366f1' : '#10b981';
+    const RED = '#ef4444';
+
+    // Code couleur par état : à venir = accent plein, en cours = rouge (live),
+    // passé = transparent + contour accent (discret, jamais de rouge).
+    let bg = 'transparent';
+    let border = `${accent}66`;
+    let fg = accent;
+    let badgeBg = accent;
+    let badgeFg = '#ffffff';
+    if (view === 'upcoming') {
+      bg = accent; border = accent; fg = '#ffffff'; badgeBg = '#ffffff'; badgeFg = accent;
+    } else if (view === 'ongoing') {
+      bg = RED; border = RED; fg = '#ffffff'; badgeBg = '#ffffff'; badgeFg = RED;
+    }
+
     return (
       <TouchableOpacity
-        style={[styles.historyBtn, isVideo && styles.historyBtnVideo]}
+        style={[styles.historyBtn, { backgroundColor: bg, borderColor: border }]}
         onPress={() => goToList(view, kind)}
         activeOpacity={0.85}
       >
-        <CalendarClock size={18} color={accent} strokeWidth={2.2} />
-        <Text style={[styles.historyBtnText, isVideo && styles.historyBtnTextVideo]}>
+        <CalendarClock size={18} color={fg} strokeWidth={2.2} />
+        <Text style={[styles.historyBtnText, { color: fg }]}>
           {label}
         </Text>
         {count > 0 && (
-          <View style={styles.historyBadge}>
-            <Text style={styles.historyBadgeText}>{count}</Text>
+          <View style={[styles.historyBadge, { backgroundColor: badgeBg }]}>
+            <Text style={[styles.historyBadgeText, { color: badgeFg }]}>{count}</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -211,14 +226,16 @@ export default function FanChoiceScreen() {
         <Text style={styles.cardDescription}>{description}</Text>
 
         <View style={styles.btnRow}>
-          <TouchableOpacity
-            style={[styles.btn, { backgroundColor: accent }]}
-            onPress={() => handleCreate(createPath)}
-            activeOpacity={0.85}
-          >
-            <Plus size={18} color="#ffffff" strokeWidth={2.5} />
-            <Text style={styles.btnPrimaryText}>{t('fanChoiceCreateBtn')}</Text>
-          </TouchableOpacity>
+          {isCelebrity && (
+            <TouchableOpacity
+              style={[styles.btn, { backgroundColor: accent }]}
+              onPress={() => handleCreate(createPath)}
+              activeOpacity={0.85}
+            >
+              <Plus size={18} color="#ffffff" strokeWidth={2.5} />
+              <Text style={styles.btnPrimaryText}>{t('fanChoiceCreateBtn')}</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={[styles.btn, styles.btnOutline, { borderColor: accent }]}
@@ -266,7 +283,7 @@ export default function FanChoiceScreen() {
                 t('eventsOngoing' as any) || 'Événements en cours',
                 eventOngoingCount, 'ongoing', 'event',
               )}
-              {renderHistoryBtn(
+              {isCelebrity && renderHistoryBtn(
                 t('eventsPast' as any) || 'Événements passés',
                 eventPastCount, 'past', 'event',
               )}
@@ -290,7 +307,7 @@ export default function FanChoiceScreen() {
                 t('videoSessionsOngoing' as any) || 'Sessions vidéo en cours',
                 videoOngoingCount, 'ongoing', 'video',
               )}
-              {renderHistoryBtn(
+              {isCelebrity && renderHistoryBtn(
                 t('videoSessionsPast' as any) || 'Sessions vidéo passées',
                 videoPastCount, 'past', 'video',
               )}
