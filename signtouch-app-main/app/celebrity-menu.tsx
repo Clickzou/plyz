@@ -10,7 +10,7 @@ import {
   Share,
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye, PenSquare, Ticket, LogIn, Users } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,19 +25,35 @@ import QRCodeSvg from 'react-native-qrcode-svg';
 type TabType = 'create' | 'events';
 type FilterType = 'all' | 'live' | 'ended' | 'scheduled';
 
+// Mapping vue (depuis fan-choice) → filtre interne.
+const VIEW_TO_FILTER: Record<string, FilterType> = {
+  upcoming: 'scheduled',
+  ongoing: 'live',
+  past: 'ended',
+};
+
 export default function CelebrityMenuScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { isCelebrity } = useCelebrityMode();
+  // Params optionnels passés par l'écran « Événements » (fan-choice).
+  const params = useLocalSearchParams<{ view?: string; kind?: string }>();
+  const viewParam = Array.isArray(params.view) ? params.view[0] : params.view;
+  const kindParam = Array.isArray(params.kind) ? params.kind[0] : params.kind;
+  const hasCategoryParam = viewParam === 'upcoming' || viewParam === 'ongoing' || viewParam === 'past';
   const [myEvents, setMyEvents] = useState<EventSession[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabType>(isCelebrity ? 'create' : 'events');
+  const [activeTab, setActiveTab] = useState<TabType>(
+    hasCategoryParam ? 'events' : (isCelebrity ? 'create' : 'events'),
+  );
   const [selectedEvent, setSelectedEvent] = useState<EventSession | null>(null);
   const [showQrModal, setShowQrModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [eventViews, setEventViews] = useState<Record<string, number>>({});
-  const [eventFilter, setEventFilter] = useState<FilterType>('live');
+  const [eventFilter, setEventFilter] = useState<FilterType>(
+    hasCategoryParam ? VIEW_TO_FILTER[viewParam as string] : 'live',
+  );
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
   const [activeFanEvent, setActiveFanEvent] = useState<ActiveFanEvent | null>(null);
@@ -245,7 +261,18 @@ export default function CelebrityMenuScreen() {
     return 'scheduled';
   };
 
-  const endedEvents = myEvents.filter(e => getEventStatus(e) === 'ended');
+  // Filtre type : si un param kind est passé, ne garde que événements OU vidéos.
+  const kindMatches = (event: EventSession) => {
+    if (kindParam === 'video') return event.event_type === 'live_video';
+    if (kindParam === 'event') return event.event_type !== 'live_video';
+    return true;
+  };
+  // Liste de base restreinte au type demandé (sinon tous les événements).
+  const scopedEvents = myEvents.filter(kindMatches);
+  // Liste qui pilote l'affichage (vide / liste / filtres).
+  const baseEvents = kindParam ? scopedEvents : myEvents;
+
+  const endedEvents = scopedEvents.filter(e => getEventStatus(e) === 'ended');
   const allEndedSelected = endedEvents.length > 0 && endedEvents.every(e => selectedEventIds.has(e.id));
 
   const toggleSelectAll = () => {
@@ -290,15 +317,25 @@ export default function CelebrityMenuScreen() {
     );
   };
 
-  const filteredEvents = myEvents.filter((event) => {
+  const filteredEvents = scopedEvents.filter((event) => {
     if (eventFilter === 'all') return true;
     const status = getEventStatus(event);
     return status === eventFilter;
   });
 
   const getFilterCount = (filter: FilterType) => {
-    if (filter === 'all') return myEvents.length;
-    return myEvents.filter((e) => getEventStatus(e) === filter).length;
+    if (filter === 'all') return scopedEvents.length;
+    return scopedEvents.filter((e) => getEventStatus(e) === filter).length;
+  };
+
+  // Titre du header : libellé de catégorie si on arrive depuis fan-choice,
+  // sinon comportement existant (« Célébrité » ou « Mes événements »).
+  const getCategoryTitle = (): string => {
+    if (!hasCategoryParam) return isCelebrity ? t('celebrity') : 'Mes événements';
+    const isVideo = kindParam === 'video';
+    if (viewParam === 'upcoming') return isVideo ? t('videoSessionsUpcoming' as any) : t('eventsUpcoming' as any);
+    if (viewParam === 'ongoing') return isVideo ? t('videoSessionsOngoing' as any) : t('eventsOngoing' as any);
+    return isVideo ? t('videoSessionsPast' as any) : t('eventsPast' as any);
   };
 
   return (
@@ -315,7 +352,7 @@ export default function CelebrityMenuScreen() {
         >
           <ArrowLeft size={24} color="#188661" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{isCelebrity ? t('celebrity') : 'Mes événements'}</Text>
+        <Text style={styles.headerTitle}>{getCategoryTitle()}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -379,7 +416,7 @@ export default function CelebrityMenuScreen() {
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#fff" />
               </View>
-            ) : myEvents.length === 0 && !activeFanEvent ? (
+            ) : baseEvents.length === 0 && !activeFanEvent ? (
               <View style={styles.emptyContainer}>
                 <QrCode size={64} color="rgba(255,255,255,0.3)" />
                 <Text style={styles.emptyTitle}>
@@ -400,7 +437,7 @@ export default function CelebrityMenuScreen() {
                   </TouchableOpacity>
                 )}
               </View>
-            ) : myEvents.length === 0 ? (
+            ) : baseEvents.length === 0 ? (
               null
             ) : (
               <>

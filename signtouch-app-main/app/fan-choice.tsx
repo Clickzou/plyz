@@ -33,8 +33,13 @@ export default function FanChoiceScreen() {
   const { user } = useAuth();
   const { requireAuth } = useAuthPrompt();
   const { enableCelebrityMode } = useCelebrityMode();
-  const [ongoingCount, setOngoingCount] = useState(0);
-  const [ongoingVideoCount, setOngoingVideoCount] = useState(0);
+  // 6 compteurs : à venir / en cours / passés × événements / vidéo
+  const [eventUpcomingCount, setEventUpcomingCount] = useState(0);
+  const [eventOngoingCount, setEventOngoingCount] = useState(0);
+  const [eventPastCount, setEventPastCount] = useState(0);
+  const [videoUpcomingCount, setVideoUpcomingCount] = useState(0);
+  const [videoOngoingCount, setVideoOngoingCount] = useState(0);
+  const [videoPastCount, setVideoPastCount] = useState(0);
 
   // Cliquer « Créer » : exige un compte, puis bascule en mode célébrité et
   // route selon le statut de vérification.
@@ -113,13 +118,33 @@ export default function FanChoiceScreen() {
             getActiveFanEvent().catch(() => null),
           ]);
           if (!active) return;
-          const isOngoing = (e: any) => e?.status !== 'ended';
+          const now = Date.now();
           const isVideo = (e: any) => e?.event_type === 'live_video';
+          // Catégorise un événement : à venir / en cours / passé (cf. ends_at vs now).
+          const categorize = (e: any): 'upcoming' | 'ongoing' | 'past' => {
+            const endsAt = e?.ends_at ? new Date(e.ends_at).getTime() : 0;
+            const startsAt = e?.starts_at ? new Date(e.starts_at).getTime() : 0;
+            if (e?.status === 'ended' || (endsAt && endsAt < now)) return 'past';
+            if (startsAt && startsAt > now) return 'upcoming';
+            return 'ongoing';
+          };
+          const counts = {
+            event: { upcoming: 0, ongoing: 0, past: 0 },
+            video: { upcoming: 0, ongoing: 0, past: 0 },
+          };
+          for (const e of items as any[]) {
+            const bucket = isVideo(e) ? counts.video : counts.event;
+            bucket[categorize(e)] += 1;
+          }
           // L'événement rejoint actif (non null = non expiré, getActiveFanEvent
           // l'a déjà vérifié) compte comme un événement dédicace « en cours ».
-          const joinedDedicace = fanEvent ? 1 : 0;
-          setOngoingCount(items.filter((e: any) => isOngoing(e) && !isVideo(e)).length + joinedDedicace);
-          setOngoingVideoCount(items.filter((e: any) => isOngoing(e) && isVideo(e)).length);
+          if (fanEvent) counts.event.ongoing += 1;
+          setEventUpcomingCount(counts.event.upcoming);
+          setEventOngoingCount(counts.event.ongoing);
+          setEventPastCount(counts.event.past);
+          setVideoUpcomingCount(counts.video.upcoming);
+          setVideoOngoingCount(counts.video.ongoing);
+          setVideoPastCount(counts.video.past);
         } catch {
           /* silencieux : pas bloquant */
         }
@@ -133,6 +158,42 @@ export default function FanChoiceScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     router.push(path as any);
+  };
+
+  // Navigue vers la liste pré-filtrée (catégorie + type événement/vidéo).
+  const goToList = (view: 'upcoming' | 'ongoing' | 'past', kind: 'event' | 'video') => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    router.push({ pathname: '/celebrity-menu', params: { view, kind } } as any);
+  };
+
+  // Petit bouton-raccourci pleine largeur avec badge compteur.
+  const renderHistoryBtn = (
+    label: string,
+    count: number,
+    view: 'upcoming' | 'ongoing' | 'past',
+    kind: 'event' | 'video',
+  ) => {
+    const isVideo = kind === 'video';
+    const accent = isVideo ? '#6366f1' : '#10b981';
+    return (
+      <TouchableOpacity
+        style={[styles.historyBtn, isVideo && styles.historyBtnVideo]}
+        onPress={() => goToList(view, kind)}
+        activeOpacity={0.85}
+      >
+        <CalendarClock size={18} color={accent} strokeWidth={2.2} />
+        <Text style={[styles.historyBtnText, isVideo && styles.historyBtnTextVideo]}>
+          {label}
+        </Text>
+        {count > 0 && (
+          <View style={styles.historyBadge}>
+            <Text style={styles.historyBadgeText}>{count}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
   };
 
   const renderCard = (
@@ -196,21 +257,20 @@ export default function FanChoiceScreen() {
               '/join-event',
             )}
 
-            <TouchableOpacity
-              style={styles.historyBtn}
-              onPress={() => handleChoice('/celebrity-menu')}
-              activeOpacity={0.85}
-            >
-              <CalendarClock size={18} color="#10b981" strokeWidth={2.2} />
-              <Text style={styles.historyBtnText}>
-                {t('myEventsHistory' as any) || 'Événements en cours et passés'}
-              </Text>
-              {ongoingCount > 0 && (
-                <View style={styles.historyBadge}>
-                  <Text style={styles.historyBadgeText}>{ongoingCount}</Text>
-                </View>
+            <View style={styles.historyGroup}>
+              {renderHistoryBtn(
+                t('eventsUpcoming' as any) || 'Événements à venir',
+                eventUpcomingCount, 'upcoming', 'event',
               )}
-            </TouchableOpacity>
+              {renderHistoryBtn(
+                t('eventsOngoing' as any) || 'Événements en cours',
+                eventOngoingCount, 'ongoing', 'event',
+              )}
+              {renderHistoryBtn(
+                t('eventsPast' as any) || 'Événements passés',
+                eventPastCount, 'past', 'event',
+              )}
+            </View>
 
             {renderCard(
               '#6366f1',
@@ -221,21 +281,20 @@ export default function FanChoiceScreen() {
               '/join-live-session',
             )}
 
-            <TouchableOpacity
-              style={[styles.historyBtn, styles.historyBtnVideo]}
-              onPress={() => handleChoice('/celebrity-menu')}
-              activeOpacity={0.85}
-            >
-              <CalendarClock size={18} color="#6366f1" strokeWidth={2.2} />
-              <Text style={[styles.historyBtnText, styles.historyBtnTextVideo]}>
-                {t('myVideoSessionsHistory' as any) || 'Sessions vidéo en cours et passées'}
-              </Text>
-              {ongoingVideoCount > 0 && (
-                <View style={styles.historyBadge}>
-                  <Text style={styles.historyBadgeText}>{ongoingVideoCount}</Text>
-                </View>
+            <View style={styles.historyGroup}>
+              {renderHistoryBtn(
+                t('videoSessionsUpcoming' as any) || 'Sessions vidéo à venir',
+                videoUpcomingCount, 'upcoming', 'video',
               )}
-            </TouchableOpacity>
+              {renderHistoryBtn(
+                t('videoSessionsOngoing' as any) || 'Sessions vidéo en cours',
+                videoOngoingCount, 'ongoing', 'video',
+              )}
+              {renderHistoryBtn(
+                t('videoSessionsPast' as any) || 'Sessions vidéo passées',
+                videoPastCount, 'past', 'video',
+              )}
+            </View>
           </View>
         </ScrollView>
       </View>
@@ -278,6 +337,10 @@ const styles = StyleSheet.create({
   cardsContainer: {
     gap: 20,
   },
+  historyGroup: {
+    gap: 8,
+    marginTop: -8,
+  },
   historyBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -289,7 +352,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    marginTop: -4,
   },
   historyBtnText: {
     color: '#10b981',
