@@ -10,9 +10,10 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Image,
+  Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, KeyRound, Camera, Sparkles } from 'lucide-react-native';
+import { Mail, KeyRound, Camera, Sparkles, X } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,7 +26,23 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Step = 'email' | 'code' | 'profile';
 
-export default function WelcomeAuthScreen() {
+interface WelcomeAuthScreenProps {
+  /** Quand true, le contenu est enveloppé dans un Modal plein écran avec une croix. */
+  asModal?: boolean;
+  /** Petit texte d'accroche affiché sous le titre (ex: « Crée ton compte pour ... »). */
+  reason?: string;
+  /** Appelé dès que la connexion + le profil sont validés. */
+  onAuthenticated?: () => void;
+  /** Appelé quand l'utilisateur ferme le modal (croix). Ignoré hors mode modal. */
+  onClose?: () => void;
+}
+
+export default function WelcomeAuthScreen({
+  asModal = false,
+  reason,
+  onAuthenticated,
+  onClose,
+}: WelcomeAuthScreenProps = {}) {
   const insets = useSafeAreaInsets();
   const { user, sendOtpCode, verifyOtpCode } = useAuth();
   const { setProfilePhoto } = useCelebrityMode();
@@ -51,6 +68,24 @@ export default function WelcomeAuthScreen() {
   // Once the profile step is finished we render nothing so the (already
   // authenticated) app behind the gate becomes visible.
   const [profileDone, setProfileDone] = useState(false);
+
+  // Garde-fou pour n'appeler onAuthenticated qu'une seule fois.
+  const [notifiedAuthenticated, setNotifiedAuthenticated] = useState(false);
+
+  // Détermine si l'authentification (connexion + profil) est terminée :
+  // - soit le profil vient d'être complété (profileDone),
+  // - soit l'utilisateur est connecté avec un profil déjà complet (user présent,
+  //   on n'est plus dans l'étape profil et on n'attend plus la vérification).
+  const isFullyAuthenticated =
+    profileDone || (!!user && step !== 'profile' && !awaitingProfileCheck);
+
+  useEffect(() => {
+    if (isFullyAuthenticated && !notifiedAuthenticated) {
+      setNotifiedAuthenticated(true);
+      onAuthenticated?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFullyAuthenticated, notifiedAuthenticated]);
 
   useEffect(() => {
     if (!awaitingProfileCheck || !user?.id) return;
@@ -232,13 +267,23 @@ export default function WelcomeAuthScreen() {
   if (profileDone) return null;
 
   // If user is authenticated and we are NOT in the profile step and not waiting
-  // for the profile check, render nothing (let the gate fall through).
+  // for the profile check, render nothing (let the gate fall through / close the modal).
   if (user && step !== 'profile' && !awaitingProfileCheck) {
     return null;
   }
 
-  return (
+  const content = (
     <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.gradient}>
+      {asModal && (
+        <TouchableOpacity
+          style={[styles.modalCloseButton, { top: insets.top + 10 }]}
+          onPress={onClose}
+          activeOpacity={0.7}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <X size={24} color="#fff" />
+        </TouchableOpacity>
+      )}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -254,6 +299,7 @@ export default function WelcomeAuthScreen() {
           <View style={styles.brand}>
             <Text style={styles.brandName}>Plyz</Text>
             <View style={styles.brandAccent} />
+            {reason ? <Text style={styles.reasonText}>{reason}</Text> : null}
           </View>
 
           {step === 'email' && (
@@ -444,6 +490,21 @@ export default function WelcomeAuthScreen() {
       </KeyboardAvoidingView>
     </LinearGradient>
   );
+
+  if (asModal) {
+    return (
+      <Modal
+        visible
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={onClose}
+      >
+        {content}
+      </Modal>
+    );
+  }
+
+  return content;
 }
 
 const styles = StyleSheet.create({
@@ -454,6 +515,25 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    right: 16,
+    zIndex: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reasonText: {
+    fontSize: 15,
+    color: '#cbd5e1',
+    textAlign: 'center',
+    lineHeight: 21,
+    marginTop: 16,
+    paddingHorizontal: 12,
   },
   brand: {
     alignItems: 'center',

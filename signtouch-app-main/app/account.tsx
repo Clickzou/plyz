@@ -23,6 +23,7 @@ import PlyzHeader from '@/components/PlyzHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { Language } from '@/locales';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStripeAccountId, saveStripeAccountId, getUserProfile, upsertUserProfile } from '@/utils/userProfile';
@@ -56,6 +57,7 @@ const LANGUAGES: { code: Language; name: string; flag: string }[] = [
 export default function AccountScreen() {
   const { t, language, setLanguage, isRTL } = useTranslation();
   const { user, signOut, sendOtpCode, verifyOtpCode } = useAuth();
+  const { requireAuth } = useAuthPrompt();
   const { isCelebrity, toggleCelebrityMode, profilePhoto, setProfilePhoto } = useCelebrityMode();
   const { startOnboarding } = useOnboarding();
   const insets = useSafeAreaInsets();
@@ -602,7 +604,9 @@ export default function AccountScreen() {
                   if (Platform.OS !== 'web') {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   }
-                  router.push('/celebrity-onboarding' as any);
+                  requireAuth(() => router.push('/celebrity-onboarding' as any), {
+                    reason: 'Crée ton compte pour passer en mode célébrité',
+                  });
                 }}
                 activeOpacity={0.8}
               >
@@ -631,7 +635,14 @@ export default function AccountScreen() {
                 if (Platform.OS !== 'web') {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 }
-                toggleCelebrityMode();
+                // Désactiver est toujours autorisé ; activer exige un compte.
+                if (isCelebrity) {
+                  toggleCelebrityMode();
+                } else {
+                  requireAuth(() => toggleCelebrityMode(), {
+                    reason: 'Crée ton compte pour passer en mode célébrité',
+                  });
+                }
               }}
               activeOpacity={0.7}
             >

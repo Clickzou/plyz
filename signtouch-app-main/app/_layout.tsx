@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { useFonts } from 'expo-font';
 import SplashOverlay from '@/components/SplashOverlay';
@@ -23,52 +23,19 @@ import { Montserrat_700Bold, Montserrat_800ExtraBold } from '@expo-google-fonts/
 import { Satisfy_400Regular } from '@expo-google-fonts/satisfy';
 import { CedarvilleCursive_400Regular } from '@expo-google-fonts/cedarville-cursive';
 import * as SplashScreen from 'expo-splash-screen';
-import PostPurchaseAccountModal from '@/components/PostPurchaseAccountModal';
-import {
-  setPostPurchaseAccountCallback,
-  setManualAccountModalCallback,
-} from '@/utils/postPurchaseAccount';
-import { setAccountPromptSnooze } from '@/utils/postPurchaseAccountStorage';
 import CustomAlert from '@/components/CustomAlert';
 import BanBanner from '@/components/BanBanner';
 import { CelebrityModeProvider } from '@/contexts/CelebrityModeContext';
 import { FollowProvider } from '@/contexts/FollowContext';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
+import { AuthPromptProvider } from '@/contexts/AuthPromptContext';
 import OnboardingTutorial from '@/components/OnboardingTutorial';
-import WelcomeAuthScreen from '@/components/WelcomeAuthScreen';
 
 SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
-  const [showPostPurchaseAccount, setShowPostPurchaseAccount] = useState(false);
-  const [isPostPurchaseContext, setIsPostPurchaseContext] = useState(false);
-  const { user, loading } = useAuth();
-
-  useEffect(() => {
-    setPostPurchaseAccountCallback(() => {
-      setShowPostPurchaseAccount(true);
-    });
-
-    setManualAccountModalCallback(() => {
-      setIsPostPurchaseContext(false);
-      setShowPostPurchaseAccount(true);
-    });
-  }, []);
-
-  const handleClosePostPurchaseAccount = async () => {
-    if (isPostPurchaseContext) {
-      await setAccountPromptSnooze();
-    }
-    setShowPostPurchaseAccount(false);
-    setIsPostPurchaseContext(false);
-  };
-
-  // Connexion obligatoire au démarrage : si le chargement est terminé et qu'aucun
-  // utilisateur n'est connecté, on affiche l'écran d'accueil/connexion plein écran.
-  if (!loading && !user) {
-    return <WelcomeAuthScreen />;
-  }
-
+  // Connexion À LA DEMANDE : l'app s'affiche librement sans compte. La connexion
+  // n'est exigée qu'à certaines actions via useAuthPrompt()/requireAuth().
   return (
     <>
       <Stack
@@ -94,11 +61,6 @@ function AppContent() {
       </Stack>
 
       <StatusBar style="auto" />
-
-      <PostPurchaseAccountModal
-        visible={showPostPurchaseAccount}
-        onClose={handleClosePostPurchaseAccount}
-      />
 
       <CustomAlert />
       <OnboardingTutorial />
@@ -152,8 +114,10 @@ export default function RootLayout() {
           <CelebrityModeProvider>
             <FollowProvider>
               <OnboardingProvider>
-                <AppContent />
-                {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
+                <AuthPromptProvider>
+                  <AppContent />
+                  {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
+                </AuthPromptProvider>
               </OnboardingProvider>
             </FollowProvider>
           </CelebrityModeProvider>

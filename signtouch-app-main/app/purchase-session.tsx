@@ -15,11 +15,11 @@ import { ArrowLeft, CreditCard, Shield, CheckCircle, Lock, Info } from 'lucide-r
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { showAlert } from '@/utils/alertHelper';
 import { ensureCanPay } from '@/utils/banGuard';
 import { isAgeCertified, certifyAge } from '@/utils/ageCertification';
 import AgeCertificationModal from '@/components/AgeCertificationModal';
-import AccountModal from '@/components/AccountModal';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -28,6 +28,7 @@ export default function PurchaseSessionScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user, isBanned, banUntil } = useAuth();
+  const { requireAuth } = useAuthPrompt();
   const params = useLocalSearchParams<{
     celebrityId: string;
     celebrityName: string;
@@ -40,7 +41,6 @@ export default function PurchaseSessionScreen() {
 
   const [purchasing, setPurchasing] = useState(false);
   const [purchaseComplete, setPurchaseComplete] = useState(false);
-  const [showAccountModal, setShowAccountModal] = useState(false);
   const [showAgeModal, setShowAgeModal] = useState(false);
 
   const priceCents = parseInt(params.priceCents || '0', 10);
@@ -79,11 +79,14 @@ export default function PurchaseSessionScreen() {
     }, 1500);
   };
 
-  const handleStripeCheckout = async () => {
-    if (!user) {
-      setShowAccountModal(true);
-      return;
-    }
+  // Compte exigé avant de payer. Une fois connecté, proceedPayment reprend le flux.
+  const handleStripeCheckout = () => {
+    requireAuth(() => proceedPayment(), {
+      reason: 'Crée ton compte pour payer en toute sécurité',
+    });
+  };
+
+  const proceedPayment = async () => {
     if (!ensureCanPay(isBanned, banUntil)) return;
     // Certification de majorité obligatoire avant tout paiement.
     if (!(await isAgeCertified())) {
@@ -231,19 +234,13 @@ export default function PurchaseSessionScreen() {
         )}
       </ScrollView>
 
-      <AccountModal
-        visible={showAccountModal}
-        onClose={() => setShowAccountModal(false)}
-        onSkip={() => setShowAccountModal(false)}
-      />
-
       <AgeCertificationModal
         visible={showAgeModal}
         onClose={() => setShowAgeModal(false)}
         onConfirm={async () => {
           await certifyAge(user?.id || null, user?.email || null);
           setShowAgeModal(false);
-          handleStripeCheckout();
+          proceedPayment();
         }}
       />
     </View>

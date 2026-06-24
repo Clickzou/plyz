@@ -19,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import { getUserProfile, upsertUserProfile } from '@/utils/userProfile';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
@@ -33,6 +34,7 @@ export default function CelebrityOnboardingScreen() {
   // undefined dans ce cas pour activer le texte de secours français écrit dans le JSX.
   const ct = (key: any) => { const v = t(key); return v === key ? undefined : v; };
   const { user } = useAuth();
+  const { requireAuth } = useAuthPrompt();
   const { profilePhoto, setProfilePhoto } = useCelebrityMode();
 
   const [step, setStep] = useState(0);
@@ -154,6 +156,13 @@ export default function CelebrityOnboardingScreen() {
   const goNext = async () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    // L'étape 2 sauvegarde le nom public / la présentation : un compte est requis.
+    if (step === 2 && !user) {
+      requireAuth(() => goNext(), {
+        reason: 'Crée ton compte pour passer en mode célébrité',
+      });
+      return;
     }
     // À l'étape 2, on sauvegarde avant d'avancer
     if (step === 2) {

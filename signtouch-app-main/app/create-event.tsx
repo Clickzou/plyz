@@ -23,7 +23,7 @@ import * as Clipboard from 'expo-clipboard';
 import Svg, { Path, G } from 'react-native-svg';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useLanguage } from '@/contexts/LanguageContext';
-import AccountModal from '@/components/AccountModal';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import { getStripeAccountId } from '@/utils/userProfile';
 import { EventType } from '@/utils/memoriesStorage';
@@ -114,7 +114,7 @@ export default function CreateEventScreen() {
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
   const { user } = useAuth();
-  const [showAccountModal, setShowAccountModal] = useState(false);
+  const { requireAuth } = useAuthPrompt();
   const [showStripeConnect, setShowStripeConnect] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
 
@@ -446,16 +446,13 @@ export default function CreateEventScreen() {
     return startDate;
   };
 
-  const handleCreateEvent = async () => {
+  const handleCreateEvent = () => {
     console.log('[handleCreateEvent] Called, user:', user?.id);
-
-    if (!user) {
-      await saveFormData();
-      setShowAccountModal(true);
-      return;
-    }
-
-    await performCreateEvent();
+    // Compte exigé pour organiser un événement. La saisie est conservée en mémoire
+    // (modal in-app), donc on relance simplement la création après connexion.
+    requireAuth(() => performCreateEvent(), {
+      reason: 'Crée ton compte pour organiser un événement',
+    });
   };
 
   const checkStripeConnectStatus = async (): Promise<string | null> => {
@@ -1372,14 +1369,6 @@ export default function CreateEventScreen() {
             </Pressable>
           </Pressable>
         </Modal>
-
-        <AccountModal
-          visible={showAccountModal}
-          onClose={() => setShowAccountModal(false)}
-          onSkip={() => setShowAccountModal(false)}
-          returnPath="/create-event"
-          allowSkip={false}
-        />
 
         <StripeConnectModal
           visible={showStripeConnect}

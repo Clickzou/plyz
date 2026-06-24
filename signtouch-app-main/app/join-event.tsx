@@ -30,7 +30,7 @@ import { ArrowLeft, QrCode, Search, Check, Download, Video, Users, Clock, Calend
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import AccountModal from '@/components/AccountModal';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { LiveEvent } from '@/utils/liveEventStorage';
 import { getSessionByCode, getSessionById, LiveSession } from '@/utils/liveSessionStorage';
 import { 
@@ -198,9 +198,7 @@ export default function JoinEventScreen() {
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
   const { user, isBanned, banUntil } = useAuth();
-  const [showAccountModal, setShowAccountModal] = useState(false);
-  const [pendingJoinQueue, setPendingJoinQueue] = useState(false);
-  const [pendingSearchCode, setPendingSearchCode] = useState('');
+  const { requireAuth } = useAuthPrompt();
 
   const [code, setCode] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -277,14 +275,6 @@ export default function JoinEventScreen() {
   const pulseStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonPulse.value }],
   }));
-
-  useEffect(() => {
-    if (user && pendingJoinQueue) {
-      setPendingJoinQueue(false);
-      setShowAccountModal(false);
-      handleJoinQueue();
-    }
-  }, [user, pendingJoinQueue]);
 
   useEffect(() => {
     const checkEventPaymentReturn = async () => {
@@ -614,30 +604,17 @@ export default function JoinEventScreen() {
     }
   };
 
-  // Compte Plyz OBLIGATOIRE avant de rejoindre un événement (saisie du code ou scan QR).
+  // Compte Plyz exigé avant de rejoindre un événement (saisie du code ou scan QR).
   const attemptJoin = (searchCode?: string) => {
     const codeToSearch = (searchCode ?? code).trim().toUpperCase();
     if (codeToSearch.length < 4) {
       showAlert(t('error') || 'Error', t('invalidCode') || 'Please enter a valid code');
       return;
     }
-    if (!user) {
-      setPendingSearchCode(codeToSearch);
-      setShowAccountModal(true);
-      return;
-    }
-    handleSearch(codeToSearch);
+    requireAuth(() => handleSearch(codeToSearch), {
+      reason: 'Crée ton compte pour rejoindre cet événement',
+    });
   };
-
-  // Dès que le compte est créé/connecté, on relance automatiquement la recherche mémorisée.
-  useEffect(() => {
-    if (user && pendingSearchCode) {
-      const c = pendingSearchCode;
-      setPendingSearchCode('');
-      setShowAccountModal(false);
-      handleSearch(c);
-    }
-  }, [user, pendingSearchCode]);
 
   const requestCameraPermission = async () => {
     if (!isBarCodeScannerAvailable()) {
@@ -676,13 +653,10 @@ export default function JoinEventScreen() {
     }
   };
 
-  const handleSaveSignature = async () => {
-    if (!user) {
-      setShowAccountModal(true);
-      return;
-    }
-    
-    await performSaveSignature();
+  const handleSaveSignature = () => {
+    requireAuth(() => performSaveSignature(), {
+      reason: 'Crée ton compte pour rejoindre cet événement',
+    });
   };
 
   const performSaveSignature = async () => {
@@ -944,8 +918,9 @@ export default function JoinEventScreen() {
     }
 
     if (!user) {
-      setPendingJoinQueue(true);
-      setShowAccountModal(true);
+      requireAuth(() => handleJoinQueue(), {
+        reason: 'Crée ton compte pour rejoindre cet événement',
+      });
       return;
     }
 
@@ -1875,22 +1850,6 @@ export default function JoinEventScreen() {
         ) : null}
       </ScrollView>
 
-      <AccountModal
-        visible={showAccountModal}
-        allowSkip={false}
-        onClose={() => {
-          setShowAccountModal(false);
-          setPendingJoinQueue(false);
-          setPendingSearchCode('');
-        }}
-        onSkip={() => {
-          setShowAccountModal(false);
-          setPendingJoinQueue(false);
-          setPendingSearchCode('');
-        }}
-        returnPath="/join-event"
-      />
-      
       <AgeCertificationModal
         visible={showAgeModal}
         onClose={() => setShowAgeModal(false)}
