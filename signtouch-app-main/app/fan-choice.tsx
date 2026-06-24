@@ -21,7 +21,7 @@ import { supabase } from '@/utils/supabase';
 import { showAlert } from '@/utils/alertHelper';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
-import { getMyScheduledEvents } from '@/utils/eventSessionStorage';
+import { getMyScheduledEvents, getActiveFanEvent } from '@/utils/eventSessionStorage';
 
 // Base API serveur (vérification de compte). Sur web on passe par le proxy local.
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
@@ -108,11 +108,17 @@ export default function FanChoiceScreen() {
       let active = true;
       (async () => {
         try {
-          const items = await getMyScheduledEvents();
+          const [items, fanEvent] = await Promise.all([
+            getMyScheduledEvents().catch(() => []),
+            getActiveFanEvent().catch(() => null),
+          ]);
           if (!active) return;
           const isOngoing = (e: any) => e?.status !== 'ended';
           const isVideo = (e: any) => e?.event_type === 'live_video';
-          setOngoingCount(items.filter((e: any) => isOngoing(e) && !isVideo(e)).length);
+          // L'événement rejoint actif (non null = non expiré, getActiveFanEvent
+          // l'a déjà vérifié) compte comme un événement dédicace « en cours ».
+          const joinedDedicace = fanEvent ? 1 : 0;
+          setOngoingCount(items.filter((e: any) => isOngoing(e) && !isVideo(e)).length + joinedDedicace);
           setOngoingVideoCount(items.filter((e: any) => isOngoing(e) && isVideo(e)).length);
         } catch {
           /* silencieux : pas bloquant */

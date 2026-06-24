@@ -12,13 +12,13 @@ import {
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye, PenSquare } from 'lucide-react-native';
+import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye, PenSquare, Ticket, LogIn, Users } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import BottomNav from '@/components/BottomNav';
-import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount } from '@/utils/eventSessionStorage';
+import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount, getActiveFanEvent, ActiveFanEvent } from '@/utils/eventSessionStorage';
 import QRCodeSvg from 'react-native-qrcode-svg';
 
 type TabType = 'create' | 'events';
@@ -38,6 +38,40 @@ export default function CelebrityMenuScreen() {
   const [eventFilter, setEventFilter] = useState<FilterType>('live');
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
+  const [activeFanEvent, setActiveFanEvent] = useState<ActiveFanEvent | null>(null);
+
+  const loadActiveFanEvent = useCallback(async () => {
+    try {
+      const fanEvent = await getActiveFanEvent();
+      setActiveFanEvent(fanEvent);
+    } catch (e) {
+      console.warn('[loadActiveFanEvent] Error:', e);
+      setActiveFanEvent(null);
+    }
+  }, []);
+
+  const handleResumeFanEvent = () => {
+    if (!activeFanEvent) return;
+    router.push({
+      pathname: '/event-gallery',
+      params: {
+        sessionId: activeFanEvent.sessionId,
+        sessionTitle: activeFanEvent.sessionTitle,
+        joinCode: activeFanEvent.joinCode,
+        endsAt: activeFanEvent.endsAt,
+        signers: activeFanEvent.signers,
+      },
+    });
+  };
+
+  const getFanSignerCount = (event: ActiveFanEvent): number => {
+    try {
+      const parsed = JSON.parse(event.signers);
+      return Array.isArray(parsed) ? parsed.length : 0;
+    } catch {
+      return 0;
+    }
+  };
 
   const loadMyEvents = useCallback(async () => {
     try {
@@ -60,7 +94,8 @@ export default function CelebrityMenuScreen() {
   useFocusEffect(
     useCallback(() => {
       loadMyEvents();
-    }, [loadMyEvents])
+      loadActiveFanEvent();
+    }, [loadMyEvents, loadActiveFanEvent])
   );
 
   const isEventLiveCheck = (event: EventSession) => {
@@ -306,6 +341,29 @@ export default function CelebrityMenuScreen() {
       >
         {activeTab === 'events' ? (
           <>
+            {activeFanEvent && (
+              <View style={styles.fanEventCard}>
+                <View style={styles.fanEventBadgeRow}>
+                  <Ticket size={14} color="#f59e0b" />
+                  <Text style={styles.fanEventBadgeText}>{t('joinedEvent' as any) || 'Tu participes à'}</Text>
+                </View>
+                <Text style={styles.fanEventTitle}>{activeFanEvent.sessionTitle}</Text>
+                <View style={styles.fanEventInfoRow}>
+                  <View style={styles.eventCode}>
+                    <Text style={styles.eventCodeLabel}>{t('code') || 'Code'}:</Text>
+                    <Text style={styles.eventCodeValue}>{activeFanEvent.joinCode}</Text>
+                  </View>
+                  <View style={styles.fanEventSigners}>
+                    <Users size={14} color="#6b7280" />
+                    <Text style={styles.fanEventSignersText}>{getFanSignerCount(activeFanEvent)}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity style={styles.fanEventResumeBtn} onPress={handleResumeFanEvent}>
+                  <LogIn size={18} color="#fff" />
+                  <Text style={styles.fanEventResumeText}>{t('resume' as any) || 'Reprendre'}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
             {loading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#fff" />
@@ -763,6 +821,67 @@ const styles = StyleSheet.create({
   },
   eventsList: {
     gap: 12,
+  },
+  fanEventCard: {
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderWidth: 2,
+    borderColor: '#f59e0b',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  fanEventBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  fanEventBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#f59e0b',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  fanEventTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 12,
+  },
+  fanEventInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 14,
+  },
+  fanEventSigners: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#f3f4f6',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  fanEventSignersText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#374151',
+  },
+  fanEventResumeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#f59e0b',
+    paddingVertical: 13,
+    borderRadius: 12,
+  },
+  fanEventResumeText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#fff',
   },
   filterRow: {
     flexDirection: 'row',
