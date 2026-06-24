@@ -10,6 +10,9 @@ import { Newspaper, CheckCircle, Calendar, Heart, MessageCircle, Send, Share2 } 
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
+import { useFollow } from '@/contexts/FollowContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import PlyzHeader from '@/components/PlyzHeader';
@@ -148,6 +151,9 @@ export default function ActivityScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const { requireAuth } = useAuthPrompt();
+  const { isFollowing, toggleFollow } = useFollow();
   const [posts, setPosts] = useState<FeedPost[]>(DEMO_FEED);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -204,6 +210,10 @@ export default function ActivityScreen() {
       AsyncStorage.setItem(LIKES_KEY, JSON.stringify([...next]));
       return next;
     });
+  };
+
+  const handleLike = (postId: string) => {
+    requireAuth(() => toggleLike(postId), { reason: 'Crée un compte pour aimer ce post' });
   };
 
   const openComments = (postId: string) => {
@@ -353,6 +363,32 @@ export default function ActivityScreen() {
               {new Date(item.created_at).toLocaleDateString()}
             </Text>
           </View>
+          {user?.id !== item.celebrity.user_id && (
+            (() => {
+              const followed = isFollowing(item.celebrity.user_id);
+              return (
+                <TouchableOpacity
+                  style={[styles.followChip, followed && styles.followChipActive]}
+                  onPress={(e) => {
+                    e.stopPropagation?.();
+                    requireAuth(
+                      () => toggleFollow({
+                        user_id: item.celebrity.user_id,
+                        stage_name: item.celebrity.stage_name,
+                        avatar_url: item.celebrity.avatar_url,
+                      }),
+                      { reason: 'Crée un compte pour suivre cette célébrité' }
+                    );
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.followChipText, followed && styles.followChipTextActive]}>
+                    {followed ? 'Suivi ✓' : 'Suivre'}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })()
+          )}
           {item.kind === 'event' && (
             <TouchableOpacity
               style={styles.eventBadge}
@@ -385,7 +421,7 @@ export default function ActivityScreen() {
 
         <View style={styles.actionsRow}>
           <View style={styles.actionGroup}>
-            <LikeButton postId={item.id} likedPosts={likedPosts} onToggle={toggleLike} />
+            <LikeButton postId={item.id} likedPosts={likedPosts} onToggle={handleLike} />
             <Text style={[styles.actionCount, isLiked && { color: '#ef4444' }]}>
               {formatCount((item.like_count || 0) + (isLiked ? 1 : 0))}
             </Text>
@@ -404,7 +440,7 @@ export default function ActivityScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionGroup}
-            onPress={() => sharePost(item)}
+            onPress={() => requireAuth(() => sharePost(item), { reason: 'Crée un compte pour partager' })}
             activeOpacity={0.7}
           >
             <View style={styles.actionBtn}>
@@ -590,6 +626,26 @@ const styles = StyleSheet.create({
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   stageName: { color: '#fff', fontSize: 15, fontWeight: '600' },
   postTime: { color: '#6b7280', fontSize: 12, marginTop: 1 },
+  followChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#10b981',
+    backgroundColor: 'transparent',
+  },
+  followChipActive: {
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  followChipText: {
+    color: '#10b981',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  followChipTextActive: {
+    color: '#9ca3af',
+  },
   eventBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: 'rgba(245,158,11,0.2)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,

@@ -24,6 +24,7 @@ import * as StorageService from '@/utils/storageService';
 import SocialShareModal from '@/components/SocialShareModal';
 import AdModal from '@/components/AdModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { captureRef } from 'react-native-view-shot';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, runOnJS } from 'react-native-reanimated';
@@ -1435,6 +1436,9 @@ export default function ResultScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { requireAuth } = useAuthPrompt();
+  // Incitation "4 photos" : ne se déclenche qu'une fois par session.
+  const fourPhotoPromptShownRef = useRef(false);
 
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
@@ -1565,6 +1569,22 @@ export default function ResultScreen() {
   // Wrapper functions for storage
   const saveMemory = async (imageUri: string, metadata?: any) => {
     return await StorageService.saveMemory(imageUri, user?.id || null, metadata);
+  };
+
+  // Incitation à créer un compte une fois 4 photos sauvegardées localement.
+  // N'est appelée qu'APRÈS une sauvegarde réussie et ne bloque jamais le save.
+  const maybePromptSaveAccount = async () => {
+    if (user) return; // connecté : aucune incitation
+    if (fourPhotoPromptShownRef.current) return; // déjà montré cette session
+    try {
+      const all = await StorageService.getAllMemories(null);
+      if (all.length >= 4) {
+        fourPhotoPromptShownRef.current = true;
+        requireAuth(() => {}, {
+          reason: 'Crée un compte gratuit pour sauvegarder et ne pas perdre tes photos',
+        });
+      }
+    } catch {}
   };
 
   const updateMemory = async (updatedMemory: Memory) => {
@@ -2387,6 +2407,7 @@ export default function ResultScreen() {
                   isEdited: true,
                 });
               }
+              maybePromptSaveAccount();
             }
 
             setSaving(false);
@@ -2454,6 +2475,8 @@ export default function ResultScreen() {
           });
           console.log('✅ Souvenir sauvegardé dans l\'app');
 
+          maybePromptSaveAccount();
+
           if (Platform.OS !== 'web') {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           }
@@ -2496,6 +2519,8 @@ export default function ResultScreen() {
         console.log('💾 Sauvegarde du nouveau souvenir dans l\'app...');
         await saveMemory(imageUri);
         console.log('✅ Souvenir sauvegardé dans l\'app');
+
+        maybePromptSaveAccount();
 
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -3145,7 +3170,7 @@ export default function ResultScreen() {
               {memoryId && (
                 <TouchableOpacity
                   style={styles.shareButton}
-                  onPress={openShareModal}
+                  onPress={() => requireAuth(() => openShareModal(), { reason: 'Crée un compte pour partager ta photo' })}
                   activeOpacity={0.7}
                 >
                   <Share2 size={24} color="#ffffff" strokeWidth={2} />

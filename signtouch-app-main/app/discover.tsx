@@ -9,6 +9,7 @@ import { Search, Star, CheckCircle, ShieldCheck, ChevronRight, X, Heart, Trendin
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFollow } from '@/contexts/FollowContext';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import PlyzHeader from '@/components/PlyzHeader';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
@@ -57,6 +58,7 @@ export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { isFollowing, toggleFollow } = useFollow();
+  const { requireAuth } = useAuthPrompt();
   const [celebrities, setCelebrities] = useState<Celebrity[]>(DEMO_CELEBRITIES);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -184,7 +186,10 @@ export default function DiscoverScreen() {
             style={styles.followButton}
             onPress={(e) => {
               e.stopPropagation?.();
-              toggleFollow({ user_id: item.user_id, stage_name: item.stage_name, avatar_url: item.avatar_url });
+              requireAuth(
+                () => toggleFollow({ user_id: item.user_id, stage_name: item.stage_name, avatar_url: item.avatar_url }),
+                { reason: 'Crée un compte pour suivre cette célébrité' }
+              );
             }}
             activeOpacity={0.7}
           >

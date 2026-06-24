@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFollow } from '@/contexts/FollowContext';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { CelebrityDetailSkeleton } from '@/components/SkeletonLoader';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
@@ -65,6 +66,7 @@ export default function CelebrityDetailScreen() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { isFollowing, toggleFollow } = useFollow();
+  const { requireAuth } = useAuthPrompt();
   const [celebrity, setCelebrity] = useState<CelebrityDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const bookingLoading = false;
@@ -338,7 +340,10 @@ export default function CelebrityDetailScreen() {
           {celebrity && (
             <TouchableOpacity
               style={styles.followHeroButton}
-              onPress={() => toggleFollow({ user_id: celebrity.user_id, stage_name: celebrity.stage_name, avatar_url: celebrity.avatar_url })}
+              onPress={() => requireAuth(
+                () => toggleFollow({ user_id: celebrity.user_id, stage_name: celebrity.stage_name, avatar_url: celebrity.avatar_url }),
+                { reason: 'Crée un compte pour suivre cette célébrité' }
+              )}
               activeOpacity={0.7}
             >
               <Heart
