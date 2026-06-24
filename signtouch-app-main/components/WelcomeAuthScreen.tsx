@@ -414,9 +414,9 @@ export default function WelcomeAuthScreen({
               <View style={styles.iconCircle}>
                 <Sparkles size={40} color="#10b981" />
               </View>
-              <Text style={styles.title}>Complète ton profil</Text>
+              <Text style={styles.title}>Crée ton profil</Text>
               <Text style={styles.subtitle}>
-                Encore une étape pour personnaliser ton compte.
+                Ton pseudo et ta photo seront visibles par les autres.
               </Text>
 
               <TouchableOpacity
@@ -439,7 +439,7 @@ export default function WelcomeAuthScreen({
 
               <TextInput
                 style={styles.input}
-                placeholder="Ton nom"
+                placeholder="Ton pseudo (nom public)"
                 placeholderTextColor="#64748b"
                 value={name}
                 onChangeText={setName}
