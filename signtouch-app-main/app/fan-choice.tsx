@@ -175,12 +175,11 @@ export default function FanChoiceScreen() {
     view: 'upcoming' | 'ongoing' | 'past',
     kind: 'event' | 'video',
   ) => {
-    const isVideo = kind === 'video';
-    const accent = isVideo ? '#6366f1' : '#10b981';
+    const accent = '#10b981'; // vert pour tous (événements ET sessions vidéo)
     const RED = '#ef4444';
 
-    // Code couleur par état : à venir = accent plein, en cours = rouge (live),
-    // passé = transparent + contour accent (discret, jamais de rouge).
+    // À venir = vert plein ; En cours = rouge UNIQUEMENT s'il y a un live actif
+    // (count > 0) ; Passé (et En cours vide) = transparent + contour vert.
     let bg = 'transparent';
     let border = `${accent}66`;
     let fg = accent;
@@ -188,7 +187,7 @@ export default function FanChoiceScreen() {
     let badgeFg = '#ffffff';
     if (view === 'upcoming') {
       bg = accent; border = accent; fg = '#ffffff'; badgeBg = '#ffffff'; badgeFg = accent;
-    } else if (view === 'ongoing') {
+    } else if (view === 'ongoing' && count > 0) {
       bg = RED; border = RED; fg = '#ffffff'; badgeBg = '#ffffff'; badgeFg = RED;
     }
 
