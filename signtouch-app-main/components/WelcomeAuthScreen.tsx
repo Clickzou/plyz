@@ -259,7 +259,7 @@ export default function WelcomeAuthScreen() {
           {step === 'email' && (
             <View style={styles.card}>
               <View style={styles.freeBadge}>
-                <Text style={styles.freeBadgeText}>100% GRATUIT</Text>
+                <Text style={styles.freeBadgeText}>GRATUIT</Text>
               </View>
               <View style={styles.iconCircle}>
                 <Mail size={40} color="#10b981" />
