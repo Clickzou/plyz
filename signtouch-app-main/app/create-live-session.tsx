@@ -558,8 +558,8 @@ export default function CreateLiveSessionScreen() {
                 pathname: '/create-post',
                 params: {
                   prefillKind: 'event',
-                  prefillTitle: `${language === 'fr' ? 'Session Live' : 'Live Session'} - ${celebrityName}`,
-                  prefillBody: `${language === 'fr' ? 'Rejoignez-moi pour une session live exclusive !' : 'Join me for an exclusive live session!'}\n\n${language === 'fr' ? 'Code' : 'Code'}: ${scheduledConfirmation.code}`,
+                  prefillTitle: language === 'fr' ? 'Session Live Vidéo' : 'Live Video Session',
+                  prefillBody: `${language === 'fr' ? '🎥 Rejoignez-moi pour une session live vidéo exclusive, en tête-à-tête face à face ! Un moment privé et unique, rien que pour vous, en direct sur Plyz 💜' : '🎥 Join me for an exclusive one-on-one live video session, face to face! A private, unique moment just for you, live on Plyz 💜'}\n\n${language === 'fr' ? 'Code' : 'Code'}: ${scheduledConfirmation.code}`,
                   prefillDate: scheduledDate.toISOString(),
                 },
               });

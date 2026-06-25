@@ -1203,8 +1203,8 @@ export default function CreateEventScreen() {
                       pathname: '/create-post',
                       params: {
                         prefillKind: 'event',
-                        prefillTitle: `${t('dedicationEvent') || 'Événement Dédicace'} - ${signers[0]?.name || ''}`,
-                        prefillBody: `${language === 'fr' ? 'Rejoignez-moi pour un événement dédicace exclusif !' : 'Join me for an exclusive dedication event!'}\n\n${language === 'fr' ? 'Code' : 'Code'}: ${createdSession.join_code}`,
+                        prefillTitle: language === 'fr' ? 'Session Live Dédicace' : 'Live Dedication Session',
+                        prefillBody: `${language === 'fr' ? '✍️ Rejoignez-moi pour une session live dédicace exclusive en direct ! Recevez votre photo personnalisée et signée, rien que pour vous, sur Plyz 💜' : '✍️ Join me for an exclusive live dedication session! Get your personalized, signed photo just for you, on Plyz 💜'}\n\n${language === 'fr' ? 'Code' : 'Code'}: ${createdSession.join_code}`,
                         prefillDate: createdSession.scheduled_at || new Date().toISOString(),
                       },
                     });
