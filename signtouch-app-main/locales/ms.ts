@@ -1496,5 +1496,5 @@ export default {
   reserveEvent: 'Tempah tempat saya',
   eventReservedMessage: 'Ditempah! Anda akan menemuinya di «Akan datang».',
   reservationFailed: 'Tempahan gagal. Sila cuba lagi.',
-  shareEventMessage: 'Sertai sesi live saya di Plyz! Kod: {code}',
+  shareEventMessage: '🎥 Saya menjemput anda ke PANGGILAN VIDEO PERIBADI satu lawan satu (bersemuka) bersama saya di Plyz! Detik istimewa hanya untuk anda, secara langsung 💜\n📅 {date}\n⏱️ {duration} bersama saya secara peribadi\n🎟️ Kod: {code}\n👉 Muat turun Plyz, masukkan kod dan tempah tempat anda!',
 };

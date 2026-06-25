@@ -1491,5 +1491,5 @@ export default {
   reserveEvent: 'Prenota il mio posto',
   eventReservedMessage: 'Prenotato! Lo troverai in «In arrivo».',
   reservationFailed: 'Prenotazione non riuscita. Riprova.',
-  shareEventMessage: 'Unisciti alla mia sessione live su Plyz! Codice: {code}',
+  shareEventMessage: '🎥 Ti invito a una VIDEOCHIAMATA PRIVATA faccia a faccia con me su Plyz! Un momento solo per te, in diretta 💜\n📅 {date}\n⏱️ {duration} in privato con me\n🎟️ Codice: {code}\n👉 Scarica Plyz, inserisci il codice e prenota il tuo posto!',
 };

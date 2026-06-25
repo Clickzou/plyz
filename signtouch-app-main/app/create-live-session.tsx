@@ -454,16 +454,25 @@ export default function CreateLiveSessionScreen() {
   const handleShareEvent = async () => {
     if (!scheduledConfirmation) return;
     const code = scheduledConfirmation.code;
-    let message = (t('shareEventMessage') || 'Rejoins ma session live sur Plyz ! Code : {code}').replace('{code}', code);
+
+    // Date/heure formatée pour le placeholder {date}
+    let when = '';
     try {
       const scheduledDate = new Date(scheduledConfirmation.scheduledAt);
       if (!isNaN(scheduledDate.getTime())) {
-        const when = scheduledDate.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', {
+        when = scheduledDate.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', {
           weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
         });
-        message += `\n${language === 'fr' ? 'Quand' : 'When'} : ${when}`;
       }
     } catch {}
+
+    // Durée par fan formatée (« X sec » / « X min ») via formatDuration
+    const duration = formatDuration(durationPerFan);
+
+    let message = (t('shareEventMessage') || 'Rejoins ma session live sur Plyz ! Code : {code}')
+      .replace('{code}', code)
+      .replace('{date}', when)
+      .replace('{duration}', duration);
 
     try {
       await Share.share({ message });

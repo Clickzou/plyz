@@ -1491,5 +1491,5 @@ export default {
   reserveEvent: '席を予約する',
   eventReservedMessage: '予約完了！「今後の予定」で確認できます。',
   reservationFailed: '予約に失敗しました。もう一度お試しください。',
-  shareEventMessage: 'Plyzで私のライブセッションに参加しよう！コード：{code}',
+  shareEventMessage: '🎥 Plyzで私と1対1のプライベートビデオ通話（フェイス・トゥ・フェイス）にご招待します！あなただけの特別な時間を、ライブで 💜\n📅 {date}\n⏱️ {duration} 私と二人きりで\n🎟️ コード：{code}\n👉 Plyzをダウンロードして、コードを入力し、あなたの席を予約しよう！',
 };

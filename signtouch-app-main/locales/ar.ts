@@ -1491,5 +1491,5 @@ export default {
   reserveEvent: 'احجز مكاني',
   eventReservedMessage: 'تم الحجز! ستجده في «القادمة».',
   reservationFailed: 'فشل الحجز. يرجى المحاولة مرة أخرى.',
-  shareEventMessage: 'انضم إلى جلستي المباشرة على Plyz! الرمز: {code}',
+  shareEventMessage: '🎥 أدعوك إلى مكالمة فيديو خاصة وجهاً لوجه معي على Plyz! لحظة لك وحدك، مباشرة 💜\n📅 {date}\n⏱️ {duration} على انفراد معي\n🎟️ الرمز: {code}\n👉 حمّل تطبيق Plyz، أدخل الرمز واحجز مكانك!',
 };

@@ -1522,5 +1522,5 @@ export default {
   reserveEvent: 'Reserve my spot',
   eventReservedMessage: 'Reserved! You\'ll find it under "Upcoming".',
   reservationFailed: 'Reservation failed. Please try again.',
-  shareEventMessage: 'Join my live session on Plyz! Code: {code}',
+  shareEventMessage: '🎥 I\'m inviting you to a PRIVATE one-on-one video call (face to face) with me on Plyz! A moment just for you, live 💜\n📅 {date}\n⏱️ {duration} privately with me\n🎟️ Code: {code}\n👉 Download Plyz, enter the code and book your spot!',
 };
