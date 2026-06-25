@@ -21,6 +21,7 @@ import {
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
+import ViewShot from 'react-native-view-shot';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -388,8 +389,18 @@ export default function DedicationResultScreen() {
       setIsSaving(true);
 
       const uri = await captureImage();
+
+      // Si la capture composee echoue, on sauve quand meme la photo brute pour
+      // que la dedicace apparaisse dans la galerie (entree mise a jour via dedupKey).
       if (!uri) {
-        showAlert(t('error'), t('dedicationSaveError'));
+        console.warn('[Dedication] Manual save: capture empty, falling back to raw photo');
+        if (photoUrl) {
+          autoSavedRef.current = true;
+          await saveToCollector(photoUrl);
+          showAlert(t('success'), t('dedicationSaved'));
+        } else {
+          showAlert(t('error'), t('dedicationSaveError'));
+        }
         setIsSaving(false);
         return;
       }
@@ -452,25 +463,52 @@ export default function DedicationResultScreen() {
 
   // Sauvegarde AUTOMATIQUE dans la galerie interne (Collector) des que la
   // dedicace est affichee, pour que le fan la retrouve sans cliquer "Enregistrer".
-  // autoSavedRef + dedupKey garantissent une seule entree (pas de doublon).
+  // Robuste : on retente la capture composee plusieurs fois ; si elle echoue
+  // toujours, on sauve QUAND MEME une entree avec la photo brute (photoUrl) pour
+  // que la dedicace APPARAISSE dans la galerie. dedupKey garantit l'unicite :
+  // un retry/clic "Enregistrer" met a jour la meme entree au lieu de creer un doublon.
   useEffect(() => {
     if (loading || noAssets || !photoUrl || autoSavedRef.current) return;
     autoSavedRef.current = true;
-    const timer = setTimeout(async () => {
-      try {
-        const uri = await captureImage();
-        if (uri) {
-          await saveToCollector(uri);
-          console.log('[DedicationResult] Auto-saved to internal gallery');
-        } else {
+    let cancelled = false;
+
+    const runAutoSave = async () => {
+      const MAX_ATTEMPTS = 3;
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        if (cancelled) return;
+        try {
+          const uri = await captureImage();
+          if (uri) {
+            await saveToCollector(uri);
+            console.log(`[DedicationResult] Auto-saved composed image (attempt ${attempt})`);
+            return;
+          }
+          console.warn(`[DedicationResult] captureImage returned empty (attempt ${attempt}/${MAX_ATTEMPTS})`);
+        } catch (e) {
+          console.error(`[DedicationResult] Auto-save capture failed (attempt ${attempt}/${MAX_ATTEMPTS}):`, e);
+        }
+        // attendre avant de retenter (capture/ViewShot pas encore pret)
+        await new Promise((r) => setTimeout(r, 800 * attempt));
+      }
+
+      // Dernier recours : la capture composee a echoue -> on sauve l'entree avec
+      // la PHOTO BRUTE pour que la dedicace soit visible dans la galerie malgre tout.
+      if (cancelled) return;
+      if (photoUrl) {
+        try {
+          await saveToCollector(photoUrl);
+          console.warn('[DedicationResult] Composed capture failed after retries — saved raw photo as fallback');
+        } catch (e) {
+          console.error('[DedicationResult] Fallback raw-photo save failed:', e);
           autoSavedRef.current = false;
         }
-      } catch (e) {
-        console.error('[DedicationResult] Auto-save failed:', e);
+      } else {
         autoSavedRef.current = false;
       }
-    }, 1200);
-    return () => clearTimeout(timer);
+    };
+
+    const timer = setTimeout(runAutoSave, 1500);
+    return () => { cancelled = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, noAssets, photoUrl, signaturePaths.length]);
 
@@ -512,6 +550,7 @@ export default function DedicationResultScreen() {
       </View>
 
       <View style={styles.photoWrapper}>
+        <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }} style={styles.captureArea}>
         <View ref={(node) => { webCaptureRef.current = node; if (Platform.OS === 'web') attachWebTouch(node); }} collapsable={false} style={styles.captureArea}>
           {photoUrl ? (
             <Image source={{ uri: photoUrl }} style={styles.photo} resizeMode="cover" />
@@ -575,6 +614,7 @@ export default function DedicationResultScreen() {
             <Text style={styles.watermarkText}>Plyz</Text>
           </View>
         </View>
+        </ViewShot>
       </View>
 
       <View style={styles.colorPickerSection}>
