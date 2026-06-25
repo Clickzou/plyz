@@ -914,6 +914,7 @@ export default {
   anonymous: 'گمنام',
   you: 'آپ',
   startVideoCall: 'ویڈیو کال شروع کریں',
+  dedicationRequiredHint: 'پہلے اپنا انتساب مکمل کریں (تصویر + دستخط)',
   joinVideoCall: 'ویڈیو کال میں شامل ہوں',
   videoCallActive: 'ویڈیو کال فعال',
   noVideoRoom: 'کوئی ویڈیو روم دستیاب نہیں',

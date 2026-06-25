@@ -914,6 +914,7 @@ export default {
   anonymous: 'Anonimo',
   you: 'tu',
   startVideoCall: 'Inizia videochiamata',
+  dedicationRequiredHint: 'Completa prima la tua dedica (foto + firma)',
   joinVideoCall: 'Partecipa alla videochiamata',
   videoCallActive: 'Videochiamata attiva',
   noVideoRoom: 'Nessuna stanza video disponibile',

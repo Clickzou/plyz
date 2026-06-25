@@ -914,6 +914,7 @@ export default {
   anonymous: 'مجهول',
   you: 'أنت',
   startVideoCall: 'بدء مكالمة فيديو',
+  dedicationRequiredHint: 'أكمل إهداءك أولاً (صورة + توقيع)',
   joinVideoCall: 'انضم لمكالمة الفيديو',
   videoCallActive: 'مكالمة فيديو نشطة',
   noVideoRoom: 'لا توجد غرفة فيديو متاحة',

@@ -914,6 +914,7 @@ export default {
   anonymous: 'अनाम',
   you: 'आप',
   startVideoCall: 'वीडियो कॉल शुरू करें',
+  dedicationRequiredHint: 'पहले अपना समर्पण पूरा करें (फ़ोटो + हस्ताक्षर)',
   joinVideoCall: 'वीडियो कॉल में शामिल हों',
   videoCallActive: 'वीडियो कॉल सक्रिय',
   noVideoRoom: 'कोई वीडियो रूम उपलब्ध नहीं',

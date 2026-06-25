@@ -914,6 +914,7 @@ export default {
   anonymous: 'Аноним',
   you: 'вы',
   startVideoCall: 'Начать видеозвонок',
+  dedicationRequiredHint: 'Сначала завершите посвящение (фото + подпись)',
   joinVideoCall: 'Присоединиться к видеозвонку',
   videoCallActive: 'Видеозвонок активен',
   noVideoRoom: 'Видеокомната недоступна',

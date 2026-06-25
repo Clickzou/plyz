@@ -914,6 +914,7 @@ export default {
   anonymous: 'Anonim',
   you: 'Anda',
   startVideoCall: 'Mulai panggilan video',
+  dedicationRequiredHint: 'Selesaikan dulu dedikasimu (foto + tanda tangan)',
   joinVideoCall: 'Gabung panggilan video',
   videoCallActive: 'Panggilan video aktif',
   noVideoRoom: 'Tidak ada ruang video tersedia',

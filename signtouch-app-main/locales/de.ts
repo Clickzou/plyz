@@ -914,6 +914,7 @@ export default {
   anonymous: 'Anonym',
   you: 'Sie',
   startVideoCall: 'Videoanruf starten',
+  dedicationRequiredHint: 'Beende zuerst deine Widmung (Foto + Unterschrift)',
   joinVideoCall: 'Videoanruf beitreten',
   videoCallActive: 'Videoanruf aktiv',
   noVideoRoom: 'Kein Videoraum verfügbar',

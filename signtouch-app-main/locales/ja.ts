@@ -914,6 +914,7 @@ export default {
   anonymous: '匿名',
   you: 'あなた',
   startVideoCall: 'ビデオ通話を開始',
+  dedicationRequiredHint: 'まずデディケーションを完成させてください（写真＋サイン）',
   joinVideoCall: 'ビデオ通話に参加',
   videoCallActive: 'ビデオ通話中',
   noVideoRoom: 'ビデオルームがありません',

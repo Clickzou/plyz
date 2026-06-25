@@ -988,6 +988,7 @@ export default {
   anonymous: 'Anonymous',
   you: 'you',
   startVideoCall: 'Start video call',
+  dedicationRequiredHint: 'Finish your dedication first (photo + signature)',
   joinVideoCall: 'Join video call',
   videoCallActive: 'Video call active',
   noVideoRoom: 'No video room available',

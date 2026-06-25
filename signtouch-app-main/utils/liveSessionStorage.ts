@@ -171,9 +171,12 @@ export const uploadDedicationPhoto = async (
     }
 
     try {
+      // Le selfie de dédicace est désormais l'UNIQUE selfie : il alimente aussi
+      // cover_photo_url (affichée sur la fiche de réservation côté fan), ce qui
+      // évite à la célébrité un double selfie redondant.
       await supabase
         .from('live_sessions')
-        .update({ dedication_photo_url: publicUrl } as any)
+        .update({ dedication_photo_url: publicUrl, cover_photo_url: publicUrl } as any)
         .eq('id', sessionId);
     } catch (updateErr) {
       console.error('Error updating session dedication photo in DB:', updateErr);

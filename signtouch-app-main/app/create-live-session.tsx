@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
-  Image,
   Platform,
   Modal,
   Pressable,
@@ -16,12 +15,12 @@ import {
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Clock, Users, DollarSign, Play, Camera, RotateCcw, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy, Send, Minus, Plus } from 'lucide-react-native';
+import { ArrowLeft, Clock, Users, DollarSign, Play, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy, Send, Minus, Plus } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { createLiveSession, uploadCoverPhoto } from '@/utils/liveSessionStorage';
+import { createLiveSession } from '@/utils/liveSessionStorage';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/contexts/AuthContext';
@@ -76,8 +75,6 @@ export default function CreateLiveSessionScreen() {
   const [isCreating, setIsCreating] = useState(false);
   const [showPaymentInfo, setShowPaymentInfo] = useState(false);
   const [nameError, setNameError] = useState(false);
-  const [coverPhotoUri, setCoverPhotoUri] = useState<string | null>(null);
-  const [photoError, setPhotoError] = useState(false);
   const [showStripeConnect, setShowStripeConnect] = useState(false);
   const [, setStripeConnected] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
@@ -140,58 +137,6 @@ export default function CreateLiveSessionScreen() {
     const startDate = new Date(sessionDate);
     startDate.setHours(hours, minutes, 0, 0);
     return startDate.toISOString();
-  };
-
-  const handleWebFileChange = useCallback((e: any) => {
-    const file = e.target?.files?.[0];
-    if (file) {
-      const uri = URL.createObjectURL(file);
-      setCoverPhotoUri(uri);
-      setPhotoError(false);
-    }
-    if (e.target) e.target.value = '';
-  }, []);
-
-  const handleTakeSelfie = async () => {
-    try {
-      if (Platform.OS === 'web') return;
-
-      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-      
-      if (!permissionResult.granted) {
-        const libraryResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (!libraryResult.granted) {
-          showAlert(t('error'), t('cameraPermissionRequired') || 'Camera permission required');
-          return;
-        }
-        const result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
-          aspect: [1, 1],
-          quality: 0.8,
-        });
-        if (!result.canceled && result.assets[0]) {
-          setCoverPhotoUri(result.assets[0].uri);
-          setPhotoError(false);
-        }
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-        cameraType: ImagePicker.CameraType.front,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setCoverPhotoUri(result.assets[0].uri);
-        setPhotoError(false);
-      }
-    } catch (error) {
-      console.error('Error taking selfie:', error);
-      showAlert(t('error'), t('cameraError') || 'Could not access camera');
-    }
   };
 
   const calculatedMaxFans = Math.floor(totalDuration / durationPerFan);
@@ -297,16 +242,11 @@ export default function CreateLiveSessionScreen() {
   }, [params?.stripe_return]);
 
   const handleCreateSession = async () => {
-    console.log('[CreateSession] Button pressed, name:', celebrityName, 'photo:', coverPhotoUri ? 'YES' : 'NO');
+    console.log('[CreateSession] Button pressed, name:', celebrityName);
     let hasError = false;
-    
+
     if (!celebrityName.trim()) {
       setNameError(true);
-      hasError = true;
-    }
-    
-    if (!coverPhotoUri) {
-      setPhotoError(true);
       hasError = true;
     }
 
@@ -327,8 +267,8 @@ export default function CreateLiveSessionScreen() {
     }
     
     if (hasError) {
-      console.log('[CreateSession] Validation failed - name:', !celebrityName.trim(), 'photo:', !coverPhotoUri);
-      showAlert(t('error') || 'Erreur', t('liveSessionFieldsRequired') || 'Veuillez remplir le nom et prendre une photo');
+      console.log('[CreateSession] Validation failed - name:', !celebrityName.trim());
+      showAlert(t('error') || 'Erreur', t('liveSessionNameRequired') || 'Veuillez entrer votre nom');
       return;
     }
     setNameError(false);
@@ -349,19 +289,16 @@ export default function CreateLiveSessionScreen() {
 
     setIsCreating(true);
     setNameError(false);
-    setPhotoError(false);
     console.log('[CreateSession] Starting session creation...');
     try {
       const deviceId = await getOrCreateDeviceId();
       const celebrityId = user?.id || deviceId;
       let session;
-      
-      let uploadedPhotoUrl: string | null = null;
-      if (coverPhotoUri) {
-        const tempId = `temp_${Date.now()}`;
-        uploadedPhotoUrl = await uploadCoverPhoto(tempId, coverPhotoUri);
-      }
-      
+
+      // Plus de photo de couverture ici : le selfie unique est pris à l'étape
+      // « Dédicace personnalisée » du dashboard, qui renseigne ensuite cover_photo_url.
+      const uploadedPhotoUrl: string | null = null;
+
       const SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
       console.log('[CreateSession] Calling server to create session, celebrityId:', celebrityId);
       
@@ -647,69 +584,6 @@ export default function CreateLiveSessionScreen() {
             <Text style={styles.stepText}>{t('liveSessionStep4' as any) || 'Lancez la session et appelez vos fans en vidéo un par un'}</Text>
           </View>
         </View>
-
-        <Text style={[styles.sectionTitle, { textAlign: 'center' }]}>{t('liveSessionCoverPhoto') || 'Your Cover Photo'}</Text>
-        <Text style={[styles.sectionHint, { textAlign: 'center' }]}>{t('liveSessionCoverPhotoHint') || 'Take a selfie to show fans who is hosting'}</Text>
-        
-        {Platform.OS === 'web' ? (
-          <View style={[styles.selfieContainer, photoError && styles.selfieContainerError, { position: 'relative', overflow: 'hidden' } as any]}>
-            {coverPhotoUri ? (
-              <View style={styles.selfiePreviewContainer}>
-                <Image source={{ uri: coverPhotoUri }} style={styles.selfiePreview} />
-                <View style={[styles.retakeSelfieButton, { position: 'relative', overflow: 'hidden' } as any]}>
-                  <RotateCcw size={16} color="#fff" />
-                  <Text style={styles.retakeSelfieText}>{t('retake') || 'Retake'}</Text>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="user"
-                    onChange={handleWebFileChange}
-                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', zIndex: 10 } as any}
-                  />
-                </View>
-              </View>
-            ) : (
-              <View style={styles.selfiePrompt}>
-                <View style={styles.selfieIconCircle}>
-                  <Camera size={40} color="#10B981" />
-                </View>
-                <Text style={styles.selfiePromptText}>{t('tapToTakeSelfie') || 'Tap to take a selfie'}</Text>
-              </View>
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              capture="user"
-              onChange={handleWebFileChange}
-              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', zIndex: coverPhotoUri ? 1 : 10 } as any}
-            />
-          </View>
-        ) : (
-          <TouchableOpacity 
-            style={[styles.selfieContainer, photoError && styles.selfieContainerError]} 
-            onPress={handleTakeSelfie}
-          >
-            {coverPhotoUri ? (
-              <View style={styles.selfiePreviewContainer}>
-                <Image source={{ uri: coverPhotoUri }} style={styles.selfiePreview} />
-                <TouchableOpacity style={styles.retakeSelfieButton} onPress={handleTakeSelfie}>
-                  <RotateCcw size={16} color="#fff" />
-                  <Text style={styles.retakeSelfieText}>{t('retake') || 'Retake'}</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.selfiePrompt}>
-                <View style={styles.selfieIconCircle}>
-                  <Camera size={40} color="#10B981" />
-                </View>
-                <Text style={styles.selfiePromptText}>{t('tapToTakeSelfie') || 'Tap to take a selfie'}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        )}
-        {photoError && (
-          <Text style={styles.errorText}>{t('liveSessionPhotoRequired') || 'Please take a cover photo'}</Text>
-        )}
 
         <Text style={styles.sectionTitle}>{t('liveSessionYourName')}</Text>
         <TextInput

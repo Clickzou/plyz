@@ -1176,7 +1176,7 @@ export default function LiveSessionDashboardScreen() {
 
         {session.status === 'waiting' && (
           <View>
-            <View style={[styles.dedicationSetupSection, { marginTop: 12, padding: 14 }]}>
+            <View style={[styles.dedicationSetupSection, { marginTop: 12, padding: 14 }, dedicationStep !== 'done' && { borderWidth: 2, borderColor: '#ef4444' }]}>
               <Text style={[styles.dedicationSetupTitle, { fontSize: 15, marginBottom: 4 }]}>{t('dedicationSetupTitle')}</Text>
               <Text style={[styles.dedicationSetupHint, { fontSize: 11, marginBottom: 10 }]}>{t('dedicationSetupHint')}</Text>
 
@@ -1352,12 +1352,15 @@ export default function LiveSessionDashboardScreen() {
               {isCreatingVideoRoom ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Video size={24} color="#fff" />
+                <Video size={24} color={dedicationStep !== 'done' ? '#9ca3af' : '#fff'} />
               )}
-              <Text style={styles.startVideoCallButtonText}>
+              <Text style={[styles.startVideoCallButtonText, dedicationStep !== 'done' && styles.videoCallButtonTextDisabled]}>
                 {isCreatingVideoRoom ? t('connectingToCall') : t('startVideoCall')}
               </Text>
             </TouchableOpacity>
+            {dedicationStep !== 'done' && (
+              <Text style={styles.dedicationRequiredHint}>{t('dedicationRequiredHint' as any)}</Text>
+            )}
           </View>
         )}
 
@@ -1889,7 +1892,20 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   videoCallButtonDisabled: {
-    opacity: 0.7,
+    backgroundColor: '#374151',
+    opacity: 0.6,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  videoCallButtonTextDisabled: {
+    color: '#9ca3af',
+  },
+  dedicationRequiredHint: {
+    color: '#9ca3af',
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 10,
+    fontWeight: '500',
   },
   videoCallButtonText: {
     color: '#fff',

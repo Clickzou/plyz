@@ -914,6 +914,7 @@ export default {
   anonymous: 'বেনামী',
   you: 'আপনি',
   startVideoCall: 'ভিডিও কল শুরু করুন',
+  dedicationRequiredHint: 'আগে আপনার উৎসর্গ সম্পূর্ণ করুন (ছবি + স্বাক্ষর)',
   joinVideoCall: 'ভিডিও কলে যোগ দিন',
   videoCallActive: 'ভিডিও কল সক্রিয়',
   noVideoRoom: 'কোনো ভিডিও রুম উপলব্ধ নেই',

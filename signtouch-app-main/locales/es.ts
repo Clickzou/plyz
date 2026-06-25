@@ -913,6 +913,7 @@ export default {
   anonymous: 'Anónimo',
   you: 'tú',
   startVideoCall: 'Iniciar videollamada',
+  dedicationRequiredHint: 'Termina primero tu dedicatoria (foto + firma)',
   joinVideoCall: 'Unirse a videollamada',
   videoCallActive: 'Videollamada activa',
   noVideoRoom: 'No hay sala de video disponible',
