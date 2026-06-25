@@ -1,5 +1,23 @@
 import { supabase } from './supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system/legacy';
+import { Platform } from 'react-native';
+
+// Convertit un URI local d'image en données uploadables par Supabase Storage.
+// Web : fetch + blob. Mobile : base64 -> ArrayBuffer (fetch(blob) ne marche pas sur RN).
+async function uriToUploadData(uri: string): Promise<Blob | ArrayBuffer> {
+  if (Platform.OS === 'web') {
+    const response = await fetch(uri);
+    return await response.blob();
+  }
+  const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
+  const byteCharacters = atob(base64);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  return new Uint8Array(byteNumbers).buffer;
+}
 
 export interface LiveSession {
   id: string;
@@ -57,14 +75,13 @@ export const uploadCoverPhoto = async (
   photoUri: string
 ): Promise<string | null> => {
   try {
-    const response = await fetch(photoUri);
-    const blob = await response.blob();
+    const fileData = await uriToUploadData(photoUri);
     const fileName = `cover_${sessionId}_${Date.now()}.jpg`;
     const filePath = `live-sessions/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('memories')
-      .upload(filePath, blob, { contentType: 'image/jpeg', upsert: true });
+      .upload(filePath, fileData, { contentType: 'image/jpeg', upsert: true });
 
     if (uploadError) {
       console.error('Error uploading cover photo:', uploadError);
@@ -130,14 +147,13 @@ export const uploadDedicationPhoto = async (
   celebrityName?: string
 ): Promise<string | null> => {
   try {
-    const response = await fetch(photoUri);
-    const blob = await response.blob();
+    const fileData = await uriToUploadData(photoUri);
     const fileName = `dedication_${sessionId}_${Date.now()}.jpg`;
     const filePath = `live-sessions/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('memories')
-      .upload(filePath, blob, { contentType: 'image/jpeg', upsert: true });
+      .upload(filePath, fileData, { contentType: 'image/jpeg', upsert: true });
 
     if (uploadError) {
       console.error('Error uploading dedication photo:', uploadError);
@@ -867,14 +883,13 @@ export const uploadFanPhoto = async (
   photoUri: string
 ): Promise<string | null> => {
   try {
-    const response = await fetch(photoUri);
-    const blob = await response.blob();
-    
+    const fileData = await uriToUploadData(photoUri);
+
     const fileName = `${sessionId}/${fanId}_${Date.now()}.jpg`;
-    
+
     const { error } = await supabase.storage
       .from('session_photos')
-      .upload(fileName, blob, {
+      .upload(fileName, fileData, {
         contentType: 'image/jpeg',
         upsert: true,
       });
