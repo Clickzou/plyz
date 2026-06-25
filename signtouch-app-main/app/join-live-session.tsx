@@ -31,6 +31,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   LiveSession,
   QueueEntry,
@@ -50,6 +51,7 @@ export default function JoinLiveSessionScreen() {
   const { code: paramCode } = useLocalSearchParams<{ code?: string }>();
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
+  const { user } = useAuth();
 
   const [code, setCode] = useState(paramCode || '');
   const [session, setSession] = useState<LiveSession | null>(null);
@@ -111,6 +113,31 @@ export default function JoinLiveSessionScreen() {
       handleJoinWithCode(paramCode);
     }
   }, [paramCode]);
+
+  // Récupère le pseudo public du fan connecté (profiles.display_name) pour
+  // l'envoyer dans la file -> la célébrité voit un vrai nom, pas un champ vide.
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', user.id)
+          .maybeSingle();
+        const displayName = (data?.display_name || '').trim();
+        if (!cancelled && displayName) {
+          setFanName(displayName);
+        }
+      } catch (e) {
+        console.error('[Join] Error loading fan display_name:', e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const handleJoinWithCode = async (inputCode: string) => {
     if (inputCode.length !== 6) {
@@ -366,7 +393,7 @@ export default function JoinLiveSessionScreen() {
       const entry = await joinSessionQueue(
         session.id,
         fanId,
-        fanName.trim() || '',
+        fanName.trim() || (t('liveSessionAnonymousFan' as any) || 'Un fan'),
         photoUrl,
         message.trim() || ''
       );

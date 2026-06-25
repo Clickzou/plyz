@@ -9,6 +9,7 @@ import {
   Dimensions,
   ActivityIndicator,
   Platform,
+  Animated,
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -130,6 +131,36 @@ export default function LiveSessionDashboardScreen() {
   const [, setQueueFull] = useState(false);
   const [, setFirstFanJoined] = useState(false);
   const [scheduledCountdown, setScheduledCountdown] = useState<string>('');
+
+  // Toast in-app non bloquant « un fan a rejoint la file » (remplace l'alerte système).
+  const [fanToastText, setFanToastText] = useState<string | null>(null);
+  const fanToastAnim = useRef(new Animated.Value(0)).current;
+  const fanToastHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // IDs des fans déjà vus dans la file (pour ne notifier que les nouveaux arrivants).
+  const seenFanIdsRef = useRef<Set<string>>(new Set());
+
+  const showFanJoinedToast = useCallback((text: string) => {
+    setFanToastText(text);
+    if (fanToastHideTimer.current) clearTimeout(fanToastHideTimer.current);
+    Animated.timing(fanToastAnim, {
+      toValue: 1,
+      duration: 350,
+      useNativeDriver: true,
+    }).start();
+    fanToastHideTimer.current = setTimeout(() => {
+      Animated.timing(fanToastAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => setFanToastText(null));
+    }, 3500);
+  }, [fanToastAnim]);
+
+  useEffect(() => {
+    return () => {
+      if (fanToastHideTimer.current) clearTimeout(fanToastHideTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!sessionId) {
@@ -340,12 +371,33 @@ export default function LiveSessionDashboardScreen() {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           } catch {}
         }
-        const fanName = fullQueue.find((e) => e.status === 'waiting' || e.status === 'called' || e.status === 'in_call')?.fan_name || '';
-        showAlert(
-          t('firstFanJoinedTitle') || 'Premier fan connecté !',
-          (t('firstFanJoinedMessage') || '{name} a rejoint la file d\'attente !').replace('{name}', fanName)
-        );
+        const fanName = fullQueue.find((e) => e.status === 'waiting' || e.status === 'called' || e.status === 'in_call')?.fan_name?.trim()
+          || (t('liveSessionAnonymousFan' as any) || 'Un fan');
+        const toastTemplate = t('fanJoinedQueueFirstToast' as any) || '🎉 Premier fan connecté : {name} !';
+        showFanJoinedToast(toastTemplate.replace('{name}', fanName));
         setTimeout(() => setFirstFanJoined(false), 4000);
+        // Mémorise les fans déjà présents pour ne « toaster » que les NOUVEAUX ensuite.
+        seenFanIdsRef.current = new Set(
+          fullQueue
+            .filter((e) => e.status === 'waiting' || e.status === 'called' || e.status === 'in_call')
+            .map((e) => e.id)
+        );
+      } else if (hasPlayedFirstFanChime.current) {
+        // Fans suivants : petit toast non bloquant « {name} a rejoint la file ! ».
+        const activeFans = fullQueue.filter(
+          (e) => e.status === 'waiting' || e.status === 'called' || e.status === 'in_call'
+        );
+        for (const fan of activeFans) {
+          if (!seenFanIdsRef.current.has(fan.id)) {
+            seenFanIdsRef.current.add(fan.id);
+            const name = fan.fan_name?.trim() || (t('liveSessionAnonymousFan' as any) || 'Un fan');
+            const tpl = t('fanJoinedQueueToast' as any) || '{name} a rejoint la file !';
+            showFanJoinedToast(tpl.replace('{name}', name));
+            if (Platform.OS !== 'web') {
+              try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+            }
+          }
+        }
       }
 
       if (session && !hasPlayedQueueFullChime.current) {
@@ -1022,6 +1074,32 @@ export default function LiveSessionDashboardScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />
 
+      {fanToastText && (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.fanToast,
+            { top: insets.top + 8 },
+            {
+              opacity: fanToastAnim,
+              transform: [
+                {
+                  translateY: fanToastAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-30, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.fanToastIcon}>
+            <Users size={18} color="#fff" />
+          </View>
+          <Text style={styles.fanToastText} numberOfLines={2}>{fanToastText}</Text>
+        </Animated.View>
+      )}
+
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backHeaderButton}
@@ -1497,6 +1575,40 @@ export default function LiveSessionDashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  fanToast: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    zIndex: 1000,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(99, 102, 241, 0.92)',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
+  fanToastIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fanToastText: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
   },
   centerContent: {
     justifyContent: 'center',
