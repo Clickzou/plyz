@@ -317,6 +317,27 @@ export default function CelebrityMenuScreen() {
     );
   };
 
+  // Catégorise l'événement rejoint par le fan pour le confronter aux params courants.
+  // kind : 'video' si session live vidéo, sinon 'event' (dédicace).
+  const getFanEventKind = (event: ActiveFanEvent): 'video' | 'event' =>
+    event.event_type === 'live_video' ? 'video' : 'event';
+  // view : même logique temporelle que getEventStatus, exprimée en upcoming/ongoing/past.
+  const getFanEventView = (event: ActiveFanEvent): 'upcoming' | 'ongoing' | 'past' => {
+    const now = new Date();
+    // starts_at n'est pas (encore) typé sur ActiveFanEvent mais peut exister au runtime.
+    const startsAt = (event as { starts_at?: string }).starts_at;
+    if (startsAt && new Date(startsAt) > now) return 'upcoming';
+    if (event.endsAt && new Date(event.endsAt) < now) return 'past';
+    return 'ongoing';
+  };
+  // La carte ne s'affiche que si elle correspond aux params (ou s'il n'y a pas de param).
+  const fanEventMatchesParams = (event: ActiveFanEvent): boolean => {
+    const kindOk = !kindParam || kindParam === getFanEventKind(event);
+    const viewOk = !hasCategoryParam || viewParam === getFanEventView(event);
+    return kindOk && viewOk;
+  };
+  const showFanEventCard = !!activeFanEvent && fanEventMatchesParams(activeFanEvent);
+
   const filteredEvents = scopedEvents.filter((event) => {
     if (eventFilter === 'all') return true;
     const status = getEventStatus(event);
@@ -408,7 +429,7 @@ export default function CelebrityMenuScreen() {
       >
         {(!isCelebrity || activeTab === 'events') ? (
           <>
-            {activeFanEvent && (
+            {showFanEventCard && activeFanEvent && (
               <View style={styles.fanEventCard}>
                 <View style={styles.fanEventBadgeRow}>
                   <Ticket size={14} color="#f59e0b" />
@@ -436,7 +457,7 @@ export default function CelebrityMenuScreen() {
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#fff" />
               </View>
-            ) : baseEvents.length === 0 && !activeFanEvent ? (
+            ) : baseEvents.length === 0 && !showFanEventCard ? (
               <View style={styles.emptyContainer}>
                 <QrCode size={64} color="rgba(255,255,255,0.3)" />
                 <Text style={styles.emptyTitle}>
