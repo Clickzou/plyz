@@ -102,7 +102,15 @@
         }
       ],
       "expo-video",
-      "expo-asset"
+      "expo-asset",
+      [
+        "@daily-co/config-plugin-rn-daily-js",
+        {
+          "enableCamera": true,
+          "enableMicrophone": true,
+          "enableScreenShare": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

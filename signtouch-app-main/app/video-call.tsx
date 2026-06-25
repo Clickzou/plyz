@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Platform,
-  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, PhoneOff, Clock, Video, Users, TrendingUp } from 'lucide-react-native';
+import { ArrowLeft, PhoneOff, Clock, Video, Users, TrendingUp, RotateCcw } from 'lucide-react-native';
 import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
@@ -20,13 +19,22 @@ import { recordTransaction } from '@/utils/transactionStorage';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
-let WebView: any = null;
+// SDK Daily NATIF (mobile uniquement). On le charge en require dynamique pour
+// ne JAMAIS l'importer côté web (où c'est l'iframe Daily qui est utilisée).
+let DailyNative: any = null;
+let DailyMediaView: any = null;
 if (Platform.OS !== 'web') {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  WebView = require('react-native-webview').WebView;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const daily = require('@daily-co/react-native-daily-js');
+    DailyNative = daily.default;
+    DailyMediaView = daily.DailyMediaView;
+  } catch (e) {
+    console.warn('[VideoCall] Daily native SDK not available:', e);
+  }
 }
 
-// Native camera/microphone permission helpers (mobile only).
+// Permissions natives caméra + micro (mobile uniquement).
 let ExpoCamera: any = null;
 if (Platform.OS !== 'web') {
   try {
@@ -43,165 +51,21 @@ if (Platform.OS !== 'web') {
   } catch {}
 }
 
-const DAILY_SUPPORTED_LANGS: Record<string, string> = {
-  en: 'en',
-  fr: 'fr',
-  es: 'es',
-  de: 'de',
-  it: 'it',
-  pt: 'pt',
-  ja: 'ja',
-  nl: 'nl',
-};
-
-// User-agent stable (calculé une seule fois) pour ne pas recréer un objet à chaque render.
-const WEBVIEW_USER_AGENT = Platform.select({
-  ios: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1',
-  android: 'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
-  default: undefined,
-});
-
-// originWhitelist stable (référence figée hors render).
-const WEBVIEW_ORIGIN_WHITELIST = ['*'];
-
-// Script injecté : constante de module, identité stable (ne dépend d'aucune prop).
-const DAILY_INJECTED_JS = `
-    (function() {
-      var style = document.createElement('style');
-      style.textContent = [
-        '* { box-sizing: border-box; }',
-        'html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #000; }',
-        'video { object-fit: cover !important; }',
-        '[class*="tile"], [class*="Tile"] { border-radius: 0 !important; }',
-        '[class*="grid"], [class*="Grid"], [class*="call-container"], [class*="videogrid"] { gap: 0 !important; padding: 0 !important; margin: 0 !important; }',
-        '[class*="topbar"], [class*="Topbar"], [class*="top-bar"], [class*="TopBar"], [class*="header-actions"], [class*="HeaderActions"] { display: none !important; }',
-        '[class*="leave"], [class*="Leave"] { display: none !important; }',
-        '[class*="tray"], [class*="Tray"], [class*="controls-bar"], [class*="ControlsBar"], [class*="control-bar"], [class*="toolbar"], [class*="Toolbar"], [class*="bottom-bar"], [class*="BottomBar"] { display: none !important; }',
-      ].join(' ');
-      document.head.appendChild(style);
-
-      window.addEventListener('message', function(event) {
-        if (event.data && event.data.action) {
-          window.ReactNativeWebView.postMessage(JSON.stringify(event.data));
-        }
-      });
-
-      var participantCheckInterval = setInterval(function() {
-        var videos = document.querySelectorAll('video');
-        if (videos.length >= 2) {
-          clearInterval(participantCheckInterval);
-          window.ReactNativeWebView.postMessage(JSON.stringify({action: 'participant-joined'}));
-        }
-      }, 1000);
-
-      var observer = new MutationObserver(function(mutations) {
-        var leaveBtn = document.querySelector('[data-testid="leave-meeting"]');
-        if (leaveBtn) {
-          leaveBtn.addEventListener('click', function() {
-            window.ReactNativeWebView.postMessage(JSON.stringify({action: 'left-meeting'}));
-          });
-        }
-        var videos = document.querySelectorAll('video');
-        videos.forEach(function(v) {
-          v.setAttribute('playsinline', '');
-          v.style.objectFit = 'cover';
-        });
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
-    })();
-    true;
-  `;
-
-// Diagnostic getUserMedia : injecté AVANT le chargement du contenu Daily.
-// Constante de module (identité stable) → ne casse pas le React.memo de DailyWebView.
-// On wrappe navigator.mediaDevices.getUserMedia pour remonter à React Native le
-// succès (caméra/micro OK) ou l'erreur EXACTE (name + message) si getUserMedia échoue.
-// Le comportement normal est préservé : on renvoie bien le stream en succès,
-// on rejette bien la promesse en erreur.
-const DAILY_GUM_DIAGNOSTIC_JS = `
-    (function() {
-      try {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          var _origGUM = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-          navigator.mediaDevices.getUserMedia = function(constraints) {
-            return _origGUM(constraints).then(function(stream) {
-              try {
-                window.ReactNativeWebView.postMessage(JSON.stringify({ action: 'gum-ok' }));
-              } catch (e) {}
-              return stream;
-            }).catch(function(err) {
-              try {
-                window.ReactNativeWebView.postMessage(JSON.stringify({
-                  action: 'gum-error',
-                  name: (err && err.name) ? err.name : 'UnknownError',
-                  message: (err && err.message) ? err.message : String(err)
-                }));
-              } catch (e) {}
-              throw err;
-            });
-          };
-        }
-      } catch (e) {}
-    })();
-    true;
-  `;
-
-// Gestion permission Android : référence stable.
-function handleWebViewPermissionRequest(event: any) {
-  try {
-    event?.nativeEvent?.grant?.(event.nativeEvent.resources);
-  } catch {}
+// Représentation minimale d'un participant natif (sous-ensemble de DailyParticipant).
+interface NativeParticipant {
+  session_id: string;
+  user_id: string;
+  user_name: string;
+  local: boolean;
+  tracks: {
+    video?: { state?: string; persistentTrack?: any; track?: any };
+    audio?: { state?: string; persistentTrack?: any; track?: any };
+  };
 }
-
-interface DailyWebViewProps {
-  dailyUrl: string;
-  webViewRef: React.RefObject<any>;
-  onLoadEnd: () => void;
-  onError: () => void;
-  onMessage: (event: any) => void;
-}
-
-// WebView isolée dans un composant React.memo : ses props sont toutes stables
-// (URL/handlers mémoïsés). Ainsi, quand le compte à rebours fait un setState
-// chaque seconde dans le parent, CE composant ne se re-render PAS et la WebView
-// n'est jamais remontée → l'écran de consentement Daily ne clignote plus.
-const DailyWebView = React.memo(function DailyWebView({
-  dailyUrl,
-  webViewRef,
-  onLoadEnd,
-  onError,
-  onMessage,
-}: DailyWebViewProps) {
-  const source = useMemo(() => ({ uri: dailyUrl }), [dailyUrl]);
-  return (
-    <WebView
-      key={dailyUrl}
-      ref={webViewRef}
-      source={source}
-      style={styles.videoArea}
-      onLoadEnd={onLoadEnd}
-      onError={onError}
-      onMessage={onMessage}
-      injectedJavaScriptBeforeContentLoaded={DAILY_GUM_DIAGNOSTIC_JS}
-      injectedJavaScript={DAILY_INJECTED_JS}
-      javaScriptEnabled={true}
-      domStorageEnabled={true}
-      mediaPlaybackRequiresUserAction={false}
-      allowsInlineMediaPlayback={true}
-      mediaCapturePermissionGrantType="grant"
-      onPermissionRequest={handleWebViewPermissionRequest}
-      startInLoadingState={false}
-      originWhitelist={WEBVIEW_ORIGIN_WHITELIST}
-      allowsFullscreenVideo={true}
-      userAgent={WEBVIEW_USER_AGENT}
-    />
-  );
-});
 
 export default function VideoCallScreen() {
   const router = useRouter();
-  const { t, language } = useLanguage();
-  const webViewRef = useRef<any>(null);
+  const { t } = useLanguage();
   const dailyCallFrameRef = useRef<any>(null);
   const params = useLocalSearchParams<{
     roomUrl: string;
@@ -221,8 +85,8 @@ export default function VideoCallScreen() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // 'pending' while we request native cam/mic, 'granted' once OK, 'denied' if refused.
-  // On web the browser handles permissions itself, so we start as 'granted'.
+  // 'pending' tant qu'on demande la cam/micro natifs, 'granted' une fois OK, 'denied' si refusé.
+  // Sur web le navigateur gère lui-même les permissions, donc on démarre en 'granted'.
   const [mediaPermission, setMediaPermission] = useState<'pending' | 'granted' | 'denied'>(
     Platform.OS === 'web' ? 'granted' : 'pending'
   );
@@ -239,6 +103,10 @@ export default function VideoCallScreen() {
   const [waitingForNextFan, setWaitingForNextFan] = useState(false);
   const [currentFanName, setCurrentFanName] = useState(params.otherUserName || 'Fan');
   const [fansRemainingCount, setFansRemainingCount] = useState(parseInt(params.fansRemaining || '0', 10));
+
+  // --- Moteur vidéo natif (mobile) ---
+  const [participants, setParticipants] = useState<Record<string, NativeParticipant>>({});
+  const [isFrontCamera, setIsFrontCamera] = useState(true);
 
   // --- End-of-session summary (replaces the basic system alert) ---
   const sessionStartTimeRef = useRef<number>(Date.now());
@@ -307,9 +175,9 @@ export default function VideoCallScreen() {
     }
   }, []);
 
-  // Demande la permission native caméra + micro AVANT de charger l'appel Daily.
-  // Sans ça, sur Android la fenêtre de permission de la WebView s'ouvre puis se ferme
-  // toute seule et la caméra reste morte.
+  // Demande la permission native caméra + micro AVANT de rejoindre l'appel Daily.
+  // Indispensable sur Android : sans la popup système RECORD_AUDIO, le SDK natif
+  // échoue à ouvrir le micro (NotReadableError) et la caméra reste morte.
   useEffect(() => {
     if (Platform.OS === 'web') return;
     let cancelled = false;
@@ -320,8 +188,7 @@ export default function VideoCallScreen() {
         let micGranted = false;
 
         // 1) Sur Android, on demande EXPLICITEMENT caméra ET micro au niveau OS via
-        //    PermissionsAndroid.requestMultiple. C'est ce qui déclenche la vraie popup
-        //    système RECORD_AUDIO (sans elle getUserMedia échoue EN ENTIER → écran noir).
+        //    PermissionsAndroid.requestMultiple (vraie popup système RECORD_AUDIO).
         if (Platform.OS === 'android') {
           try {
             // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -339,9 +206,7 @@ export default function VideoCallScreen() {
           }
         }
 
-        // 2) En complément (et seul chemin sur iOS), expo-camera : demande caméra + micro.
-        //    On exige les DEUX. Si l'un manque encore après PermissionsAndroid, expo-camera
-        //    peut le compléter (et inversement).
+        // 2) En complément (et seul chemin sur iOS), expo-camera : caméra + micro.
         if (ExpoCamera?.requestCameraPermissionsAsync) {
           if (!camGranted) {
             const cam = await ExpoCamera.requestCameraPermissionsAsync();
@@ -352,13 +217,11 @@ export default function VideoCallScreen() {
             micGranted = !!mic?.granted;
           }
         } else if (Platform.OS !== 'android') {
-          // iOS sans expo-camera : on laisse la WebView gérer (mediaCapturePermissionGrantType="grant").
           camGranted = true;
           micGranted = true;
         }
 
         if (!cancelled) {
-          // On n'autorise le montage de la WebView Daily QUE si caméra ET micro sont accordés.
           setMediaPermission(camGranted && micGranted ? 'granted' : 'denied');
         }
       } catch (e) {
@@ -405,62 +268,121 @@ export default function VideoCallScreen() {
 
   const isHost = params.isHost === 'true';
   const userName = params.userName || (isHost ? 'Host' : 'Guest');
-  const dailyLang = DAILY_SUPPORTED_LANGS[language] || 'en';
 
-  const getDailyPrebuiltUrl = () => {
-    const baseUrl = params.roomUrl;
-    if (!baseUrl) return null;
-    
-    const urlParams = new URLSearchParams();
-    if (params.token) {
-      urlParams.append('t', params.token);
-    }
-    urlParams.append('userName', userName);
-    urlParams.append('showLeaveButton', 'false');
-    urlParams.append('showFullscreenButton', 'false');
-    urlParams.append('showParticipantsBar', 'false');
-    urlParams.append('activeSpeakerMode', 'false');
-    urlParams.append('lang', dailyLang);
-    urlParams.append('startAudioOff', 'false');
-    urlParams.append('startVideoOff', 'false');
-    
-    return `${baseUrl}?${urlParams.toString()}`;
-  };
+  // ----------------------------------------------------------------------------
+  // MOTEUR VIDÉO NATIF (mobile) : createCallObject + events + join.
+  // S'appuie sur l'ancien app/video-call.tsx (réf : _ref_native_videocall.bak.tsx).
+  // ----------------------------------------------------------------------------
 
-  // Handlers mémoïsés (référence stable) pour ne pas re-render la WebView mémoïsée.
-  // handleCallEnded est défini plus bas mais référencé via un ref pour garder une
-  // identité stable sans dépendre de sa redéfinition à chaque render.
-  const handleCallEndedRef = useRef<() => void>(() => {});
-
-  const handleWebViewMessage = useCallback((event: any) => {
+  // Met à jour la liste des participants depuis l'objet d'appel natif, et déclenche
+  // otherParticipantJoined dès qu'un participant DISTANT (non-local) est présent.
+  const refreshParticipants = useCallback(() => {
+    const call = dailyCallFrameRef.current;
+    if (!call) return;
     try {
-      const data = JSON.parse(event.nativeEvent.data);
-      if (data.action === 'left-meeting') {
-        handleCallEndedRef.current();
-      } else if (data.action === 'participant-joined') {
+      const next = call.participants() as Record<string, NativeParticipant>;
+      setParticipants({ ...next });
+      const hasRemote = Object.values(next).some((p) => !p.local);
+      if (hasRemote) {
         setOtherParticipantJoined(true);
-      } else if (data.action === 'gum-error') {
-        // Diagnostic : getUserMedia a échoué côté WebView → on affiche l'erreur
-        // EXACTE (ex. "NotAllowedError: Permission denied") pour ne plus deviner.
-        const name = data.name || 'UnknownError';
-        const message = data.message || '';
-        console.warn('[VideoCall] getUserMedia error:', name, message);
-        Alert.alert('Diagnostic caméra', name + ': ' + message);
-      } else if (data.action === 'gum-ok') {
-        console.log('[VideoCall] getUserMedia OK (caméra + micro accordés)');
       }
-    } catch {
+    } catch {}
+  }, []);
+
+  const initNativeCall = useCallback(async () => {
+    if (!DailyNative || !params.roomUrl) {
+      setError(t('videoCallError'));
+      setIsLoading(false);
+      return;
+    }
+    try {
+      // Réutilise l'objet d'appel s'il existe déjà (cas "fan suivant").
+      let call = dailyCallFrameRef.current;
+      if (!call) {
+        call = DailyNative.createCallObject({
+          audioSource: true,
+          videoSource: true,
+        });
+        dailyCallFrameRef.current = call;
+
+        call.on('joined-meeting', () => {
+          setIsLoading(false);
+          refreshParticipants();
+        });
+        call.on('participant-joined', refreshParticipants);
+        call.on('participant-updated', refreshParticipants);
+        call.on('participant-left', () => {
+          refreshParticipants();
+          const c = dailyCallFrameRef.current;
+          if (!c) return;
+          try {
+            const ps = c.participants() as Record<string, NativeParticipant>;
+            const remoteCount = Object.values(ps).filter((p) => !p.local).length;
+            if (remoteCount === 0 && otherParticipantJoined) {
+              if (callEndReason.current === 'unknown') {
+                callEndReason.current = isHost ? 'fan_left' : 'celebrity_left';
+              }
+              handleCallEnded();
+            }
+          } catch {}
+        });
+        call.on('left-meeting', () => {
+          handleCallEndedRef.current();
+        });
+        call.on('error', (ev: any) => {
+          console.error('[VideoCall] Daily native error:', ev?.errorMsg);
+          setError(ev?.errorMsg || t('videoCallError'));
+          setIsLoading(false);
+        });
+      }
+
+      await call.join({
+        url: params.roomUrl,
+        token: params.token || undefined,
+        userName,
+      });
+      refreshParticipants();
+    } catch (err) {
+      console.error('[VideoCall] Failed to init native call:', err);
+      setError(t('videoCallError'));
+      setIsLoading(false);
+    }
+  }, [params.roomUrl, params.token, userName, refreshParticipants, isHost, otherParticipantJoined, t]);
+
+  // Lance l'appel natif une fois la permission accordée (mobile uniquement).
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    if (mediaPermission !== 'granted') return;
+    if (dailyCallFrameRef.current) return; // déjà initialisé
+    initNativeCall();
+  }, [mediaPermission, initNativeCall]);
+
+  // Nettoyage à la destruction de l'écran.
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    return () => {
+      const call = dailyCallFrameRef.current;
+      if (call) {
+        try {
+          call.leave().catch(() => {});
+          call.destroy().catch(() => {});
+        } catch {}
+        dailyCallFrameRef.current = null;
+      }
+    };
+  }, []);
+
+  const switchCamera = useCallback(() => {
+    const call = dailyCallFrameRef.current;
+    if (call?.cycleCamera) {
+      call.cycleCamera().catch(() => {});
+      setIsFrontCamera((prev) => !prev);
     }
   }, []);
 
-  const handleWebViewError = useCallback(() => {
-    setError(t('videoCallError'));
-    setIsLoading(false);
-  }, [t]);
-
-  const handleLoadEnd = useCallback(() => {
-    setIsLoading(false);
-  }, []);
+  // Handlers mémoïsés (référence stable). handleCallEnded est défini plus bas mais
+  // référencé via un ref pour garder une identité stable.
+  const handleCallEndedRef = useRef<() => void>(() => {});
 
   const handleCallEnded = () => {
     if (!hasLeftCall) {
@@ -478,8 +400,8 @@ export default function VideoCallScreen() {
     }
   };
 
-  // Garde le ref à jour pour que les handlers WebView mémoïsés appellent
-  // toujours la version courante de handleCallEnded.
+  // Garde le ref à jour pour que les handlers Daily appellent toujours la version
+  // courante de handleCallEnded.
   handleCallEndedRef.current = handleCallEnded;
 
   const leaveCall = () => {
@@ -682,25 +604,52 @@ export default function VideoCallScreen() {
     }
   };
 
-  const dailyUrl = getDailyPrebuiltUrl();
+  // ----------------------------------------------------------------------------
+  // RENDU
+  // ----------------------------------------------------------------------------
 
-  if (!dailyUrl) {
+  // Sépare le participant local (soi) du participant distant (l'autre) pour le
+  // layout type WhatsApp : l'autre en plein écran, soi en petit PiP arrondi.
+  const allParticipants = Object.values(participants);
+  const localParticipant = allParticipants.find((p) => p.local) || null;
+  const remoteParticipant = allParticipants.find((p) => !p.local) || null;
+
+  const getVideoTrack = (p: NativeParticipant | null) => {
+    if (!p) return null;
+    const v = p.tracks?.video;
+    if (!v) return null;
+    if (v.state === 'playable') {
+      return v.persistentTrack || v.track || null;
+    }
+    return null;
+  };
+
+  const renderNativeTile = (
+    p: NativeParticipant | null,
+    opts: { full: boolean }
+  ) => {
+    const track = getVideoTrack(p);
+    if (track && DailyMediaView) {
+      return (
+        <DailyMediaView
+          videoTrack={track}
+          audioTrack={p && !p.local ? p.tracks?.audio?.persistentTrack || p.tracks?.audio?.track || null : null}
+          mirror={!!(p && p.local && isFrontCamera)}
+          zOrder={opts.full ? 0 : 1}
+          objectFit="cover"
+          style={styles.mediaView}
+        />
+      );
+    }
+    // Placeholder (vidéo pas encore prête) : initiale du nom.
     return (
-      <View style={styles.container}>
-        <StatusBar style="light" />
-        <View style={styles.errorContainer}>
-          <View style={styles.errorIconCircle}>
-            <Video size={40} color="#ef4444" />
-          </View>
-          <Text style={styles.errorTitle}>{t('videoCallError')}</Text>
-          <Text style={styles.errorSubtext}>{t('videoCallConnectionFailed')}</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>{t('goBack')}</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.videoPlaceholder}>
+        <Text style={[styles.videoPlaceholderText, !opts.full && styles.videoPlaceholderTextSmall]}>
+          {(p?.user_name || (p?.local ? userName : currentFanName))?.charAt(0)?.toUpperCase() || '?'}
+        </Text>
       </View>
     );
-  }
+  };
 
   const renderVideoContent = () => {
     if (error) {
@@ -822,7 +771,7 @@ export default function VideoCallScreen() {
       );
     }
 
-    // Caméra/micro refusés : message clair, on ne charge pas l'appel.
+    // Caméra/micro refusés : message clair, on ne rejoint pas l'appel.
     if (mediaPermission === 'denied') {
       return (
         <View style={styles.errorContainer}>
@@ -843,45 +792,64 @@ export default function VideoCallScreen() {
       );
     }
 
-    // En attente de la réponse de permission native : on patiente (l'overlay de chargement reste visible).
+    // En attente de la réponse de permission native : on patiente.
     if (mediaPermission === 'pending') {
       return <View style={styles.videoArea} />;
     }
 
-    if (WebView) {
-      return (
-        <DailyWebView
-          dailyUrl={dailyUrl}
-          webViewRef={webViewRef}
-          onLoadEnd={handleLoadEnd}
-          onError={handleWebViewError}
-          onMessage={handleWebViewMessage}
-        />
-      );
-    }
-
+    // --- MOTEUR NATIF : layout type WhatsApp ---
+    // L'AUTRE participant en plein écran, SOI en petit cadre arrondi (PiP).
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorTitle}>{t('videoCallError')}</Text>
+      <View style={styles.videoArea}>
+        {/* Plein écran : l'autre participant (ou soi si seul). */}
+        <View style={styles.fullScreenVideo}>
+          {renderNativeTile(remoteParticipant || (remoteParticipant ? null : localParticipant), {
+            full: true,
+          })}
+        </View>
+
+        {/* PiP arrondi : soi-même, uniquement quand l'autre est en grand. */}
+        {remoteParticipant && localParticipant && (
+          <View style={styles.pipContainer}>
+            {renderNativeTile(localParticipant, { full: false })}
+          </View>
+        )}
+
+        {/* Bouton bascule caméra (mobile natif). */}
+        <TouchableOpacity style={styles.switchCameraButton} onPress={switchCamera}>
+          <RotateCcw size={20} color="#fff" />
+        </TouchableOpacity>
       </View>
     );
   };
+
+  if (!params.roomUrl) {
+    return (
+      <View style={styles.container}>
+        <StatusBar style="light" />
+        <View style={styles.errorContainer}>
+          <View style={styles.errorIconCircle}>
+            <Video size={40} color="#ef4444" />
+          </View>
+          <Text style={styles.errorTitle}>{t('videoCallError')}</Text>
+          <Text style={styles.errorSubtext}>{t('videoCallConnectionFailed')}</Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Text style={styles.backButtonText}>{t('goBack')}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
 
       <View style={styles.controlBar}>
-        {isHost ? (
-          <TouchableOpacity style={styles.headerBackButton} onPress={() => router.back()}>
-            <ArrowLeft size={20} color="#fff" />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.headerBackButton} onPress={() => router.back()}>
-            <ArrowLeft size={20} color="#fff" />
-          </TouchableOpacity>
-        )}
-        
+        <TouchableOpacity style={styles.headerBackButton} onPress={() => router.back()}>
+          <ArrowLeft size={20} color="#fff" />
+        </TouchableOpacity>
+
         {params.durationPerFan ? (
           <View style={[styles.timerContainer, timeWarning && styles.timerWarning, !otherParticipantJoined && { opacity: 0.5 }]}>
             <Clock size={14} color="#fff" />
@@ -904,13 +872,13 @@ export default function VideoCallScreen() {
             </Text>
           </View>
         ) : null}
-        
+
         <TouchableOpacity style={styles.endCallButton} onPress={leaveCall}>
           <PhoneOff size={16} color="#fff" />
           <Text style={styles.endCallText}>{t('endCall')}</Text>
         </TouchableOpacity>
       </View>
-      
+
       {!hasLeftCall && renderVideoContent()}
       {hasLeftCall && <View style={{ flex: 1, backgroundColor: '#000' }} />}
 
@@ -1225,6 +1193,59 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
     overflow: 'hidden',
+  },
+  fullScreenVideo: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#000',
+  },
+  mediaView: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  pipContainer: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 110,
+    height: 160,
+    borderRadius: 18,
+    overflow: 'hidden',
+    backgroundColor: '#1f2937',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.6)',
+    zIndex: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  videoPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#374151',
+  },
+  videoPlaceholderText: {
+    fontSize: 64,
+    fontWeight: '700',
+    color: '#9ca3af',
+  },
+  videoPlaceholderTextSmall: {
+    fontSize: 32,
+  },
+  switchCameraButton: {
+    position: 'absolute',
+    bottom: 24,
+    right: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 30,
   },
   fanConnectingBanner: {
     position: 'absolute',

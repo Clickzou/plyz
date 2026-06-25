@@ -11,6 +11,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@daily-co/config-plugin-rn-daily-js": "^0.0.11",
+    "@daily-co/react-native-daily-js": "^0.83.0",
+    "@daily-co/react-native-webrtc": "^124.0.6-daily.1",
     "@expo-google-fonts/alex-brush": "^0.4.1",
     "@expo-google-fonts/alfa-slab-one": "^0.4.1",
     "@expo-google-fonts/allura": "^0.4.2",
@@ -116,6 +119,7 @@
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.16.0",
+    "react-native-background-timer": "^2.4.1",
     "react-native-svg": "15.12.1",
     "react-native-url-polyfill": "^3.0.0",
     "react-native-view-shot": "^4.0.3",
