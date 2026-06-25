@@ -411,7 +411,7 @@ export default function JoinLiveSessionScreen() {
               <Check size={60} color="#4ade80" />
             </View>
             <Text style={styles.subtitle}>{t('eventReservedMessage')}</Text>
-            <TouchableOpacity style={styles.primaryButton} onPress={() => router.back()}>
+            <TouchableOpacity style={[styles.primaryButton, { alignSelf: 'stretch', marginTop: 24 }]} onPress={() => router.back()}>
               <Text style={styles.primaryButtonText}>{t('back') || 'Retour'}</Text>
             </TouchableOpacity>
           </View>
