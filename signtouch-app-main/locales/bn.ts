@@ -1494,4 +1494,5 @@ export default {
   reserveEvent: 'আমার জায়গা সংরক্ষণ করুন',
   eventReservedMessage: 'সংরক্ষিত হয়েছে! আপনি এটি «আসন্ন»-এ খুঁজে পাবেন।',
   reservationFailed: 'সংরক্ষণ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।',
+  shareEventMessage: 'Plyz-এ আমার লাইভ সেশনে যোগ দিন! কোড: {code}',
 };

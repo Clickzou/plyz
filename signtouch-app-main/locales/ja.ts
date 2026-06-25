@@ -1489,4 +1489,5 @@ export default {
   reserveEvent: '席を予約する',
   eventReservedMessage: '予約完了！「今後の予定」で確認できます。',
   reservationFailed: '予約に失敗しました。もう一度お試しください。',
+  shareEventMessage: 'Plyzで私のライブセッションに参加しよう！コード：{code}',
 };

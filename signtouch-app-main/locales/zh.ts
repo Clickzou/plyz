@@ -1489,4 +1489,5 @@ export default {
   reserveEvent: '预订我的位置',
   eventReservedMessage: '已预订！你可以在「即将开始」中找到它。',
   reservationFailed: '预订失败，请重试。',
+  shareEventMessage: '快来加入我在 Plyz 的直播！验证码：{code}',
 };

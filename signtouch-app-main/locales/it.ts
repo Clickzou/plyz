@@ -1489,4 +1489,5 @@ export default {
   reserveEvent: 'Prenota il mio posto',
   eventReservedMessage: 'Prenotato! Lo troverai in «In arrivo».',
   reservationFailed: 'Prenotazione non riuscita. Riprova.',
+  shareEventMessage: 'Unisciti alla mia sessione live su Plyz! Codice: {code}',
 };

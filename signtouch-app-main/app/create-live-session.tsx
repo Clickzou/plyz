@@ -11,6 +11,7 @@ import {
   Platform,
   Modal,
   Pressable,
+  Share,
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -450,6 +451,36 @@ export default function CreateLiveSessionScreen() {
     }
   };
 
+  const handleShareEvent = async () => {
+    if (!scheduledConfirmation) return;
+    const code = scheduledConfirmation.code;
+    let message = (t('shareEventMessage') || 'Rejoins ma session live sur Plyz ! Code : {code}').replace('{code}', code);
+    try {
+      const scheduledDate = new Date(scheduledConfirmation.scheduledAt);
+      if (!isNaN(scheduledDate.getTime())) {
+        const when = scheduledDate.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', {
+          weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+        });
+        message += `\n${language === 'fr' ? 'Quand' : 'When'} : ${when}`;
+      }
+    } catch {}
+
+    try {
+      await Share.share({ message });
+    } catch (error) {
+      // Sur web, Share.share peut échouer -> fallback presse-papier
+      try {
+        await Clipboard.setStringAsync(message);
+        showAlert(
+          t('success') || 'OK',
+          language === 'fr' ? 'Texte copié dans le presse-papier !' : 'Text copied to clipboard!'
+        );
+      } catch {
+        console.error('Share/clipboard failed:', error);
+      }
+    }
+  };
+
   if (scheduledConfirmation) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -528,6 +559,16 @@ export default function CreateLiveSessionScreen() {
             <Send size={18} color="#000" />
             <Text style={{ color: '#000', fontSize: 16, fontWeight: '700' }}>
               {language === 'fr' ? 'Publier dans le fil Actu' : 'Publish to Feed'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', paddingVertical: 14, paddingHorizontal: 32, borderRadius: 12, width: '100%', marginBottom: 12 }}
+            onPress={handleShareEvent}
+          >
+            <Send size={18} color="#fff" />
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
+              {t('share') || 'Partager'}
             </Text>
           </TouchableOpacity>
 

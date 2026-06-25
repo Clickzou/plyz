@@ -1489,4 +1489,5 @@ export default {
   reserveEvent: 'Platz reservieren',
   eventReservedMessage: 'Reserviert! Du findest es unter „Bevorstehend".',
   reservationFailed: 'Reservierung fehlgeschlagen. Bitte erneut versuchen.',
+  shareEventMessage: 'Komm zu meiner Live-Session auf Plyz! Code: {code}',
 };

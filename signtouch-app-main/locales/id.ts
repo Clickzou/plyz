@@ -1494,4 +1494,5 @@ export default {
   reserveEvent: 'Pesan tempat saya',
   eventReservedMessage: 'Tersimpan! Kamu akan menemukannya di «Akan datang».',
   reservationFailed: 'Reservasi gagal. Silakan coba lagi.',
+  shareEventMessage: 'Gabung sesi live saya di Plyz! Kode: {code}',
 };

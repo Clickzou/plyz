@@ -36,6 +36,7 @@ import {
   subscribeToSession,
   subscribeToQueueEntry,
 } from '@/utils/liveSessionStorage';
+import { saveActiveFanEvent } from '@/utils/eventSessionStorage';
 
 export default function JoinLiveSessionScreen() {
   const router = useRouter();
@@ -45,7 +46,9 @@ export default function JoinLiveSessionScreen() {
 
   const [code, setCode] = useState(paramCode || '');
   const [session, setSession] = useState<LiveSession | null>(null);
-  const [step, setStep] = useState<'code' | 'upload' | 'queue' | 'signing'>('code');
+  const [step, setStep] = useState<'code' | 'scheduled' | 'upload' | 'queue' | 'signing'>('code');
+  const [isReserving, setIsReserving] = useState(false);
+  const [reservationDone, setReservationDone] = useState(false);
   const [fanName, setFanName] = useState('');
   const [message, setMessage] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -104,7 +107,16 @@ export default function JoinLiveSessionScreen() {
       }
 
       setSession(s);
-      setStep('upload');
+
+      const isScheduled =
+        s.status === 'scheduled' ||
+        (!!s.scheduled_at && new Date(s.scheduled_at) > new Date());
+
+      if (isScheduled) {
+        setStep('scheduled');
+      } else {
+        setStep('upload');
+      }
 
       sessionChannelRef.current = subscribeToSession(s.id, (updated) => {
         setSession(updated);
@@ -233,6 +245,89 @@ export default function JoinLiveSessionScreen() {
       setIsLoading(false);
     }
   };
+
+  const formatScheduledDate = (iso?: string | null): string => {
+    if (!iso) return '';
+    try {
+      return new Date(iso).toLocaleString('fr-FR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return '';
+    }
+  };
+
+  const handleReserve = async () => {
+    if (!session) return;
+    setIsReserving(true);
+    try {
+      let endsAt = session.ends_at;
+      if (!endsAt) {
+        const base = session.scheduled_at ? new Date(session.scheduled_at) : new Date();
+        endsAt = new Date(base.getTime() + (session.duration_minutes || 30) * 60 * 1000).toISOString();
+      }
+
+      await saveActiveFanEvent({
+        sessionId: session.id,
+        sessionTitle: session.celebrity_name,
+        joinCode: session.code,
+        endsAt,
+        signers: '[]',
+        savedAt: Date.now(),
+        starts_at: session.scheduled_at || undefined,
+        event_type: 'live_video',
+      });
+
+      setReservationDone(true);
+      showAlert(t('success') || 'OK', t('eventReservedMessage'));
+    } catch (error) {
+      console.error('Error reserving event:', error);
+      showAlert(t('error'), t('reservationFailed'));
+    } finally {
+      setIsReserving(false);
+    }
+  };
+
+  const renderScheduledStep = () => (
+    <View style={[styles.stepContainer, { justifyContent: 'center' }]}>
+      <View style={styles.queueIconContainer}>
+        <Clock size={60} color="#fff" />
+      </View>
+
+      <Text style={styles.title}>{session?.celebrity_name}</Text>
+      <Text style={styles.subtitle}>
+        Session programmée pour {formatScheduledDate(session?.scheduled_at)}
+      </Text>
+
+      {reservationDone ? (
+        <>
+          <View style={[styles.signingIconContainer, { marginTop: 0 }]}>
+            <Check size={60} color="#4ade80" />
+          </View>
+          <Text style={styles.subtitle}>{t('eventReservedMessage')}</Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={() => router.back()}>
+            <Text style={styles.primaryButtonText}>{t('back') || 'Retour'}</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <TouchableOpacity
+          style={[styles.primaryButton, isReserving && styles.buttonDisabled]}
+          onPress={handleReserve}
+          disabled={isReserving}
+        >
+          {isReserving ? (
+            <ActivityIndicator color="#6366f1" />
+          ) : (
+            <Text style={styles.primaryButtonText}>{t('reserveEvent')}</Text>
+          )}
+        </TouchableOpacity>
+      )}
+    </View>
+  );
 
   const renderCodeStep = () => (
     <ScrollView style={styles.stepContainer} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
@@ -389,6 +484,7 @@ export default function JoinLiveSessionScreen() {
       </View>
 
       {step === 'code' && renderCodeStep()}
+      {step === 'scheduled' && renderScheduledStep()}
       {step === 'upload' && renderUploadStep()}
       {step === 'queue' && renderQueueStep()}
       {step === 'signing' && renderSigningStep()}

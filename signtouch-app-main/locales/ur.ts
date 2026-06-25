@@ -1494,4 +1494,5 @@ export default {
   reserveEvent: 'میری جگہ محفوظ کریں',
   eventReservedMessage: 'محفوظ ہو گیا! آپ اسے «آنے والے» میں پائیں گے۔',
   reservationFailed: 'ریزرویشن ناکام ہو گئی۔ براہ کرم دوبارہ کوشش کریں۔',
+  shareEventMessage: 'Plyz پر میرے لائیو سیشن میں شامل ہوں! کوڈ: {code}',
 };

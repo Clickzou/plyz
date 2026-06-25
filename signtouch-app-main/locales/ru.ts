@@ -1489,4 +1489,5 @@ export default {
   reserveEvent: 'Забронировать место',
   eventReservedMessage: 'Забронировано! Вы найдёте это в разделе «Предстоящие».',
   reservationFailed: 'Не удалось забронировать. Попробуйте ещё раз.',
+  shareEventMessage: 'Присоединяйся к моей прямой трансляции в Plyz! Код: {code}',
 };

@@ -1489,4 +1489,5 @@ export default {
   reserveEvent: 'मेरी जगह आरक्षित करें',
   eventReservedMessage: 'आरक्षित हो गया! आप इसे «आगामी» में पाएंगे।',
   reservationFailed: 'आरक्षण विफल रहा। कृपया फिर से प्रयास करें।',
+  shareEventMessage: 'Plyz पर मेरे लाइव सेशन में शामिल हों! कोड: {code}',
 };
