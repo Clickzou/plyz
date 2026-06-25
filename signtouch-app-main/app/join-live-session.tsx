@@ -694,27 +694,151 @@ export default function JoinLiveSessionScreen() {
     </ScrollView>
   );
 
-  const renderUploadStep = () => (
-    <View style={[styles.stepContainer, { justifyContent: 'center' }]}>
-      <Text style={styles.title}>{session?.celebrity_name}</Text>
-      <Text style={styles.subtitle}>{t('liveSessionUploadHint')}</Text>
+  const renderUploadStep = () => {
+    const celebrityName = session?.celebrity_name || (language === 'fr' ? 'la célébrité' : 'the celebrity');
+    const spotsLeft =
+      session && session.max_slots > 0
+        ? Math.max(0, session.max_slots - (session.slots_used || 0))
+        : 0;
+    const perFanDuration = formatPerFanDuration(session?.duration_per_fan_minutes);
+    const waiting = session?.slots_used || 0;
 
-      <TouchableOpacity
-        style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
-        onPress={handleJoinQueue}
-        disabled={isLoading}
+    const waitingLabel =
+      waiting > 0
+        ? language === 'fr'
+          ? `${waiting} personne${waiting > 1 ? 's' : ''} en attente`
+          : `${waiting} ${waiting > 1 ? 'people' : 'person'} waiting`
+        : language === 'fr'
+          ? 'Sois le premier !'
+          : 'Be the first!';
+
+    const excitingText =
+      language === 'fr'
+        ? `Prépare-toi pour un moment unique en tête-à-tête, rien que toi et ${celebrityName} !`
+        : `Get ready for a unique one-on-one moment, just you and ${celebrityName}!`;
+
+    return (
+      <ScrollView
+        style={styles.stepContainer}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
       >
-        {isLoading ? (
-          <ActivityIndicator color="#6366f1" />
+        {/* Cover photo / fallback */}
+        {session?.cover_photo_url ? (
+          <Image
+            source={{ uri: session.cover_photo_url }}
+            style={styles.coverPhoto}
+            resizeMode="cover"
+          />
         ) : (
-          <>
-            <Send size={20} color="#6366f1" />
-            <Text style={styles.primaryButtonText}>{t('liveSessionJoinQueue')}</Text>
-          </>
+          <View style={styles.coverFallback}>
+            <Video size={64} color="#fff" />
+          </View>
         )}
-      </TouchableOpacity>
-    </View>
-  );
+
+        {/* Celebrity name */}
+        <Text style={[styles.title, { marginTop: 20 }]}>{session?.celebrity_name}</Text>
+
+        {/* Live badge (red) */}
+        <View
+          style={[
+            styles.liveBadge,
+            { backgroundColor: 'rgba(239, 68, 68, 0.18)' },
+          ]}
+        >
+          <View
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: '#ef4444',
+            }}
+          />
+          <Text style={[styles.liveBadgeText, { color: '#ef4444' }]}>
+            {language === 'fr' ? '🔴 EN DIRECT' : '🔴 LIVE NOW'}
+          </Text>
+        </View>
+
+        {/* Exciting text */}
+        <Text style={[styles.subtitle, { marginBottom: 20 }]}>{excitingText}</Text>
+
+        {/* Info cards */}
+        <View style={styles.infoCardsContainer}>
+          <View style={styles.infoCard}>
+            <View style={styles.infoIconCircle}>
+              <Tag size={20} color="#818cf8" />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>{t('pricePerFan') || 'Tarif par fan'}</Text>
+              <Text style={styles.infoValue}>
+                {formatPrice(session?.price_cents, session?.currency)}
+              </Text>
+            </View>
+          </View>
+
+          {!!perFanDuration && (
+            <View style={styles.infoCard}>
+              <View style={styles.infoIconCircle}>
+                <Clock size={20} color="#818cf8" />
+              </View>
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>
+                  {t('liveSessionDurationPerFan') || 'Durée par fan'}
+                </Text>
+                <Text style={styles.infoValue}>{perFanDuration}</Text>
+              </View>
+            </View>
+          )}
+
+          {!!session?.max_slots && (
+            <View style={styles.infoCard}>
+              <View style={styles.infoIconCircle}>
+                <Users size={20} color="#818cf8" />
+              </View>
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>{t('slots') || 'Places'}</Text>
+                <Text style={styles.infoValue}>
+                  {spotsLeft} / {session.max_slots}
+                  {'  '}
+                  <Text style={styles.infoValueMuted}>
+                    {t('spotsRemaining') || 'places restantes'}
+                  </Text>
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Fans in queue (instead of date) */}
+          <View style={styles.infoCard}>
+            <View style={styles.infoIconCircle}>
+              <Clock size={20} color="#818cf8" />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>
+                {language === 'fr' ? "File d'attente" : 'Queue'}
+              </Text>
+              <Text style={styles.infoValue}>{waitingLabel}</Text>
+            </View>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.primaryButton, { marginTop: 24 }, isLoading && styles.buttonDisabled]}
+          onPress={handleJoinQueue}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#6366f1" />
+          ) : (
+            <>
+              <Send size={20} color="#6366f1" />
+              <Text style={styles.primaryButtonText}>{t('liveSessionJoinQueue')}</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
+    );
+  };
 
   const renderQueueStep = () => {
     const displayRank = queueRank > 0 ? queueRank : (queueEntry?.position || queuePosition);
