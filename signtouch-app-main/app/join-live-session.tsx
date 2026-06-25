@@ -35,18 +35,21 @@ import {
   LiveSession,
   QueueEntry,
   getSessionByCode,
+  getSessionById,
   joinSessionQueue,
   uploadFanPhoto,
   subscribeToSession,
   subscribeToQueueEntry,
 } from '@/utils/liveSessionStorage';
+import { supabase } from '@/utils/supabase';
+import { createMeetingToken } from '@/utils/dailyService';
 import { saveActiveFanEvent } from '@/utils/eventSessionStorage';
 
 export default function JoinLiveSessionScreen() {
   const router = useRouter();
   const { code: paramCode } = useLocalSearchParams<{ code?: string }>();
   const insets = useSafeAreaInsets();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [code, setCode] = useState(paramCode || '');
   const [session, setSession] = useState<LiveSession | null>(null);
@@ -59,12 +62,23 @@ export default function JoinLiveSessionScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [queueEntry, setQueueEntry] = useState<QueueEntry | null>(null);
   const [queuePosition, setQueuePosition] = useState(0);
+  const [queueRank, setQueueRank] = useState(0);
+  const [waitMinutes, setWaitMinutes] = useState(0);
   const [showScanner, setShowScanner] = useState(false);
   const [, setHasPermission] = useState<boolean | null>(null);
 
   const fanId = useMemo(() => `fan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, []);
   const sessionChannelRef = useRef<RealtimeChannel | null>(null);
   const queueChannelRef = useRef<RealtimeChannel | null>(null);
+  // Subscription/polling sur TOUTE la file (pas seulement mon entrée) pour le rang dynamique
+  const queueRankChannelRef = useRef<RealtimeChannel | null>(null);
+  const queueRankPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Garde anti-double déclenchement du passage à la visio
+  const hasJoinedVideoRef = useRef(false);
+  // Référence à jour de l'entrée du fan (utilisée par le recalcul du rang)
+  const queueEntryRef = useRef<QueueEntry | null>(null);
+  // Référence à jour de la session (pour récupérer room_url / durée sans dépendances stale)
+  const sessionRef = useRef<LiveSession | null>(null);
 
   useEffect(() => {
     return () => {
@@ -74,8 +88,23 @@ export default function JoinLiveSessionScreen() {
       if (queueChannelRef.current) {
         queueChannelRef.current.unsubscribe();
       }
+      if (queueRankChannelRef.current) {
+        queueRankChannelRef.current.unsubscribe();
+      }
+      if (queueRankPollRef.current) {
+        clearInterval(queueRankPollRef.current);
+      }
     };
   }, []);
+
+  // Garde les refs à jour pour les callbacks asynchrones (évite les valeurs périmées)
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
+  useEffect(() => {
+    queueEntryRef.current = queueEntry;
+  }, [queueEntry]);
 
   useEffect(() => {
     if (paramCode) {
@@ -203,6 +232,127 @@ export default function JoinLiveSessionScreen() {
     }
   };
 
+  // === PARTIE A : recalcul du RANG DYNAMIQUE du fan dans la file ===
+  // rang = nombre de fans encore actifs DEVANT moi (position inférieure) + 1.
+  // « actif » = pas encore passé : waiting / current / signing / called / in_call.
+  const recalcQueueRank = async () => {
+    const myEntry = queueEntryRef.current;
+    const currentSession = sessionRef.current;
+    if (!myEntry || !currentSession) return;
+
+    try {
+      const { count, error } = await supabase
+        .from('session_queue')
+        .select('id', { count: 'exact', head: true })
+        .eq('session_id', currentSession.id)
+        .in('status', ['waiting', 'current', 'signing', 'called', 'in_call'])
+        .lt('position', myEntry.position);
+
+      if (error) {
+        console.error('[Queue] Error recalculating rank:', error);
+        return;
+      }
+
+      const ahead = count || 0;
+      const rank = ahead + 1;
+      setQueueRank(rank);
+
+      const perFan = currentSession.duration_per_fan_minutes || 0;
+      setWaitMinutes(Math.max(0, (rank - 1) * perFan));
+    } catch (e) {
+      console.error('[Queue] recalcQueueRank exception:', e);
+    }
+  };
+
+  // === PARTIE B : connexion du fan à la VISIO Daily quand c'est son tour ===
+  const joinVideoCall = async () => {
+    if (hasJoinedVideoRef.current) return;
+    hasJoinedVideoRef.current = true;
+
+    const myEntry = queueEntryRef.current;
+    const baseSession = sessionRef.current;
+    if (!baseSession) {
+      hasJoinedVideoRef.current = false;
+      return;
+    }
+
+    try {
+      // 1) Récupère le room_url. Re-fetch + poll si la célébrité n'a pas encore créé la room.
+      let roomUrl = baseSession.room_url || null;
+      let attempts = 0;
+      const maxAttempts = 10; // ~20s max
+      while (!roomUrl && attempts < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        const refreshed = await getSessionById(baseSession.id);
+        if (refreshed) {
+          sessionRef.current = refreshed;
+          setSession(refreshed);
+          roomUrl = refreshed.room_url || null;
+        }
+        attempts += 1;
+      }
+
+      if (!roomUrl) {
+        console.error('[Fan Video] room_url still empty after polling');
+        hasJoinedVideoRef.current = false;
+        showAlert(t('error'), t('videoCallError' as any) || 'Connexion à la visio impossible.');
+        return;
+      }
+
+      // 2) Génère le jeton Daily du FAN (mêmes params que le dashboard, mais isOwner:false).
+      // Le roomName est dérivé de la convention `session-<id>` (cf. createSessionVideoRoom).
+      const roomName = `session-${baseSession.id}`;
+      const fanDisplayName = myEntry?.fan_name?.trim() || fanName.trim() || 'Fan';
+      const token = await createMeetingToken({
+        roomName,
+        userName: fanDisplayName,
+        userId: myEntry?.fan_id || fanId,
+        isOwner: false,
+        expiryMinutes: 120,
+      });
+
+      // 3) Navigue vers /video-call avec les MÊMES params que le dashboard (côté fan).
+      router.replace({
+        pathname: '/video-call',
+        params: {
+          roomUrl,
+          token: token || '',
+          isHost: 'false',
+          sessionId: baseSession.id,
+          userName: fanDisplayName,
+          durationPerFan: String(baseSession.duration_per_fan_minutes || 5),
+          queueEntryId: myEntry?.id || '',
+          otherUserName: baseSession.celebrity_name || 'Celebrity',
+          otherUserId: baseSession.celebrity_id || '',
+          celebrityId: baseSession.celebrity_id || '',
+          priceCents: String(baseSession.price_cents || 0),
+        },
+      });
+    } catch (error) {
+      console.error('[Fan Video] Error joining video call:', error);
+      hasJoinedVideoRef.current = false;
+      showAlert(t('error'), t('videoCallError' as any) || 'Connexion à la visio impossible.');
+    }
+  };
+
+  // Réagit au changement de statut de l'entrée du fan : si appelé -> rejoint la visio.
+  const handleFanStatusChange = (updated: QueueEntry) => {
+    const status = updated.status as string;
+    // 'current'/'in_call'/'called' = c'est mon tour pour une session VIDÉO -> rejoindre la visio.
+    if (status === 'current' || status === 'in_call' || status === 'called') {
+      setStep('signing');
+      joinVideoCall();
+    } else if (status === 'signing') {
+      // Conservé pour le flux dédicace pur (signature dessinée par la célébrité).
+      setStep('signing');
+    } else if (status === 'completed') {
+      router.replace({
+        pathname: '/live-signature-result',
+        params: { entryId: updated.id },
+      });
+    }
+  };
+
   const handleJoinQueue = async () => {
     if (!session) return;
 
@@ -228,20 +378,42 @@ export default function JoinLiveSessionScreen() {
       }
 
       setQueueEntry(entry);
+      queueEntryRef.current = entry;
       setQueuePosition(entry.position);
       setStep('queue');
 
+      // Rang initial (avant le premier événement temps réel).
+      await recalcQueueRank();
+
+      // Abonnement sur MON entrée : déclenche le passage à la visio quand c'est mon tour.
       queueChannelRef.current = subscribeToQueueEntry(entry.id, (updated) => {
         setQueueEntry(updated);
-        if (updated.status === 'current' || updated.status === 'signing') {
-          setStep('signing');
-        } else if (updated.status === 'completed') {
-          router.replace({
-            pathname: '/live-signature-result',
-            params: { entryId: updated.id },
-          });
-        }
+        queueEntryRef.current = updated;
+        handleFanStatusChange(updated);
       });
+
+      // PARTIE A — temps réel sur TOUTE la file de cette session : recalcule le rang
+      // à chaque changement (un fan devant passe 'completed' -> mon rang descend).
+      queueRankChannelRef.current = supabase
+        .channel(`queue_rank_${session.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'session_queue',
+            filter: `session_id=eq.${session.id}`,
+          },
+          () => {
+            recalcQueueRank();
+          }
+        )
+        .subscribe();
+
+      // Filet de sécurité : polling toutes les 5s (si le temps réel est indisponible).
+      queueRankPollRef.current = setInterval(() => {
+        recalcQueueRank();
+      }, 5000);
     } catch (error) {
       console.error('Error joining queue:', error);
       showAlert(t('error'), t('liveSessionJoinError'));
@@ -517,23 +689,37 @@ export default function JoinLiveSessionScreen() {
     </View>
   );
 
-  const renderQueueStep = () => (
-    <View style={styles.stepContainer}>
-      <View style={styles.queueIconContainer}>
-        <Clock size={60} color="#fff" />
+  const renderQueueStep = () => {
+    const displayRank = queueRank > 0 ? queueRank : (queueEntry?.position || queuePosition);
+    const isAlmostTurn = displayRank <= 1;
+    let waitLabel: string;
+    if (isAlmostTurn) {
+      waitLabel =
+        (t('liveSessionAlmostYourTurn' as any) || '') ||
+        (language === 'fr' ? "C'est bientôt ton tour !" : "It's almost your turn!");
+    } else {
+      const estimate = `~ ${waitMinutes} min`;
+      waitLabel = `${t('estimatedWait')} : ${estimate}`;
+    }
+
+    return (
+      <View style={styles.stepContainer}>
+        <View style={styles.queueIconContainer}>
+          <Clock size={60} color="#fff" />
+        </View>
+
+        <Text style={styles.title}>{t('liveSessionInQueue')}</Text>
+        <Text style={styles.queuePosition}>#{displayRank}</Text>
+        <Text style={styles.subtitle}>{waitLabel}</Text>
+
+        <View style={styles.waitingAnimation}>
+          <ActivityIndicator size="large" color="#fff" />
+        </View>
+
+        <Text style={styles.waitingNote}>{t('liveSessionDontLeave')}</Text>
       </View>
-
-      <Text style={styles.title}>{t('liveSessionInQueue')}</Text>
-      <Text style={styles.queuePosition}>#{queueEntry?.position || queuePosition}</Text>
-      <Text style={styles.subtitle}>{t('liveSessionWaitingHint')}</Text>
-
-      <View style={styles.waitingAnimation}>
-        <ActivityIndicator size="large" color="#fff" />
-      </View>
-
-      <Text style={styles.waitingNote}>{t('liveSessionDontLeave')}</Text>
-    </View>
-  );
+    );
+  };
 
   const renderSigningStep = () => (
     <View style={styles.stepContainer}>
@@ -542,13 +728,13 @@ export default function JoinLiveSessionScreen() {
       </View>
 
       <Text style={styles.title}>{t('liveSessionYourTurn')}</Text>
-      <Text style={styles.subtitle}>{t('liveSessionSigningNow')}</Text>
+      <Text style={styles.subtitle}>{t('connectingToCall')}</Text>
 
       <View style={styles.waitingAnimation}>
         <ActivityIndicator size="large" color="#4ade80" />
       </View>
 
-      <Text style={styles.waitingNote}>{t('liveSessionWatchSignature')}</Text>
+      <Text style={styles.waitingNote}>{t('liveSessionDontLeave')}</Text>
     </View>
   );
 
