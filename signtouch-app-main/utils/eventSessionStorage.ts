@@ -332,12 +332,13 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
   console.log('[getMyScheduledEvents] Local IDs:', localIds.length, localIds);
   const existingEventIds = new Set(allEvents.map(e => e.id));
   const missingLocalIds = localIds.filter(id => !existingEventIds.has(id));
-  if (missingLocalIds.length > 0) {
+  if (userId && missingLocalIds.length > 0) {
     console.log('[getMyScheduledEvents] Fetching', missingLocalIds.length, 'missing local events');
     const { data: localEvents, error: localError } = await supabase
       .from('event_sessions')
       .select('*')
       .in('id', missingLocalIds)
+      .eq('created_by', userId)
       .in('status', ['scheduled', 'active', 'live', 'ended']);
 
     if (!localError && localEvents) {
@@ -348,11 +349,20 @@ export const getMyScheduledEvents = async (creatorId?: string): Promise<EventSes
     }
   }
 
-  const { data: liveVideoSessions, error: lvsError } = await supabase
-    .from('live_sessions')
-    .select('*')
-    .in('status', ['scheduled', 'waiting', 'active', 'ended'])
-    .order('created_at', { ascending: false });
+  // Ne récupérer QUE les sessions vidéo créées par l'utilisateur connecté
+  // (sinon un fan verrait les sessions vidéo de toute la plateforme).
+  let liveVideoSessions: any[] | null = [];
+  let lvsError: { message?: string } | null = null;
+  if (userId) {
+    const lvsRes = await supabase
+      .from('live_sessions')
+      .select('*')
+      .eq('celebrity_id', userId)
+      .in('status', ['scheduled', 'waiting', 'active', 'ended'])
+      .order('created_at', { ascending: false });
+    liveVideoSessions = lvsRes.data;
+    lvsError = lvsRes.error;
+  }
 
   if (!lvsError && liveVideoSessions) {
     const existingIds = new Set(allEvents.map(e => e.id));
