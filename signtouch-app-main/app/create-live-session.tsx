@@ -15,7 +15,7 @@ import {
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Clock, Users, DollarSign, Play, Camera, RotateCcw, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy, Send } from 'lucide-react-native';
+import { ArrowLeft, Clock, Users, DollarSign, Play, Camera, RotateCcw, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy, Send, Minus, Plus } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
@@ -215,7 +215,31 @@ export default function CreateLiveSessionScreen() {
   };
   
   const minTotalDuration = Math.max(1, durationPerFan);
-  
+
+  // Bornes/pas des sliders (mêmes valeurs que les props Slider) pour les boutons +/-
+  const PER_FAN_MIN = 0.5;
+  const PER_FAN_MAX = 60;
+  const PER_FAN_STEP = 0.5;
+  const TOTAL_MAX = 60;
+  const TOTAL_STEP = 1;
+
+  const clamp = (value: number, min: number, max: number) =>
+    Math.min(max, Math.max(min, value));
+
+  const stepDurationPerFan = (direction: number) => {
+    const next = clamp(
+      Math.round((durationPerFan + direction * PER_FAN_STEP) * 10) / 10,
+      PER_FAN_MIN,
+      PER_FAN_MAX
+    );
+    handleDurationPerFanChange(next);
+  };
+
+  const stepTotalDuration = (direction: number) => {
+    const next = clamp(totalDuration + direction * TOTAL_STEP, minTotalDuration, TOTAL_MAX);
+    handleTotalDurationChange(next);
+  };
+
   const handlePriceSelect = (value: number) => {
     setPrice(value);
     setIsCustomPrice(false);
@@ -711,17 +735,35 @@ export default function CreateLiveSessionScreen() {
             <Clock size={18} color="#10B981" />
             <Text style={styles.sliderValue}>{formatDuration(durationPerFan)}</Text>
           </View>
-          <Slider
-            style={styles.slider}
-            minimumValue={0.5}
-            maximumValue={60}
-            step={0.5}
-            value={durationPerFan}
-            onValueChange={handleDurationPerFanChange}
-            minimumTrackTintColor="#10B981"
-            maximumTrackTintColor="rgba(255,255,255,0.3)"
-            thumbTintColor="#10B981"
-          />
+          <View style={styles.sliderRow}>
+            <TouchableOpacity
+              style={[styles.stepButton, durationPerFan <= PER_FAN_MIN && styles.stepButtonDisabled]}
+              onPress={() => stepDurationPerFan(-1)}
+              disabled={durationPerFan <= PER_FAN_MIN}
+              activeOpacity={0.7}
+            >
+              <Minus size={20} color={durationPerFan <= PER_FAN_MIN ? 'rgba(255,255,255,0.3)' : '#10B981'} />
+            </TouchableOpacity>
+            <Slider
+              style={styles.sliderFlex}
+              minimumValue={PER_FAN_MIN}
+              maximumValue={PER_FAN_MAX}
+              step={PER_FAN_STEP}
+              value={durationPerFan}
+              onValueChange={handleDurationPerFanChange}
+              minimumTrackTintColor="#10B981"
+              maximumTrackTintColor="rgba(255,255,255,0.3)"
+              thumbTintColor="#10B981"
+            />
+            <TouchableOpacity
+              style={[styles.stepButton, durationPerFan >= PER_FAN_MAX && styles.stepButtonDisabled]}
+              onPress={() => stepDurationPerFan(1)}
+              disabled={durationPerFan >= PER_FAN_MAX}
+              activeOpacity={0.7}
+            >
+              <Plus size={20} color={durationPerFan >= PER_FAN_MAX ? 'rgba(255,255,255,0.3)' : '#10B981'} />
+            </TouchableOpacity>
+          </View>
           <View style={styles.sliderLabels}>
             <Text style={styles.sliderLabel}>30 sec</Text>
             <Text style={styles.sliderLabel}>1h</Text>
@@ -734,17 +776,35 @@ export default function CreateLiveSessionScreen() {
             <Clock size={18} color="#10B981" />
             <Text style={styles.sliderValue}>{formatDuration(totalDuration)}</Text>
           </View>
-          <Slider
-            style={styles.slider}
-            minimumValue={minTotalDuration}
-            maximumValue={60}
-            step={1}
-            value={totalDuration}
-            onValueChange={handleTotalDurationChange}
-            minimumTrackTintColor="#10B981"
-            maximumTrackTintColor="rgba(255,255,255,0.3)"
-            thumbTintColor="#10B981"
-          />
+          <View style={styles.sliderRow}>
+            <TouchableOpacity
+              style={[styles.stepButton, totalDuration <= minTotalDuration && styles.stepButtonDisabled]}
+              onPress={() => stepTotalDuration(-1)}
+              disabled={totalDuration <= minTotalDuration}
+              activeOpacity={0.7}
+            >
+              <Minus size={20} color={totalDuration <= minTotalDuration ? 'rgba(255,255,255,0.3)' : '#10B981'} />
+            </TouchableOpacity>
+            <Slider
+              style={styles.sliderFlex}
+              minimumValue={minTotalDuration}
+              maximumValue={TOTAL_MAX}
+              step={TOTAL_STEP}
+              value={totalDuration}
+              onValueChange={handleTotalDurationChange}
+              minimumTrackTintColor="#10B981"
+              maximumTrackTintColor="rgba(255,255,255,0.3)"
+              thumbTintColor="#10B981"
+            />
+            <TouchableOpacity
+              style={[styles.stepButton, totalDuration >= TOTAL_MAX && styles.stepButtonDisabled]}
+              onPress={() => stepTotalDuration(1)}
+              disabled={totalDuration >= TOTAL_MAX}
+              activeOpacity={0.7}
+            >
+              <Plus size={20} color={totalDuration >= TOTAL_MAX ? 'rgba(255,255,255,0.3)' : '#10B981'} />
+            </TouchableOpacity>
+          </View>
           <View style={styles.sliderLabels}>
             <Text style={styles.sliderLabel}>{formatDuration(minTotalDuration)}</Text>
             <Text style={styles.sliderLabel}>1h</Text>
@@ -1239,6 +1299,29 @@ const styles = StyleSheet.create({
   slider: {
     width: '100%',
     height: 40,
+  },
+  sliderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sliderFlex: {
+    flex: 1,
+    height: 40,
+  },
+  stepButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepButtonDisabled: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   sliderLabels: {
     flexDirection: 'row',
