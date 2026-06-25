@@ -78,6 +78,7 @@ export default function CelebrityMenuScreen() {
         joinCode: activeFanEvent.joinCode,
         endsAt: activeFanEvent.endsAt,
         signers: activeFanEvent.signers,
+        startsAt: activeFanEvent.starts_at || '',
       },
     });
   };

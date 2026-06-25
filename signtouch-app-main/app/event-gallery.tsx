@@ -193,6 +193,12 @@ export default function EventGalleryScreen() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [newPhotoSignerName, setNewPhotoSignerName] = useState('');
 
+  // Mode attente : l'événement réservé n'a pas encore commencé (starts_at futur).
+  const startsAtMs = params.startsAt ? new Date(params.startsAt as string).getTime() : NaN;
+  const hasFutureStart = !Number.isNaN(startsAtMs) && startsAtMs > Date.now();
+  const [hasStarted, setHasStarted] = useState(!hasFutureStart);
+  const [countdown, setCountdown] = useState('');
+
   const viewerIdRef = useRef<string>('');
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -210,7 +216,7 @@ export default function EventGalleryScreen() {
     title: (params.sessionTitle as string) || 'Live Event',
     join_code: (params.joinCode as string) || '',
     ends_at: (params.endsAt as string) || new Date().toISOString(),
-    starts_at: '',
+    starts_at: (params.startsAt as string) || '',
     status: 'live',
     viewer_soft_limit: 5000,
     created_by: null,
@@ -352,12 +358,40 @@ export default function EventGalleryScreen() {
     }
   }, [session.ends_at, t]);
 
+  // Compte à rebours avant le démarrage + bascule automatique en galerie.
   useEffect(() => {
-    if (!isValidSession) {
-      setIsLoading(false);
+    if (hasStarted || Number.isNaN(startsAtMs)) return;
+
+    const tick = () => {
+      const diff = startsAtMs - Date.now();
+      if (diff <= 0) {
+        setHasStarted(true);
+        return;
+      }
+      const totalSec = Math.floor(diff / 1000);
+      const days = Math.floor(totalSec / 86400);
+      const hours = Math.floor((totalSec % 86400) / 3600);
+      const minutes = Math.floor((totalSec % 3600) / 60);
+      const seconds = totalSec % 60;
+      const pad = (n: number) => String(n).padStart(2, '0');
+      if (days > 0) {
+        setCountdown(`${days}j ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`);
+      } else {
+        setCountdown(`${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`);
+      }
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [hasStarted, startsAtMs]);
+
+  useEffect(() => {
+    if (!isValidSession || !hasStarted) {
+      if (!isValidSession) setIsLoading(false);
       return;
     }
-    
+
     const init = async () => {
       setIsLoading(true);
       viewerIdRef.current = await getOrCreateDeviceId();
@@ -383,24 +417,27 @@ export default function EventGalleryScreen() {
         leaveEventSession(session.id, viewerIdRef.current);
       }
     };
-  }, [isValidSession]);
+  }, [isValidSession, hasStarted]);
 
   useEffect(() => {
+    if (!hasStarted) return;
     handleRefresh();
-  }, [activeTab]);
+  }, [activeTab, hasStarted]);
 
   useFocusEffect(
     useCallback(() => {
+      if (!hasStarted) return;
       startPolling();
       startHeartbeat();
       return () => {
         stopPolling();
         stopHeartbeat();
       };
-    }, [startPolling, stopPolling, startHeartbeat, stopHeartbeat])
+    }, [hasStarted, startPolling, stopPolling, startHeartbeat, stopHeartbeat])
   );
 
   useEffect(() => {
+    if (!hasStarted) return;
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (appStateRef.current.match(/inactive|background/) && nextAppState === 'active') {
         startPolling();
@@ -413,7 +450,7 @@ export default function EventGalleryScreen() {
       appStateRef.current = nextAppState;
     });
     return () => subscription.remove();
-  }, [startPolling, stopPolling, startHeartbeat, stopHeartbeat, handleRefresh]);
+  }, [hasStarted, startPolling, stopPolling, startHeartbeat, stopHeartbeat, handleRefresh]);
 
   const handleOpenEditor = (asset: EventAsset) => {
     const originalUrl = asset.original_photo_url || (asset.signature_metadata as any)?.original_photo_url;
@@ -501,27 +538,48 @@ export default function EventGalleryScreen() {
           </Text>
         </View>
       ) : null}
-      
+
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => (router.canGoBack() ? router.back() : router.replace('/fan-choice' as any))}>
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle} numberOfLines={1}>{session.title}</Text>
-          <View style={styles.headerStats}>
-            <View style={styles.statBadge}>
-              <Users size={12} color="#10B981" />
-              <Text style={styles.statText}>{viewerCount}</Text>
+          {hasStarted && (
+            <View style={styles.headerStats}>
+              <View style={styles.statBadge}>
+                <Users size={12} color="#10B981" />
+                <Text style={styles.statText}>{viewerCount}</Text>
+              </View>
+              <View style={styles.statBadge}>
+                <Clock size={12} color="#f59e0b" />
+                <Text style={styles.statText}>{timeRemaining}</Text>
+              </View>
             </View>
-            <View style={styles.statBadge}>
-              <Clock size={12} color="#f59e0b" />
-              <Text style={styles.statText}>{timeRemaining}</Text>
-            </View>
-          </View>
+          )}
         </View>
         <View style={{ width: 44 }} />
       </View>
 
+      {!hasStarted ? (
+        <View style={styles.waitingContainer}>
+          <View style={styles.waitingClockCircle}>
+            <Clock size={64} color="#10B981" />
+          </View>
+          <Text style={styles.waitingTitle}>
+            {(t as any)('eventNotStartedTitle') || "L'événement n'a pas encore commencé"}
+          </Text>
+          <Text style={styles.waitingEventTitle} numberOfLines={2}>{session.title}</Text>
+          <Text style={styles.waitingStartsInLabel}>
+            {(t as any)('eventStartsInLabel') || 'Commence dans'}
+          </Text>
+          <Text style={styles.waitingCountdown}>{countdown}</Text>
+          <Text style={styles.waitingHint}>
+            {(t as any)('eventWaitingHint') || 'Reste sur cette page, ça va bientôt commencer.'}
+          </Text>
+        </View>
+      ) : (
+      <>
       <View style={styles.signersRow}>
         {signers.slice(0, 5).map((signer) => (
           <View key={signer.id} style={styles.signerChip}>
@@ -586,7 +644,9 @@ export default function EventGalleryScreen() {
           onEndReachedThreshold={0.5}
         />
       )}
-      
+      </>
+      )}
+
       <BottomNav />
     </View>
   );
@@ -642,6 +702,23 @@ const styles = StyleSheet.create({
   tabActive: { backgroundColor: '#10B981' },
   tabText: { fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
   tabTextActive: { color: '#fff' },
+  waitingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 },
+  waitingClockCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(16,185,129,0.12)',
+    borderWidth: 2,
+    borderColor: 'rgba(16,185,129,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 28,
+  },
+  waitingTitle: { fontSize: 20, fontWeight: '700', color: '#fff', textAlign: 'center', marginBottom: 8 },
+  waitingEventTitle: { fontSize: 16, color: '#10B981', fontWeight: '600', textAlign: 'center', marginBottom: 28 },
+  waitingStartsInLabel: { fontSize: 14, color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginBottom: 6 },
+  waitingCountdown: { fontSize: 34, fontWeight: '800', color: '#fff', textAlign: 'center', marginBottom: 28, letterSpacing: 1 },
+  waitingHint: { fontSize: 14, color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 20 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 },
   emptyText: { fontSize: 18, color: 'rgba(255,255,255,0.6)', marginTop: 16, textAlign: 'center' },

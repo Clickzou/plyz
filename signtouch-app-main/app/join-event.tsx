@@ -817,6 +817,7 @@ export default function JoinEventScreen() {
           joinCode: foundSession.join_code,
           endsAt: foundSession.ends_at,
           signers: signersJson,
+          startsAt: foundSession.starts_at || '',
         }
       });
     }
@@ -1514,6 +1515,7 @@ export default function JoinEventScreen() {
                         joinCode: activeFanEvent.joinCode,
                         endsAt: activeFanEvent.endsAt,
                         signers: activeFanEvent.signers,
+                        startsAt: activeFanEvent.starts_at || '',
                       },
                     });
                   } catch {
@@ -1525,6 +1527,7 @@ export default function JoinEventScreen() {
                         joinCode: activeFanEvent.joinCode,
                         endsAt: activeFanEvent.endsAt,
                         signers: activeFanEvent.signers,
+                        startsAt: activeFanEvent.starts_at || '',
                       },
                     });
                   }
