@@ -649,6 +649,7 @@ export default function LiveSessionDashboardScreen() {
   };
 
   const dedicationPanGesture = Gesture.Pan()
+    .runOnJS(true)
     .minDistance(0)
     .onStart((e) => {
       isDrawingDedicationRef.current = true;
@@ -865,6 +866,7 @@ export default function LiveSessionDashboardScreen() {
   };
 
   const panGesture = Gesture.Pan()
+    .runOnJS(true)
     .onStart((e) => {
       pathRef.current = `M${e.x.toFixed(1)},${e.y.toFixed(1)}`;
       setCurrentPath(pathRef.current);
