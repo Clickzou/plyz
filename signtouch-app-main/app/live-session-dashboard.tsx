@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Platform,
   Animated,
+  Share,
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -33,6 +34,7 @@ import {
   TrendingUp,
   Calendar,
   ArrowLeft,
+  Send,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -628,6 +630,72 @@ export default function LiveSessionDashboardScreen() {
     }
   };
 
+  // Formate la durée par fan (« X sec » / « X min ») pour le placeholder {duration}.
+  const formatPerFanDuration = (minutes: number): string => {
+    if (!minutes || minutes < 1) {
+      return `${Math.round((minutes || 0) * 60)} sec`;
+    }
+    if (minutes < 60) {
+      return `${Math.round(minutes)} min`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    return mins === 0 ? `${hours}h` : `${hours}h${mins.toString().padStart(2, '0')}`;
+  };
+
+  // « Publier dans le fil Actu » : pré-remplit le composeur de post comme sur l'écran
+  // « Session programmée ! » de create-live-session.tsx.
+  const handlePublishSessionToFeed = () => {
+    if (!session) return;
+    const when = session.scheduled_at ? new Date(session.scheduled_at) : new Date();
+    router.push({
+      pathname: '/create-post',
+      params: {
+        prefillKind: 'event',
+        prefillTitle: language === 'fr' ? 'Session Live Vidéo' : 'Live Video Session',
+        prefillBody: `${language === 'fr' ? '🎥 Rejoignez-moi pour une session live vidéo exclusive, en tête-à-tête face à face ! Un moment privé et unique, rien que pour vous, en direct sur Plyz 💜' : '🎥 Join me for an exclusive one-on-one live video session, face to face! A private, unique moment just for you, live on Plyz 💜'}\n\n${language === 'fr' ? 'Code' : 'Code'}: ${session.code}`,
+        prefillDate: when.toISOString(),
+      },
+    });
+  };
+
+  // « Partager » (réseaux sociaux) : Share.share avec fallback presse-papier sur web,
+  // même logique que handleShareEvent de create-live-session.tsx.
+  const handleShareSession = async () => {
+    if (!session) return;
+
+    let when = '';
+    try {
+      const scheduledDate = session.scheduled_at ? new Date(session.scheduled_at) : new Date();
+      if (!isNaN(scheduledDate.getTime())) {
+        when = scheduledDate.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', {
+          weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+        });
+      }
+    } catch {}
+
+    const duration = formatPerFanDuration(session.duration_per_fan_minutes || 0);
+
+    const message = (t('shareEventMessage') || 'Rejoins ma session live sur Plyz ! Code : {code}')
+      .replace('{code}', session.code)
+      .replace('{date}', when)
+      .replace('{duration}', duration);
+
+    try {
+      await Share.share({ message });
+    } catch (error) {
+      try {
+        await Clipboard.setStringAsync(message);
+        showAlert(
+          t('success') || 'OK',
+          language === 'fr' ? 'Texte copié dans le presse-papier !' : 'Text copied to clipboard!'
+        );
+      } catch {
+        console.error('Share/clipboard failed:', error);
+      }
+    }
+  };
+
   const processDedicationPhoto = async (uri: string) => {
     setDedicationPhotoUri(uri);
     setIsUploadingDedication(true);
@@ -1171,6 +1239,19 @@ export default function LiveSessionDashboardScreen() {
               )}
             </TouchableOpacity>
             <Text style={[styles.qrHint, { marginTop: 6, fontSize: 12 }]}>{t('liveSessionShareHint')}</Text>
+
+            <View style={styles.shareButtonsRow}>
+              <TouchableOpacity style={styles.publishFeedButton} onPress={handlePublishSessionToFeed}>
+                <Send size={18} color="#fff" />
+                <Text style={styles.publishFeedButtonText}>
+                  {language === 'fr' ? 'Publier dans le fil Actu' : 'Publish to Feed'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shareSessionButton} onPress={handleShareSession}>
+                <Send size={18} color="#6366f1" />
+                <Text style={styles.shareSessionButtonText}>{t('share') || 'Partager'}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -1735,6 +1816,46 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     marginTop: 12,
     textAlign: 'center',
+  },
+  shareButtonsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+    width: '100%',
+  },
+  publishFeedButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#6366f1',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+  publishFeedButtonText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  shareSessionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(99,102,241,0.12)',
+    borderWidth: 1,
+    borderColor: '#6366f1',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  shareSessionButtonText: {
+    color: '#6366f1',
+    fontSize: 13,
+    fontWeight: '700',
   },
   signingSection: {
     flex: 1,
