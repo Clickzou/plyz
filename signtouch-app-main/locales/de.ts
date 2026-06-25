@@ -926,6 +926,7 @@ export default {
   rating3Star: 'Durchschnittlich',
   rating4Star: 'Gut',
   rating5Star: 'Ausgezeichnet',
+  ratingCommentPlaceholder: 'Hinterlasse einen Kommentar zu diesem Videoanruf und zum Verhalten der Person (optional)',
   tapToRate: 'Tippen Sie auf einen Stern zum Bewerten',
   submitRating: 'Bewertung senden',
   skipRating: 'Überspringen',

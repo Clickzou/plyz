@@ -1003,6 +1003,7 @@ export default {
   rating3Star: 'Moyen',
   rating4Star: 'Bien',
   rating5Star: 'Excellent',
+  ratingCommentPlaceholder: 'Laisser un commentaire sur cet appel vidéo et le comportement de la personne (optionnel)',
   tapToRate: 'Appuyez sur une étoile pour noter',
   submitRating: 'Envoyer la note',
   skipRating: 'Passer',

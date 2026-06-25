@@ -926,6 +926,7 @@ export default {
   rating3Star: '一般',
   rating4Star: '好',
   rating5Star: '优秀',
+  ratingCommentPlaceholder: '留下关于本次视频通话和对方行为的评论（可选）',
   tapToRate: '点击星星评分',
   submitRating: '提交评分',
   skipRating: '跳过',

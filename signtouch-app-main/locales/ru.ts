@@ -926,6 +926,7 @@ export default {
   rating3Star: 'Средне',
   rating4Star: 'Хорошо',
   rating5Star: 'Отлично',
+  ratingCommentPlaceholder: 'Оставьте комментарий об этом видеозвонке и поведении человека (необязательно)',
   tapToRate: 'Нажмите на звезду для оценки',
   submitRating: 'Отправить оценку',
   skipRating: 'Пропустить',

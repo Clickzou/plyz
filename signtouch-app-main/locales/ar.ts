@@ -926,6 +926,7 @@ export default {
   rating3Star: 'متوسط',
   rating4Star: 'جيد',
   rating5Star: 'ممتاز',
+  ratingCommentPlaceholder: 'اترك تعليقًا حول مكالمة الفيديو هذه وسلوك الشخص (اختياري)',
   tapToRate: 'اضغط على نجمة للتقييم',
   submitRating: 'إرسال التقييم',
   skipRating: 'تخطي',

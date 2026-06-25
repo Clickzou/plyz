@@ -1000,6 +1000,7 @@ export default {
   rating3Star: 'Average',
   rating4Star: 'Good',
   rating5Star: 'Excellent',
+  ratingCommentPlaceholder: 'Leave a comment about this video call and the person\'s behavior (optional)',
   tapToRate: 'Tap a star to rate',
   submitRating: 'Submit Rating',
   skipRating: 'Skip',

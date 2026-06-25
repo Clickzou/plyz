@@ -925,6 +925,7 @@ export default {
   rating3Star: 'Regular',
   rating4Star: 'Bueno',
   rating5Star: 'Excelente',
+  ratingCommentPlaceholder: 'Deja un comentario sobre esta videollamada y el comportamiento de la persona (opcional)',
   tapToRate: 'Toca una estrella para calificar',
   submitRating: 'Enviar calificación',
   skipRating: 'Omitir',

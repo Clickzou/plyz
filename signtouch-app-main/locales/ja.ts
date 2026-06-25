@@ -926,6 +926,7 @@ export default {
   rating3Star: '普通',
   rating4Star: '良い',
   rating5Star: '素晴らしい',
+  ratingCommentPlaceholder: 'このビデオ通話と相手の振る舞いについてコメントを残してください（任意）',
   tapToRate: '星をタップして評価',
   submitRating: '評価を送信',
   skipRating: 'スキップ',

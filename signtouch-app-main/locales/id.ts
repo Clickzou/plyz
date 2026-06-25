@@ -930,6 +930,7 @@ export default {
   rating4Star: 'Bagus',
 
   rating5Star: 'Luar biasa',
+  ratingCommentPlaceholder: 'Tinggalkan komentar tentang panggilan video ini dan perilaku orang tersebut (opsional)',
 
   tapToRate: 'Ketuk bintang untuk menilai',
   submitRating: 'Kirim peringkat',

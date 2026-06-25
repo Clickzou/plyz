@@ -930,6 +930,7 @@ export default {
   rating4Star: 'اچھا',
 
   rating5Star: 'بہترین',
+  ratingCommentPlaceholder: 'اس ویڈیو کال اور شخص کے رویے کے بارے میں تبصرہ چھوڑیں (اختیاری)',
 
   tapToRate: 'درجہ بندی کے لیے ایک ستارے پر ٹیپ کریں',
   submitRating: 'ریٹنگ بھیجیں',

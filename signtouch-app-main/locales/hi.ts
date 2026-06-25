@@ -926,6 +926,7 @@ export default {
   rating3Star: 'औसत',
   rating4Star: 'अच्छा',
   rating5Star: 'उत्कृष्ट',
+  ratingCommentPlaceholder: 'इस वीडियो कॉल और व्यक्ति के व्यवहार के बारे में टिप्पणी छोड़ें (वैकल्पिक)',
   tapToRate: 'रेटिंग देने के लिए एक तारे पर टैप करें',
   submitRating: 'रेटिंग भेजें',
   skipRating: 'छोड़ें',

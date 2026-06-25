@@ -926,6 +926,7 @@ export default {
   rating3Star: 'Nella media',
   rating4Star: 'Buono',
   rating5Star: 'Eccellente',
+  ratingCommentPlaceholder: 'Lascia un commento su questa videochiamata e sul comportamento della persona (facoltativo)',
   tapToRate: 'Tocca una stella per votare',
   submitRating: 'Invia valutazione',
   skipRating: 'Salta',
