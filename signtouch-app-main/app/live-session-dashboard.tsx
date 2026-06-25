@@ -976,6 +976,9 @@ export default function LiveSessionDashboardScreen() {
           fansRemaining: String(waitingCount),
           otherUserName: nextFan?.fan_name || 'Fan',
           otherUserId: nextFan?.fan_id || '',
+          queueEntryId: nextFan?.id || '',
+          celebrityId: session.celebrity_id || '',
+          priceCents: String(session.price_cents || 0),
         }
       });
     } catch (error) {

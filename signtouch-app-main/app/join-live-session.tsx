@@ -380,6 +380,31 @@ export default function JoinLiveSessionScreen() {
     }
   };
 
+  // Filet de sécurité : si le temps réel (subscribeToQueueEntry) ne reçoit pas le
+  // changement de statut (réseau instable / publication realtime), on relit MON
+  // entrée par polling et on déclenche la bascule visio nous-mêmes.
+  const pollMyStatus = async () => {
+    const myEntry = queueEntryRef.current;
+    if (!myEntry || hasJoinedVideoRef.current) return;
+    try {
+      const { data, error } = await supabase
+        .from('session_queue')
+        .select('*')
+        .eq('id', myEntry.id)
+        .single();
+      if (!error && data) {
+        const updated = data as QueueEntry;
+        if (updated.status !== queueEntryRef.current?.status) {
+          setQueueEntry(updated);
+          queueEntryRef.current = updated;
+          handleFanStatusChange(updated);
+        }
+      }
+    } catch (e) {
+      console.error('[Queue] pollMyStatus exception:', e);
+    }
+  };
+
   const handleJoinQueue = async () => {
     if (!session) return;
 
@@ -438,8 +463,10 @@ export default function JoinLiveSessionScreen() {
         .subscribe();
 
       // Filet de sécurité : polling toutes les 5s (si le temps réel est indisponible).
+      // On recalcule le rang ET on relit mon statut (bascule visio si c'est mon tour).
       queueRankPollRef.current = setInterval(() => {
         recalcQueueRank();
+        pollMyStatus();
       }, 5000);
     } catch (error) {
       console.error('Error joining queue:', error);
