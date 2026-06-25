@@ -137,8 +137,12 @@ export default function FanChoiceScreen() {
             bucket[categorize(e)] += 1;
           }
           // L'événement rejoint actif (non null = non expiré, getActiveFanEvent
-          // l'a déjà vérifié) compte comme un événement dédicace « en cours ».
-          if (fanEvent) counts.event.ongoing += 1;
+          // l'a déjà vérifié). S'il est programmé pour plus tard (starts_at futur),
+          // il compte comme « à venir » (réservation) ; sinon « en cours ».
+          if (fanEvent) {
+            const fanBucket = isVideo(fanEvent) ? counts.video : counts.event;
+            fanBucket[categorize(fanEvent)] += 1;
+          }
           setEventUpcomingCount(counts.event.upcoming);
           setEventOngoingCount(counts.event.ongoing);
           setEventPastCount(counts.event.past);

@@ -1483,4 +1483,7 @@ export default {
   legalDocuments: 'कानूनी दस्तावेज़',
   joinedEvent: 'आप शामिल हैं',
   resume: 'फिर से शुरू करें',
+  reserveEvent: 'मेरी जगह आरक्षित करें',
+  eventReservedMessage: 'आरक्षित हो गया! आप इसे «आगामी» में पाएंगे।',
+  reservationFailed: 'आरक्षण विफल रहा। कृपया फिर से प्रयास करें।',
 };

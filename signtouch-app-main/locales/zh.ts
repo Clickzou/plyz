@@ -1483,4 +1483,7 @@ export default {
   legalDocuments: '法律文件',
   joinedEvent: '你正在参加',
   resume: '继续',
+  reserveEvent: '预订我的位置',
+  eventReservedMessage: '已预订！你可以在「即将开始」中找到它。',
+  reservationFailed: '预订失败，请重试。',
 };

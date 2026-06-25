@@ -1488,4 +1488,7 @@ export default {
   legalDocuments: 'قانونی دستاویزات',
   joinedEvent: 'آپ شامل ہیں',
   resume: 'دوبارہ شروع کریں',
+  reserveEvent: 'میری جگہ محفوظ کریں',
+  eventReservedMessage: 'محفوظ ہو گیا! آپ اسے «آنے والے» میں پائیں گے۔',
+  reservationFailed: 'ریزرویشن ناکام ہو گئی۔ براہ کرم دوبارہ کوشش کریں۔',
 };

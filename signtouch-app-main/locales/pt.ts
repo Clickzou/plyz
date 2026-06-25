@@ -1483,4 +1483,7 @@ export default {
   legalDocuments: 'Documentos legais',
   joinedEvent: 'Você participa de',
   resume: 'Retomar',
+  reserveEvent: 'Reservar meu lugar',
+  eventReservedMessage: 'Reservado! Você vai encontrá-lo em «Em breve».',
+  reservationFailed: 'A reserva falhou. Tente novamente.',
 };

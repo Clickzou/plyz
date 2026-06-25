@@ -1483,4 +1483,7 @@ export default {
   legalDocuments: '法的文書',
   joinedEvent: '参加中',
   resume: '再開',
+  reserveEvent: '席を予約する',
+  eventReservedMessage: '予約完了！「今後の予定」で確認できます。',
+  reservationFailed: '予約に失敗しました。もう一度お試しください。',
 };

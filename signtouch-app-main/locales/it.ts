@@ -1483,4 +1483,7 @@ export default {
   legalDocuments: 'Documenti legali',
   joinedEvent: 'Partecipi a',
   resume: 'Riprendi',
+  reserveEvent: 'Prenota il mio posto',
+  eventReservedMessage: 'Prenotato! Lo troverai in «In arrivo».',
+  reservationFailed: 'Prenotazione non riuscita. Riprova.',
 };

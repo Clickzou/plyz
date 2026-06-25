@@ -1488,4 +1488,7 @@ export default {
   legalDocuments: 'Dokumen hukum',
   joinedEvent: 'Kamu mengikuti',
   resume: 'Lanjutkan',
+  reserveEvent: 'Pesan tempat saya',
+  eventReservedMessage: 'Tersimpan! Kamu akan menemukannya di «Akan datang».',
+  reservationFailed: 'Reservasi gagal. Silakan coba lagi.',
 };

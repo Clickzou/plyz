@@ -1514,4 +1514,7 @@ export default {
   legalDocuments: 'Legal documents',
   joinedEvent: "You're attending",
   resume: 'Resume',
+  reserveEvent: 'Reserve my spot',
+  eventReservedMessage: 'Reserved! You\'ll find it under "Upcoming".',
+  reservationFailed: 'Reservation failed. Please try again.',
 };

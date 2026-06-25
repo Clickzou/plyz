@@ -882,6 +882,8 @@ export interface ActiveFanEvent {
   savedAt: number;
   /** Type d'événement : 'live_video' = session vidéo ; 'qr' ou absent = dédicace. */
   event_type?: string;
+  /** Date de début ISO. Si future, l'événement est « à venir » (réservation). */
+  starts_at?: string;
 }
 
 export const saveActiveFanEvent = async (event: ActiveFanEvent): Promise<void> => {

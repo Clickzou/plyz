@@ -1482,4 +1482,7 @@ export default {
   legalDocuments: 'Documentos legales',
   joinedEvent: 'Participas en',
   resume: 'Reanudar',
+  reserveEvent: 'Reservar mi lugar',
+  eventReservedMessage: '¡Reservado! Lo encontrarás en «Próximos».',
+  reservationFailed: 'La reserva falló. Inténtalo de nuevo.',
 };

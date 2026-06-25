@@ -1488,4 +1488,7 @@ export default {
   legalDocuments: 'Dokumen undang-undang',
   joinedEvent: 'Anda menyertai',
   resume: 'Sambung',
+  reserveEvent: 'Tempah tempat saya',
+  eventReservedMessage: 'Ditempah! Anda akan menemuinya di «Akan datang».',
+  reservationFailed: 'Tempahan gagal. Sila cuba lagi.',
 };

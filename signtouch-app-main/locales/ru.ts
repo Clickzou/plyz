@@ -1483,4 +1483,7 @@ export default {
   legalDocuments: 'Юридические документы',
   joinedEvent: 'Вы участвуете в',
   resume: 'Продолжить',
+  reserveEvent: 'Забронировать место',
+  eventReservedMessage: 'Забронировано! Вы найдёте это в разделе «Предстоящие».',
+  reservationFailed: 'Не удалось забронировать. Попробуйте ещё раз.',
 };

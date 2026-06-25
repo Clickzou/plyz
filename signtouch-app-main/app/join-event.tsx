@@ -49,6 +49,7 @@ import {
   saveActiveFanEvent,
   getActiveFanEvent,
   clearActiveFanEvent,
+  getEventSigners,
   ActiveFanEvent,
 } from '@/utils/eventSessionStorage';
 import BarCodeScannerWrapper, { requestCameraPermissionAsync, isBarCodeScannerAvailable } from '@/components/BarCodeScannerWrapper';
@@ -213,6 +214,7 @@ export default function JoinEventScreen() {
   const [eventScheduled, setEventScheduled] = useState(false);
   const [scheduledSession, setScheduledSession] = useState<EventSession | null>(null);
   const [notificationSet, setNotificationSet] = useState(false);
+  const [reserved, setReserved] = useState(false);
 
   const [showScanner, setShowScanner] = useState(false);
   const [, setHasPermission] = useState<boolean | null>(null);
@@ -804,6 +806,7 @@ export default function JoinEventScreen() {
         signers: signersJson,
         savedAt: Date.now(),
         event_type: foundSession.event_type || 'qr',
+        starts_at: foundSession.starts_at,
       });
       setActiveFanEvent(null);
       router.push({
@@ -830,6 +833,7 @@ export default function JoinEventScreen() {
     setEventScheduled(false);
     setScheduledSession(null);
     setNotificationSet(false);
+    setReserved(false);
     setHasJoinedQueue(false);
     setQueueEntry(null);
     setQueueStats(null);
@@ -992,9 +996,36 @@ export default function JoinEventScreen() {
     }
   };
 
+  // Réserve un événement dédicace PROGRAMMÉ : on le mémorise comme événement
+  // fan actif. Comme starts_at est futur, il apparaîtra dans « À venir » côté fan,
+  // puis basculera tout seul en « En cours » une fois l'heure de début atteinte.
+  const handleReserveScheduled = async () => {
+    if (!scheduledSession) return;
+    try {
+      const reserveSigners = await getEventSigners(scheduledSession.id).catch(() => [] as EventSigner[]);
+      await saveActiveFanEvent({
+        sessionId: scheduledSession.id,
+        sessionTitle: scheduledSession.title,
+        joinCode: scheduledSession.join_code,
+        endsAt: scheduledSession.ends_at,
+        signers: JSON.stringify(reserveSigners),
+        savedAt: Date.now(),
+        event_type: scheduledSession.event_type || 'qr',
+        starts_at: scheduledSession.starts_at,
+      });
+      setReserved(true);
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (e) {
+      console.warn('[handleReserveScheduled] Error:', e);
+      showAlert(t('error') || 'Error', t('reservationFailed' as any) || 'La réservation a échoué');
+    }
+  };
+
   const handleSetNotification = async () => {
     if (!scheduledSession) return;
-    
+
     if (!Notifications) {
       showAlert(
         t('notAvailable') || 'Not Available',
@@ -1615,6 +1646,19 @@ export default function JoinEventScreen() {
                 </Text>
               </View>
             </View>
+            {!reserved ? (
+              <TouchableOpacity style={styles.reserveButton} onPress={handleReserveScheduled}>
+                <Check size={20} color="#fff" />
+                <Text style={styles.reserveButtonText}>{t('reserveEvent' as any) || 'Réserver'}</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.notificationSetCard}>
+                <Check size={20} color="#10B981" />
+                <Text style={styles.notificationSetText}>
+                  {t('eventReservedMessage' as any) || "C'est réservé ! Tu le retrouveras dans « À venir »."}
+                </Text>
+              </View>
+            )}
             {!notificationSet ? (
               <TouchableOpacity style={styles.notifyButton} onPress={handleSetNotification}>
                 <Bell size={20} color="#fff" />
@@ -2095,6 +2139,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 12,
     marginBottom: 16,
+  },
+  reserveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#10B981',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  reserveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
   notificationSetCard: {
     flexDirection: 'row',

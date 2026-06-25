@@ -1483,4 +1483,7 @@ export default {
   legalDocuments: 'Rechtliche Dokumente',
   joinedEvent: 'Du nimmst teil an',
   resume: 'Fortsetzen',
+  reserveEvent: 'Platz reservieren',
+  eventReservedMessage: 'Reserviert! Du findest es unter „Bevorstehend".',
+  reservationFailed: 'Reservierung fehlgeschlagen. Bitte erneut versuchen.',
 };

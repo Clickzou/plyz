@@ -1483,4 +1483,7 @@ export default {
   legalDocuments: 'المستندات القانونية',
   joinedEvent: 'أنت مشارك في',
   resume: 'استئناف',
+  reserveEvent: 'احجز مكاني',
+  eventReservedMessage: 'تم الحجز! ستجده في «القادمة».',
+  reservationFailed: 'فشل الحجز. يرجى المحاولة مرة أخرى.',
 };
