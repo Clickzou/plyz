@@ -750,16 +750,6 @@ export default function AccountScreen() {
             <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('faqTitle' as any) || 'FAQ - Questions fréquentes'}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
-            onPress={() => handlePress('report')}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
-              <Mail size={24} color="#10b981" strokeWidth={2} />
-            </View>
-            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('reportProblem' as any) || 'Signaler un problème'}</Text>
-          </TouchableOpacity>
         </View>
 
         {(user?.email || '').toLowerCase() === 'jc@clickzou.fr' && (
