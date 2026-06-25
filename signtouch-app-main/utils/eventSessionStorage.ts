@@ -903,8 +903,11 @@ export const getActiveFanEvent = async (): Promise<ActiveFanEvent | null> => {
       await AsyncStorage.removeItem(ACTIVE_FAN_EVENT_KEY);
       return null;
     }
+    // Vérifier le statut dans la BONNE table selon le type :
+    // session vidéo → live_sessions ; dédicace → event_sessions.
+    const statusTable = event.event_type === 'live_video' ? 'live_sessions' : 'event_sessions';
     const { data: session } = await supabase
-      .from('event_sessions')
+      .from(statusTable)
       .select('status')
       .eq('id', event.sessionId)
       .single();
