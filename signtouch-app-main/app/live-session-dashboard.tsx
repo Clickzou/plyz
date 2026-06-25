@@ -662,8 +662,9 @@ export default function LiveSessionDashboardScreen() {
       setDedicationCurrentPath(dedicationPathRef.current);
     })
     .onEnd(() => {
-      if (dedicationPathRef.current) {
-        setDedicationPaths((prev) => [...prev, dedicationPathRef.current]);
+      const finishedPath = dedicationPathRef.current;
+      if (finishedPath) {
+        setDedicationPaths((prev) => [...prev, finishedPath]);
       }
       dedicationPathRef.current = '';
       setDedicationCurrentPath('');
@@ -880,10 +881,11 @@ export default function LiveSessionDashboardScreen() {
       }
     })
     .onEnd(() => {
-      if (pathRef.current) {
-        setPaths((prev) => [...prev, pathRef.current]);
+      const finishedPath = pathRef.current;
+      if (finishedPath) {
+        setPaths((prev) => [...prev, finishedPath]);
         if (currentFan) {
-          const allPaths = [...paths, pathRef.current];
+          const allPaths = [...paths, finishedPath];
           const fullSvg = allPaths.join('|||');
           updateSignatureSvg(currentFan.id, fullSvg);
         }
