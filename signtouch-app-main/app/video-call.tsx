@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -52,6 +52,115 @@ const DAILY_SUPPORTED_LANGS: Record<string, string> = {
   ja: 'ja',
   nl: 'nl',
 };
+
+// User-agent stable (calculé une seule fois) pour ne pas recréer un objet à chaque render.
+const WEBVIEW_USER_AGENT = Platform.select({
+  ios: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1',
+  android: 'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
+  default: undefined,
+});
+
+// originWhitelist stable (référence figée hors render).
+const WEBVIEW_ORIGIN_WHITELIST = ['*'];
+
+// Script injecté : constante de module, identité stable (ne dépend d'aucune prop).
+const DAILY_INJECTED_JS = `
+    (function() {
+      var style = document.createElement('style');
+      style.textContent = [
+        '* { box-sizing: border-box; }',
+        'html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #000; }',
+        'video { object-fit: cover !important; }',
+        '[class*="tile"], [class*="Tile"] { border-radius: 0 !important; }',
+        '[class*="grid"], [class*="Grid"], [class*="call-container"], [class*="videogrid"] { gap: 0 !important; padding: 0 !important; margin: 0 !important; }',
+        '[class*="topbar"], [class*="Topbar"], [class*="top-bar"], [class*="TopBar"], [class*="header-actions"], [class*="HeaderActions"] { display: none !important; }',
+        '[class*="leave"], [class*="Leave"] { display: none !important; }',
+        '[class*="tray"], [class*="Tray"], [class*="controls-bar"], [class*="ControlsBar"], [class*="control-bar"], [class*="toolbar"], [class*="Toolbar"], [class*="bottom-bar"], [class*="BottomBar"] { display: none !important; }',
+      ].join(' ');
+      document.head.appendChild(style);
+
+      window.addEventListener('message', function(event) {
+        if (event.data && event.data.action) {
+          window.ReactNativeWebView.postMessage(JSON.stringify(event.data));
+        }
+      });
+
+      var participantCheckInterval = setInterval(function() {
+        var videos = document.querySelectorAll('video');
+        if (videos.length >= 2) {
+          clearInterval(participantCheckInterval);
+          window.ReactNativeWebView.postMessage(JSON.stringify({action: 'participant-joined'}));
+        }
+      }, 1000);
+
+      var observer = new MutationObserver(function(mutations) {
+        var leaveBtn = document.querySelector('[data-testid="leave-meeting"]');
+        if (leaveBtn) {
+          leaveBtn.addEventListener('click', function() {
+            window.ReactNativeWebView.postMessage(JSON.stringify({action: 'left-meeting'}));
+          });
+        }
+        var videos = document.querySelectorAll('video');
+        videos.forEach(function(v) {
+          v.setAttribute('playsinline', '');
+          v.style.objectFit = 'cover';
+        });
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    })();
+    true;
+  `;
+
+// Gestion permission Android : référence stable.
+function handleWebViewPermissionRequest(event: any) {
+  try {
+    event?.nativeEvent?.grant?.(event.nativeEvent.resources);
+  } catch {}
+}
+
+interface DailyWebViewProps {
+  dailyUrl: string;
+  webViewRef: React.RefObject<any>;
+  onLoadEnd: () => void;
+  onError: () => void;
+  onMessage: (event: any) => void;
+}
+
+// WebView isolée dans un composant React.memo : ses props sont toutes stables
+// (URL/handlers mémoïsés). Ainsi, quand le compte à rebours fait un setState
+// chaque seconde dans le parent, CE composant ne se re-render PAS et la WebView
+// n'est jamais remontée → l'écran de consentement Daily ne clignote plus.
+const DailyWebView = React.memo(function DailyWebView({
+  dailyUrl,
+  webViewRef,
+  onLoadEnd,
+  onError,
+  onMessage,
+}: DailyWebViewProps) {
+  const source = useMemo(() => ({ uri: dailyUrl }), [dailyUrl]);
+  return (
+    <WebView
+      key={dailyUrl}
+      ref={webViewRef}
+      source={source}
+      style={styles.videoArea}
+      onLoadEnd={onLoadEnd}
+      onError={onError}
+      onMessage={onMessage}
+      injectedJavaScript={DAILY_INJECTED_JS}
+      javaScriptEnabled={true}
+      domStorageEnabled={true}
+      mediaPlaybackRequiresUserAction={false}
+      allowsInlineMediaPlayback={true}
+      mediaCapturePermissionGrantType="grant"
+      onPermissionRequest={handleWebViewPermissionRequest}
+      startInLoadingState={false}
+      originWhitelist={WEBVIEW_ORIGIN_WHITELIST}
+      allowsFullscreenVideo={true}
+      userAgent={WEBVIEW_USER_AGENT}
+    />
+  );
+});
 
 export default function VideoCallScreen() {
   const router = useRouter();
@@ -270,26 +379,31 @@ export default function VideoCallScreen() {
     return `${baseUrl}?${urlParams.toString()}`;
   };
 
-  const handleWebViewMessage = (event: any) => {
+  // Handlers mémoïsés (référence stable) pour ne pas re-render la WebView mémoïsée.
+  // handleCallEnded est défini plus bas mais référencé via un ref pour garder une
+  // identité stable sans dépendre de sa redéfinition à chaque render.
+  const handleCallEndedRef = useRef<() => void>(() => {});
+
+  const handleWebViewMessage = useCallback((event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.action === 'left-meeting') {
-        handleCallEnded();
+        handleCallEndedRef.current();
       } else if (data.action === 'participant-joined') {
         setOtherParticipantJoined(true);
       }
     } catch {
     }
-  };
+  }, []);
 
-  const handleWebViewError = () => {
+  const handleWebViewError = useCallback(() => {
     setError(t('videoCallError'));
     setIsLoading(false);
-  };
+  }, [t]);
 
-  const handleLoadEnd = () => {
+  const handleLoadEnd = useCallback(() => {
     setIsLoading(false);
-  };
+  }, []);
 
   const handleCallEnded = () => {
     if (!hasLeftCall) {
@@ -306,6 +420,10 @@ export default function VideoCallScreen() {
       setShowRatingModal(true);
     }
   };
+
+  // Garde le ref à jour pour que les handlers WebView mémoïsés appellent
+  // toujours la version courante de handleCallEnded.
+  handleCallEndedRef.current = handleCallEnded;
 
   const leaveCall = () => {
     if (callEndReason.current === 'unknown') {
@@ -527,53 +645,6 @@ export default function VideoCallScreen() {
     );
   }
 
-  const injectedJavaScript = `
-    (function() {
-      var style = document.createElement('style');
-      style.textContent = [
-        '* { box-sizing: border-box; }',
-        'html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #000; }',
-        'video { object-fit: cover !important; }',
-        '[class*="tile"], [class*="Tile"] { border-radius: 0 !important; }',
-        '[class*="grid"], [class*="Grid"], [class*="call-container"], [class*="videogrid"] { gap: 0 !important; padding: 0 !important; margin: 0 !important; }',
-        '[class*="topbar"], [class*="Topbar"], [class*="top-bar"], [class*="TopBar"], [class*="header-actions"], [class*="HeaderActions"] { display: none !important; }',
-        '[class*="leave"], [class*="Leave"] { display: none !important; }',
-        '[class*="tray"], [class*="Tray"], [class*="controls-bar"], [class*="ControlsBar"], [class*="control-bar"], [class*="toolbar"], [class*="Toolbar"], [class*="bottom-bar"], [class*="BottomBar"] { display: none !important; }',
-      ].join(' ');
-      document.head.appendChild(style);
-
-      window.addEventListener('message', function(event) {
-        if (event.data && event.data.action) {
-          window.ReactNativeWebView.postMessage(JSON.stringify(event.data));
-        }
-      });
-
-      var participantCheckInterval = setInterval(function() {
-        var videos = document.querySelectorAll('video');
-        if (videos.length >= 2) {
-          clearInterval(participantCheckInterval);
-          window.ReactNativeWebView.postMessage(JSON.stringify({action: 'participant-joined'}));
-        }
-      }, 1000);
-      
-      var observer = new MutationObserver(function(mutations) {
-        var leaveBtn = document.querySelector('[data-testid="leave-meeting"]');
-        if (leaveBtn) {
-          leaveBtn.addEventListener('click', function() {
-            window.ReactNativeWebView.postMessage(JSON.stringify({action: 'left-meeting'}));
-          });
-        }
-        var videos = document.querySelectorAll('video');
-        videos.forEach(function(v) {
-          v.setAttribute('playsinline', '');
-          v.style.objectFit = 'cover';
-        });
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
-    })();
-    true;
-  `;
-
   const renderVideoContent = () => {
     if (error) {
       return (
@@ -722,34 +793,12 @@ export default function VideoCallScreen() {
 
     if (WebView) {
       return (
-        <WebView
-          ref={webViewRef}
-          source={{ uri: dailyUrl }}
-          style={styles.videoArea}
+        <DailyWebView
+          dailyUrl={dailyUrl}
+          webViewRef={webViewRef}
           onLoadEnd={handleLoadEnd}
           onError={handleWebViewError}
           onMessage={handleWebViewMessage}
-          injectedJavaScript={injectedJavaScript}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          mediaPlaybackRequiresUserAction={false}
-          allowsInlineMediaPlayback={true}
-          mediaCapturePermissionGrantType="grant"
-          onPermissionRequest={(event: any) => {
-            // Android : accorde automatiquement les ressources (caméra/micro) demandées
-            // par la page Daily dans la WebView.
-            try {
-              event?.nativeEvent?.grant?.(event.nativeEvent.resources);
-            } catch {}
-          }}
-          startInLoadingState={false}
-          originWhitelist={['*']}
-          allowsFullscreenVideo={true}
-          userAgent={Platform.select({
-            ios: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1',
-            android: 'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
-            default: undefined,
-          })}
         />
       );
     }
