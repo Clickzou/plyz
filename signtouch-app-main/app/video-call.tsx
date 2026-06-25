@@ -25,6 +25,15 @@ if (Platform.OS !== 'web') {
   WebView = require('react-native-webview').WebView;
 }
 
+// Native camera/microphone permission helpers (mobile only).
+let ExpoCamera: any = null;
+if (Platform.OS !== 'web') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    ExpoCamera = require('expo-camera');
+  } catch {}
+}
+
 let ScreenOrientation: any = null;
 if (Platform.OS !== 'web') {
   try {
@@ -67,6 +76,11 @@ export default function VideoCallScreen() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // 'pending' while we request native cam/mic, 'granted' once OK, 'denied' if refused.
+  // On web the browser handles permissions itself, so we start as 'granted'.
+  const [mediaPermission, setMediaPermission] = useState<'pending' | 'granted' | 'denied'>(
+    Platform.OS === 'web' ? 'granted' : 'pending'
+  );
   const [fanTimeRemaining, setFanTimeRemaining] = useState<string>('--:--');
   const [, setTimeProgress] = useState(0);
   const [timeWarning, setTimeWarning] = useState(false);
@@ -146,6 +160,59 @@ export default function VideoCallScreen() {
       }, 3000);
       return () => clearTimeout(timer);
     }
+  }, []);
+
+  // Demande la permission native caméra + micro AVANT de charger l'appel Daily.
+  // Sans ça, sur Android la fenêtre de permission de la WebView s'ouvre puis se ferme
+  // toute seule et la caméra reste morte.
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        let camGranted = false;
+        let micGranted = false;
+
+        if (ExpoCamera?.requestCameraPermissionsAsync) {
+          const cam = await ExpoCamera.requestCameraPermissionsAsync();
+          camGranted = !!cam?.granted;
+          if (ExpoCamera.requestMicrophonePermissionsAsync) {
+            const mic = await ExpoCamera.requestMicrophonePermissionsAsync();
+            micGranted = !!mic?.granted;
+          } else {
+            micGranted = true;
+          }
+        } else {
+          // Fallback Android natif si expo-camera indisponible.
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const { PermissionsAndroid } = require('react-native');
+          if (Platform.OS === 'android' && PermissionsAndroid?.requestMultiple) {
+            const res = await PermissionsAndroid.requestMultiple([
+              'android.permission.CAMERA',
+              'android.permission.RECORD_AUDIO',
+            ]);
+            camGranted = res['android.permission.CAMERA'] === 'granted';
+            micGranted = res['android.permission.RECORD_AUDIO'] === 'granted';
+          } else {
+            // iOS sans expo-camera : on laisse la WebView gérer (mediaCapturePermissionGrantType="grant").
+            camGranted = true;
+            micGranted = true;
+          }
+        }
+
+        if (!cancelled) {
+          setMediaPermission(camGranted && micGranted ? 'granted' : 'denied');
+        }
+      } catch (e) {
+        console.error('[VideoCall] Error requesting camera/mic permission:', e);
+        if (!cancelled) setMediaPermission('denied');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -627,6 +694,32 @@ export default function VideoCallScreen() {
       );
     }
 
+    // Caméra/micro refusés : message clair, on ne charge pas l'appel.
+    if (mediaPermission === 'denied') {
+      return (
+        <View style={styles.errorContainer}>
+          <View style={styles.errorIconCircle}>
+            <Video size={40} color="#ef4444" />
+          </View>
+          <Text style={styles.errorTitle}>
+            {t('videoCallPermissionTitle') || 'Caméra et micro requis'}
+          </Text>
+          <Text style={styles.errorSubtext}>
+            {t('videoCallPermissionMessage') ||
+              'Autorise la caméra et le micro pour passer un appel vidéo. Active-les dans les réglages de ton téléphone.'}
+          </Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Text style={styles.backButtonText}>{t('goBack')}</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // En attente de la réponse de permission native : on patiente (l'overlay de chargement reste visible).
+    if (mediaPermission === 'pending') {
+      return <View style={styles.videoArea} />;
+    }
+
     if (WebView) {
       return (
         <WebView
@@ -642,6 +735,13 @@ export default function VideoCallScreen() {
           mediaPlaybackRequiresUserAction={false}
           allowsInlineMediaPlayback={true}
           mediaCapturePermissionGrantType="grant"
+          onPermissionRequest={(event: any) => {
+            // Android : accorde automatiquement les ressources (caméra/micro) demandées
+            // par la page Daily dans la WebView.
+            try {
+              event?.nativeEvent?.grant?.(event.nativeEvent.resources);
+            } catch {}
+          }}
           startInLoadingState={false}
           originWhitelist={['*']}
           allowsFullscreenVideo={true}

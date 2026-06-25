@@ -1047,6 +1047,8 @@ export default {
   yourTurnNotification: "It's your turn! Join the call now.",
   videoCallPreparing: 'Preparing your video call...',
   videoCallConnectionFailed: 'Video call connection failed. Please try again.',
+  videoCallPermissionTitle: 'Camera and microphone required',
+  videoCallPermissionMessage: 'Allow the camera and microphone to make a video call. Enable them in your phone settings.',
   queueFullTitle: 'Queue is full!',
   queueFullMessage: 'All fans have joined the session. You can start the live now!',
   firstFanJoinedTitle: 'First fan connected!',

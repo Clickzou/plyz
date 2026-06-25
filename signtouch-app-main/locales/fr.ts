@@ -1050,6 +1050,8 @@ export default {
   yourTurnNotification: "C'est votre tour ! Rejoignez l'appel maintenant.",
   videoCallPreparing: 'Préparation de votre appel vidéo...',
   videoCallConnectionFailed: 'La connexion à l\'appel vidéo a échoué. Veuillez réessayer.',
+  videoCallPermissionTitle: 'Caméra et micro requis',
+  videoCallPermissionMessage: 'Autorise la caméra et le micro pour passer un appel vidéo. Active-les dans les réglages de ton téléphone.',
   queueFullTitle: 'File d\'attente complète !',
   queueFullMessage: 'Tous les fans ont rejoint la session. Vous pouvez lancer le live !',
   firstFanJoinedTitle: 'Premier fan connecté !',
