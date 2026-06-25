@@ -9,6 +9,7 @@ export interface CollectorLiveItem {
   fanName: string;
   sessionId?: string;
   sessionCode?: string;
+  dedupKey?: string;
   photoUri?: string;
   signaturePaths?: string[];
   signatureColor?: string;
@@ -76,6 +77,7 @@ export const saveCollectorLive = async (
     signatureScale?: number;
     signatureRotation?: number;
   },
+  dedupKey?: string,
 ): Promise<CollectorLiveItem> => {
   const timestamp = Date.now();
   const id = `collector_${timestamp}`;
@@ -89,6 +91,32 @@ export const saveCollectorLive = async (
     }
   }
 
+  const items = await getAllCollectorLive();
+
+  // Anti-doublon : si une dedicace pour cette session/file existe deja,
+  // on met a jour l'entree existante au lieu d'en creer une nouvelle.
+  const existingIdx = dedupKey
+    ? items.findIndex(i => i.dedupKey === dedupKey)
+    : -1;
+
+  if (existingIdx !== -1) {
+    const existing = items[existingIdx];
+    const updated: CollectorLiveItem = {
+      ...existing,
+      uri: finalUri,
+      imageUri: finalUri,
+      celebrityName,
+      fanName,
+      sessionId,
+      sessionCode,
+      dedupKey,
+      ...(rawData || {}),
+    };
+    items[existingIdx] = updated;
+    await persistCollectorLive(items);
+    return updated;
+  }
+
   const item: CollectorLiveItem = {
     id,
     uri: finalUri,
@@ -98,12 +126,18 @@ export const saveCollectorLive = async (
     fanName,
     sessionId,
     sessionCode,
+    dedupKey,
     ...(rawData || {}),
   };
 
-  const items = await getAllCollectorLive();
   items.unshift(item);
 
+  await persistCollectorLive(items);
+
+  return item;
+};
+
+const persistCollectorLive = async (items: CollectorLiveItem[]): Promise<void> => {
   const limited = Platform.OS === 'web' ? items.slice(0, MAX_ITEMS_WEB) : items;
 
   try {
@@ -124,8 +158,6 @@ export const saveCollectorLive = async (
       throw quotaError;
     }
   }
-
-  return item;
 };
 
 export const deleteCollectorLive = async (id: string): Promise<void> => {

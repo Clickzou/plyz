@@ -79,6 +79,13 @@ export default function DedicationResultScreen() {
   const [signatureColor, setSignatureColor] = useState('#FFFFFF');
   const [isSaving, setIsSaving] = useState(false);
 
+  // Cle anti-doublon : une seule entree galerie par file/session de ce fan.
+  const dedupKey =
+    (params.queueEntryId as string) ||
+    (params.sessionId as string) ||
+    undefined;
+  const autoSavedRef = useRef(false);
+
   const sigTranslateX = useSharedValue(0);
   const sigTranslateY = useSharedValue(PHOTO_HEIGHT * 0.55);
   const sigScale = useSharedValue(1);
@@ -354,6 +361,28 @@ export default function DedicationResultScreen() {
     return null;
   };
 
+  // Enregistre la dedicace dans la galerie interne de l'app (Collector).
+  // Anti-doublon via dedupKey : reappeler ne cree pas de seconde entree, ca met a jour.
+  const saveToCollector = async (uri: string) => {
+    await saveCollectorLive(
+      uri,
+      celebrityName || 'Celebrity',
+      (params.fanName as string) || 'Fan',
+      params.sessionId as string || undefined,
+      undefined,
+      {
+        photoUri: photoUrl || undefined,
+        signaturePaths: signaturePaths.length > 0 ? signaturePaths : undefined,
+        signatureColor: signatureColor,
+        signatureX: sigTranslateX.value,
+        signatureY: sigTranslateY.value,
+        signatureScale: sigScale.value,
+        signatureRotation: sigRotation.value,
+      },
+      dedupKey,
+    );
+  };
+
   const handleSave = async () => {
     try {
       setIsSaving(true);
@@ -365,22 +394,8 @@ export default function DedicationResultScreen() {
         return;
       }
 
-      await saveCollectorLive(
-        uri,
-        celebrityName || 'Celebrity',
-        (params.fanName as string) || 'Fan',
-        params.sessionId as string || undefined,
-        undefined,
-        {
-          photoUri: photoUrl || undefined,
-          signaturePaths: signaturePaths.length > 0 ? signaturePaths : undefined,
-          signatureColor: signatureColor,
-          signatureX: sigTranslateX.value,
-          signatureY: sigTranslateY.value,
-          signatureScale: sigScale.value,
-          signatureRotation: sigRotation.value,
-        },
-      );
+      autoSavedRef.current = true;
+      await saveToCollector(uri);
 
       if (Platform.OS === 'web') {
         downloadImageWeb(uri, `dedication_${celebrityName}_${Date.now()}.png`);
@@ -434,6 +449,30 @@ export default function DedicationResultScreen() {
       console.error('Error sharing dedication:', error);
     }
   };
+
+  // Sauvegarde AUTOMATIQUE dans la galerie interne (Collector) des que la
+  // dedicace est affichee, pour que le fan la retrouve sans cliquer "Enregistrer".
+  // autoSavedRef + dedupKey garantissent une seule entree (pas de doublon).
+  useEffect(() => {
+    if (loading || noAssets || !photoUrl || autoSavedRef.current) return;
+    autoSavedRef.current = true;
+    const timer = setTimeout(async () => {
+      try {
+        const uri = await captureImage();
+        if (uri) {
+          await saveToCollector(uri);
+          console.log('[DedicationResult] Auto-saved to internal gallery');
+        } else {
+          autoSavedRef.current = false;
+        }
+      } catch (e) {
+        console.error('[DedicationResult] Auto-save failed:', e);
+        autoSavedRef.current = false;
+      }
+    }, 1200);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, noAssets, photoUrl, signaturePaths.length]);
 
   if (loading) {
     return (
@@ -576,22 +615,8 @@ export default function DedicationResultScreen() {
           try {
             const uri = await captureImage();
             if (uri) {
-              await saveCollectorLive(
-                uri,
-                celebrityName || 'Celebrity',
-                (params.fanName as string) || 'Fan',
-                params.sessionId as string || undefined,
-                undefined,
-                {
-                  photoUri: photoUrl || undefined,
-                  signaturePaths: signaturePaths.length > 0 ? signaturePaths : undefined,
-                  signatureColor: signatureColor,
-                  signatureX: sigTranslateX.value,
-                  signatureY: sigTranslateY.value,
-                  signatureScale: sigScale.value,
-                  signatureRotation: sigRotation.value,
-                },
-              );
+              autoSavedRef.current = true;
+              await saveToCollector(uri);
             }
           } catch (e) {
             console.error('[Dedication] Auto-save before home failed:', e);
