@@ -32,10 +32,10 @@ export async function scheduleCelebrityReminders(options: ReminderOptions): Prom
     if (oneHourBefore > now) {
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: `${options.eventName} - Plyz`,
-          body: options.type === 'live_session'
-            ? 'Votre session live commence dans 1 heure ! Préparez-vous.'
-            : 'Votre événement commence dans 1 heure ! Préparez-vous.',
+          title: options.type === 'live_session'
+            ? '⚠️ Votre session live commence dans 1 heure'
+            : '⚠️ Votre événement dédicace commence dans 1 heure',
+          body: `${options.eventName} — préparez-vous, ça commence dans une heure !`,
           data: { code: options.eventCode, id: options.eventId, type: options.type },
           sound: true,
         },
@@ -50,10 +50,10 @@ export async function scheduleCelebrityReminders(options: ReminderOptions): Prom
     if (twoMinBefore > now) {
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: `${options.eventName} - Plyz`,
-          body: options.type === 'live_session'
-            ? 'Votre session live commence dans 2 minutes ! Ouvrez l\'app maintenant.'
-            : 'Votre événement commence dans 2 minutes ! Ouvrez l\'app maintenant.',
+          title: options.type === 'live_session'
+            ? '⚠️ Votre session live commence dans 2 min'
+            : '⚠️ Votre événement dédicace commence dans 2 min',
+          body: `${options.eventName} — ouvrez Plyz maintenant, ça démarre !`,
           data: { code: options.eventCode, id: options.eventId, type: options.type },
           sound: true,
           priority: Notifications.AndroidNotificationPriority?.MAX,
