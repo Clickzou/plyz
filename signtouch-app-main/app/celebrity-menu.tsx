@@ -259,6 +259,10 @@ export default function CelebrityMenuScreen() {
   const getEventStatus = (event: EventSession) => {
     if (isEventEnded(event)) return 'ended';
     if (event.status === 'live') return 'live';
+    // L'heure de début est passée (et l'événement n'est pas terminé) → « en cours »,
+    // même si le statut en base est encore 'scheduled' (créateur pas encore connecté).
+    // Aligne celebrity-menu sur la logique de fan-choice (cohérence des compteurs).
+    if (event.starts_at && new Date(event.starts_at).getTime() <= Date.now()) return 'live';
     return 'scheduled';
   };
 
