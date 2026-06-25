@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Platform,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -111,6 +112,40 @@ const DAILY_INJECTED_JS = `
     true;
   `;
 
+// Diagnostic getUserMedia : injecté AVANT le chargement du contenu Daily.
+// Constante de module (identité stable) → ne casse pas le React.memo de DailyWebView.
+// On wrappe navigator.mediaDevices.getUserMedia pour remonter à React Native le
+// succès (caméra/micro OK) ou l'erreur EXACTE (name + message) si getUserMedia échoue.
+// Le comportement normal est préservé : on renvoie bien le stream en succès,
+// on rejette bien la promesse en erreur.
+const DAILY_GUM_DIAGNOSTIC_JS = `
+    (function() {
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          var _origGUM = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+          navigator.mediaDevices.getUserMedia = function(constraints) {
+            return _origGUM(constraints).then(function(stream) {
+              try {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ action: 'gum-ok' }));
+              } catch (e) {}
+              return stream;
+            }).catch(function(err) {
+              try {
+                window.ReactNativeWebView.postMessage(JSON.stringify({
+                  action: 'gum-error',
+                  name: (err && err.name) ? err.name : 'UnknownError',
+                  message: (err && err.message) ? err.message : String(err)
+                }));
+              } catch (e) {}
+              throw err;
+            });
+          };
+        }
+      } catch (e) {}
+    })();
+    true;
+  `;
+
 // Gestion permission Android : référence stable.
 function handleWebViewPermissionRequest(event: any) {
   try {
@@ -147,6 +182,7 @@ const DailyWebView = React.memo(function DailyWebView({
       onLoadEnd={onLoadEnd}
       onError={onError}
       onMessage={onMessage}
+      injectedJavaScriptBeforeContentLoaded={DAILY_GUM_DIAGNOSTIC_JS}
       injectedJavaScript={DAILY_INJECTED_JS}
       javaScriptEnabled={true}
       domStorageEnabled={true}
@@ -283,34 +319,46 @@ export default function VideoCallScreen() {
         let camGranted = false;
         let micGranted = false;
 
-        if (ExpoCamera?.requestCameraPermissionsAsync) {
-          const cam = await ExpoCamera.requestCameraPermissionsAsync();
-          camGranted = !!cam?.granted;
-          if (ExpoCamera.requestMicrophonePermissionsAsync) {
-            const mic = await ExpoCamera.requestMicrophonePermissionsAsync();
-            micGranted = !!mic?.granted;
-          } else {
-            micGranted = true;
-          }
-        } else {
-          // Fallback Android natif si expo-camera indisponible.
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
-          const { PermissionsAndroid } = require('react-native');
-          if (Platform.OS === 'android' && PermissionsAndroid?.requestMultiple) {
-            const res = await PermissionsAndroid.requestMultiple([
-              'android.permission.CAMERA',
-              'android.permission.RECORD_AUDIO',
-            ]);
-            camGranted = res['android.permission.CAMERA'] === 'granted';
-            micGranted = res['android.permission.RECORD_AUDIO'] === 'granted';
-          } else {
-            // iOS sans expo-camera : on laisse la WebView gérer (mediaCapturePermissionGrantType="grant").
-            camGranted = true;
-            micGranted = true;
+        // 1) Sur Android, on demande EXPLICITEMENT caméra ET micro au niveau OS via
+        //    PermissionsAndroid.requestMultiple. C'est ce qui déclenche la vraie popup
+        //    système RECORD_AUDIO (sans elle getUserMedia échoue EN ENTIER → écran noir).
+        if (Platform.OS === 'android') {
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const { PermissionsAndroid } = require('react-native');
+            if (PermissionsAndroid?.requestMultiple) {
+              const res = await PermissionsAndroid.requestMultiple([
+                'android.permission.CAMERA',
+                'android.permission.RECORD_AUDIO',
+              ]);
+              camGranted = res['android.permission.CAMERA'] === 'granted';
+              micGranted = res['android.permission.RECORD_AUDIO'] === 'granted';
+            }
+          } catch (e) {
+            console.warn('[VideoCall] PermissionsAndroid request failed:', e);
           }
         }
 
+        // 2) En complément (et seul chemin sur iOS), expo-camera : demande caméra + micro.
+        //    On exige les DEUX. Si l'un manque encore après PermissionsAndroid, expo-camera
+        //    peut le compléter (et inversement).
+        if (ExpoCamera?.requestCameraPermissionsAsync) {
+          if (!camGranted) {
+            const cam = await ExpoCamera.requestCameraPermissionsAsync();
+            camGranted = !!cam?.granted;
+          }
+          if (!micGranted && ExpoCamera.requestMicrophonePermissionsAsync) {
+            const mic = await ExpoCamera.requestMicrophonePermissionsAsync();
+            micGranted = !!mic?.granted;
+          }
+        } else if (Platform.OS !== 'android') {
+          // iOS sans expo-camera : on laisse la WebView gérer (mediaCapturePermissionGrantType="grant").
+          camGranted = true;
+          micGranted = true;
+        }
+
         if (!cancelled) {
+          // On n'autorise le montage de la WebView Daily QUE si caméra ET micro sont accordés.
           setMediaPermission(camGranted && micGranted ? 'granted' : 'denied');
         }
       } catch (e) {
@@ -391,6 +439,15 @@ export default function VideoCallScreen() {
         handleCallEndedRef.current();
       } else if (data.action === 'participant-joined') {
         setOtherParticipantJoined(true);
+      } else if (data.action === 'gum-error') {
+        // Diagnostic : getUserMedia a échoué côté WebView → on affiche l'erreur
+        // EXACTE (ex. "NotAllowedError: Permission denied") pour ne plus deviner.
+        const name = data.name || 'UnknownError';
+        const message = data.message || '';
+        console.warn('[VideoCall] getUserMedia error:', name, message);
+        Alert.alert('Diagnostic caméra', name + ': ' + message);
+      } else if (data.action === 'gum-ok') {
+        console.log('[VideoCall] getUserMedia OK (caméra + micro accordés)');
       }
     } catch {
     }

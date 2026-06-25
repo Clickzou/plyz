@@ -55,6 +55,36 @@ const PRICE_OPTIONS = [
   { label: '100€', value: 10000 },
 ];
 
+// Demande caméra + micro DÈS la création/lancement de la session pour que les
+// permissions soient déjà accordées le jour de l'appel vidéo (sinon getUserMedia
+// échoue côté Daily → écran noir). Ne bloque JAMAIS la création : on informe juste.
+async function requestVideoPermissionsEarly(): Promise<void> {
+  if (Platform.OS === 'web') return;
+  try {
+    if (Platform.OS === 'android') {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { PermissionsAndroid } = require('react-native');
+      if (PermissionsAndroid?.requestMultiple) {
+        await PermissionsAndroid.requestMultiple([
+          'android.permission.CAMERA',
+          'android.permission.RECORD_AUDIO',
+        ]);
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const ExpoCamera = require('expo-camera');
+    if (ExpoCamera?.requestCameraPermissionsAsync) {
+      await ExpoCamera.requestCameraPermissionsAsync();
+      if (ExpoCamera.requestMicrophonePermissionsAsync) {
+        await ExpoCamera.requestMicrophonePermissionsAsync();
+      }
+    }
+  } catch (e) {
+    // On n'empêche pas la création de session si la demande échoue.
+    console.warn('[CreateSession] Early cam/mic permission request failed:', e);
+  }
+}
+
 const PLYZ_FEES = 0.15; // 15% Plyz
 const STRIPE_PERCENT = 0.029; // 2.9% Stripe
 const STRIPE_FIXED = 30; // 0.30€ par transaction (en centimes)
@@ -243,6 +273,11 @@ export default function CreateLiveSessionScreen() {
 
   const handleCreateSession = async () => {
     console.log('[CreateSession] Button pressed, name:', celebrityName);
+
+    // Déclenche la popup caméra + micro dès maintenant (sans bloquer la création).
+    // Objectif : permissions déjà accordées le jour de l'appel vidéo.
+    requestVideoPermissionsEarly();
+
     let hasError = false;
 
     if (!celebrityName.trim()) {
