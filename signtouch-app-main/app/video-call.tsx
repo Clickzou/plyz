@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,14 +9,13 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, PhoneOff, Clock, Video, Users } from 'lucide-react-native';
+import { ArrowLeft, PhoneOff, Clock, Video, Users, TrendingUp } from 'lucide-react-native';
 import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
 import { sendDedicationNotification, callNextFan } from '@/utils/sessionQueueStorage';
 import { markPaymentCaptured } from '@/utils/liveSessionStorage';
 import { recordTransaction } from '@/utils/transactionStorage';
-import { showConfirm } from '@/utils/alertHelper';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -81,6 +80,53 @@ export default function VideoCallScreen() {
   const [waitingForNextFan, setWaitingForNextFan] = useState(false);
   const [currentFanName, setCurrentFanName] = useState(params.otherUserName || 'Fan');
   const [fansRemainingCount, setFansRemainingCount] = useState(parseInt(params.fansRemaining || '0', 10));
+
+  // --- End-of-session summary (replaces the basic system alert) ---
+  const sessionStartTimeRef = useRef<number>(Date.now());
+  const [showEndSummary, setShowEndSummary] = useState(false);
+  const [summaryDurationMin, setSummaryDurationMin] = useState(0);
+  const [summaryFansMet, setSummaryFansMet] = useState(0);
+  const [summaryEarningsCents, setSummaryEarningsCents] = useState(0);
+
+  const openEndSummary = useCallback(async () => {
+    // Durée de session (depuis l'ouverture de l'appel vidéo de la célébrité)
+    const elapsedMin = Math.max(0, Math.round((Date.now() - sessionStartTimeRef.current) / 60000));
+    setSummaryDurationMin(elapsedMin);
+
+    // Revenus + nombre de fans rencontrés via /api/session-earnings (même source que le dashboard)
+    let fansMet = 0;
+    let earningsCents = 0;
+    if (params.sessionId && STRIPE_SERVER_URL) {
+      try {
+        const response = await fetch(`${STRIPE_SERVER_URL}/api/session-earnings?session_id=${params.sessionId}`);
+        const data = await response.json();
+        if (data.total_captured_cents !== undefined) earningsCents = data.total_captured_cents;
+        if (data.captured_count !== undefined) fansMet = data.captured_count;
+      } catch (e) {
+        console.error('[VideoCall] Error fetching session earnings for summary:', e);
+      }
+    }
+    setSummaryFansMet(fansMet);
+    setSummaryEarningsCents(earningsCents);
+    setShowEndSummary(true);
+  }, [params.sessionId]);
+
+  const closeEndSummary = useCallback(() => {
+    setShowEndSummary(false);
+    router.replace({
+      pathname: '/live-session-dashboard',
+      params: { sessionId: params.sessionId },
+    });
+  }, [params.sessionId, router]);
+
+  const formatSummaryDuration = (min: number): string => {
+    if (min >= 60) {
+      const h = Math.floor(min / 60);
+      const m = min % 60;
+      return m > 0 ? `${h}h ${m}m` : `${h}h`;
+    }
+    return `${min} min`;
+  };
 
   useEffect(() => {
     if (ScreenOrientation) {
@@ -279,16 +325,7 @@ export default function VideoCallScreen() {
           dailyCallFrameRef.current = null;
         }
         setHasLeftCall(true);
-        showConfirm(
-          t('noMoreFansTitle'),
-          t('noMoreFansMessage'),
-          [{ text: 'OK', style: 'default', onPress: () => {
-            router.replace({
-              pathname: '/live-session-dashboard',
-              params: { sessionId: params.sessionId },
-            });
-          }}]
-        );
+        openEndSummary();
       }
     } catch (error) {
       console.error('[VideoCall] Error calling next fan:', error);
@@ -327,16 +364,7 @@ export default function VideoCallScreen() {
           dailyCallFrameRef.current = null;
         }
         setHasLeftCall(true);
-        showConfirm(
-          t('noMoreFansTitle'),
-          t('noMoreFansMessage'),
-          [{ text: 'OK', style: 'default', onPress: () => {
-            router.replace({
-              pathname: '/live-session-dashboard',
-              params: { sessionId: params.sessionId },
-            });
-          }}]
-        );
+        openEndSummary();
       }
     }, 120000);
     return () => clearTimeout(timeout);
@@ -722,6 +750,58 @@ export default function VideoCallScreen() {
         </View>
       )}
 
+      {showEndSummary && (
+        <View style={styles.summaryOverlay}>
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryEmoji}>🎉</Text>
+            <Text style={styles.summaryTitle}>
+              {(t('noMoreFansTitle') || 'Session terminée') + ' !'}
+            </Text>
+            <Text style={styles.summarySubtitle}>
+              {t('noMoreFansMessage') || 'Belle session !'}
+            </Text>
+
+            <View style={styles.summaryStats}>
+              <View style={styles.summaryStatRow}>
+                <View style={styles.summaryStatIcon}>
+                  <Clock size={20} color="#a78bfa" />
+                </View>
+                <View style={styles.summaryStatTexts}>
+                  <Text style={styles.summaryStatLabel}>{t('summaryDuration') || 'Durée'}</Text>
+                  <Text style={styles.summaryStatValue}>{formatSummaryDuration(summaryDurationMin)}</Text>
+                </View>
+              </View>
+
+              <View style={styles.summaryStatRow}>
+                <View style={styles.summaryStatIcon}>
+                  <Users size={20} color="#a78bfa" />
+                </View>
+                <View style={styles.summaryStatTexts}>
+                  <Text style={styles.summaryStatLabel}>{t('summaryFansMet') || 'Fans rencontrés'}</Text>
+                  <Text style={styles.summaryStatValue}>{summaryFansMet}</Text>
+                </View>
+              </View>
+
+              <View style={styles.summaryStatRow}>
+                <View style={styles.summaryStatIcon}>
+                  <TrendingUp size={20} color="#a78bfa" />
+                </View>
+                <View style={styles.summaryStatTexts}>
+                  <Text style={styles.summaryStatLabel}>{t('summaryRevenue') || 'Revenus générés'}</Text>
+                  <Text style={styles.summaryStatValue}>
+                    {(summaryEarningsCents / 100).toFixed(2).replace('.', ',')} €
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <TouchableOpacity style={styles.summaryButton} onPress={closeEndSummary} activeOpacity={0.85}>
+              <Text style={styles.summaryButtonText}>{t('summaryFinish') || 'Terminer'}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       <RatingModal
         visible={showRatingModal}
         onClose={handleRatingModalClose}
@@ -737,6 +817,94 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  summaryOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(15,23,42,0.92)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    zIndex: 50,
+  },
+  summaryCard: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: '#1e1b4b',
+    borderRadius: 28,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.35)',
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.4,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  summaryEmoji: {
+    fontSize: 48,
+    marginBottom: 8,
+  },
+  summaryTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  summarySubtitle: {
+    fontSize: 15,
+    color: '#c7d2fe',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  summaryStats: {
+    width: '100%',
+    gap: 12,
+    marginBottom: 28,
+  },
+  summaryStatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(99,102,241,0.12)',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 14,
+  },
+  summaryStatIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(99,102,241,0.22)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  summaryStatTexts: {
+    flex: 1,
+  },
+  summaryStatLabel: {
+    fontSize: 13,
+    color: '#a5b4fc',
+    marginBottom: 2,
+  },
+  summaryStatValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  summaryButton: {
+    width: '100%',
+    backgroundColor: '#6366f1',
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  summaryButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#ffffff',
   },
   controlBar: {
     flexDirection: 'row',
