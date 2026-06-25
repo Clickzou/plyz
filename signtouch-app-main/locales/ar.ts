@@ -1439,7 +1439,7 @@ export default {
   enterPromoCode: 'أدخل رمزاً ترويجياً',
   fanChoiceCreateBtn: 'إنشاء',
   fanChoiceEventDesc: 'أنشئ فعالية إهداء مباشرة خاصة بك، أو انضم إلى واحدة باستخدام رمز QR.',
-  fanChoiceEventTitle: 'فعالية',
+  fanChoiceEventTitle: 'فعالية الإهداء',
   fanChoiceJoinBtn: 'انضمام',
   fanChoiceVideoDesc2: 'ابدأ مكالمة فيديو خاصة مع معجبيك، أو انضم إلى مكالمة المشهور الخاص بك.',
   fanChoiceVideoTitle: 'جلسة فيديو',

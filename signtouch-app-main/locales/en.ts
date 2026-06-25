@@ -683,7 +683,7 @@ export default {
   fanChoiceVideoDesc: 'Join a live video call and chat privately with your favorite celebrity. You will also receive a dedicated photo at the end.',
   fanChoiceCreate: 'Create an event',
   fanChoiceCreateDesc: 'Host your own live dedication event and invite your fans.',
-  fanChoiceEventTitle: 'Event',
+  fanChoiceEventTitle: 'Autograph Event',
   fanChoiceEventDesc: 'Create your own live dedication event, or join one with a QR code.',
   fanChoiceVideoTitle: 'Video session',
   eventsUpcoming: 'Upcoming events',

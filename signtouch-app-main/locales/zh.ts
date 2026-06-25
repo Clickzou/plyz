@@ -1439,7 +1439,7 @@ export default {
   enterPromoCode: '输入促销代码',
   fanChoiceCreateBtn: '创建',
   fanChoiceEventDesc: '创建您自己的现场签名活动，或使用二维码加入活动。',
-  fanChoiceEventTitle: '活动',
+  fanChoiceEventTitle: '签名活动',
   fanChoiceJoinBtn: '加入',
   fanChoiceVideoDesc2: '与您的粉丝开始私人视频通话，或加入您明星的通话。',
   fanChoiceVideoTitle: '视频通话',

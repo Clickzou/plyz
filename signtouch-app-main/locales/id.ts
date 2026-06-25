@@ -1444,7 +1444,7 @@ export default {
   enterPromoCode: 'Masukkan kode promo',
   fanChoiceCreateBtn: 'Buat',
   fanChoiceEventDesc: 'Buat acara dedikasi langsung Anda sendiri, atau bergabung dengan QR code.',
-  fanChoiceEventTitle: 'Acara',
+  fanChoiceEventTitle: 'Acara tanda tangan',
   fanChoiceJoinBtn: 'Gabung',
   fanChoiceVideoDesc2: 'Mulai panggilan video pribadi dengan penggemar Anda, atau bergabung dengan selebriti Anda.',
   fanChoiceVideoTitle: 'Sesi video',

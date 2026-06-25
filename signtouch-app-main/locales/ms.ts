@@ -1444,7 +1444,7 @@ export default {
   enterPromoCode: 'Masukkan kod promosi',
   fanChoiceCreateBtn: 'Cipta',
   fanChoiceEventDesc: 'Cipta acara dedikasi langsung anda sendiri, atau sertai satu dengan kod QR.',
-  fanChoiceEventTitle: 'Acara',
+  fanChoiceEventTitle: 'Acara autograf',
   fanChoiceJoinBtn: 'Sertai',
   fanChoiceVideoDesc2: 'Mulakan panggilan video peribadi dengan peminat anda, atau sertai panggilan selebriti anda.',
   fanChoiceVideoTitle: 'Sesi video',

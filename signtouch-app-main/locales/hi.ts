@@ -1439,7 +1439,7 @@ export default {
   enterPromoCode: 'प्रोमो कोड दर्ज करें',
   fanChoiceCreateBtn: 'बनाएं',
   fanChoiceEventDesc: 'अपना खुद का लाइव समर्पण इवेंट बनाएं, या QR कोड के साथ किसी में शामिल हों।',
-  fanChoiceEventTitle: 'इवेंट',
+  fanChoiceEventTitle: 'ऑटोग्राफ इवेंट',
   fanChoiceJoinBtn: 'शामिल हों',
   fanChoiceVideoDesc2: 'अपने प्रशंसकों के साथ एक निजी वीडियो कॉल शुरू करें, या अपनी सेलिब्रिटी की कॉल में शामिल हों।',
   fanChoiceVideoTitle: 'वीडियो सत्र',

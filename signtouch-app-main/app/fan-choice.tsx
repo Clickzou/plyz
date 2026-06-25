@@ -11,7 +11,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PlyzHeader from '@/components/PlyzHeader';
-import { Calendar, Video, Plus, LogIn, CalendarClock } from 'lucide-react-native';
+import { PenTool, Video, Plus, LogIn, CalendarClock } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -213,15 +213,21 @@ export default function FanChoiceScreen() {
   const renderCard = (
     accent: string,
     icon: React.ReactNode,
+    badgeIcon: React.ReactNode,
+    badgeLabel: string,
     title: string,
     description: string,
     createPath: string,
     joinPath: string,
   ) => (
-    <View style={styles.card}>
+    <View style={[styles.card, { borderColor: `${accent}40` }]}>
       <LinearGradient colors={[`${accent}26`, `${accent}0d`]} style={styles.cardGradient}>
+        <View style={[styles.typeBadge, { backgroundColor: `${accent}26`, borderColor: `${accent}59` }]}>
+          {badgeIcon}
+          <Text style={[styles.typeBadgeText, { color: accent }]}>{badgeLabel}</Text>
+        </View>
         <View style={[styles.iconContainer, { backgroundColor: `${accent}1f` }]}>{icon}</View>
-        <Text style={styles.cardTitle}>{title}</Text>
+        <Text style={[styles.cardTitle, { color: accent }]}>{title}</Text>
         <Text style={styles.cardDescription}>{description}</Text>
 
         <View style={styles.btnRow}>
@@ -266,7 +272,9 @@ export default function FanChoiceScreen() {
           <View style={styles.cardsContainer}>
             {renderCard(
               '#10b981',
-              <Calendar size={40} color="#10b981" strokeWidth={1.5} />,
+              <PenTool size={40} color="#10b981" strokeWidth={1.5} />,
+              <PenTool size={14} color="#10b981" strokeWidth={2.5} />,
+              t('eventTypeDedicace' as any) || 'Dédicace',
               t('fanChoiceEventTitle'),
               t('fanChoiceEventDesc'),
               '/create-event',
@@ -291,6 +299,8 @@ export default function FanChoiceScreen() {
             {renderCard(
               '#6366f1',
               <Video size={40} color="#6366f1" strokeWidth={1.5} />,
+              <Video size={14} color="#6366f1" strokeWidth={2.5} />,
+              t('eventTypeLiveVideo' as any) || 'Live vidéo',
               t('fanChoiceVideoTitle'),
               t('fanChoiceVideoDesc2'),
               '/create-live-session',
@@ -348,10 +358,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: 'rgba(255, 255, 255, 0.6)',
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
   },
   cardsContainer: {
-    gap: 20,
+    gap: 18,
   },
   historyGroup: {
     gap: 8,
@@ -404,22 +414,39 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   cardGradient: {
-    padding: 22,
+    padding: 20,
     alignItems: 'center',
+  },
+  typeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingVertical: 5,
+    paddingHorizontal: 11,
+    marginBottom: 12,
+  },
+  typeBadgeText: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   iconContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   cardTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 21,
+    fontWeight: '800',
     color: '#ffffff',
-    marginBottom: 8,
+    marginBottom: 6,
     textAlign: 'center',
   },
   cardDescription: {
@@ -427,7 +454,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.6)',
     textAlign: 'center',
     lineHeight: 20,
-    marginBottom: 18,
+    marginBottom: 16,
   },
   btnRow: {
     flexDirection: 'row',

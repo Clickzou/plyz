@@ -1439,7 +1439,7 @@ export default {
   enterPromoCode: 'Inserisci un codice promozionale',
   fanChoiceCreateBtn: 'Crea',
   fanChoiceEventDesc: 'Crea il tuo evento dedica dal vivo, oppure partecipa a uno con un codice QR.',
-  fanChoiceEventTitle: 'Evento',
+  fanChoiceEventTitle: 'Evento dedica',
   fanChoiceJoinBtn: 'Partecipa',
   fanChoiceVideoDesc2: 'Avvia una videochiamata privata con i tuoi fan, oppure partecipa a quella della tua celebrità.',
   fanChoiceVideoTitle: 'Sessione video',

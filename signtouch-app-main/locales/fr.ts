@@ -684,7 +684,7 @@ export default {
   fanChoiceVideoDesc: 'Rejoignez un appel vidéo en direct et échangez en privé avec votre célébrité préférée. Vous recevrez aussi une photo dédicacée à la fin.',
   fanChoiceCreate: 'Créer un événement',
   fanChoiceCreateDesc: 'Organisez votre propre événement live de dédicace et invitez vos fans.',
-  fanChoiceEventTitle: 'Événement',
+  fanChoiceEventTitle: 'Événement Dédicace',
   fanChoiceEventDesc: 'Créez votre événement de dédicace en direct, ou rejoignez-en un avec un QR code.',
   fanChoiceVideoTitle: 'Session vidéo',
   eventsUpcoming: 'Événements à venir',

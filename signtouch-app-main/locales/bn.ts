@@ -1444,7 +1444,7 @@ export default {
   enterPromoCode: 'একটি প্রোমো কোড লিখুন',
   fanChoiceCreateBtn: 'তৈরি করুন',
   fanChoiceEventDesc: 'আপনার নিজের লাইভ উৎসর্গ ইভেন্ট তৈরি করুন, অথবা একটি QR কোড দিয়ে যোগ দিন।',
-  fanChoiceEventTitle: 'ইভেন্ট',
+  fanChoiceEventTitle: 'অটোগ্রাফ ইভেন্ট',
   fanChoiceJoinBtn: 'যোগ দিন',
   fanChoiceVideoDesc2: 'আপনার ভক্তদের সাথে একটি ব্যক্তিগত ভিডিও কল শুরু করুন, অথবা আপনার সেলিব্রিটির কলে যোগ দিন।',
   fanChoiceVideoTitle: 'ভিডিও সেশন',

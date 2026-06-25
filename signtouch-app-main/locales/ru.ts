@@ -1439,7 +1439,7 @@ export default {
   enterPromoCode: 'Введите промокод',
   fanChoiceCreateBtn: 'Создать',
   fanChoiceEventDesc: 'Создайте собственное живое событие с автографами или присоединитесь к нему по QR-коду.',
-  fanChoiceEventTitle: 'Событие',
+  fanChoiceEventTitle: 'Событие с автографом',
   fanChoiceJoinBtn: 'Присоединиться',
   fanChoiceVideoDesc2: 'Начните приватный видеозвонок с вашими фанатами или присоединитесь к звонку вашей знаменитости.',
   fanChoiceVideoTitle: 'Видеосессия',

@@ -1439,7 +1439,7 @@ export default {
   enterPromoCode: 'プロモコードを入力',
   fanChoiceCreateBtn: '作成',
   fanChoiceEventDesc: '自分のライブサインイベントを作成するか、QRコードで参加しましょう。',
-  fanChoiceEventTitle: 'イベント',
+  fanChoiceEventTitle: 'サインイベント',
   fanChoiceJoinBtn: '参加',
   fanChoiceVideoDesc2: 'ファンとのプライベートビデオ通話を始めるか、あなたのセレブの通話に参加しましょう。',
   fanChoiceVideoTitle: 'ビデオセッション',

@@ -1439,7 +1439,7 @@ export default {
   enterPromoCode: 'Promo-Code eingeben',
   fanChoiceCreateBtn: 'Erstellen',
   fanChoiceEventDesc: 'Erstellen Sie Ihr eigenes Live-Widmungs-Event oder treten Sie einem mit einem QR-Code bei.',
-  fanChoiceEventTitle: 'Event',
+  fanChoiceEventTitle: 'Autogramm-Event',
   fanChoiceJoinBtn: 'Beitreten',
   fanChoiceVideoDesc2: 'Starten Sie einen privaten Videoanruf mit Ihren Fans oder treten Sie dem Ihrer Berühmtheit bei.',
   fanChoiceVideoTitle: 'Videositzung',

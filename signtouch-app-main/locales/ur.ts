@@ -1444,7 +1444,7 @@ export default {
   enterPromoCode: 'پروموشنل کوڈ درج کریں',
   fanChoiceCreateBtn: 'بنائیں',
   fanChoiceEventDesc: 'اپنی لائیو انتساب کی تقریب بنائیں، یا QR کوڈ کے ساتھ کسی میں شامل ہوں۔',
-  fanChoiceEventTitle: 'تقریب',
+  fanChoiceEventTitle: 'آٹوگراف تقریب',
   fanChoiceJoinBtn: 'شامل ہوں',
   fanChoiceVideoDesc2: 'اپنے مداحوں کے ساتھ نجی ویڈیو کال شروع کریں، یا اپنی مشہور شخصیت کی کال میں شامل ہوں۔',
   fanChoiceVideoTitle: 'ویڈیو سیشن',
