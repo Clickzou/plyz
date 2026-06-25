@@ -1429,6 +1429,8 @@ export default {
   eventWaiting: 'Ожидание',
   liveSession: 'Лайв-сессия',
   slots: 'мест',
+  sessionDateTime: 'Дата и время',
+  spotsRemaining: 'мест осталось',
   registerEvent: 'Записаться',
   registerAndPay: 'Записаться и оплатить',
   registerEventConfirm: 'Хотите записаться на это событие?',

@@ -1434,6 +1434,8 @@ export default {
   eventWaiting: 'زیر انتظار',
   liveSession: 'لائیو سیشن',
   slots: 'مقامات',
+  sessionDateTime: 'تاریخ اور وقت',
+  spotsRemaining: 'باقی مقامات',
   registerEvent: 'رجسٹر کریں',
   registerAndPay: 'رجسٹر کریں اور پیشگی ادائیگی',
   registerEventConfirm: 'کیا آپ اس تقریب میں رجسٹر ہونا چاہتے ہیں؟',

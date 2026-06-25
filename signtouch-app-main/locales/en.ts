@@ -1467,6 +1467,8 @@ export default {
   eventScheduled: 'Scheduled',
   liveSession: 'Live Session',
   slots: 'slots',
+  sessionDateTime: 'Date & time',
+  spotsRemaining: 'spots left',
   registerEvent: 'Register',
   registerAndPay: 'Register & Pre-pay',
   registerEventConfirm: 'Do you want to register for this event?',

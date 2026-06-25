@@ -21,6 +21,10 @@ import {
   Clock,
   Check,
   QrCode,
+  Users,
+  Tag,
+  Calendar,
+  Video,
 } from 'lucide-react-native';
 import BarCodeScannerWrapper, { requestCameraPermissionAsync, isBarCodeScannerAvailable } from '@/components/BarCodeScannerWrapper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -261,6 +265,22 @@ export default function JoinLiveSessionScreen() {
     }
   };
 
+  const formatPrice = (cents?: number | null, currency?: string | null): string => {
+    if (!cents || cents <= 0) return t('free') || 'Gratuit';
+    const value = (cents / 100).toFixed(2).replace('.', ',');
+    const symbol = (currency || 'eur').toLowerCase() === 'usd' ? '$' : '€';
+    return `${value} ${symbol}`;
+  };
+
+  const formatPerFanDuration = (minutes?: number | null): string => {
+    if (!minutes || minutes <= 0) return '';
+    if (minutes < 1) {
+      const seconds = Math.round(minutes * 60);
+      return `${seconds} sec`;
+    }
+    return `${Math.round(minutes)} min`;
+  };
+
   const handleReserve = async () => {
     if (!session) return;
     setIsReserving(true);
@@ -292,42 +312,125 @@ export default function JoinLiveSessionScreen() {
     }
   };
 
-  const renderScheduledStep = () => (
-    <View style={[styles.stepContainer, { justifyContent: 'center' }]}>
-      <View style={styles.queueIconContainer}>
-        <Clock size={60} color="#fff" />
-      </View>
+  const renderScheduledStep = () => {
+    const spotsLeft =
+      session && session.max_slots > 0
+        ? Math.max(0, session.max_slots - (session.slots_used || 0))
+        : 0;
+    const perFanDuration = formatPerFanDuration(session?.duration_per_fan_minutes);
 
-      <Text style={styles.title}>{session?.celebrity_name}</Text>
-      <Text style={styles.subtitle}>
-        Session programmée pour {formatScheduledDate(session?.scheduled_at)}
-      </Text>
-
-      {reservationDone ? (
-        <>
-          <View style={[styles.signingIconContainer, { marginTop: 0 }]}>
-            <Check size={60} color="#4ade80" />
+    return (
+      <ScrollView
+        style={styles.stepContainer}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Cover photo / fallback */}
+        {session?.cover_photo_url ? (
+          <Image
+            source={{ uri: session.cover_photo_url }}
+            style={styles.coverPhoto}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.coverFallback}>
+            <Video size={64} color="#fff" />
           </View>
-          <Text style={styles.subtitle}>{t('eventReservedMessage')}</Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={() => router.back()}>
-            <Text style={styles.primaryButtonText}>{t('back') || 'Retour'}</Text>
-          </TouchableOpacity>
-        </>
-      ) : (
-        <TouchableOpacity
-          style={[styles.primaryButton, isReserving && styles.buttonDisabled]}
-          onPress={handleReserve}
-          disabled={isReserving}
-        >
-          {isReserving ? (
-            <ActivityIndicator color="#6366f1" />
-          ) : (
-            <Text style={styles.primaryButtonText}>{t('reserveEvent')}</Text>
+        )}
+
+        {/* Celebrity name + badge */}
+        <Text style={[styles.title, { marginTop: 20 }]}>{session?.celebrity_name}</Text>
+
+        <View style={styles.liveBadge}>
+          <Video size={14} color="#fff" />
+          <Text style={styles.liveBadgeText}>
+            {t('eventTypeLiveVideo' as any) || 'Live vidéo'}
+          </Text>
+        </View>
+
+        {/* Info cards */}
+        <View style={styles.infoCardsContainer}>
+          <View style={styles.infoCard}>
+            <View style={styles.infoIconCircle}>
+              <Calendar size={20} color="#818cf8" />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>{t('sessionDateTime') || 'Date et heure'}</Text>
+              <Text style={styles.infoValue}>{formatScheduledDate(session?.scheduled_at)}</Text>
+            </View>
+          </View>
+
+          <View style={styles.infoCard}>
+            <View style={styles.infoIconCircle}>
+              <Tag size={20} color="#818cf8" />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>{t('pricePerFan') || 'Tarif par fan'}</Text>
+              <Text style={styles.infoValue}>
+                {formatPrice(session?.price_cents, session?.currency)}
+              </Text>
+            </View>
+          </View>
+
+          {!!perFanDuration && (
+            <View style={styles.infoCard}>
+              <View style={styles.infoIconCircle}>
+                <Clock size={20} color="#818cf8" />
+              </View>
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>
+                  {t('liveSessionDurationPerFan') || 'Durée par fan'}
+                </Text>
+                <Text style={styles.infoValue}>{perFanDuration}</Text>
+              </View>
+            </View>
           )}
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+
+          {!!session?.max_slots && (
+            <View style={styles.infoCard}>
+              <View style={styles.infoIconCircle}>
+                <Users size={20} color="#818cf8" />
+              </View>
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>{t('slots') || 'Places'}</Text>
+                <Text style={styles.infoValue}>
+                  {spotsLeft} / {session.max_slots}
+                  {'  '}
+                  <Text style={styles.infoValueMuted}>
+                    {t('spotsRemaining') || 'places restantes'}
+                  </Text>
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+
+        {reservationDone ? (
+          <View style={{ alignItems: 'center' }}>
+            <View style={[styles.signingIconContainer, { marginTop: 12 }]}>
+              <Check size={60} color="#4ade80" />
+            </View>
+            <Text style={styles.subtitle}>{t('eventReservedMessage')}</Text>
+            <TouchableOpacity style={styles.primaryButton} onPress={() => router.back()}>
+              <Text style={styles.primaryButtonText}>{t('back') || 'Retour'}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={[styles.primaryButton, { marginTop: 24 }, isReserving && styles.buttonDisabled]}
+            onPress={handleReserve}
+            disabled={isReserving}
+          >
+            {isReserving ? (
+              <ActivityIndicator color="#6366f1" />
+            ) : (
+              <Text style={styles.primaryButtonText}>{t('reserveEvent')}</Text>
+            )}
+          </TouchableOpacity>
+        )}
+      </ScrollView>
+    );
+  };
 
   const renderCodeStep = () => (
     <ScrollView style={styles.stepContainer} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
@@ -685,6 +788,75 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 60,
     marginBottom: 24,
+  },
+  coverPhoto: {
+    width: '100%',
+    height: 200,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    marginTop: 8,
+  },
+  coverFallback: {
+    width: '100%',
+    height: 200,
+    borderRadius: 20,
+    backgroundColor: '#6366f1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: 6,
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginBottom: 24,
+  },
+  liveBadgeText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  infoCardsContainer: {
+    gap: 12,
+  },
+  infoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 16,
+    padding: 16,
+  },
+  infoIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoTextContainer: {
+    flex: 1,
+  },
+  infoLabel: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 13,
+    marginBottom: 2,
+  },
+  infoValue: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  infoValueMuted: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 13,
+    fontWeight: '400',
   },
   queuePosition: {
     fontSize: 72,

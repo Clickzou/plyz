@@ -1429,6 +1429,8 @@ export default {
   eventWaiting: 'Wartend',
   liveSession: 'Live-Session',
   slots: 'Plätze',
+  sessionDateTime: 'Datum & Uhrzeit',
+  spotsRemaining: 'Plätze übrig',
   registerEvent: 'Anmelden',
   registerAndPay: 'Anmelden & Vorauszahlen',
   registerEventConfirm: 'Möchtest du dich für dieses Event anmelden?',

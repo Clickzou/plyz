@@ -1429,6 +1429,8 @@ export default {
   eventWaiting: 'في الانتظار',
   liveSession: 'جلسة مباشرة',
   slots: 'أماكن',
+  sessionDateTime: 'التاريخ والوقت',
+  spotsRemaining: 'أماكن متبقية',
   registerEvent: 'التسجيل',
   registerAndPay: 'التسجيل والدفع المسبق',
   registerEventConfirm: 'هل تريد التسجيل في هذه الفعالية؟',

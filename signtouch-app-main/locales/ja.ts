@@ -1429,6 +1429,8 @@ export default {
   eventWaiting: '待機中',
   liveSession: 'ライブセッション',
   slots: '席',
+  sessionDateTime: '日時',
+  spotsRemaining: '残り席数',
   registerEvent: '登録',
   registerAndPay: '登録して事前支払い',
   registerEventConfirm: 'このイベントに登録しますか？',

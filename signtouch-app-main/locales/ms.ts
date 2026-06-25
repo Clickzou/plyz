@@ -1434,6 +1434,8 @@ export default {
   eventWaiting: 'Menunggu',
   liveSession: 'Sesi Langsung',
   slots: 'tempat',
+  sessionDateTime: 'Tarikh & masa',
+  spotsRemaining: 'tempat tinggal',
   registerEvent: 'Daftar',
   registerAndPay: 'Daftar & Pra-bayar',
   registerEventConfirm: 'Adakah anda mahu mendaftar untuk acara ini?',

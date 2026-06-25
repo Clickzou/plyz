@@ -1434,6 +1434,8 @@ export default {
   eventWaiting: 'অপেক্ষমান',
   liveSession: 'লাইভ সেশন',
   slots: 'আসন',
+  sessionDateTime: 'তারিখ ও সময়',
+  spotsRemaining: 'অবশিষ্ট আসন',
   registerEvent: 'নিবন্ধন করুন',
   registerAndPay: 'নিবন্ধন এবং প্রি-পেমেন্ট',
   registerEventConfirm: 'আপনি কি এই ইভেন্টে নিবন্ধন করতে চান?',

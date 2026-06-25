@@ -1429,6 +1429,8 @@ export default {
   eventWaiting: '等待中',
   liveSession: '直播会话',
   slots: '名额',
+  sessionDateTime: '日期和时间',
+  spotsRemaining: '剩余名额',
   registerEvent: '报名',
   registerAndPay: '报名并预付',
   registerEventConfirm: '您要报名此活动吗？',

@@ -1429,6 +1429,8 @@ export default {
   eventWaiting: 'प्रतीक्षारत',
   liveSession: 'लाइव सत्र',
   slots: 'स्थान',
+  sessionDateTime: 'दिनांक और समय',
+  spotsRemaining: 'शेष स्थान',
   registerEvent: 'पंजीकरण करें',
   registerAndPay: 'पंजीकरण और पूर्व-भुगतान',
   registerEventConfirm: 'क्या आप इस इवेंट के लिए पंजीकरण करना चाहते हैं?',

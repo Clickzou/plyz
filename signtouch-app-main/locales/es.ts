@@ -1428,6 +1428,8 @@ export default {
   eventWaiting: 'En espera',
   liveSession: 'Sesión Live',
   slots: 'plazas',
+  sessionDateTime: 'Fecha y hora',
+  spotsRemaining: 'plazas restantes',
   registerEvent: 'Inscribirse',
   registerAndPay: 'Inscribirse y Prepagar',
   registerEventConfirm: '¿Quieres inscribirte en este evento?',
