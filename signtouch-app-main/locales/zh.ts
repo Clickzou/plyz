@@ -684,6 +684,8 @@ export default {
   paymentReleasedNotCharged: '你不会被收取预定的金额。',
   hostEndedEarlyTitle: '通话提前结束',
   hostEndedEarlyNotPaid: '你将不会获得本次会话的报酬。',
+  fanEndedEarlyTitle: '粉丝挂断了',
+  fanEndedEarlyMessage: '粉丝在本次会话结束前挂断了。你仍然会获得报酬——这不是你的错。',
   celebrityEndEarlyWarning: '⚠️ 重要提示：如果你在通话时长结束前结束通话，粉丝将获得全额退款，而你不会获得本次会话的报酬。请坚持到每次通话结束才能获得报酬。',
   liveSessionFull: '此会话已满',
   liveSessionJoin: '加入会话',

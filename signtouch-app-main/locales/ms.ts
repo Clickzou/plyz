@@ -684,6 +684,8 @@ export default {
   paymentReleasedNotCharged: 'Anda tidak akan dicaj jumlah yang ditetapkan.',
   hostEndedEarlyTitle: 'Panggilan ditamatkan lebih awal',
   hostEndedEarlyNotPaid: 'Anda tidak akan dibayar untuk sesi ini.',
+  fanEndedEarlyTitle: 'Peminat menutup panggilan',
+  fanEndedEarlyMessage: 'Peminat menutup panggilan sebelum sesi tamat. Anda tetap akan dibayar — ini bukan salah anda.',
   celebrityEndEarlyWarning: '⚠️ Penting: jika anda menamatkan panggilan sebelum tempohnya tamat, peminat akan dikembalikan bayaran sepenuhnya dan anda TIDAK dibayar untuk sesi ini. Habiskan setiap panggilan hingga akhir untuk dibayar.',
   liveSessionFull: 'Sesi ini penuh',
   liveSessionJoin: 'Sertai Sesi',

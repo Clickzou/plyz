@@ -684,6 +684,8 @@ export default {
   paymentReleasedNotCharged: 'لن يتم خصم المبلغ المحدد من حسابك.',
   hostEndedEarlyTitle: 'انتهت المكالمة قبل موعدها',
   hostEndedEarlyNotPaid: 'لن تحصل على أجر عن هذه الجلسة.',
+  fanEndedEarlyTitle: 'أنهى المعجب المكالمة',
+  fanEndedEarlyMessage: 'أنهى المعجب المكالمة قبل نهاية الجلسة. ستحصل على أجرك رغم ذلك — هذا ليس خطأك.',
   celebrityEndEarlyWarning: '⚠️ مهم: إذا أنهيت مكالمة قبل انتهاء مدتها، يُسترد للمعجب كامل المبلغ ولن تحصل أنت على أجر عن هذه الجلسة. أكمل كل مكالمة حتى النهاية لتحصل على أجرك.',
   liveSessionFull: 'هذه الجلسة ممتلئة',
   liveSessionJoin: 'الانضمام للجلسة',

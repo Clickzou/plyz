@@ -684,6 +684,8 @@ export default {
   paymentReleasedNotCharged: 'Der vorgesehene Betrag wird dir nicht belastet.',
   hostEndedEarlyTitle: 'Anruf vorzeitig beendet',
   hostEndedEarlyNotPaid: 'Du wirst für diese Sitzung nicht bezahlt.',
+  fanEndedEarlyTitle: 'Der Fan hat aufgelegt',
+  fanEndedEarlyMessage: 'Der Fan hat vor dem Ende der Sitzung aufgelegt. Du wirst trotzdem bezahlt — es ist nicht deine Schuld.',
   celebrityEndEarlyWarning: '⚠️ Wichtig: Wenn du einen Anruf vor Ablauf seiner Dauer beendest, wird dem Fan der volle Betrag erstattet und du wirst für diese Sitzung NICHT bezahlt. Führe jeden Anruf bis zum Ende, um bezahlt zu werden.',
   liveSessionFull: 'Diese Session ist voll',
   liveSessionJoin: 'Session beitreten',

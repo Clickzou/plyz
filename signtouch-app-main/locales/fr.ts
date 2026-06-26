@@ -759,6 +759,8 @@ export default {
   paymentReleasedNotCharged: 'Vous ne serez pas débité du montant prévu.',
   hostEndedEarlyTitle: 'Appel terminé avant la fin',
   hostEndedEarlyNotPaid: 'Tu ne seras pas crédité(e) pour cette session.',
+  fanEndedEarlyTitle: 'Le fan a raccroché',
+  fanEndedEarlyMessage: 'Le fan a raccroché avant la fin de la session. Vous serez quand même crédité(e) — ce n\'est pas de votre faute.',
   celebrityEndEarlyWarning: '⚠️ Important : si tu mets fin à un appel avant la fin de sa durée, le fan est intégralement remboursé et tu n\'es PAS payé(e) pour cette session. Va au bout de chaque appel pour être crédité(e).',
   liveSessionFull: 'Cette session est complète',
   liveSessionJoin: 'Rejoindre',

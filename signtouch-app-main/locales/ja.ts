@@ -684,6 +684,8 @@ export default {
   paymentReleasedNotCharged: '予定された金額が請求されることはありません。',
   hostEndedEarlyTitle: '通話が途中で終了しました',
   hostEndedEarlyNotPaid: 'このセッションの報酬は支払われません。',
+  fanEndedEarlyTitle: 'ファンが通話を切りました',
+  fanEndedEarlyMessage: 'ファンがセッション終了前に通話を切りました。それでも報酬は支払われます。あなたのせいではありません。',
   celebrityEndEarlyWarning: '⚠️ 重要：通話の所定の時間が終わる前に通話を終了すると、ファンには全額返金され、あなたはこのセッションの報酬を受け取れません。報酬を得るには、各通話を最後まで行ってください。',
   liveSessionFull: 'このセッションは満員です',
   liveSessionJoin: 'セッションに参加',

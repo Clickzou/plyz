@@ -684,6 +684,8 @@ export default {
   paymentReleasedNotCharged: 'No se te cobrará el importe previsto.',
   hostEndedEarlyTitle: 'Llamada finalizada antes de tiempo',
   hostEndedEarlyNotPaid: 'No recibirás el pago de esta sesión.',
+  fanEndedEarlyTitle: 'El fan colgó',
+  fanEndedEarlyMessage: 'El fan colgó antes del final de la sesión. Aun así recibirás el pago — no es culpa tuya.',
   celebrityEndEarlyWarning: '⚠️ Importante: si finalizas una llamada antes de que termine su duración, al fan se le reembolsa íntegramente y tú NO cobras esta sesión. Llega hasta el final de cada llamada para cobrar.',
   liveSessionFull: 'Esta sesión está llena',
   liveSessionJoin: 'Unirse',

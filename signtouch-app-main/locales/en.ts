@@ -758,6 +758,8 @@ export default {
   paymentReleasedNotCharged: 'You will not be charged the planned amount.',
   hostEndedEarlyTitle: 'Call ended early',
   hostEndedEarlyNotPaid: 'You will not be paid for this session.',
+  fanEndedEarlyTitle: 'The fan hung up',
+  fanEndedEarlyMessage: 'The fan hung up before the end of the session. You will still be paid — it is not your fault.',
   celebrityEndEarlyWarning: '⚠️ Important: if you end a call before its duration is over, the fan is fully refunded and you are NOT paid for this session. Go through to the end of every call to get paid.',
   liveSessionFull: 'This session is full',
   liveSessionJoin: 'Join Session',

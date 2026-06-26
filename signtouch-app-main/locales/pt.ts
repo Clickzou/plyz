@@ -684,6 +684,8 @@ export default {
   paymentReleasedNotCharged: 'Não serás cobrado pelo valor previsto.',
   hostEndedEarlyTitle: 'Chamada terminada antes do fim',
   hostEndedEarlyNotPaid: 'Não serás pago por esta sessão.',
+  fanEndedEarlyTitle: 'O fã desligou',
+  fanEndedEarlyMessage: 'O fã desligou antes do fim da sessão. Mesmo assim serás pago — não é culpa tua.',
   celebrityEndEarlyWarning: '⚠️ Importante: se terminares uma chamada antes do fim da sua duração, o fan é totalmente reembolsado e tu NÃO és pago por esta sessão. Vai até ao fim de cada chamada para seres pago.',
   liveSessionFull: 'Esta sessão está cheia',
   liveSessionJoin: 'Entrar na Sessão',

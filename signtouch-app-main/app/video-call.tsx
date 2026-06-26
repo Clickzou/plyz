@@ -227,6 +227,10 @@ export default function VideoCallScreen() {
   // Message affiché à la CÉLÉBRITÉ quand ELLE écourte l'appel (raccroche avant la fin) :
   // dans ce cas elle n'est PAS créditée (le fan est remboursé). Voir handleCallEnded.
   const [hostEndedEarly, setHostEndedEarly] = useState(false);
+  // Message affiché à la CÉLÉBRITÉ quand c'est le FAN qui raccroche avant la fin alors que
+  // l'appel a bien eu lieu : elle est QUAND MÊME créditée (ce n'est pas de sa faute). Le
+  // bouton OK enchaîne le flux normal (notation puis fan suivant / dashboard).
+  const [fanEndedEarly, setFanEndedEarly] = useState(false);
   // Vrai quand la pré-autorisation a été LIBÉRÉE (appel non eu) -> message rassurant au fan.
   const [paymentWasReleased, setPaymentWasReleased] = useState(false);
   const sessionEndedHandledRef = useRef(false);
@@ -569,6 +573,19 @@ export default function VideoCallScreen() {
       // indépendant du flag payment_captured que le fan écrit en différé.
       if (isHost && otherParticipantJoinedRef.current) {
         fansServedRef.current += 1;
+      }
+
+      // Côté CÉLÉBRITÉ (host) : si c'est le FAN qui a raccroché AVANT la fin alors que l'appel
+      // a bien eu lieu, on affiche un overlay rassurant ("le fan a raccroché, tu es quand même
+      // créditée") AU LIEU d'ouvrir directement la notation. Le bouton OK de cet overlay
+      // enchaîne ensuite le flux normal (RatingModal -> fan suivant / dashboard).
+      if (
+        isHost &&
+        otherParticipantJoinedRef.current &&
+        (reason === 'fan_left' || reason === 'fan_hangup')
+      ) {
+        setFanEndedEarly(true);
+        return;
       }
 
       setShowRatingModal(true);
@@ -1316,6 +1333,33 @@ export default function VideoCallScreen() {
               activeOpacity={0.85}
             >
               <Text style={styles.endedBackButtonText}>{t('backToMySession' as any) || 'Retour à ma session'}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {fanEndedEarly && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.endedCard}>
+            <PhoneOff size={48} color="#6366f1" />
+            <Text style={styles.endedTitle}>
+              {t('fanEndedEarlyTitle' as any) || 'Le fan a raccroché'}
+            </Text>
+            <Text style={styles.endedSubtext}>
+              {t('fanEndedEarlyMessage' as any) ||
+                'Le fan a raccroché avant la fin de la session. Vous serez quand même crédité(e) — ce n\'est pas de votre faute.'}
+            </Text>
+            <TouchableOpacity
+              style={styles.endedBackButton}
+              onPress={() => {
+                // Ferme l'overlay puis enchaîne le flux normal : notation du fan, qui via
+                // handleRatingModalClose -> handleCallNextFan passe au fan suivant ou au dashboard.
+                setFanEndedEarly(false);
+                setShowRatingModal(true);
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.endedBackButtonText}>{t('ok' as any) || 'OK'}</Text>
             </TouchableOpacity>
           </View>
         </View>
