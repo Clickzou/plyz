@@ -108,6 +108,16 @@ export default function VideoCallScreen() {
   const otherParticipantJoinedRef = useRef(false);
   // Évite de capturer ET d'annuler, ou d'annuler deux fois, le même paiement.
   const paymentResolvedRef = useRef(false);
+  // Garde-fou anti-double notation : handleCallEnded peut être appelé 2x quasi simultanément
+  // (listeners Daily participant-left + left-meeting dans le même tick). hasLeftCall est un
+  // useState (valeur périmée dans la 2e invocation) -> ce ref SYNCHRONE garantit qu'on ne
+  // traite la fin qu'UNE fois, donc une seule ouverture du modal de notation.
+  const callEndedRef = useRef(false);
+  // Compteur LOCAL (côté hôte) des fans réellement rencontrés (appel ayant réellement eu lieu)
+  // sur toute la session. Plus fiable que le serveur pour le résumé de fin : le flag
+  // payment_captured est écrit par le FAN en différé (course entre les 2 téléphones) -> il vaut
+  // souvent 0 à l'instant où l'hôte affiche le résumé. Ce compteur, lui, est immédiat.
+  const fansServedRef = useRef(0);
   const [waitingForNextFan, setWaitingForNextFan] = useState(false);
   const [currentFanName, setCurrentFanName] = useState(params.otherUserName || 'Fan');
   const [fansRemainingCount, setFansRemainingCount] = useState(parseInt(params.fansRemaining || '0', 10));
@@ -128,23 +138,38 @@ export default function VideoCallScreen() {
     const elapsedMin = Math.max(0, Math.round((Date.now() - sessionStartTimeRef.current) / 60000));
     setSummaryDurationMin(elapsedMin);
 
-    // Revenus + nombre de fans rencontrés via /api/session-earnings (même source que le dashboard)
-    let fansMet = 0;
-    let earningsCents = 0;
+    // 1) AFFICHAGE IMMÉDIAT basé sur le compteur LOCAL fiable (fans réellement rencontrés sur la
+    //    session). Revenus provisoires = fans rencontrés x (prix - 15% de commission). Très proche
+    //    du réel : pas de dépendance au flag payment_captured que le fan écrit en différé.
+    const pricePerFan = parseInt(params.priceCents || '0', 10);
+    const netPerFanCents = Math.round(pricePerFan * 0.85); // 85% pour la célébrité (15% Clickzou)
+    const localFans = fansServedRef.current;
+    setSummaryFansMet(localFans);
+    setSummaryEarningsCents(localFans * netPerFanCents);
+    setShowEndSummary(true);
+
+    // 2) RÉCONCILIATION avec le serveur (/api/session-earnings = source officielle, mais alimentée
+    //    par la capture côté fan, qui arrive avec quelques secondes de décalage). On réessaie
+    //    plusieurs fois et on remplace par la valeur serveur dès qu'elle rattrape/dépasse le local.
     if (params.sessionId && STRIPE_SERVER_URL) {
-      try {
-        const response = await fetch(`${STRIPE_SERVER_URL}/api/session-earnings?session_id=${params.sessionId}`);
-        const data = await response.json();
-        if (data.total_captured_cents !== undefined) earningsCents = data.total_captured_cents;
-        if (data.captured_count !== undefined) fansMet = data.captured_count;
-      } catch (e) {
-        console.error('[VideoCall] Error fetching session earnings for summary:', e);
+      for (let attempt = 0; attempt < 5; attempt++) {
+        try {
+          const response = await fetch(`${STRIPE_SERVER_URL}/api/session-earnings?session_id=${params.sessionId}`);
+          const data = await response.json();
+          const srvFans = typeof data.captured_count === 'number' ? data.captured_count : 0;
+          const srvCents = typeof data.total_captured_cents === 'number' ? data.total_captured_cents : 0;
+          if (srvFans >= localFans) {
+            setSummaryFansMet(srvFans);
+            setSummaryEarningsCents(srvCents);
+            break;
+          }
+        } catch (e) {
+          console.warn('[VideoCall] session-earnings: nouvelle tentative', attempt + 1, 'échouée (réseau ?)');
+        }
+        await new Promise((r) => setTimeout(r, 2500));
       }
     }
-    setSummaryFansMet(fansMet);
-    setSummaryEarningsCents(earningsCents);
-    setShowEndSummary(true);
-  }, [params.sessionId]);
+  }, [params.sessionId, params.priceCents]);
 
   const closeEndSummary = useCallback(() => {
     setShowEndSummary(false);
@@ -460,6 +485,10 @@ export default function VideoCallScreen() {
   const handleCallEndedRef = useRef<() => void>(() => {});
 
   const handleCallEnded = () => {
+    // Garde-fou synchrone : si la fin a déjà été traitée (un autre listener Daily a tiré dans le
+    // même tick), on sort immédiatement -> évite que le modal de notation s'ouvre deux fois.
+    if (callEndedRef.current) return;
+    callEndedRef.current = true;
     if (!hasLeftCall) {
       setHasLeftCall(true);
 
@@ -501,6 +530,13 @@ export default function VideoCallScreen() {
         setHostEndedEarly(true);
         // L'overlay RESTE affiché ; la célébrité sort uniquement via le bouton Retour.
         return;
+      }
+
+      // Côté hôte : si l'appel a RÉELLEMENT eu lieu (le fan a rejoint la visio), on compte ce
+      // fan comme rencontré pour le résumé de fin de session. Compteur local immédiat et fiable,
+      // indépendant du flag payment_captured que le fan écrit en différé.
+      if (isHost && otherParticipantJoinedRef.current) {
+        fansServedRef.current += 1;
       }
 
       setShowRatingModal(true);
@@ -597,6 +633,7 @@ export default function VideoCallScreen() {
     callStartTime.current = 0;
     autoEndTriggered.current = false;
     callEndReason.current = 'unknown';
+    callEndedRef.current = false;
     setHasLeftCall(false);
     setFanTimeRemaining(`${params.durationPerFan || '5'}:00`);
     setTimeProgress(1);
