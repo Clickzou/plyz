@@ -466,6 +466,29 @@ export default function VideoCallScreen() {
         dailyCallFrameRef.current = null;
       }
 
+      // Côté FAN, si c'est la CÉLÉBRITÉ qui a mis fin à l'appel (raccroché ou arrêt de
+      // la session) : on affiche un message clair, on LIBÈRE le paiement (remboursement
+      // intégral) et on sort SANS demander de notation (l'appel a été écourté par elle,
+      // pas une fin normale).
+      const reason = callEndReason.current;
+      if (
+        !isHost &&
+        (reason === 'celebrity_left' || reason === 'celebrity_hangup') &&
+        !sessionEndedHandledRef.current
+      ) {
+        sessionEndedHandledRef.current = true;
+        const priceCents = parseInt(params.priceCents || '0', 10);
+        if (priceCents > 0 && params.checkoutSessionId) {
+          cancelPaymentAuthorization();
+          setPaymentWasReleased(true);
+        }
+        setSessionEndedByCelebrity(true);
+        setTimeout(() => {
+          try { router.replace('/activity'); } catch {}
+        }, 3500);
+        return;
+      }
+
       setShowRatingModal(true);
     }
   };
