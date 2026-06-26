@@ -398,17 +398,17 @@ app.post('/api/create-session', async (req, res) => {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
 
-    const durationPerFanValue = Number(duration_per_fan_minutes);
-    const durationPerFanInt = durationPerFanValue < 1 
-      ? Math.max(1, Math.round(durationPerFanValue * 60))
-      : Math.round(durationPerFanValue);
+    // La colonne duration_per_fan_minutes est NUMERIC : on garde la valeur REELLE, y compris les
+    // demi-minutes (ex 0.5 = 30 s), demandee pour les sessions courtes (club de sport, 30 s/fan...).
+    // On borne juste a un minimum de securite (0.25 min = 15 s) pour ne jamais stocker 0.
+    const durationPerFanValue = Math.max(0.25, Number(duration_per_fan_minutes) || 5);
 
     const insertData = {
       code,
       celebrity_id,
       celebrity_name,
       duration_minutes,
-      duration_per_fan_minutes: durationPerFanValue < 1 ? 1 : durationPerFanInt,
+      duration_per_fan_minutes: durationPerFanValue,
       max_slots,
       price_cents,
       status: scheduled_at ? 'scheduled' : 'waiting',
