@@ -680,6 +680,7 @@ export default {
   liveSessionInvalidCode: 'कृपया एक वैध 6-अक्षर का कोड दर्ज करें',
   liveSessionNotFound: 'सत्र नहीं मिला',
   liveSessionHasEnded: 'यह सत्र समाप्त हो गया है',
+  liveSessionEndedByCelebrity: 'सत्र को सेलिब्रिटी द्वारा समाप्त कर दिया गया',
   liveSessionFull: 'यह सत्र भरा हुआ है',
   liveSessionJoin: 'सत्र में शामिल हों',
   liveSessionJoinSession: 'लाइव वीडियो सेशन',

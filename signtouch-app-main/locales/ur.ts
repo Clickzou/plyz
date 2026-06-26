@@ -680,6 +680,7 @@ export default {
   liveSessionInvalidCode: 'براہ کرم 6 حروف کا درست کوڈ درج کریں',
   liveSessionNotFound: 'سیشن نہیں ملا',
   liveSessionHasEnded: 'یہ سیشن ختم ہو چکا ہے',
+  liveSessionEndedByCelebrity: 'سیشن کو مشہور شخصیت نے ختم کر دیا',
   liveSessionFull: 'یہ سیشن بھر گیا ہے',
   liveSessionJoin: 'سیشن میں شامل ہوں',
   liveSessionJoinSession: 'لائیو ویڈیو سیشن',

@@ -14,7 +14,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
 import { sendDedicationNotification, callNextFan } from '@/utils/sessionQueueStorage';
-import { markPaymentCaptured } from '@/utils/liveSessionStorage';
+import { markPaymentCaptured, subscribeToSession } from '@/utils/liveSessionStorage';
 import { recordTransaction } from '@/utils/transactionStorage';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -103,6 +103,11 @@ export default function VideoCallScreen() {
   const autoEndTriggered = useRef(false);
   const callEndReason = useRef<'timer' | 'fan_left' | 'celebrity_left' | 'fan_hangup' | 'celebrity_hangup' | 'unknown'>('unknown');
   const [otherParticipantJoined, setOtherParticipantJoined] = useState(false);
+  // Ref synchronisé : l'état peut être périmé dans un handler async (capture/annulation
+  // du paiement). Ce ref reflète toujours la dernière valeur de otherParticipantJoined.
+  const otherParticipantJoinedRef = useRef(false);
+  // Évite de capturer ET d'annuler, ou d'annuler deux fois, le même paiement.
+  const paymentResolvedRef = useRef(false);
   const [waitingForNextFan, setWaitingForNextFan] = useState(false);
   const [currentFanName, setCurrentFanName] = useState(params.otherUserName || 'Fan');
   const [fansRemainingCount, setFansRemainingCount] = useState(parseInt(params.fansRemaining || '0', 10));
@@ -177,6 +182,58 @@ export default function VideoCallScreen() {
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Garde otherParticipantJoinedRef synchronisé avec l'état (lu dans des handlers async).
+  useEffect(() => {
+    otherParticipantJoinedRef.current = otherParticipantJoined;
+  }, [otherParticipantJoined]);
+
+  // FIX 2 : message affiché au fan quand la célébrité termine la session pendant l'attente.
+  const [sessionEndedByCelebrity, setSessionEndedByCelebrity] = useState(false);
+  const sessionEndedHandledRef = useRef(false);
+
+  // Le fan (et la célébrité) écoute le statut de la session. Si elle passe 'ended'
+  // alors que l'appel n'a pas eu lieu, on libère la pré-autorisation et on sort proprement.
+  useEffect(() => {
+    if (!params.sessionId) return;
+    // Côté célébrité (host), c'est elle qui pilote la fin -> pas de message ni d'annulation ici.
+    if (params.isHost === 'true') return;
+
+    const channel = subscribeToSession(params.sessionId, (updated) => {
+      if (updated.status !== 'ended' || sessionEndedHandledRef.current) return;
+      sessionEndedHandledRef.current = true;
+
+      // Si l'appel n'a jamais réellement eu lieu, on annule le paiement (une seule fois).
+      const priceCents = parseInt(params.priceCents || '0', 10);
+      if (!otherParticipantJoinedRef.current && priceCents > 0 && params.checkoutSessionId) {
+        cancelPaymentAuthorization();
+      }
+
+      setSessionEndedByCelebrity(true);
+
+      // Coupe l'appel en cours s'il y en a un, puis sort vers l'accueil après un court délai.
+      const call = dailyCallFrameRef.current;
+      if (call) {
+        try {
+          call.leave?.().catch?.(() => {});
+          call.destroy?.().catch?.(() => {});
+        } catch {}
+        dailyCallFrameRef.current = null;
+      }
+      setShowRatingModal(false);
+
+      setTimeout(() => {
+        router.replace('/activity' as any);
+      }, 2500);
+    });
+
+    return () => {
+      try {
+        channel?.unsubscribe?.();
+      } catch {}
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.sessionId, params.isHost]);
 
   // Demande la permission native caméra + micro AVANT de rejoindre l'appel Daily.
   // Indispensable sur Android : sans la popup système RECORD_AUDIO, le SDK natif
@@ -441,9 +498,28 @@ export default function VideoCallScreen() {
     }
   };
 
-  const capturePaymentAfterCall = async () => {
-    if (!params.checkoutSessionId || paymentCaptured) return;
+  // Annule (libère) la pré-autorisation Stripe : appelé quand l'appel n'a PAS eu lieu
+  // (aucun participant distant) ou que la célébrité a terminé tôt. Ne débite JAMAIS le fan.
+  const cancelPaymentAuthorization = async () => {
+    if (!params.checkoutSessionId || paymentResolvedRef.current) return;
+    paymentResolvedRef.current = true;
+    try {
+      console.log('[VideoCall] Cancelling payment authorization for:', params.checkoutSessionId);
+      await fetch(`${STRIPE_SERVER_URL}/api/cancel-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkout_session_id: params.checkoutSessionId }),
+      });
+    } catch (e) {
+      console.error('[VideoCall] Error cancelling payment:', e);
+      paymentResolvedRef.current = false;
+    }
+  };
 
+  const capturePaymentAfterCall = async () => {
+    if (!params.checkoutSessionId || paymentCaptured || paymentResolvedRef.current) return;
+
+    paymentResolvedRef.current = true;
     setPaymentCaptured(true);
 
     try {
@@ -461,10 +537,12 @@ export default function VideoCallScreen() {
       } else {
         console.error('[VideoCall] Payment capture failed:', data);
         setPaymentCaptured(false);
+        paymentResolvedRef.current = false;
       }
     } catch (error) {
       console.error('[VideoCall] Error capturing payment:', error);
       setPaymentCaptured(false);
+      paymentResolvedRef.current = false;
     }
   };
 
@@ -549,9 +627,19 @@ export default function VideoCallScreen() {
     if (!isHost && params.sessionId) {
       const priceCents = parseInt(params.priceCents || '0', 10);
       const reason = callEndReason.current;
-      const shouldChargeFan = reason === 'timer' || reason === 'fan_hangup' || reason === 'fan_left';
+      // L'appel n'a réellement EU LIEU que si un participant distant a rejoint.
+      // Sans ça, le fan ne doit JAMAIS être débité (timer qui expire pendant l'attente,
+      // raccroché avant connexion, etc.).
+      const callReallyHappened = otherParticipantJoinedRef.current;
+      const shouldChargeFan =
+        callReallyHappened &&
+        (reason === 'timer' || reason === 'fan_hangup' || reason === 'fan_left');
 
-      console.log('[VideoCall] Call end reason:', reason, '| Charge fan:', shouldChargeFan);
+      console.log(
+        '[VideoCall] Call end reason:', reason,
+        '| Call really happened:', callReallyHappened,
+        '| Charge fan:', shouldChargeFan
+      );
 
       if (priceCents > 0 && shouldChargeFan) {
         if (params.checkoutSessionId) {
@@ -577,16 +665,10 @@ export default function VideoCallScreen() {
           platform: storePlatform,
         }).catch((err) => console.error('Error recording transaction:', err));
       } else if (priceCents > 0 && !shouldChargeFan && params.checkoutSessionId) {
-        try {
-          console.log('[VideoCall] Celebrity ended early, cancelling payment');
-          await fetch(`${STRIPE_SERVER_URL}/api/cancel-payment`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ checkout_session_id: params.checkoutSessionId }),
-          });
-        } catch (e) {
-          console.error('[VideoCall] Error cancelling payment:', e);
-        }
+        // Pas de débit (appel jamais eu lieu OU célébrité a terminé tôt) -> on LIBÈRE
+        // la pré-autorisation. cancelPaymentAuthorization est protégé contre la double
+        // annulation et ne s'exécute jamais si une capture a déjà eu lieu.
+        await cancelPaymentAuthorization();
       }
 
       console.log('[VideoCall] Fan call ended, navigating to dedication-result for session:', params.sessionId);
@@ -982,6 +1064,17 @@ export default function VideoCallScreen() {
             <TouchableOpacity style={styles.summaryButton} onPress={closeEndSummary} activeOpacity={0.85}>
               <Text style={styles.summaryButtonText}>{t('summaryFinish') || 'Terminer'}</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {sessionEndedByCelebrity && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingCard}>
+            <PhoneOff size={40} color="#ef4444" />
+            <Text style={styles.loadingTitle}>
+              {t('liveSessionEndedByCelebrity' as any) || 'La session a été terminée par la célébrité'}
+            </Text>
           </View>
         </View>
       )}

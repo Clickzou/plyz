@@ -680,6 +680,7 @@ export default {
   liveSessionInvalidCode: 'Пожалуйста, введите действительный 6-значный код',
   liveSessionNotFound: 'Сессия не найдена',
   liveSessionHasEnded: 'Эта сессия завершена',
+  liveSessionEndedByCelebrity: 'Сессия была завершена знаменитостью',
   liveSessionFull: 'Эта сессия заполнена',
   liveSessionJoin: 'Присоединиться к сессии',
   liveSessionJoinSession: 'Живая видеосессия',

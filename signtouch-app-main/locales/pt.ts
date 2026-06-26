@@ -680,6 +680,7 @@ export default {
   liveSessionInvalidCode: 'Por favor, insira um código válido de 6 caracteres',
   liveSessionNotFound: 'Sessão não encontrada',
   liveSessionHasEnded: 'Esta sessão já terminou',
+  liveSessionEndedByCelebrity: 'A sessão foi encerrada pela celebridade',
   liveSessionFull: 'Esta sessão está cheia',
   liveSessionJoin: 'Entrar na Sessão',
   liveSessionJoinSession: 'Sessão Live Vídeo',

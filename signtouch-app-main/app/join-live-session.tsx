@@ -79,7 +79,16 @@ export default function JoinLiveSessionScreen() {
   const [showScanner, setShowScanner] = useState(false);
   const [, setHasPermission] = useState<boolean | null>(null);
 
-  const fanId = useMemo(() => `fan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, []);
+  // fanId STABLE : pour un utilisateur connecté on dérive l'id de son compte, sinon
+  // on retombe sur un id aléatoire. Stabiliser évite une 2e entrée dans la file quand
+  // la page se recharge (web) au retour du paiement.
+  const fanId = useMemo(
+    () =>
+      user?.id
+        ? `fan_user_${user.id}`
+        : `fan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    [user?.id]
+  );
   const sessionChannelRef = useRef<RealtimeChannel | null>(null);
   const queueChannelRef = useRef<RealtimeChannel | null>(null);
   // Subscription/polling sur TOUTE la file (pas seulement mon entrée) pour le rang dynamique
@@ -155,8 +164,9 @@ export default function JoinLiveSessionScreen() {
 
         sessionChannelRef.current = subscribeToSession(s.id, (updated) => {
           setSession(updated);
+          sessionRef.current = updated;
           if (updated.status === 'ended') {
-            showAlert(t('info'), t('liveSessionHasEnded'));
+            handleSessionEndedForFan();
           }
         });
 
@@ -244,8 +254,9 @@ export default function JoinLiveSessionScreen() {
 
       sessionChannelRef.current = subscribeToSession(s.id, (updated) => {
         setSession(updated);
+        sessionRef.current = updated;
         if (updated.status === 'ended') {
-          showAlert(t('info'), t('liveSessionHasEnded'));
+          handleSessionEndedForFan();
         }
       });
     } catch (error) {
@@ -358,14 +369,19 @@ export default function JoinLiveSessionScreen() {
   // === PARTIE B : connexion du fan à la VISIO Daily quand c'est son tour ===
   const joinVideoCall = async () => {
     if (hasJoinedVideoRef.current) return;
-    hasJoinedVideoRef.current = true;
 
     const myEntry = queueEntryRef.current;
     const baseSession = sessionRef.current;
     if (!baseSession) {
-      hasJoinedVideoRef.current = false;
       return;
     }
+
+    // Garde : ne pas basculer en visio si la session est déjà terminée.
+    if (baseSession.status === 'ended') {
+      return;
+    }
+
+    hasJoinedVideoRef.current = true;
 
     try {
       // 1) Récupère le room_url. Re-fetch + poll si la célébrité n'a pas encore créé la room.
@@ -428,9 +444,22 @@ export default function JoinLiveSessionScreen() {
     }
   };
 
+  // Sortie propre du fan quand la session est terminée par la célébrité.
+  const sessionEndedHandledRef = useRef(false);
+  const handleSessionEndedForFan = () => {
+    if (sessionEndedHandledRef.current) return;
+    sessionEndedHandledRef.current = true;
+    showAlert(t('info'), t('liveSessionEndedByCelebrity' as any) || t('liveSessionHasEnded'));
+  };
+
   // Réagit au changement de statut de l'entrée du fan : si appelé -> rejoint la visio.
   const handleFanStatusChange = (updated: QueueEntry) => {
     const status = updated.status as string;
+    // Si la session est terminée, ne PAS basculer en visio.
+    if (sessionRef.current?.status === 'ended') {
+      handleSessionEndedForFan();
+      return;
+    }
     // 'current'/'in_call'/'called' = c'est mon tour pour une session VIDÉO -> rejoindre la visio.
     if (status === 'current' || status === 'in_call' || status === 'called') {
       setStep('signing');

@@ -680,6 +680,7 @@ export default {
   liveSessionInvalidCode: '有効な6文字のコードを入力してください',
   liveSessionNotFound: 'セッションが見つかりません',
   liveSessionHasEnded: 'このセッションは終了しました',
+  liveSessionEndedByCelebrity: 'セッションはセレブによって終了されました',
   liveSessionFull: 'このセッションは満員です',
   liveSessionJoin: 'セッションに参加',
   liveSessionJoinSession: 'ライブビデオセッション',

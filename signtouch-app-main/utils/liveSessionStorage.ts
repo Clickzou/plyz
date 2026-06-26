@@ -568,13 +568,36 @@ export const joinSessionQueue = async (
   message: string | null
 ): Promise<QueueEntry | null> => {
   try {
+    // ANTI-DOUBLON : si ce fan a déjà une entrée ACTIVE dans cette session
+    // (cas du web qui recharge la page au retour de paiement), on la réutilise
+    // au lieu d'en créer une seconde.
+    try {
+      const { data: existingActive } = await supabase
+        .from('session_queue')
+        .select('*')
+        .eq('session_id', sessionId)
+        .eq('fan_id', fanId)
+        .in('status', ['waiting', 'current', 'signing', 'called', 'in_call'])
+        .order('position', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (existingActive) {
+        console.log('[Queue] Reusing existing active entry for fan:', fanId);
+        return existingActive as QueueEntry;
+      }
+    } catch {}
+
+    // nextPosition = MAX(position) + 1 sur les seules entrées ACTIVES.
+    // Une entrée déjà passée (completed/missed/left/skipped) ne décale plus la
+    // position -> un fan seul ne se retrouve plus en "position 2".
     const { data: lastPosition } = await supabase
       .from('session_queue')
       .select('position')
       .eq('session_id', sessionId)
+      .in('status', ['waiting', 'current', 'signing', 'called', 'in_call'])
       .order('position', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     const nextPosition = (lastPosition?.position || 0) + 1;
 

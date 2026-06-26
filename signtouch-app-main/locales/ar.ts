@@ -680,6 +680,7 @@ export default {
   liveSessionInvalidCode: 'يرجى إدخال رمز صالح مكون من 6 أحرف',
   liveSessionNotFound: 'الجلسة غير موجودة',
   liveSessionHasEnded: 'انتهت هذه الجلسة',
+  liveSessionEndedByCelebrity: 'تم إنهاء الجلسة من قبل المشهور',
   liveSessionFull: 'هذه الجلسة ممتلئة',
   liveSessionJoin: 'الانضمام للجلسة',
   liveSessionJoinSession: 'جلسة فيديو مباشرة',

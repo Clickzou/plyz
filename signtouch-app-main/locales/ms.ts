@@ -680,6 +680,7 @@ export default {
   liveSessionInvalidCode: 'Sila masukkan kod 6 aksara yang sah',
   liveSessionNotFound: 'Sesi tidak dijumpai',
   liveSessionHasEnded: 'Sesi ini telah tamat',
+  liveSessionEndedByCelebrity: 'Sesi telah ditamatkan oleh selebriti',
   liveSessionFull: 'Sesi ini penuh',
   liveSessionJoin: 'Sertai Sesi',
   liveSessionJoinSession: 'Sesi Video Langsung',

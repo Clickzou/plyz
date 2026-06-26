@@ -680,6 +680,7 @@ export default {
   liveSessionInvalidCode: '请输入有效的6位代码',
   liveSessionNotFound: '未找到会话',
   liveSessionHasEnded: '此会话已结束',
+  liveSessionEndedByCelebrity: '会话已被名人结束',
   liveSessionFull: '此会话已满',
   liveSessionJoin: '加入会话',
   liveSessionJoinSession: '现场视频会话',
