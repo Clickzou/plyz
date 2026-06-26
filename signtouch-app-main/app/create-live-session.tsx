@@ -597,7 +597,7 @@ export default function CreateLiveSessionScreen() {
 
       <ScrollView
         style={styles.content}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[styles.contentContainer, { paddingBottom: insets.bottom + 64 }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.stepsContainer}>
