@@ -755,6 +755,7 @@ export default {
   liveSessionNotFound: 'Session not found',
   liveSessionHasEnded: 'This session has ended',
   liveSessionEndedByCelebrity: 'The session was ended by the celebrity',
+  paymentReleasedNotCharged: '✅ Your card was NOT charged. The session ended before your call — the held amount has been fully released.',
   liveSessionFull: 'This session is full',
   liveSessionJoin: 'Join Session',
   liveSessionJoinSession: 'Live Video Session',

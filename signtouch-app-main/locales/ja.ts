@@ -681,6 +681,7 @@ export default {
   liveSessionNotFound: 'セッションが見つかりません',
   liveSessionHasEnded: 'このセッションは終了しました',
   liveSessionEndedByCelebrity: 'セッションはセレブによって終了されました',
+  paymentReleasedNotCharged: '✅ あなたのカードには請求されていません。あなたの通話の前にセッションが終了しました — 保留されていた金額は全額解放されました。',
   liveSessionFull: 'このセッションは満員です',
   liveSessionJoin: 'セッションに参加',
   liveSessionJoinSession: 'ライブビデオセッション',

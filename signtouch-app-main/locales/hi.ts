@@ -681,6 +681,7 @@ export default {
   liveSessionNotFound: 'सत्र नहीं मिला',
   liveSessionHasEnded: 'यह सत्र समाप्त हो गया है',
   liveSessionEndedByCelebrity: 'सत्र को सेलिब्रिटी द्वारा समाप्त कर दिया गया',
+  paymentReleasedNotCharged: '✅ आपके कार्ड से कोई शुल्क नहीं लिया गया। आपकी कॉल से पहले सत्र समाप्त हो गया — आरक्षित राशि पूरी तरह से जारी कर दी गई है।',
   liveSessionFull: 'यह सत्र भरा हुआ है',
   liveSessionJoin: 'सत्र में शामिल हों',
   liveSessionJoinSession: 'लाइव वीडियो सेशन',

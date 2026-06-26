@@ -681,6 +681,7 @@ export default {
   liveSessionNotFound: 'Sesi tidak dijumpai',
   liveSessionHasEnded: 'Sesi ini telah tamat',
   liveSessionEndedByCelebrity: 'Sesi telah ditamatkan oleh selebriti',
+  paymentReleasedNotCharged: '✅ Kad anda TIDAK dicaj. Sesi tamat sebelum panggilan anda — jumlah yang ditahan telah dilepaskan sepenuhnya.',
   liveSessionFull: 'Sesi ini penuh',
   liveSessionJoin: 'Sertai Sesi',
   liveSessionJoinSession: 'Sesi Video Langsung',

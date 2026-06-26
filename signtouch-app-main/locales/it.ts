@@ -681,6 +681,7 @@ export default {
   liveSessionNotFound: 'Sessione non trovata',
   liveSessionHasEnded: 'Questa sessione è terminata',
   liveSessionEndedByCelebrity: 'La sessione è stata terminata dalla celebrità',
+  paymentReleasedNotCharged: '✅ La tua carta NON è stata addebitata. La sessione è terminata prima della tua chiamata — l\'importo riservato è stato interamente rilasciato.',
   liveSessionFull: 'Questa sessione è al completo',
   liveSessionJoin: 'Unisciti alla sessione',
   liveSessionJoinSession: 'Sessione Live Video',

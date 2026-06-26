@@ -681,6 +681,7 @@ export default {
   liveSessionNotFound: 'الجلسة غير موجودة',
   liveSessionHasEnded: 'انتهت هذه الجلسة',
   liveSessionEndedByCelebrity: 'تم إنهاء الجلسة من قبل المشهور',
+  paymentReleasedNotCharged: '✅ لم يتم خصم أي مبلغ من بطاقتك. انتهت الجلسة قبل مكالمتك — تم تحرير المبلغ المحجوز بالكامل.',
   liveSessionFull: 'هذه الجلسة ممتلئة',
   liveSessionJoin: 'الانضمام للجلسة',
   liveSessionJoinSession: 'جلسة فيديو مباشرة',

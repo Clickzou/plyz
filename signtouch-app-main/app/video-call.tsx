@@ -190,6 +190,8 @@ export default function VideoCallScreen() {
 
   // FIX 2 : message affiché au fan quand la célébrité termine la session pendant l'attente.
   const [sessionEndedByCelebrity, setSessionEndedByCelebrity] = useState(false);
+  // Vrai quand la pré-autorisation a été LIBÉRÉE (appel non eu) -> message rassurant au fan.
+  const [paymentWasReleased, setPaymentWasReleased] = useState(false);
   const sessionEndedHandledRef = useRef(false);
 
   // Le fan (et la célébrité) écoute le statut de la session. Si elle passe 'ended'
@@ -207,6 +209,7 @@ export default function VideoCallScreen() {
       const priceCents = parseInt(params.priceCents || '0', 10);
       if (!otherParticipantJoinedRef.current && priceCents > 0 && params.checkoutSessionId) {
         cancelPaymentAuthorization();
+        setPaymentWasReleased(true);
       }
 
       setSessionEndedByCelebrity(true);
@@ -1075,6 +1078,12 @@ export default function VideoCallScreen() {
             <Text style={styles.loadingTitle}>
               {t('liveSessionEndedByCelebrity' as any) || 'La session a été terminée par la célébrité'}
             </Text>
+            {paymentWasReleased && (
+              <Text style={{ color: '#10B981', fontSize: 14, textAlign: 'center', marginTop: 12, lineHeight: 20 }}>
+                {t('paymentReleasedNotCharged' as any) ||
+                  '✅ Ta carte n\'a PAS été débitée. La session s\'est terminée avant ton appel — le montant réservé a été entièrement libéré.'}
+              </Text>
+            )}
           </View>
         </View>
       )}

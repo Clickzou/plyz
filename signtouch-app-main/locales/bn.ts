@@ -681,6 +681,7 @@ export default {
   liveSessionNotFound: 'সেশন পাওয়া যায়নি',
   liveSessionHasEnded: 'এই সেশন শেষ হয়ে গেছে',
   liveSessionEndedByCelebrity: 'সেশনটি সেলিব্রিটি দ্বারা শেষ করা হয়েছে',
+  paymentReleasedNotCharged: '✅ আপনার কার্ড থেকে কোনো টাকা কাটা হয়নি। আপনার কল শুরু হওয়ার আগেই সেশনটি শেষ হয়ে গেছে — সংরক্ষিত অর্থ সম্পূর্ণরূপে মুক্ত করা হয়েছে।',
   liveSessionFull: 'এই সেশন পূর্ণ',
   liveSessionJoin: 'সেশনে যোগ দিন',
   liveSessionJoinSession: 'লাইভ ভিডিও সেশন',

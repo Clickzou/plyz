@@ -681,6 +681,7 @@ export default {
   liveSessionNotFound: '未找到会话',
   liveSessionHasEnded: '此会话已结束',
   liveSessionEndedByCelebrity: '会话已被名人结束',
+  paymentReleasedNotCharged: '✅ 你的银行卡未被扣款。会话在你通话之前已结束 — 预留的金额已全额释放。',
   liveSessionFull: '此会话已满',
   liveSessionJoin: '加入会话',
   liveSessionJoinSession: '现场视频会话',

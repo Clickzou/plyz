@@ -681,6 +681,7 @@ export default {
   liveSessionNotFound: 'Сессия не найдена',
   liveSessionHasEnded: 'Эта сессия завершена',
   liveSessionEndedByCelebrity: 'Сессия была завершена знаменитостью',
+  paymentReleasedNotCharged: '✅ С вашей карты НЕ были списаны деньги. Сессия завершилась до вашего звонка — зарезервированная сумма полностью разблокирована.',
   liveSessionFull: 'Эта сессия заполнена',
   liveSessionJoin: 'Присоединиться к сессии',
   liveSessionJoinSession: 'Живая видеосессия',

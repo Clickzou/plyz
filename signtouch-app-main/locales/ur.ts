@@ -681,6 +681,7 @@ export default {
   liveSessionNotFound: 'سیشن نہیں ملا',
   liveSessionHasEnded: 'یہ سیشن ختم ہو چکا ہے',
   liveSessionEndedByCelebrity: 'سیشن کو مشہور شخصیت نے ختم کر دیا',
+  paymentReleasedNotCharged: '✅ آپ کے کارڈ سے کوئی رقم نہیں کاٹی گئی۔ سیشن آپ کی کال سے پہلے ختم ہو گیا — محفوظ کی گئی رقم مکمل طور پر جاری کر دی گئی ہے۔',
   liveSessionFull: 'یہ سیشن بھر گیا ہے',
   liveSessionJoin: 'سیشن میں شامل ہوں',
   liveSessionJoinSession: 'لائیو ویڈیو سیشن',
