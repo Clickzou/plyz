@@ -682,6 +682,8 @@ export default {
   liveSessionHasEnded: 'Sesi ini telah tamat',
   liveSessionEndedByCelebrity: 'Sesi telah ditamatkan oleh selebriti',
   paymentReleasedNotCharged: '✅ Kad anda TIDAK dicaj. Sesi tamat sebelum panggilan anda — jumlah yang ditahan telah dilepaskan sepenuhnya.',
+  hostEndedEarlyNotPaid: '⚠️ Anda menamatkan panggilan sebelum sesi berakhir. Oleh itu, anda TIDAK akan dibayar untuk sesi ini.',
+  celebrityEndEarlyWarning: '⚠️ Penting: jika anda menamatkan panggilan sebelum tempohnya tamat, peminat akan dikembalikan bayaran sepenuhnya dan anda TIDAK dibayar untuk sesi ini. Habiskan setiap panggilan hingga akhir untuk dibayar.',
   liveSessionFull: 'Sesi ini penuh',
   liveSessionJoin: 'Sertai Sesi',
   liveSessionJoinSession: 'Sesi Video Langsung',

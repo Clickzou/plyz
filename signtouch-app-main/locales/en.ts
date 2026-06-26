@@ -756,6 +756,8 @@ export default {
   liveSessionHasEnded: 'This session has ended',
   liveSessionEndedByCelebrity: 'The session was ended by the celebrity',
   paymentReleasedNotCharged: '✅ Your card was NOT charged. The session ended before your call — the held amount has been fully released.',
+  hostEndedEarlyNotPaid: '⚠️ You ended the call before the session was over. You will therefore NOT be paid for this session.',
+  celebrityEndEarlyWarning: '⚠️ Important: if you end a call before its duration is over, the fan is fully refunded and you are NOT paid for this session. Go through to the end of every call to get paid.',
   liveSessionFull: 'This session is full',
   liveSessionJoin: 'Join Session',
   liveSessionJoinSession: 'Live Video Session',

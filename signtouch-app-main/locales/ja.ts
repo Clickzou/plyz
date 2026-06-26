@@ -682,6 +682,8 @@ export default {
   liveSessionHasEnded: 'このセッションは終了しました',
   liveSessionEndedByCelebrity: 'セッションはセレブによって終了されました',
   paymentReleasedNotCharged: '✅ あなたのカードには請求されていません。あなたの通話の前にセッションが終了しました — 保留されていた金額は全額解放されました。',
+  hostEndedEarlyNotPaid: '⚠️ セッションが終わる前に通話を終了しました。そのため、このセッションの報酬は支払われません。',
+  celebrityEndEarlyWarning: '⚠️ 重要：通話の所定の時間が終わる前に通話を終了すると、ファンには全額返金され、あなたはこのセッションの報酬を受け取れません。報酬を得るには、各通話を最後まで行ってください。',
   liveSessionFull: 'このセッションは満員です',
   liveSessionJoin: 'セッションに参加',
   liveSessionJoinSession: 'ライブビデオセッション',

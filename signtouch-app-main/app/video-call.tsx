@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, PhoneOff, Clock, Video, Users, TrendingUp, RotateCcw } from 'lucide-react-native';
+import { ArrowLeft, PhoneOff, Clock, Video, Users, TrendingUp, RotateCcw, AlertTriangle } from 'lucide-react-native';
 import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
@@ -190,6 +190,9 @@ export default function VideoCallScreen() {
 
   // FIX 2 : message affiché au fan quand la célébrité termine la session pendant l'attente.
   const [sessionEndedByCelebrity, setSessionEndedByCelebrity] = useState(false);
+  // Message affiché à la CÉLÉBRITÉ quand ELLE écourte l'appel (raccroche avant la fin) :
+  // dans ce cas elle n'est PAS créditée (le fan est remboursé). Voir handleCallEnded.
+  const [hostEndedEarly, setHostEndedEarly] = useState(false);
   // Vrai quand la pré-autorisation a été LIBÉRÉE (appel non eu) -> message rassurant au fan.
   const [paymentWasReleased, setPaymentWasReleased] = useState(false);
   const sessionEndedHandledRef = useRef(false);
@@ -483,6 +486,19 @@ export default function VideoCallScreen() {
           setPaymentWasReleased(true);
         }
         setSessionEndedByCelebrity(true);
+        setTimeout(() => {
+          try { router.replace('/activity'); } catch {}
+        }, 3500);
+        return;
+      }
+
+      // Côté CÉLÉBRITÉ (host) : si c'est ELLE qui a raccroché AVANT la fin de la session
+      // (raccrochage manuel, et NON le timer qui atteint la durée), elle ne sera PAS
+      // créditée (le fan est remboursé). On l'en informe clairement puis on sort SANS
+      // demander de notation. Garde-fou : on n'entre ici que pour 'celebrity_hangup'
+      // (le cas 'timer' = durée atteinte = paiement normal n'est PAS concerné).
+      if (isHost && reason === 'celebrity_hangup') {
+        setHostEndedEarly(true);
         setTimeout(() => {
           try { router.replace('/activity'); } catch {}
         }, 3500);
@@ -1107,6 +1123,18 @@ export default function VideoCallScreen() {
                   '✅ Ta carte n\'a PAS été débitée. La session s\'est terminée avant ton appel — le montant réservé a été entièrement libéré.'}
               </Text>
             )}
+          </View>
+        </View>
+      )}
+
+      {hostEndedEarly && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingCard}>
+            <AlertTriangle size={40} color="#fbbf24" />
+            <Text style={[styles.loadingTitle, { color: '#fbbf24' }]}>
+              {t('hostEndedEarlyNotPaid' as any) ||
+                '⚠️ Tu as mis fin à l\'appel avant la fin de la session. Tu ne seras donc PAS crédité(e) pour cette session.'}
+            </Text>
           </View>
         </View>
       )}

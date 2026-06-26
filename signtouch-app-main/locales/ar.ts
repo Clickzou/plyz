@@ -682,6 +682,8 @@ export default {
   liveSessionHasEnded: 'انتهت هذه الجلسة',
   liveSessionEndedByCelebrity: 'تم إنهاء الجلسة من قبل المشهور',
   paymentReleasedNotCharged: '✅ لم يتم خصم أي مبلغ من بطاقتك. انتهت الجلسة قبل مكالمتك — تم تحرير المبلغ المحجوز بالكامل.',
+  hostEndedEarlyNotPaid: '⚠️ لقد أنهيت المكالمة قبل انتهاء الجلسة. لذلك لن تحصل على أجر عن هذه الجلسة.',
+  celebrityEndEarlyWarning: '⚠️ مهم: إذا أنهيت مكالمة قبل انتهاء مدتها، يُسترد للمعجب كامل المبلغ ولن تحصل أنت على أجر عن هذه الجلسة. أكمل كل مكالمة حتى النهاية لتحصل على أجرك.',
   liveSessionFull: 'هذه الجلسة ممتلئة',
   liveSessionJoin: 'الانضمام للجلسة',
   liveSessionJoinSession: 'جلسة فيديو مباشرة',

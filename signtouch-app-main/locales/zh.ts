@@ -682,6 +682,8 @@ export default {
   liveSessionHasEnded: '此会话已结束',
   liveSessionEndedByCelebrity: '会话已被名人结束',
   paymentReleasedNotCharged: '✅ 你的银行卡未被扣款。会话在你通话之前已结束 — 预留的金额已全额释放。',
+  hostEndedEarlyNotPaid: '⚠️ 你在会话结束前挂断了通话。因此你将不会获得本次会话的报酬。',
+  celebrityEndEarlyWarning: '⚠️ 重要提示：如果你在通话时长结束前结束通话，粉丝将获得全额退款，而你不会获得本次会话的报酬。请坚持到每次通话结束才能获得报酬。',
   liveSessionFull: '此会话已满',
   liveSessionJoin: '加入会话',
   liveSessionJoinSession: '现场视频会话',

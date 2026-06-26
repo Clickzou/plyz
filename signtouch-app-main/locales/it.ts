@@ -682,6 +682,8 @@ export default {
   liveSessionHasEnded: 'Questa sessione è terminata',
   liveSessionEndedByCelebrity: 'La sessione è stata terminata dalla celebrità',
   paymentReleasedNotCharged: '✅ La tua carta NON è stata addebitata. La sessione è terminata prima della tua chiamata — l\'importo riservato è stato interamente rilasciato.',
+  hostEndedEarlyNotPaid: '⚠️ Hai terminato la chiamata prima della fine della sessione. Pertanto NON riceverai il pagamento per questa sessione.',
+  celebrityEndEarlyWarning: '⚠️ Importante: se termini una chiamata prima della fine della sua durata, il fan viene rimborsato per intero e tu NON vieni pagato per questa sessione. Arriva fino alla fine di ogni chiamata per essere pagato.',
   liveSessionFull: 'Questa sessione è al completo',
   liveSessionJoin: 'Unisciti alla sessione',
   liveSessionJoinSession: 'Sessione Live Video',

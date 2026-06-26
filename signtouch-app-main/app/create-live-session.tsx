@@ -15,7 +15,7 @@ import {
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Clock, Users, DollarSign, Play, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy, Send, Minus, Plus } from 'lucide-react-native';
+import { ArrowLeft, Clock, Users, DollarSign, Play, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy, Send, Minus, Plus, AlertTriangle } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
@@ -879,6 +879,14 @@ export default function CreateLiveSessionScreen() {
           </View>
         )}
 
+        <View style={styles.endEarlyWarningCard}>
+          <AlertTriangle size={20} color="#fbbf24" />
+          <Text style={styles.endEarlyWarningText}>
+            {t('celebrityEndEarlyWarning' as any) ||
+              '⚠️ Important : si tu mets fin à un appel avant la fin de sa durée, le fan est intégralement remboursé et tu n\'es PAS payé(e) pour cette session. Va au bout de chaque appel pour être crédité(e).'}
+          </Text>
+        </View>
+
         <TouchableOpacity
           style={[styles.createButton, isCreating && styles.createButtonDisabled]}
           onPress={handleCreateSession}
@@ -1493,6 +1501,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
+  },
+  endEarlyWarningCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: 'rgba(251,191,36,0.12)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(251,191,36,0.4)',
+  },
+  endEarlyWarningText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#fde68a',
+    lineHeight: 20,
+    fontWeight: '600',
   },
   paymentInfoIntro: {
     fontSize: 13,
