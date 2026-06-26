@@ -705,7 +705,7 @@ export default {
   fanJoinedQueueFirstToast: '🎉 Primeiro fã conectado: {name}!',
   fanWaitingBannerTitle: '🔔 Um fã está esperando por você!',
   fanWaitingBannerTitlePlural: '🔔 {count} fãs estão esperando por você!',
-  fanWaitingBannerSubtitle: 'Toque aqui para iniciar a chamada de vídeo.',
+  fanWaitingBannerSubtitle: 'Toque em «Aceder à sua videochamada» abaixo para começar.',
   liveSessionDontLeave: 'Não saia desta tela',
   liveSessionYourTurn: 'É Sua Vez!',
   liveSessionSigningNow: 'A celebridade está assinando sua foto',

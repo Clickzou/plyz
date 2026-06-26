@@ -780,7 +780,7 @@ export default {
   fanJoinedQueueFirstToast: '🎉 Premier fan connecté : {name} !',
   fanWaitingBannerTitle: '🔔 Un fan vous attend !',
   fanWaitingBannerTitlePlural: '🔔 {count} fans vous attendent !',
-  fanWaitingBannerSubtitle: 'Appuyez ici pour démarrer l\'appel vidéo.',
+  fanWaitingBannerSubtitle: 'Cliquez sur « Accéder à votre appel vidéo » en bas pour démarrer.',
   liveSessionDontLeave: 'Ne quittez pas cet écran',
   liveSessionYourTurn: 'C\'est Votre Tour !',
   liveSessionSigningNow: 'La célébrité signe votre photo',

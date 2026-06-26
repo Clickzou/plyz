@@ -705,7 +705,7 @@ export default {
   fanJoinedQueueFirstToast: '🎉 أول معجب متصل: {name}!',
   fanWaitingBannerTitle: '🔔 هناك معجب ينتظرك!',
   fanWaitingBannerTitlePlural: '🔔 هناك {count} من المعجبين ينتظرونك!',
-  fanWaitingBannerSubtitle: 'اضغط هنا لبدء مكالمة الفيديو.',
+  fanWaitingBannerSubtitle: 'اضغط على «الانضمام إلى مكالمة الفيديو» في الأسفل للبدء.',
   liveSessionDontLeave: 'لا تغادر هذه الشاشة',
   liveSessionYourTurn: 'جاء دورك!',
   liveSessionSigningNow: 'المشهور يوقع صورتك',

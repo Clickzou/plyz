@@ -705,7 +705,7 @@ export default {
   fanJoinedQueueFirstToast: '🎉 Penggemar pertama terhubung: {name}!',
   fanWaitingBannerTitle: '🔔 Seorang penggemar menunggu Anda!',
   fanWaitingBannerTitlePlural: '🔔 {count} penggemar menunggu Anda!',
-  fanWaitingBannerSubtitle: 'Ketuk di sini untuk memulai panggilan video.',
+  fanWaitingBannerSubtitle: 'Ketuk "Gabung ke panggilan video Anda" di bawah untuk memulai.',
   liveSessionDontLeave: 'Jangan tinggalkan layar ini',
   liveSessionYourTurn: 'Giliran Anda!',
   liveSessionSigningNow: 'Selebriti sedang menandatangani foto Anda',

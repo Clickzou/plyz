@@ -705,7 +705,7 @@ export default {
   fanJoinedQueueFirstToast: '🎉 最初のファンが接続しました：{name} さん！',
   fanWaitingBannerTitle: '🔔 ファンがあなたを待っています！',
   fanWaitingBannerTitlePlural: '🔔 {count} 人のファンがあなたを待っています！',
-  fanWaitingBannerSubtitle: 'ここをタップしてビデオ通話を開始してください。',
+  fanWaitingBannerSubtitle: '下の「ビデオ通話に参加」をタップして開始してください。',
   liveSessionDontLeave: 'この画面から離れないでください',
   liveSessionYourTurn: 'あなたの番です！',
   liveSessionSigningNow: 'セレブがあなたの写真にサインしています',

@@ -705,7 +705,7 @@ export default {
   fanJoinedQueueFirstToast: '🎉 پہلا مداح جُڑ گیا: {name}!',
   fanWaitingBannerTitle: '🔔 ایک مداح آپ کا انتظار کر رہا ہے!',
   fanWaitingBannerTitlePlural: '🔔 {count} مداح آپ کا انتظار کر رہے ہیں!',
-  fanWaitingBannerSubtitle: 'ویڈیو کال شروع کرنے کے لیے یہاں ٹیپ کریں۔',
+  fanWaitingBannerSubtitle: 'شروع کرنے کے لیے نیچے «اپنی ویڈیو کال میں شامل ہوں» پر ٹیپ کریں۔',
   liveSessionDontLeave: 'اس اسکرین کو مت چھوڑیں',
   liveSessionYourTurn: 'آپ کی باری ہے!',
   liveSessionSigningNow: 'مشہور شخصیت آپ کی تصویر پر دستخط کر رہی ہے',

@@ -705,7 +705,7 @@ export default {
   fanJoinedQueueFirstToast: '🎉 पहला फैन जुड़ा: {name}!',
   fanWaitingBannerTitle: '🔔 एक फैन आपका इंतज़ार कर रहा है!',
   fanWaitingBannerTitlePlural: '🔔 {count} फैन आपका इंतज़ार कर रहे हैं!',
-  fanWaitingBannerSubtitle: 'वीडियो कॉल शुरू करने के लिए यहाँ टैप करें।',
+  fanWaitingBannerSubtitle: 'शुरू करने के लिए नीचे "अपनी वीडियो कॉल में शामिल हों" पर टैप करें।',
   liveSessionDontLeave: 'इस स्क्रीन से न जाएं',
   liveSessionYourTurn: 'आपकी बारी है!',
   liveSessionSigningNow: 'सेलेब्रिटी आपकी फोटो पर हस्ताक्षर कर रहे हैं',

@@ -1310,6 +1310,36 @@ export default function LiveSessionDashboardScreen() {
         </View>
       </View>
 
+      {showWaitingBanner && (
+        <Animated.View style={[styles.fanWaitingBannerFixed, { transform: [{ scale: waitingBannerPulse }] }]}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.fanWaitingBanner}
+            onPress={handleStartVideoCall}
+            disabled={isCreatingVideoRoom}
+          >
+            <View style={styles.fanWaitingBannerIcon}>
+              <Bell size={26} color="#fff" />
+            </View>
+            <View style={styles.fanWaitingBannerContent}>
+              <Text style={styles.fanWaitingBannerTitle}>
+                {fansWaitingForBanner > 1
+                  ? (t('fanWaitingBannerTitlePlural' as any) || '🔔 {count} fans vous attendent !').replace('{count}', String(fansWaitingForBanner))
+                  : (t('fanWaitingBannerTitle' as any) || '🔔 Un fan vous attend !')}
+              </Text>
+              <Text style={styles.fanWaitingBannerSubtitle}>
+                {t('fanWaitingBannerSubtitle' as any) || 'Cliquez sur « Accéder à votre appel vidéo » en bas pour démarrer.'}
+              </Text>
+            </View>
+            {isCreatingVideoRoom ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Video size={22} color="#fff" />
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+
       <ScrollView ref={scrollRef} style={styles.content} contentContainerStyle={[styles.contentContainer, { paddingBottom: insets.bottom + 40 }]} scrollEnabled={dedicationStep !== 'signature'}>
         {showQR && session.status === 'waiting' && dedicationStep !== 'signature' && (
           <View style={styles.qrSection}>
@@ -1534,35 +1564,6 @@ export default function LiveSessionDashboardScreen() {
 
         {(session.status === 'active' || session.status === 'paused') && (
           <>
-            {showWaitingBanner && (
-              <Animated.View style={{ transform: [{ scale: waitingBannerPulse }] }}>
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  style={styles.fanWaitingBanner}
-                  onPress={handleStartVideoCall}
-                  disabled={isCreatingVideoRoom}
-                >
-                  <View style={styles.fanWaitingBannerIcon}>
-                    <Bell size={26} color="#fff" />
-                  </View>
-                  <View style={styles.fanWaitingBannerContent}>
-                    <Text style={styles.fanWaitingBannerTitle}>
-                      {fansWaitingForBanner > 1
-                        ? (t('fanWaitingBannerTitlePlural' as any) || '🔔 {count} fans vous attendent !').replace('{count}', String(fansWaitingForBanner))
-                        : (t('fanWaitingBannerTitle' as any) || '🔔 Un fan vous attend !')}
-                    </Text>
-                    <Text style={styles.fanWaitingBannerSubtitle}>
-                      {t('fanWaitingBannerSubtitle' as any) || 'Appuyez ici pour démarrer l\'appel vidéo.'}
-                    </Text>
-                  </View>
-                  {isCreatingVideoRoom ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Video size={22} color="#fff" />
-                  )}
-                </TouchableOpacity>
-              </Animated.View>
-            )}
             {currentFan ? (
               <View style={styles.signingSection}>
                 <View style={styles.fanInfo}>
@@ -2052,6 +2053,10 @@ const styles = StyleSheet.create({
   waitingSection: {
     alignItems: 'center',
     paddingVertical: 40,
+  },
+  fanWaitingBannerFixed: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
   },
   fanWaitingBanner: {
     flexDirection: 'row',

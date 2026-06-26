@@ -705,7 +705,7 @@ export default {
   fanJoinedQueueFirstToast: '🎉 প্রথম ফ্যান যুক্ত হয়েছেন: {name}!',
   fanWaitingBannerTitle: '🔔 একজন ফ্যান আপনার জন্য অপেক্ষা করছেন!',
   fanWaitingBannerTitlePlural: '🔔 {count} জন ফ্যান আপনার জন্য অপেক্ষা করছেন!',
-  fanWaitingBannerSubtitle: 'ভিডিও কল শুরু করতে এখানে ট্যাপ করুন।',
+  fanWaitingBannerSubtitle: 'শুরু করতে নিচে "আপনার ভিডিও কলে যোগ দিন"-এ ট্যাপ করুন।',
   liveSessionDontLeave: 'এই স্ক্রিন ছেড়ে যাবেন না',
   liveSessionYourTurn: 'আপনার পালা!',
   liveSessionSigningNow: 'সেলিব্রিটি আপনার ফটোতে স্বাক্ষর করছেন',

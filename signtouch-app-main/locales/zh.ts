@@ -705,7 +705,7 @@ export default {
   fanJoinedQueueFirstToast: '🎉 第一位粉丝已连接：{name}！',
   fanWaitingBannerTitle: '🔔 有一位粉丝正在等您！',
   fanWaitingBannerTitlePlural: '🔔 有 {count} 位粉丝正在等您！',
-  fanWaitingBannerSubtitle: '点击这里开始视频通话。',
+  fanWaitingBannerSubtitle: '点击底部的"进入您的视频通话"即可开始。',
   liveSessionDontLeave: '请不要离开此页面',
   liveSessionYourTurn: '轮到您了！',
   liveSessionSigningNow: '明星正在为您的照片签名',

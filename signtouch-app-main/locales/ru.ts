@@ -705,7 +705,7 @@ export default {
   fanJoinedQueueFirstToast: '🎉 Первый фанат подключился: {name}!',
   fanWaitingBannerTitle: '🔔 Вас ждёт фанат!',
   fanWaitingBannerTitlePlural: '🔔 Вас ждут {count} фанатов!',
-  fanWaitingBannerSubtitle: 'Нажмите здесь, чтобы начать видеозвонок.',
+  fanWaitingBannerSubtitle: 'Нажмите «Присоединиться к видеозвонку» внизу, чтобы начать.',
   liveSessionDontLeave: 'Не покидайте этот экран',
   liveSessionYourTurn: 'Ваша очередь!',
   liveSessionSigningNow: 'Знаменитость подписывает ваше фото',
