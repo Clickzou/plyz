@@ -813,6 +813,156 @@ app.post('/api/cancel-payment', async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// POST /api/end-fan-call
+// Déclenché par la célébrité à la fin (ou à l'annulation) d'un échange avec un
+// fan. Capture le paiement si l'appel a eu lieu, le libère sinon. FIABLE :
+// idempotent + compare-and-set anti-race AVANT l'appel Stripe.
+// Body : { queueEntryId, callHappened: boolean, sessionId }
+// ---------------------------------------------------------------------------
+app.post('/api/end-fan-call', async (req, res) => {
+  const { queueEntryId, callHappened, sessionId } = req.body || {};
+  try {
+    if (!queueEntryId) {
+      return res.status(400).json({ ok: false, error: 'Missing queueEntryId' });
+    }
+    if (typeof callHappened !== 'boolean') {
+      return res.status(400).json({ ok: false, error: 'Missing or invalid callHappened (boolean)' });
+    }
+
+    const supabase = getSupabaseAdmin();
+    const stripe = await getStripe();
+
+    // 1. Lire l'entrée session_queue
+    const { data: entry, error: readError } = await supabase
+      .from('session_queue')
+      .select('id, checkout_session_id, payment_intent_id, payment_captured, session_id, status')
+      .eq('id', queueEntryId)
+      .single();
+
+    if (readError || !entry) {
+      console.error('[EndFanCall] Queue entry not found:', queueEntryId, readError?.message);
+      return res.status(404).json({ ok: false, error: 'queue_entry_not_found' });
+    }
+
+    console.log(
+      `[EndFanCall] entry=${queueEntryId} session=${entry.session_id} callHappened=${callHappened} ` +
+      `captured=${entry.payment_captured} checkout=${entry.checkout_session_id || 'none'} pi=${entry.payment_intent_id || 'none'}`
+    );
+
+    // 2. IDEMPOTENCE : déjà capturé -> no-op
+    if (entry.payment_captured === true) {
+      console.log('[EndFanCall] Already captured, idempotent no-op:', queueEntryId);
+      return res.json({ ok: true, captured: true, already: true });
+    }
+
+    // 3. Pas de checkout_session_id -> session gratuite / pas de paiement
+    if (!entry.checkout_session_id) {
+      console.log('[EndFanCall] No checkout_session_id (free session), no payment:', queueEntryId);
+      return res.json({ ok: true, captured: false, reason: 'no_payment' });
+    }
+
+    // 4. Résoudre le PaymentIntent (le persister s'il manque)
+    let paymentIntentId = entry.payment_intent_id;
+    if (!paymentIntentId) {
+      const checkoutSession = await stripe.checkout.sessions.retrieve(entry.checkout_session_id);
+      paymentIntentId = checkoutSession.payment_intent;
+      if (!paymentIntentId) {
+        console.log('[EndFanCall] No payment_intent on checkout session (no payment):', entry.checkout_session_id);
+        return res.json({ ok: true, captured: false, reason: 'no_payment' });
+      }
+      await supabase
+        .from('session_queue')
+        .update({ payment_intent_id: paymentIntentId })
+        .eq('id', queueEntryId);
+      console.log('[EndFanCall] Resolved & persisted payment_intent:', paymentIntentId);
+    }
+
+    // 5. DÉCISION
+    if (callHappened === true) {
+      // --- CAPTURE ---
+      // Compare-and-set anti-race AVANT Stripe : ne capture que si pas déjà capturé.
+      const { data: claimed, error: claimError } = await supabase
+        .from('session_queue')
+        .update({ payment_captured: true })
+        .eq('id', queueEntryId)
+        .not('payment_captured', 'is', true)
+        .select('id');
+
+      if (claimError) {
+        console.error('[EndFanCall] Compare-and-set error:', claimError.message);
+        return res.status(500).json({ ok: false, error: claimError.message });
+      }
+
+      // 0 ligne modifiée -> un autre process a déjà capturé
+      if (!claimed || claimed.length === 0) {
+        console.log('[EndFanCall] Lost the race, already captured by another process:', queueEntryId);
+        return res.json({ ok: true, captured: true, already: true });
+      }
+
+      // On a remporté le verrou : capturer côté Stripe
+      try {
+        const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+        if (pi.status === 'requires_capture') {
+          const captured = await stripe.paymentIntents.capture(paymentIntentId);
+          console.log('[EndFanCall] Payment captured:', paymentIntentId, '| Amount:', captured.amount, captured.currency);
+        } else if (pi.status === 'succeeded') {
+          console.log('[EndFanCall] PaymentIntent already succeeded (idempotent OK):', paymentIntentId);
+        } else if (pi.status === 'canceled') {
+          // Impossible de capturer : on remet le flag à false (release du verrou)
+          await supabase
+            .from('session_queue')
+            .update({ payment_captured: false })
+            .eq('id', queueEntryId);
+          console.error('[EndFanCall] PaymentIntent already canceled, cannot capture:', paymentIntentId);
+          return res.json({ ok: false, error: 'already_canceled' });
+        } else {
+          // Statut inattendu (requires_payment_method, etc.) : on relâche le verrou
+          await supabase
+            .from('session_queue')
+            .update({ payment_captured: false })
+            .eq('id', queueEntryId);
+          console.error('[EndFanCall] Cannot capture, unexpected status:', pi.status, paymentIntentId);
+          return res.json({ ok: false, error: `cannot_capture_status_${pi.status}` });
+        }
+      } catch (stripeErr) {
+        // L'appel Stripe a échoué : relâcher le verrou pour permettre un retry
+        await supabase
+          .from('session_queue')
+          .update({ payment_captured: false })
+          .eq('id', queueEntryId);
+        console.error('[EndFanCall] Stripe capture error (lock released):', stripeErr.message);
+        return res.status(500).json({ ok: false, error: stripeErr.message });
+      }
+
+      return res.json({ ok: true, captured: true });
+    } else {
+      // --- RELEASE (cancel) ---
+      // payment_captured reste false ; on libère l'autorisation.
+      const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+      if (pi.status === 'succeeded') {
+        // Déjà capturé côté Stripe : impossible d'annuler proprement -> no-op.
+        console.log('[EndFanCall] PaymentIntent already succeeded, cannot release:', paymentIntentId);
+        return res.json({ ok: true, captured: false, released: false, reason: 'already_succeeded' });
+      }
+
+      if (pi.status === 'canceled') {
+        console.log('[EndFanCall] PaymentIntent already canceled (no-op):', paymentIntentId);
+        return res.json({ ok: true, captured: false, released: true, already: true });
+      }
+
+      const canceled = await stripe.paymentIntents.cancel(paymentIntentId);
+      console.log('[EndFanCall] Payment released (canceled):', canceled.id);
+      return res.json({ ok: true, captured: false, released: true });
+    }
+  } catch (error) {
+    console.error('[EndFanCall] Error:', error?.message || error);
+    return res.status(500).json({ ok: false, error: error?.message || 'internal_error' });
+  }
+});
+
 app.get('/api/session-earnings', async (req, res) => {
   try {
     const stripe = await getStripe();

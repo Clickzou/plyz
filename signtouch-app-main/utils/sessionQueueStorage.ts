@@ -15,6 +15,9 @@ export interface QueueEntry {
   completed_at: string | null;
   missed_count: number;
   created_at: string;
+  checkout_session_id?: string | null;
+  payment_intent_id?: string | null;
+  payment_captured?: boolean;
 }
 
 export interface QueueStats {

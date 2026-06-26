@@ -571,7 +571,8 @@ export default function JoinLiveSessionScreen() {
         fanId,
         queueFanName,
         photoUrl,
-        queueMessage
+        queueMessage,
+        checkoutSessionIdRef.current
       );
 
       if (!entry) {

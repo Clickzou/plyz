@@ -59,6 +59,9 @@ export interface QueueEntry {
   created_at: string;
   called_at: string | null;
   completed_at: string | null;
+  checkout_session_id?: string | null;
+  payment_intent_id?: string | null;
+  payment_captured?: boolean;
 }
 
 const generateSessionCode = (): string => {
@@ -566,7 +569,8 @@ export const joinSessionQueue = async (
   fanId: string,
   fanName: string,
   photoUrl: string | null,
-  message: string | null
+  message: string | null,
+  checkoutSessionId?: string | null
 ): Promise<QueueEntry | null> => {
   try {
     // ANTI-DOUBLON : si ce fan a déjà une entrée ACTIVE dans cette session
@@ -584,6 +588,21 @@ export const joinSessionQueue = async (
         .maybeSingle();
       if (existingActive) {
         console.log('[Queue] Reusing existing active entry for fan:', fanId);
+        // Si l'entrée existante n'a pas encore de checkout_session_id, on le renseigne
+        // (cas où le fan paye après une 1re tentative sans paiement).
+        if (checkoutSessionId && !existingActive.checkout_session_id) {
+          try {
+            const { data: updated } = await supabase
+              .from('session_queue')
+              .update({ checkout_session_id: checkoutSessionId })
+              .eq('id', existingActive.id)
+              .select()
+              .single();
+            if (updated) return updated as QueueEntry;
+          } catch (e) {
+            console.warn('[Queue] Could not backfill checkout_session_id:', e);
+          }
+        }
         return existingActive as QueueEntry;
       }
     } catch {}
@@ -637,6 +656,9 @@ export const joinSessionQueue = async (
     };
     if (dedicationSig) {
       insertData.signature_svg = dedicationSig;
+    }
+    if (checkoutSessionId) {
+      insertData.checkout_session_id = checkoutSessionId;
     }
 
     const { data, error } = await supabase

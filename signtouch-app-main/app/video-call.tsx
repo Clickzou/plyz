@@ -129,6 +129,13 @@ export default function VideoCallScreen() {
   // MÊME appel déjà terminé. Ce ref, lui, n'est remis à false QUE lorsqu'un NOUVEAU fan a
   // réellement rejoint la visio -> garantit UNE SEULE notation par appel.
   const ratingHandledForCallRef = useRef(false);
+  // CÔTÉ HÔTE — id de l'entrée de file du fan ACTUELLEMENT en appel. CRUCIAL pour la capture
+  // serveur fiable : on doit résoudre le paiement du fan QUI VIENT DE TERMINER, pas du suivant.
+  // Initialisé au 1er fan (params.queueEntryId), mis à jour à chaque passage au fan suivant
+  // dans handleCallNextFan APRÈS avoir déclenché la capture du fan précédent.
+  const currentHostFanEntryIdRef = useRef<string | null>(params.queueEntryId || null);
+  // Garde-fou anti-double-résolution côté serveur : ids de fans déjà envoyés à /api/end-fan-call.
+  const endFanCallResolvedIdsRef = useRef<Set<string>>(new Set());
   // Compteur LOCAL (côté hôte) des fans réellement rencontrés (appel ayant réellement eu lieu)
   // sur toute la session. Plus fiable que le serveur pour le résumé de fin : le flag
   // payment_captured est écrit par le FAN en différé (course entre les 2 téléphones) -> il vaut
@@ -576,6 +583,8 @@ export default function VideoCallScreen() {
       // (le cas 'timer' = durée atteinte = paiement normal n'est PAS concerné).
       if (isHost && reason === 'celebrity_hangup') {
         ratingHandledForCallRef.current = true;
+        // Célébrité raccroche -> LIBÉRATION (callHappened=false), fan non débité.
+        endFanCallOnServer(currentHostFanEntryIdRef.current, false);
         setHostEndedEarly(true);
         // L'overlay RESTE affiché ; la célébrité sort uniquement via le bouton Retour.
         return;
@@ -586,6 +595,17 @@ export default function VideoCallScreen() {
       // indépendant du flag payment_captured que le fan écrit en différé.
       if (isHost && otherParticipantJoinedRef.current) {
         fansServedRef.current += 1;
+      }
+
+      // Côté HÔTE — déclencheur de paiement FIABLE et indépendant du fan. callHappened suit la
+      // MÊME logique que shouldChargeFan : l'appel a eu lieu ET la fin est normale (timer) ou
+      // c'est le fan qui a raccroché/quitté. On résout LE fan courant (currentHostFanEntryIdRef),
+      // celui qui vient de terminer — surtout pas le suivant.
+      if (isHost) {
+        const callHappened =
+          otherParticipantJoinedRef.current &&
+          (reason === 'timer' || reason === 'fan_hangup' || reason === 'fan_left');
+        endFanCallOnServer(currentHostFanEntryIdRef.current, callHappened);
       }
 
       // Côté CÉLÉBRITÉ (host) : si c'est le FAN qui a raccroché AVANT la fin alors que l'appel
@@ -709,6 +729,30 @@ export default function VideoCallScreen() {
     }
   };
 
+  // CÔTÉ HÔTE — Déclencheur FIABLE et INDÉPENDANT DU FAN. Demande au serveur de capturer
+  // (callHappened=true) ou de libérer (callHappened=false) le paiement du fan dont l'appel
+  // vient de se terminer. Fire-and-forget : ne bloque jamais l'UI. Idempotent côté serveur
+  // (protégé contre la double capture), et anti-double localement via endFanCallResolvedIdsRef.
+  const endFanCallOnServer = (queueEntryId: string | null, callHappened: boolean) => {
+    const priceCents = parseInt(params.priceCents || '0', 10);
+    if (priceCents <= 0 || !queueEntryId || !STRIPE_SERVER_URL) return;
+    if (endFanCallResolvedIdsRef.current.has(queueEntryId)) return;
+    endFanCallResolvedIdsRef.current.add(queueEntryId);
+    try {
+      fetch(`${STRIPE_SERVER_URL}/api/end-fan-call`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          queueEntryId,
+          callHappened,
+          sessionId: params.sessionId,
+        }),
+      }).catch((e) => console.error('[VideoCall] end-fan-call error:', e));
+    } catch (e) {
+      console.error('[VideoCall] end-fan-call threw:', e);
+    }
+  };
+
   const handleCallNextFan = async () => {
     if (!params.sessionId) {
       router.back();
@@ -729,6 +773,10 @@ export default function VideoCallScreen() {
     try {
       const nextFan = await callNextFan(params.sessionId);
       if (nextFan) {
+        // Le fan précédent a déjà été résolu côté serveur dans handleCallEnded (appelé AVANT
+        // handleCallNextFan). On bascule maintenant le ref sur le NOUVEAU fan en appel, pour que
+        // la prochaine fin d'appel capture/libère le bon (et pas le précédent ni le suivant).
+        currentHostFanEntryIdRef.current = nextFan.id;
         setCurrentFanName(nextFan.fan_name || 'Fan');
         setFansRemainingCount(prev => Math.max(0, prev - 1));
       } else {
@@ -833,6 +881,9 @@ export default function VideoCallScreen() {
 
         const nextFan = await callNextFan(params.sessionId);
         if (nextFan && !cancelled) {
+          // Garde le ref du fan courant à jour : ce fan (appelé par le polling d'une file
+          // initialement vide) est désormais celui dont l'appel devra être résolu côté serveur.
+          currentHostFanEntryIdRef.current = nextFan.id;
           setCurrentFanName(nextFan.fan_name || 'Fan');
         }
       } catch (e) {
