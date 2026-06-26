@@ -62,6 +62,11 @@ export default function DedicationResultScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
+  // « Great Vibes » (calligraphie) ne couvre QUE le script latin. Pour les langues à
+  // écriture non-latine (ar, ur, zh, ja, hi, bn, ru…), on garde la police système
+  // (lisible) plutôt qu'un rendu cassé / en caractères manquants.
+  const LATIN_SCRIPT_LANGS = ['fr', 'en', 'es', 'de', 'pt', 'it', 'id', 'ms'];
+  const dedicationFontFamily = LATIN_SCRIPT_LANGS.includes(language) ? 'Great Vibes' : undefined;
   const viewShotRef = useRef<any>(null);
   const webCaptureRef = useRef<any>(null);
 
@@ -561,8 +566,8 @@ export default function DedicationResultScreen() {
           )}
 
           <View style={[styles.textOverlay, Platform.OS === 'web' && { pointerEvents: 'none' } as any]}>
-            <Text style={styles.dedicationForText}>{getDedicationFor()}</Text>
-            <Text style={styles.dedicationDateText}>{formatDate()}</Text>
+            <Text style={[styles.dedicationForText, { fontFamily: dedicationFontFamily }]}>{getDedicationFor()}</Text>
+            <Text style={[styles.dedicationDateText, { fontFamily: dedicationFontFamily }]}>{formatDate()}</Text>
           </View>
 
           <View style={[styles.liveBadge, Platform.OS === 'web' && { pointerEvents: 'none' } as any]}>
