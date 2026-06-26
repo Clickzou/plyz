@@ -15,7 +15,7 @@ import {
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Clock, Users, DollarSign, Play, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy, Send, Minus, Plus, AlertTriangle } from 'lucide-react-native';
+import { ArrowLeft, Clock, Users, DollarSign, Play, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy, Send, Minus, Plus, AlertTriangle, Video } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
@@ -620,6 +620,31 @@ export default function CreateLiveSessionScreen() {
           </View>
         </View>
 
+        <View style={styles.ideasCard}>
+          <View style={styles.ideasHeaderRow}>
+            <Video size={20} color="#a78bfa" />
+            <Text style={styles.ideasTitle}>{t('liveSessionIdeasTitle' as any) || 'Que faire en session live vidéo ?'}</Text>
+          </View>
+          <Text style={styles.ideasIntro}>{t('liveSessionIdeasIntro' as any) || 'Une session live, c\'est une visio en direct où tes fans passent un par un. Quelques idées pour t\'inspirer :'}</Text>
+
+          <View style={styles.ideaRow}>
+            <Text style={styles.ideaEmoji}>🎤</Text>
+            <Text style={styles.ideaText}>{t('liveSessionIdeaStar' as any) || 'Star / artiste : un tête-à-tête privé et exclusif avec chaque fan'}</Text>
+          </View>
+          <View style={styles.ideaRow}>
+            <Text style={styles.ideaEmoji}>⚽</Text>
+            <Text style={styles.ideaText}>{t('liveSessionIdeaTeam' as any) || 'Club de sport / équipe : le responsable filme l\'équipe (vestiaire, entraînement, coulisses) ; ex. 1 min par fan, chaque fan voit le live à tour de rôle'}</Text>
+          </View>
+          <View style={styles.ideaRow}>
+            <Text style={styles.ideaEmoji}>👨‍🍳</Text>
+            <Text style={styles.ideaText}>{t('liveSessionIdeaExpert' as any) || 'Expert / créateur : mini-consultation, coulisses ou démonstration en direct'}</Text>
+          </View>
+          <View style={styles.ideaRow}>
+            <Text style={styles.ideaEmoji}>💡</Text>
+            <Text style={styles.ideaText}>{t('liveSessionIdeaPrinciple' as any) || 'Principe : tu choisis la durée par fan et le prix ; les fans passent un par un en visio'}</Text>
+          </View>
+        </View>
+
         <Text style={styles.sectionTitle}>{t('liveSessionYourName')}</Text>
         <TextInput
           style={[styles.nameInput, nameError && styles.nameInputError]}
@@ -1045,6 +1070,48 @@ export default function CreateLiveSessionScreen() {
 }
 
 const styles = StyleSheet.create({
+  ideasCard: {
+    backgroundColor: 'rgba(167,139,250,0.10)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(167,139,250,0.30)',
+    padding: 16,
+    marginBottom: 20,
+  },
+  ideasHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  ideasTitle: {
+    flex: 1,
+    color: '#c4b5fd',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  ideasIntro: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 14,
+  },
+  ideaRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  ideaEmoji: {
+    fontSize: 16,
+    marginRight: 10,
+    marginTop: 1,
+  },
+  ideaText: {
+    color: '#e5e7eb',
+    fontSize: 13,
+    flex: 1,
+    lineHeight: 19,
+  },
   stepsContainer: {
     backgroundColor: 'rgba(16,185,129,0.08)',
     borderRadius: 14,
