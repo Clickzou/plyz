@@ -103,7 +103,18 @@ export default function RootLayout() {
     SplashScreen.hideAsync();
   }, [fontsLoaded, fontError]);
 
-  const [showSplash, setShowSplash] = useState(true);
+  // Pas de vidéo de bienvenue quand on revient d'un paiement Stripe : sur le web,
+  // l'app se RECHARGE sur /payment-success (ou /purchase-session), ce qui rejouerait
+  // le splash avant la redirection vers la file. On le saute dans ce cas.
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window !== 'undefined' && window.location) {
+      const loc = (window.location.pathname + window.location.search).toLowerCase();
+      if (/payment-success|purchase-session|paymentauthorized|checkout_session_id/.test(loc)) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
