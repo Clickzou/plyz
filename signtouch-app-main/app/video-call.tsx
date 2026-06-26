@@ -231,10 +231,8 @@ export default function VideoCallScreen() {
       }
       setShowRatingModal(false);
 
-      // Laisse le temps au fan de LIRE le message « session terminée / carte non débitée ».
-      setTimeout(() => {
-        router.replace('/activity' as any);
-      }, 5000);
+      // L'overlay « session terminée / carte non débitée » RESTE affiché ; le fan sort
+      // uniquement via le bouton Retour.
     });
 
     return () => {
@@ -490,9 +488,7 @@ export default function VideoCallScreen() {
           setPaymentWasReleased(true);
         }
         setSessionEndedByCelebrity(true);
-        setTimeout(() => {
-          try { router.replace('/activity'); } catch {}
-        }, 5000);
+        // L'overlay RESTE affiché ; le fan sort uniquement via le bouton Retour.
         return;
       }
 
@@ -503,9 +499,7 @@ export default function VideoCallScreen() {
       // (le cas 'timer' = durée atteinte = paiement normal n'est PAS concerné).
       if (isHost && reason === 'celebrity_hangup') {
         setHostEndedEarly(true);
-        setTimeout(() => {
-          try { router.replace('/activity'); } catch {}
-        }, 3500);
+        // L'overlay RESTE affiché ; la célébrité sort uniquement via le bouton Retour.
         return;
       }
 
@@ -1119,14 +1113,18 @@ export default function VideoCallScreen() {
           <View style={styles.loadingCard}>
             <PhoneOff size={40} color="#ef4444" />
             <Text style={styles.loadingTitle}>
-              {t('liveSessionEndedByCelebrity' as any) || 'La session a été terminée par la célébrité'}
+              {t('liveSessionEndedByCelebrity' as any) ||
+                "L'appel vidéo a été interrompu par la célébrité avant le temps imparti."}
             </Text>
             {paymentWasReleased && (
               <Text style={{ color: '#10B981', fontSize: 14, textAlign: 'center', marginTop: 12, lineHeight: 20 }}>
                 {t('paymentReleasedNotCharged' as any) ||
-                  '✅ Ta carte n\'a PAS été débitée. La session s\'est terminée avant ton appel — le montant réservé a été entièrement libéré.'}
+                  '✅ Vous ne serez pas débité du montant prévu.'}
               </Text>
             )}
+            <TouchableOpacity style={styles.endedBackButton} onPress={() => router.replace('/activity' as any)} activeOpacity={0.85}>
+              <Text style={styles.endedBackButtonText}>{t('goBack') || 'Retour'}</Text>
+            </TouchableOpacity>
           </View>
         </View>
       )}
@@ -1139,6 +1137,13 @@ export default function VideoCallScreen() {
               {t('hostEndedEarlyNotPaid' as any) ||
                 '⚠️ Tu as mis fin à l\'appel avant la fin de la session. Tu ne seras donc PAS crédité(e) pour cette session.'}
             </Text>
+            <TouchableOpacity
+              style={styles.endedBackButton}
+              onPress={() => router.replace({ pathname: '/live-session-dashboard', params: { sessionId: params.sessionId } } as any)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.endedBackButtonText}>{t('backToMySession' as any) || 'Retour à ma session'}</Text>
+            </TouchableOpacity>
           </View>
         </View>
       )}
@@ -1459,6 +1464,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+  },
+  endedBackButton: {
+    backgroundColor: '#6366f1',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    marginTop: 20,
+  },
+  endedBackButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
   loadingSubtext: {
     color: 'rgba(255,255,255,0.5)',
