@@ -1093,7 +1093,7 @@ export default {
   estimatedTotal: 'geschätzter Gesamtbetrag',
   totalDuration: 'Gesamtdauer',
   preAuthorization: 'Vorautorisierung',
-  preAuthExplanation: 'Dies ist nur eine Vorautorisierung. Der Betrag wird auf Ihrer Karte reserviert, aber NICHT sofort abgebucht. Sie werden erst nach einem erfolgreichen Videoanruf belastet. Findet der Anruf nicht statt, wird kein Betrag abgebucht.',
+  preAuthExplanation: '💳 Der Betrag wird während des Anrufs nur auf deiner Karte RESERVIERT — abgebucht wird er ERST NACHDEM du deinen Anruf mit dem Star hattest. Nimmt der Star dich nicht dran, wird der Betrag automatisch FREIGEGEBEN und du zahlst nichts.',
   authorizePayment: '{amount}€ autorisieren',
   paymentConfirmed: 'Zahlung bestätigt',
   paymentCapturedMessage: '{amount}€ wurden für Ihren erfolgreichen Videoanruf abgebucht.',

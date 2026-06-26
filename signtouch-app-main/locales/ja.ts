@@ -1093,7 +1093,7 @@ export default {
   estimatedTotal: '推定合計',
   totalDuration: '合計時間',
   preAuthorization: '事前承認',
-  preAuthExplanation: 'これは事前承認のみです。金額はカードに予約されますが、すぐに請求されることはありません。ビデオ通話が成功した後にのみ請求されます。通話が行われない場合、金額は引き落とされません。',
+  preAuthExplanation: '💳 通話中、金額はカードに保留されるだけです — 請求されるのは有名人との通話が実際に行われた後だけです。相手が応じなかった場合、金額は自動的に解除され、料金は一切かかりません。',
   authorizePayment: '{amount}€を承認',
   paymentConfirmed: 'お支払い確認済み',
   paymentCapturedMessage: 'ビデオ通話が成功し、{amount}€が請求されました。',

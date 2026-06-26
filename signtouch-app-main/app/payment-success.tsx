@@ -19,6 +19,10 @@ export default function PaymentSuccessScreen() {
     price_cents: string;
     fan_name: string;
     celebrity_stripe_account_id: string;
+    // 'video' = session live vidéo -> retour vers join-live-session (sinon dédicace -> join-event)
+    flow: string;
+    resume_photo_url: string;
+    resume_message: string;
   }>();
 
   const [, setVerified] = useState(false);
@@ -46,7 +50,31 @@ export default function PaymentSuccessScreen() {
 
       if (isAuthorized) {
         setVerified(true);
+        // Flux VIDÉO (session live) -> retour vers join-live-session pour rejoindre la file.
+        // On route vers la vidéo UNIQUEMENT si flow='video' (propagé depuis join-live-session).
+        // Sinon (dédicace), on garde le flux join-event historique. NE PAS se baser sur
+        // live_session_id seul : la dédicace le renseigne aussi.
+        const isVideoFlow = params.flow === 'video';
         setTimeout(() => {
+          if (isVideoFlow) {
+            router.replace({
+              pathname: '/join-live-session',
+              params: {
+                checkoutSessionId: params.checkout_session_id,
+                sessionId: params.live_session_id || '',
+                paymentAuthorized: 'true',
+                resumePhotoUrl: params.resume_photo_url
+                  ? decodeURIComponent(params.resume_photo_url)
+                  : '',
+                resumeMessage: params.resume_message
+                  ? decodeURIComponent(params.resume_message)
+                  : '',
+                resumeFanName: params.fan_name ? decodeURIComponent(params.fan_name) : '',
+              },
+            });
+            return;
+          }
+          // Flux DÉDICACE (inchangé).
           router.replace({
             pathname: '/join-event',
             params: {

@@ -1214,7 +1214,7 @@ export default {
   estimatedTotal: 'estimated total',
   totalDuration: 'total duration',
   preAuthorization: 'Pre-authorization',
-  preAuthExplanation: 'This is a pre-authorization only. The amount will be reserved on your card but will NOT be charged immediately. You will only be charged after a successful video call. If the call does not take place, no amount will be debited.',
+  preAuthExplanation: '💳 The amount is only HELD on your card during the call — you are charged ONLY AFTER you actually get your call with the celebrity. If they don\'t take your call, the amount is RELEASED automatically and you pay nothing.',
   authorizePayment: 'Authorize {amount}€',
   paymentConfirmed: 'Payment Confirmed',
   paymentCapturedMessage: '{amount}€ has been charged for your successful video call.',

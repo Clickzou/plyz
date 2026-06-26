@@ -48,7 +48,17 @@ import { saveActiveFanEvent } from '@/utils/eventSessionStorage';
 
 export default function JoinLiveSessionScreen() {
   const router = useRouter();
-  const { code: paramCode } = useLocalSearchParams<{ code?: string }>();
+  const params = useLocalSearchParams<{
+    code?: string;
+    // Params de RETOUR après paiement (purchase-session -> payment-success -> ici)
+    paymentAuthorized?: string;
+    checkoutSessionId?: string;
+    sessionId?: string;
+    resumePhotoUrl?: string;
+    resumeMessage?: string;
+    resumeFanName?: string;
+  }>();
+  const paramCode = params.code;
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
   const { user } = useAuth();
@@ -81,6 +91,11 @@ export default function JoinLiveSessionScreen() {
   const queueEntryRef = useRef<QueueEntry | null>(null);
   // Référence à jour de la session (pour récupérer room_url / durée sans dépendances stale)
   const sessionRef = useRef<LiveSession | null>(null);
+  // checkoutSessionId du paiement Stripe pré-autorisé (session payante) -> transmis à
+  // /video-call pour la capture finale du paiement à la fin de l'appel.
+  const checkoutSessionIdRef = useRef<string | null>(null);
+  // Évite de relancer la reprise post-paiement plusieurs fois.
+  const resumeHandledRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -113,6 +128,55 @@ export default function JoinLiveSessionScreen() {
       handleJoinWithCode(paramCode);
     }
   }, [paramCode]);
+
+  // RETOUR APRÈS PAIEMENT (flux vidéo payant) : payment-success nous renvoie ici avec
+  // paymentAuthorized='true' + checkoutSessionId + sessionId (+ photo/message déjà uploadés).
+  // On recharge la session, on mémorise le checkoutSessionId, et on rejoint la file
+  // directement (pas de nouveau paiement).
+  useEffect(() => {
+    if (resumeHandledRef.current) return;
+    if (params.paymentAuthorized !== 'true' || !params.checkoutSessionId || !params.sessionId) {
+      return;
+    }
+    resumeHandledRef.current = true;
+    checkoutSessionIdRef.current = params.checkoutSessionId;
+
+    (async () => {
+      setIsLoading(true);
+      try {
+        const s = await getSessionById(params.sessionId as string);
+        if (!s) {
+          showAlert(t('error'), t('liveSessionNotFound'));
+          setIsLoading(false);
+          return;
+        }
+        setSession(s);
+        sessionRef.current = s;
+
+        sessionChannelRef.current = subscribeToSession(s.id, (updated) => {
+          setSession(updated);
+          if (updated.status === 'ended') {
+            showAlert(t('info'), t('liveSessionHasEnded'));
+          }
+        });
+
+        const resumeFanName =
+          (params.resumeFanName || '').trim() ||
+          fanName.trim() ||
+          (t('liveSessionAnonymousFan' as any) || 'Un fan');
+
+        await joinQueueWithData(
+          params.resumePhotoUrl || null,
+          params.resumeMessage || '',
+          resumeFanName
+        );
+      } catch (error) {
+        console.error('[Join] Error resuming after payment:', error);
+        showAlert(t('error'), t('liveSessionJoinError'));
+        setIsLoading(false);
+      }
+    })();
+  }, [params.paymentAuthorized, params.checkoutSessionId, params.sessionId]);
 
   // Récupère le pseudo public du fan connecté (profiles.display_name) pour
   // l'envoyer dans la file -> la célébrité voit un vrai nom, pas un champ vide.
@@ -353,6 +417,8 @@ export default function JoinLiveSessionScreen() {
           otherUserId: baseSession.celebrity_id || '',
           celebrityId: baseSession.celebrity_id || '',
           priceCents: String(baseSession.price_cents || 0),
+          // Paiement pré-autorisé (session payante) -> capture en fin d'appel.
+          checkoutSessionId: checkoutSessionIdRef.current || '',
         },
       });
     } catch (error) {
@@ -408,19 +474,71 @@ export default function JoinLiveSessionScreen() {
   const handleJoinQueue = async () => {
     if (!session) return;
 
+    // SESSION PAYANTE : on déclenche d'abord le paiement (pré-autorisation Stripe).
+    // On uploade la photo AVANT de partir vers Stripe pour ne pas la perdre,
+    // puis on passe l'URL + le message en params pour les retrouver au retour.
+    if ((session.price_cents || 0) > 0 && !checkoutSessionIdRef.current) {
+      setIsLoading(true);
+      try {
+        let photoUrl: string | null = null;
+        if (photoUri) {
+          photoUrl = await uploadFanPhoto(session.id, fanId, photoUri);
+        }
+        const resolvedFanName =
+          fanName.trim() || (t('liveSessionAnonymousFan' as any) || 'Un fan');
+
+        router.push({
+          pathname: '/purchase-session',
+          params: {
+            celebrityId: session.celebrity_id || '',
+            celebrityName: session.celebrity_name || '',
+            sessionId: session.id,
+            priceCents: String(session.price_cents),
+            durationMinutes: String(session.duration_per_fan_minutes || 5),
+            celebrityStripeAccountId: session.celebrity_stripe_account_id || '',
+            fanName: resolvedFanName,
+            flow: 'video',
+            resumePhotoUrl: photoUrl || '',
+            resumeMessage: message.trim() || '',
+          },
+        });
+      } catch (error) {
+        console.error('Error preparing paid session checkout:', error);
+        showAlert(t('error'), t('liveSessionJoinError'));
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // SESSION GRATUITE (ou déjà payée) : on rejoint la file directement.
+    await joinQueueWithData(
+      photoUri ? await (async () => {
+        try { return await uploadFanPhoto(session.id, fanId, photoUri); }
+        catch { return null; }
+      })() : null,
+      message.trim() || '',
+      fanName.trim() || (t('liveSessionAnonymousFan' as any) || 'Un fan')
+    );
+  };
+
+  // Rejoint la file avec des données déjà prêtes (photo déjà uploadée le cas échéant).
+  // Utilisé par le flux gratuit ET par la reprise après paiement.
+  const joinQueueWithData = async (
+    photoUrl: string | null,
+    queueMessage: string,
+    queueFanName: string
+  ) => {
+    if (!session) return;
+
     setIsLoading(true);
     try {
-      let photoUrl: string | null = null;
-      if (photoUri) {
-        photoUrl = await uploadFanPhoto(session.id, fanId, photoUri);
-      }
-
       const entry = await joinSessionQueue(
         session.id,
         fanId,
-        fanName.trim() || (t('liveSessionAnonymousFan' as any) || 'Un fan'),
+        queueFanName,
         photoUrl,
-        message.trim() || ''
+        queueMessage
       );
 
       if (!entry) {

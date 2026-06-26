@@ -1093,7 +1093,7 @@ export default {
   estimatedTotal: 'total estimado',
   totalDuration: 'duração total',
   preAuthorization: 'Pré-autorização',
-  preAuthExplanation: 'Esta é apenas uma pré-autorização. O valor será reservado no seu cartão, mas NÃO será cobrado imediatamente. Você só será cobrado após uma videochamada bem-sucedida. Se a chamada não ocorrer, nenhum valor será debitado.',
+  preAuthExplanation: '💳 O valor fica apenas BLOQUEADO no seu cartão durante a chamada — você só é cobrado DEPOIS de ter a sua chamada com a celebridade. Se ela não te atender, o valor é LIBERADO automaticamente e você não paga nada.',
   authorizePayment: 'Autorizar {amount}€',
   paymentConfirmed: 'Pagamento confirmado',
   paymentCapturedMessage: '{amount}€ foram cobrados pela sua videochamada bem-sucedida.',

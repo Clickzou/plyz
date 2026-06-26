@@ -1093,7 +1093,7 @@ export default {
   estimatedTotal: '预估总额',
   totalDuration: '总时长',
   preAuthorization: '预授权',
-  preAuthExplanation: '这仅是预授权。金额将在您的卡上预留，但不会立即扣款。只有在视频通话成功后才会扣款。如果通话未进行，将不会扣除任何金额。',
+  preAuthExplanation: '💳 通话期间，金额只是被冻结在您的卡上 — 只有在您与明星完成通话之后才会扣款。如果明星没有接听，金额会自动解冻，您无需支付任何费用。',
   authorizePayment: '授权 {amount}€',
   paymentConfirmed: '付款已确认',
   paymentCapturedMessage: '您的视频通话已成功，已扣款{amount}€。',

@@ -37,6 +37,11 @@ export default function PurchaseSessionScreen() {
     durationMinutes: string;
     celebrityStripeAccountId: string;
     fanName: string;
+    // 'video' = session live vidéo (retour vers join-live-session). Sinon dédicace (join-event).
+    flow?: string;
+    // Données déjà uploadées avant le paiement (à retrouver au retour).
+    resumePhotoUrl?: string;
+    resumeMessage?: string;
   }>();
 
   const [purchasing, setPurchasing] = useState(false);
@@ -74,6 +79,9 @@ export default function PurchaseSessionScreen() {
           price_cents: params.priceCents || '0',
           fan_name: params.fanName || '',
           celebrity_stripe_account_id: params.celebrityStripeAccountId || '',
+          flow: params.flow || '',
+          resume_photo_url: params.resumePhotoUrl || '',
+          resume_message: params.resumeMessage || '',
         },
       });
     }, 1500);
@@ -109,7 +117,7 @@ export default function PurchaseSessionScreen() {
           priceCents: priceCents,
           currency: 'eur',
           celebrityStripeAccountId: params.celebrityStripeAccountId || '',
-          successUrl: `${currentOrigin}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&live_session_id=${params.sessionId}&celebrity_id=${params.celebrityId}&celebrity_name=${encodeURIComponent(params.celebrityName || '')}&duration_minutes=${params.durationMinutes || '5'}&price_cents=${params.priceCents || '0'}&fan_name=${encodeURIComponent(params.fanName || '')}&celebrity_stripe_account_id=${params.celebrityStripeAccountId || ''}`,
+          successUrl: `${currentOrigin}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&live_session_id=${params.sessionId}&celebrity_id=${params.celebrityId}&celebrity_name=${encodeURIComponent(params.celebrityName || '')}&duration_minutes=${params.durationMinutes || '5'}&price_cents=${params.priceCents || '0'}&fan_name=${encodeURIComponent(params.fanName || '')}&celebrity_stripe_account_id=${params.celebrityStripeAccountId || ''}&flow=${params.flow || ''}&resume_photo_url=${encodeURIComponent(params.resumePhotoUrl || '')}&resume_message=${encodeURIComponent(params.resumeMessage || '')}`,
           cancelUrl: `${currentOrigin}/purchase-session?sessionId=${params.sessionId}&celebrityId=${params.celebrityId}&celebrityName=${params.celebrityName}&priceCents=${params.priceCents}&durationMinutes=${params.durationMinutes}&celebrityStripeAccountId=${params.celebrityStripeAccountId || ''}&fanName=${encodeURIComponent(params.fanName || '')}`,
         }),
       });

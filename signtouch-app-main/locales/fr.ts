@@ -1217,7 +1217,7 @@ export default {
   estimatedTotal: 'total estimé',
   totalDuration: 'durée totale',
   preAuthorization: 'Pré-autorisation',
-  preAuthExplanation: 'Ceci est une simple pré-autorisation. Le montant sera réservé sur votre carte mais ne sera PAS débité immédiatement. Vous ne serez débité(e) qu\'après un appel vidéo réussi. Si l\'appel n\'a pas lieu, aucun montant ne sera prélevé.',
+  preAuthExplanation: '💳 Le montant est seulement BLOQUÉ sur ta carte le temps de l\'appel — tu n\'es débité(e) QU\'APRÈS avoir eu ton appel avec la célébrité. Si elle ne te prend pas, le montant est LIBÉRÉ automatiquement et tu ne paies rien.',
   authorizePayment: 'Autoriser {amount}€',
   paymentConfirmed: 'Paiement confirmé',
   paymentCapturedMessage: '{amount}€ ont été débités suite à votre appel vidéo réussi.',
