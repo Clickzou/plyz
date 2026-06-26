@@ -208,9 +208,12 @@ export default function VideoCallScreen() {
       if (updated.status !== 'ended' || sessionEndedHandledRef.current) return;
       sessionEndedHandledRef.current = true;
 
-      // Si l'appel n'a jamais réellement eu lieu, on annule le paiement (une seule fois).
+      // La CÉLÉBRITÉ a terminé la session -> le fan est REMBOURSÉ (règle métier), que
+      // l'appel ait eu lieu ou non. On libère la pré-autorisation. Garde-fou
+      // `!paymentResolvedRef.current` : si le paiement a DÉJÀ été capturé (appel complet
+      // débité avant l'arrêt), on ne libère pas et on n'affiche pas « non débité » à tort.
       const priceCents = parseInt(params.priceCents || '0', 10);
-      if (!otherParticipantJoinedRef.current && priceCents > 0 && params.checkoutSessionId) {
+      if (priceCents > 0 && params.checkoutSessionId && !paymentResolvedRef.current) {
         cancelPaymentAuthorization();
         setPaymentWasReleased(true);
       }
@@ -228,9 +231,10 @@ export default function VideoCallScreen() {
       }
       setShowRatingModal(false);
 
+      // Laisse le temps au fan de LIRE le message « session terminée / carte non débitée ».
       setTimeout(() => {
         router.replace('/activity' as any);
-      }, 2500);
+      }, 5000);
     });
 
     return () => {
@@ -481,14 +485,14 @@ export default function VideoCallScreen() {
       ) {
         sessionEndedHandledRef.current = true;
         const priceCents = parseInt(params.priceCents || '0', 10);
-        if (priceCents > 0 && params.checkoutSessionId) {
+        if (priceCents > 0 && params.checkoutSessionId && !paymentResolvedRef.current) {
           cancelPaymentAuthorization();
           setPaymentWasReleased(true);
         }
         setSessionEndedByCelebrity(true);
         setTimeout(() => {
           try { router.replace('/activity'); } catch {}
-        }, 3500);
+        }, 5000);
         return;
       }
 
