@@ -918,7 +918,7 @@ export default {
   host: 'होस्ट',
   anonymous: 'अनाम',
   you: 'आप',
-  startVideoCall: 'वीडियो कॉल शुरू करें',
+  startVideoCall: 'अपनी वीडियो कॉल में शामिल हों',
   dedicationRequiredHint: 'पहले अपना समर्पण पूरा करें (फ़ोटो + हस्ताक्षर)',
   joinVideoCall: 'वीडियो कॉल में शामिल हों',
   videoCallActive: 'वीडियो कॉल सक्रिय',

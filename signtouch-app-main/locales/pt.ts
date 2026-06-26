@@ -918,7 +918,7 @@ export default {
   host: 'ANFITRIÃO',
   anonymous: 'Anônimo',
   you: 'você',
-  startVideoCall: 'Iniciar videochamada',
+  startVideoCall: 'Aceder à sua videochamada',
   dedicationRequiredHint: 'Termine primeiro a sua dedicatória (foto + assinatura)',
   joinVideoCall: 'Entrar na videochamada',
   videoCallActive: 'Videochamada ativa',

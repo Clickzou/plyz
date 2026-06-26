@@ -918,7 +918,7 @@ export default {
   host: 'المضيف',
   anonymous: 'مجهول',
   you: 'أنت',
-  startVideoCall: 'بدء مكالمة فيديو',
+  startVideoCall: 'الانضمام إلى مكالمة الفيديو',
   dedicationRequiredHint: 'أكمل إهداءك أولاً (صورة + توقيع)',
   joinVideoCall: 'انضم لمكالمة الفيديو',
   videoCallActive: 'مكالمة فيديو نشطة',

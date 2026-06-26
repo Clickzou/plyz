@@ -995,7 +995,7 @@ export default {
   host: 'HÔTE',
   anonymous: 'Anonyme',
   you: 'vous',
-  startVideoCall: 'Démarrer l\'appel vidéo',
+  startVideoCall: 'Accéder à votre appel vidéo',
   dedicationRequiredHint: 'Termine d\'abord ta dédicace (photo + signature)',
   joinVideoCall: 'Rejoindre l\'appel vidéo',
   videoCallActive: 'Appel vidéo en cours',

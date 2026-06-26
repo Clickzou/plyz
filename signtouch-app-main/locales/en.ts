@@ -992,7 +992,7 @@ export default {
   host: 'HOST',
   anonymous: 'Anonymous',
   you: 'you',
-  startVideoCall: 'Start video call',
+  startVideoCall: 'Join your video call',
   dedicationRequiredHint: 'Finish your dedication first (photo + signature)',
   joinVideoCall: 'Join video call',
   videoCallActive: 'Video call active',

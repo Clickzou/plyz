@@ -918,7 +918,7 @@ export default {
   host: '主持人',
   anonymous: '匿名',
   you: '你',
-  startVideoCall: '开始视频通话',
+  startVideoCall: '进入您的视频通话',
   dedicationRequiredHint: '请先完成你的专属献词（照片 + 签名）',
   joinVideoCall: '加入视频通话',
   videoCallActive: '视频通话中',

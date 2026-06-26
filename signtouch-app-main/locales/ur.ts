@@ -918,7 +918,7 @@ export default {
   host: 'میزبان',
   anonymous: 'گمنام',
   you: 'آپ',
-  startVideoCall: 'ویڈیو کال شروع کریں',
+  startVideoCall: 'اپنی ویڈیو کال میں شامل ہوں',
   dedicationRequiredHint: 'پہلے اپنا انتساب مکمل کریں (تصویر + دستخط)',
   joinVideoCall: 'ویڈیو کال میں شامل ہوں',
   videoCallActive: 'ویڈیو کال فعال',

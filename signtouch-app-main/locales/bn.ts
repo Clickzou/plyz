@@ -918,7 +918,7 @@ export default {
   host: 'হোস্ট',
   anonymous: 'বেনামী',
   you: 'আপনি',
-  startVideoCall: 'ভিডিও কল শুরু করুন',
+  startVideoCall: 'আপনার ভিডিও কলে যোগ দিন',
   dedicationRequiredHint: 'আগে আপনার উৎসর্গ সম্পূর্ণ করুন (ছবি + স্বাক্ষর)',
   joinVideoCall: 'ভিডিও কলে যোগ দিন',
   videoCallActive: 'ভিডিও কল সক্রিয়',

@@ -918,7 +918,7 @@ export default {
   host: 'GASTGEBER',
   anonymous: 'Anonym',
   you: 'Sie',
-  startVideoCall: 'Videoanruf starten',
+  startVideoCall: 'Ihrem Videoanruf beitreten',
   dedicationRequiredHint: 'Beende zuerst deine Widmung (Foto + Unterschrift)',
   joinVideoCall: 'Videoanruf beitreten',
   videoCallActive: 'Videoanruf aktiv',

@@ -918,7 +918,7 @@ export default {
   host: 'HOS',
   anonymous: 'Tanpa nama',
   you: 'anda',
-  startVideoCall: 'Mulakan panggilan video',
+  startVideoCall: 'Sertai panggilan video anda',
   dedicationRequiredHint: 'Selesaikan dedikasi anda dahulu (foto + tandatangan)',
   joinVideoCall: 'Sertai panggilan video',
   videoCallActive: 'Panggilan video aktif',
