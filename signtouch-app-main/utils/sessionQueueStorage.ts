@@ -183,13 +183,22 @@ export const getFullQueue = async (sessionId: string): Promise<QueueEntry[]> => 
       .order('position', { ascending: true });
 
     if (error) {
-      console.error('Error getting queue:', error);
+      console.warn('getFullQueue: requete file echouee (reseau ?), reessai au prochain cycle');
       return [];
     }
 
     return (data || []) as QueueEntry[];
-  } catch (error) {
-    console.error('Error getting queue:', error);
+  } catch (error: any) {
+    // Coupure reseau transitoire pendant le polling de la file (le Wi-Fi/4G du telephone perd la
+    // connexion un instant) : on renvoie [] sans casser, et la prochaine iteration du polling
+    // rechargera la file. On log en warn (pas error) pour ne PAS declencher le bandeau rouge
+    // "Console Error" de LogBox a chaque micro-coupure, qui inquiete inutilement.
+    const msg = error?.message || String(error);
+    if (/network request failed|fetch failed|failed to fetch|timeout|network error/i.test(msg)) {
+      console.warn('getFullQueue: reseau momentanement indisponible, reessai au prochain cycle');
+    } else {
+      console.error('Error getting queue:', error);
+    }
     return [];
   }
 };

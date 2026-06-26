@@ -1110,16 +1110,16 @@ export default function VideoCallScreen() {
 
       {sessionEndedByCelebrity && (
         <View style={styles.loadingOverlay}>
-          <View style={styles.loadingCard}>
-            <PhoneOff size={40} color="#ef4444" />
-            <Text style={styles.loadingTitle}>
+          <View style={styles.endedCard}>
+            <PhoneOff size={48} color="#ef4444" />
+            <Text style={styles.endedTitle}>
               {t('liveSessionEndedByCelebrity' as any) ||
-                "L'appel vidéo a été interrompu par la célébrité avant le temps imparti."}
+                'Appel interrompu par la célébrité'}
             </Text>
             {paymentWasReleased && (
-              <Text style={{ color: '#10B981', fontSize: 14, textAlign: 'center', marginTop: 12, lineHeight: 20 }}>
+              <Text style={styles.endedSubtext}>
                 {t('paymentReleasedNotCharged' as any) ||
-                  '✅ Vous ne serez pas débité du montant prévu.'}
+                  'Vous ne serez pas débité du montant prévu.'}
               </Text>
             )}
             <TouchableOpacity style={styles.endedBackButton} onPress={() => router.replace('/activity' as any)} activeOpacity={0.85}>
@@ -1131,11 +1131,14 @@ export default function VideoCallScreen() {
 
       {hostEndedEarly && (
         <View style={styles.loadingOverlay}>
-          <View style={styles.loadingCard}>
-            <AlertTriangle size={40} color="#fbbf24" />
-            <Text style={[styles.loadingTitle, { color: '#fbbf24' }]}>
+          <View style={styles.endedCard}>
+            <AlertTriangle size={48} color="#fbbf24" />
+            <Text style={styles.endedTitle}>
+              {t('hostEndedEarlyTitle' as any) || 'Appel terminé avant la fin'}
+            </Text>
+            <Text style={[styles.endedSubtext, { color: '#fbbf24' }]}>
               {t('hostEndedEarlyNotPaid' as any) ||
-                '⚠️ Tu as mis fin à l\'appel avant la fin de la session. Tu ne seras donc PAS crédité(e) pour cette session.'}
+                'Tu ne seras pas crédité(e) pour cette session.'}
             </Text>
             <TouchableOpacity
               style={styles.endedBackButton}
@@ -1465,12 +1468,39 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  endedCard: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 20,
+    paddingVertical: 28,
+    paddingHorizontal: 28,
+    alignItems: 'center',
+    gap: 14,
+    marginHorizontal: 32,
+    maxWidth: 360,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.3)',
+  },
+  endedTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  endedSubtext: {
+    color: '#cbd5e1',
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+  },
   endedBackButton: {
     backgroundColor: '#6366f1',
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 32,
-    marginTop: 20,
+    marginTop: 24,
+    alignSelf: 'stretch',
+    alignItems: 'center',
   },
   endedBackButtonText: {
     color: '#fff',
