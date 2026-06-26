@@ -320,16 +320,17 @@ export const createLiveSession = async (
 ): Promise<LiveSession | null> => {
   const code = generateSessionCode();
   
-  const durationPerFanInt = durationPerFanMinutes < 1 
-    ? 1 
-    : Math.round(durationPerFanMinutes);
+  // La colonne duration_per_fan_minutes est NUMERIC : on garde la valeur RÉELLE, y compris les
+  // demi-minutes (ex 0.5 = 30 s), demandé pour les sessions courtes (club de sport, 30 s/fan…).
+  // On borne juste à un minimum de sécurité (0.25 min = 15 s) pour ne jamais stocker 0.
+  const durationPerFanValue = Math.max(0.25, durationPerFanMinutes);
 
   const insertData: any = {
     code,
     celebrity_id: celebrityId,
     celebrity_name: celebrityName,
     duration_minutes: durationMinutes,
-    duration_per_fan_minutes: durationPerFanInt,
+    duration_per_fan_minutes: durationPerFanValue,
     max_slots: maxSlots,
     price_cents: priceCents,
     status: scheduledAt ? 'scheduled' : 'waiting',

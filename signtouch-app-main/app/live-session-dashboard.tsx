@@ -139,6 +139,10 @@ export default function LiveSessionDashboardScreen() {
   const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
   const hasPlayedQueueFullChime = useRef(false);
   const hasPlayedFirstFanChime = useRef(false);
+  // Vrai au TOUT PREMIER chargement de la file. Sert à NE PAS rejouer le son « fan rejoint » si
+  // des fans sont déjà présents quand le dashboard (RE)monte — ex : au retour depuis la visio, le
+  // dashboard est recréé et le son sonnerait à tort « à la fin » de l'appel.
+  const isInitialQueueLoad = useRef(true);
   const [, setQueueFull] = useState(false);
   const [, setFirstFanJoined] = useState(false);
   const [scheduledCountdown, setScheduledCountdown] = useState<string>('');
@@ -366,6 +370,19 @@ export default function LiveSessionDashboardScreen() {
       }
 
       const waitingInQueue = fullQueue.filter((e) => e.status === 'waiting' || e.status === 'called' || e.status === 'in_call').length;
+
+      // Au (RE)MONTAGE du dashboard (ex : retour depuis la visio), des fans peuvent DÉJÀ être dans
+      // la file. On les marque « déjà vus » et on considère le 1er fan comme déjà annoncé, pour NE
+      // PAS rejouer le son « fan rejoint » à tort (bug : son qui sonnait à la fin de l'appel).
+      if (isInitialQueueLoad.current) {
+        isInitialQueueLoad.current = false;
+        if (waitingInQueue >= 1) {
+          hasPlayedFirstFanChime.current = true;
+          fullQueue
+            .filter((e) => e.status === 'waiting' || e.status === 'called' || e.status === 'in_call')
+            .forEach((e) => seenFanIdsRef.current.add(e.id));
+        }
+      }
 
       if (waitingInQueue >= 1 && !hasPlayedFirstFanChime.current) {
         hasPlayedFirstFanChime.current = true;
@@ -744,26 +761,31 @@ export default function LiveSessionDashboardScreen() {
   };
 
   const handleTakeDedicationPhoto = async () => {
+    console.log('[Dedicace] Selfie: clic reçu, platform=', Platform.OS);
     if (Platform.OS === 'web') return;
     try {
+      console.log('[Dedicace] Selfie: demande permission caméra...');
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      console.log('[Dedicace] Selfie: permission =', status);
       if (status !== 'granted') {
         showAlert(t('error'), t('cameraPermissionDenied'));
         return;
       }
 
+      console.log('[Dedicace] Selfie: ouverture caméra...');
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: 'images' as any,
+        mediaTypes: ['images'],
         quality: 0.8,
         allowsEditing: true,
         aspect: [3, 4],
       });
+      console.log('[Dedicace] Selfie: résultat caméra, canceled=', result.canceled);
 
       if (!result.canceled && result.assets[0]) {
         await processDedicationPhoto(result.assets[0].uri);
       }
     } catch (error) {
-      console.error('Error taking dedication photo:', error);
+      console.error('[Dedicace] Selfie: ERREUR', error);
       setIsUploadingDedication(false);
     }
   };

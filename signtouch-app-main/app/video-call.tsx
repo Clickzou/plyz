@@ -66,6 +66,15 @@ interface NativeParticipant {
   };
 }
 
+// Formate une durée en minutes (éventuellement décimale, ex 0.5) en horloge "m:ss"
+// (ex 0.5 -> "0:30", 1.5 -> "1:30"). Évite l'affichage cassé "0.5:00".
+const formatClock = (minutes: number): string => {
+  const safe = isNaN(minutes) ? 0 : minutes;
+  const m = Math.floor(safe);
+  const s = Math.round((safe - m) * 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+};
+
 export default function VideoCallScreen() {
   const router = useRouter();
   const { t } = useLanguage();
@@ -329,7 +338,9 @@ export default function VideoCallScreen() {
   }, []);
 
   useEffect(() => {
-    const durationMinutes = parseInt(params.durationPerFan || '5', 10);
+    // parseFloat (pas parseInt) : la durée peut être décimale (0.5 = 30 s). parseInt('0.5')
+    // donnerait 0 et casserait le minuteur.
+    const durationMinutes = parseFloat(params.durationPerFan || '5');
     if (!durationMinutes || !otherParticipantJoined) return;
 
     if (callStartTime.current === 0) {
@@ -635,7 +646,7 @@ export default function VideoCallScreen() {
     callEndReason.current = 'unknown';
     callEndedRef.current = false;
     setHasLeftCall(false);
-    setFanTimeRemaining(`${params.durationPerFan || '5'}:00`);
+    setFanTimeRemaining(formatClock(parseFloat(params.durationPerFan || '5')));
     setTimeProgress(1);
     setTimeWarning(false);
 
@@ -1039,7 +1050,7 @@ export default function VideoCallScreen() {
           <View style={[styles.timerContainer, timeWarning && styles.timerWarning, !otherParticipantJoined && { opacity: 0.5 }]}>
             <Clock size={14} color="#fff" />
             <Text style={styles.timerText}>
-              {otherParticipantJoined ? fanTimeRemaining : `${params.durationPerFan}:00`}
+              {otherParticipantJoined ? fanTimeRemaining : formatClock(parseFloat(params.durationPerFan || '5'))}
             </Text>
           </View>
         ) : (
