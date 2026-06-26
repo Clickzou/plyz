@@ -294,12 +294,14 @@ export default function VideoCallScreen() {
 
   const initNativeCall = useCallback(async () => {
     if (!DailyNative) {
-      setError('Diag SDK: ' + (DailyLoadError || 'non charge (rebuild requis ?)'));
+      console.error('[VideoCall] SDK natif non charge:', DailyLoadError);
+      setError(t('videoCallError'));
       setIsLoading(false);
       return;
     }
     if (!params.roomUrl) {
-      setError('Diag: salle video manquante (room_url vide)');
+      console.error('[VideoCall] room_url manquante');
+      setError(t('videoCallError'));
       setIsLoading(false);
       return;
     }
@@ -339,7 +341,7 @@ export default function VideoCallScreen() {
         });
         call.on('error', (ev: any) => {
           console.error('[VideoCall] Daily native error:', ev);
-          setError('Diag Daily: ' + (ev?.errorMsg || ev?.error?.msg || JSON.stringify(ev || {})));
+          setError(ev?.errorMsg || t('videoCallError'));
           setIsLoading(false);
         });
       }
@@ -352,7 +354,7 @@ export default function VideoCallScreen() {
       refreshParticipants();
     } catch (err: any) {
       console.error('[VideoCall] Failed to init native call:', err);
-      setError('Diag join: ' + (err?.message || String(err)));
+      setError(t('videoCallError'));
       setIsLoading(false);
     }
   }, [params.roomUrl, params.token, userName, refreshParticipants, isHost, otherParticipantJoined, t]);
