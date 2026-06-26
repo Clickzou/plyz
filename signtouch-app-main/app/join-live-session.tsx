@@ -529,12 +529,16 @@ export default function JoinLiveSessionScreen() {
     queueMessage: string,
     queueFanName: string
   ) => {
-    if (!session) return;
+    // sessionRef est à jour SYNCHRONEMENT : la reprise après paiement la remplit
+    // (sessionRef.current = s) AVANT d'appeler cette fonction, alors que le state
+    // `session` n'est pas encore propagé -> sans ça, on lit null et on bloque.
+    const sess = sessionRef.current || session;
+    if (!sess) return;
 
     setIsLoading(true);
     try {
       const entry = await joinSessionQueue(
-        session.id,
+        sess.id,
         fanId,
         queueFanName,
         photoUrl,
@@ -565,14 +569,14 @@ export default function JoinLiveSessionScreen() {
       // PARTIE A — temps réel sur TOUTE la file de cette session : recalcule le rang
       // à chaque changement (un fan devant passe 'completed' -> mon rang descend).
       queueRankChannelRef.current = supabase
-        .channel(`queue_rank_${session.id}`)
+        .channel(`queue_rank_${sess.id}`)
         .on(
           'postgres_changes',
           {
             event: '*',
             schema: 'public',
             table: 'session_queue',
-            filter: `session_id=eq.${session.id}`,
+            filter: `session_id=eq.${sess.id}`,
           },
           () => {
             recalcQueueRank();
