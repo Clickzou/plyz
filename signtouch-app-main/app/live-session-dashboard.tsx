@@ -16,6 +16,7 @@ import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { useKeepAwake } from 'expo-keep-awake';
 import { useAudioPlayer } from 'expo-audio';
 import {
   Play,
@@ -93,6 +94,10 @@ export default function LiveSessionDashboardScreen() {
   const router = useRouter();
   const { sessionId, sessionData } = useLocalSearchParams<{ sessionId: string; sessionData?: string }>();
   const insets = useSafeAreaInsets();
+  // Garde l'écran ALLUMÉ tant que la célébrité est sur son dashboard de session live : sinon
+  // l'écran se met en veille, l'app se suspend, et elle ne voit plus en direct les fans qui
+  // rejoignent (ni le son in-app). La notification push reste le filet si l'app passe en arrière-plan.
+  useKeepAwake();
   const { t, language } = useLanguage();
 
   const [session, setSession] = useState<LiveSession | null>(null);

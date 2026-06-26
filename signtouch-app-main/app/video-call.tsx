@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useKeepAwake } from 'expo-keep-awake';
 import { ArrowLeft, PhoneOff, Clock, Video, Users, TrendingUp, RotateCcw, AlertTriangle } from 'lucide-react-native';
 import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
@@ -78,6 +79,8 @@ const formatClock = (minutes: number): string => {
 export default function VideoCallScreen() {
   const router = useRouter();
   const { t } = useLanguage();
+  // L'écran reste allumé pendant tout l'appel vidéo (pas de mise en veille en pleine conversation).
+  useKeepAwake();
   const dailyCallFrameRef = useRef<any>(null);
   const params = useLocalSearchParams<{
     roomUrl: string;
