@@ -13,7 +13,7 @@ import { ArrowLeft, PhoneOff, Clock, Video, Users, TrendingUp, RotateCcw, AlertT
 import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
-import { sendDedicationNotification, callNextFan } from '@/utils/sessionQueueStorage';
+import { sendDedicationNotification, callNextFan, getFullQueue } from '@/utils/sessionQueueStorage';
 import { markPaymentCaptured, subscribeToSession } from '@/utils/liveSessionStorage';
 import { recordTransaction } from '@/utils/transactionStorage';
 
@@ -709,6 +709,66 @@ export default function VideoCallScreen() {
     }, 120000);
     return () => clearTimeout(timeout);
   }, [waitingForNextFan]);
+
+  // FIX — Célébrité (host) qui a lancé l'appel avec une file VIDE : aucun fan n'a été mis en
+  // 'called', donc personne ne bascule dans la visio. Tant qu'AUCUN participant distant n'a
+  // rejoint, on poll la file (toutes les 3 s) ; dès qu'un fan 'waiting' apparaît ET qu'AUCUN
+  // n'est déjà 'called'/'in_call', on l'appelle via callNextFan (-> statut 'called'), ce qui
+  // déclenche sa bascule visio côté fan. Le polling s'arrête dès qu'un participant a rejoint.
+  //
+  // Garde-fous anti-double-appel / anti-régression :
+  //  - on ne tourne QUE si host, AUCUN participant distant, pas en "fan suivant", appel pas terminé ;
+  //  - on n'appelle callNextFan QUE s'il n'y a PAS déjà un fan 'called'/'in_call' (sinon callNextFan
+  //    marquerait ce fan 'completed' et le sauterait — c'est le flux nominal "fan déjà présent") ;
+  //  - un ref synchrone (hostQueuePollBusyRef) évite deux appels concurrents de callNextFan.
+  const hostQueuePollBusyRef = useRef(false);
+  useEffect(() => {
+    if (!isHost) return;
+    if (!params.sessionId) return;
+    if (otherParticipantJoined) return;
+    if (waitingForNextFan || hasLeftCall || isLoading) return;
+
+    let cancelled = false;
+
+    const pollAndCallWaitingFan = async () => {
+      // Garde-fous synchrones : ne rien faire si un participant a rejoint entre-temps,
+      // ou si un appel à callNextFan est déjà en cours.
+      if (cancelled || otherParticipantJoinedRef.current || hostQueuePollBusyRef.current) return;
+      hostQueuePollBusyRef.current = true;
+      try {
+        const fullQueue = await getFullQueue(params.sessionId);
+        // Si un fan est DÉJÀ appelé/en appel, on ne touche à rien : c'est le flux nominal
+        // (le fan a été appelé au démarrage et est en train de rejoindre la visio).
+        const alreadyActive = fullQueue.some(
+          (e) => e.status === 'called' || e.status === 'in_call'
+        );
+        if (alreadyActive) return;
+
+        const hasWaiting = fullQueue.some((e) => e.status === 'waiting');
+        if (!hasWaiting) return;
+
+        // Re-vérifie juste avant l'appel (le participant a pu rejoindre entre-temps).
+        if (cancelled || otherParticipantJoinedRef.current) return;
+
+        const nextFan = await callNextFan(params.sessionId);
+        if (nextFan && !cancelled) {
+          setCurrentFanName(nextFan.fan_name || 'Fan');
+        }
+      } catch (e) {
+        console.warn('[VideoCall] host queue poll failed:', e);
+      } finally {
+        hostQueuePollBusyRef.current = false;
+      }
+    };
+
+    // Premier passage immédiat puis toutes les 3 s.
+    pollAndCallWaitingFan();
+    const interval = setInterval(pollAndCallWaitingFan, 3000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [isHost, params.sessionId, otherParticipantJoined, waitingForNextFan, hasLeftCall, isLoading]);
 
   const handleRatingModalClose = async () => {
     setShowRatingModal(false);
