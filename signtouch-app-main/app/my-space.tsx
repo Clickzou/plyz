@@ -283,7 +283,11 @@ export default function MySpaceScreen() {
       const events = await getMyScheduledEvents();
       const sortedEvents = events.sort((a, b) => {
         const statusOrder = { live: 0, scheduled: 1, ended: 2 };
-        return (statusOrder[a.status as keyof typeof statusOrder] || 2) - (statusOrder[b.status as keyof typeof statusOrder] || 2);
+        const byStatus = (statusOrder[a.status as keyof typeof statusOrder] || 2) - (statusOrder[b.status as keyof typeof statusOrder] || 2);
+        if (byStatus !== 0) return byStatus;
+        // À statut égal, les événements les plus RÉCENTS en premier (sinon le dernier créé se
+        // retrouvait tout en bas de la liste des "passés", invisible).
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
       setMyEvents(sortedEvents);
 

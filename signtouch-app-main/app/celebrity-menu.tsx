@@ -104,7 +104,10 @@ export default function CelebrityMenuScreen() {
       console.log('[loadMyEvents] Got', events.length, 'events:', events.map(e => e.id));
       const sortedEvents = events.sort((a, b) => {
         const statusOrder = { live: 0, scheduled: 1, ended: 2 };
-        return (statusOrder[a.status as keyof typeof statusOrder] || 2) - (statusOrder[b.status as keyof typeof statusOrder] || 2);
+        const byStatus = (statusOrder[a.status as keyof typeof statusOrder] || 2) - (statusOrder[b.status as keyof typeof statusOrder] || 2);
+        if (byStatus !== 0) return byStatus;
+        // À statut égal, les plus RÉCENTS en premier (sinon le dernier créé est invisible en bas).
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
       setMyEvents(sortedEvents);
 
