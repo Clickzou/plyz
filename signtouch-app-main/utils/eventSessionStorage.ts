@@ -6,6 +6,26 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const DEVICE_ID_KEY = '@plyz_device_id';
 const MY_EVENT_IDS_KEY = '@plyz_my_event_ids';
 
+const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
+
+// Libère les pré-autorisations Stripe NON capturées à l'annulation/fin d'un événement.
+// Fire-and-forget : ne bloque jamais l'annulation/fin. Le serveur est idempotent et ne
+// libère que les paiements non capturés (si des photos ont été postées, les captures restent).
+const releaseEventPayments = (sessionId: string): void => {
+  if (!STRIPE_SERVER_URL || !sessionId) return;
+  (async () => {
+    try {
+      await fetch(`${STRIPE_SERVER_URL}/api/release-event-payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventSessionId: sessionId }),
+      });
+    } catch (releaseErr) {
+      console.error('[eventSessionStorage] Release paiements échouée (non bloquant):', releaseErr);
+    }
+  })();
+};
+
 const addLocalEventId = async (eventId: string) => {
   try {
     const stored = await AsyncStorage.getItem(MY_EVENT_IDS_KEY);
@@ -469,6 +489,8 @@ export const initDeletedEventsCache = async (): Promise<void> => {
 
 export const deleteEventSession = async (sessionId: string): Promise<void> => {
   console.log('[deleteEventSession] Deleting event:', sessionId);
+  // Libère les pré-autorisations non capturées avant de supprimer (fire-and-forget).
+  releaseEventPayments(sessionId);
   await removeLocalEventId(sessionId);
   
   const { data: liveSession } = await supabase
@@ -832,6 +854,8 @@ export const getSessionByCode = async (joinCode: string): Promise<EventSession |
 };
 
 export const endEventSession = async (sessionId: string): Promise<void> => {
+  // Libère les pré-autorisations non capturées avant de marquer terminé (fire-and-forget).
+  releaseEventPayments(sessionId);
   const { error } = await supabase
     .from('event_sessions')
     .update({ status: 'ended' })

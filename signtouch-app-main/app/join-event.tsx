@@ -65,6 +65,25 @@ try {
 const SAVED_SIGNATURES_KEY = '@plyz_event_signatures';
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
+// Détermine si le serveur accorde l'accès à la galerie pour ce fan.
+// IMPORTANT : avec la pré-autorisation (capture_method:'manual'), le fan a payé
+// (carte pré-autorisée) mais Stripe renvoie payment_status='unpaid'/'requires_capture'.
+// On accorde donc l'accès dès que le serveur signale un de ces états « autorisé »,
+// pas seulement payment_status==='paid'. Les fans gratuits / non payants ne sont pas
+// concernés (cette vérif n'est appelée que pour les événements payants).
+const hasEventAccess = (data: any): boolean => {
+  if (!data) return false;
+  return (
+    data.paid === true ||
+    data.access === true ||
+    data.hasAccess === true ||
+    data.authorized === true ||
+    data.requires_capture === true ||
+    data.payment_status === 'paid' ||
+    data.payment_status === 'requires_capture'
+  );
+};
+
 const playNotificationChime = () => {
   if (Platform.OS === 'web' && typeof window !== 'undefined' && (window.AudioContext || (window as any).webkitAudioContext)) {
     try {
@@ -291,7 +310,7 @@ export default function JoinEventScreen() {
             const verifyRes = await fetch(`${STRIPE_SERVER_URL}/api/verify-event-payment?checkout_session_id=${checkoutId}`);
             const verifyData = await verifyRes.json();
 
-            if (verifyData.paid && verifyData.eventSessionId) {
+            if (hasEventAccess(verifyData) && verifyData.eventSessionId) {
               await AsyncStorage.setItem(`@event_paid_${verifyData.eventSessionId}`, 'true');
               setEventPaid(true);
               setCode(returnCode);
@@ -331,7 +350,7 @@ export default function JoinEventScreen() {
               const viewerId = await getOrCreateDeviceId();
               const checkRes = await fetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${pendingSessionId}&fan_id=${viewerId}`);
               const checkData = await checkRes.json();
-              if (checkData.paid) {
+              if (hasEventAccess(checkData)) {
                 await AsyncStorage.setItem(`@event_paid_${pendingSessionId}`, 'true');
                 setEventPaid(true);
                 await AsyncStorage.removeItem('@event_pending_payment_session');
@@ -561,7 +580,7 @@ export default function JoinEventScreen() {
                 try {
                   const checkRes = await fetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${sessionResult.session.id}&fan_id=${viewerId}`);
                   const checkData = await checkRes.json();
-                  if (checkData.paid) {
+                  if (hasEventAccess(checkData)) {
                     await AsyncStorage.setItem(`@event_paid_${sessionResult.session.id}`, 'true');
                     setEventPaid(true);
                   }
@@ -780,7 +799,7 @@ export default function JoinEventScreen() {
           const viewerId = await getOrCreateDeviceId();
           const checkRes = await fetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${foundSession.id}&fan_id=${viewerId}`);
           const checkData = await checkRes.json();
-          if (checkData.paid) {
+          if (hasEventAccess(checkData)) {
             await AsyncStorage.setItem(`@event_paid_${foundSession.id}`, 'true');
             setEventPaid(true);
           } else {
@@ -1495,7 +1514,7 @@ export default function JoinEventScreen() {
                     if (storedPaid !== 'true' && STRIPE_SERVER_URL) {
                       const checkRes = await fetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${activeFanEvent.sessionId}&fan_id=${viewerId}`);
                       const checkData = await checkRes.json();
-                      if (!checkData.paid) {
+                      if (!hasEventAccess(checkData)) {
                         const payRes = await fetch(`${STRIPE_SERVER_URL}/api/get-event-payment-config?event_session_id=${activeFanEvent.sessionId}`);
                         const payConfig = await payRes.json();
                         if (payConfig.priceCents > 0) {

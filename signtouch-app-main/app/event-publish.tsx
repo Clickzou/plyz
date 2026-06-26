@@ -558,6 +558,23 @@ export default function EventPublishScreen() {
         publishOptions
       );
 
+      // Capture des paiements pré-autorisés des fans dès la 1ère photo dédicacée publiée.
+      // Fire-and-forget : ne bloque NI l'UI NI la publication. Le serveur est idempotent
+      // (une seule capture même si plusieurs photos signées sont publiées).
+      if (type === 'photo_signed' && priceCents > 0 && STRIPE_SERVER_URL) {
+        (async () => {
+          try {
+            await fetch(`${STRIPE_SERVER_URL}/api/capture-event-payments`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ eventSessionId: sessionId }),
+            });
+          } catch (captureErr) {
+            console.error('[EventPublish] Capture paiements échouée (non bloquant):', captureErr);
+          }
+        })();
+      }
+
       // Sauvegarde automatique de la dedicace dans "Ma Galerie" de l'app
       // (la celebrite retrouve ainsi chaque photo publiee dans sa galerie).
       try {

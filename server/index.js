@@ -1501,17 +1501,20 @@ app.post('/api/create-event-checkout', async (req, res) => {
       cancel_url: cancelUrl,
     };
 
+    // Pré-autorisation SYSTÉMATIQUE (capture différée), comme le flux vidéo.
+    // Le débit n'a lieu qu'à la capture en masse (1ère photo). Sans ce flag,
+    // Stripe débiterait immédiatement.
+    sessionParams.payment_intent_data = { capture_method: 'manual' };
+
     if (celebrityStripeAccountId) {
       try {
         const account = await stripe.accounts.retrieve(celebrityStripeAccountId);
         const canTransfer = account.charges_enabled && (account.capabilities?.transfers === 'active' || account.capabilities?.legacy_payments === 'active');
 
         if (canTransfer) {
-          sessionParams.payment_intent_data = {
-            application_fee_amount: signTouchFeeCents,
-            transfer_data: {
-              destination: celebrityStripeAccountId,
-            },
+          sessionParams.payment_intent_data.application_fee_amount = signTouchFeeCents;
+          sessionParams.payment_intent_data.transfer_data = {
+            destination: celebrityStripeAccountId,
           };
         }
       } catch (e) {
@@ -1547,17 +1550,56 @@ app.get('/api/verify-event-payment', async (req, res) => {
     const session = await stripe.checkout.sessions.retrieve(checkout_session_id);
     const eventSessionId = session.metadata?.event_session_id;
     const fanId = session.metadata?.fan_id;
-    const paid = session.payment_status === 'paid';
+    const paymentIntentId = session.payment_intent || null;
 
-    if (paid && eventSessionId && fanId) {
+    // Avec capture manuelle, payment_status reste 'unpaid' mais le PI passe
+    // 'requires_capture' (autorisé). On considère le paiement AUTORISÉ dans
+    // les deux cas.
+    let piStatus = null;
+    if (paymentIntentId) {
+      try {
+        const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+        piStatus = pi.status;
+      } catch (piErr) {
+        console.warn('[EventPayment] Could not retrieve PaymentIntent:', piErr.message);
+      }
+    }
+    const authorized = session.payment_status === 'paid' || piStatus === 'requires_capture';
+
+    if (authorized && eventSessionId && fanId) {
       const key = `${eventSessionId}_${fanId}`;
       global.eventPaidRecords[key] = { paid: true, checkoutSessionId: checkout_session_id, paidAt: new Date().toISOString() };
-      console.log('[EventPayment] Recorded paid access:', key);
+      console.log('[EventPayment] Recorded paid access (memory):', key);
+
+      // Persistance durable (le registre mémoire est volatile sur Replit).
+      try {
+        const admin = getSupabaseAdmin();
+        const { error: upsertErr } = await admin
+          .from('event_paid_fans')
+          .upsert(
+            {
+              event_session_id: eventSessionId,
+              fan_id: fanId,
+              checkout_session_id: checkout_session_id,
+              payment_intent_id: paymentIntentId,
+              payment_captured: false,
+            },
+            { onConflict: 'event_session_id,fan_id' }
+          );
+        if (upsertErr) {
+          console.error('[EventPayment] event_paid_fans upsert error:', upsertErr.message);
+        } else {
+          console.log('[EventPayment] Persisted event_paid_fans:', key, '| pi:', paymentIntentId || 'none');
+        }
+      } catch (dbErr) {
+        console.error('[EventPayment] event_paid_fans persist failed:', dbErr.message);
+      }
     }
 
     res.json({
-      paid,
+      paid: authorized,
       status: session.payment_status,
+      paymentIntentStatus: piStatus,
       eventSessionId,
       fanId,
     });
@@ -1618,13 +1660,250 @@ app.get('/api/check-event-access', async (req, res) => {
     const record = global.eventPaidRecords?.[key];
 
     if (record?.paid) {
-      return res.json({ paid: true, paidAt: record.paidAt });
+      return res.json({ paid: true, paidAt: record.paidAt, source: 'memory' });
+    }
+
+    // Fallback durable : le registre mémoire est volatile (redémarrage Replit).
+    // Présence dans event_paid_fans = pré-autorisé (même non capturé) = accès OK.
+    try {
+      const admin = getSupabaseAdmin();
+      const { data: row, error: dbErr } = await admin
+        .from('event_paid_fans')
+        .select('id, payment_captured, created_at')
+        .eq('event_session_id', event_session_id)
+        .eq('fan_id', fan_id)
+        .maybeSingle();
+
+      if (!dbErr && row) {
+        return res.json({ paid: true, paidAt: row.created_at, source: 'db' });
+      }
+    } catch (dbErr) {
+      console.warn('[EventPayment] check-event-access DB fallback failed:', dbErr.message);
     }
 
     res.json({ paid: false });
   } catch (error) {
     console.error('[EventPayment] Check access error:', error.message);
     res.json({ paid: false });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// CAPTURE EN MASSE des dédicaces — déclenchée à la 1ère photo dédicacée.
+// Aligné sur le flux vidéo (/api/end-fan-call) : pré-autorisations posées au
+// checkout, capturées toutes d'un coup ici. Idempotent à 2 niveaux :
+//   - événement : event_sessions.dedication_captures_triggered (compare-and-set)
+//   - fan       : event_paid_fans.payment_captured (compare-and-set)
+// Body : { eventSessionId }
+// ---------------------------------------------------------------------------
+app.post('/api/capture-event-payments', async (req, res) => {
+  const { eventSessionId } = req.body || {};
+  try {
+    if (!eventSessionId) {
+      return res.status(400).json({ ok: false, error: 'Missing eventSessionId' });
+    }
+
+    const supabase = getSupabaseAdmin();
+    const stripe = await getStripe();
+
+    // 1. Compare-and-set ÉVÉNEMENT : ne déclenche qu'une fois.
+    const { data: triggered, error: triggerErr } = await supabase
+      .from('event_sessions')
+      .update({ dedication_captures_triggered: true })
+      .eq('id', eventSessionId)
+      .not('dedication_captures_triggered', 'is', true)
+      .select('id');
+
+    if (triggerErr) {
+      console.error('[EventCapture] Trigger compare-and-set error:', triggerErr.message);
+      return res.status(500).json({ ok: false, error: triggerErr.message });
+    }
+
+    if (!triggered || triggered.length === 0) {
+      console.log('[EventCapture] Already triggered (idempotent no-op):', eventSessionId);
+      return res.json({ ok: true, already: true });
+    }
+
+    console.log('[EventCapture] Triggered mass capture for event:', eventSessionId);
+
+    // 2. Tous les fans pré-autorisés non encore capturés.
+    const { data: fans, error: fansErr } = await supabase
+      .from('event_paid_fans')
+      .select('*')
+      .eq('event_session_id', eventSessionId)
+      .eq('payment_captured', false);
+
+    if (fansErr) {
+      console.error('[EventCapture] Fetch fans error:', fansErr.message);
+      return res.status(500).json({ ok: false, error: fansErr.message });
+    }
+
+    let capturedCount = 0;
+    let skippedCount = 0;
+    let failedCount = 0;
+
+    for (const fan of (fans || [])) {
+      try {
+        // Compare-and-set PAR FAN : verrou anti-race avant Stripe.
+        const { data: claimed, error: claimErr } = await supabase
+          .from('event_paid_fans')
+          .update({ payment_captured: true })
+          .eq('id', fan.id)
+          .not('payment_captured', 'is', true)
+          .select('id');
+
+        if (claimErr) {
+          console.error('[EventCapture] Claim error for fan', fan.fan_id, ':', claimErr.message);
+          failedCount++;
+          continue;
+        }
+
+        if (!claimed || claimed.length === 0) {
+          // Un autre process a déjà capturé ce fan.
+          console.log('[EventCapture] Fan already captured (skip):', fan.fan_id);
+          skippedCount++;
+          continue;
+        }
+
+        // Résoudre le payment_intent_id si manquant.
+        let paymentIntentId = fan.payment_intent_id;
+        if (!paymentIntentId && fan.checkout_session_id) {
+          const cs = await stripe.checkout.sessions.retrieve(fan.checkout_session_id);
+          paymentIntentId = cs.payment_intent;
+          if (paymentIntentId) {
+            await supabase
+              .from('event_paid_fans')
+              .update({ payment_intent_id: paymentIntentId })
+              .eq('id', fan.id);
+          }
+        }
+
+        if (!paymentIntentId) {
+          // Pas de PI : rien à capturer, on relâche le verrou.
+          await supabase
+            .from('event_paid_fans')
+            .update({ payment_captured: false })
+            .eq('id', fan.id);
+          console.warn('[EventCapture] No payment_intent for fan (lock released):', fan.fan_id);
+          failedCount++;
+          continue;
+        }
+
+        const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+        if (pi.status === 'requires_capture') {
+          const cap = await stripe.paymentIntents.capture(paymentIntentId);
+          console.log('[EventCapture] Captured:', paymentIntentId, '| fan:', fan.fan_id, '| amount:', cap.amount, cap.currency);
+          capturedCount++;
+        } else if (pi.status === 'succeeded') {
+          console.log('[EventCapture] Already succeeded (idempotent OK):', paymentIntentId, '| fan:', fan.fan_id);
+          capturedCount++;
+        } else {
+          // Statut non capturable : relâcher le verrou.
+          await supabase
+            .from('event_paid_fans')
+            .update({ payment_captured: false })
+            .eq('id', fan.id);
+          console.error('[EventCapture] Cannot capture status', pi.status, 'for fan (lock released):', fan.fan_id);
+          failedCount++;
+        }
+      } catch (fanErr) {
+        // Erreur sur ce fan : relâcher SON verrou et CONTINUER les autres.
+        try {
+          await supabase
+            .from('event_paid_fans')
+            .update({ payment_captured: false })
+            .eq('id', fan.id);
+        } catch (_) {}
+        console.error('[EventCapture] Capture error for fan', fan.fan_id, '(lock released):', fanErr.message);
+        failedCount++;
+      }
+    }
+
+    console.log(`[EventCapture] Done event=${eventSessionId} captured=${capturedCount} skipped=${skippedCount} failed=${failedCount}`);
+    return res.json({ ok: true, capturedCount, skippedCount, failedCount });
+  } catch (error) {
+    console.error('[EventCapture] Error:', error?.message || error);
+    return res.status(500).json({ ok: false, error: error?.message || 'internal_error' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// RELEASE en masse — annule les pré-autorisations non capturées (événement
+// terminé sans dédicace, annulation...). Idempotent. Même logique RELEASE que
+// /api/end-fan-call.
+// Body : { eventSessionId }
+// ---------------------------------------------------------------------------
+app.post('/api/release-event-payments', async (req, res) => {
+  const { eventSessionId } = req.body || {};
+  try {
+    if (!eventSessionId) {
+      return res.status(400).json({ ok: false, error: 'Missing eventSessionId' });
+    }
+
+    const supabase = getSupabaseAdmin();
+    const stripe = await getStripe();
+
+    const { data: fans, error: fansErr } = await supabase
+      .from('event_paid_fans')
+      .select('*')
+      .eq('event_session_id', eventSessionId)
+      .eq('payment_captured', false);
+
+    if (fansErr) {
+      console.error('[EventRelease] Fetch fans error:', fansErr.message);
+      return res.status(500).json({ ok: false, error: fansErr.message });
+    }
+
+    let releasedCount = 0;
+    let skippedCount = 0;
+    let failedCount = 0;
+
+    for (const fan of (fans || [])) {
+      try {
+        let paymentIntentId = fan.payment_intent_id;
+        if (!paymentIntentId && fan.checkout_session_id) {
+          const cs = await stripe.checkout.sessions.retrieve(fan.checkout_session_id);
+          paymentIntentId = cs.payment_intent;
+          if (paymentIntentId) {
+            await supabase
+              .from('event_paid_fans')
+              .update({ payment_intent_id: paymentIntentId })
+              .eq('id', fan.id);
+          }
+        }
+
+        if (!paymentIntentId) {
+          console.warn('[EventRelease] No payment_intent for fan (skip):', fan.fan_id);
+          skippedCount++;
+          continue;
+        }
+
+        const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+        if (pi.status === 'requires_capture' || pi.status === 'requires_payment_method') {
+          const canceled = await stripe.paymentIntents.cancel(paymentIntentId);
+          console.log('[EventRelease] Released (canceled):', canceled.id, '| fan:', fan.fan_id);
+          releasedCount++;
+        } else if (pi.status === 'canceled') {
+          console.log('[EventRelease] Already canceled (no-op):', paymentIntentId, '| fan:', fan.fan_id);
+          releasedCount++;
+        } else if (pi.status === 'succeeded') {
+          console.log('[EventRelease] Already succeeded, cannot release (skip):', paymentIntentId, '| fan:', fan.fan_id);
+          skippedCount++;
+        } else {
+          console.log('[EventRelease] Status', pi.status, 'not cancelable (skip):', paymentIntentId, '| fan:', fan.fan_id);
+          skippedCount++;
+        }
+      } catch (fanErr) {
+        console.error('[EventRelease] Release error for fan', fan.fan_id, ':', fanErr.message);
+        failedCount++;
+      }
+    }
+
+    console.log(`[EventRelease] Done event=${eventSessionId} released=${releasedCount} skipped=${skippedCount} failed=${failedCount}`);
+    return res.json({ ok: true, releasedCount, skippedCount, failedCount });
+  } catch (error) {
+    console.error('[EventRelease] Error:', error?.message || error);
+    return res.status(500).json({ ok: false, error: error?.message || 'internal_error' });
   }
 });
 
