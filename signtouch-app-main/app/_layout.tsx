@@ -29,6 +29,7 @@ import { CelebrityModeProvider } from '@/contexts/CelebrityModeContext';
 import { FollowProvider } from '@/contexts/FollowContext';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import { AuthPromptProvider } from '@/contexts/AuthPromptContext';
+import { initNotifications } from '@/utils/notifications';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -102,6 +103,12 @@ export default function RootLayout() {
   useEffect(() => {
     SplashScreen.hideAsync();
   }, [fontsLoaded, fontError]);
+
+  // Notifications push : handler (son app ouverte) + canal Android (son+vibration
+  // app fermée). Indispensable pour que la dédicace/file fasse du bruit et vibre.
+  useEffect(() => {
+    initNotifications().catch(() => {});
+  }, []);
 
   // Pas de vidéo de bienvenue quand on revient d'un paiement Stripe : sur le web,
   // l'app se RECHARGE sur /payment-success (ou /purchase-session), ce qui rejouerait

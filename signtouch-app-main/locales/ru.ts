@@ -1196,6 +1196,7 @@ export default {
   summaryDuration: 'Длительность',
   summaryFansMet: 'Встречено фанатов',
   summaryRevenue: 'Полученный доход',
+  revenueInMyEventsHint: '💡 Подробности о доходах смотри в разделе «Мои события»',
   summaryFinish: 'Завершить',
   yourTurnNotification: 'Ваша очередь! Присоединяйтесь к звонку сейчас.',
   editDedication: 'Редактировать посвящение',

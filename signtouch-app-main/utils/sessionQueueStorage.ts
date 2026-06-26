@@ -438,6 +438,10 @@ export const sendQueueNotification = async (
         body,
         data,
         priority: 'high',
+        // channelId Android : doit correspondre au canal créé au démarrage
+        // (utils/notifications.ts -> DEFAULT_CHANNEL_ID). Sans ça, son+vibration
+        // ne sont pas garantis quand l'app est fermée sur Android 8+.
+        channelId: 'default',
       }),
     });
 

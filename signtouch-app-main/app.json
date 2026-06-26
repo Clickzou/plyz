@@ -110,7 +110,8 @@
           "enableMicrophone": true,
           "enableScreenShare": false
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true

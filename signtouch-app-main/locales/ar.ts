@@ -1196,6 +1196,7 @@ export default {
   summaryDuration: 'المدة',
   summaryFansMet: 'المعجبون الذين تمت مقابلتهم',
   summaryRevenue: 'الإيرادات المحققة',
+  revenueInMyEventsHint: '💡 تجد تفاصيل أرباحك في «فعالياتي»',
   summaryFinish: 'إنهاء',
   yourTurnNotification: 'حان دورك! انضم إلى المكالمة الآن.',
   editDedication: 'تعديل الإهداء',

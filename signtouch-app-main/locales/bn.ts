@@ -1201,6 +1201,7 @@ export default {
   summaryDuration: 'সময়কাল',
   summaryFansMet: 'সাক্ষাৎ হওয়া ফ্যান',
   summaryRevenue: 'অর্জিত আয়',
+  revenueInMyEventsHint: '💡 «আমার ইভেন্ট» বিভাগে আপনার আয়ের বিস্তারিত দেখুন',
   summaryFinish: 'সম্পন্ন',
   yourTurnNotification: 'আপনার পালা! এখনই কলে যোগ দিন।',
   editDedication: 'উৎসর্গ সম্পাদনা করুন',

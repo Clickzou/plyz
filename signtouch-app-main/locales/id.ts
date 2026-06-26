@@ -1201,6 +1201,7 @@ export default {
   summaryDuration: 'Durasi',
   summaryFansMet: 'Fan ditemui',
   summaryRevenue: 'Pendapatan dihasilkan',
+  revenueInMyEventsHint: '💡 Temukan rincian pendapatanmu di "Acara Saya"',
   summaryFinish: 'Selesai',
   yourTurnNotification: 'Giliran Anda! Bergabunglah dengan panggilan sekarang.',
   editDedication: 'Edit dedikasi',

@@ -1196,6 +1196,7 @@ export default {
   summaryDuration: '时长',
   summaryFansMet: '已见粉丝',
   summaryRevenue: '已产生收入',
+  revenueInMyEventsHint: '💡 在"我的活动"中查看你的收入明细',
   summaryFinish: '完成',
   yourTurnNotification: '轮到您了！立即加入通话。',
   editDedication: '编辑寄语',

@@ -1052,6 +1052,7 @@ export default {
   summaryDuration: 'Durée',
   summaryFansMet: 'Fans rencontrés',
   summaryRevenue: 'Revenus générés',
+  revenueInMyEventsHint: '💡 Retrouve le détail de tes revenus dans « Mes événements »',
   summaryFinish: 'Terminer',
   yourTurnNotification: "C'est votre tour ! Rejoignez l'appel maintenant.",
   videoCallPreparing: 'Préparation de votre appel vidéo...',

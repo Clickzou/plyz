@@ -1196,6 +1196,7 @@ export default {
   summaryDuration: 'Dauer',
   summaryFansMet: 'Getroffene Fans',
   summaryRevenue: 'Erzielte Einnahmen',
+  revenueInMyEventsHint: '💡 Alle Details zu deinen Einnahmen findest du unter „Meine Events"',
   summaryFinish: 'Beenden',
   yourTurnNotification: 'Du bist dran! Tritt jetzt dem Anruf bei.',
   editDedication: 'Widmung bearbeiten',

@@ -16,6 +16,7 @@ import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { useAudioPlayer } from 'expo-audio';
 import {
   Play,
   Pause,
@@ -102,6 +103,14 @@ export default function LiveSessionDashboardScreen() {
   const [copied, setCopied] = useState(false);
   const [isCreatingVideoRoom, setIsCreatingVideoRoom] = useState(false);
   const [isInVideoCall, setIsInVideoCall] = useState(false);
+  // Son joué quand un fan rejoint la file (uniquement si la célébrité patiente sur le dashboard).
+  const fanJoinedPlayer = useAudioPlayer(require('@/assets/sounds/fan-joined.wav'));
+  // Ref synchronisée avec isInVideoCall : showFanJoinedToast est un useCallback (closure),
+  // sans ref il lirait une valeur de state périmée.
+  const isInVideoCallRef = useRef(false);
+  useEffect(() => {
+    isInVideoCallRef.current = isInVideoCall;
+  }, [isInVideoCall]);
 
   const [dedicationPhotoUri, setDedicationPhotoUri] = useState<string | null>(null);
   const [dedicationStep, setDedicationStep] = useState<'photo' | 'signature' | 'done'>('photo');
@@ -142,6 +151,17 @@ export default function LiveSessionDashboardScreen() {
   const seenFanIdsRef = useRef<Set<string>>(new Set());
 
   const showFanJoinedToast = useCallback((text: string) => {
+    // Son + vibration UNIQUEMENT si la célébrité patiente sur le dashboard,
+    // JAMAIS pendant un appel vidéo (le dashboard reste monté en arrière-plan).
+    if (!isInVideoCallRef.current) {
+      try {
+        fanJoinedPlayer.seekTo(0);
+        fanJoinedPlayer.play();
+      } catch {}
+      try {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch {}
+    }
     setFanToastText(text);
     if (fanToastHideTimer.current) clearTimeout(fanToastHideTimer.current);
     Animated.timing(fanToastAnim, {
@@ -156,7 +176,7 @@ export default function LiveSessionDashboardScreen() {
         useNativeDriver: true,
       }).start(() => setFanToastText(null));
     }, 3500);
-  }, [fanToastAnim]);
+  }, [fanToastAnim, fanJoinedPlayer]);
 
   useEffect(() => {
     return () => {
@@ -370,11 +390,6 @@ export default function LiveSessionDashboardScreen() {
               osc.start(ctx.currentTime + start);
               osc.stop(ctx.currentTime + start + dur + 0.05);
             });
-          } catch {}
-        }
-        if (Platform.OS !== 'web') {
-          try {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           } catch {}
         }
         const fanName = fullQueue.find((e) => e.status === 'waiting' || e.status === 'called' || e.status === 'in_call')?.fan_name?.trim()

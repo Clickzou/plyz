@@ -1049,6 +1049,7 @@ export default {
   summaryDuration: 'Duration',
   summaryFansMet: 'Fans met',
   summaryRevenue: 'Revenue generated',
+  revenueInMyEventsHint: '💡 Find all your earnings in "My Events"',
   summaryFinish: 'Finish',
   yourTurnNotification: "It's your turn! Join the call now.",
   videoCallPreparing: 'Preparing your video call...',

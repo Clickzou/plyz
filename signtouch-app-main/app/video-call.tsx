@@ -1138,6 +1138,10 @@ export default function VideoCallScreen() {
               </View>
             </View>
 
+            <Text style={{ color: '#a78bfa', fontSize: 13, textAlign: 'center', marginTop: 18, marginBottom: 2, lineHeight: 18, paddingHorizontal: 8 }}>
+              {t('revenueInMyEventsHint' as any) || '💡 Retrouve le détail de tes revenus dans « Mes événements »'}
+            </Text>
+
             <TouchableOpacity style={styles.summaryButton} onPress={closeEndSummary} activeOpacity={0.85}>
               <Text style={styles.summaryButtonText}>{t('summaryFinish') || 'Terminer'}</Text>
             </TouchableOpacity>

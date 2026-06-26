@@ -1196,6 +1196,7 @@ export default {
   summaryDuration: '時間',
   summaryFansMet: '対応したファン',
   summaryRevenue: '獲得した収益',
+  revenueInMyEventsHint: '💡 収益の詳細は「マイイベント」で確認できます',
   summaryFinish: '完了',
   yourTurnNotification: 'あなたの番です！今すぐ通話に参加してください。',
   editDedication: '寄せ書きを編集',

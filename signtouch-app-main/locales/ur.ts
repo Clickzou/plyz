@@ -1201,6 +1201,7 @@ export default {
   summaryDuration: 'دورانیہ',
   summaryFansMet: 'ملاقات کرنے والے مداح',
   summaryRevenue: 'حاصل کردہ آمدنی',
+  revenueInMyEventsHint: '💡 اپنی آمدنی کی تفصیل «میرے ایونٹس» میں دیکھیں',
   summaryFinish: 'مکمل کریں',
   yourTurnNotification: 'آپ کی باری ہے! ابھی کال میں شامل ہوں۔',
   editDedication: 'خراج تحسین میں ترمیم کریں',

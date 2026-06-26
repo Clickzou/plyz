@@ -1196,6 +1196,7 @@ export default {
   summaryDuration: 'अवधि',
   summaryFansMet: 'मिले फैन',
   summaryRevenue: 'अर्जित आय',
+  revenueInMyEventsHint: '💡 अपनी कमाई का विवरण «मेरे इवेंट» में देखें',
   summaryFinish: 'समाप्त करें',
   yourTurnNotification: 'आपकी बारी है! अभी कॉल में शामिल हों।',
   editDedication: 'समर्पण संपादित करें',

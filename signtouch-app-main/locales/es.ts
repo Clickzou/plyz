@@ -1195,6 +1195,7 @@ export default {
   summaryDuration: 'Duración',
   summaryFansMet: 'Fans atendidos',
   summaryRevenue: 'Ingresos generados',
+  revenueInMyEventsHint: '💡 Encuentra el detalle de tus ingresos en «Mis eventos»',
   summaryFinish: 'Finalizar',
   yourTurnNotification: '¡Es tu turno! Únete a la llamada ahora.',
   editDedication: 'Editar la dedicatoria',
