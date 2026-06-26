@@ -36,6 +36,7 @@ import {
   Calendar,
   ArrowLeft,
   Send,
+  Bell,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -153,6 +154,9 @@ export default function LiveSessionDashboardScreen() {
   const fanToastHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // IDs des fans déjà vus dans la file (pour ne notifier que les nouveaux arrivants).
   const seenFanIdsRef = useRef<Set<string>>(new Set());
+
+  // Animation "pulse" de la bannière persistante "un fan vous attend".
+  const waitingBannerPulse = useRef(new Animated.Value(1)).current;
 
   const showFanJoinedToast = useCallback((text: string) => {
     // Son + vibration UNIQUEMENT si la célébrité patiente sur le dashboard,
@@ -1072,6 +1076,35 @@ export default function LiveSessionDashboardScreen() {
   const pollingCount = sessionQueue.filter((e) => e.status === 'waiting' || (e.status as string) === 'called' || (e.status as string) === 'in_call').length;
   const waitingCount = Math.max(realtimeCount, pollingCount);
 
+  // Bannière persistante "un fan vous attend" : nb de fans en attente d'être appelés.
+  const fansWaitingForBanner = sessionQueue.filter(
+    (e) => e.status === 'waiting' || (e.status as string) === 'called'
+  ).length;
+  // Conditions d'affichage : session active/en pause, au moins 1 fan en attente, la célébrité
+  // n'est PAS déjà dans l'appel vidéo, et aucun fan n'est déjà en cours d'appel (calledFan null).
+  const showWaitingBanner =
+    (session?.status === 'active' || session?.status === 'paused') &&
+    fansWaitingForBanner >= 1 &&
+    !isInVideoCall &&
+    !calledFan;
+
+  // Pulse léger tant que la bannière est visible.
+  useEffect(() => {
+    if (!showWaitingBanner) {
+      waitingBannerPulse.stopAnimation();
+      waitingBannerPulse.setValue(1);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(waitingBannerPulse, { toValue: 1.04, duration: 700, useNativeDriver: true }),
+        Animated.timing(waitingBannerPulse, { toValue: 1, duration: 700, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [showWaitingBanner, waitingBannerPulse]);
+
   const handleLaunchSession = async () => {
     if (!session) return;
     try {
@@ -1501,6 +1534,35 @@ export default function LiveSessionDashboardScreen() {
 
         {(session.status === 'active' || session.status === 'paused') && (
           <>
+            {showWaitingBanner && (
+              <Animated.View style={{ transform: [{ scale: waitingBannerPulse }] }}>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={styles.fanWaitingBanner}
+                  onPress={handleStartVideoCall}
+                  disabled={isCreatingVideoRoom}
+                >
+                  <View style={styles.fanWaitingBannerIcon}>
+                    <Bell size={26} color="#fff" />
+                  </View>
+                  <View style={styles.fanWaitingBannerContent}>
+                    <Text style={styles.fanWaitingBannerTitle}>
+                      {fansWaitingForBanner > 1
+                        ? (t('fanWaitingBannerTitlePlural' as any) || '🔔 {count} fans vous attendent !').replace('{count}', String(fansWaitingForBanner))
+                        : (t('fanWaitingBannerTitle' as any) || '🔔 Un fan vous attend !')}
+                    </Text>
+                    <Text style={styles.fanWaitingBannerSubtitle}>
+                      {t('fanWaitingBannerSubtitle' as any) || 'Appuyez ici pour démarrer l\'appel vidéo.'}
+                    </Text>
+                  </View>
+                  {isCreatingVideoRoom ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Video size={22} color="#fff" />
+                  )}
+                </TouchableOpacity>
+              </Animated.View>
+            )}
             {currentFan ? (
               <View style={styles.signingSection}>
                 <View style={styles.fanInfo}>
@@ -1990,6 +2052,46 @@ const styles = StyleSheet.create({
   waitingSection: {
     alignItems: 'center',
     paddingVertical: 40,
+  },
+  fanWaitingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#10B981',
+    width: '100%',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  fanWaitingBannerIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fanWaitingBannerContent: {
+    flex: 1,
+  },
+  fanWaitingBannerTitle: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '800',
+    marginBottom: 3,
+  },
+  fanWaitingBannerSubtitle: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 13,
+    fontWeight: '500',
   },
   behaviorWarningCard: {
     flexDirection: 'row',

@@ -342,6 +342,9 @@ export default function VideoCallScreen() {
     // donnerait 0 et casserait le minuteur.
     const durationMinutes = parseFloat(params.durationPerFan || '5');
     if (!durationMinutes || !otherParticipantJoined) return;
+    // L'appel est déjà terminé (raccrochage, départ d'un participant, timer atteint) :
+    // on ne (re)lance PAS le minuteur -> il ne tourne plus en fond après la fin de l'appel.
+    if (hasLeftCall || callEndedRef.current) return;
 
     if (callStartTime.current === 0) {
       callStartTime.current = Date.now();
@@ -350,6 +353,13 @@ export default function VideoCallScreen() {
     const durationMs = durationMinutes * 60 * 1000;
 
     const interval = setInterval(() => {
+      // Garde-fou synchrone : si l'appel s'est terminé entre deux tics, on coupe le minuteur
+      // immédiatement (callEndedRef est posé AVANT le re-render qui flippe hasLeftCall).
+      if (callEndedRef.current) {
+        clearInterval(interval);
+        return;
+      }
+
       const endTime = callStartTime.current + durationMs;
       const now = Date.now();
       const diff = Math.max(0, endTime - now);
@@ -368,7 +378,7 @@ export default function VideoCallScreen() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [params.durationPerFan, otherParticipantJoined]);
+  }, [params.durationPerFan, otherParticipantJoined, hasLeftCall]);
 
   const isHost = params.isHost === 'true';
   const userName = params.userName || (isHost ? 'Host' : 'Guest');
@@ -429,9 +439,20 @@ export default function VideoCallScreen() {
           try {
             const ps = c.participants() as Record<string, NativeParticipant>;
             const remoteCount = Object.values(ps).filter((p) => !p.local).length;
-            if (remoteCount === 0 && otherParticipantJoined) {
-              if (callEndReason.current === 'unknown') {
-                callEndReason.current = isHost ? 'fan_left' : 'celebrity_left';
+            // IMPORTANT : on lit le REF synchrone (otherParticipantJoinedRef), pas la
+            // variable de closure `otherParticipantJoined` qui est FIGÉE à false (le
+            // listener est enregistré une seule fois, au join, avant l'arrivée du fan).
+            // Sans ça, côté hôte, le départ du fan n'était jamais détecté ici -> le reason
+            // restait 'unknown', l'appel ne se terminait pas, et la célébrité finissait par
+            // raccrocher manuellement -> 'celebrity_hangup' -> overlay hostEndedEarly à tort.
+            if (remoteCount === 0 && otherParticipantJoinedRef.current) {
+              // Un participant DISTANT était présent et vient de partir : c'est le FAN qui a
+              // raccroché (host) / la CÉLÉBRITÉ qui a raccroché (fan). On pose le reason AVANT
+              // handleCallEnded, et on ÉCRASE un éventuel 'unknown'/'fan_hangup' antérieur :
+              // le départ effectif du participant fait foi.
+              const departReason = isHost ? 'fan_left' : 'celebrity_left';
+              if (callEndReason.current === 'unknown' || callEndReason.current === departReason) {
+                callEndReason.current = departReason;
               }
               handleCallEnded();
             }
@@ -560,7 +581,28 @@ export default function VideoCallScreen() {
 
   const leaveCall = () => {
     if (callEndReason.current === 'unknown') {
-      callEndReason.current = isHost ? 'celebrity_hangup' : 'fan_hangup';
+      // Un vrai clic « Raccrocher » ne vaut 'celebrity_hangup'/'fan_hangup' QUE si l'autre
+      // est ENCORE là. Si le participant distant est DÉJÀ parti (le fan a raccroché en
+      // premier, mais 'participant-left' n'a pas encore posé le reason -> race), alors ce
+      // n'est PAS la célébrité qui écourte : c'est le fan qui est parti. On pose 'fan_left'
+      // (côté hôte) / 'celebrity_left' (côté fan) pour NE PAS afficher hostEndedEarly à tort
+      // et créditer/débiter normalement.
+      let remoteStillPresent = false;
+      try {
+        const c = dailyCallFrameRef.current;
+        if (c?.participants) {
+          const ps = c.participants() as Record<string, NativeParticipant>;
+          remoteStillPresent = Object.values(ps).some((p) => p && !p.local);
+        }
+      } catch {}
+
+      if (otherParticipantJoinedRef.current && !remoteStillPresent) {
+        // L'appel a eu lieu et l'autre est déjà parti -> c'est lui qui a raccroché.
+        callEndReason.current = isHost ? 'fan_left' : 'celebrity_left';
+      } else {
+        // L'autre est encore là (ou l'appel n'a jamais eu lieu) -> vrai raccrochage manuel.
+        callEndReason.current = isHost ? 'celebrity_hangup' : 'fan_hangup';
+      }
     }
     handleCallEnded();
   };
