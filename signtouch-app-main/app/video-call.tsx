@@ -122,6 +122,13 @@ export default function VideoCallScreen() {
   // useState (valeur périmée dans la 2e invocation) -> ce ref SYNCHRONE garantit qu'on ne
   // traite la fin qu'UNE fois, donc une seule ouverture du modal de notation.
   const callEndedRef = useRef(false);
+  // Garde-fou DÉDIÉ anti-double-notation, distinct de callEndedRef. callEndedRef est RÉARMÉ
+  // (remis à false) par handleCallNextFan pour le fan suivant ; or un événement Daily RÉSIDUEL
+  // (left-meeting/participant-left émis par l'objet d'appel détruit) peut re-déclencher
+  // handleCallEnded APRÈS ce réarmement et rouvrir une 2e fois l'overlay/RatingModal pour le
+  // MÊME appel déjà terminé. Ce ref, lui, n'est remis à false QUE lorsqu'un NOUVEAU fan a
+  // réellement rejoint la visio -> garantit UNE SEULE notation par appel.
+  const ratingHandledForCallRef = useRef(false);
   // Compteur LOCAL (côté hôte) des fans réellement rencontrés (appel ayant réellement eu lieu)
   // sur toute la session. Plus fiable que le serveur pour le résumé de fin : le flag
   // payment_captured est écrit par le FAN en différé (course entre les 2 téléphones) -> il vaut
@@ -524,6 +531,11 @@ export default function VideoCallScreen() {
     // Garde-fou synchrone : si la fin a déjà été traitée (un autre listener Daily a tiré dans le
     // même tick), on sort immédiatement -> évite que le modal de notation s'ouvre deux fois.
     if (callEndedRef.current) return;
+    // 2e garde-fou DÉDIÉ : empêche un événement Daily RÉSIDUEL (left-meeting/participant-left de
+    // l'objet d'appel détruit) de re-terminer le MÊME appel APRÈS que handleCallNextFan a réarmé
+    // callEndedRef pour le fan suivant. Tant qu'un NOUVEAU fan n'a pas rejoint, on ne ré-ouvre
+    // ni l'overlay fanEndedEarly ni le RatingModal -> une seule notation par appel.
+    if (ratingHandledForCallRef.current) return;
     callEndedRef.current = true;
     if (!hasLeftCall) {
       setHasLeftCall(true);
@@ -563,6 +575,7 @@ export default function VideoCallScreen() {
       // demander de notation. Garde-fou : on n'entre ici que pour 'celebrity_hangup'
       // (le cas 'timer' = durée atteinte = paiement normal n'est PAS concerné).
       if (isHost && reason === 'celebrity_hangup') {
+        ratingHandledForCallRef.current = true;
         setHostEndedEarly(true);
         // L'overlay RESTE affiché ; la célébrité sort uniquement via le bouton Retour.
         return;
@@ -584,10 +597,14 @@ export default function VideoCallScreen() {
         otherParticipantJoinedRef.current &&
         (reason === 'fan_left' || reason === 'fan_hangup')
       ) {
+        // Notation gérée pour CET appel : aucun événement Daily résiduel ne pourra ré-ouvrir
+        // l'overlay/RatingModal tant qu'un nouveau fan n'a pas rejoint (reset dans l'effet join).
+        ratingHandledForCallRef.current = true;
         setFanEndedEarly(true);
         return;
       }
 
+      ratingHandledForCallRef.current = true;
       setShowRatingModal(true);
     }
   };
@@ -747,6 +764,11 @@ export default function VideoCallScreen() {
   useEffect(() => {
     if (waitingForNextFan && otherParticipantJoined) {
       setWaitingForNextFan(false);
+      // Un NOUVEAU fan a réellement rejoint la visio : on ré-arme le garde-fou de notation
+      // pour ce nouvel appel (il sera de nouveau noté une seule fois à sa fin). On ne le
+      // ré-arme JAMAIS de façon synchrone dans handleCallNextFan, sinon un événement Daily
+      // résiduel de l'appel précédent rouvrirait une 2e notation.
+      ratingHandledForCallRef.current = false;
     }
   }, [waitingForNextFan, otherParticipantJoined]);
 
