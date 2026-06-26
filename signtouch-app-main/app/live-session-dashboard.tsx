@@ -198,10 +198,14 @@ export default function LiveSessionDashboardScreen() {
 
     const queueChannel = subscribeToQueue(sessionId, (updatedQueue) => {
       setQueue(updatedQueue);
-      const current = updatedQueue.find(
-        (e) => e.status === 'current' || e.status === 'signing'
-      );
-      setCurrentFan(current || null);
+      // Plyz est 100% VIDEO : la dedicace se fait PENDANT l'appel video (video-call ->
+      // dedication-result), pas via un canevas "dessiner sur la photo du fan" dans le dashboard.
+      // L'ancien rendu dedicace (statuts 'current'/'signing', heritage SignTouch) ne doit JAMAIS
+      // s'afficher ici, sinon la celebrite voit un bouton vert "Suivant" (handleNextFan) qui marque
+      // le fan 'completed' et l'envoie sur l'ecran signature au lieu de lancer la visio (la file se
+      // vide aussi). On neutralise donc currentFan -> seul le rendu video (appeler le fan suivant,
+      // demarrer l'appel) reste affiche.
+      setCurrentFan(null);
     });
 
     return () => {
@@ -1544,12 +1548,9 @@ export default function LiveSessionDashboardScreen() {
                         ? t('fansInQueue', { count: sessionQueue.length }) || `${sessionQueue.length} fans in queue`
                         : t('liveSessionNoFansYet')}
                     </Text>
-                    {sessionQueue.length > 0 && (
-                      <TouchableOpacity style={styles.callNextButton} onPress={handleCallNextFromQueue}>
-                        <Users size={24} color="#4ade80" />
-                        <Text style={styles.callNextButtonText}>{t('callNextFan') || 'Call next fan'}</Text>
-                      </TouchableOpacity>
-                    )}
+                    {/* Bouton "Appeler le fan suivant" SUPPRIME : redondant avec "Demarrer l'appel
+                        video" (handleStartVideoCall) qui, lui, cree la salle Daily + appelle le 1er
+                        fan de la file + entre dans la visio. Un seul bouton d'action = plus coherent. */}
                   </>
                 )}
 
