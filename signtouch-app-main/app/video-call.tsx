@@ -750,6 +750,22 @@ export default function VideoCallScreen() {
 
       console.log('[VideoCall] Fan call ended, navigating to dedication-result for session:', params.sessionId);
 
+      // Notification "dédicace prête" envoyée de DEUX façons, pour fiabiliser :
+      //  1) depuis le serveur (fiable même si l'app se ferme juste après),
+      //  2) depuis le téléphone (fallback immédiat si le serveur est injoignable).
+      if (STRIPE_SERVER_URL) {
+        fetch(`${STRIPE_SERVER_URL}/api/notify-dedication`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: params.sessionId,
+            queueEntryId: params.queueEntryId || null,
+            celebrityName: params.otherUserName || 'Celebrity',
+            message: t('dedicationNotificationBody'),
+          }),
+        }).catch((e) => console.error('[VideoCall] Server dedication notify error:', e));
+      }
+
       sendDedicationNotification(
         params.sessionId,
         params.queueEntryId || null,

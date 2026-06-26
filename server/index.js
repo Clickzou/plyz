@@ -199,6 +199,47 @@ function getSupabaseAdmin() {
   return supabaseAdmin;
 }
 
+// ---------------------------------------------------------------------------
+// Notifications push Expo (envoyées DEPUIS le serveur, plus fiables que depuis
+// le téléphone de la célébrité qui peut fermer l'app juste après la dédicace).
+// API Expo : POST https://exp.host/--/api/v2/push/send (accepte un tableau).
+// Utilise fetch natif (Node 18+). Ne throw jamais : best-effort.
+// ---------------------------------------------------------------------------
+async function sendExpoPush(pushTokens, title, body, data = {}) {
+  try {
+    const tokens = Array.isArray(pushTokens) ? pushTokens : [pushTokens];
+    const unique = [...new Set(tokens.filter((t) => typeof t === 'string' && t.length > 0))];
+    if (unique.length === 0) {
+      console.log('[Push] No valid push token, skipping');
+      return;
+    }
+
+    const messages = unique.map((to) => ({
+      to,
+      sound: 'default',
+      priority: 'high',
+      channelId: 'default',
+      title,
+      body,
+      data,
+    }));
+
+    const response = await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(messages),
+    });
+
+    const result = await response.json().catch(() => null);
+    console.log(`[Push] Sent ${messages.length} notification(s) "${title}"`, result?.data ? '(ok)' : '');
+  } catch (err) {
+    console.error('[Push] sendExpoPush error:', err.message);
+  }
+}
+
 let stripeClient = null;
 
 function getStripeCredentials() {
@@ -1471,6 +1512,71 @@ app.post('/api/record-free-event-access', async (req, res) => {
     console.error('[EventPromoAccess] Error:', error.message);
     res.status(500).json({ error: error.message });
   }
+});
+
+// ---------------------------------------------------------------------------
+// Notification de dédicace prête, envoyée DEPUIS le serveur.
+// L'app (côté célébrité) enregistre la dédicace dans Supabase puis appelle cet
+// endpoint en fire-and-forget. Comme c'est le serveur qui envoie le push, la
+// notif part même si la célébrité ferme l'app juste après. On répond tout de
+// suite (200) et on envoie le push en arrière-plan.
+//
+// Body attendu :
+//   - sessionId        (string, requis)  : id de la session live / appel vidéo
+//   - queueEntryId     (string, optionnel): id de la ligne session_queue du fan
+//   - celebrityName    (string, optionnel)
+//   - message          (string, optionnel): corps déjà traduit (peut contenir {name})
+// ---------------------------------------------------------------------------
+app.post('/api/notify-dedication', async (req, res) => {
+  const { sessionId, queueEntryId, celebrityName, message } = req.body || {};
+
+  if (!sessionId) {
+    return res.status(400).json({ error: 'Missing sessionId' });
+  }
+
+  // Répond immédiatement : l'envoi du push ne doit pas bloquer le client.
+  res.json({ success: true });
+
+  // Fire-and-forget : récupère le(s) push_token puis envoie.
+  (async () => {
+    try {
+      const supabase = getSupabase();
+
+      // 1) Cas appel vidéo / dédicace ciblée : un fan précis (queueEntryId).
+      // 2) Fallback : tous les fans encore en file pour cette session.
+      let rows = [];
+      if (queueEntryId) {
+        const { data } = await supabase
+          .from('session_queue')
+          .select('push_token, fan_name')
+          .eq('id', queueEntryId)
+          .single();
+        if (data) rows = [data];
+      } else {
+        const { data } = await supabase
+          .from('session_queue')
+          .select('push_token, fan_name')
+          .eq('session_id', sessionId);
+        if (data) rows = data;
+      }
+
+      const tokens = rows.map((r) => r && r.push_token).filter(Boolean);
+      if (tokens.length === 0) {
+        console.log('[NotifyDedication] No push token found for session', sessionId);
+        return;
+      }
+
+      const fanName = (rows[0] && rows[0].fan_name) || 'Fan';
+      const title = celebrityName ? `${celebrityName} - Plyz` : 'Nouvelle dédicace ! 🎉';
+      const body = message
+        ? message.replace('{name}', fanName)
+        : `🎁 ${fanName}, votre dédicace personnalisée est prête ! Ouvrez l'app pour la voir.`;
+
+      await sendExpoPush(tokens, title, body, { sessionId, action: 'dedication_ready' });
+    } catch (err) {
+      console.error('[NotifyDedication] Error:', err.message);
+    }
+  })();
 });
 
 // Traductions des pages de retour Stripe (servies par le serveur, hors app) \u2014 15 langues
