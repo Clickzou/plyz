@@ -23,13 +23,16 @@ const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 // ne JAMAIS l'importer côté web (où c'est l'iframe Daily qui est utilisée).
 let DailyNative: any = null;
 let DailyMediaView: any = null;
+let DailyLoadError: string | null = null;
 if (Platform.OS !== 'web') {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const daily = require('@daily-co/react-native-daily-js');
     DailyNative = daily.default;
     DailyMediaView = daily.DailyMediaView;
-  } catch (e) {
+    if (!DailyNative) DailyLoadError = 'module charge mais default vide';
+  } catch (e: any) {
+    DailyLoadError = e?.message || String(e);
     console.warn('[VideoCall] Daily native SDK not available:', e);
   }
 }
@@ -291,7 +294,7 @@ export default function VideoCallScreen() {
 
   const initNativeCall = useCallback(async () => {
     if (!DailyNative) {
-      setError('Diag: SDK video natif non charge (rebuild requis ?)');
+      setError('Diag SDK: ' + (DailyLoadError || 'non charge (rebuild requis ?)'));
       setIsLoading(false);
       return;
     }

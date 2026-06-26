@@ -944,6 +944,16 @@ export default function LiveSessionDashboardScreen() {
         setCalledFan(nextFan);
         calledFanIdRef.current = nextFan.id;
 
+        // Propage la signature de la dedicace a l'entree du fan appele. Le flux video
+        // (callNextQueueFan) ne la propage pas, contrairement au flux dedicace pur
+        // -> sans ca la signature n'apparait pas sur la dedicace recue par le fan.
+        try {
+          const sig = await AsyncStorage.getItem(`dedication_signature_${session.id}`);
+          if (sig) await updateSignatureSvg(nextFan.id, sig);
+        } catch (e) {
+          console.warn('[VideoCall] signature propagation failed:', e);
+        }
+
         if (nextFan.push_token) {
           await sendQueueNotification(
             nextFan.push_token,
