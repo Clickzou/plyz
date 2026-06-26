@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, CreditCard, Shield, CheckCircle, Lock, Info } from 'lucide-react-native';
+import { ArrowLeft, CreditCard, Shield, CheckCircle, Lock, Info, Video, PenTool, Gem } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -194,9 +194,39 @@ export default function PurchaseSessionScreen() {
             <View style={styles.priceCard}>
               <Text style={styles.priceLabel}>{t('totalAmount') || 'Montant total'}</Text>
               <Text style={styles.priceAmount}>{priceEuros}€</Text>
-              <Text style={styles.priceDesc}>
-                {t('liveSessionSignatureDesc') || 'Signature personnalisée en direct'}
+            </View>
+
+            <View style={styles.valueCard}>
+              <Text style={styles.valueTitle}>
+                {(t('valueSectionTitle') || 'Ton moment exclusif avec {celebrityName}').replace('{celebrityName}', params.celebrityName || '')}
               </Text>
+
+              <View style={styles.valueItem}>
+                <View style={styles.valueIconWrap}>
+                  <Video size={20} color="#10B981" />
+                </View>
+                <Text style={styles.valueItemText}>
+                  {(t('valuePointLive') || 'Un face-à-face vidéo EN DIRECT, rien que toi et {celebrityName}').replace('{celebrityName}', params.celebrityName || '')}
+                </Text>
+              </View>
+
+              <View style={styles.valueItem}>
+                <View style={styles.valueIconWrap}>
+                  <PenTool size={20} color="#10B981" />
+                </View>
+                <Text style={styles.valueItemText}>
+                  {t('valuePointDedication') || '+ ta dédicace personnalisée (photo + signature) à la fin'}
+                </Text>
+              </View>
+
+              <View style={styles.valueItem}>
+                <View style={styles.valueIconWrap}>
+                  <Gem size={20} color="#10B981" />
+                </View>
+                <Text style={styles.valueItemText}>
+                  {t('valuePointKeepsake') || 'Un souvenir unique, à garder pour toujours'}
+                </Text>
+              </View>
             </View>
 
             <View style={styles.preAuthInfo}>
@@ -333,10 +363,41 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#10B981',
   },
-  priceDesc: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.5)',
-    marginTop: 8,
+  valueCard: {
+    backgroundColor: 'rgba(16, 185, 129, 0.06)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+    padding: 20,
+    gap: 16,
+  },
+  valueTitle: {
+    fontSize: 19,
+    fontWeight: '800',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 4,
+    lineHeight: 25,
+  },
+  valueItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  valueIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  valueItemText: {
+    flex: 1,
+    fontSize: 14.5,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.92)',
+    lineHeight: 20,
   },
   preAuthInfo: {
     flexDirection: 'row',
