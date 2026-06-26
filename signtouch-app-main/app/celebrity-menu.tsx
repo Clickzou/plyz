@@ -20,6 +20,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import BottomNav from '@/components/BottomNav';
 import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount, getActiveFanEvent, ActiveFanEvent } from '@/utils/eventSessionStorage';
+import { getServedFansCountBySessions } from '@/utils/sessionQueueStorage';
 import QRCodeSvg from 'react-native-qrcode-svg';
 
 type TabType = 'create' | 'events';
@@ -51,6 +52,9 @@ export default function CelebrityMenuScreen() {
   const [showQrModal, setShowQrModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [eventViews, setEventViews] = useState<Record<string, number>>({});
+  // Fans REELLEMENT servis (session_queue completed + payment_captured) par session video terminee.
+  // Cle = live_session_id. Sert au « total reel » des cartes de sessions video terminees.
+  const [servedFansBySession, setServedFansBySession] = useState<Record<string, number>>({});
   const [eventFilter, setEventFilter] = useState<FilterType>(
     hasCategoryParam ? VIEW_TO_FILTER[viewParam as string] : 'live',
   );
@@ -103,6 +107,23 @@ export default function CelebrityMenuScreen() {
         return (statusOrder[a.status as keyof typeof statusOrder] || 2) - (statusOrder[b.status as keyof typeof statusOrder] || 2);
       });
       setMyEvents(sortedEvents);
+
+      // Sessions VIDEO TERMINEES : recuperer le nombre de fans reellement servis (1 requete groupee)
+      // pour afficher un « total reel » au lieu de l'estimation basee sur max_fans.
+      const now = Date.now();
+      const endedVideoSessionIds = sortedEvents
+        .filter((e) => {
+          if (e.event_type !== 'live_video' || !e.live_session_id) return false;
+          const ended = e.status === 'ended' || (e.ends_at ? new Date(e.ends_at).getTime() < now : false);
+          return ended;
+        })
+        .map((e) => e.live_session_id as string);
+      if (endedVideoSessionIds.length > 0) {
+        const counts = await getServedFansCountBySessions(endedVideoSessionIds);
+        setServedFansBySession(counts);
+      } else {
+        setServedFansBySession({});
+      }
     } catch (error) {
       console.error('Error loading events:', error);
     } finally {
@@ -553,6 +574,12 @@ export default function CelebrityMenuScreen() {
                   const eventEnded = isEventEnded(event);
                   const eventLive = isEventLive(event);
                   const currentStatus = getEventStatus(event);
+                  // Session video TERMINEE : total REEL (fans servis x prix x 85%) + duree REELLE.
+                  // Sinon : estimation max_fans.
+                  const realFans = (isLiveVideo && eventEnded && event.live_session_id)
+                    ? (servedFansBySession[event.live_session_id] || 0)
+                    : null;
+                  const durationPerFan = event.duration_per_fan_minutes || 5;
                   return (
                     <TouchableOpacity
                       key={event.id}
@@ -651,19 +678,25 @@ export default function CelebrityMenuScreen() {
                           <View style={styles.eventDetailDivider} />
                           <View style={styles.eventDetailItem}>
                             <Text style={styles.eventDetailValue}>
-                              {event.price_cents && event.max_fans ? `${((event.price_cents * event.max_fans) / 100).toFixed(0)}€` : '-'}
+                              {realFans !== null
+                                ? `${((realFans * (event.price_cents || 0) * 0.85) / 100).toFixed(0)}€`
+                                : (event.price_cents && event.max_fans ? `${((event.price_cents * event.max_fans) / 100).toFixed(0)}€` : '-')}
                             </Text>
-                            <Text style={styles.eventDetailLabel}>{t('estimatedTotal') || 'total estimé'}</Text>
+                            <Text style={styles.eventDetailLabel}>
+                              {realFans !== null ? (t('realTotal') || 'total réel') : (t('estimatedTotal') || 'total estimé')}
+                            </Text>
                           </View>
                           <View style={styles.eventDetailDivider} />
                           <View style={styles.eventDetailItem}>
-                            <Text style={styles.eventDetailValue}>{event.duration_per_fan_minutes || 5} min</Text>
+                            <Text style={styles.eventDetailValue}>{durationPerFan} min</Text>
                             <Text style={styles.eventDetailLabel}>{t('perFan') || 'par fan'}</Text>
                           </View>
                           <View style={styles.eventDetailDivider} />
                           <View style={styles.eventDetailItem}>
                             <Text style={styles.eventDetailValue}>
-                              {((event.duration_per_fan_minutes || 5) * (event.max_fans || 60))} min
+                              {realFans !== null
+                                ? `${realFans * durationPerFan} min`
+                                : `${durationPerFan * (event.max_fans || 60)} min`}
                             </Text>
                             <Text style={styles.eventDetailLabel}>{t('totalDuration') || 'durée totale'}</Text>
                           </View>

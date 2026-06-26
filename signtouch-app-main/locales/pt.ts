@@ -1101,6 +1101,7 @@ export default {
   copied: 'Copiado!',
   perFan: 'por fã',
   estimatedTotal: 'total estimado',
+  realTotal: 'total real',
   totalDuration: 'duração total',
   preAuthorization: 'Pré-autorização',
   preAuthExplanation: '💳 O valor fica apenas BLOQUEADO no seu cartão durante a chamada — você só é cobrado DEPOIS de ter a sua chamada com a celebridade. Se ela não te atender, o valor é LIBERADO automaticamente e você não paga nada.',

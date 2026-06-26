@@ -1101,6 +1101,7 @@ export default {
   copied: 'コピーしました！',
   perFan: 'ファンごと',
   estimatedTotal: '推定合計',
+  realTotal: '実際の合計',
   totalDuration: '合計時間',
   preAuthorization: '事前承認',
   preAuthExplanation: '💳 通話中、金額はカードに保留されるだけです — 請求されるのは有名人との通話が実際に行われた後だけです。相手が応じなかった場合、金額は自動的に解除され、料金は一切かかりません。',

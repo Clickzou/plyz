@@ -1222,6 +1222,7 @@ export default {
   copied: 'Copied!',
   perFan: 'per fan',
   estimatedTotal: 'estimated total',
+  realTotal: 'actual total',
   totalDuration: 'total duration',
   preAuthorization: 'Pre-authorization',
   preAuthExplanation: '💳 The amount is only HELD on your card during the call — you are charged ONLY AFTER you actually get your call with the celebrity. If they don\'t take your call, the amount is RELEASED automatically and you pay nothing.',

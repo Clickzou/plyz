@@ -26,6 +26,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStripeAccountId } from '@/utils/userProfile';
 
 import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount } from '@/utils/eventSessionStorage';
+import { getServedFansCountBySessions } from '@/utils/sessionQueueStorage';
 import QRCodeSvg from 'react-native-qrcode-svg';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
@@ -104,6 +105,9 @@ export default function MySpaceScreen() {
   const [showQrModal, setShowQrModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [eventViews, setEventViews] = useState<Record<string, number>>({});
+  // Nombre de fans REELLEMENT servis (session_queue completed + payment_captured) par session video,
+  // utilise pour le « total reel » des sessions video TERMINEES. Cle = live_session_id.
+  const [servedFansBySession, setServedFansBySession] = useState<Record<string, number>>({});
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
 
@@ -282,6 +286,23 @@ export default function MySpaceScreen() {
         return (statusOrder[a.status as keyof typeof statusOrder] || 2) - (statusOrder[b.status as keyof typeof statusOrder] || 2);
       });
       setMyEvents(sortedEvents);
+
+      // Pour les sessions VIDEO TERMINEES uniquement, on recupere le nombre de fans
+      // reellement servis (1 requete groupee) pour afficher un « total reel ».
+      const now = Date.now();
+      const endedVideoSessionIds = sortedEvents
+        .filter((e) => {
+          if (e.event_type !== 'live_video' || !e.live_session_id) return false;
+          const ended = e.status === 'ended' || (e.ends_at ? new Date(e.ends_at).getTime() < now : false);
+          return ended;
+        })
+        .map((e) => e.live_session_id as string);
+      if (endedVideoSessionIds.length > 0) {
+        const counts = await getServedFansCountBySessions(endedVideoSessionIds);
+        setServedFansBySession(counts);
+      } else {
+        setServedFansBySession({});
+      }
     } catch (error) {
       console.error('Error loading events:', error);
     } finally {
@@ -1240,6 +1261,12 @@ export default function MySpaceScreen() {
                   const eventEnded = isEventEnded(event);
                   const eventLive = isEventLive(event);
                   const currentStatus = getEventStatus(event);
+                  // Session video TERMINEE : on affiche le total REEL (fans reellement servis x prix x 85%)
+                  // et la duree REELLE. Session active/programmee : on garde l'estimation (max_fans).
+                  const realFans = (isLiveVideo && eventEnded && event.live_session_id)
+                    ? (servedFansBySession[event.live_session_id] || 0)
+                    : null;
+                  const durationPerFan = event.duration_per_fan_minutes || 5;
                   return (
                     <TouchableOpacity
                       key={event.id}
@@ -1331,19 +1358,25 @@ export default function MySpaceScreen() {
                           <View style={styles.evtEventDetailDivider} />
                           <View style={styles.evtEventDetailItem}>
                             <Text style={styles.evtEventDetailValue}>
-                              {event.price_cents && event.max_fans ? `${((event.price_cents * event.max_fans) / 100).toFixed(0)}€` : '-'}
+                              {realFans !== null
+                                ? `${((realFans * (event.price_cents || 0) * 0.85) / 100).toFixed(0)}€`
+                                : (event.price_cents && event.max_fans ? `${((event.price_cents * event.max_fans) / 100).toFixed(0)}€` : '-')}
                             </Text>
-                            <Text style={styles.evtEventDetailLabel}>{t('estimatedTotal') || 'total estimé'}</Text>
+                            <Text style={styles.evtEventDetailLabel}>
+                              {realFans !== null ? (t('realTotal') || 'total réel') : (t('estimatedTotal') || 'total estimé')}
+                            </Text>
                           </View>
                           <View style={styles.evtEventDetailDivider} />
                           <View style={styles.evtEventDetailItem}>
-                            <Text style={styles.evtEventDetailValue}>{event.duration_per_fan_minutes || 5} min</Text>
+                            <Text style={styles.evtEventDetailValue}>{durationPerFan} min</Text>
                             <Text style={styles.evtEventDetailLabel}>{t('perFan') || 'par fan'}</Text>
                           </View>
                           <View style={styles.evtEventDetailDivider} />
                           <View style={styles.evtEventDetailItem}>
                             <Text style={styles.evtEventDetailValue}>
-                              {((event.duration_per_fan_minutes || 5) * (event.max_fans || 60))} min
+                              {realFans !== null
+                                ? `${realFans * durationPerFan} min`
+                                : `${durationPerFan * (event.max_fans || 60)} min`}
                             </Text>
                             <Text style={styles.evtEventDetailLabel}>{t('totalDuration') || 'durée totale'}</Text>
                           </View>

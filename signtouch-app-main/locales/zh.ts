@@ -1101,6 +1101,7 @@ export default {
   copied: '已复制！',
   perFan: '每位粉丝',
   estimatedTotal: '预估总额',
+  realTotal: '实际总额',
   totalDuration: '总时长',
   preAuthorization: '预授权',
   preAuthExplanation: '💳 通话期间，金额只是被冻结在您的卡上 — 只有在您与明星完成通话之后才会扣款。如果明星没有接听，金额会自动解冻，您无需支付任何费用。',

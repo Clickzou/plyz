@@ -1106,6 +1106,7 @@ export default {
   copied: 'Disalin!',
   perFan: 'setiap peminat',
   estimatedTotal: 'jumlah anggaran',
+  realTotal: 'jumlah sebenar',
   totalDuration: 'jumlah masa',
   preAuthorization: 'Pra-kebenaran',
   preAuthExplanation: '💳 Jumlahnya hanya DISEKAT pada kad anda sepanjang panggilan — anda hanya dicaj SELEPAS benar-benar mendapat panggilan dengan selebriti. Jika dia tidak menjawab panggilan anda, jumlahnya DILEPASKAN secara automatik dan anda tidak membayar apa-apa.',

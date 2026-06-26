@@ -173,6 +173,46 @@ export const getQueuePosition = async (
   }
 };
 
+/**
+ * Compte, par session, le nombre de fans qui ont REELLEMENT fait la session video
+ * jusqu'au bout : entrees session_queue avec status='completed' ET payment_captured=true.
+ * Meme definition que /api/session-earnings cote serveur.
+ *
+ * UNE seule requete groupee (filtree par la liste de sessionIds), puis agregation en JS
+ * car le client Supabase ne fait pas de GROUP BY simplement.
+ *
+ * @returns map { sessionId: nombreDeFansReels } (les sessions sans fan reel sont absentes du map)
+ */
+export const getServedFansCountBySessions = async (
+  sessionIds: string[]
+): Promise<Record<string, number>> => {
+  const counts: Record<string, number> = {};
+  try {
+    const ids = (sessionIds || []).filter(Boolean);
+    if (ids.length === 0) return counts;
+
+    const { data, error } = await supabase
+      .from('session_queue')
+      .select('session_id')
+      .in('session_id', ids)
+      .eq('status', 'completed')
+      .eq('payment_captured', true);
+
+    if (error) {
+      console.warn('getServedFansCountBySessions: requete echouee', error.message);
+      return counts;
+    }
+
+    for (const row of (data || []) as { session_id: string }[]) {
+      counts[row.session_id] = (counts[row.session_id] || 0) + 1;
+    }
+    return counts;
+  } catch (error) {
+    console.error('Error counting served fans:', error);
+    return counts;
+  }
+};
+
 export const getFullQueue = async (sessionId: string): Promise<QueueEntry[]> => {
   try {
     const { data, error } = await supabase
