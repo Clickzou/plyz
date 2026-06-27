@@ -234,10 +234,27 @@ export default function JoinLiveSessionScreen() {
         return;
       }
 
-      if (s.slots_used >= s.max_slots) {
-        showAlert(t('error'), t('liveSessionFull'));
-        setIsLoading(false);
-        return;
+      // PLAFOND TOTAL CUMULÉ : on compte le nombre de fans DISTINCTS déjà entrés
+      // dans cette session depuis le début (waiting + current + completed + tous
+      // statuts confondus). Une fois max_slots personnes entrées, plus personne ne
+      // peut rejoindre — même si des places se sont "libérées" (slots_used dynamique).
+      // EXCEPTION : le fan déjà présent (il revient/recharge) garde sa place.
+      try {
+        const { data: allEntries } = await supabase
+          .from('session_queue')
+          .select('fan_id')
+          .eq('session_id', s.id);
+        const distinctFanIds = new Set(
+          (allEntries || []).map((e: { fan_id: string }) => e.fan_id)
+        );
+        const alreadyInQueue = !!(user?.id && distinctFanIds.has(user.id));
+        if (distinctFanIds.size >= s.max_slots && !alreadyInQueue) {
+          showAlert(t('error'), t('liveSessionFull'));
+          setIsLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.error('[Join] Error counting cumulative slots:', e);
       }
 
       setSession(s);

@@ -762,7 +762,7 @@ export default {
   fanEndedEarlyTitle: 'Le fan a raccroché',
   fanEndedEarlyMessage: 'Le fan a raccroché avant la fin de l\'appel. Vous serez quand même crédité(e) pour cet appel — ce n\'est pas de votre faute.',
   celebrityEndEarlyWarning: '⚠️ Important : si tu mets fin à un appel avant la fin de sa durée, CE fan est intégralement remboursé et tu n\'es PAS payé(e) pour CET appel. La session vidéo continue — va au bout de chaque appel pour être crédité(e).',
-  liveSessionFull: 'Cette session est complète',
+  liveSessionFull: 'Cet événement est complet, le nombre maximum de participants est atteint.',
   liveSessionJoin: 'Rejoindre',
   liveSessionJoinSession: 'Session Live Vidéo',
   liveSessionJoinError: 'Échec de la connexion à la session',

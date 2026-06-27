@@ -607,6 +607,35 @@ export const joinSessionQueue = async (
       }
     } catch {}
 
+    // PLAFOND TOTAL CUMULÉ (sécurité anti-concurrence, refait juste avant l'insert).
+    // On compte les fans DISTINCTS déjà entrés dans la session, tous statuts confondus
+    // (waiting + current + completed + ...). Si max_slots est atteint ET que ce fan
+    // n'a PAS déjà d'entrée (il ne revient pas), on refuse l'insertion.
+    try {
+      const { data: sessionRow } = await supabase
+        .from('live_sessions')
+        .select('max_slots')
+        .eq('id', sessionId)
+        .maybeSingle();
+      const maxSlots = sessionRow?.max_slots ?? 0;
+      if (maxSlots > 0) {
+        const { data: allEntries } = await supabase
+          .from('session_queue')
+          .select('fan_id')
+          .eq('session_id', sessionId);
+        const distinctFanIds = new Set(
+          (allEntries || []).map((e: { fan_id: string }) => e.fan_id)
+        );
+        const alreadyPresent = distinctFanIds.has(fanId);
+        if (distinctFanIds.size >= maxSlots && !alreadyPresent) {
+          console.warn('[Queue] Session full (cumulative cap reached), refusing insert');
+          return null;
+        }
+      }
+    } catch (e) {
+      console.warn('[Queue] Could not verify cumulative cap:', e);
+    }
+
     // nextPosition = MAX(position) + 1 sur les seules entrées ACTIVES.
     // Une entrée déjà passée (completed/missed/left/skipped) ne décale plus la
     // position -> un fan seul ne se retrouve plus en "position 2".
