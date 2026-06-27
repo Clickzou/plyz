@@ -1540,6 +1540,7 @@ export default {
   eventFinishedTitle: "セッションが終了しました 🎉",
   eventFinishedMessage: "ご参加ありがとうございました！サインはギャラリーでご覧いただけます。",
   backToFeed: "フィードに戻る",
+  viewMyGallery: "マイギャラリーを見る",
   startDedicationSession: "サイン会を開始する",
   endSessionConfirm: "サイン会を終了しますか？ファンは参加できなくなります。",
 };

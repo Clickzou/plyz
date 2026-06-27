@@ -42,6 +42,7 @@ import {
   getSignedDedicationCount,
 } from '@/utils/eventSessionStorage';
 import { saveMemory } from '@/utils/storageService';
+import { saveCollectorLive } from '@/utils/collectorLiveStorage';
 import { useAuth } from '@/contexts/AuthContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
@@ -297,6 +298,25 @@ export default function EventGalleryScreen() {
             triggerNewPhotoAlert(signerName);
           }
 
+          // Auto-enregistrement « Collector Live » : chaque NOUVELLE dédicace reçue
+          // est sauvée dans Ma Galerie (onglet Collector Live), en fire-and-forget.
+          // dedupKey = asset.id → un même asset n'est jamais ajouté 2 fois.
+          if (trulyNew.length > 0 && initialLoadDoneRef.current) {
+            trulyNew
+              .filter(a => a.asset_type === 'photo_signed' || a.asset_type === 'signed_photo')
+              .forEach(a => {
+                saveCollectorLive(
+                  a.asset_url,
+                  a.signer?.display_name || 'Celebrity',
+                  user?.email || 'Fan',
+                  session.id || undefined,
+                  session.join_code || undefined,
+                  undefined,
+                  a.id,
+                ).catch(() => {});
+              });
+          }
+
           setAssets(prev => {
             const existingIds = new Set(prev.map(a => a.id));
             const uniqueNew = newAssets.filter(a => !existingIds.has(a.id));
@@ -548,6 +568,19 @@ export default function EventGalleryScreen() {
       await saveMemory(imageUri, user?.id || null, {
         isEdited: true,
       });
+      // Cohérence avec l'auto-enregistrement : on ajoute aussi au Collector Live
+      // (même dedupKey asset.id → pas de doublon avec le polling automatique).
+      if (asset.asset_type === 'photo_signed' || asset.asset_type === 'signed_photo') {
+        saveCollectorLive(
+          asset.asset_url,
+          asset.signer?.display_name || 'Celebrity',
+          user?.email || 'Fan',
+          session.id || undefined,
+          session.join_code || undefined,
+          undefined,
+          asset.id,
+        ).catch(() => {});
+      }
       showAlert(
         t('done') || 'Done', 
         (t as any)('savedToGallery') || 'Photo saved to your Plyz gallery!'
@@ -740,11 +773,11 @@ export default function EventGalleryScreen() {
               style={styles.refundBackButton}
               onPress={() => {
                 clearActiveFanEvent();
-                router.replace('/activity' as any);
+                router.replace('/gallery' as any);
               }}
               activeOpacity={0.85}
             >
-              <Text style={styles.refundBackButtonText}>{(t as any)('backToFeed') || 'Retour aux actualités'}</Text>
+              <Text style={styles.refundBackButtonText}>{(t as any)('viewMyGallery') || 'Voir ma galerie'}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -1540,6 +1540,7 @@ export default {
   eventFinishedTitle: "Session beendet 🎉",
   eventFinishedMessage: "Danke fürs Mitmachen! Deine Widmungen findest du in deiner Galerie.",
   backToFeed: "Zurück zu Neuigkeiten",
+  viewMyGallery: "Meine Galerie ansehen",
   startDedicationSession: "Starte deine Widmungs-Session",
   endSessionConfirm: "Widmungs-Session beenden? Fans können dann nicht mehr beitreten.",
 };

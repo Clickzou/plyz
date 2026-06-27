@@ -1540,6 +1540,7 @@ export default {
   eventFinishedTitle: "Sessione terminata 🎉",
   eventFinishedMessage: "Grazie per aver partecipato! Trova le tue dediche nella tua galleria.",
   backToFeed: "Torna alle novità",
+  viewMyGallery: "Vedi la mia galleria",
   startDedicationSession: "Avvia la tua sessione di dediche",
   endSessionConfirm: "Terminare la sessione di dediche? I fan non potranno più partecipare.",
 };

@@ -1539,6 +1539,7 @@ export default {
   eventFinishedTitle: "Sesión finalizada 🎉",
   eventFinishedMessage: "¡Gracias por participar! Encuentra tus dedicatorias en tu galería.",
   backToFeed: "Volver a novedades",
+  viewMyGallery: "Ver mi galería",
   startDedicationSession: "Inicia tu sesión de dedicatorias",
   endSessionConfirm: "¿Finalizar la sesión de dedicatorias? Los fans ya no podrán unirse.",
 };

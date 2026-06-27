@@ -1540,6 +1540,7 @@ export default {
   eventFinishedTitle: "انتهت الجلسة 🎉",
   eventFinishedMessage: "شكرًا لمشاركتك! ستجد إهداءاتك في معرض الصور الخاص بك.",
   backToFeed: "العودة إلى آخر الأخبار",
+  viewMyGallery: "عرض معرض الصور الخاص بي",
   startDedicationSession: "ابدأ جلسة الإهداءات الخاصة بك",
   endSessionConfirm: "إنهاء جلسة الإهداءات؟ لن يتمكن المعجبون من الانضمام بعد الآن.",
 };

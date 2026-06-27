@@ -1545,6 +1545,7 @@ export default {
   eventFinishedTitle: "سیشن ختم ہو گیا 🎉",
   eventFinishedMessage: "شرکت کرنے کا شکریہ! اپنی ڈیڈیکیشنز اپنی گیلری میں دیکھیں۔",
   backToFeed: "فیڈ پر واپس جائیں",
+  viewMyGallery: "میری گیلری دیکھیں",
   startDedicationSession: "اپنا ڈیڈیکیشن سیشن شروع کریں",
   endSessionConfirm: "ڈیڈیکیشن سیشن ختم کریں؟ مداح اب شامل نہیں ہو سکیں گے۔",
 };

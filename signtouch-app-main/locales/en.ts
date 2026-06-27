@@ -1573,6 +1573,7 @@ export default {
   eventFinishedTitle: "Session finished 🎉",
   eventFinishedMessage: "Thanks for joining! Find your dedications in your gallery.",
   backToFeed: "Back to feed",
+  viewMyGallery: "View my gallery",
   startDedicationSession: "Start your dedication session",
   endSessionConfirm: "End the dedication session? Fans will no longer be able to join.",
 };

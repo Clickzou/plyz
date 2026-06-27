@@ -1540,6 +1540,7 @@ export default {
   eventFinishedTitle: "会话已结束 🎉",
   eventFinishedMessage: "感谢参与！你的签名照可在相册中找到。",
   backToFeed: "返回动态",
+  viewMyGallery: "查看我的相册",
   startDedicationSession: "开始你的签名专场",
   endSessionConfirm: "结束签名专场吗？粉丝将无法再加入。",
 };

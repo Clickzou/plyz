@@ -1540,6 +1540,7 @@ export default {
   eventFinishedTitle: "सत्र समाप्त हो गया 🎉",
   eventFinishedMessage: "भाग लेने के लिए धन्यवाद! अपनी डेडिकेशन अपनी गैलरी में देखें।",
   backToFeed: "फ़ीड पर वापस जाएँ",
+  viewMyGallery: "मेरी गैलरी देखें",
   startDedicationSession: "अपना डेडिकेशन सेशन शुरू करें",
   endSessionConfirm: "डेडिकेशन सेशन समाप्त करें? फैंस अब शामिल नहीं हो पाएंगे।",
 };

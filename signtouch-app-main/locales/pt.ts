@@ -1540,6 +1540,7 @@ export default {
   eventFinishedTitle: "Sessão concluída 🎉",
   eventFinishedMessage: "Obrigado por participar! Encontre suas dedicatórias na sua galeria.",
   backToFeed: "Voltar às novidades",
+  viewMyGallery: "Ver minha galeria",
   startDedicationSession: "Inicie sua sessão de dedicatórias",
   endSessionConfirm: "Encerrar a sessão de dedicatórias? Os fãs não poderão mais entrar.",
 };

@@ -1545,6 +1545,7 @@ export default {
   eventFinishedTitle: "Sesi tamat 🎉",
   eventFinishedMessage: "Terima kasih kerana menyertai! Cari dedikasi anda dalam galeri anda.",
   backToFeed: "Kembali ke berita",
+  viewMyGallery: "Lihat galeri saya",
   startDedicationSession: "Mulakan sesi dedikasi anda",
   endSessionConfirm: "Tamatkan sesi dedikasi? Peminat tidak lagi boleh menyertai.",
 };

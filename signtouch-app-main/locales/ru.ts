@@ -1540,6 +1540,7 @@ export default {
   eventFinishedTitle: "Сессия завершена 🎉",
   eventFinishedMessage: "Спасибо за участие! Ваши автографы вы найдёте в своей галерее.",
   backToFeed: "Назад к новостям",
+  viewMyGallery: "Открыть мою галерею",
   startDedicationSession: "Начните сессию автографов",
   endSessionConfirm: "Завершить сессию автографов? Фанаты больше не смогут присоединиться.",
 };

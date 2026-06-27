@@ -1545,6 +1545,7 @@ export default {
   eventFinishedTitle: "সেশন শেষ হয়েছে 🎉",
   eventFinishedMessage: "অংশগ্রহণের জন্য ধন্যবাদ! আপনার ডেডিকেশনগুলো আপনার গ্যালারিতে খুঁজে পাবেন।",
   backToFeed: "ফিডে ফিরে যান",
+  viewMyGallery: "আমার গ্যালারি দেখুন",
   startDedicationSession: "আপনার ডেডিকেশন সেশন শুরু করুন",
   endSessionConfirm: "ডেডিকেশন সেশন শেষ করবেন? ভক্তরা আর যোগ দিতে পারবে না।",
 };

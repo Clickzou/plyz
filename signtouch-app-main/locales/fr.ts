@@ -1557,6 +1557,7 @@ export default {
   eventFinishedTitle: "Session terminée 🎉",
   eventFinishedMessage: "Merci d'avoir participé ! Retrouvez vos dédicaces dans votre galerie.",
   backToFeed: "Retour aux actualités",
+  viewMyGallery: "Voir ma galerie",
   startDedicationSession: "Lancer votre séance de dédicace",
   endSessionConfirm: "Terminer la session de dédicace ? Les fans ne pourront plus rejoindre.",
 };
