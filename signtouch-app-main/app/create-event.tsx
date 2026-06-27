@@ -124,6 +124,7 @@ const SignaturePad = memo(function SignaturePad({
   }, []);
 
   const start = useCallback((event: any) => {
+    if (isDrawingRef.current) return; // garde : un même geste peut déclencher Responder + Touch
     const { x, y } = getPoint(event);
     startPointRef.current = { x, y };
     lastPointRef.current = { x, y };
@@ -177,13 +178,23 @@ const SignaturePad = memo(function SignaturePad({
         onMouseLeave: end,
       }
     : {
+        // Système Responder : capte le geste dans le ScrollView.
         onStartShouldSetResponder: () => true,
         onMoveShouldSetResponder: () => true,
+        onStartShouldSetResponderCapture: () => true,
         onResponderTerminationRequest: () => false,
         onResponderGrant: start,
         onResponderMove: move,
         onResponderRelease: end,
         onResponderTerminate: end,
+        // + events tactiles bruts en FILET : si le ScrollView vole le responder au
+        // démarrage du geste, onTouch* continue de capter le tracé (c'est ce filet qui
+        // rendait le dessin fiable AVANT la refonte). Les doublons de points sont
+        // éliminés par le throttle <1px (move) et la garde de `start`.
+        onTouchStart: start,
+        onTouchMove: move,
+        onTouchEnd: end,
+        onTouchCancel: end,
       };
 
   return (
