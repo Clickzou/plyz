@@ -2793,7 +2793,7 @@ export default function ResultScreen() {
                 onLongPress={() => removeSignatureOverlay(overlay.id)}
                 onPress={() => selectElement(overlay.id, 'signature')}
                 onDelete={() => removeSignatureOverlay(overlay.id)}
-                isSelected={selectedElementId === overlay.id}
+                isSelected={isEditMode && !isReEdit && selectedElementId === overlay.id}
                 captureMode={capturingStatic || saving}
               />
             ))}
@@ -2808,7 +2808,7 @@ export default function ResultScreen() {
                 onLongPress={() => removeTextOverlay(overlay.id)}
                 onPress={() => selectElement(overlay.id, 'text')}
                 onDelete={() => removeTextOverlay(overlay.id)}
-                isSelected={selectedElementId === overlay.id}
+                isSelected={isEditMode && !isReEdit && selectedElementId === overlay.id}
                 onFontPress={() => setShowFontPicker(!showFontPicker)}
                 captureMode={capturingStatic || saving}
               />
