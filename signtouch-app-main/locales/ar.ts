@@ -1543,4 +1543,10 @@ export default {
   viewMyGallery: "عرض معرض الصور الخاص بي",
   startDedicationSession: "ابدأ جلسة الإهداءات الخاصة بك",
   endSessionConfirm: "إنهاء جلسة الإهداءات؟ لن يتمكن المعجبون من الانضمام بعد الآن.",
+  blockFanOption: "حظر هذا المعجب",
+  blockFanDescription: "لن يتمكن من الانضمام إلى جلساتك بعد الآن",
+  blockFanButton: "حظر هذا المعجب",
+  fanBlockedConfirm: "تم حظر المعجب. لن يتمكن من الانضمام إليك بعد الآن.",
+  accessDenied: "تم رفض الوصول",
+  blockedByHost: "لا يمكنك الانضمام إلى هذه الجلسة.",
 };

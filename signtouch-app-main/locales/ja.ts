@@ -1543,4 +1543,10 @@ export default {
   viewMyGallery: "マイギャラリーを見る",
   startDedicationSession: "サイン会を開始する",
   endSessionConfirm: "サイン会を終了しますか？ファンは参加できなくなります。",
+  blockFanOption: "このファンをブロック",
+  blockFanDescription: "あなたのセッションに参加できなくなります",
+  blockFanButton: "このファンをブロック",
+  fanBlockedConfirm: "ファンをブロックしました。今後参加できません。",
+  accessDenied: "アクセスが拒否されました",
+  blockedByHost: "このセッションに参加できません。",
 };

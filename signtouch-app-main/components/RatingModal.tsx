@@ -9,15 +9,17 @@ import {
   TextInput,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star, X, Shield, Heart } from 'lucide-react-native';
+import { Star, X, Shield, Heart, Ban, Check } from 'lucide-react-native';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface RatingModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (rating: number, comment: string) => Promise<void>;
+  onSubmit: (rating: number, comment: string, blockFan?: boolean) => Promise<void>;
   userName: string;
   isCelebrity: boolean;
+  // Affiche la case « Bloquer ce fan » (réservé à la célébrité qui note un fan).
+  showBlockOption?: boolean;
 }
 
 export default function RatingModal({
@@ -26,20 +28,23 @@ export default function RatingModal({
   onSubmit,
   userName,
   isCelebrity,
+  showBlockOption,
 }: RatingModalProps) {
   const { t } = useLanguage();
   const [selectedRating, setSelectedRating] = useState<number>(0);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [blockFan, setBlockFan] = useState(false);
 
   const handleSubmit = async () => {
     if (selectedRating === 0) return;
 
     setIsSubmitting(true);
     try {
-      await onSubmit(selectedRating, comment.trim());
+      await onSubmit(selectedRating, comment.trim(), blockFan);
       setSelectedRating(0);
       setComment('');
+      setBlockFan(false);
       onClose();
     } catch (error) {
       console.error('Error submitting rating:', error);
@@ -51,6 +56,7 @@ export default function RatingModal({
   const handleSkip = () => {
     setSelectedRating(0);
     setComment('');
+    setBlockFan(false);
     onClose();
   };
 
@@ -165,6 +171,31 @@ export default function RatingModal({
             <View style={styles.explanationCard}>
               <Text style={styles.explanationText}>{getExplanation()}</Text>
             </View>
+
+            {showBlockOption && (
+              <TouchableOpacity
+                style={styles.blockOption}
+                onPress={() => setBlockFan((v) => !v)}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.blockCheckbox, blockFan && styles.blockCheckboxChecked]}>
+                  {blockFan ? (
+                    <Check size={16} color="#fff" />
+                  ) : (
+                    <Ban size={16} color="#f87171" />
+                  )}
+                </View>
+                <View style={styles.blockTexts}>
+                  <Text style={styles.blockOptionText}>
+                    {t('blockFanOption') || 'Bloquer ce fan'}
+                  </Text>
+                  <Text style={styles.blockOptionSubtext}>
+                    {t('blockFanDescription') ||
+                      'Il ne pourra plus rejoindre vos sessions'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={[
@@ -326,6 +357,46 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.5)',
     lineHeight: 19,
     textAlign: 'center',
+  },
+  blockOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    width: '100%',
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.25)',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 16,
+  },
+  blockCheckbox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: 'rgba(248, 113, 113, 0.5)',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  blockCheckboxChecked: {
+    backgroundColor: '#dc2626',
+    borderColor: '#dc2626',
+  },
+  blockTexts: {
+    flex: 1,
+  },
+  blockOptionText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fca5a5',
+  },
+  blockOptionSubtext: {
+    fontSize: 12,
+    color: 'rgba(252, 165, 165, 0.7)',
+    marginTop: 2,
   },
   submitButton: {
     width: '100%',

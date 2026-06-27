@@ -1542,4 +1542,10 @@ export default {
   viewMyGallery: "Ver mi galería",
   startDedicationSession: "Inicia tu sesión de dedicatorias",
   endSessionConfirm: "¿Finalizar la sesión de dedicatorias? Los fans ya no podrán unirse.",
+  blockFanOption: "Bloquear a este fan",
+  blockFanDescription: "Ya no podrá unirse a tus sesiones",
+  blockFanButton: "Bloquear a este fan",
+  fanBlockedConfirm: "Fan bloqueado. Ya no podrá unirse a ti.",
+  accessDenied: "Acceso denegado",
+  blockedByHost: "No puedes unirte a esta sesión.",
 };

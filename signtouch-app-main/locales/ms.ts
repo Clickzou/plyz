@@ -1548,4 +1548,10 @@ export default {
   viewMyGallery: "Lihat galeri saya",
   startDedicationSession: "Mulakan sesi dedikasi anda",
   endSessionConfirm: "Tamatkan sesi dedikasi? Peminat tidak lagi boleh menyertai.",
+  blockFanOption: "Sekat peminat ini",
+  blockFanDescription: "Dia tidak lagi boleh menyertai sesi anda",
+  blockFanButton: "Sekat peminat ini",
+  fanBlockedConfirm: "Peminat disekat. Dia tidak lagi boleh menyertai anda.",
+  accessDenied: "Akses ditolak",
+  blockedByHost: "Anda tidak boleh menyertai sesi ini.",
 };

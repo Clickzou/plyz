@@ -1548,4 +1548,10 @@ export default {
   viewMyGallery: "আমার গ্যালারি দেখুন",
   startDedicationSession: "আপনার ডেডিকেশন সেশন শুরু করুন",
   endSessionConfirm: "ডেডিকেশন সেশন শেষ করবেন? ভক্তরা আর যোগ দিতে পারবে না।",
+  blockFanOption: "এই ফ্যানকে ব্লক করুন",
+  blockFanDescription: "সে আর আপনার সেশনে যোগ দিতে পারবে না",
+  blockFanButton: "এই ফ্যানকে ব্লক করুন",
+  fanBlockedConfirm: "ফ্যান ব্লক করা হয়েছে। সে আর আপনার সাথে যোগ দিতে পারবে না।",
+  accessDenied: "প্রবেশ অস্বীকৃত",
+  blockedByHost: "আপনি এই সেশনে যোগ দিতে পারবেন না।",
 };

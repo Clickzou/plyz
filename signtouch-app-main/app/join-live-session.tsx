@@ -43,6 +43,7 @@ import {
   subscribeToQueueEntry,
 } from '@/utils/liveSessionStorage';
 import { supabase } from '@/utils/supabase';
+import { isFanBlocked } from '@/utils/blockedFansStorage';
 import { createMeetingToken } from '@/utils/dailyService';
 import { saveActiveFanEvent } from '@/utils/eventSessionStorage';
 
@@ -255,6 +256,22 @@ export default function JoinLiveSessionScreen() {
         }
       } catch (e) {
         console.error('[Join] Error counting cumulative slots:', e);
+      }
+
+      // BLOCAGE : si la célébrité a bloqué ce fan (harcèlement/injures), il ne peut
+      // pas rejoindre. On vérifie AVANT d'afficher l'écran d'inscription/file.
+      // N'altère PAS le contrôle de plafond ci-dessus (vérification indépendante).
+      if (s.celebrity_id) {
+        const blocked = await isFanBlocked(s.celebrity_id, fanId);
+        if (blocked) {
+          showAlert(
+            t('accessDenied' as any) || 'Accès refusé',
+            t('blockedByHost' as any) ||
+              'Vous ne pouvez pas rejoindre cette session.'
+          );
+          setIsLoading(false);
+          return;
+        }
       }
 
       setSession(s);
@@ -580,6 +597,21 @@ export default function JoinLiveSessionScreen() {
     // `session` n'est pas encore propagé -> sans ça, on lit null et on bloque.
     const sess = sessionRef.current || session;
     if (!sess) return;
+
+    // Filet de sécurité BLOCAGE : couvre aussi le retour après paiement (qui ne passe
+    // pas par handleJoinWithCode). Refuse l'entrée d'un fan bloqué par la célébrité.
+    if (sess.celebrity_id) {
+      const blocked = await isFanBlocked(sess.celebrity_id, fanId);
+      if (blocked) {
+        showAlert(
+          t('accessDenied' as any) || 'Accès refusé',
+          t('blockedByHost' as any) ||
+            'Vous ne pouvez pas rejoindre cette session.'
+        );
+        setIsLoading(false);
+        return;
+      }
+    }
 
     setIsLoading(true);
     try {

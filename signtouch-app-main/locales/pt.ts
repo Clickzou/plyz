@@ -1543,4 +1543,10 @@ export default {
   viewMyGallery: "Ver minha galeria",
   startDedicationSession: "Inicie sua sessão de dedicatórias",
   endSessionConfirm: "Encerrar a sessão de dedicatórias? Os fãs não poderão mais entrar.",
+  blockFanOption: "Bloquear este fã",
+  blockFanDescription: "Ele não poderá mais entrar nas suas sessões",
+  blockFanButton: "Bloquear este fã",
+  fanBlockedConfirm: "Fã bloqueado. Ele não poderá mais entrar.",
+  accessDenied: "Acesso negado",
+  blockedByHost: "Você não pode entrar nesta sessão.",
 };

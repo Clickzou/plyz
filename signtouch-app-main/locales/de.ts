@@ -1543,4 +1543,10 @@ export default {
   viewMyGallery: "Meine Galerie ansehen",
   startDedicationSession: "Starte deine Widmungs-Session",
   endSessionConfirm: "Widmungs-Session beenden? Fans können dann nicht mehr beitreten.",
+  blockFanOption: "Diesen Fan blockieren",
+  blockFanDescription: "Er kann deinen Sessions nicht mehr beitreten",
+  blockFanButton: "Diesen Fan blockieren",
+  fanBlockedConfirm: "Fan blockiert. Er kann dir nicht mehr beitreten.",
+  accessDenied: "Zugriff verweigert",
+  blockedByHost: "Du kannst dieser Session nicht beitreten.",
 };

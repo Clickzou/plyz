@@ -1576,4 +1576,10 @@ export default {
   viewMyGallery: "View my gallery",
   startDedicationSession: "Start your dedication session",
   endSessionConfirm: "End the dedication session? Fans will no longer be able to join.",
+  blockFanOption: "Block this fan",
+  blockFanDescription: "They will no longer be able to join your sessions",
+  blockFanButton: "Block this fan",
+  fanBlockedConfirm: "Fan blocked. They can no longer join you.",
+  accessDenied: "Access denied",
+  blockedByHost: "You cannot join this session.",
 };

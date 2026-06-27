@@ -1548,4 +1548,10 @@ export default {
   viewMyGallery: "میری گیلری دیکھیں",
   startDedicationSession: "اپنا ڈیڈیکیشن سیشن شروع کریں",
   endSessionConfirm: "ڈیڈیکیشن سیشن ختم کریں؟ مداح اب شامل نہیں ہو سکیں گے۔",
+  blockFanOption: "اس فین کو بلاک کریں",
+  blockFanDescription: "وہ اب آپ کے سیشنز میں شامل نہیں ہو سکے گا",
+  blockFanButton: "اس فین کو بلاک کریں",
+  fanBlockedConfirm: "فین بلاک کر دیا گیا۔ وہ اب آپ سے نہیں جڑ سکے گا۔",
+  accessDenied: "رسائی مسترد",
+  blockedByHost: "آپ اس سیشن میں شامل نہیں ہو سکتے۔",
 };

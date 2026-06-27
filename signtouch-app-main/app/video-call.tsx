@@ -10,13 +10,16 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useKeepAwake } from 'expo-keep-awake';
-import { ArrowLeft, PhoneOff, Clock, Video, Users, TrendingUp, RotateCcw, AlertTriangle } from 'lucide-react-native';
+import { ArrowLeft, PhoneOff, Clock, Video, Users, TrendingUp, RotateCcw, AlertTriangle, Ban } from 'lucide-react-native';
 import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
 import { sendDedicationNotification, callNextFan, getFullQueue } from '@/utils/sessionQueueStorage';
 import { markPaymentCaptured, subscribeToSession } from '@/utils/liveSessionStorage';
 import { recordTransaction } from '@/utils/transactionStorage';
+import { blockFan as blockFanInDb } from '@/utils/blockedFansStorage';
+import { supabase } from '@/utils/supabase';
+import { showAlert } from '@/utils/alertHelper';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -145,6 +148,8 @@ export default function VideoCallScreen() {
   // souvent 0 à l'instant où l'hôte affiche le résumé. Ce compteur, lui, est immédiat.
   const fansServedRef = useRef(0);
   const [waitingForNextFan, setWaitingForNextFan] = useState(false);
+  // Bouton « Bloquer ce fan » de l'overlay hostEndedEarly : passe à true une fois cliqué.
+  const [fanBlockedDone, setFanBlockedDone] = useState(false);
   const [currentFanName, setCurrentFanName] = useState(params.otherUserName || 'Fan');
   const [fansRemainingCount, setFansRemainingCount] = useState(parseInt(params.fansRemaining || '0', 10));
 
@@ -664,7 +669,12 @@ export default function VideoCallScreen() {
     handleCallEnded();
   };
 
-  const handleSubmitRating = async (rating: number, comment: string) => {
+  const handleSubmitRating = async (rating: number, comment: string, blockFan?: boolean) => {
+    // Si la célébrité a coché « Bloquer ce fan » : on bloque (fire-and-forget, n'impacte
+    // ni la notation ni le paiement / flux d'appel).
+    if (blockFan && isHost) {
+      blockCurrentFan().catch((e) => console.error('[VideoCall] blockFan on rating error:', e));
+    }
     try {
       const myDeviceId = await getOrCreateDeviceId();
       const otherUserId = params.otherUserId || (isHost ? 'fan_unknown' : params.sessionId || 'celebrity_unknown');
@@ -753,6 +763,45 @@ export default function VideoCallScreen() {
       }).catch((e) => console.error('[VideoCall] end-fan-call error:', e));
     } catch (e) {
       console.error('[VideoCall] end-fan-call threw:', e);
+    }
+  };
+
+  // CÔTÉ HÔTE — Bloque le fan ACTUELLEMENT en appel (harcèlement / injures).
+  // Résout celebrity_id = auth.uid() de la célébrité connectée, et le fan_id (format
+  // `fan_user_...`) depuis l'entrée session_queue courante (currentHostFanEntryIdRef).
+  // Fire-and-forget : ne bloque jamais l'UI ni le flux d'appel / paiement.
+  const blockCurrentFan = async (): Promise<boolean> => {
+    if (!isHost) return false;
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      const celebrityId = authData?.user?.id;
+      if (!celebrityId) return false;
+
+      // Récupère le VRAI fan_id (et son nom) depuis l'entrée de file en cours.
+      let fanId: string | null = null;
+      let fanName: string | null = currentFanName || null;
+      const entryId = currentHostFanEntryIdRef.current || params.queueEntryId || null;
+      if (entryId) {
+        const { data: entry } = await supabase
+          .from('session_queue')
+          .select('fan_id, fan_name')
+          .eq('id', entryId)
+          .maybeSingle();
+        if (entry) {
+          fanId = (entry as { fan_id?: string }).fan_id || null;
+          fanName = (entry as { fan_name?: string }).fan_name || fanName;
+        }
+      }
+      // Repli : id de l'autre participant transmis en param (peut déjà être au format fan_user_).
+      if (!fanId) {
+        fanId = params.otherUserId || null;
+      }
+      if (!fanId) return false;
+
+      return await blockFanInDb(celebrityId, fanId, fanName);
+    } catch (e) {
+      console.error('[VideoCall] blockCurrentFan error:', e);
+      return false;
     }
   };
 
@@ -1404,6 +1453,29 @@ export default function VideoCallScreen() {
                 'Tu ne seras pas crédité(e) pour cette session.'}
             </Text>
             <TouchableOpacity
+              style={[styles.blockFanButton, fanBlockedDone && styles.blockFanButtonDone]}
+              disabled={fanBlockedDone}
+              onPress={async () => {
+                const ok = await blockCurrentFan();
+                if (ok) {
+                  setFanBlockedDone(true);
+                  showAlert(
+                    t('accessDenied' as any) || 'Accès refusé',
+                    t('fanBlockedConfirm' as any) ||
+                      'Fan bloqué. Il ne pourra plus vous rejoindre.'
+                  );
+                }
+              }}
+              activeOpacity={0.85}
+            >
+              <Ban size={18} color="#fff" />
+              <Text style={styles.blockFanButtonText}>
+                {fanBlockedDone
+                  ? t('fanBlockedConfirm' as any) || 'Fan bloqué.'
+                  : `🚫 ${t('blockFanButton' as any) || 'Bloquer ce fan'}`}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={styles.endedBackButton}
               onPress={() => router.replace({ pathname: '/live-session-dashboard', params: { sessionId: params.sessionId } } as any)}
               activeOpacity={0.85}
@@ -1447,6 +1519,7 @@ export default function VideoCallScreen() {
         onSubmit={handleSubmitRating}
         userName={currentFanName || (isHost ? 'Fan' : params.userName || 'Celebrity')}
         isCelebrity={isHost}
+        showBlockOption={isHost}
       />
     </View>
   );
@@ -1781,6 +1854,26 @@ const styles = StyleSheet.create({
     color: '#cbd5e1',
     fontSize: 15,
     lineHeight: 22,
+    textAlign: 'center',
+  },
+  blockFanButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#dc2626',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    width: '100%',
+  },
+  blockFanButtonDone: {
+    backgroundColor: 'rgba(220,38,38,0.35)',
+  },
+  blockFanButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
     textAlign: 'center',
   },
   endedBackButton: {

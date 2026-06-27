@@ -1543,4 +1543,10 @@ export default {
   viewMyGallery: "查看我的相册",
   startDedicationSession: "开始你的签名专场",
   endSessionConfirm: "结束签名专场吗？粉丝将无法再加入。",
+  blockFanOption: "屏蔽该粉丝",
+  blockFanDescription: "他将无法再加入您的会话",
+  blockFanButton: "屏蔽该粉丝",
+  fanBlockedConfirm: "粉丝已屏蔽。他将无法再加入您。",
+  accessDenied: "访问被拒绝",
+  blockedByHost: "您无法加入此会话。",
 };

@@ -1543,4 +1543,10 @@ export default {
   viewMyGallery: "Vedi la mia galleria",
   startDedicationSession: "Avvia la tua sessione di dediche",
   endSessionConfirm: "Terminare la sessione di dediche? I fan non potranno più partecipare.",
+  blockFanOption: "Blocca questo fan",
+  blockFanDescription: "Non potrà più partecipare alle tue sessioni",
+  blockFanButton: "Blocca questo fan",
+  fanBlockedConfirm: "Fan bloccato. Non potrà più raggiungerti.",
+  accessDenied: "Accesso negato",
+  blockedByHost: "Non puoi partecipare a questa sessione.",
 };

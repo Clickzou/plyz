@@ -1560,4 +1560,10 @@ export default {
   viewMyGallery: "Voir ma galerie",
   startDedicationSession: "Lancer votre séance de dédicace",
   endSessionConfirm: "Terminer la session de dédicace ? Les fans ne pourront plus rejoindre.",
+  blockFanOption: "Bloquer ce fan",
+  blockFanDescription: "Il ne pourra plus rejoindre vos sessions",
+  blockFanButton: "Bloquer ce fan",
+  fanBlockedConfirm: "Fan bloqué. Il ne pourra plus vous rejoindre.",
+  accessDenied: "Accès refusé",
+  blockedByHost: "Vous ne pouvez pas rejoindre cette session.",
 };
