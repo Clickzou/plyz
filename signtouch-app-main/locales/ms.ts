@@ -1542,6 +1542,9 @@ export default {
   endEventNoDedicationConfirm: "Anda belum menerbitkan sebarang dedikasi. Jika anda tamatkan sekarang, anda TIDAK akan dibayar dan peminat akan menerima bayaran balik sepenuhnya. Sahkan?",
   eventRefundedTitle: "Acara tamat",
   eventRefundedMessage: "Acara tamat tanpa dedikasi — anda tidak dicaj (dikembalikan).",
+  eventFinishedTitle: "Sesi tamat 🎉",
+  eventFinishedMessage: "Terima kasih kerana menyertai! Cari dedikasi anda dalam galeri anda.",
+  backToFeed: "Kembali ke berita",
   startDedicationSession: "Mulakan sesi dedikasi anda",
   endSessionConfirm: "Tamatkan sesi dedikasi? Peminat tidak lagi boleh menyertai.",
 };

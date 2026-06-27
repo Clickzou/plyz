@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect, memo } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   View,
@@ -77,168 +77,6 @@ interface SignerEntry {
   paths: PathData[];
 }
 
-// Canevas de signature isolé en composant memo : il gère le trait EN COURS
-// dans son propre state local, donc dessiner ne re-render QUE ce pad
-// (pas tout l'écran create-event). Il ne notifie le parent qu'à la fin
-// d'un trait via onStrokeComplete(pathData).
-interface SignaturePadProps {
-  paths: PathData[];
-  color: string;
-  strokeWidth: number;
-  placeholder: React.ReactNode;
-  containerStyle: any;
-  svgStyle: any;
-  onStrokeComplete: (pathData: string) => void;
-  onDrawingChange: (drawing: boolean) => void;
-}
-
-const SignaturePad = memo(function SignaturePad({
-  paths,
-  color,
-  strokeWidth,
-  placeholder,
-  containerStyle,
-  svgStyle,
-  onStrokeComplete,
-  onDrawingChange,
-}: SignaturePadProps) {
-  const [currentPath, setCurrentPath] = useState<string>('');
-  const currentPathRef = useRef<string>('');
-  const isDrawingRef = useRef(false);
-  const startPointRef = useRef<{ x: number; y: number } | null>(null);
-  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
-  const hasMoved = useRef(false);
-  const layoutRef = useRef<{ width: number; height: number }>({ width: 300, height: 200 });
-
-  const getPoint = useCallback((event: any) => {
-    const ne = event.nativeEvent || event;
-    const { locationX, locationY, offsetX, offsetY } = ne;
-    const x = locationX ?? offsetX ?? 0;
-    const y = locationY ?? offsetY ?? 0;
-    const scaleX = 300 / layoutRef.current.width;
-    const scaleY = 200 / layoutRef.current.height;
-    return {
-      x: Math.max(0, Math.min(300, x * scaleX)),
-      y: Math.max(0, Math.min(200, y * scaleY)),
-    };
-  }, []);
-
-  const start = useCallback((event: any) => {
-    if (isDrawingRef.current) return; // garde : un même geste peut déclencher Responder + Touch
-    const { x, y } = getPoint(event);
-    startPointRef.current = { x, y };
-    lastPointRef.current = { x, y };
-    hasMoved.current = false;
-    currentPathRef.current = `M${x.toFixed(1)},${y.toFixed(1)}`;
-    setCurrentPath(currentPathRef.current);
-    isDrawingRef.current = true;
-    onDrawingChange(true);
-  }, [getPoint, onDrawingChange]);
-
-  const move = useCallback((event: any) => {
-    if (!isDrawingRef.current) return;
-    const { x, y } = getPoint(event);
-    // throttle léger : ignore les micro-déplacements (< 1px) pour éviter
-    // des centaines de segments inutiles (le trait reste lisse, linecap round).
-    const last = lastPointRef.current;
-    if (last && Math.abs(x - last.x) < 1 && Math.abs(y - last.y) < 1) return;
-    lastPointRef.current = { x, y };
-    hasMoved.current = true;
-    currentPathRef.current += ` L${x.toFixed(1)},${y.toFixed(1)}`;
-    setCurrentPath(currentPathRef.current);
-  }, [getPoint]);
-
-  const end = useCallback(() => {
-    if (currentPathRef.current && isDrawingRef.current) {
-      let pathData = currentPathRef.current;
-      if (!hasMoved.current && startPointRef.current) {
-        const { x, y } = startPointRef.current;
-        pathData += ` L${(x + 2).toFixed(1)},${(y + 2).toFixed(1)} L${x.toFixed(1)},${(y + 2).toFixed(1)}`;
-      }
-      onStrokeComplete(pathData);
-    }
-    currentPathRef.current = '';
-    setCurrentPath('');
-    isDrawingRef.current = false;
-    onDrawingChange(false);
-    startPointRef.current = null;
-    lastPointRef.current = null;
-    hasMoved.current = false;
-  }, [onStrokeComplete, onDrawingChange]);
-
-  // Handlers séparés par plateforme : sur mobile UNIQUEMENT le système
-  // Responder (jamais onResponder* + onTouch* en même temps -> plus de
-  // double déclenchement / points dupliqués). Sur web UNIQUEMENT la souris.
-  const platformHandlers = Platform.OS === 'web'
-    ? {
-        // @ts-ignore - mouse events for web
-        onMouseDown: start,
-        onMouseMove: (e: any) => isDrawingRef.current && move(e),
-        onMouseUp: end,
-        onMouseLeave: end,
-      }
-    : {
-        // Système Responder : capte le geste dans le ScrollView.
-        onStartShouldSetResponder: () => true,
-        onMoveShouldSetResponder: () => true,
-        onStartShouldSetResponderCapture: () => true,
-        onResponderTerminationRequest: () => false,
-        onResponderGrant: start,
-        onResponderMove: move,
-        onResponderRelease: end,
-        onResponderTerminate: end,
-        // + events tactiles bruts en FILET : si le ScrollView vole le responder au
-        // démarrage du geste, onTouch* continue de capter le tracé (c'est ce filet qui
-        // rendait le dessin fiable AVANT la refonte). Les doublons de points sont
-        // éliminés par le throttle <1px (move) et la garde de `start`.
-        onTouchStart: start,
-        onTouchMove: move,
-        onTouchEnd: end,
-        onTouchCancel: end,
-      };
-
-  return (
-    <View
-      style={containerStyle}
-      pointerEvents="box-only"
-      onLayout={(e) => {
-        layoutRef.current = {
-          width: e.nativeEvent.layout.width,
-          height: e.nativeEvent.layout.height,
-        };
-      }}
-      {...platformHandlers}
-    >
-      <Svg width="100%" height="100%" viewBox="0 0 300 200" style={svgStyle}>
-        <G>
-          {paths.map((path) => (
-            <Path
-              key={path.id}
-              d={path.d}
-              stroke={path.color}
-              strokeWidth={path.strokeWidth}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          ))}
-          {currentPath ? (
-            <Path
-              d={currentPath}
-              stroke={color}
-              strokeWidth={strokeWidth}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          ) : null}
-        </G>
-      </Svg>
-      {paths.length === 0 && !currentPath ? placeholder : null}
-    </View>
-  );
-});
-
 const DURATION_OPTIONS = [
   { label: '10 min', value: 10 },
   { label: '30 min', value: 30 },
@@ -303,11 +141,19 @@ export default function CreateEventScreen() {
 
   const [signers, setSigners] = useState<SignerEntry[]>([{ name: '', paths: [] }]);
   const [activeSignerIndex, setActiveSignerIndex] = useState(0);
+  const [currentPath, setCurrentPath] = useState<string>('');
+  const currentPathRef = useRef<string>('');
   const signatureColor = '#FFFFFF';
   const strokeWidth = 3;
 
+  const canvasRef = useRef<View>(null);
+  const [, setIsDrawing] = useState(false);
+  const isDrawingRef = useRef(false);
   const [scrollEnabled, setScrollEnabled] = useState(true);
+  const canvasLayoutRef = useRef<{ x: number; y: number; width: number; height: number }>({ x: 0, y: 0, width: 300, height: 200 });
 
+  const startPointRef = useRef<{ x: number; y: number } | null>(null);
+  const hasMoved = useRef(false);
   const hasRestoredRef = useRef(false);
 
   // Sauvegarder les données du formulaire
@@ -469,29 +315,71 @@ export default function CreateEventScreen() {
     restoreAndContinue();
   }, [user]);
 
-  // Appelé par le SignaturePad à la FIN d'un trait : on ajoute le path
-  // au signataire actif. Plus de re-render pendant le tracé côté parent.
-  const handleStrokeComplete = useCallback((pathData: string) => {
-    const newPath: PathData = {
-      id: Date.now().toString(),
-      d: pathData,
-      color: signatureColor,
-      strokeWidth,
+  const getPointerPositionFromNative = useCallback((nativeEvent: any) => {
+    const { locationX, locationY, offsetX, offsetY } = nativeEvent;
+    const x = locationX ?? offsetX ?? 0;
+    const y = locationY ?? offsetY ?? 0;
+    const scaleX = 300 / canvasLayoutRef.current.width;
+    const scaleY = 200 / canvasLayoutRef.current.height;
+    return {
+      x: Math.max(0, Math.min(300, x * scaleX)),
+      y: Math.max(0, Math.min(200, y * scaleY)),
     };
-    setSigners(prev => {
-      const updated = [...prev];
-      updated[activeSignerIndex] = {
-        ...updated[activeSignerIndex],
-        paths: [...updated[activeSignerIndex].paths, newPath],
-      };
-      return updated;
-    });
-  }, [activeSignerIndex]);
-
-  // Bloque le scroll pendant qu'on dessine, le réactive à la fin du trait.
-  const handleDrawingChange = useCallback((drawing: boolean) => {
-    setScrollEnabled(!drawing);
   }, []);
+
+  const handleTouchStart = useCallback((event: any) => {
+    setScrollEnabled(false);
+    const nativeEvent = event.nativeEvent || event;
+    const { x, y } = getPointerPositionFromNative(nativeEvent);
+    startPointRef.current = { x, y };
+    hasMoved.current = false;
+    currentPathRef.current = `M${x.toFixed(1)},${y.toFixed(1)}`;
+    setCurrentPath(currentPathRef.current);
+    isDrawingRef.current = true;
+    setIsDrawing(true);
+  }, [getPointerPositionFromNative]);
+
+  const handleTouchMove = useCallback((event: any) => {
+    if (!isDrawingRef.current) return;
+    const nativeEvent = event.nativeEvent || event;
+    const { x, y } = getPointerPositionFromNative(nativeEvent);
+    hasMoved.current = true;
+    currentPathRef.current += ` L${x.toFixed(1)},${y.toFixed(1)}`;
+    setCurrentPath(currentPathRef.current);
+  }, [getPointerPositionFromNative]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (currentPathRef.current && isDrawingRef.current) {
+      let pathData = currentPathRef.current;
+
+      if (!hasMoved.current && startPointRef.current) {
+        const { x, y } = startPointRef.current;
+        pathData += ` L${(x + 2).toFixed(1)},${(y + 2).toFixed(1)} L${x.toFixed(1)},${(y + 2).toFixed(1)}`;
+      }
+
+      const newPath: PathData = {
+        id: Date.now().toString(),
+        d: pathData,
+        color: signatureColor,
+        strokeWidth,
+      };
+      setSigners(prev => {
+        const updated = [...prev];
+        updated[activeSignerIndex] = {
+          ...updated[activeSignerIndex],
+          paths: [...updated[activeSignerIndex].paths, newPath],
+        };
+        return updated;
+      });
+      currentPathRef.current = '';
+      setCurrentPath('');
+    }
+    isDrawingRef.current = false;
+    setIsDrawing(false);
+    setScrollEnabled(true);
+    startPointRef.current = null;
+    hasMoved.current = false;
+  }, [activeSignerIndex]);
 
   const clearSignature = () => {
     setSigners(prev => {
@@ -499,6 +387,8 @@ export default function CreateEventScreen() {
       updated[activeSignerIndex] = { ...updated[activeSignerIndex], paths: [] };
       return updated;
     });
+    setCurrentPath('');
+    currentPathRef.current = '';
   };
 
   const addSigner = () => {
@@ -1144,16 +1034,61 @@ export default function CreateEventScreen() {
                     </TouchableOpacity>
                   )}
                 </View>
-                <SignaturePad
-                  key={activeSignerIndex}
-                  paths={activeSigner.paths}
-                  color={signatureColor}
-                  strokeWidth={strokeWidth}
-                  containerStyle={styles.signatureContainer}
-                  svgStyle={styles.signatureSvg}
-                  onStrokeComplete={handleStrokeComplete}
-                  onDrawingChange={handleDrawingChange}
-                  placeholder={
+                <View
+                  style={styles.signatureContainer}
+                  ref={canvasRef}
+                  pointerEvents="box-only"
+                  onLayout={(e) => {
+                    canvasLayoutRef.current = {
+                      x: e.nativeEvent.layout.x,
+                      y: e.nativeEvent.layout.y,
+                      width: e.nativeEvent.layout.width,
+                      height: e.nativeEvent.layout.height,
+                    };
+                  }}
+                  onStartShouldSetResponder={() => true}
+                  onMoveShouldSetResponder={() => true}
+                  onResponderTerminationRequest={() => false}
+                  onResponderGrant={handleTouchStart}
+                  onResponderMove={handleTouchMove}
+                  onResponderRelease={handleTouchEnd}
+                  onResponderTerminate={handleTouchEnd}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  onTouchCancel={handleTouchEnd}
+                  // @ts-ignore - mouse events for web
+                  onMouseDown={handleTouchStart}
+                  onMouseMove={(e: any) => isDrawingRef.current && handleTouchMove(e)}
+                  onMouseUp={handleTouchEnd}
+                  onMouseLeave={handleTouchEnd}
+                >
+                  <Svg width="100%" height="100%" viewBox="0 0 300 200" style={styles.signatureSvg}>
+                    <G>
+                      {activeSigner.paths.map((path) => (
+                        <Path
+                          key={path.id}
+                          d={path.d}
+                          stroke={path.color}
+                          strokeWidth={path.strokeWidth}
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      ))}
+                      {currentPath && (
+                        <Path
+                          d={currentPath}
+                          stroke={signatureColor}
+                          strokeWidth={strokeWidth}
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      )}
+                    </G>
+                  </Svg>
+                  {activeSigner.paths.length === 0 && !currentPath && (
                     <View style={styles.signaturePlaceholder}>
                       <Text style={styles.signaturePlaceholderText}>
                         {activeSigner.name.trim().length === 0
@@ -1161,8 +1096,8 @@ export default function CreateEventScreen() {
                           : (t('drawSignatureHere') || 'Draw signature here')}
                       </Text>
                     </View>
-                  }
-                />
+                  )}
+                </View>
               </View>
 
               <View style={styles.signersSummary}>

@@ -1554,6 +1554,9 @@ export default {
   endEventNoDedicationConfirm: "Tu n'as publié aucune dédicace. Si tu termines maintenant, tu ne seras PAS payée et les fans seront intégralement remboursés. Confirmer ?",
   eventRefundedTitle: "Événement terminé",
   eventRefundedMessage: "L'événement s'est terminé sans dédicace — tu n'as pas été débité(e) (remboursé).",
+  eventFinishedTitle: "Session terminée 🎉",
+  eventFinishedMessage: "Merci d'avoir participé ! Retrouvez vos dédicaces dans votre galerie.",
+  backToFeed: "Retour aux actualités",
   startDedicationSession: "Lancer votre séance de dédicace",
   endSessionConfirm: "Terminer la session de dédicace ? Les fans ne pourront plus rejoindre.",
 };

@@ -1537,6 +1537,9 @@ export default {
   endEventNoDedicationConfirm: "你还没有发布任何签名照。如果现在结束，你将不会获得报酬，粉丝将获得全额退款。确认吗？",
   eventRefundedTitle: "活动已结束",
   eventRefundedMessage: "活动结束时没有签名照——你未被扣款（已退款）。",
+  eventFinishedTitle: "会话已结束 🎉",
+  eventFinishedMessage: "感谢参与！你的签名照可在相册中找到。",
+  backToFeed: "返回动态",
   startDedicationSession: "开始你的签名专场",
   endSessionConfirm: "结束签名专场吗？粉丝将无法再加入。",
 };

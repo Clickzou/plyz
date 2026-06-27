@@ -1570,6 +1570,9 @@ export default {
   endEventNoDedicationConfirm: "You haven't published any dedication. If you end now, you will NOT be paid and fans will be fully refunded. Confirm?",
   eventRefundedTitle: "Event ended",
   eventRefundedMessage: "The event ended without a dedication — you were not charged (refunded).",
+  eventFinishedTitle: "Session finished 🎉",
+  eventFinishedMessage: "Thanks for joining! Find your dedications in your gallery.",
+  backToFeed: "Back to feed",
   startDedicationSession: "Start your dedication session",
   endSessionConfirm: "End the dedication session? Fans will no longer be able to join.",
 };

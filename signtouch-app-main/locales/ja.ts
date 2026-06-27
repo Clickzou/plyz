@@ -1537,6 +1537,9 @@ export default {
   endEventNoDedicationConfirm: "サインをまだ公開していません。今終了すると報酬は支払われず、ファンには全額返金されます。よろしいですか？",
   eventRefundedTitle: "イベント終了",
   eventRefundedMessage: "サインなしでイベントが終了しました — 請求はされていません（返金済み）。",
+  eventFinishedTitle: "セッションが終了しました 🎉",
+  eventFinishedMessage: "ご参加ありがとうございました！サインはギャラリーでご覧いただけます。",
+  backToFeed: "フィードに戻る",
   startDedicationSession: "サイン会を開始する",
   endSessionConfirm: "サイン会を終了しますか？ファンは参加できなくなります。",
 };

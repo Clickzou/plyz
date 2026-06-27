@@ -1537,6 +1537,9 @@ export default {
   endEventNoDedicationConfirm: "Non hai pubblicato alcuna dedica. Se termini ora, NON verrai pagata e i fan saranno completamente rimborsati. Confermi?",
   eventRefundedTitle: "Evento terminato",
   eventRefundedMessage: "L'evento è terminato senza dedica — non ti è stato addebitato nulla (rimborsato).",
+  eventFinishedTitle: "Sessione terminata 🎉",
+  eventFinishedMessage: "Grazie per aver partecipato! Trova le tue dediche nella tua galleria.",
+  backToFeed: "Torna alle novità",
   startDedicationSession: "Avvia la tua sessione di dediche",
   endSessionConfirm: "Terminare la sessione di dediche? I fan non potranno più partecipare.",
 };

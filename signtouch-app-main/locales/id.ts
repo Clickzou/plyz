@@ -1542,6 +1542,9 @@ export default {
   endEventNoDedicationConfirm: "Kamu belum memublikasikan dedikasi apa pun. Jika kamu mengakhiri sekarang, kamu TIDAK akan dibayar dan penggemar akan mendapat pengembalian dana penuh. Konfirmasi?",
   eventRefundedTitle: "Acara berakhir",
   eventRefundedMessage: "Acara berakhir tanpa dedikasi — kamu tidak ditagih (dikembalikan).",
+  eventFinishedTitle: "Sesi selesai 🎉",
+  eventFinishedMessage: "Terima kasih telah bergabung! Temukan dedikasimu di galerimu.",
+  backToFeed: "Kembali ke beranda",
   startDedicationSession: "Mulai sesi dedikasimu",
   endSessionConfirm: "Akhiri sesi dedikasi? Fans tidak akan bisa bergabung lagi.",
 };

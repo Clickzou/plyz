@@ -23,7 +23,7 @@ import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Download, Users, Clock, Image as ImageIcon, Pen, Info } from 'lucide-react-native';
+import { ArrowLeft, Download, Users, Clock, Image as ImageIcon, Pen, Info, PartyPopper } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -202,6 +202,9 @@ export default function EventGalleryScreen() {
   // Overlay « remboursé » : l'événement s'est terminé sans aucune dédicace pour ce fan.
   const [eventRefunded, setEventRefunded] = useState(false);
   const eventRefundCheckedRef = useRef(false);
+  // Overlay « session terminée » : l'événement s'est terminé AVEC au moins une dédicace publiée.
+  const [eventFinished, setEventFinished] = useState(false);
+  const eventFinishedCheckedRef = useRef(false);
 
   // Mode attente : l'événement réservé n'a pas encore commencé (starts_at futur).
   const startsAtMs = params.startsAt ? new Date(params.startsAt as string).getTime() : NaN;
@@ -463,10 +466,11 @@ export default function EventGalleryScreen() {
   }, [hasStarted, startPolling, stopPolling, startHeartbeat, stopHeartbeat, handleRefresh]);
 
   // Surveillance de la fin d'événement (best-effort, ne touche pas au polling photos).
-  // Quand l'événement dédicace se termine (status 'ended'/'deleted' OU disparu) et
-  // qu'AUCUNE dédicace n'existe → on affiche l'overlay « remboursé » au fan.
+  // Quand l'événement dédicace se termine (status 'ended'/'deleted' OU disparu) :
+  //  - AUCUNE dédicace (signedCount === 0) → overlay « remboursé ».
+  //  - AVEC dédicace(s) (signedCount > 0) → overlay « session terminée » (félicitations).
   useEffect(() => {
-    if (!hasStarted || !isValidSession || eventRefunded) return;
+    if (!hasStarted || !isValidSession || eventRefunded || eventFinished) return;
     let cancelled = false;
 
     const checkEnded = async () => {
@@ -474,13 +478,21 @@ export default function EventGalleryScreen() {
         const status = await getEventSessionStatus(session.id);
         if (cancelled) return;
         if (status === 'ended' || status === 'deleted') {
-          if (eventRefundCheckedRef.current) return;
+          if (eventRefundCheckedRef.current || eventFinishedCheckedRef.current) return;
           eventRefundCheckedRef.current = true;
+          eventFinishedCheckedRef.current = true;
           const signedCount = await getSignedDedicationCount(session.id).catch(() => -1);
           if (cancelled) return;
           if (signedCount === 0) {
             setEventRefunded(true);
             clearActiveFanEvent();
+          } else if (signedCount > 0) {
+            setEventFinished(true);
+            clearActiveFanEvent();
+          } else {
+            // signedCount inconnu (-1) : on relâche les gardes pour réessayer au prochain tick.
+            eventRefundCheckedRef.current = false;
+            eventFinishedCheckedRef.current = false;
           }
         }
       } catch {
@@ -494,7 +506,7 @@ export default function EventGalleryScreen() {
       cancelled = true;
       clearInterval(statusInterval);
     };
-  }, [hasStarted, isValidSession, eventRefunded, session.id]);
+  }, [hasStarted, isValidSession, eventRefunded, eventFinished, session.id]);
 
   const handleOpenEditor = (asset: EventAsset) => {
     const originalUrl = asset.original_photo_url || (asset.signature_metadata as any)?.original_photo_url;
@@ -708,6 +720,31 @@ export default function EventGalleryScreen() {
               activeOpacity={0.85}
             >
               <Text style={styles.refundBackButtonText}>{t('goBack') || 'Retour'}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {eventFinished && (
+        <View style={styles.refundOverlay}>
+          <View style={styles.refundCard}>
+            <PartyPopper size={48} color="#10B981" />
+            <Text style={styles.refundTitle}>
+              {(t as any)('eventFinishedTitle') || 'Session terminée 🎉'}
+            </Text>
+            <Text style={styles.refundMessage}>
+              {(t as any)('eventFinishedMessage') ||
+                "Merci d'avoir participé ! Retrouvez vos dédicaces dans votre galerie."}
+            </Text>
+            <TouchableOpacity
+              style={styles.refundBackButton}
+              onPress={() => {
+                clearActiveFanEvent();
+                router.replace('/activity' as any);
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.refundBackButtonText}>{(t as any)('backToFeed') || 'Retour aux actualités'}</Text>
             </TouchableOpacity>
           </View>
         </View>
