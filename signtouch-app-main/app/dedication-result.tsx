@@ -426,20 +426,9 @@ export default function DedicationResultScreen() {
     }
   };
 
-  // Message attractif joint au partage : incite à télécharger Plyz. On injecte le
-  // nom de la célébrité s'il est connu, sinon on utilise la version générique.
-  const getShareMessage = () => {
-    const name = (celebrityName || '').trim();
-    if (name) {
-      return ((t as any)('shareDedicationMessage') as string).replace('{celebrity}', name);
-    }
-    return (t as any)('shareDedicationMessageNoName') as string;
-  };
-
   const handleShare = async () => {
     try {
       const uri = await captureImage();
-      const shareMessage = getShareMessage();
 
       if (Platform.OS === 'web') {
         if (uri && typeof navigator !== 'undefined' && navigator.share) {
@@ -449,7 +438,7 @@ export default function DedicationResultScreen() {
             const file = new File([blob], `dedication_${celebrityName}.png`, { type: 'image/png' });
             await navigator.share({
               title: `${getDedicationFor()} - ${celebrityName}`,
-              text: shareMessage,
+              text: `${getDedicationFor()} - ${celebrityName} #Plyz`,
               files: [file],
             });
             return;
@@ -464,11 +453,11 @@ export default function DedicationResultScreen() {
         if (uri) {
           await Share.share({
             url: uri,
-            message: shareMessage,
+            message: `${getDedicationFor()} - ${celebrityName} #Plyz`,
           });
         } else {
           await Share.share({
-            message: shareMessage,
+            message: `${getDedicationFor()} - ${celebrityName} #Plyz`,
           });
         }
       }

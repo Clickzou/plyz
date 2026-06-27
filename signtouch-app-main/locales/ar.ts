@@ -1549,6 +1549,4 @@ export default {
   fanBlockedConfirm: "تم حظر المعجب. لن يتمكن من الانضمام إليك بعد الآن.",
   accessDenied: "تم رفض الوصول",
   blockedByHost: "لا يمكنك الانضمام إلى هذه الجلسة.",
-  shareDedicationMessage: "✨ لحظة فريدة: إهدائي الشخصي موقَّع من {celebrity}.\n\nمع Plyz، عِش تجربة إهداء أو مكالمة فيديو خاصة مع الشخصيات التي تُعجب بها 💜\n\n📲 plyz.app",
-  shareDedicationMessageNoName: "✨ لحظة فريدة: إهدائي الشخصي من Plyz.\n\nمع Plyz، عِش تجربة إهداء أو مكالمة فيديو خاصة مع الشخصيات التي تُعجب بها 💜\n\n📲 plyz.app",
 };

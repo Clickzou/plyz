@@ -1554,6 +1554,4 @@ export default {
   fanBlockedConfirm: "فین بلاک کر دیا گیا۔ وہ اب آپ سے نہیں جڑ سکے گا۔",
   accessDenied: "رسائی مسترد",
   blockedByHost: "آپ اس سیشن میں شامل نہیں ہو سکتے۔",
-  shareDedicationMessage: "✨ ایک منفرد لمحہ: میرا ذاتی پیغام جس پر {celebrity} نے دستخط کیے ہیں۔\n\nPlyz پر، اُن شخصیات کے ساتھ پیغام یا نجی ویڈیو کال کا تجربہ کریں جنہیں آپ سراہتے ہیں 💜\n\n📲 plyz.app",
-  shareDedicationMessageNoName: "✨ ایک منفرد لمحہ: میرا ذاتی Plyz پیغام۔\n\nPlyz پر، اُن شخصیات کے ساتھ پیغام یا نجی ویڈیو کال کا تجربہ کریں جنہیں آپ سراہتے ہیں 💜\n\n📲 plyz.app",
 };

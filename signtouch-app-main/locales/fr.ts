@@ -1566,6 +1566,4 @@ export default {
   fanBlockedConfirm: "Fan bloqué. Il ne pourra plus vous rejoindre.",
   accessDenied: "Accès refusé",
   blockedByHost: "Vous ne pouvez pas rejoindre cette session.",
-  shareDedicationMessage: "✨ Un moment unique : ma dédicace personnalisée signée par {celebrity}.\n\nSur Plyz, vivez l'expérience d'une dédicace ou d'un appel vidéo privé avec les personnalités que vous admirez 💜\n\n📲 plyz.app",
-  shareDedicationMessageNoName: "✨ Un moment unique : ma dédicace personnalisée Plyz.\n\nSur Plyz, vivez l'expérience d'une dédicace ou d'un appel vidéo privé avec les personnalités que vous admirez 💜\n\n📲 plyz.app",
 };
