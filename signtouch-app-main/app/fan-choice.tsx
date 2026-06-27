@@ -241,13 +241,16 @@ export default function FanChoiceScreen() {
             </TouchableOpacity>
           )}
 
+          {/* Le bouton coloré = action principale du rôle : « Créer » pour la célébrité,
+              « Rejoindre » pour le fan. Donc « Rejoindre » est plein UNIQUEMENT si le fan
+              n'a pas le bouton « Créer » à côté ; sinon il reste en outline. */}
           <TouchableOpacity
-            style={[styles.btn, { backgroundColor: accent }]}
+            style={[styles.btn, isCelebrity ? [styles.btnOutline, { borderColor: accent }] : { backgroundColor: accent }]}
             onPress={() => handleChoice(joinPath)}
             activeOpacity={0.85}
           >
-            <LogIn size={18} color="#ffffff" strokeWidth={2.5} />
-            <Text style={styles.btnPrimaryText}>{t('fanChoiceJoinBtn')}</Text>
+            <LogIn size={18} color={isCelebrity ? accent : '#ffffff'} strokeWidth={2.5} />
+            <Text style={isCelebrity ? [styles.btnOutlineText, { color: accent }] : styles.btnPrimaryText}>{t('fanChoiceJoinBtn')}</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
