@@ -1528,4 +1528,6 @@ export default {
   endEventNoDedicationConfirm: "No has publicado ninguna dedicatoria. Si terminas ahora, NO se te pagará y los fans serán reembolsados por completo. ¿Confirmar?",
   eventRefundedTitle: "Evento finalizado",
   eventRefundedMessage: "El evento terminó sin dedicatoria — no se te cobró (reembolsado).",
+  startDedicationSession: "Inicia tu sesión de dedicatorias",
+  endSessionConfirm: "¿Finalizar la sesión de dedicatorias? Los fans ya no podrán unirse.",
 };

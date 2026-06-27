@@ -1529,4 +1529,6 @@ export default {
   endEventNoDedicationConfirm: "لم تنشر أي إهداء. إذا أنهيت الآن، فلن تتقاضى أجراً وسيتم رد المبلغ بالكامل للمعجبين. هل تؤكد؟",
   eventRefundedTitle: "انتهى الحدث",
   eventRefundedMessage: "انتهى الحدث دون إهداء — لم يتم خصم أي مبلغ منك (تم الاسترداد).",
+  startDedicationSession: "ابدأ جلسة الإهداءات الخاصة بك",
+  endSessionConfirm: "إنهاء جلسة الإهداءات؟ لن يتمكن المعجبون من الانضمام بعد الآن.",
 };

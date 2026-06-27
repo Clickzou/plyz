@@ -10,12 +10,12 @@ import {
   ActivityIndicator,
   PanResponder,
 } from 'react-native';
-import { showAlert } from '@/utils/alertHelper';
+import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, ZoomIn, ZoomOut, RotateCcw, RotateCw, Palette, QrCode, X, Copy, Share2, Plus, Calendar, Clock, Video, MapPin, Euro, PenTool } from 'lucide-react-native';
+import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, ZoomIn, ZoomOut, RotateCcw, RotateCw, Palette, QrCode, X, Copy, Share2, Plus, Calendar, Clock, Video, MapPin, Euro, PenTool, StopCircle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
 import { SvgUri, SvgXml } from 'react-native-svg';
@@ -32,6 +32,8 @@ import {
   publishEventAsset,
   getActiveViewerCount,
   fetchEventAssets,
+  endEventSession,
+  getSignedDedicationCount,
 } from '@/utils/eventSessionStorage';
 import QRCodeSvg from 'react-native-qrcode-svg';
 
@@ -102,6 +104,7 @@ export default function EventPublishScreen() {
   const [selectedSignerId, setSelectedSignerId] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [ending, setEnding] = useState(false);
   // Toast informatif (rappel de vérifier la célébrité) affiché ~4s après le choix d'une photo.
   const [signerReminderVisible, setSignerReminderVisible] = useState(false);
   const [reminderDismissed, setReminderDismissed] = useState(false);
@@ -603,6 +606,45 @@ export default function EventPublishScreen() {
     }
   };
 
+  // Termine la session de dedicace : libere les paiements + passe l'evenement en
+  // status 'ended' (declenche remboursement + notif push cote fan si rien publie).
+  const handleEndSession = async () => {
+    const doEnd = async () => {
+      setEnding(true);
+      try {
+        await endEventSession(sessionId);
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        router.back();
+      } catch (error) {
+        console.error('End session error:', error);
+        showAlert(t('error') || 'Error', t('publishFailed') || 'Une erreur est survenue');
+      } finally {
+        setEnding(false);
+      }
+    };
+
+    const signedCount = await getSignedDedicationCount(sessionId);
+    const noDedicationRefund =
+      priceCents > 0 && eventType !== 'live_video' && signedCount === 0;
+
+    showConfirm(
+      t('endSession') || 'Terminer la session',
+      noDedicationRefund
+        ? (t('endEventNoDedicationConfirm') as string)
+        : (t('endSessionConfirm') as string),
+      [
+        { text: t('cancel') || 'Annuler', style: 'cancel' },
+        {
+          text: t('endSession') || 'Terminer',
+          style: 'destructive',
+          onPress: doEnd,
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />
@@ -1016,6 +1058,21 @@ export default function EventPublishScreen() {
             {t('noPhotosPublished') || 'No photos published yet'}
           </Text>
         )}
+
+        <TouchableOpacity
+          style={[styles.endSessionBtn, ending && styles.publishBtnDisabled]}
+          onPress={handleEndSession}
+          disabled={ending}
+        >
+          {ending ? (
+            <ActivityIndicator color="#EF4444" />
+          ) : (
+            <>
+              <StopCircle size={20} color="#EF4444" />
+              <Text style={styles.endSessionBtnText}>{t('endSession') || 'Terminer la session'}</Text>
+            </>
+          )}
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Success Modal */}
@@ -1384,6 +1441,20 @@ const styles = StyleSheet.create({
   publishBtnSignature: { backgroundColor: '#f59e0b' },
   publishBtnDisabled: { opacity: 0.5 },
   publishBtnText: { fontSize: 16, color: '#fff', fontWeight: '600' },
+  endSessionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: '#EF4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  endSessionBtnText: { fontSize: 16, color: '#EF4444', fontWeight: '700' },
   codeContainer: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -1529,4 +1529,6 @@ export default {
   endEventNoDedicationConfirm: "Du hast keine Widmung veröffentlicht. Wenn du jetzt beendest, wirst du NICHT bezahlt und die Fans werden vollständig erstattet. Bestätigen?",
   eventRefundedTitle: "Event beendet",
   eventRefundedMessage: "Das Event endete ohne Widmung — dir wurde nichts berechnet (erstattet).",
+  startDedicationSession: "Starte deine Widmungs-Session",
+  endSessionConfirm: "Widmungs-Session beenden? Fans können dann nicht mehr beitreten.",
 };

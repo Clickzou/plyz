@@ -1196,6 +1196,17 @@ export default function CreateEventScreen() {
               </View>
 
               <View style={styles.actionsColumn}>
+                {/* Action PRINCIPALE : lancer la séance de dédicace (= publier les photos signées). */}
+                <TouchableOpacity style={styles.publishButton} onPress={goToPublish}>
+                  <Sparkles size={20} color="#ffffff" />
+                  <Text style={styles.publishButtonText}>
+                    {createdSession.status === 'scheduled'
+                      ? (t('schedulePhotos') || 'Schedule your Photos')
+                      : (t('startDedicationSession') || 'Lancer votre séance de dédicace')}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Secondaire : annoncer l'événement dans le fil Actu. */}
                 <TouchableOpacity
                   style={[styles.publishButton, { backgroundColor: '#f59e0b' }]}
                   onPress={() => {
@@ -1216,15 +1227,6 @@ export default function CreateEventScreen() {
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.publishButton} onPress={goToPublish}>
-                  <Sparkles size={20} color="#ffffff" />
-                  <Text style={styles.publishButtonText}>
-                    {createdSession.status === 'scheduled' 
-                      ? (t('schedulePhotos') || 'Schedule your Photos')
-                      : (t('publishPhotos') || 'Publish Photos')}
-                  </Text>
-                </TouchableOpacity>
-                
                 <TouchableOpacity style={styles.shareButton} onPress={shareEvent}>
                   <Share2 size={20} color="#ffffff" />
                   <Text style={styles.shareButtonText}>{t('shareQRCode') || 'Share QR Code'}</Text>

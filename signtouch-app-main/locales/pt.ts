@@ -1529,4 +1529,6 @@ export default {
   endEventNoDedicationConfirm: "Você não publicou nenhuma dedicatória. Se encerrar agora, você NÃO será pago e os fãs serão totalmente reembolsados. Confirmar?",
   eventRefundedTitle: "Evento encerrado",
   eventRefundedMessage: "O evento terminou sem dedicatória — você não foi cobrado (reembolsado).",
+  startDedicationSession: "Inicie sua sessão de dedicatórias",
+  endSessionConfirm: "Encerrar a sessão de dedicatórias? Os fãs não poderão mais entrar.",
 };
