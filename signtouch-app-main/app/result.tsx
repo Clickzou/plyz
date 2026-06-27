@@ -1468,7 +1468,8 @@ export default function ResultScreen() {
   const [showMetadataModal, setShowMetadataModal] = useState(false);
 
   // Welcome message state
-  const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
+  // Popup d'onboarding « activer le mode édition » retirée (obsolète) : démarre masquée.
+  const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
   const welcomeOpacity = useSharedValue(0);
 
   const welcomeAnimatedStyle = useAnimatedStyle(() => {
