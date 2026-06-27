@@ -302,6 +302,57 @@ export const callNextFan = async (sessionId: string): Promise<QueueEntry | null>
   }
 };
 
+/**
+ * Clôture (passe à 'completed') UNE entrée de file précise, à la FIN de son appel.
+ * Idempotent : .neq('status','completed') évite d'écraser/redéclencher une entrée déjà finie,
+ * et permet d'être appelé plusieurs fois sans effet de bord. Utilisé côté célébrité quand
+ * l'appel du fan se termine (dernier fan ou non), pour qu'aucune entrée ne reste 'called'.
+ */
+export const completeFan = async (queueEntryId: string): Promise<boolean> => {
+  try {
+    if (!queueEntryId) return false;
+    const { error } = await supabase
+      .from('session_queue')
+      .update({ status: 'completed', completed_at: new Date().toISOString() })
+      .eq('id', queueEntryId)
+      .neq('status', 'completed');
+
+    if (error) {
+      console.warn('completeFan: echec cloture entree file', queueEntryId, error.message);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Error completing fan:', error);
+    return false;
+  }
+};
+
+/**
+ * Clôture TOUS les fans encore actifs d'une session (à la FIN de la session côté célébrité).
+ * Évite qu'une entrée reste 'waiting'/'called'/'in_call' indéfiniment (compteur > 0, bannière
+ * « un fan vous attend » persistante). Idempotent : ne touche que les statuts actifs.
+ */
+export const completeAllActiveFans = async (sessionId: string): Promise<boolean> => {
+  try {
+    if (!sessionId) return false;
+    const { error } = await supabase
+      .from('session_queue')
+      .update({ status: 'completed', completed_at: new Date().toISOString() })
+      .eq('session_id', sessionId)
+      .in('status', ['waiting', 'called', 'in_call', 'current', 'signing']);
+
+    if (error) {
+      console.warn('completeAllActiveFans: echec cloture file', sessionId, error.message);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Error completing all active fans:', error);
+    return false;
+  }
+};
+
 export const admitFanToCall = async (queueEntryId: string): Promise<boolean> => {
   try {
     const { error } = await supabase

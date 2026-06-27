@@ -14,7 +14,7 @@ import { ArrowLeft, PhoneOff, Clock, Video, Users, TrendingUp, RotateCcw, AlertT
 import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
-import { sendDedicationNotification, callNextFan, getFullQueue } from '@/utils/sessionQueueStorage';
+import { sendDedicationNotification, callNextFan, getFullQueue, completeFan } from '@/utils/sessionQueueStorage';
 import { markPaymentCaptured, subscribeToSession } from '@/utils/liveSessionStorage';
 import { recordTransaction } from '@/utils/transactionStorage';
 import { blockFan as blockFanInDb } from '@/utils/blockedFansStorage';
@@ -747,6 +747,21 @@ export default function VideoCallScreen() {
   // vient de se terminer. Fire-and-forget : ne bloque jamais l'UI. Idempotent côté serveur
   // (protégé contre la double capture), et anti-double localement via endFanCallResolvedIdsRef.
   const endFanCallOnServer = (queueEntryId: string | null, callHappened: boolean) => {
+    // CLÔTURE DE LA FILE — indépendante du paiement. À la fin de CHAQUE appel côté hôte
+    // (y compris le DERNIER fan, ou quand on raccroche sans appeler de « fan suivant »), on
+    // passe l'entrée de file à 'completed' pour qu'elle ne reste pas 'called' indéfiniment
+    // (sinon : fan affiché « Appelé », compteur > 0, bannière « un fan vous attend »).
+    // Fire-and-forget + idempotent (completeFan ignore une entrée déjà 'completed').
+    if (queueEntryId) {
+      try {
+        completeFan(queueEntryId).catch((e) =>
+          console.error('[VideoCall] completeFan error:', e)
+        );
+      } catch (e) {
+        console.error('[VideoCall] completeFan threw:', e);
+      }
+    }
+
     const priceCents = parseInt(params.priceCents || '0', 10);
     if (priceCents <= 0 || !queueEntryId || !STRIPE_SERVER_URL) return;
     if (endFanCallResolvedIdsRef.current.has(queueEntryId)) return;

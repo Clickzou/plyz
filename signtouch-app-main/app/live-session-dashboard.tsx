@@ -64,6 +64,7 @@ import {
   uploadDedicationPhoto,
   updateDedicationSignature,
 } from '@/utils/liveSessionStorage';
+import { completeAllActiveFans } from '@/utils/sessionQueueStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRCode from 'react-native-qrcode-svg';
 import * as Clipboard from 'expo-clipboard';
@@ -336,6 +337,9 @@ export default function LiveSessionDashboardScreen() {
       setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
 
       if (diff <= 0) {
+        // Fin automatique (durée totale atteinte) : on clôture aussi tous les fans actifs
+        // pour ne laisser aucune entrée résiduelle en 'called'/'waiting'/'in_call'.
+        completeAllActiveFans(sessionId!).catch(() => {});
         endSession(sessionId!);
       }
     }, 1000);
@@ -675,6 +679,10 @@ export default function LiveSessionDashboardScreen() {
         style: 'destructive',
         onPress: async () => {
           if (!sessionId) return;
+          // Clôture TOUS les fans encore actifs AVANT de terminer la session, pour qu'aucune
+          // entrée ne reste 'called'/'waiting'/'in_call' (sinon : compteur > 0, bannière
+          // « un fan vous attend » persistante). Idempotent, ne casse pas le flux d'appel.
+          await completeAllActiveFans(sessionId);
           await endSession(sessionId);
           router.replace('/');
         },
