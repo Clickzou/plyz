@@ -243,17 +243,35 @@ async function sendExpoPush(pushTokens, title, body, data = {}) {
 let stripeClient = null;
 
 function getStripeCredentials() {
-  const userKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+  // DÉFAUT = TEST. Le mode LIVE ne s'active QUE si STRIPE_MODE === 'live'
+  // (sécurité absolue : jamais de live par accident).
+  const mode = process.env.STRIPE_MODE === 'live' ? 'live' : 'test';
 
-  if (!userKey) {
-    throw new Error('No Stripe credentials available. Set STRIPE_TEST_SECRET_KEY or STRIPE_SECRET_KEY.');
+  let userKey;
+  if (mode === 'live') {
+    userKey = process.env.SECRET_KEY_LIVE_STRIPE || process.env.STRIPE_SECRET_KEY_LIVE;
+
+    // Garde-fou : live demandé mais clé absente ou clé de test → on bloque.
+    if (!userKey || userKey.startsWith('sk_test_')) {
+      throw new Error('STRIPE_MODE=live mais cle live absente ou invalide (sk_test_)');
+    }
+  } else {
+    userKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+
+    if (!userKey) {
+      throw new Error('No Stripe credentials available. Set STRIPE_TEST_SECRET_KEY or STRIPE_SECRET_KEY.');
+    }
+
+    // Garde-fou : mode test mais clé live fournie → on alerte sans bloquer.
+    if (userKey.startsWith('sk_live_')) {
+      console.warn('[Stripe] ALERTE : STRIPE_MODE=test mais une cle sk_live_ est fournie (paiements REELS).');
+    }
   }
 
   const keyPrefix = userKey.substring(0, 8);
-  const isTestKey = userKey.startsWith('sk_test_');
-  console.log(`[Stripe] Using key: ${keyPrefix}... (test mode: ${isTestKey})`);
+  console.log(`[Stripe] MODE=${mode} key=${keyPrefix}...`);
 
-  return { secretKey: userKey };
+  return { secretKey: userKey, mode };
 }
 
 async function getStripe() {
@@ -616,7 +634,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
     }
 
     const account = await stripe.accounts.retrieve(celebrityStripeAccountId);
-    const stripeKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '';
+    const stripeKey = getStripeCredentials().secretKey;
     const isTestMode = stripeKey.startsWith('sk_test_');
 
     if (!account.charges_enabled) {
@@ -1312,7 +1330,7 @@ app.post('/api/stripe/express/create-and-onboard', async (req, res) => {
     ].filter(Boolean).join('&');
     const refreshQs = lang ? `lang=${encodeURIComponent(lang)}` : '';
 
-    console.log('[Connect Express] Creating account with key prefix:', (process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '').substring(0, 12) + '...');
+    console.log('[Connect Express] Creating account with key prefix:', getStripeCredentials().secretKey.substring(0, 12) + '...');
 
     const account = await stripe.accounts.create({
       type: 'express',
