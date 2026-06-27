@@ -1542,4 +1542,8 @@ export default {
   eventReservedMessage: 'C\'est réservé ! Tu le retrouveras dans « À venir ».',
   reservationFailed: 'La réservation a échoué. Réessaie.',
   shareEventMessage: '🎥 Je t\'invite à un APPEL VIDÉO PRIVÉ en tête-à-tête (face à face) avec moi sur Plyz ! Un moment rien que pour toi, en direct 💜\n📅 {date}\n⏱️ {duration} en privé avec moi\n🎟️ Code : {code}\n👉 Télécharge Plyz, entre le code et réserve ta place !',
+  // Fin d evenement dedicace sans dedicace (remboursement)
+  endEventNoDedicationConfirm: "Tu n'as publié aucune dédicace. Si tu termines maintenant, tu ne seras PAS payée et les fans seront intégralement remboursés. Confirmer ?",
+  eventRefundedTitle: "Événement terminé",
+  eventRefundedMessage: "L'événement s'est terminé sans dédicace — tu n'as pas été débité(e) (remboursé).",
 };

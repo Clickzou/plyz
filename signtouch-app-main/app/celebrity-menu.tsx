@@ -19,7 +19,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import BottomNav from '@/components/BottomNav';
-import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount, getActiveFanEvent, ActiveFanEvent } from '@/utils/eventSessionStorage';
+import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount, getActiveFanEvent, ActiveFanEvent, getSignedDedicationCount } from '@/utils/eventSessionStorage';
 import { getServedFansCountBySessions } from '@/utils/sessionQueueStorage';
 import QRCodeSvg from 'react-native-qrcode-svg';
 
@@ -221,9 +221,45 @@ export default function CelebrityMenuScreen() {
     }
   };
 
+  const performDeleteEvent = async (event: EventSession) => {
+    try {
+      await deleteEventSession(event.id);
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      loadMyEvents();
+    } catch (error) {
+      console.error('Delete failed:', error);
+      showAlert(t('error') || 'Erreur', t('deleteFailed') || 'Échec de la suppression');
+    }
+  };
+
   const handleDeleteEvent = async (event: EventSession) => {
+    // Événement DÉDICACE PAYANT sans aucune dédicace publiée : terminer (= supprimer)
+    // rembourse intégralement les fans et la célébrité n'est PAS payée → avertissement.
+    const isDedication = event.event_type !== 'live_video';
+    const isPaid = !!event.price_cents && event.price_cents > 0;
+    if (isDedication && isPaid) {
+      const signedCount = await getSignedDedicationCount(event.id).catch(() => -1);
+      if (signedCount === 0) {
+        showConfirm(
+          t('deleteEvent') || 'Supprimer l\'événement',
+          t('endEventNoDedicationConfirm') ||
+            'Tu n\'as publié aucune dédicace. Si tu termines maintenant, tu ne seras PAS payée et les fans seront intégralement remboursés. Confirmer ?',
+          [
+            { text: t('cancel') || 'Annuler', style: 'cancel' },
+            {
+              text: t('delete') || 'Supprimer',
+              style: 'destructive',
+              onPress: () => performDeleteEvent(event),
+            },
+          ]
+        );
+        return;
+      }
+    }
+
     const confirmMessage = t('deleteEventConfirm') || `Êtes-vous sûr de vouloir supprimer "${event.title}" ?`;
-    
     showConfirm(
       t('deleteEvent') || 'Supprimer l\'événement',
       confirmMessage,
@@ -232,18 +268,7 @@ export default function CelebrityMenuScreen() {
         {
           text: t('delete') || 'Supprimer',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteEventSession(event.id);
-              if (Platform.OS !== 'web') {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              }
-              loadMyEvents();
-            } catch (error) {
-              console.error('Delete failed:', error);
-              showAlert(t('error') || 'Erreur', t('deleteFailed') || 'Échec de la suppression');
-            }
-          },
+          onPress: () => performDeleteEvent(event),
         },
       ]
     );

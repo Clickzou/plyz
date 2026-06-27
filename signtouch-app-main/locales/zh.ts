@@ -1525,4 +1525,8 @@ export default {
   eventReservedMessage: '已预订！你可以在「即将开始」中找到它。',
   reservationFailed: '预订失败，请重试。',
   shareEventMessage: '🎥 我邀请你在 Plyz 上和我进行一对一的私密视频通话（面对面）！这是专属于你的时刻，实时直播 💜\n📅 {date}\n⏱️ {duration} 与我私下相处\n🎟️ 验证码：{code}\n👉 下载 Plyz，输入验证码，预约你的专属时刻！',
+  // Fin d evenement dedicace sans dedicace (remboursement)
+  endEventNoDedicationConfirm: "你还没有发布任何签名照。如果现在结束，你将不会获得报酬，粉丝将获得全额退款。确认吗？",
+  eventRefundedTitle: "活动已结束",
+  eventRefundedMessage: "活动结束时没有签名照——你未被扣款（已退款）。",
 };

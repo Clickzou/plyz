@@ -25,7 +25,7 @@ import StripeConnectModal from '@/components/StripeConnectModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStripeAccountId } from '@/utils/userProfile';
 
-import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount } from '@/utils/eventSessionStorage';
+import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount, getSignedDedicationCount } from '@/utils/eventSessionStorage';
 import { getServedFansCountBySessions } from '@/utils/sessionQueueStorage';
 import QRCodeSvg from 'react-native-qrcode-svg';
 
@@ -405,7 +405,45 @@ export default function MySpaceScreen() {
     }
   };
 
+  const performDeleteEvent = async (event: EventSession) => {
+    try {
+      await deleteEventSession(event.id);
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      loadMyEvents();
+    } catch (error) {
+      console.error('Delete failed:', error);
+      showAlert(t('error') || 'Erreur', t('deleteFailed') || 'Échec de la suppression');
+    }
+  };
+
   const handleDeleteEvent = async (event: EventSession) => {
+    // Événement DÉDICACE PAYANT sans aucune dédicace publiée : terminer maintenant
+    // (= supprimer) déclenche le remboursement intégral des fans et la célébrité
+    // n'est PAS payée. On l'avertit avec un message spécifique avant de confirmer.
+    const isDedication = event.event_type !== 'live_video';
+    const isPaid = !!event.price_cents && event.price_cents > 0;
+    if (isDedication && isPaid) {
+      const signedCount = await getSignedDedicationCount(event.id).catch(() => -1);
+      if (signedCount === 0) {
+        showConfirm(
+          t('deleteEvent') || 'Supprimer l\'événement',
+          t('endEventNoDedicationConfirm') ||
+            'Tu n\'as publié aucune dédicace. Si tu termines maintenant, tu ne seras PAS payée et les fans seront intégralement remboursés. Confirmer ?',
+          [
+            { text: t('cancel') || 'Annuler', style: 'cancel' },
+            {
+              text: t('delete') || 'Supprimer',
+              style: 'destructive',
+              onPress: () => performDeleteEvent(event),
+            },
+          ]
+        );
+        return;
+      }
+    }
+
     const confirmMessage = t('deleteEventConfirm') || `Êtes-vous sûr de vouloir supprimer "${event.title}" ?`;
     showConfirm(
       t('deleteEvent') || 'Supprimer l\'événement',
@@ -415,18 +453,7 @@ export default function MySpaceScreen() {
         {
           text: t('delete') || 'Supprimer',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteEventSession(event.id);
-              if (Platform.OS !== 'web') {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              }
-              loadMyEvents();
-            } catch (error) {
-              console.error('Delete failed:', error);
-              showAlert(t('error') || 'Erreur', t('deleteFailed') || 'Échec de la suppression');
-            }
-          },
+          onPress: () => performDeleteEvent(event),
         },
       ]
     );

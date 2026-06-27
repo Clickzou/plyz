@@ -1558,4 +1558,8 @@ export default {
   eventReservedMessage: 'Reserved! You\'ll find it under "Upcoming".',
   reservationFailed: 'Reservation failed. Please try again.',
   shareEventMessage: '🎥 I\'m inviting you to a PRIVATE one-on-one video call (face to face) with me on Plyz! A moment just for you, live 💜\n📅 {date}\n⏱️ {duration} privately with me\n🎟️ Code: {code}\n👉 Download Plyz, enter the code and book your spot!',
+  // Fin d evenement dedicace sans dedicace (remboursement)
+  endEventNoDedicationConfirm: "You haven't published any dedication. If you end now, you will NOT be paid and fans will be fully refunded. Confirm?",
+  eventRefundedTitle: "Event ended",
+  eventRefundedMessage: "The event ended without a dedication — you were not charged (refunded).",
 };

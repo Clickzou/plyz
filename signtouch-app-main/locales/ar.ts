@@ -1525,4 +1525,8 @@ export default {
   eventReservedMessage: 'تم الحجز! ستجده في «القادمة».',
   reservationFailed: 'فشل الحجز. يرجى المحاولة مرة أخرى.',
   shareEventMessage: '🎥 أدعوك إلى مكالمة فيديو خاصة وجهاً لوجه معي على Plyz! لحظة لك وحدك، مباشرة 💜\n📅 {date}\n⏱️ {duration} على انفراد معي\n🎟️ الرمز: {code}\n👉 حمّل تطبيق Plyz، أدخل الرمز واحجز مكانك!',
+  // Fin d evenement dedicace sans dedicace (remboursement)
+  endEventNoDedicationConfirm: "لم تنشر أي إهداء. إذا أنهيت الآن، فلن تتقاضى أجراً وسيتم رد المبلغ بالكامل للمعجبين. هل تؤكد؟",
+  eventRefundedTitle: "انتهى الحدث",
+  eventRefundedMessage: "انتهى الحدث دون إهداء — لم يتم خصم أي مبلغ منك (تم الاسترداد).",
 };

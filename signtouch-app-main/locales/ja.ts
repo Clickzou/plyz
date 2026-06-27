@@ -1525,4 +1525,8 @@ export default {
   eventReservedMessage: '予約完了！「今後の予定」で確認できます。',
   reservationFailed: '予約に失敗しました。もう一度お試しください。',
   shareEventMessage: '🎥 Plyzで私と1対1のプライベートビデオ通話（フェイス・トゥ・フェイス）にご招待します！あなただけの特別な時間を、ライブで 💜\n📅 {date}\n⏱️ {duration} 私と二人きりで\n🎟️ コード：{code}\n👉 Plyzをダウンロードして、コードを入力し、あなたの席を予約しよう！',
+  // Fin d evenement dedicace sans dedicace (remboursement)
+  endEventNoDedicationConfirm: "サインをまだ公開していません。今終了すると報酬は支払われず、ファンには全額返金されます。よろしいですか？",
+  eventRefundedTitle: "イベント終了",
+  eventRefundedMessage: "サインなしでイベントが終了しました — 請求はされていません（返金済み）。",
 };

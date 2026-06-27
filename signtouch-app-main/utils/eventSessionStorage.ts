@@ -895,6 +895,39 @@ export const getEventPublishedCount = async (eventId: string): Promise<number> =
   return count || 0;
 };
 
+// Compte uniquement les DÉDICACES publiées (photos signées) pour cet événement.
+// Sert à savoir si une célébrité a réellement dédicacé avant de terminer/supprimer
+// un événement dédicace payant (sinon les fans sont remboursés et elle n'est pas payée).
+export const getSignedDedicationCount = async (eventId: string): Promise<number> => {
+  const { count, error } = await supabase
+    .from('event_assets')
+    .select('*', { count: 'exact', head: true })
+    .eq('event_id', eventId)
+    .eq('asset_type', 'photo_signed');
+
+  if (error) return 0;
+  return count || 0;
+};
+
+// Statut courant d'un événement dédicace (event_sessions). Renvoie le status,
+// ou 'deleted' si l'événement a disparu (introuvable). Best-effort : null si erreur réseau.
+export const getEventSessionStatus = async (
+  eventId: string
+): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('event_sessions')
+      .select('status')
+      .eq('id', eventId)
+      .maybeSingle();
+    if (error) return null;
+    if (!data) return 'deleted';
+    return (data.status as string) || null;
+  } catch {
+    return null;
+  }
+};
+
 const ACTIVE_FAN_EVENT_KEY = '@plyz_active_fan_event';
 
 export interface ActiveFanEvent {

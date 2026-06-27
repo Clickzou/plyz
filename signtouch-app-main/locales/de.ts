@@ -1525,4 +1525,8 @@ export default {
   eventReservedMessage: 'Reserviert! Du findest es unter „Bevorstehend".',
   reservationFailed: 'Reservierung fehlgeschlagen. Bitte erneut versuchen.',
   shareEventMessage: '🎥 Ich lade dich zu einem PRIVATEN Eins-zu-eins-Videoanruf (von Angesicht zu Angesicht) mit mir auf Plyz ein! Ein Moment nur für dich, live 💜\n📅 {date}\n⏱️ {duration} privat mit mir\n🎟️ Code: {code}\n👉 Lade Plyz herunter, gib den Code ein und sichere dir deinen Platz!',
+  // Fin d evenement dedicace sans dedicace (remboursement)
+  endEventNoDedicationConfirm: "Du hast keine Widmung veröffentlicht. Wenn du jetzt beendest, wirst du NICHT bezahlt und die Fans werden vollständig erstattet. Bestätigen?",
+  eventRefundedTitle: "Event beendet",
+  eventRefundedMessage: "Das Event endete ohne Widmung — dir wurde nichts berechnet (erstattet).",
 };

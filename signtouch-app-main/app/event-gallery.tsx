@@ -37,6 +37,8 @@ import {
   getOrCreateDeviceId,
   getActiveViewerCount,
   clearActiveFanEvent,
+  getEventSessionStatus,
+  getSignedDedicationCount,
 } from '@/utils/eventSessionStorage';
 import { saveMemory } from '@/utils/storageService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -192,6 +194,9 @@ export default function EventGalleryScreen() {
   const [timeRemaining, setTimeRemaining] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
   const [newPhotoSignerName, setNewPhotoSignerName] = useState('');
+  // Overlay « remboursé » : l'événement s'est terminé sans aucune dédicace pour ce fan.
+  const [eventRefunded, setEventRefunded] = useState(false);
+  const eventRefundCheckedRef = useRef(false);
 
   // Mode attente : l'événement réservé n'a pas encore commencé (starts_at futur).
   const startsAtMs = params.startsAt ? new Date(params.startsAt as string).getTime() : NaN;
@@ -452,6 +457,40 @@ export default function EventGalleryScreen() {
     return () => subscription.remove();
   }, [hasStarted, startPolling, stopPolling, startHeartbeat, stopHeartbeat, handleRefresh]);
 
+  // Surveillance de la fin d'événement (best-effort, ne touche pas au polling photos).
+  // Quand l'événement dédicace se termine (status 'ended'/'deleted' OU disparu) et
+  // qu'AUCUNE dédicace n'existe → on affiche l'overlay « remboursé » au fan.
+  useEffect(() => {
+    if (!hasStarted || !isValidSession || eventRefunded) return;
+    let cancelled = false;
+
+    const checkEnded = async () => {
+      try {
+        const status = await getEventSessionStatus(session.id);
+        if (cancelled) return;
+        if (status === 'ended' || status === 'deleted') {
+          if (eventRefundCheckedRef.current) return;
+          eventRefundCheckedRef.current = true;
+          const signedCount = await getSignedDedicationCount(session.id).catch(() => -1);
+          if (cancelled) return;
+          if (signedCount === 0) {
+            setEventRefunded(true);
+            clearActiveFanEvent();
+          }
+        }
+      } catch {
+        // best-effort, on ignore
+      }
+    };
+
+    checkEnded();
+    const statusInterval = setInterval(checkEnded, POLLING_INTERVAL);
+    return () => {
+      cancelled = true;
+      clearInterval(statusInterval);
+    };
+  }, [hasStarted, isValidSession, eventRefunded, session.id]);
+
   const handleOpenEditor = (asset: EventAsset) => {
     const originalUrl = asset.original_photo_url || (asset.signature_metadata as any)?.original_photo_url;
     if (asset.signature_metadata && originalUrl) {
@@ -647,6 +686,28 @@ export default function EventGalleryScreen() {
       </>
       )}
 
+      {eventRefunded && (
+        <View style={styles.refundOverlay}>
+          <View style={styles.refundCard}>
+            <Info size={48} color="#10B981" />
+            <Text style={styles.refundTitle}>
+              {(t as any)('eventRefundedTitle') || 'Événement terminé'}
+            </Text>
+            <Text style={styles.refundMessage}>
+              {(t as any)('eventRefundedMessage') ||
+                'L\'événement s\'est terminé sans dédicace — tu n\'as pas été débité(e) (remboursé).'}
+            </Text>
+            <TouchableOpacity
+              style={styles.refundBackButton}
+              onPress={() => router.replace('/activity' as any)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.refundBackButtonText}>{t('goBack') || 'Retour'}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       <BottomNav />
     </View>
   );
@@ -654,6 +715,56 @@ export default function EventGalleryScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#1a1a2e' },
+  refundOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 15, 40, 0.92)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 50,
+  },
+  refundCard: {
+    backgroundColor: '#16213e',
+    borderRadius: 20,
+    paddingVertical: 28,
+    paddingHorizontal: 28,
+    alignItems: 'center',
+    gap: 14,
+    marginHorizontal: 32,
+    maxWidth: 360,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
+  },
+  refundTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  refundMessage: {
+    color: '#cbd5e1',
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+  },
+  refundBackButton: {
+    backgroundColor: '#10B981',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    marginTop: 16,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+  },
+  refundBackButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -1530,4 +1530,8 @@ export default {
   eventReservedMessage: 'Tersimpan! Kamu akan menemukannya di «Akan datang».',
   reservationFailed: 'Reservasi gagal. Silakan coba lagi.',
   shareEventMessage: '🎥 Aku mengundangmu ke PANGGILAN VIDEO PRIBADI satu lawan satu (tatap muka) bersamaku di Plyz! Momen khusus untukmu, secara langsung 💜\n📅 {date}\n⏱️ {duration} berdua denganku\n🎟️ Kode: {code}\n👉 Unduh Plyz, masukkan kode dan pesan tempatmu!',
+  // Fin d evenement dedicace sans dedicace (remboursement)
+  endEventNoDedicationConfirm: "Kamu belum memublikasikan dedikasi apa pun. Jika kamu mengakhiri sekarang, kamu TIDAK akan dibayar dan penggemar akan mendapat pengembalian dana penuh. Konfirmasi?",
+  eventRefundedTitle: "Acara berakhir",
+  eventRefundedMessage: "Acara berakhir tanpa dedikasi — kamu tidak ditagih (dikembalikan).",
 };

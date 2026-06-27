@@ -1547,6 +1547,10 @@ app.get('/api/verify-event-payment', async (req, res) => {
       return res.status(400).json({ error: 'Missing checkout_session_id' });
     }
 
+    // push_token : optionnel, sert à notifier le fan en cas de remboursement
+    // (événement terminé sans dédicace). Accepté en query OU body.
+    const pushToken = req.query.push_token || req.body?.push_token || null;
+
     const session = await stripe.checkout.sessions.retrieve(checkout_session_id);
     const eventSessionId = session.metadata?.event_session_id;
     const fanId = session.metadata?.fan_id;
@@ -1574,18 +1578,18 @@ app.get('/api/verify-event-payment', async (req, res) => {
       // Persistance durable (le registre mémoire est volatile sur Replit).
       try {
         const admin = getSupabaseAdmin();
+        const upsertRow = {
+          event_session_id: eventSessionId,
+          fan_id: fanId,
+          checkout_session_id: checkout_session_id,
+          payment_intent_id: paymentIntentId,
+          payment_captured: false,
+        };
+        // N'écrase le push_token QUE s'il est fourni (sinon on garde l'existant).
+        if (pushToken) upsertRow.push_token = pushToken;
         const { error: upsertErr } = await admin
           .from('event_paid_fans')
-          .upsert(
-            {
-              event_session_id: eventSessionId,
-              fan_id: fanId,
-              checkout_session_id: checkout_session_id,
-              payment_intent_id: paymentIntentId,
-              payment_captured: false,
-            },
-            { onConflict: 'event_session_id,fan_id' }
-          );
+          .upsert(upsertRow, { onConflict: 'event_session_id,fan_id' });
         if (upsertErr) {
           console.error('[EventPayment] event_paid_fans upsert error:', upsertErr.message);
         } else {
@@ -1857,6 +1861,9 @@ app.post('/api/release-event-payments', async (req, res) => {
     let releasedCount = 0;
     let skippedCount = 0;
     let failedCount = 0;
+    // Push tokens des fans RÉELLEMENT libérés (pré-auto annulée), pour la notif
+    // « remboursé ». On exclut les déjà succeeded/capturés.
+    const refundedPushTokens = [];
 
     for (const fan of (fans || [])) {
       try {
@@ -1883,9 +1890,11 @@ app.post('/api/release-event-payments', async (req, res) => {
           const canceled = await stripe.paymentIntents.cancel(paymentIntentId);
           console.log('[EventRelease] Released (canceled):', canceled.id, '| fan:', fan.fan_id);
           releasedCount++;
+          if (fan.push_token) refundedPushTokens.push(fan.push_token);
         } else if (pi.status === 'canceled') {
           console.log('[EventRelease] Already canceled (no-op):', paymentIntentId, '| fan:', fan.fan_id);
           releasedCount++;
+          if (fan.push_token) refundedPushTokens.push(fan.push_token);
         } else if (pi.status === 'succeeded') {
           console.log('[EventRelease] Already succeeded, cannot release (skip):', paymentIntentId, '| fan:', fan.fan_id);
           skippedCount++;
@@ -1900,6 +1909,25 @@ app.post('/api/release-event-payments', async (req, res) => {
     }
 
     console.log(`[EventRelease] Done event=${eventSessionId} released=${releasedCount} skipped=${skippedCount} failed=${failedCount}`);
+
+    // Notif « remboursé » aux fans réellement libérés (fire-and-forget).
+    // body : FR par défaut, ou texte fourni par l'app (déjà traduit).
+    try {
+      const tokens = [...new Set(refundedPushTokens.filter((t) => typeof t === 'string' && t.length > 0))];
+      if (tokens.length > 0) {
+        const refundBody = (typeof req.body?.body === 'string' && req.body.body.length > 0)
+          ? req.body.body
+          : "L'événement s'est terminé sans dédicace — vous n'avez pas été débité(e) (remboursé).";
+        console.log(`[EventRefundNotif] Sending refund push to ${tokens.length} fan(s) for event=${eventSessionId}`);
+        sendExpoPush(tokens, 'Plyz', refundBody, { eventSessionId, action: 'event_refunded' })
+          .catch((e) => console.error('[EventRefundNotif] send error:', e?.message || e));
+      } else {
+        console.log(`[EventRefundNotif] No push token among released fans for event=${eventSessionId}, skipping`);
+      }
+    } catch (notifErr) {
+      console.error('[EventRefundNotif] error:', notifErr?.message || notifErr);
+    }
+
     return res.json({ ok: true, releasedCount, skippedCount, failedCount });
   } catch (error) {
     console.error('[EventRelease] Error:', error?.message || error);

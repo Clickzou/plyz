@@ -65,6 +65,26 @@ try {
 const SAVED_SIGNATURES_KEY = '@plyz_event_signatures';
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
+// Récupère le token push Expo du fan (best-effort, mobile uniquement). Sert à le notifier
+// d'un remboursement si la célébrité termine l'événement dédicace sans publier de dédicace.
+// Si pas de permission / pas de module / web → renvoie null sans bloquer le flux de paiement.
+const getFanPushToken = async (): Promise<string | null> => {
+  try {
+    if (!Notifications || Platform.OS === 'web') return null;
+    const { status } = await Notifications.getPermissionsAsync();
+    let finalStatus = status;
+    if (finalStatus !== 'granted') {
+      const req = await Notifications.requestPermissionsAsync();
+      finalStatus = req.status;
+    }
+    if (finalStatus !== 'granted') return null;
+    const tokenData = await Notifications.getExpoPushTokenAsync();
+    return tokenData?.data || null;
+  } catch {
+    return null;
+  }
+};
+
 // Détermine si le serveur accorde l'accès à la galerie pour ce fan.
 // IMPORTANT : avec la pré-autorisation (capture_method:'manual'), le fan a payé
 // (carte pré-autorisée) mais Stripe renvoie payment_status='unpaid'/'requires_capture'.
@@ -303,7 +323,11 @@ export default function JoinEventScreen() {
 
         if (paymentSuccess === 'true' && checkoutId && returnCode) {
           try {
-            const verifyRes = await fetch(`${STRIPE_SERVER_URL}/api/verify-event-payment?checkout_session_id=${checkoutId}`);
+            // Best-effort : transmet le token push du fan pour qu'il puisse être notifié
+            // d'un éventuel remboursement (web → null la plupart du temps).
+            const pushToken = await getFanPushToken();
+            const tokenQS = pushToken ? `&push_token=${encodeURIComponent(pushToken)}` : '';
+            const verifyRes = await fetch(`${STRIPE_SERVER_URL}/api/verify-event-payment?checkout_session_id=${checkoutId}${tokenQS}`);
             const verifyData = await verifyRes.json();
 
             if (hasEventAccess(verifyData) && verifyData.eventSessionId) {
@@ -350,6 +374,25 @@ export default function JoinEventScreen() {
                 await AsyncStorage.setItem(`@event_paid_${pendingSessionId}`, 'true');
                 setEventPaid(true);
                 await AsyncStorage.removeItem('@event_pending_payment_session');
+
+                // Best-effort : enregistre le token push du fan pour pouvoir le notifier
+                // d'un remboursement si l'événement dédicace se termine sans dédicace.
+                try {
+                  const pushToken = await getFanPushToken();
+                  if (pushToken) {
+                    await fetch(`${STRIPE_SERVER_URL}/api/verify-event-payment`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        event_session_id: pendingSessionId,
+                        fan_id: viewerId,
+                        push_token: pushToken,
+                      }),
+                    });
+                  }
+                } catch (pte) {
+                  console.warn('[JoinEvent] push_token register failed (non bloquant):', pte);
+                }
 
                 const pendingPromoId = await AsyncStorage.getItem('@event_pending_promo_id');
                 if (pendingPromoId) {
