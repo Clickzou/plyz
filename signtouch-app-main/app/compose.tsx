@@ -1308,6 +1308,20 @@ export default function ComposeScreen() {
       setIsSaving(true);
       console.log('📸 Capture de la composition...');
 
+      // IMPORTANT : on DÉSÉLECTIONNE l'élément actif avant la capture native.
+      // Sinon le cadre vert en pointillés (selectionBorder, affiché quand
+      // isSelected) est encore monté dans la vue et captureRef le "cuit" dans
+      // l'image sauvegardée -> il réapparaît ensuite à la simple visualisation
+      // depuis la galerie. On attend 2 frames pour que le retrait soit peint
+      // avant de capturer. (Le web redessine sur canvas et n'est pas concerné.)
+      if (Platform.OS !== 'web') {
+        setSelectedSignatureIndex(null);
+        setSelectedTextIndex(null);
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+        );
+      }
+
       const uri = await captureComposition();
       console.log('✅ Image capturée:', uri);
 
