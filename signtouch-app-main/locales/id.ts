@@ -1115,6 +1115,7 @@ export default {
   totalDuration: 'durasi total',
   preAuthorization: 'Pra-otorisasi',
   preAuthExplanation: '💳 Jumlahnya hanya DIBLOKIR di kartu Anda selama panggilan — Anda baru ditagih SETELAH benar-benar mendapat panggilan dengan selebriti. Jika dia tidak menerima panggilan Anda, jumlahnya DILEPAS otomatis dan Anda tidak membayar apa pun.',
+  preAuthExplanationDedication: '💳 Prabayar: jumlahnya hanya DIBLOKIR di kartu Anda, tidak ditagih. Anda baru ditagih ketika selebriti menerbitkan sebuah dedikasi. Jika tidak ada dedikasi yang diterbitkan, Anda mendapat pengembalian dana penuh.',
   authorizePayment: 'Otorisasi {amount}€',
   paymentConfirmed: 'Pembayaran dikonfirmasi',
   paymentCapturedMessage: '{amount}€ telah ditagihkan untuk panggilan video Anda yang berhasil.',

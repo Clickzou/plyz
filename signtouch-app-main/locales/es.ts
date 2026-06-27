@@ -1109,6 +1109,7 @@ export default {
   totalDuration: 'duración total',
   preAuthorization: 'Pre-autorización',
   preAuthExplanation: '💳 El importe solo queda BLOQUEADO en tu tarjeta durante la llamada — solo se te cobra DESPUÉS de tener tu llamada con la celebridad. Si no te atiende, el importe se LIBERA automáticamente y no pagas nada.',
+  preAuthExplanationDedication: '💳 Prepago: el importe solo queda BLOQUEADO en tu tarjeta, no se cobra. Solo se te cobra cuando la celebridad publica una dedicatoria. Si no se publica ninguna dedicatoria, se te reembolsa por completo.',
   authorizePayment: 'Autorizar {amount}€',
   paymentConfirmed: 'Pago confirmado',
   paymentCapturedMessage: 'Se han cobrado {amount}€ por tu videollamada exitosa.',

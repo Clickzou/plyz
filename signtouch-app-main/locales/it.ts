@@ -1110,6 +1110,7 @@ export default {
   totalDuration: 'durata totale',
   preAuthorization: 'Pre-autorizzazione',
   preAuthExplanation: '💳 L\'importo viene solo BLOCCATO sulla tua carta durante la chiamata — ti viene addebitato SOLO DOPO aver avuto la tua chiamata con la celebrità. Se non ti risponde, l\'importo viene RILASCIATO automaticamente e non paghi nulla.',
+  preAuthExplanationDedication: '💳 Prepagamento: l\'importo viene solo BLOCCATO sulla tua carta, non addebitato. Ti viene addebitato SOLO quando la celebrità pubblica una dedica. Se non viene pubblicata alcuna dedica, ricevi il rimborso completo.',
   authorizePayment: 'Autorizza {amount}€',
   paymentConfirmed: 'Pagamento confermato',
   paymentCapturedMessage: '{amount}€ sono stati addebitati per la tua videochiamata riuscita.',

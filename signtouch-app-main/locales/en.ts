@@ -1232,6 +1232,7 @@ export default {
   totalDuration: 'total duration',
   preAuthorization: 'Pre-authorization',
   preAuthExplanation: '💳 The amount is only HELD on your card during the call — you are charged ONLY AFTER you actually get your call with the celebrity. If they don\'t take your call, the amount is RELEASED automatically and you pay nothing.',
+  preAuthExplanationDedication: '💳 Pre-payment: the amount is only HELD on your card, not charged. You are charged ONLY when the celebrity publishes a dedication. If no dedication is published, you are fully refunded.',
   authorizePayment: 'Authorize {amount}€',
   paymentConfirmed: 'Payment Confirmed',
   paymentCapturedMessage: '{amount}€ has been charged for your successful video call.',

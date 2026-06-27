@@ -1115,6 +1115,7 @@ export default {
   totalDuration: 'jumlah masa',
   preAuthorization: 'Pra-kebenaran',
   preAuthExplanation: '💳 Jumlahnya hanya DISEKAT pada kad anda sepanjang panggilan — anda hanya dicaj SELEPAS benar-benar mendapat panggilan dengan selebriti. Jika dia tidak menjawab panggilan anda, jumlahnya DILEPASKAN secara automatik dan anda tidak membayar apa-apa.',
+  preAuthExplanationDedication: '💳 Prabayar: jumlahnya hanya DISEKAT pada kad anda, bukan dicaj. Anda hanya dicaj apabila selebriti menerbitkan sesuatu dedikasi. Jika tiada dedikasi diterbitkan, anda dibayar balik sepenuhnya.',
   authorizePayment: 'Benarkan {amount}€',
   paymentConfirmed: 'Pembayaran disahkan',
   paymentCapturedMessage: '{amount}€ telah dicaj untuk panggilan video anda yang berjaya.',

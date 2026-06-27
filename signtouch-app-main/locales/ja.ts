@@ -1110,6 +1110,7 @@ export default {
   totalDuration: '合計時間',
   preAuthorization: '事前承認',
   preAuthExplanation: '💳 通話中、金額はカードに保留されるだけです — 請求されるのは有名人との通話が実際に行われた後だけです。相手が応じなかった場合、金額は自動的に解除され、料金は一切かかりません。',
+  preAuthExplanationDedication: '💳 前払い：金額はカードに保留されるだけで、請求はされません。請求されるのは有名人がサインを公開したときだけです。サインが一つも公開されなかった場合は、全額返金されます。',
   authorizePayment: '{amount}€を承認',
   paymentConfirmed: 'お支払い確認済み',
   paymentCapturedMessage: 'ビデオ通話が成功し、{amount}€が請求されました。',

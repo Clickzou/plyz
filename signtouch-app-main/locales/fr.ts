@@ -1235,6 +1235,7 @@ export default {
   totalDuration: 'durée totale',
   preAuthorization: 'Pré-autorisation',
   preAuthExplanation: '💳 Le montant est seulement BLOQUÉ sur ta carte le temps de l\'appel — tu n\'es débité(e) QU\'APRÈS avoir eu ton appel avec la célébrité. Si elle ne te prend pas, le montant est LIBÉRÉ automatiquement et tu ne paies rien.',
+  preAuthExplanationDedication: '💳 Prépaiement : le montant est seulement BLOQUÉ sur ta carte, pas débité. Tu n\'es débité(e) QUE lorsque la célébrité publie une dédicace. Si aucune dédicace n\'est publiée, tu es intégralement remboursé(e).',
   authorizePayment: 'Autoriser {amount}€',
   paymentConfirmed: 'Paiement confirmé',
   paymentCapturedMessage: '{amount}€ ont été débités suite à votre appel vidéo réussi.',

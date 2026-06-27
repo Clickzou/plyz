@@ -1110,6 +1110,7 @@ export default {
   totalDuration: '总时长',
   preAuthorization: '预授权',
   preAuthExplanation: '💳 通话期间，金额只是被冻结在您的卡上 — 只有在您与明星完成通话之后才会扣款。如果明星没有接听，金额会自动解冻，您无需支付任何费用。',
+  preAuthExplanationDedication: '💳 预付款：金额只是被冻结在您的卡上，并未扣款。只有当明星发布签名献词后才会扣款。如果没有发布任何签名献词，将全额退款给您。',
   authorizePayment: '授权 {amount}€',
   paymentConfirmed: '付款已确认',
   paymentCapturedMessage: '您的视频通话已成功，已扣款{amount}€。',
