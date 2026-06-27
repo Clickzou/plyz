@@ -9,8 +9,17 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
+import { AlertTriangle, CheckCircle } from 'lucide-react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+type Tone = 'danger' | 'error' | 'success';
+
+const TONE_COLORS: Record<Tone, string> = {
+  danger: '#f59e0b',
+  error: '#ef4444',
+  success: '#10b981',
+};
 
 type AlertButton = {
   text: string;
@@ -88,6 +97,18 @@ export default function CustomAlert() {
 
   const buttons = alertData.buttons || [{ text: 'OK', style: 'default' as const }];
 
+  const hasDestructive = buttons.some(b => b.style === 'destructive');
+  const titleLower = alertData.title.toLowerCase();
+  const isError =
+    titleLower.includes('erreur') ||
+    titleLower.includes('error') ||
+    titleLower.includes('échou') ||
+    titleLower.includes('echou') ||
+    titleLower.includes('failed');
+  const tone: Tone = hasDestructive ? 'danger' : isError ? 'error' : 'success';
+  const toneColor = TONE_COLORS[tone];
+  const ToneIcon = tone === 'success' ? CheckCircle : AlertTriangle;
+
   return (
     <Modal transparent visible={visible} animationType="none" statusBarTranslucent>
       <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
@@ -109,10 +130,16 @@ export default function CustomAlert() {
           ]}
         >
           <View style={styles.iconRow}>
-            <View style={styles.iconCircle}>
-              <Text style={styles.iconText}>
-                {alertData.title.includes('erreur') || alertData.title.includes('Error') ? '!' : '✓'}
-              </Text>
+            <View
+              style={[
+                styles.iconCircle,
+                {
+                  backgroundColor: toneColor + '26',
+                  borderColor: toneColor,
+                },
+              ]}
+            >
+              <ToneIcon size={28} color={toneColor} strokeWidth={2.5} />
             </View>
           </View>
 
@@ -191,16 +218,9 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
     borderWidth: 2,
-    borderColor: '#8b5cf6',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  iconText: {
-    fontSize: 24,
-    color: '#8b5cf6',
-    fontWeight: '700',
   },
   title: {
     fontSize: 20,
