@@ -33,6 +33,10 @@
       }
     },
     "production": {
+      "env": {
+        "EXPO_PUBLIC_STRIPE_SERVER_URL": "https://REMPLACER-PAR-URL-REPLIT-DEPLOYMENT.replit.app",
+        "EXPO_PUBLIC_SENTRY_DSN": "REMPLACER-PAR-DSN-SENTRY"
+      },
       "ios": {
         "resourceClass": "m-medium"
       },
