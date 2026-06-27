@@ -26,6 +26,9 @@ import QRCodeSvg from 'react-native-qrcode-svg';
 type TabType = 'create' | 'events';
 type FilterType = 'all' | 'live' | 'ended' | 'scheduled';
 
+// Serveur Stripe (revenus réels des dédicaces). Vide en l'absence d'env → fetch ignoré.
+const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
+
 // Mapping vue (depuis fan-choice) → filtre interne.
 const VIEW_TO_FILTER: Record<string, FilterType> = {
   upcoming: 'scheduled',
@@ -55,6 +58,9 @@ export default function CelebrityMenuScreen() {
   // Fans REELLEMENT servis (session_queue completed + payment_captured) par session video terminee.
   // Cle = live_session_id. Sert au « total reel » des cartes de sessions video terminees.
   const [servedFansBySession, setServedFansBySession] = useState<Record<string, number>>({});
+  // Revenus REELS des événements DEDICACE (clé = event.id → revenus 85% en € + nb personnes payées).
+  // Renseigné via l'endpoint /api/event-session-earnings (seuls les fans CAPTURÉS comptent).
+  const [eventEarnings, setEventEarnings] = useState<Record<string, { revenue: number; fans: number }>>({});
   const [eventFilter, setEventFilter] = useState<FilterType>(
     hasCategoryParam ? VIEW_TO_FILTER[viewParam as string] : 'live',
   );
@@ -126,6 +132,33 @@ export default function CelebrityMenuScreen() {
         setServedFansBySession(counts);
       } else {
         setServedFansBySession({});
+      }
+
+      // Evénements DEDICACE (non vidéo) : revenus REELS + nb de personnes ayant payé.
+      // L'endpoint ne compte que les paiements CAPTURÉS (dédicace publiée) → 0 si rien publié.
+      if (STRIPE_SERVER_URL) {
+        const dedicationEvents = sortedEvents.filter((e) => e.event_type !== 'live_video');
+        if (dedicationEvents.length > 0) {
+          const entries = await Promise.all(
+            dedicationEvents.map(async (e) => {
+              try {
+                const r = await fetch(
+                  `${STRIPE_SERVER_URL}/api/event-session-earnings?event_session_id=${e.id}`,
+                );
+                const data = await r.json();
+                const gross = typeof data.total_gross_cents === 'number' ? data.total_gross_cents : 0;
+                const fans = typeof data.paid_fan_count === 'number' ? data.paid_fan_count : 0;
+                // Revenus célébrité = brut * 85% (cohérent avec l'affichage vidéo).
+                return [e.id, { revenue: (gross * 0.85) / 100, fans }] as const;
+              } catch {
+                return [e.id, { revenue: 0, fans: 0 }] as const;
+              }
+            }),
+          );
+          setEventEarnings(Object.fromEntries(entries));
+        } else {
+          setEventEarnings({});
+        }
       }
     } catch (error) {
       console.error('Error loading events:', error);
@@ -608,6 +641,8 @@ export default function CelebrityMenuScreen() {
                     ? (servedFansBySession[event.live_session_id] || 0)
                     : null;
                   const durationPerFan = event.duration_per_fan_minutes || 5;
+                  // Dédicace : revenus REELS (85%) + nb de personnes ayant payé (endpoint serveur).
+                  const dedicationEarnings = !isLiveVideo ? (eventEarnings[event.id] || null) : null;
                   return (
                     <TouchableOpacity
                       key={event.id}
@@ -727,6 +762,22 @@ export default function CelebrityMenuScreen() {
                                 : `${durationPerFan * (event.max_fans || 60)} min`}
                             </Text>
                             <Text style={styles.eventDetailLabel}>{t('totalDuration') || 'durée totale'}</Text>
+                          </View>
+                        </View>
+                      )}
+
+                      {!isLiveVideo && dedicationEarnings && (
+                        <View style={styles.eventDetailsRow}>
+                          <View style={styles.eventDetailItem}>
+                            <Text style={styles.eventDetailValue}>
+                              {`${dedicationEarnings.revenue.toFixed(2)}€`}
+                            </Text>
+                            <Text style={styles.eventDetailLabel}>{t('realRevenue') || 'Revenus réels'}</Text>
+                          </View>
+                          <View style={styles.eventDetailDivider} />
+                          <View style={styles.eventDetailItem}>
+                            <Text style={styles.eventDetailValue}>{dedicationEarnings.fans}</Text>
+                            <Text style={styles.eventDetailLabel}>{t('peopleReached') || 'Personnes'}</Text>
                           </View>
                         </View>
                       )}

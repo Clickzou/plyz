@@ -1107,6 +1107,8 @@ export default {
   perFan: 'pro Fan',
   estimatedTotal: 'geschätzter Gesamtbetrag',
   realTotal: 'tatsächlicher Gesamtbetrag',
+  realRevenue: 'Tatsächliche Einnahmen',
+  peopleReached: 'Personen',
   totalDuration: 'Gesamtdauer',
   preAuthorization: 'Vorautorisierung',
   preAuthExplanation: '💳 Der Betrag wird während des Anrufs nur auf deiner Karte RESERVIERT — abgebucht wird er ERST NACHDEM du deinen Anruf mit dem Star hattest. Nimmt der Star dich nicht dran, wird der Betrag automatisch FREIGEGEBEN und du zahlst nichts.',

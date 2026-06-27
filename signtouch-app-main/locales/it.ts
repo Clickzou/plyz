@@ -1107,6 +1107,8 @@ export default {
   perFan: 'per fan',
   estimatedTotal: 'totale stimato',
   realTotal: 'totale reale',
+  realRevenue: 'Guadagni reali',
+  peopleReached: 'Persone',
   totalDuration: 'durata totale',
   preAuthorization: 'Pre-autorizzazione',
   preAuthExplanation: '💳 L\'importo viene solo BLOCCATO sulla tua carta durante la chiamata — ti viene addebitato SOLO DOPO aver avuto la tua chiamata con la celebrità. Se non ti risponde, l\'importo viene RILASCIATO automaticamente e non paghi nulla.',

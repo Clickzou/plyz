@@ -1112,6 +1112,8 @@ export default {
   perFan: 'فی مداح',
   estimatedTotal: 'تخمینی کل',
   realTotal: 'اصل کل',
+  realRevenue: 'اصل آمدنی',
+  peopleReached: 'لوگ',
   totalDuration: 'کل دورانیہ',
   preAuthorization: 'پیشگی اجازت',
   preAuthExplanation: '💳 کال کے دوران رقم صرف آپ کے کارڈ پر روکی جاتی ہے — رقم تب ہی کاٹی جاتی ہے جب آپ کی مشہور شخصیت سے کال ہو جائے۔ اگر وہ آپ کی کال نہ لیں تو رقم خود بخود واپس کھول دی جاتی ہے اور آپ کچھ ادا نہیں کرتے۔',

@@ -616,7 +616,12 @@ export default function EventPublishScreen() {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
-        router.back();
+        // Redirige vers la liste « Mes événements » onglet « Passés » (au lieu de revenir
+        // à l'écran « Événement créé » d'où la séance pouvait être relancée par erreur).
+        router.replace({
+          pathname: '/celebrity-menu',
+          params: { view: 'past', kind: 'event' },
+        } as any);
       } catch (error) {
         console.error('End session error:', error);
         showAlert(t('error') || 'Error', t('publishFailed') || 'Une erreur est survenue');
