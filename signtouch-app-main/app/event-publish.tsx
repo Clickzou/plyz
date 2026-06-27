@@ -17,6 +17,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Camera, Image as ImageIcon, Check, Users, Send, ZoomIn, ZoomOut, RotateCcw, RotateCw, Palette, QrCode, X, Copy, Share2, Plus, Calendar, Clock, Video, MapPin, Euro, PenTool, StopCircle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useKeepAwake } from 'expo-keep-awake';
+import { useAudioPlayer } from 'expo-audio';
 import ViewShot from 'react-native-view-shot';
 import { SvgUri, SvgXml } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
@@ -74,6 +76,10 @@ export default function EventPublishScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user } = useAuth();
+  // Garde l'écran ALLUMÉ tant que la célébrité dédicace : sinon l'écran se met en veille,
+  // l'app se suspend, et elle ne voit plus en direct les fans qui rejoignent (ni le son in-app).
+  // Aligné sur le flux vidéo (video-call / live-session-dashboard).
+  useKeepAwake();
 
   const sessionId = params.sessionId as string;
   const sessionTitle = params.sessionTitle as string;
@@ -109,6 +115,14 @@ export default function EventPublishScreen() {
   const [signerReminderVisible, setSignerReminderVisible] = useState(false);
   const [reminderDismissed, setReminderDismissed] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
+  // Son joué quand un fan rejoint la séance (même asset que le flux vidéo live-session-dashboard).
+  const fanJoinedPlayer = useAudioPlayer(require('@/assets/sounds/fan-joined.wav'));
+  // Garde anti-déclenchement : vrai au TOUT PREMIER chargement du compteur de fans présents.
+  // Sert à NE PAS jouer le son au montage de l'écran ni à chaque poll, UNIQUEMENT quand le
+  // nombre de fans présents AUGMENTE réellement (un nouveau fan rejoint). Reproduit le pattern
+  // isInitialQueueLoad de live-session-dashboard.
+  const isInitialViewerLoad = useRef(true);
+  const prevViewerCountRef = useRef(0);
   const [publishedCount, setPublishedCount] = useState(0);
   const [publishedAssets, setPublishedAssets] = useState<any[]>([]);
   const [realNetCents, setRealNetCents] = useState<number | null>(null);
@@ -368,6 +382,27 @@ export default function EventPublishScreen() {
 
     return () => clearInterval(interval);
   }, [sessionId, priceCents]);
+
+  // Son + vibration quand un NOUVEAU fan rejoint la séance (le compteur de fans présents augmente).
+  // Aligné sur live-session-dashboard (flux vidéo) : garde anti-montage pour ne jamais jouer au
+  // premier chargement de l'écran ni à chaque poll, uniquement sur une vraie augmentation.
+  useEffect(() => {
+    if (isInitialViewerLoad.current) {
+      isInitialViewerLoad.current = false;
+      prevViewerCountRef.current = viewerCount;
+      return;
+    }
+    if (viewerCount > prevViewerCountRef.current) {
+      try {
+        fanJoinedPlayer.seekTo(0);
+        fanJoinedPlayer.play();
+      } catch {}
+      try {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch {}
+    }
+    prevViewerCountRef.current = viewerCount;
+  }, [viewerCount, fanJoinedPlayer]);
 
   const resetSignatureTransform = () => {
     setSignaturePosition({ x: 0, y: 0 });

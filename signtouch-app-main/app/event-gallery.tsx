@@ -25,6 +25,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Download, Users, Clock, Image as ImageIcon, Pen, Info } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useKeepAwake } from 'expo-keep-awake';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -185,6 +186,10 @@ export default function EventGalleryScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user } = useAuth();
+  // Garde l'écran ALLUMÉ tant que le fan attend sa dédicace : sinon l'écran se met en veille,
+  // l'app se suspend, et il rate l'arrivée en direct de sa photo dédicacée (confetti + son).
+  // Aligné sur le flux vidéo (video-call / live-session-dashboard).
+  useKeepAwake();
 
   const [activeTab] = useState<TabType>('all');
   const [assets, setAssets] = useState<EventAsset[]>([]);

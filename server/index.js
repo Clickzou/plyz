@@ -1587,6 +1587,9 @@ app.get('/api/verify-event-payment', async (req, res) => {
         };
         // N'écrase le push_token QUE s'il est fourni (sinon on garde l'existant).
         if (pushToken) upsertRow.push_token = pushToken;
+        // Montant payé par le fan (centimes). Comme push_token : on ne l'écrit
+        // que s'il est disponible, pour ne pas écraser une valeur existante.
+        if (typeof session.amount_total === 'number') upsertRow.amount_cents = session.amount_total;
         const { error: upsertErr } = await admin
           .from('event_paid_fans')
           .upsert(upsertRow, { onConflict: 'event_session_id,fan_id' });
@@ -1615,30 +1618,64 @@ app.get('/api/verify-event-payment', async (req, res) => {
 
 app.get('/api/event-session-earnings', async (req, res) => {
   try {
-    const stripe = await getStripe();
     const { event_session_id } = req.query;
 
     if (!event_session_id) {
       return res.status(400).json({ error: 'Missing event_session_id' });
     }
 
-    const checkoutSessions = await stripe.checkout.sessions.list({
-      limit: 100,
-    });
+    // Source de vérité : la base. On lit les paiements RÉELLEMENT capturés
+    // (payment_captured = true) dans event_paid_fans. Reflète 0 tant qu'aucune
+    // dédicace n'est publiée (rien n'est encore capturé). Plus fiable que de
+    // scanner les 100 derniers paiements Stripe (fragile à grande échelle).
+    const admin = getSupabaseAdmin();
+    const { data: capturedRows, error: dbErr } = await admin
+      .from('event_paid_fans')
+      .select('amount_cents')
+      .eq('event_session_id', event_session_id)
+      .eq('payment_captured', true);
 
-    let totalGrossCents = 0;
-    let paidFanCount = 0;
-
-    for (const cs of checkoutSessions.data) {
-      if (cs.metadata?.event_session_id === event_session_id && cs.payment_status === 'paid') {
-        totalGrossCents += cs.amount_total || 0;
-        paidFanCount++;
-      }
+    if (dbErr) {
+      throw new Error(`event_paid_fans read failed: ${dbErr.message}`);
     }
 
+    const rows = capturedRows || [];
+    const paidFanCount = rows.length;
+    const rowsWithAmount = rows.filter((r) => typeof r.amount_cents === 'number');
+
+    // FALLBACK robustesse : si des lignes sont capturées mais qu'AUCUNE n'a
+    // d'amount_cents (vieux enregistrements d'avant l'ajout de la colonne), on
+    // retombe sur l'ancien scan Stripe pour ne pas afficher 0 à tort.
+    if (paidFanCount > 0 && rowsWithAmount.length === 0) {
+      console.log('[EventEarnings] No amount_cents on captured rows, fallback Stripe scan for', event_session_id);
+      const stripe = await getStripe();
+      const checkoutSessions = await stripe.checkout.sessions.list({ limit: 100 });
+
+      let totalGrossCents = 0;
+      let fanCount = 0;
+      for (const cs of checkoutSessions.data) {
+        if (cs.metadata?.event_session_id === event_session_id && cs.payment_status === 'paid') {
+          totalGrossCents += cs.amount_total || 0;
+          fanCount++;
+        }
+      }
+      const feeCents = Math.round(totalGrossCents * 0.15);
+      return res.json({
+        event_session_id,
+        total_gross_cents: totalGrossCents,
+        net_cents: Math.max(0, totalGrossCents - feeCents),
+        paid_fan_count: fanCount,
+      });
+    }
+
+    // Cas normal : on somme les montants en base (on ignore les null).
+    const totalGrossCents = rowsWithAmount.reduce((sum, r) => sum + r.amount_cents, 0);
     const signTouchFeeCents = Math.round(totalGrossCents * 0.15);
-    const stripeFeeCents = Math.round(totalGrossCents * 0.029) + paidFanCount * 30;
-    const netCents = totalGrossCents - signTouchFeeCents - stripeFeeCents;
+    // NE PAS déduire les frais Stripe : la célébrité touche 85% brut via
+    // transfer_data (cohérent avec le flux vidéo /api/session-earnings).
+    const netCents = totalGrossCents - signTouchFeeCents;
+
+    console.log('[EventEarnings] DB earnings for', event_session_id, '| captured fans:', paidFanCount, '| gross:', totalGrossCents, '| net:', netCents);
 
     res.json({
       event_session_id,
