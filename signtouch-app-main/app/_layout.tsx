@@ -1,3 +1,14 @@
+import * as Sentry from '@sentry/react-native';
+
+// Sentry s'active UNIQUEMENT si EXPO_PUBLIC_SENTRY_DSN est défini. Sans DSN,
+// `enabled: false` => Sentry reste inactif et l'app fonctionne normalement.
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: !!process.env.EXPO_PUBLIC_SENTRY_DSN,
+  environment: __DEV__ ? 'development' : 'production',
+  tracesSampleRate: 0.2,
+});
+
 import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -29,6 +40,7 @@ import { CelebrityModeProvider } from '@/contexts/CelebrityModeContext';
 import { FollowProvider } from '@/contexts/FollowContext';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import { AuthPromptProvider } from '@/contexts/AuthPromptContext';
+import AppErrorBoundary from '@/components/AppErrorBoundary';
 import { initNotifications } from '@/utils/notifications';
 
 SplashScreen.preventAutoHideAsync();
@@ -68,7 +80,7 @@ function AppContent() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   useFrameworkReady();
 
   const pumpkindFont = (() => {
@@ -125,20 +137,26 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <LanguageProvider>
-          <CelebrityModeProvider>
-            <FollowProvider>
-              <OnboardingProvider>
-                <AuthPromptProvider>
-                  <AppContent />
-                  {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
-                </AuthPromptProvider>
-              </OnboardingProvider>
-            </FollowProvider>
-          </CelebrityModeProvider>
-        </LanguageProvider>
-      </AuthProvider>
+      <AppErrorBoundary>
+        <AuthProvider>
+          <LanguageProvider>
+            <CelebrityModeProvider>
+              <FollowProvider>
+                <OnboardingProvider>
+                  <AuthPromptProvider>
+                    <AppContent />
+                    {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
+                  </AuthPromptProvider>
+                </OnboardingProvider>
+              </FollowProvider>
+            </CelebrityModeProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </AppErrorBoundary>
     </GestureHandlerRootView>
   );
 }
+
+// Sentry.wrap est la pratique recommandée pour SDK 54 (profilage/perf du composant
+// racine). Sans DSN, Sentry est inactif et wrap reste un simple passe-plat.
+export default Sentry.wrap(RootLayout);
