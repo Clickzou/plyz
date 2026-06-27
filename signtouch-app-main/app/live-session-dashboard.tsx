@@ -13,7 +13,7 @@ import {
   Share,
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useKeepAwake } from 'expo-keep-awake';
@@ -135,6 +135,11 @@ export default function LiveSessionDashboardScreen() {
   const pathRef = useRef<string>('');
   
   const [sessionQueue, setSessionQueue] = useState<SessionQueueEntry[]>([]);
+  // Incrémenté à chaque RETOUR de focus sur le dashboard (ex : sortie de la visio). Sert de
+  // dépendance au useEffect de polling de la file : sans ça, le polling ne se relance pas au
+  // retour (deps = [sessionId] inchangé) et la file resterait PÉRIMÉE (fan completed affiché
+  // « Appelé », compteur faux, bannière « un fan vous attend » à tort).
+  const [focusTick, setFocusTick] = useState(0);
   const [calledFan, setCalledFan] = useState<SessionQueueEntry | null>(null);
   const [fanCallTimeout, setFanCallTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const FAN_RESPONSE_TIMEOUT_MS = 30000;
@@ -495,7 +500,49 @@ export default function LiveSessionDashboardScreen() {
     return () => {
       clearInterval(queuePollInterval);
     };
-  }, [sessionId]);
+    // focusTick : relance ce polling à CHAQUE retour de focus (sortie de la visio), pour
+    // re-fetch immédiatement la file et la rafraîchir (sinon état périmé).
+  }, [sessionId, focusTick]);
+
+  // RETOUR de focus sur le dashboard (ex : sortie de l'écran /video-call). À ce moment, l'état
+  // local est PÉRIMÉ : isInVideoCall est resté true, calledFan pointe encore le fan déjà terminé
+  // (désormais 'completed' en base), et le polling de la file ne s'était pas relancé. Résultat
+  // sinon : fan « Appelé » fantôme dans la file, compteur « 1/60 » faux, bannière « un fan vous
+  // attend » à tort. On nettoie ces états et on force un re-fetch immédiat de la file (via
+  // getFullQueue, qui ne renvoie QUE waiting/called/in_call -> le fan completed disparaît).
+  // skipFirstFocusRef : ignore le TOUT PREMIER focus (montage initial), déjà couvert par les
+  // effets de chargement, pour ne pas double-fetch ni perturber les chimes du 1er chargement.
+  const skipFirstFocusRef = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (skipFirstFocusRef.current) {
+        skipFirstFocusRef.current = false;
+        return;
+      }
+      if (!sessionId) return;
+
+      // L'appel vidéo est terminé : on n'est plus dedans.
+      setIsInVideoCall(false);
+
+      // Re-fetch immédiat de la file (ne pas attendre le prochain tick de polling).
+      (async () => {
+        const fullQueue = await getFullQueue(sessionId);
+        setSessionQueue(fullQueue);
+        // Si le fan « appelé » n'est plus dans la file active (il est passé 'completed'),
+        // on purge l'état local calledFan pour que la bannière/compteur reflètent le réel.
+        if (calledFanIdRef.current) {
+          const stillActive = fullQueue.some((e) => e.id === calledFanIdRef.current);
+          if (!stillActive) {
+            calledFanIdRef.current = null;
+            setCalledFan(null);
+          }
+        }
+      })();
+
+      // Relance le polling périodique de la file (deps focusTick du useEffect de polling).
+      setFocusTick((n) => n + 1);
+    }, [sessionId])
+  );
 
   useEffect(() => {
     return () => {
