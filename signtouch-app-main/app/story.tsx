@@ -1294,10 +1294,18 @@ export default function StoryScreen() {
     }
     
     setIsExporting(true);
-    
+
+    // Désélectionner avant capture pour ne pas "cuire" le cadre vert pointillé de
+    // l'élément sélectionné dans l'image exportée (cf. handleShare).
+    setSelectedSignatureIndex(null);
+    setSelectedTextIndex(null);
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    );
+
     try {
       let uri: string;
-      
+
       if (Platform.OS === 'web') {
         if (!webContainerRef.current) {
           throw new Error('Web container ref not available');
@@ -1339,7 +1347,18 @@ export default function StoryScreen() {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    
+
+    // Désélectionner AVANT la capture : un élément sélectionné affiche un cadre vert
+    // pointillé (borderStyle dashed) qui serait sinon "cuit" dans l'image partagée.
+    // Par défaut selectedSignatureIndex = 0, donc une signature est toujours
+    // sélectionnée au repos -> on retire la sélection puis on attend 2 frames que
+    // le rendu sans bordure soit peint avant captureRef.
+    setSelectedSignatureIndex(null);
+    setSelectedTextIndex(null);
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    );
+
     try {
       if (viewShotRef.current?.capture) {
         const uri = await viewShotRef.current.capture();
