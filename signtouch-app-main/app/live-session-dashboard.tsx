@@ -522,7 +522,7 @@ export default function LiveSessionDashboardScreen() {
         prevEarningsRef.current = data.captured_count;
       }
     } catch (e) {
-      console.error('[Dashboard] Error fetching earnings:', e);
+      console.warn('[Dashboard] Error fetching earnings:', e);
     }
   }, [sessionId, session?.price_cents, STRIPE_SERVER_URL]);
 

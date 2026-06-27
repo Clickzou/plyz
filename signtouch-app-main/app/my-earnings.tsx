@@ -78,7 +78,7 @@ export default function MyEarningsScreen() {
       const result = await response.json();
       setData(result);
     } catch (e) {
-      console.error('[MyEarnings] Error fetching:', e);
+      console.warn('[MyEarnings] Error fetching:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
