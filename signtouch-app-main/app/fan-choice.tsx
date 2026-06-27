@@ -180,20 +180,15 @@ export default function FanChoiceScreen() {
     kind: 'event' | 'video',
   ) => {
     const accent = '#10b981'; // vert pour tous (événements ET sessions vidéo)
-    const RED = '#ef4444';
 
-    // À venir = vert plein ; En cours = rouge UNIQUEMENT s'il y a un live actif
-    // (count > 0) ; Passé (et En cours vide) = transparent + contour vert.
-    let bg = 'transparent';
-    let border = `${accent}66`;
-    let fg = accent;
-    let badgeBg = accent;
-    let badgeFg = '#ffffff';
-    if (view === 'upcoming') {
-      bg = accent; border = accent; fg = '#ffffff'; badgeBg = '#ffffff'; badgeFg = accent;
-    } else if (view === 'ongoing' && count > 0) {
-      bg = RED; border = RED; fg = '#ffffff'; badgeBg = '#ffffff'; badgeFg = RED;
-    }
+    // Tous les boutons liste (à venir / en cours / passés) restent SANS couleur de fond :
+    // transparent + contour léger. Seul le bouton « Rejoindre » de chaque carte est plein
+    // (vert pour la dédicace, violet pour la vidéo).
+    const bg = 'transparent';
+    const border = `${accent}66`;
+    const fg = accent;
+    const badgeBg = accent;
+    const badgeFg = '#ffffff';
 
     return (
       <TouchableOpacity
@@ -247,12 +242,12 @@ export default function FanChoiceScreen() {
           )}
 
           <TouchableOpacity
-            style={[styles.btn, styles.btnOutline, { borderColor: accent }]}
+            style={[styles.btn, { backgroundColor: accent }]}
             onPress={() => handleChoice(joinPath)}
             activeOpacity={0.85}
           >
-            <LogIn size={18} color={accent} strokeWidth={2.5} />
-            <Text style={[styles.btnOutlineText, { color: accent }]}>{t('fanChoiceJoinBtn')}</Text>
+            <LogIn size={18} color="#ffffff" strokeWidth={2.5} />
+            <Text style={styles.btnPrimaryText}>{t('fanChoiceJoinBtn')}</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
