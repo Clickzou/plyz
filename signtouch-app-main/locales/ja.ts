@@ -1549,4 +1549,6 @@ export default {
   fanBlockedConfirm: "ファンをブロックしました。今後参加できません。",
   accessDenied: "アクセスが拒否されました",
   blockedByHost: "このセッションに参加できません。",
+  shareDedicationMessage: "✨ 特別な瞬間：{celebrity} が署名した私だけのメッセージ。\n\nPlyz では、あなたが憧れる著名人からのメッセージやプライベートなビデオ通話を体験できます 💜\n\n📲 plyz.app",
+  shareDedicationMessageNoName: "✨ 特別な瞬間：私だけの Plyz メッセージ。\n\nPlyz では、あなたが憧れる著名人からのメッセージやプライベートなビデオ通話を体験できます 💜\n\n📲 plyz.app",
 };

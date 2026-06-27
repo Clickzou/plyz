@@ -52,7 +52,7 @@ export default function LiveSignatureResultScreen() {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: t('liveSessionShareMessage'),
+        message: (t as any)('shareDedicationMessageNoName') || t('liveSessionShareMessage'),
       });
     } catch (error) {
       console.error('Error sharing:', error);

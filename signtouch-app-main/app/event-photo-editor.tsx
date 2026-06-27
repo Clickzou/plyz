@@ -363,8 +363,13 @@ export default function EventPhotoEditorScreen() {
             const response = await fetch(uri);
             const blob = await response.blob();
             const file = new File([blob], `plyz_${signerName}.png`, { type: 'image/png' });
+            const name = (signerName || '').trim();
+            const shareMessage = name
+              ? ((t as any)('shareDedicationMessage') as string).replace('{celebrity}', name)
+              : ((t as any)('shareDedicationMessageNoName') as string);
             await navigator.share({
               title: `${signerName} - Plyz`,
+              text: shareMessage,
               files: [file],
             });
             return;

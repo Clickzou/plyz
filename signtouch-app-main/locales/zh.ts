@@ -1549,4 +1549,6 @@ export default {
   fanBlockedConfirm: "粉丝已屏蔽。他将无法再加入您。",
   accessDenied: "访问被拒绝",
   blockedByHost: "您无法加入此会话。",
+  shareDedicationMessage: "✨ 独一无二的时刻：我的专属寄语，由 {celebrity} 亲笔签名。\n\n在 Plyz，与你仰慕的名人体验专属寄语或私人视频通话 💜\n\n📲 plyz.app",
+  shareDedicationMessageNoName: "✨ 独一无二的时刻：我的 Plyz 专属寄语。\n\n在 Plyz，与你仰慕的名人体验专属寄语或私人视频通话 💜\n\n📲 plyz.app",
 };

@@ -1554,4 +1554,6 @@ export default {
   fanBlockedConfirm: "Fan diblokir. Dia tidak bisa bergabung dengan Anda lagi.",
   accessDenied: "Akses ditolak",
   blockedByHost: "Anda tidak dapat bergabung ke sesi ini.",
+  shareDedicationMessage: "✨ Momen istimewa: dedikasi personal saya yang ditandatangani oleh {celebrity}.\n\nDi Plyz, rasakan pengalaman dedikasi atau panggilan video pribadi dengan tokoh yang Anda kagumi 💜\n\n📲 plyz.app",
+  shareDedicationMessageNoName: "✨ Momen istimewa: dedikasi personal Plyz saya.\n\nDi Plyz, rasakan pengalaman dedikasi atau panggilan video pribadi dengan tokoh yang Anda kagumi 💜\n\n📲 plyz.app",
 };

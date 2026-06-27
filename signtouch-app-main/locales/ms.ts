@@ -1554,4 +1554,6 @@ export default {
   fanBlockedConfirm: "Peminat disekat. Dia tidak lagi boleh menyertai anda.",
   accessDenied: "Akses ditolak",
   blockedByHost: "Anda tidak boleh menyertai sesi ini.",
+  shareDedicationMessage: "✨ Detik istimewa: dedikasi peribadi saya yang ditandatangani oleh {celebrity}.\n\nDi Plyz, alami pengalaman dedikasi atau panggilan video peribadi dengan personaliti yang anda kagumi 💜\n\n📲 plyz.app",
+  shareDedicationMessageNoName: "✨ Detik istimewa: dedikasi peribadi Plyz saya.\n\nDi Plyz, alami pengalaman dedikasi atau panggilan video peribadi dengan personaliti yang anda kagumi 💜\n\n📲 plyz.app",
 };

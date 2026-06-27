@@ -1549,4 +1549,6 @@ export default {
   fanBlockedConfirm: "Fã bloqueado. Ele não poderá mais entrar.",
   accessDenied: "Acesso negado",
   blockedByHost: "Você não pode entrar nesta sessão.",
+  shareDedicationMessage: "✨ Um momento único: a minha dedicatória personalizada assinada por {celebrity}.\n\nNa Plyz, vive a experiência de uma dedicatória ou de uma videochamada privada com as personalidades que admiras 💜\n\n📲 plyz.app",
+  shareDedicationMessageNoName: "✨ Um momento único: a minha dedicatória personalizada Plyz.\n\nNa Plyz, vive a experiência de uma dedicatória ou de uma videochamada privada com as personalidades que admiras 💜\n\n📲 plyz.app",
 };

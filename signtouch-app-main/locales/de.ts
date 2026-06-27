@@ -1549,4 +1549,6 @@ export default {
   fanBlockedConfirm: "Fan blockiert. Er kann dir nicht mehr beitreten.",
   accessDenied: "Zugriff verweigert",
   blockedByHost: "Du kannst dieser Session nicht beitreten.",
+  shareDedicationMessage: "✨ Ein einzigartiger Moment: meine persönliche Widmung, signiert von {celebrity}.\n\nAuf Plyz erlebst du eine Widmung oder einen privaten Videoanruf mit den Stars, die du bewunderst 💜\n\n📲 plyz.app",
+  shareDedicationMessageNoName: "✨ Ein einzigartiger Moment: meine persönliche Plyz-Widmung.\n\nAuf Plyz erlebst du eine Widmung oder einen privaten Videoanruf mit den Stars, die du bewunderst 💜\n\n📲 plyz.app",
 };

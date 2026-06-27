@@ -1582,4 +1582,6 @@ export default {
   fanBlockedConfirm: "Fan blocked. They can no longer join you.",
   accessDenied: "Access denied",
   blockedByHost: "You cannot join this session.",
+  shareDedicationMessage: "✨ A unique moment: my personalized dedication signed by {celebrity}.\n\nOn Plyz, experience a dedication or a private video call with the stars you admire 💜\n\n📲 plyz.app",
+  shareDedicationMessageNoName: "✨ A unique moment: my personalized Plyz dedication.\n\nOn Plyz, experience a dedication or a private video call with the stars you admire 💜\n\n📲 plyz.app",
 };
