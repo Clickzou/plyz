@@ -24,6 +24,7 @@ import AccountAvatarButton from '@/components/AccountAvatarButton';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStripeAccountId } from '@/utils/userProfile';
+import { authedFetch } from '@/utils/authedFetch';
 
 import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount, getSignedDedicationCount } from '@/utils/eventSessionStorage';
 import { getServedFansCountBySessions } from '@/utils/sessionQueueStorage';
@@ -219,7 +220,7 @@ export default function MySpaceScreen() {
 
   const handleUpdateBookingStatus = async (bookingId: string, status: string) => {
     try {
-      await fetch(`${API_BASE}/api/update-booking-status`, {
+      await authedFetch(`${API_BASE}/api/update-booking-status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ booking_id: bookingId, status }),
@@ -232,7 +233,7 @@ export default function MySpaceScreen() {
 
   const handleUpdateAutographStatus = async (autographId: string, status: string) => {
     try {
-      await fetch(`${API_BASE}/api/update-autograph-status`, {
+      await authedFetch(`${API_BASE}/api/update-autograph-status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ autograph_id: autographId, status }),

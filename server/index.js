@@ -177,6 +177,17 @@ async function verifySupabaseJWT(req) {
   }
 }
 
+// True si la plateforme tourne sur une clé Stripe de TEST (sk_test_...).
+// Sert à la règle anti-casse C2 : en TEST on tolère (warning) quand une donnée
+// de vérification de propriété est introuvable ; en LIVE on refuse (403).
+function isStripeTestMode() {
+  try {
+    return getStripeCredentials().secretKey.startsWith('sk_test_');
+  } catch (e) {
+    return false; // par sécurité, en cas de doute on est en mode strict (LIVE)
+  }
+}
+
 let supabaseClient = null;
 function getSupabase() {
   if (!supabaseClient) {
@@ -612,21 +623,53 @@ app.post('/api/create-checkout-session', async (req, res) => {
     const {
       sessionId,
       celebrityId,
-      celebrityName,
       fanId,
-      priceCents,
       currency = 'eur',
       successUrl,
       cancelUrl,
-      celebrityStripeAccountId,
     } = req.body;
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Missing session ID' });
+    }
+
+    const stripeKey = getStripeCredentials().secretKey;
+    const isTestMode = stripeKey.startsWith('sk_test_');
+
+    // 🔒 SÉCURITÉ : le prix et le compte destinataire sont rechargés depuis la base,
+    // JAMAIS depuis le client (sinon un fan pourrait payer 0€ ou détourner les fonds
+    // vers son propre compte Stripe en falsifiant le corps de la requête).
+    const adminDb = getSupabaseAdmin();
+    const { data: liveSession } = await adminDb
+      .from('live_sessions')
+      .select('price_cents, celebrity_id, celebrity_name, celebrity_stripe_account_id')
+      .eq('id', sessionId)
+      .maybeSingle();
+
+    let priceCents, celebrityStripeAccountId, celebrityName;
+    if (liveSession) {
+      priceCents = liveSession.price_cents;
+      celebrityName = liveSession.celebrity_name;
+      // Destinataire fiable : on privilégie le compte Stripe du profil célébrité
+      // (source de vérité protégée), avec repli sur celui stocké dans la session.
+      const { data: celebProfile } = await adminDb
+        .from('celebrity_profiles')
+        .select('stripe_account_id')
+        .eq('user_id', liveSession.celebrity_id)
+        .maybeSingle();
+      celebrityStripeAccountId = celebProfile?.stripe_account_id || liveSession.celebrity_stripe_account_id;
+    } else if (isTestMode) {
+      // Mode TEST uniquement : session non persistée en base → on tolère les valeurs client.
+      priceCents = req.body.priceCents;
+      celebrityStripeAccountId = req.body.celebrityStripeAccountId;
+      celebrityName = req.body.celebrityName;
+      console.warn('[Checkout] TEST: live session not found in DB, falling back to client values for', sessionId);
+    } else {
+      return res.status(404).json({ error: 'Live session not found' });
+    }
 
     if (!priceCents || priceCents < 200) {
       return res.status(400).json({ error: 'Minimum price is 2€ (200 cents)' });
-    }
-
-    if (!sessionId || !celebrityId) {
-      return res.status(400).json({ error: 'Missing session or celebrity ID' });
     }
 
     if (!celebrityStripeAccountId) {
@@ -634,8 +677,6 @@ app.post('/api/create-checkout-session', async (req, res) => {
     }
 
     const account = await stripe.accounts.retrieve(celebrityStripeAccountId);
-    const stripeKey = getStripeCredentials().secretKey;
-    const isTestMode = stripeKey.startsWith('sk_test_');
 
     if (!account.charges_enabled) {
       if (isTestMode) {
@@ -757,6 +798,37 @@ app.post('/api/capture-payment', async (req, res) => {
       return res.status(400).json({ error: 'Missing checkout_session_id' });
     }
 
+    // 🔒 C2 — AUTH + PROPRIÉTÉ : seule la célébrité hôte du live peut capturer.
+    // On remonte checkout_session_id → session_queue → live_sessions.celebrity_id.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+    {
+      const admin = getSupabaseAdmin();
+      const { data: qEntry } = await admin
+        .from('session_queue')
+        .select('session_id')
+        .eq('checkout_session_id', checkout_session_id)
+        .maybeSingle();
+      let ownerCelebId = null;
+      if (qEntry?.session_id) {
+        const { data: live } = await admin
+          .from('live_sessions')
+          .select('celebrity_id')
+          .eq('id', qEntry.session_id)
+          .maybeSingle();
+        ownerCelebId = live?.celebrity_id || null;
+      }
+      if (!ownerCelebId) {
+        if (isStripeTestMode()) {
+          console.warn('[Capture] TEST: owner introuvable pour checkout', checkout_session_id, '→ toléré');
+        } else {
+          return res.status(403).json({ error: 'Ownership could not be verified' });
+        }
+      } else if (String(ownerCelebId) !== String(authUser.id)) {
+        return res.status(403).json({ error: 'Not the owner of this session' });
+      }
+    }
+
     const session = await stripe.checkout.sessions.retrieve(checkout_session_id);
     const paymentIntentId = session.payment_intent;
 
@@ -799,6 +871,39 @@ app.post('/api/cancel-payment', async (req, res) => {
 
     if (!checkout_session_id) {
       return res.status(400).json({ error: 'Missing checkout_session_id' });
+    }
+
+    // 🔒 C2 — AUTH + PROPRIÉTÉ : appelé par la célébrité hôte OU par le fan.
+    // Autorisé si user == celebrity de la session OU user == fan de l'entrée.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+    {
+      const admin = getSupabaseAdmin();
+      const { data: qEntry } = await admin
+        .from('session_queue')
+        .select('session_id, fan_id')
+        .eq('checkout_session_id', checkout_session_id)
+        .maybeSingle();
+      let ownerCelebId = null;
+      if (qEntry?.session_id) {
+        const { data: live } = await admin
+          .from('live_sessions')
+          .select('celebrity_id')
+          .eq('id', qEntry.session_id)
+          .maybeSingle();
+        ownerCelebId = live?.celebrity_id || null;
+      }
+      const isCeleb = ownerCelebId && String(ownerCelebId) === String(authUser.id);
+      const isFan = qEntry?.fan_id && String(qEntry.fan_id) === String(authUser.id);
+      if (!qEntry) {
+        if (isStripeTestMode()) {
+          console.warn('[Cancel] TEST: entrée introuvable pour checkout', checkout_session_id, '→ toléré (user authentifié)');
+        } else {
+          return res.status(403).json({ error: 'Ownership could not be verified' });
+        }
+      } else if (!isCeleb && !isFan) {
+        return res.status(403).json({ error: 'Not authorized to cancel this payment' });
+      }
     }
 
     const session = await stripe.checkout.sessions.retrieve(checkout_session_id);
@@ -850,6 +955,36 @@ app.post('/api/end-fan-call', async (req, res) => {
 
     const supabase = getSupabaseAdmin();
     const stripe = await getStripe();
+
+    // 🔒 C2 — AUTH + PROPRIÉTÉ : seule la célébrité hôte peut terminer l'appel et
+    // déclencher la capture/release. queueEntryId → session_queue → live_sessions.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ ok: false, error: 'Authentication required' });
+    {
+      const { data: qOwn } = await supabase
+        .from('session_queue')
+        .select('session_id')
+        .eq('id', queueEntryId)
+        .maybeSingle();
+      let ownerCelebId = null;
+      if (qOwn?.session_id) {
+        const { data: live } = await supabase
+          .from('live_sessions')
+          .select('celebrity_id')
+          .eq('id', qOwn.session_id)
+          .maybeSingle();
+        ownerCelebId = live?.celebrity_id || null;
+      }
+      if (!ownerCelebId) {
+        if (isStripeTestMode()) {
+          console.warn('[EndFanCall] TEST: owner introuvable pour entry', queueEntryId, '→ toléré');
+        } else {
+          return res.status(403).json({ ok: false, error: 'Ownership could not be verified' });
+        }
+      } else if (String(ownerCelebId) !== String(authUser.id)) {
+        return res.status(403).json({ ok: false, error: 'Not the owner of this session' });
+      }
+    }
 
     // 1. Lire l'entrée session_queue
     const { data: entry, error: readError } = await supabase
@@ -1409,6 +1544,28 @@ app.post('/api/set-event-payment-config', async (req, res) => {
     const { eventSessionId, priceCents, celebrityStripeAccountId, celebrityName, creatorId } = req.body;
     if (!eventSessionId) return res.status(400).json({ error: 'Missing eventSessionId' });
 
+    // 🔒 C2 — AUTH + PROPRIÉTÉ : seule la célébrité créatrice de l'événement peut
+    // définir le prix/destinataire. Vérif via event_sessions.created_by.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+    {
+      const admin = getSupabaseAdmin();
+      const { data: evt } = await admin
+        .from('event_sessions')
+        .select('created_by')
+        .eq('id', eventSessionId)
+        .maybeSingle();
+      if (!evt) {
+        if (isStripeTestMode()) {
+          console.warn('[EventPayment] TEST: event introuvable pour config', eventSessionId, '→ toléré');
+        } else {
+          return res.status(403).json({ error: 'Ownership could not be verified' });
+        }
+      } else if (String(evt.created_by) !== String(authUser.id)) {
+        return res.status(403).json({ error: 'Not the creator of this event' });
+      }
+    }
+
     global.eventPaymentConfigs[eventSessionId] = {
       priceCents: priceCents || 0,
       celebrityStripeAccountId: celebrityStripeAccountId || null,
@@ -1482,14 +1639,41 @@ app.get('/api/get-event-payment-config', async (req, res) => {
 app.post('/api/create-event-checkout', async (req, res) => {
   try {
     const stripe = await getStripe();
-    const { eventSessionId, fanId, priceCents, celebrityStripeAccountId, celebrityName, successUrl, cancelUrl } = req.body;
-
-    if (!priceCents || priceCents < 100) {
-      return res.status(400).json({ error: 'Minimum price is 1€ (100 cents)' });
-    }
+    const { eventSessionId, fanId, successUrl, cancelUrl } = req.body;
 
     if (!eventSessionId) {
       return res.status(400).json({ error: 'Missing event session ID' });
+    }
+
+    const stripeKey = getStripeCredentials().secretKey;
+    const isTestMode = stripeKey.startsWith('sk_test_');
+
+    // 🔒 SÉCURITÉ : le prix et le compte destinataire viennent de la config serveur
+    // (event_payment_configs), JAMAIS du client (sinon paiement à 0€ / détournement).
+    const adminDb = getSupabaseAdmin();
+    const { data: cfg } = await adminDb
+      .from('event_payment_configs')
+      .select('price_cents, celebrity_stripe_account_id, celebrity_name')
+      .eq('event_session_id', eventSessionId)
+      .maybeSingle();
+
+    let priceCents, celebrityStripeAccountId, celebrityName;
+    if (cfg) {
+      priceCents = cfg.price_cents;
+      celebrityStripeAccountId = cfg.celebrity_stripe_account_id;
+      celebrityName = cfg.celebrity_name;
+    } else if (isTestMode) {
+      // Mode TEST uniquement : config absente en base → repli sur les valeurs client.
+      priceCents = req.body.priceCents;
+      celebrityStripeAccountId = req.body.celebrityStripeAccountId;
+      celebrityName = req.body.celebrityName;
+      console.warn('[EventCheckout] TEST: payment config not found in DB, falling back to client values for', eventSessionId);
+    } else {
+      return res.status(404).json({ error: 'Event payment config not found' });
+    }
+
+    if (!priceCents || priceCents < 100) {
+      return res.status(400).json({ error: 'Minimum price is 1€ (100 cents)' });
     }
 
     const signTouchFeeCents = Math.round(priceCents * 0.15);
@@ -1708,6 +1892,10 @@ app.get('/api/event-session-earnings', async (req, res) => {
 });
 
 app.get('/api/check-event-access', async (req, res) => {
+  // C2 — CAS SPÉCIAL : endpoint appelé par des fans potentiellement NON connectés
+  // (identifiés par device_id/fan_id). On N'EXIGE PAS de JWT ici, sinon les fans
+  // anonymes seraient cassés. Lecture seule (renvoie paid: true/false).
+  // TODO durcir après migration device_id → compte (exiger le JWT + user==fan_id).
   try {
     const { event_session_id, fan_id } = req.query;
 
@@ -1764,6 +1952,26 @@ app.post('/api/capture-event-payments', async (req, res) => {
 
     const supabase = getSupabaseAdmin();
     const stripe = await getStripe();
+
+    // 🔒 C2 — AUTH + PROPRIÉTÉ : seule la célébrité créatrice de l'événement.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ ok: false, error: 'Authentication required' });
+    {
+      const { data: evt } = await supabase
+        .from('event_sessions')
+        .select('created_by')
+        .eq('id', eventSessionId)
+        .maybeSingle();
+      if (!evt) {
+        if (isStripeTestMode()) {
+          console.warn('[EventCapture] TEST: event introuvable', eventSessionId, '→ toléré');
+        } else {
+          return res.status(403).json({ ok: false, error: 'Ownership could not be verified' });
+        }
+      } else if (String(evt.created_by) !== String(authUser.id)) {
+        return res.status(403).json({ ok: false, error: 'Not the creator of this event' });
+      }
+    }
 
     // 1. Compare-and-set ÉVÉNEMENT : ne déclenche qu'une fois.
     const { data: triggered, error: triggerErr } = await supabase
@@ -1902,6 +2110,26 @@ app.post('/api/release-event-payments', async (req, res) => {
     const supabase = getSupabaseAdmin();
     const stripe = await getStripe();
 
+    // 🔒 C2 — AUTH + PROPRIÉTÉ : seule la célébrité créatrice de l'événement.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ ok: false, error: 'Authentication required' });
+    {
+      const { data: evt } = await supabase
+        .from('event_sessions')
+        .select('created_by')
+        .eq('id', eventSessionId)
+        .maybeSingle();
+      if (!evt) {
+        if (isStripeTestMode()) {
+          console.warn('[EventRelease] TEST: event introuvable', eventSessionId, '→ toléré');
+        } else {
+          return res.status(403).json({ ok: false, error: 'Ownership could not be verified' });
+        }
+      } else if (String(evt.created_by) !== String(authUser.id)) {
+        return res.status(403).json({ ok: false, error: 'Not the creator of this event' });
+      }
+    }
+
     const { data: fans, error: fansErr } = await supabase
       .from('event_paid_fans')
       .select('*')
@@ -1999,9 +2227,21 @@ app.post('/api/record-free-event-access', async (req, res) => {
       return res.status(400).json({ error: 'Missing event_session_id, fan_id, or promo_id' });
     }
 
+    // 🔒 C2 — AUTH : durcissement préventif (aucun appel client actuel). On exige
+    // un user authentifié, et que fan_id corresponde à l'utilisateur connecté.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+    if (String(fan_id) !== String(authUser.id)) {
+      if (isStripeTestMode()) {
+        console.warn('[EventPromoAccess] TEST: fan_id != user', fan_id, authUser.id, '→ toléré');
+      } else {
+        return res.status(403).json({ error: 'fan_id does not match authenticated user' });
+      }
+    }
+
     const { data: promo } = await supabase
       .from('promo_code_evenement_qr')
-      .select('id, discount_percent, is_active, event_session_id')
+      .select('id, discount_percent, is_active, event_session_id, used_count, max_uses')
       .eq('id', promo_id)
       .eq('is_active', true)
       .single();
@@ -2014,11 +2254,33 @@ app.post('/api/record-free-event-access', async (req, res) => {
       return res.status(403).json({ error: 'Promo code not valid for this event' });
     }
 
+    if (promo.max_uses !== null && (promo.used_count || 0) >= promo.max_uses) {
+      return res.status(400).json({ error: 'Promo code usage limit reached' });
+    }
+
+    // Incrément ATOMIQUE de used_count (compare-and-set, même pattern que
+    // /api/use-event-promo-code) pour éviter la double consommation.
+    const newCount = (promo.used_count || 0) + 1;
+    const { data: incremented, error: incErr } = await supabase
+      .from('promo_code_evenement_qr')
+      .update({ used_count: newCount })
+      .eq('id', promo_id)
+      .eq('used_count', promo.used_count)
+      .select('id');
+
+    if (incErr) {
+      console.error('[EventPromoAccess] Increment error:', incErr.message);
+      return res.status(500).json({ error: incErr.message });
+    }
+    if (!incremented || incremented.length === 0) {
+      return res.status(409).json({ error: 'Concurrent update detected, please retry' });
+    }
+
     const key = `${event_session_id}_${fan_id}`;
     if (!global.eventPaidRecords) global.eventPaidRecords = {};
     global.eventPaidRecords[key] = { paid: true, paidAt: new Date().toISOString(), method: 'promo_code', promo_id };
 
-    console.log('[EventPromoAccess] Recorded free access for:', key, '| Promo:', promo_id);
+    console.log('[EventPromoAccess] Recorded free access for:', key, '| Promo:', promo_id, '| New count:', newCount);
     res.json({ success: true });
   } catch (error) {
     console.error('[EventPromoAccess] Error:', error.message);
@@ -3127,6 +3389,26 @@ app.post('/api/update-booking-status', async (req, res) => {
     const { booking_id, status } = req.body;
     if (!booking_id || !status) return res.status(400).json({ error: 'booking_id and status required' });
 
+    // 🔒 C2 — AUTH + PROPRIÉTÉ : autorisé si user == celebrity_id OU fan_id du booking.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+    {
+      const { data: bk } = await db
+        .from('booking_requests')
+        .select('celebrity_id, fan_id')
+        .eq('id', booking_id)
+        .maybeSingle();
+      if (!bk) {
+        if (isStripeTestMode()) {
+          console.warn('[Update Booking] TEST: booking introuvable', booking_id, '→ toléré');
+        } else {
+          return res.status(403).json({ error: 'Ownership could not be verified' });
+        }
+      } else if (String(bk.celebrity_id) !== String(authUser.id) && String(bk.fan_id) !== String(authUser.id)) {
+        return res.status(403).json({ error: 'Not authorized for this booking' });
+      }
+    }
+
     const update = { status, updated_at: new Date().toISOString() };
     if (status === 'completed') update.completed_at = new Date().toISOString();
 
@@ -3150,6 +3432,26 @@ app.post('/api/update-autograph-status', async (req, res) => {
     const db = getSupabaseAdmin();
     const { autograph_id, status, delivery_url } = req.body;
     if (!autograph_id || !status) return res.status(400).json({ error: 'autograph_id and status required' });
+
+    // 🔒 C2 — AUTH + PROPRIÉTÉ : autorisé si user == celebrity_id OU fan_id de la dédicace.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+    {
+      const { data: ag } = await db
+        .from('autograph_requests')
+        .select('celebrity_id, fan_id')
+        .eq('id', autograph_id)
+        .maybeSingle();
+      if (!ag) {
+        if (isStripeTestMode()) {
+          console.warn('[Update Autograph] TEST: dédicace introuvable', autograph_id, '→ toléré');
+        } else {
+          return res.status(403).json({ error: 'Ownership could not be verified' });
+        }
+      } else if (String(ag.celebrity_id) !== String(authUser.id) && String(ag.fan_id) !== String(authUser.id)) {
+        return res.status(403).json({ error: 'Not authorized for this autograph' });
+      }
+    }
 
     const update = { status, updated_at: new Date().toISOString() };
     if (delivery_url) update.delivery_url = delivery_url;

@@ -19,6 +19,7 @@ import { markPaymentCaptured, subscribeToSession } from '@/utils/liveSessionStor
 import { recordTransaction } from '@/utils/transactionStorage';
 import { blockFan as blockFanInDb } from '@/utils/blockedFansStorage';
 import { supabase } from '@/utils/supabase';
+import { authedFetch } from '@/utils/authedFetch';
 import { showAlert } from '@/utils/alertHelper';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -701,7 +702,7 @@ export default function VideoCallScreen() {
     paymentResolvedRef.current = true;
     try {
       console.log('[VideoCall] Cancelling payment authorization for:', params.checkoutSessionId);
-      await fetch(`${STRIPE_SERVER_URL}/api/cancel-payment`, {
+      await authedFetch(`${STRIPE_SERVER_URL}/api/cancel-payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ checkout_session_id: params.checkoutSessionId }),
@@ -720,7 +721,7 @@ export default function VideoCallScreen() {
 
     try {
       console.log('[VideoCall] Capturing payment for checkout session:', params.checkoutSessionId);
-      const response = await fetch(`${STRIPE_SERVER_URL}/api/capture-payment`, {
+      const response = await authedFetch(`${STRIPE_SERVER_URL}/api/capture-payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ checkout_session_id: params.checkoutSessionId }),
@@ -767,7 +768,7 @@ export default function VideoCallScreen() {
     if (endFanCallResolvedIdsRef.current.has(queueEntryId)) return;
     endFanCallResolvedIdsRef.current.add(queueEntryId);
     try {
-      fetch(`${STRIPE_SERVER_URL}/api/end-fan-call`, {
+      authedFetch(`${STRIPE_SERVER_URL}/api/end-fan-call`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

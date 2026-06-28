@@ -26,6 +26,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import { getStripeAccountId } from '@/utils/userProfile';
+import { authedFetch } from '@/utils/authedFetch';
 import { EventType } from '@/utils/memoriesStorage';
 import { useAuth } from '@/contexts/AuthContext';
 import { scheduleCelebrityReminders } from '@/utils/scheduleReminders';
@@ -273,7 +274,7 @@ export default function CreateEventScreen() {
       if (session && priceCents && priceCents > 0 && STRIPE_SERVER_URL) {
         const acctForPayment = effectiveStripeAccount || await AsyncStorage.getItem('stripe_connect_account_id');
         try {
-          await fetch(`${STRIPE_SERVER_URL}/api/set-event-payment-config`, {
+          await authedFetch(`${STRIPE_SERVER_URL}/api/set-event-payment-config`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -525,7 +526,7 @@ export default function CreateEventScreen() {
       if (session && effectivePriceCents > 0 && STRIPE_SERVER_URL) {
         const acctForPayment = effectiveStripeAccount || await AsyncStorage.getItem('stripe_connect_account_id');
         try {
-          await fetch(`${STRIPE_SERVER_URL}/api/set-event-payment-config`, {
+          await authedFetch(`${STRIPE_SERVER_URL}/api/set-event-payment-config`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

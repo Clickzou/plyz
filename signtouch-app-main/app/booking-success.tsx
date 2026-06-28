@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle, ArrowRight, Video, XCircle, RefreshCw } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { authedFetch } from '@/utils/authedFetch';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
@@ -31,7 +32,7 @@ export default function BookingSuccessScreen() {
       if (data.status === 'complete' || data.status === 'paid' || data.authorized) {
         setVerified(true);
         if (booking_id) {
-          await fetch(`${API_BASE}/api/update-booking-status`, {
+          await authedFetch(`${API_BASE}/api/update-booking-status`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ booking_id, status: 'paid' }),

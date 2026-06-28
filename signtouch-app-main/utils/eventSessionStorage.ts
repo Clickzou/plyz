@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { authedFetch } from './authedFetch';
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -15,7 +16,7 @@ const releaseEventPayments = (sessionId: string): void => {
   if (!STRIPE_SERVER_URL || !sessionId) return;
   (async () => {
     try {
-      await fetch(`${STRIPE_SERVER_URL}/api/release-event-payments`, {
+      await authedFetch(`${STRIPE_SERVER_URL}/api/release-event-payments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventSessionId: sessionId }),

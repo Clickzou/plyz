@@ -26,6 +26,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { saveMemory } from '@/utils/storageService';
+import { authedFetch } from '@/utils/authedFetch';
 import BottomNav from '@/components/BottomNav';
 import {
   EventSigner,
@@ -602,7 +603,7 @@ export default function EventPublishScreen() {
       if (type === 'photo_signed' && priceCents > 0 && STRIPE_SERVER_URL) {
         (async () => {
           try {
-            await fetch(`${STRIPE_SERVER_URL}/api/capture-event-payments`, {
+            await authedFetch(`${STRIPE_SERVER_URL}/api/capture-event-payments`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ eventSessionId: sessionId }),

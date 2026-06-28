@@ -20,6 +20,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { showAlert } from '@/utils/alertHelper';
+import { authedFetch } from '@/utils/authedFetch';
 import { ensureCanPay } from '@/utils/banGuard';
 import { isAgeCertified, certifyAge } from '@/utils/ageCertification';
 import AgeCertificationModal from '@/components/AgeCertificationModal';
@@ -368,7 +369,7 @@ export default function JoinEventScreen() {
           } else {
             try {
               const viewerId = await getOrCreateDeviceId();
-              const checkRes = await fetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${pendingSessionId}&fan_id=${viewerId}`);
+              const checkRes = await authedFetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${pendingSessionId}&fan_id=${viewerId}`);
               const checkData = await checkRes.json();
               if (hasEventAccess(checkData)) {
                 await AsyncStorage.setItem(`@event_paid_${pendingSessionId}`, 'true');
@@ -617,7 +618,7 @@ export default function JoinEventScreen() {
                 setEventPaid(true);
               } else {
                 try {
-                  const checkRes = await fetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${sessionResult.session.id}&fan_id=${viewerId}`);
+                  const checkRes = await authedFetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${sessionResult.session.id}&fan_id=${viewerId}`);
                   const checkData = await checkRes.json();
                   if (hasEventAccess(checkData)) {
                     await AsyncStorage.setItem(`@event_paid_${sessionResult.session.id}`, 'true');
@@ -812,7 +813,7 @@ export default function JoinEventScreen() {
       if (eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !eventPaid) {
         try {
           const viewerId = await getOrCreateDeviceId();
-          const checkRes = await fetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${foundSession.id}&fan_id=${viewerId}`);
+          const checkRes = await authedFetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${foundSession.id}&fan_id=${viewerId}`);
           const checkData = await checkRes.json();
           if (hasEventAccess(checkData)) {
             await AsyncStorage.setItem(`@event_paid_${foundSession.id}`, 'true');
@@ -879,7 +880,7 @@ export default function JoinEventScreen() {
     if (!checkoutSessionId) return;
     try {
       console.log('[JoinEvent] Canceling pre-authorization:', checkoutSessionId);
-      const response = await fetch(`${STRIPE_SERVER_URL}/api/cancel-payment`, {
+      const response = await authedFetch(`${STRIPE_SERVER_URL}/api/cancel-payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ checkout_session_id: checkoutSessionId }),
@@ -1498,7 +1499,7 @@ export default function JoinEventScreen() {
                     const viewerId = await getOrCreateDeviceId();
                     const storedPaid = await AsyncStorage.getItem(`@event_paid_${activeFanEvent.sessionId}`);
                     if (storedPaid !== 'true' && STRIPE_SERVER_URL) {
-                      const checkRes = await fetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${activeFanEvent.sessionId}&fan_id=${viewerId}`);
+                      const checkRes = await authedFetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${activeFanEvent.sessionId}&fan_id=${viewerId}`);
                       const checkData = await checkRes.json();
                       if (!hasEventAccess(checkData)) {
                         const payRes = await fetch(`${STRIPE_SERVER_URL}/api/get-event-payment-config?event_session_id=${activeFanEvent.sessionId}`);

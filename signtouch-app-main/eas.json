@@ -35,7 +35,7 @@
     "production": {
       "env": {
         "EXPO_PUBLIC_STRIPE_SERVER_URL": "https://REMPLACER-PAR-URL-REPLIT-DEPLOYMENT.replit.app",
-        "EXPO_PUBLIC_SENTRY_DSN": "REMPLACER-PAR-DSN-SENTRY"
+        "EXPO_PUBLIC_SENTRY_DSN": "https://3cdd796e29aead42beeb5649a80cbfcf@o4511643437236224.ingest.de.sentry.io/4511643449360464"
       },
       "ios": {
         "resourceClass": "m-medium"
