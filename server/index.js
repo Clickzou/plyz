@@ -1357,7 +1357,7 @@ app.post('/api/use-promo-code', async (req, res) => {
 
 app.post('/api/validate-event-promo-code', async (req, res) => {
   try {
-    const supabase = getSupabase();
+    const admin = getSupabaseAdmin();
     const { code, event_session_id } = req.body;
 
     if (!code || !event_session_id) {
@@ -1366,7 +1366,7 @@ app.post('/api/validate-event-promo-code', async (req, res) => {
 
     const upperCode = code.trim().toUpperCase();
 
-    const { data: promos, error } = await supabase
+    const { data: promos, error } = await admin
       .from('promo_code_evenement_qr')
       .select('*')
       .eq('code', upperCode)
@@ -1406,14 +1406,14 @@ app.post('/api/validate-event-promo-code', async (req, res) => {
 
 app.post('/api/use-event-promo-code', async (req, res) => {
   try {
-    const supabase = getSupabase();
+    const admin = getSupabaseAdmin();
     const { promo_id } = req.body;
 
     if (!promo_id) {
       return res.status(400).json({ error: 'Missing promo_id' });
     }
 
-    const { data: promo } = await supabase
+    const { data: promo } = await admin
       .from('promo_code_evenement_qr')
       .select('used_count, max_uses, is_active')
       .eq('id', promo_id)
@@ -1429,7 +1429,7 @@ app.post('/api/use-event-promo-code', async (req, res) => {
 
     const newCount = (promo.used_count || 0) + 1;
 
-    const { data: updated, error } = await supabase
+    const { data: updated, error } = await admin
       .from('promo_code_evenement_qr')
       .update({ used_count: newCount })
       .eq('id', promo_id)
@@ -1574,8 +1574,8 @@ app.post('/api/set-event-payment-config', async (req, res) => {
     };
 
     try {
-      const supabase = getSupabase();
-      await supabase
+      const admin = getSupabaseAdmin();
+      await admin
         .from('event_payment_configs')
         .upsert({
           event_session_id: eventSessionId,
@@ -1610,8 +1610,8 @@ app.get('/api/get-event-payment-config', async (req, res) => {
     }
 
     try {
-      const supabase = getSupabase();
-      const { data, error } = await supabase
+      const admin = getSupabaseAdmin();
+      const { data, error } = await admin
         .from('event_payment_configs')
         .select('*')
         .eq('event_session_id', event_session_id)
@@ -2220,7 +2220,7 @@ app.post('/api/release-event-payments', async (req, res) => {
 
 app.post('/api/record-free-event-access', async (req, res) => {
   try {
-    const supabase = getSupabase();
+    const admin = getSupabaseAdmin();
     const { event_session_id, fan_id, promo_id } = req.body;
 
     if (!event_session_id || !fan_id || !promo_id) {
@@ -2239,7 +2239,7 @@ app.post('/api/record-free-event-access', async (req, res) => {
       }
     }
 
-    const { data: promo } = await supabase
+    const { data: promo } = await admin
       .from('promo_code_evenement_qr')
       .select('id, discount_percent, is_active, event_session_id, used_count, max_uses')
       .eq('id', promo_id)
@@ -2261,7 +2261,7 @@ app.post('/api/record-free-event-access', async (req, res) => {
     // Incrément ATOMIQUE de used_count (compare-and-set, même pattern que
     // /api/use-event-promo-code) pour éviter la double consommation.
     const newCount = (promo.used_count || 0) + 1;
-    const { data: incremented, error: incErr } = await supabase
+    const { data: incremented, error: incErr } = await admin
       .from('promo_code_evenement_qr')
       .update({ used_count: newCount })
       .eq('id', promo_id)
@@ -4244,6 +4244,189 @@ app.post('/api/report-problem', async (req, res) => {
   } catch (error) {
     console.error('[report-problem]', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// =====================================================================
+// DAILY.CO — proxy serveur (la clé admin Daily reste côté serveur)
+// La clé EXPO_PUBLIC_DAILY_API_KEY ne doit plus jamais être utilisée par
+// le client. Toutes les opérations admin Daily passent par ces endpoints,
+// protégés par verifySupabaseJWT (401 si non authentifié).
+// =====================================================================
+const DAILY_API_URL = 'https://api.daily.co/v1';
+
+function getDailyApiKey() {
+  // Clé NON-publique (jamais embarquée dans l'app)
+  return process.env.DAILY_API_KEY || null;
+}
+
+// POST /api/daily/create-room
+// body: { name?, expiryMinutes?, maxParticipants?, isPrivate? }
+// renvoie l'objet room Daily complet (incl. .url et .name)
+app.post('/api/daily/create-room', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+
+    const apiKey = getDailyApiKey();
+    if (!apiKey) return res.status(500).json({ error: 'Daily API key not configured' });
+
+    const {
+      name = `plyz-${Date.now()}`,
+      expiryMinutes = 120,
+      maxParticipants = 50,
+      isPrivate = true,
+    } = req.body || {};
+
+    const response = await fetch(`${DAILY_API_URL}/rooms`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        name,
+        privacy: isPrivate ? 'private' : 'public',
+        properties: {
+          exp: Math.floor(Date.now() / 1000) + expiryMinutes * 60,
+          max_participants: maxParticipants,
+          enable_chat: true,
+          enable_screenshare: false,
+          enable_prejoin_ui: false,
+          start_video_off: false,
+          start_audio_off: false,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[Daily] Failed to create room:', errorData);
+      return res.status(response.status).json({ error: 'create_room_failed', details: errorData });
+    }
+
+    const room = await response.json();
+    return res.json(room);
+  } catch (error) {
+    console.error('[Daily] Error creating room:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/daily/meeting-token
+// body: { roomName, userName, userId, isOwner?, expiryMinutes? }
+// renvoie: { token }
+app.post('/api/daily/meeting-token', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+
+    const apiKey = getDailyApiKey();
+    if (!apiKey) return res.status(500).json({ error: 'Daily API key not configured' });
+
+    const {
+      roomName,
+      userName,
+      userId,
+      isOwner = false,
+      expiryMinutes = 120,
+    } = req.body || {};
+
+    if (!roomName) return res.status(400).json({ error: 'roomName required' });
+
+    const response = await fetch(`${DAILY_API_URL}/meeting-tokens`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        properties: {
+          room_name: roomName,
+          user_name: userName,
+          user_id: userId,
+          is_owner: isOwner,
+          enable_screenshare: false,
+          enable_prejoin_ui: false,
+          start_video_off: false,
+          start_audio_off: false,
+          exp: Math.floor(Date.now() / 1000) + expiryMinutes * 60,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[Daily] Failed to create meeting token:', errorData);
+      return res.status(response.status).json({ error: 'meeting_token_failed', details: errorData });
+    }
+
+    const data = await response.json();
+    return res.json({ token: data.token });
+  } catch (error) {
+    console.error('[Daily] Error creating meeting token:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/daily/delete-room
+// body: { roomName }
+// renvoie: { ok: boolean }
+app.post('/api/daily/delete-room', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+
+    const apiKey = getDailyApiKey();
+    if (!apiKey) return res.status(500).json({ error: 'Daily API key not configured' });
+
+    const { roomName } = req.body || {};
+    if (!roomName) return res.status(400).json({ error: 'roomName required' });
+
+    const response = await fetch(`${DAILY_API_URL}/rooms/${roomName}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
+
+    return res.json({ ok: response.ok });
+  } catch (error) {
+    console.error('[Daily] Error deleting room:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/daily/get-room
+// body: { roomName }
+// renvoie l'objet room Daily, ou 404 si absente
+app.post('/api/daily/get-room', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+
+    const apiKey = getDailyApiKey();
+    if (!apiKey) return res.status(500).json({ error: 'Daily API key not configured' });
+
+    const { roomName } = req.body || {};
+    if (!roomName) return res.status(400).json({ error: 'roomName required' });
+
+    const response = await fetch(`${DAILY_API_URL}/rooms/${roomName}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
+
+    if (!response.ok) {
+      return res.status(404).json({ error: 'room_not_found' });
+    }
+
+    const room = await response.json();
+    return res.json(room);
+  } catch (error) {
+    console.error('[Daily] Error getting room:', error);
+    return res.status(500).json({ error: error.message });
   }
 });
 

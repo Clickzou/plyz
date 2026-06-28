@@ -1,4 +1,9 @@
-const DAILY_API_URL = 'https://api.daily.co/v1';
+import { authedFetch } from './authedFetch';
+
+// La clé admin Daily.co ne vit PLUS dans l'app. Toutes les opérations admin
+// (créer room, générer meeting token, supprimer/lire room) passent désormais
+// par le serveur (process.env.DAILY_API_KEY côté serveur uniquement).
+const SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 interface DailyRoom {
   id: string;
@@ -13,10 +18,6 @@ interface DailyRoom {
     enable_screenshare?: boolean;
     enable_recording?: string;
   };
-}
-
-interface DailyMeetingToken {
-  token: string;
 }
 
 interface CreateRoomOptions {
@@ -34,21 +35,9 @@ interface CreateTokenOptions {
   expiryMinutes?: number;
 }
 
-export const getDailyApiKey = (): string | null => {
-  // EXPO_PUBLIC_ prefix is required for client-side access in Expo
-  const apiKey = process.env.EXPO_PUBLIC_DAILY_API_KEY;
-  console.log('[Daily] Checking API key, found:', apiKey ? 'YES' : 'NO');
-  if (!apiKey) {
-    console.error('[Daily] API key not found - make sure EXPO_PUBLIC_DAILY_API_KEY is set');
-    return null;
-  }
-  return apiKey;
-};
-
 export const createDailyRoom = async (options: CreateRoomOptions = {}): Promise<DailyRoom | null> => {
-  const apiKey = getDailyApiKey();
-  if (!apiKey) {
-    console.error('Daily API key not configured');
+  if (!SERVER_URL) {
+    console.error('[Daily] Server URL not configured (EXPO_PUBLIC_STRIPE_SERVER_URL)');
     return null;
   }
 
@@ -60,32 +49,16 @@ export const createDailyRoom = async (options: CreateRoomOptions = {}): Promise<
   } = options;
 
   try {
-    console.log('[Daily] Creating room:', name);
-    const response = await fetch(`${DAILY_API_URL}/rooms`, {
+    console.log('[Daily] Creating room via server:', name);
+    const response = await authedFetch(`${SERVER_URL}/api/daily/create-room`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        name,
-        privacy: isPrivate ? 'private' : 'public',
-        properties: {
-          exp: Math.floor(Date.now() / 1000) + (expiryMinutes * 60),
-          max_participants: maxParticipants,
-          enable_chat: true,
-          enable_screenshare: false,
-          enable_prejoin_ui: false,
-          start_video_off: false,
-          start_audio_off: false,
-        },
-      }),
+      body: JSON.stringify({ name, expiryMinutes, maxParticipants, isPrivate }),
     });
 
     console.log('[Daily] Response status:', response.status);
-    
+
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       console.error('[Daily] Failed to create room:', errorData);
       return null;
     }
@@ -100,9 +73,8 @@ export const createDailyRoom = async (options: CreateRoomOptions = {}): Promise<
 };
 
 export const createMeetingToken = async (options: CreateTokenOptions): Promise<string | null> => {
-  const apiKey = getDailyApiKey();
-  if (!apiKey) {
-    console.error('Daily API key not configured');
+  if (!SERVER_URL) {
+    console.error('[Daily] Server URL not configured (EXPO_PUBLIC_STRIPE_SERVER_URL)');
     return null;
   }
 
@@ -115,34 +87,18 @@ export const createMeetingToken = async (options: CreateTokenOptions): Promise<s
   } = options;
 
   try {
-    const response = await fetch(`${DAILY_API_URL}/meeting-tokens`, {
+    const response = await authedFetch(`${SERVER_URL}/api/daily/meeting-token`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        properties: {
-          room_name: roomName,
-          user_name: userName,
-          user_id: userId,
-          is_owner: isOwner,
-          enable_screenshare: false,
-          enable_prejoin_ui: false,
-          start_video_off: false,
-          start_audio_off: false,
-          exp: Math.floor(Date.now() / 1000) + (expiryMinutes * 60),
-        },
-      }),
+      body: JSON.stringify({ roomName, userName, userId, isOwner, expiryMinutes }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       console.error('Failed to create meeting token:', errorData);
       return null;
     }
 
-    const data: DailyMeetingToken = await response.json();
+    const data = await response.json();
     return data.token;
   } catch (error) {
     console.error('Error creating meeting token:', error);
@@ -151,20 +107,19 @@ export const createMeetingToken = async (options: CreateTokenOptions): Promise<s
 };
 
 export const deleteDailyRoom = async (roomName: string): Promise<boolean> => {
-  const apiKey = getDailyApiKey();
-  if (!apiKey) {
+  if (!SERVER_URL) {
     return false;
   }
 
   try {
-    const response = await fetch(`${DAILY_API_URL}/rooms/${roomName}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-      },
+    const response = await authedFetch(`${SERVER_URL}/api/daily/delete-room`, {
+      method: 'POST',
+      body: JSON.stringify({ roomName }),
     });
 
-    return response.ok;
+    if (!response.ok) return false;
+    const data = await response.json().catch(() => ({}));
+    return !!data.ok;
   } catch (error) {
     console.error('Error deleting Daily room:', error);
     return false;
@@ -172,17 +127,14 @@ export const deleteDailyRoom = async (roomName: string): Promise<boolean> => {
 };
 
 export const getDailyRoom = async (roomName: string): Promise<DailyRoom | null> => {
-  const apiKey = getDailyApiKey();
-  if (!apiKey) {
+  if (!SERVER_URL) {
     return null;
   }
 
   try {
-    const response = await fetch(`${DAILY_API_URL}/rooms/${roomName}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-      },
+    const response = await authedFetch(`${SERVER_URL}/api/daily/get-room`, {
+      method: 'POST',
+      body: JSON.stringify({ roomName }),
     });
 
     if (!response.ok) {
@@ -198,7 +150,7 @@ export const getDailyRoom = async (roomName: string): Promise<DailyRoom | null> 
 
 export const createSessionVideoRoom = async (sessionId: string, celebrityName: string): Promise<{ roomUrl: string; roomName: string } | null> => {
   const roomName = `session-${sessionId}`;
-  
+
   const existingRoom = await getDailyRoom(roomName);
   if (existingRoom) {
     console.log('[Daily] Room already exists, reusing:', existingRoom.url);
