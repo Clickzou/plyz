@@ -218,17 +218,26 @@ export default function MyEarningsScreen() {
               const celebrityPerFan = (session.price_cents - Math.round(session.price_cents * 0.15)) / 100;
               return (
                 <View key={session.id} style={styles.sessionCard}>
-                  <View style={styles.sessionHeader}>
-                    <View style={styles.sessionDateContainer}>
-                      <Calendar size={14} color="rgba(255,255,255,0.5)" />
-                      <Text style={styles.sessionDate}>
-                        {formatDate(session.created_at)}
-                        {session.started_at && ` · ${formatTime(session.started_at)}`}
+                  <View style={styles.sessionTitleRow}>
+                    <View style={styles.sessionTitleContainer}>
+                      <Video size={16} color="#fff" />
+                      <Text style={styles.sessionTitle} numberOfLines={1}>
+                        {session.code}
                       </Text>
                     </View>
                     <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(session.status)}20`, borderColor: getStatusColor(session.status) }]}>
                       <Text style={[styles.statusText, { color: getStatusColor(session.status) }]}>
                         {getStatusLabel(session.status)}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.sessionHeader}>
+                    <View style={styles.sessionDateContainer}>
+                      <Calendar size={14} color="rgba(255,255,255,0.5)" />
+                      <Text style={styles.sessionDate}>
+                        {formatDate(session.started_at || session.created_at)}
+                        {(session.started_at || session.created_at) && ` à ${formatTime(session.started_at || session.created_at)}`}
                       </Text>
                     </View>
                   </View>
@@ -449,6 +458,25 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
+  },
+  sessionTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sessionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    marginRight: 8,
+  },
+  sessionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+    flexShrink: 1,
   },
   sessionHeader: {
     flexDirection: 'row',

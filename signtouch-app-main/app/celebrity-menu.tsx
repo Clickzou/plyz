@@ -20,6 +20,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import BottomNav from '@/components/BottomNav';
+import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount, getMergedFanEvents, ActiveFanEvent, getSignedDedicationCount } from '@/utils/eventSessionStorage';
 import { getServedFansCountBySessions } from '@/utils/sessionQueueStorage';
 import QRCodeSvg from 'react-native-qrcode-svg';
@@ -498,6 +499,9 @@ export default function CelebrityMenuScreen() {
         <Text style={styles.headerTitle}>{getCategoryTitle()}</Text>
         <View style={{ width: 40 }} />
       </View>
+
+      <AccountAvatarButton topOffset={insets.top + 4} rightOffset={16} />
+
 
       {isCelebrity && (
         <View style={styles.tabsContainer}>

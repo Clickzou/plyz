@@ -3456,7 +3456,67 @@ app.get('/api/celebrity-events', async (req, res) => {
     const { data, error } = await query;
 
     if (error) throw error;
-    res.json({ events: data || [] });
+
+    // 🧹 Auto-clôture des sessions périmées (jamais clôturées manuellement).
+    // Une session "active/waiting/scheduled" dont le créneau est manifestement
+    // passé doit être marquée 'ended' pour ne plus s'afficher « En cours » et
+    // ne plus laisser un fan PAYER une session morte (le contrôle status==='ended'
+    // côté app n'arrive qu'APRÈS paiement). On ne clôture QUE selon une date fiable.
+    const now = Date.now();
+    const sessions = data || [];
+    const staleIds = [];
+
+    for (const s of sessions) {
+      const durMs = ((s.duration_minutes || 30) * 60 * 1000);
+      const endsAt = s.ends_at ? Date.parse(s.ends_at) : NaN;
+      const startedAt = s.started_at ? Date.parse(s.started_at) : NaN;
+      const scheduledAt = s.scheduled_at ? Date.parse(s.scheduled_at) : NaN;
+      let isStale = false;
+
+      if ((s.status === 'active' || s.status === 'paused' || s.status === 'waiting') && !Number.isNaN(endsAt)) {
+        // Date de fin explicite dépassée → terminée.
+        if (endsAt < now) isStale = true;
+      } else if ((s.status === 'active' || s.status === 'paused') && !Number.isNaN(startedAt)) {
+        // Démarrée + durée écoulée → terminée.
+        if (startedAt + durMs < now) isStale = true;
+      } else if (s.status === 'scheduled' && !Number.isNaN(scheduledAt)) {
+        // Créneau programmé + durée écoulée → terminée.
+        if (scheduledAt + durMs < now) isStale = true;
+      } else if (s.status === 'active' || s.status === 'paused' || s.status === 'waiting') {
+        // Filet de sécurité : session active/en attente SANS aucune date fiable
+        // (ni ends_at, ni started_at) — cas des sessions créées "actives" sans started_at.
+        // Si elle a été créée il y a plus que (durée + 3h de marge), elle est abandonnée.
+        const createdAt = s.created_at ? Date.parse(s.created_at) : NaN;
+        const STALE_GRACE_MS = 3 * 60 * 60 * 1000; // 3h de marge pour ne pas couper une session en cours
+        if (!Number.isNaN(createdAt) && (createdAt + durMs + STALE_GRACE_MS < now)) isStale = true;
+      }
+
+      if (isStale) staleIds.push(s.id);
+    }
+
+    // Best-effort : on clôture en base sans casser la réponse en cas d'échec.
+    if (staleIds.length > 0) {
+      try {
+        const { error: closeErr } = await db
+          .from('live_sessions')
+          .update({ status: 'ended' })
+          .in('id', staleIds);
+        if (closeErr) {
+          console.error('[Celebrity Events] Auto-close failed:', closeErr.message);
+        } else {
+          console.log('[Celebrity Events] Auto-closed stale sessions:', staleIds.length);
+        }
+      } catch (closeError) {
+        console.error('[Celebrity Events] Auto-close exception:', closeError.message);
+      }
+    }
+
+    // On exclut de la réponse les sessions clôturées ci-dessus ET toute session
+    // déjà 'ended' : seules les sessions réellement actives ou à venir sont renvoyées.
+    const staleSet = new Set(staleIds);
+    const events = sessions.filter(s => !staleSet.has(s.id) && s.status !== 'ended');
+
+    res.json({ events });
   } catch (error) {
     console.error('[Celebrity Events] Error:', error.message);
     if (!MOCK_MODE) {
