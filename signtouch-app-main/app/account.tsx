@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { router } from 'expo-router';
-import { Info, Heart, Share2, Globe, Check, FileText, LogOut, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle, Camera, Images, ChevronRight , Star, Clock } from 'lucide-react-native';
+import { Info, Heart, Share2, Globe, Check, FileText, LogOut, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle, Camera, Images, ChevronRight , Star, Clock, TrendingUp } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import * as Clipboard from 'expo-clipboard';
@@ -28,6 +28,7 @@ import { Language } from '@/locales';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStripeAccountId, saveStripeAccountId, getUserProfile, upsertUserProfile } from '@/utils/userProfile';
 import StripeConnectModal from '@/components/StripeConnectModal';
+import { authedFetch } from '@/utils/authedFetch';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 
@@ -35,6 +36,26 @@ import { FanBadgeCard } from '@/components/FanBadge';
 import { supabase } from '@/utils/supabase';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
+
+// Réponse de GET /api/celebrity-earnings (cf. app/my-earnings.tsx)
+interface EarningsSession {
+  session_earnings_cents: number;
+  created_at: string;
+  ended_at: string | null;
+}
+interface EarningsData {
+  total_earnings_cents: number;
+  total_fans: number;
+  total_sessions: number;
+  sessions: EarningsSession[];
+  // Champs ajoutés serveur (vidéo + dédicaces). Optionnels : si le serveur
+  // n'est pas encore à jour, ils valent undefined -> fallback rétrocompatible.
+  video_month_cents?: number;
+  dedication_total_cents?: number;
+  dedication_month_cents?: number;
+  grand_total_cents?: number;
+}
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -73,6 +94,8 @@ export default function AccountScreen() {
   const [, setStripeLoading] = useState(false);
   const [celebrityName, setCelebrityName] = useState('');
   const [isVerified, setIsVerified] = useState(false);
+  const [earnings, setEarnings] = useState<EarningsData | null>(null);
+  const [earningsLoading, setEarningsLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -97,6 +120,68 @@ export default function AccountScreen() {
       }
     })();
   }, [user?.id]);
+
+  // Gains célébrité : ne charge que pour les comptes en mode célébrité.
+  useEffect(() => {
+    (async () => {
+      if (!isCelebrity || !user?.id || !STRIPE_SERVER_URL) {
+        setEarnings(null);
+        return;
+      }
+      setEarningsLoading(true);
+      try {
+        const res = await authedFetch(
+          `${STRIPE_SERVER_URL}/api/celebrity-earnings?celebrity_id=${user.id}`
+        );
+        const result = await res.json();
+        setEarnings(result);
+      } catch (e) {
+        // Catch silencieux : on affiche 0 € sans casser l'écran.
+        console.warn('[Account] earnings fetch failed', e);
+        setEarnings(null);
+      } finally {
+        setEarningsLoading(false);
+      }
+    })();
+  }, [isCelebrity, user?.id]);
+
+  // Gains vidéo du mois civil en cours (fallback client si serveur pas à jour).
+  const videoMonthClientCents = (() => {
+    if (!earnings?.sessions) return 0;
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    return earnings.sessions.reduce((sum, s) => {
+      const ref = s.ended_at || s.created_at;
+      if (!ref) return sum;
+      const d = new Date(ref);
+      if (d.getFullYear() === y && d.getMonth() === m) {
+        return sum + (s.session_earnings_cents || 0);
+      }
+      return sum;
+    }, 0);
+  })();
+
+  // Total des gains (vidéo + dédicaces). FALLBACK : si grand_total_cents absent
+  // (ancien serveur), on retombe sur total_earnings_cents (vidéo seule).
+  const totalEarningsCents =
+    earnings?.grand_total_cents ?? earnings?.total_earnings_cents ?? 0;
+
+  // Gains du mois civil en cours = vidéo du mois + dédicaces du mois.
+  // FALLBACK : si les nouveaux champs sont absents, on utilise le calcul vidéo
+  // client (comportement historique) pour ne rien casser.
+  const monthEarningsCents =
+    earnings?.video_month_cents !== undefined ||
+    earnings?.dedication_month_cents !== undefined
+      ? (earnings?.video_month_cents ?? videoMonthClientCents) +
+        (earnings?.dedication_month_cents ?? 0)
+      : videoMonthClientCents;
+
+  const formatEuros = (cents: number) =>
+    (cents / 100).toLocaleString('fr-FR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }) + ' €';
 
   useEffect(() => {
     checkLocalStripeConnect();
@@ -659,6 +744,63 @@ export default function AccountScreen() {
             )}
           </View>
         </View>
+
+        {isCelebrity && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>
+              {t('myEarnings') || 'Mes gains'}
+            </Text>
+
+            <View style={styles.accountCard}>
+              <View style={styles.accountCardHeader}>
+                <View style={styles.accountAvatar}>
+                  <TrendingUp size={26} color="#10b981" />
+                </View>
+                <View style={styles.accountCardInfo}>
+                  <Text style={styles.accountCardName}>
+                    {t('myEarnings') || 'Mes gains'}
+                  </Text>
+                  <Text style={styles.accountCardSubtitle}>
+                    {t('myEarningsDesc' as any) || 'Vos revenus issus des sessions vidéo live et des dédicaces.'}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.earningsRow}>
+                <Text style={styles.earningsRowLabel}>
+                  {t('thisMonth' as any) || 'Ce mois-ci'}
+                </Text>
+                <Text style={styles.earningsRowValue}>
+                  {earningsLoading ? '—' : formatEuros(monthEarningsCents)}
+                </Text>
+              </View>
+              <View style={[styles.earningsRow, { borderBottomWidth: 0 }]}>
+                <Text style={styles.earningsRowLabel}>
+                  {t('total' as any) || 'Total'}
+                </Text>
+                <Text style={styles.earningsRowValue}>
+                  {earningsLoading ? '—' : formatEuros(totalEarningsCents)}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.earningsDetailButton}
+                onPress={() => {
+                  if (Platform.OS !== 'web') {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                  router.push('/my-earnings' as any);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.earningsDetailButtonText}>
+                  {t('viewDetail' as any) || 'Voir le détail'}
+                </Text>
+                <ArrowRight size={16} color="#10b981" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         <View style={styles.section}>
           <TouchableOpacity
@@ -1480,5 +1622,40 @@ const styles = StyleSheet.create({
   },
   stripeActionButtonTextConnected: {
     color: '#635BFF',
+  },
+  earningsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+  },
+  earningsRowLabel: {
+    fontSize: 14,
+    color: '#cbd5e1',
+    fontWeight: '500',
+  },
+  earningsRowValue: {
+    fontSize: 18,
+    color: '#10b981',
+    fontWeight: '700',
+  },
+  earningsDetailButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
+  },
+  earningsDetailButtonText: {
+    fontSize: 15,
+    color: '#10b981',
+    fontWeight: '600',
   },
 });

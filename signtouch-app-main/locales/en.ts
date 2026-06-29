@@ -1201,6 +1201,10 @@ export default {
   estimatedPayout: 'Estimated payout within 7 business days',
 
   myEarnings: 'My Earnings',
+  myEarningsDesc: 'Your earnings from live video sessions.',
+  thisMonth: 'This month',
+  total: 'Total',
+  viewDetail: 'View detail',
   totalEarnings: 'Total Earnings',
   freeSession: 'Free session',
   estimatedRevenue: 'Estimated revenue (net)',

@@ -1309,6 +1309,74 @@ app.get('/api/celebrity-earnings', async (req, res) => {
       nextBusinessDay.setDate(nextBusinessDay.getDate() + 1);
     }
 
+    // ---- MOIS CIVIL EN COURS : helper commun (année + mois locaux) ----------
+    const now = new Date();
+    const curYear = now.getFullYear();
+    const curMonth = now.getMonth();
+    const isCurrentMonth = (dateStr) => {
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return false;
+      return d.getFullYear() === curYear && d.getMonth() === curMonth;
+    };
+
+    // ---- VIDÉO : portion du mois civil courant (même base que sessionStats) --
+    // On réutilise sessionStats (déjà 85% appliqué) et la date ended_at|created_at,
+    // cohérent avec le calcul historique côté client de my-earnings/account.
+    let videoMonthCents = 0;
+    for (const s of sessionStats) {
+      const ref = s.ended_at || s.created_at;
+      if (isCurrentMonth(ref)) {
+        videoMonthCents += s.session_earnings_cents || 0;
+      }
+    }
+
+    // ---- DÉDICACES : revenus des événements créés par cette célébrité --------
+    // Modèle : event_paid_fans (paiements capturés) ⋈ event_sessions via
+    // event_session_id = event_sessions.id. On ne garde que les événements dont
+    // created_by = authUser.id. Montant brut = amount_cents capturé ; la célébrité
+    // touche 85% (frais plateforme 15%), identique à /api/event-session-earnings.
+    // Date de référence = event_paid_fans.created_at (pas de colonne captured_at).
+    let dedicationTotalCents = 0;
+    let dedicationMonthCents = 0;
+    try {
+      const admin = getSupabaseAdmin();
+
+      // 1) Événements créés par cette célébrité (id en uuid -> comparé en text).
+      const { data: myEvents, error: evErr } = await admin
+        .from('event_sessions')
+        .select('id')
+        .eq('created_by', authUser.id);
+      if (evErr) throw new Error(`event_sessions read failed: ${evErr.message}`);
+
+      const myEventIds = (myEvents || []).map((e) => String(e.id));
+
+      if (myEventIds.length > 0) {
+        // 2) Paiements dédicace CAPTURÉS rattachés à ces événements.
+        const { data: paidRows, error: pErr } = await admin
+          .from('event_paid_fans')
+          .select('amount_cents, created_at')
+          .in('event_session_id', myEventIds)
+          .eq('payment_captured', true);
+        if (pErr) throw new Error(`event_paid_fans read failed: ${pErr.message}`);
+
+        for (const r of (paidRows || [])) {
+          if (typeof r.amount_cents !== 'number') continue; // ignore les null (legacy)
+          const gross = r.amount_cents;
+          const fee = Math.round(gross * 0.15);
+          const net = Math.max(0, gross - fee); // 85% célébrité
+          dedicationTotalCents += net;
+          if (isCurrentMonth(r.created_at)) {
+            dedicationMonthCents += net;
+          }
+        }
+      }
+    } catch (dedErr) {
+      // Catch silencieux : si le calcul dédicace échoue, on renvoie 0 pour cette
+      // portion sans casser la réponse vidéo (rétrocompatible).
+      console.warn('[CelebrityEarnings] dedication calc failed:', dedErr.message);
+    }
+
     res.json({
       celebrity_id,
       total_earnings_cents: totalEarningsCents,
@@ -1316,6 +1384,11 @@ app.get('/api/celebrity-earnings', async (req, res) => {
       total_sessions: (sessions || []).length,
       estimated_payout_date: nextBusinessDay.toISOString().split('T')[0],
       sessions: sessionStats,
+      // --- NOUVEAUX CHAMPS (vidéo + dédicaces) — n'altèrent pas l'existant ---
+      video_month_cents: videoMonthCents,
+      dedication_total_cents: dedicationTotalCents,
+      dedication_month_cents: dedicationMonthCents,
+      grand_total_cents: totalEarningsCents + dedicationTotalCents,
     });
   } catch (error) {
     console.error('[CelebrityEarnings] Error:', error.message);
