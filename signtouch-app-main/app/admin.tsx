@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,8 @@ import {
   Clock, CheckCircle2, XCircle, RefreshCw, Megaphone, Calendar, Video,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { SvgXml } from 'react-native-svg';
+import { ShieldCheck } from 'lucide-react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/utils/supabase';
@@ -51,6 +53,89 @@ export default function AdminScreen() {
   const [searchQ, setSearchQ] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
+
+  // ---- 2FA (TOTP) ----
+  const [mfaOk, setMfaOk] = useState(false);
+  const [mfaMode, setMfaMode] = useState<'loading' | 'enroll' | 'challenge'>('loading');
+  const [qrXml, setQrXml] = useState<string | null>(null);
+  const [secret, setSecret] = useState<string | null>(null);
+  const [factorId, setFactorId] = useState<string | null>(null);
+  const [code, setCode] = useState('');
+  const [mfaError, setMfaError] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+
+  const setupMfa = useCallback(async () => {
+    setMfaMode('loading');
+    setMfaError(null);
+    try {
+      // 1) Déjà vérifié pour cette session ? (aal2)
+      const aal = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (!aal.error && aal.data?.currentLevel === 'aal2') {
+        setMfaOk(true);
+        return;
+      }
+
+      // 2) Un facteur TOTP vérifié existe-t-il déjà ?
+      const factors = await supabase.auth.mfa.listFactors();
+      if (factors.error) throw factors.error;
+      const verified = (factors.data?.totp || []).find((f: any) => f.status === 'verified');
+
+      if (verified) {
+        // Mode CHALLENGE
+        setFactorId(verified.id);
+        setQrXml(null);
+        setSecret(null);
+        setMfaMode('challenge');
+        return;
+      }
+
+      // 3) Mode ENROLL (première fois)
+      const enroll = await supabase.auth.mfa.enroll({
+        factorType: 'totp',
+        friendlyName: 'Plyz Admin ' + Date.now(),
+      });
+      if (enroll.error) throw enroll.error;
+      setFactorId(enroll.data.id);
+      setQrXml(enroll.data.totp.qr_code);
+      setSecret(enroll.data.totp.secret);
+      setMfaMode('enroll');
+    } catch (e: any) {
+      const msg = String(e?.message || e || '');
+      if (/mfa|not enabled|unsupported|disabled/i.test(msg)) {
+        setMfaError("Le 2FA n'est pas activé côté Supabase (Authentication > Multi-Factor).");
+      } else {
+        setMfaError(msg || 'Erreur lors de la configuration du 2FA.');
+      }
+      setMfaMode('challenge');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isAdmin && !mfaOk) setupMfa();
+  }, [isAdmin, mfaOk, setupMfa]);
+
+  const verifyMfa = useCallback(async () => {
+    if (!factorId || code.trim().length < 6) {
+      setMfaError('Saisis le code à 6 chiffres.');
+      return;
+    }
+    setVerifying(true);
+    setMfaError(null);
+    try {
+      const res = await supabase.auth.mfa.challengeAndVerify({
+        factorId,
+        code: code.trim(),
+      });
+      if (res.error) throw res.error;
+      setCode('');
+      setMfaOk(true);
+    } catch (e: any) {
+      setMfaError('Code invalide. Réessaie.');
+      setCode('');
+    } finally {
+      setVerifying(false);
+    }
+  }, [factorId, code]);
 
   const loadOverview = useCallback(async () => {
     const { data, error } = await supabase.rpc('admin_get_overview');
@@ -174,6 +259,87 @@ export default function AdminScreen() {
             <Text style={styles.backBtnWideText}>Retour</Text>
           </TouchableOpacity>
         </View>
+      </View>
+    );
+  }
+
+  // ---- Garde 2FA (TOTP obligatoire) ----
+  if (isAdmin && !mfaOk) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={['#0f172a', '#1e293b', '#0f172a']} style={StyleSheet.absoluteFill} />
+        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <ArrowLeft size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Vérification 2FA</Text>
+          <View style={styles.backBtn} />
+        </View>
+
+        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40, alignItems: 'center' }]} showsVerticalScrollIndicator={false}>
+          {mfaMode === 'loading' ? (
+            <ActivityIndicator color="#10b981" style={{ marginTop: 60 }} />
+          ) : (
+            <View style={[styles.itemCard, { width: '100%', alignItems: 'center', paddingVertical: 22 }]}>
+              <View style={[styles.statIcon, { backgroundColor: '#10b98122', width: 56, height: 56, borderRadius: 28 }]}>
+                <ShieldCheck size={28} color="#10b981" />
+              </View>
+
+              {mfaMode === 'enroll' && (
+                <>
+                  <Text style={styles.mfaTitle}>Active la double authentification</Text>
+                  <Text style={styles.mfaText}>
+                    Scanne ce QR avec Google Authenticator (ou saisis le code manuellement).
+                  </Text>
+                  {!!qrXml && (
+                    <View style={styles.qrBox}>
+                      <SvgXml xml={qrXml} width={220} height={220} />
+                    </View>
+                  )}
+                  {!!secret && (
+                    <>
+                      <Text style={styles.mfaSecretLabel}>Clé manuelle :</Text>
+                      <Text style={styles.mfaSecret} selectable>{secret}</Text>
+                    </>
+                  )}
+                </>
+              )}
+
+              {mfaMode === 'challenge' && (
+                <>
+                  <Text style={styles.mfaTitle}>Code de vérification</Text>
+                  <Text style={styles.mfaText}>
+                    Ouvre ton application d'authentification et saisis le code à 6 chiffres.
+                  </Text>
+                </>
+              )}
+
+              <TextInput
+                style={styles.mfaInput}
+                value={code}
+                onChangeText={(t) => { setCode(t.replace(/[^0-9]/g, '').slice(0, 6)); setMfaError(null); }}
+                placeholder="Code à 6 chiffres"
+                placeholderTextColor="rgba(255,255,255,0.35)"
+                keyboardType="number-pad"
+                maxLength={6}
+                textAlign="center"
+                editable={!verifying}
+                onSubmitEditing={verifyMfa}
+                returnKeyType="done"
+              />
+
+              {!!mfaError && <Text style={styles.mfaErrorText}>{mfaError}</Text>}
+
+              <TouchableOpacity
+                style={[styles.mfaBtn, (verifying || code.length < 6) && { opacity: 0.5 }]}
+                onPress={verifyMfa}
+                disabled={verifying || code.length < 6}
+              >
+                {verifying ? <ActivityIndicator color="#fff" /> : <Text style={styles.mfaBtnText}>Valider</Text>}
+              </TouchableOpacity>
+            </View>
+          )}
+        </ScrollView>
       </View>
     );
   }
@@ -463,4 +629,14 @@ const styles = StyleSheet.create({
   searchBtn: { width: 50, borderRadius: 12, backgroundColor: '#10b981', justifyContent: 'center', alignItems: 'center' },
   bannedTag: { color: '#fca5a5', fontSize: 13, fontWeight: '700', marginTop: 6 },
   empty: { color: 'rgba(255,255,255,0.5)', fontSize: 14, textAlign: 'center', marginTop: 30, fontStyle: 'italic' },
+  // ---- 2FA ----
+  mfaTitle: { color: '#fff', fontSize: 18, fontWeight: '700', marginTop: 14, textAlign: 'center' },
+  mfaText: { color: 'rgba(255,255,255,0.6)', fontSize: 14, textAlign: 'center', lineHeight: 20, marginTop: 8, paddingHorizontal: 8 },
+  qrBox: { backgroundColor: '#fff', borderRadius: 14, padding: 14, marginTop: 18 },
+  mfaSecretLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 14 },
+  mfaSecret: { color: '#10b981', fontSize: 15, fontWeight: '700', letterSpacing: 1, marginTop: 4, textAlign: 'center' },
+  mfaInput: { width: '100%', backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', borderRadius: 12, paddingVertical: 14, color: '#fff', fontSize: 22, fontWeight: '700', letterSpacing: 6, marginTop: 20 },
+  mfaErrorText: { color: '#fca5a5', fontSize: 14, fontWeight: '600', marginTop: 12, textAlign: 'center' },
+  mfaBtn: { width: '100%', backgroundColor: '#10b981', paddingVertical: 14, borderRadius: 12, alignItems: 'center', marginTop: 16 },
+  mfaBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
 });
