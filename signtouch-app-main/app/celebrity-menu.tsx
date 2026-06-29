@@ -19,7 +19,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import BottomNav from '@/components/BottomNav';
-import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount, getActiveFanEvent, ActiveFanEvent, getSignedDedicationCount } from '@/utils/eventSessionStorage';
+import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount, getMergedFanEvents, ActiveFanEvent, getSignedDedicationCount } from '@/utils/eventSessionStorage';
 import { getServedFansCountBySessions } from '@/utils/sessionQueueStorage';
 import QRCodeSvg from 'react-native-qrcode-svg';
 
@@ -66,29 +66,38 @@ export default function CelebrityMenuScreen() {
   );
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
-  const [activeFanEvent, setActiveFanEvent] = useState<ActiveFanEvent | null>(null);
+  // Liste des événements rejoints par le fan : base (getMergedFanEvents) + cache local fusionnés.
+  const [fanEvents, setFanEvents] = useState<ActiveFanEvent[]>([]);
 
   const loadActiveFanEvent = useCallback(async () => {
     try {
-      const fanEvent = await getActiveFanEvent();
-      setActiveFanEvent(fanEvent);
+      const events = await getMergedFanEvents();
+      setFanEvents(events);
     } catch (e) {
       console.warn('[loadActiveFanEvent] Error:', e);
-      setActiveFanEvent(null);
+      setFanEvents([]);
     }
   }, []);
 
-  const handleResumeFanEvent = () => {
-    if (!activeFanEvent) return;
+  const handleResumeFanEvent = (fanEvent: ActiveFanEvent) => {
+    if (!fanEvent) return;
+    // Session vidéo : on rejoint la file (re-paiement bloqué par check-active-payment).
+    if (fanEvent.event_type === 'live_video') {
+      router.push({
+        pathname: '/join-live-session',
+        params: { code: fanEvent.joinCode },
+      });
+      return;
+    }
     router.push({
       pathname: '/event-gallery',
       params: {
-        sessionId: activeFanEvent.sessionId,
-        sessionTitle: activeFanEvent.sessionTitle,
-        joinCode: activeFanEvent.joinCode,
-        endsAt: activeFanEvent.endsAt,
-        signers: activeFanEvent.signers,
-        startsAt: activeFanEvent.starts_at || '',
+        sessionId: fanEvent.sessionId,
+        sessionTitle: fanEvent.sessionTitle,
+        joinCode: fanEvent.joinCode,
+        endsAt: fanEvent.endsAt,
+        signers: fanEvent.signers,
+        startsAt: fanEvent.starts_at || '',
       },
     });
   };
@@ -423,7 +432,13 @@ export default function CelebrityMenuScreen() {
     const viewOk = !hasCategoryParam || viewParam === getFanEventView(event);
     return kindOk && viewOk;
   };
-  const showFanEventCard = !!activeFanEvent && fanEventMatchesParams(activeFanEvent);
+  // Événements fan à afficher, filtrés selon les params (catégorie/type) et dédupliqués
+  // contre les événements créés par l'utilisateur (déjà listés plus bas dans baseEvents).
+  const ownEventIds = new Set(myEvents.map((e) => e.id));
+  const visibleFanEvents = fanEvents.filter(
+    (e) => fanEventMatchesParams(e) && !ownEventIds.has(e.sessionId)
+  );
+  const showFanEventCard = visibleFanEvents.length > 0;
 
   const filteredEvents = scopedEvents.filter((event) => {
     if (eventFilter === 'all') return true;
@@ -516,30 +531,30 @@ export default function CelebrityMenuScreen() {
       >
         {(!isCelebrity || activeTab === 'events') ? (
           <>
-            {showFanEventCard && activeFanEvent && (
-              <View style={styles.fanEventCard}>
+            {visibleFanEvents.map((fanEvent) => (
+              <View key={`fan_${fanEvent.sessionId}`} style={styles.fanEventCard}>
                 <View style={styles.fanEventBadgeRow}>
                   <Ticket size={14} color="#f59e0b" />
                   <Text style={styles.fanEventBadgeText}>{t('joinedEvent' as any) || 'Tu participes à'}</Text>
-                  {renderEventTypeBadge(activeFanEvent.event_type)}
+                  {renderEventTypeBadge(fanEvent.event_type)}
                 </View>
-                <Text style={styles.fanEventTitle}>{activeFanEvent.sessionTitle}</Text>
+                <Text style={styles.fanEventTitle}>{fanEvent.sessionTitle}</Text>
                 <View style={styles.fanEventInfoRow}>
                   <View style={styles.eventCode}>
                     <Text style={styles.eventCodeLabel}>{t('code') || 'Code'}:</Text>
-                    <Text style={styles.eventCodeValue}>{activeFanEvent.joinCode}</Text>
+                    <Text style={styles.eventCodeValue}>{fanEvent.joinCode}</Text>
                   </View>
                   <View style={styles.fanEventSigners}>
                     <Users size={14} color="#6b7280" />
-                    <Text style={styles.fanEventSignersText}>{getFanSignerCount(activeFanEvent)}</Text>
+                    <Text style={styles.fanEventSignersText}>{getFanSignerCount(fanEvent)}</Text>
                   </View>
                 </View>
-                <TouchableOpacity style={styles.fanEventResumeBtn} onPress={handleResumeFanEvent}>
+                <TouchableOpacity style={styles.fanEventResumeBtn} onPress={() => handleResumeFanEvent(fanEvent)}>
                   <LogIn size={18} color="#fff" />
                   <Text style={styles.fanEventResumeText}>{t('resume' as any) || 'Reprendre'}</Text>
                 </TouchableOpacity>
               </View>
-            )}
+            ))}
             {loading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#fff" />

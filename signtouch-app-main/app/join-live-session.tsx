@@ -45,7 +45,10 @@ import {
 import { supabase } from '@/utils/supabase';
 import { isFanBlocked } from '@/utils/blockedFansStorage';
 import { createMeetingToken } from '@/utils/dailyService';
-import { saveActiveFanEvent } from '@/utils/eventSessionStorage';
+import { saveActiveFanEvent, getOrCreateDeviceId } from '@/utils/eventSessionStorage';
+import { authedFetch } from '@/utils/authedFetch';
+
+const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 export default function JoinLiveSessionScreen() {
   const router = useRouter();
@@ -543,6 +546,40 @@ export default function JoinLiveSessionScreen() {
     if ((session.price_cents || 0) > 0 && !checkoutSessionIdRef.current) {
       setIsLoading(true);
       try {
+        // ANTI RE-PAIEMENT : si ce fan a DÉJÀ un paiement actif (pré-autorisé non capturé)
+        // pour cette session vidéo, on NE repaie PAS — on reprend la file directement.
+        // Le fan est identifié par son compte (JWT via authedFetch), device_id en complément.
+        if (STRIPE_SERVER_URL) {
+          try {
+            const deviceId = await getOrCreateDeviceId();
+            const res = await authedFetch(
+              `${STRIPE_SERVER_URL}/api/check-active-payment?type=video&session_id=${encodeURIComponent(session.id)}&device_id=${encodeURIComponent(deviceId)}`
+            );
+            if (res.ok) {
+              const data = await res.json();
+              if (data?.hasActivePayment && data.checkoutSessionId) {
+                // Reprise sans nouveau paiement : on mémorise le checkout existant puis on
+                // rejoint la file (même chemin qu'au retour de paiement).
+                checkoutSessionIdRef.current = data.checkoutSessionId;
+                let photoUrl: string | null = null;
+                if (photoUri) {
+                  try { photoUrl = await uploadFanPhoto(session.id, fanId, photoUri); }
+                  catch { photoUrl = null; }
+                }
+                await joinQueueWithData(
+                  photoUrl,
+                  message.trim() || '',
+                  fanName.trim() || (t('liveSessionAnonymousFan' as any) || 'Un fan')
+                );
+                return;
+              }
+            }
+          } catch (checkErr) {
+            // Vérif non bloquante : en cas d'échec, on retombe sur le paiement normal.
+            console.warn('[Join] check-active-payment failed (non bloquant):', checkErr);
+          }
+        }
+
         let photoUrl: string | null = null;
         if (photoUri) {
           photoUrl = await uploadFanPhoto(session.id, fanId, photoUri);
@@ -634,6 +671,30 @@ export default function JoinLiveSessionScreen() {
       queueEntryRef.current = entry;
       setQueuePosition(entry.position);
       setStep('queue');
+
+      // MÉMORISE LE JOIN (cache local) pour retrouver cette session vidéo dans
+      // « événements en cours » même après fermeture/refresh de l'app. Best-effort.
+      try {
+        let endsAt = sess.ends_at;
+        if (!endsAt) {
+          const base = sess.scheduled_at ? new Date(sess.scheduled_at) : new Date();
+          endsAt = new Date(
+            base.getTime() + (sess.duration_minutes || 30) * 60 * 1000
+          ).toISOString();
+        }
+        await saveActiveFanEvent({
+          sessionId: sess.id,
+          sessionTitle: sess.celebrity_name,
+          joinCode: sess.code,
+          endsAt,
+          signers: '[]',
+          savedAt: Date.now(),
+          starts_at: sess.scheduled_at || undefined,
+          event_type: 'live_video',
+        });
+      } catch (saveErr) {
+        console.warn('[Join] saveActiveFanEvent (join) failed (non bloquant):', saveErr);
+      }
 
       // Rang initial (avant le premier événement temps réel).
       await recalcQueueRank();

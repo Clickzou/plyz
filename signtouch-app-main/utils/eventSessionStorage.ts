@@ -987,3 +987,59 @@ export const clearActiveFanEvent = async (): Promise<void> => {
     console.warn('[clearActiveFanEvent] Error:', e);
   }
 };
+
+// Récupère TOUS les événements en cours/à venir auxquels ce fan participe, depuis la BASE
+// (et non plus seulement le cache local). Le serveur identifie les sessions vidéo via le
+// compte (JWT envoyé par authedFetch) et les dédicaces via le device_id.
+// Best-effort : renvoie [] si l'endpoint est indisponible (le cache local reste le fallback).
+// Le résultat est normalisé au format ActiveFanEvent pour réutiliser l'affichage existant.
+export const getOngoingFanEvents = async (): Promise<ActiveFanEvent[]> => {
+  if (!STRIPE_SERVER_URL) return [];
+  try {
+    const deviceId = await getOrCreateDeviceId();
+    const res = await authedFetch(
+      `${STRIPE_SERVER_URL}/api/my-ongoing-events?device_id=${encodeURIComponent(deviceId)}`
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const events: any[] = Array.isArray(data?.events) ? data.events : [];
+
+    return events.map((ev): ActiveFanEvent => {
+      const isVideo = ev.type === 'video';
+      // ID de session à utiliser pour rouvrir l'événement (vidéo → session_id ; dédicace → event_session_id).
+      const sessionId = String(
+        isVideo ? (ev.session_id || ev.event_session_id || '') : (ev.event_session_id || ev.session_id || '')
+      );
+      return {
+        sessionId,
+        sessionTitle: ev.celebrity_name || ev.title || '',
+        joinCode: ev.code || '',
+        endsAt: ev.ends_at || '',
+        signers: '[]',
+        savedAt: Date.now(),
+        event_type: isVideo ? 'live_video' : 'qr',
+        starts_at: ev.scheduled_at || undefined,
+      };
+    }).filter((e) => !!e.sessionId);
+  } catch (e) {
+    console.warn('[getOngoingFanEvents] Error (non bloquant):', e);
+    return [];
+  }
+};
+
+// Fusionne le cache local rapide + la liste serveur en dédupliquant par sessionId.
+// Le cache local prend la priorité (données déjà présentes, signers réels), la base
+// vient compléter avec les événements absents du cache (ex : après réinstallation / refresh).
+export const getMergedFanEvents = async (): Promise<ActiveFanEvent[]> => {
+  const [local, remote] = await Promise.all([
+    getActiveFanEvent().catch(() => null),
+    getOngoingFanEvents().catch(() => [] as ActiveFanEvent[]),
+  ]);
+  const byId = new Map<string, ActiveFanEvent>();
+  for (const ev of remote) {
+    if (ev.sessionId) byId.set(ev.sessionId, ev);
+  }
+  // Le cache local écrase l'entrée serveur de même id (priorité au local).
+  if (local?.sessionId) byId.set(local.sessionId, local);
+  return Array.from(byId.values());
+};

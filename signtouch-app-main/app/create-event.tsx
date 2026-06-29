@@ -1047,24 +1047,31 @@ export default function CreateEventScreen() {
                       height: e.nativeEvent.layout.height,
                     };
                   }}
-                  onStartShouldSetResponder={() => true}
-                  onMoveShouldSetResponder={() => true}
-                  onResponderTerminationRequest={() => false}
-                  onResponderGrant={handleTouchStart}
-                  onResponderMove={handleTouchMove}
-                  onResponderRelease={handleTouchEnd}
-                  onResponderTerminate={handleTouchEnd}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  onTouchCancel={handleTouchEnd}
-                  // @ts-ignore - mouse events for web
-                  onMouseDown={handleTouchStart}
-                  onMouseMove={(e: any) => isDrawingRef.current && handleTouchMove(e)}
-                  onMouseUp={handleTouchEnd}
-                  onMouseLeave={handleTouchEnd}
+                  {...(Platform.OS === 'web'
+                    ? {
+                        // Web : souris UNIQUEMENT (évite le double tracé responder+souris)
+                        // @ts-ignore - mouse events web
+                        onMouseDown: handleTouchStart,
+                        // @ts-ignore
+                        onMouseMove: (e: any) => isDrawingRef.current && handleTouchMove(e),
+                        // @ts-ignore
+                        onMouseUp: handleTouchEnd,
+                        // @ts-ignore
+                        onMouseLeave: handleTouchEnd,
+                      }
+                    : {
+                        // Mobile : système responder UNIQUEMENT (les onTouch* doublaient
+                        // chaque point -> trait dédoublé / qui se croise). On les retire.
+                        onStartShouldSetResponder: () => true,
+                        onMoveShouldSetResponder: () => true,
+                        onResponderTerminationRequest: () => false,
+                        onResponderGrant: handleTouchStart,
+                        onResponderMove: handleTouchMove,
+                        onResponderRelease: handleTouchEnd,
+                        onResponderTerminate: handleTouchEnd,
+                      })}
                 >
-                  <Svg width="100%" height="100%" viewBox="0 0 300 200" style={styles.signatureSvg}>
+                  <Svg width="100%" height="100%" viewBox="0 0 300 200" preserveAspectRatio="none" style={styles.signatureSvg}>
                     <G>
                       {activeSigner.paths.map((path) => (
                         <Path

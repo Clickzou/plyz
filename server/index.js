@@ -1936,6 +1936,297 @@ app.get('/api/check-event-access', async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// RÉCUPÉRATION DES ÉVÉNEMENTS EN COURS DU FAN (anti « on me redemande de payer »)
+//
+// Bug corrigé : un fan qui a déjà payé/pré-autorisé un événement et qui
+// ferme/rafraîchit l'app ne le retrouvait plus (l'app ne relisait pas la base).
+// Cet endpoint relit les 2 sources de vérité serveur :
+//   - VIDÉO    : session_queue ⋈ live_sessions   (fan_id = "fan_user_<user.id>")
+//   - DÉDICACE : event_paid_fans ⋈ event_sessions (fan_id = user.id OU device_id legacy)
+//
+// Identification du fan :
+//   - vidéo    : la file stocke fan_id = `fan_user_<user.id>` (entrées récentes).
+//                Les vieilles entrées legacy device (`fan_<ts>_<rand>`) ne sont
+//                PAS rattachables à un compte → ignorées ici (pas de device_id
+//                fiable pour la vidéo).
+//   - dédicace : event_paid_fans.fan_id = device_id (legacy, pas encore migré
+//                vers le compte). On accepte donc fan_id = user.id (futur) OU le
+//                device_id passé en query (présent).
+//
+// Statuts NON terminaux pris en compte :
+//   - session_queue : 'waiting', 'called'  (terminal = 'completed' ; on inclut
+//     aussi 'current'/'in_call'/'signing' par prudence s'ils apparaissent).
+//   - live_sessions : non 'ended'  (actifs observés : 'active' ; on tolère
+//     'scheduled'/'waiting' au cas où).
+//   - event_sessions : non 'ended' et non 'deleted' (actif observé : 'live').
+//
+// Best-effort : si une des deux sous-requêtes échoue, on renvoie quand même
+// l'autre (on n'écroule pas toute la réponse).
+// ---------------------------------------------------------------------------
+const VIDEO_QUEUE_TERMINAL_STATUSES = ['completed', 'cancelled', 'canceled', 'removed'];
+const LIVE_SESSION_TERMINAL_STATUSES = ['ended'];
+const EVENT_SESSION_TERMINAL_STATUSES = ['ended', 'deleted'];
+
+app.get('/api/my-ongoing-events', async (req, res) => {
+  try {
+    const user = await verifySupabaseJWT(req);
+    if (!user) return res.status(401).json({ error: 'Authentication required' });
+
+    const deviceId = req.query.device_id ? String(req.query.device_id) : null;
+    const admin = getSupabaseAdmin();
+    const events = [];
+
+    // ---- VIDÉO : session_queue ⋈ live_sessions -----------------------------
+    try {
+      const videoFanId = `fan_user_${user.id}`;
+      const { data: qRows, error: qErr } = await admin
+        .from('session_queue')
+        .select('id, session_id, fan_id, status, checkout_session_id, payment_intent_id, payment_captured, created_at')
+        .eq('fan_id', videoFanId)
+        .not('status', 'in', `(${VIDEO_QUEUE_TERMINAL_STATUSES.join(',')})`)
+        .order('created_at', { ascending: false });
+
+      if (qErr) {
+        console.warn('[MyOngoing] session_queue read failed:', qErr.message);
+      } else if (qRows && qRows.length > 0) {
+        const sessionIds = [...new Set(qRows.map((r) => r.session_id).filter(Boolean))];
+        let liveById = {};
+        if (sessionIds.length > 0) {
+          const { data: lives, error: lErr } = await admin
+            .from('live_sessions')
+            .select('id, code, celebrity_name, status, scheduled_at')
+            .in('id', sessionIds);
+          if (lErr) {
+            console.warn('[MyOngoing] live_sessions read failed:', lErr.message);
+          } else {
+            for (const l of (lives || [])) liveById[l.id] = l;
+          }
+        }
+        // Dédupliquer par session : on garde la 1ère entrée non terminale (la
+        // plus récente) pour chaque live, pour ne pas afficher 2x le même event.
+        const seenSessions = new Set();
+        for (const q of qRows) {
+          const live = liveById[q.session_id];
+          if (!live) continue; // live introuvable -> on ignore
+          if (LIVE_SESSION_TERMINAL_STATUSES.includes(live.status)) continue;
+          if (seenSessions.has(q.session_id)) continue;
+          seenSessions.add(q.session_id);
+          events.push({
+            type: 'video',
+            session_id: q.session_id,
+            queue_entry_id: q.id,
+            code: live.code || null,
+            celebrity_name: live.celebrity_name || null,
+            status: q.status,
+            scheduled_at: live.scheduled_at || null,
+            checkout_session_id: q.checkout_session_id || null,
+            payment_intent_id: q.payment_intent_id || null,
+            payment_captured: q.payment_captured === true,
+          });
+        }
+      }
+    } catch (videoErr) {
+      console.warn('[MyOngoing] video branch error (ignored):', videoErr.message);
+    }
+
+    // ---- DÉDICACE : event_paid_fans ⋈ event_sessions -----------------------
+    try {
+      // fan_id peut être l'user.id (futur) OU le device_id legacy (présent).
+      const fanIds = [String(user.id)];
+      if (deviceId) fanIds.push(deviceId);
+
+      const { data: paidRows, error: pErr } = await admin
+        .from('event_paid_fans')
+        .select('id, event_session_id, fan_id, checkout_session_id, payment_intent_id, payment_captured, amount_cents, created_at')
+        .in('fan_id', fanIds)
+        .order('created_at', { ascending: false });
+
+      if (pErr) {
+        console.warn('[MyOngoing] event_paid_fans read failed:', pErr.message);
+      } else if (paidRows && paidRows.length > 0) {
+        const eventIds = [...new Set(paidRows.map((r) => r.event_session_id).filter(Boolean))];
+        let evtById = {};
+        if (eventIds.length > 0) {
+          const { data: evts, error: eErr } = await admin
+            .from('event_sessions')
+            .select('id, title, join_code, status, starts_at, created_by')
+            .in('id', eventIds);
+          if (eErr) {
+            console.warn('[MyOngoing] event_sessions read failed:', eErr.message);
+          } else {
+            for (const e of (evts || [])) evtById[e.id] = e;
+          }
+        }
+
+        // celebrity_name : event_sessions n'a pas de colonne dédiée. On résout
+        // via user_profiles.display_name (clé = created_by). Best-effort.
+        const creatorIds = [...new Set(Object.values(evtById).map((e) => e.created_by).filter(Boolean))];
+        let nameByCreator = {};
+        if (creatorIds.length > 0) {
+          try {
+            const { data: profs } = await admin
+              .from('user_profiles')
+              .select('id, display_name')
+              .in('id', creatorIds);
+            for (const p of (profs || [])) nameByCreator[p.id] = p.display_name;
+          } catch (nameErr) {
+            console.warn('[MyOngoing] creator name lookup failed:', nameErr.message);
+          }
+        }
+
+        const seenEvents = new Set();
+        for (const row of paidRows) {
+          const evt = evtById[row.event_session_id];
+          if (!evt) continue;
+          if (EVENT_SESSION_TERMINAL_STATUSES.includes(evt.status)) continue;
+          if (seenEvents.has(row.event_session_id)) continue;
+          seenEvents.add(row.event_session_id);
+          events.push({
+            type: 'dedication',
+            event_session_id: row.event_session_id,
+            code: evt.join_code || null,
+            celebrity_name: nameByCreator[evt.created_by] || evt.title || null,
+            status: evt.status,
+            scheduled_at: evt.starts_at || null,
+            checkout_session_id: row.checkout_session_id || null,
+            payment_intent_id: row.payment_intent_id || null,
+            payment_captured: row.payment_captured === true,
+            amount_cents: typeof row.amount_cents === 'number' ? row.amount_cents : null,
+          });
+        }
+      }
+    } catch (dedicErr) {
+      console.warn('[MyOngoing] dedication branch error (ignored):', dedicErr.message);
+    }
+
+    return res.json({ events });
+  } catch (error) {
+    console.error('[MyOngoing] Error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// VÉRIFICATION D'UN PAIEMENT ACTIF POUR UN ÉVÉNEMENT DONNÉ
+//
+// L'app appelle ceci AVANT de proposer le paiement : si le fan a déjà une
+// pré-autorisation valide (PaymentIntent en 'requires_capture' ou déjà
+// 'succeeded'), on le laisse rejoindre SANS repayer. Si l'autorisation a
+// expiré / été annulée, on renvoie expired:true et l'app peut reproposer
+// le paiement.
+//
+// Params (query) :
+//   - type             : 'video' | 'dedication'   (requis)
+//   - session_id       : id live_sessions          (requis si type=video)
+//   - event_session_id : id event_sessions         (requis si type=dedication)
+//   - device_id        : device_id legacy          (optionnel, dédicace)
+//
+// Réutilise la logique Stripe de /api/verify-payment :
+//   requires_capture | succeeded -> hasActivePayment:true
+//   canceled / expiré / absent   -> hasActivePayment:false (+ expired si annulé)
+// ---------------------------------------------------------------------------
+app.get('/api/check-active-payment', async (req, res) => {
+  try {
+    const user = await verifySupabaseJWT(req);
+    if (!user) return res.status(401).json({ error: 'Authentication required' });
+
+    const type = req.query.type;
+    if (type !== 'video' && type !== 'dedication') {
+      return res.status(400).json({ error: "Invalid or missing 'type' (video|dedication)" });
+    }
+
+    const admin = getSupabaseAdmin();
+    let row = null; // { checkout_session_id, payment_intent_id, payment_captured }
+
+    if (type === 'video') {
+      const sessionId = req.query.session_id;
+      if (!sessionId) return res.status(400).json({ error: 'Missing session_id' });
+      const videoFanId = `fan_user_${user.id}`;
+      const { data, error } = await admin
+        .from('session_queue')
+        .select('checkout_session_id, payment_intent_id, payment_captured, status')
+        .eq('session_id', sessionId)
+        .eq('fan_id', videoFanId)
+        .not('status', 'in', `(${VIDEO_QUEUE_TERMINAL_STATUSES.join(',')})`)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) {
+        console.warn('[CheckActivePayment] session_queue read failed:', error.message);
+      }
+      row = data || null;
+    } else {
+      const eventSessionId = req.query.event_session_id;
+      if (!eventSessionId) return res.status(400).json({ error: 'Missing event_session_id' });
+      const deviceId = req.query.device_id ? String(req.query.device_id) : null;
+      const fanIds = [String(user.id)];
+      if (deviceId) fanIds.push(deviceId);
+      const { data, error } = await admin
+        .from('event_paid_fans')
+        .select('checkout_session_id, payment_intent_id, payment_captured')
+        .eq('event_session_id', eventSessionId)
+        .in('fan_id', fanIds)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) {
+        console.warn('[CheckActivePayment] event_paid_fans read failed:', error.message);
+      }
+      row = data || null;
+    }
+
+    // Aucune entrée payée -> pas de paiement actif (l'app proposera de payer).
+    if (!row || !row.checkout_session_id) {
+      return res.json({ hasActivePayment: false });
+    }
+
+    // Si déjà capturé en base, c'est forcément un paiement actif (succeeded).
+    if (row.payment_captured === true) {
+      return res.json({
+        hasActivePayment: true,
+        checkoutSessionId: row.checkout_session_id,
+        paymentIntentId: row.payment_intent_id || null,
+        paymentCaptured: true,
+      });
+    }
+
+    // Sinon on vérifie l'état réel côté Stripe (même logique que verify-payment).
+    try {
+      const stripe = await getStripe();
+      let paymentIntentId = row.payment_intent_id || null;
+      if (!paymentIntentId) {
+        const session = await stripe.checkout.sessions.retrieve(row.checkout_session_id);
+        paymentIntentId = session.payment_intent || null;
+      }
+      if (!paymentIntentId) {
+        return res.json({ hasActivePayment: false });
+      }
+      const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+      if (pi.status === 'requires_capture' || pi.status === 'succeeded') {
+        return res.json({
+          hasActivePayment: true,
+          checkoutSessionId: row.checkout_session_id,
+          paymentIntentId,
+          paymentCaptured: pi.status === 'succeeded',
+        });
+      }
+      if (pi.status === 'canceled') {
+        return res.json({ hasActivePayment: false, expired: true });
+      }
+      // requires_payment_method / processing / etc. : paiement non finalisé.
+      return res.json({ hasActivePayment: false, paymentIntentStatus: pi.status });
+    } catch (stripeErr) {
+      console.warn('[CheckActivePayment] Stripe check failed:', stripeErr.message);
+      // On ne bloque pas le fan : on signale juste qu'on n'a pas pu confirmer.
+      return res.json({ hasActivePayment: false, error: 'stripe_check_failed' });
+    }
+  } catch (error) {
+    console.error('[CheckActivePayment] Error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // CAPTURE EN MASSE des dédicaces — déclenchée à la 1ère photo dédicacée.
 // Aligné sur le flux vidéo (/api/end-fan-call) : pré-autorisations posées au
 // checkout, capturées toutes d'un coup ici. Idempotent à 2 niveaux :

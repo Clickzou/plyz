@@ -810,7 +810,33 @@ export default function JoinEventScreen() {
 
   const goToGallery = async () => {
     if (foundSession) {
-      if (eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !eventPaid) {
+      // Flag local : permet de court-circuiter dans le même appel (eventPaid via state
+      // n'est pas encore à jour après setEventPaid). True dès qu'un paiement valable existe.
+      let alreadyPaid = eventPaid;
+
+      // ANTI RE-PAIEMENT DÉDICACE : si ce fan (device_id) a déjà un paiement actif
+      // (pré-autorisé non capturé / capturé) pour cet événement, on entre direct dans
+      // la galerie sans repayer.
+      if (eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !alreadyPaid && STRIPE_SERVER_URL) {
+        try {
+          const deviceId = await getOrCreateDeviceId();
+          const activeRes = await authedFetch(
+            `${STRIPE_SERVER_URL}/api/check-active-payment?type=dedication&event_session_id=${encodeURIComponent(foundSession.id)}&device_id=${encodeURIComponent(deviceId)}`
+          );
+          if (activeRes.ok) {
+            const activeData = await activeRes.json();
+            if (activeData?.hasActivePayment) {
+              await AsyncStorage.setItem(`@event_paid_${foundSession.id}`, 'true');
+              setEventPaid(true);
+              alreadyPaid = true;
+            }
+          }
+        } catch (activeErr) {
+          console.warn('[JoinEvent] check-active-payment dedication failed (non bloquant):', activeErr);
+        }
+      }
+
+      if (eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !alreadyPaid) {
         try {
           const viewerId = await getOrCreateDeviceId();
           const checkRes = await authedFetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${foundSession.id}&fan_id=${viewerId}`);

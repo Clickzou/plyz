@@ -1488,7 +1488,7 @@ export default function VideoCallScreen() {
               <Text style={styles.blockFanButtonText}>
                 {fanBlockedDone
                   ? t('fanBlockedConfirm' as any) || 'Fan bloqué.'
-                  : `🚫 ${t('blockFanButton' as any) || 'Bloquer ce fan'}`}
+                  : t('blockFanButton' as any) || 'Bloquer ce fan'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity

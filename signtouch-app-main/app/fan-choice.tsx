@@ -21,7 +21,7 @@ import { supabase } from '@/utils/supabase';
 import { showAlert } from '@/utils/alertHelper';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
-import { getMyScheduledEvents, getActiveFanEvent } from '@/utils/eventSessionStorage';
+import { getMyScheduledEvents, getMergedFanEvents } from '@/utils/eventSessionStorage';
 
 // Base API serveur (vérification de compte). Sur web on passe par le proxy local.
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
@@ -113,9 +113,9 @@ export default function FanChoiceScreen() {
       let active = true;
       (async () => {
         try {
-          const [items, fanEvent] = await Promise.all([
+          const [items, fanEvents] = await Promise.all([
             getMyScheduledEvents().catch(() => []),
-            getActiveFanEvent().catch(() => null),
+            getMergedFanEvents().catch(() => []),
           ]);
           if (!active) return;
           const now = Date.now();
@@ -136,10 +136,10 @@ export default function FanChoiceScreen() {
             const bucket = isVideo(e) ? counts.video : counts.event;
             bucket[categorize(e)] += 1;
           }
-          // L'événement rejoint actif (non null = non expiré, getActiveFanEvent
-          // l'a déjà vérifié). S'il est programmé pour plus tard (starts_at futur),
-          // il compte comme « à venir » (réservation) ; sinon « en cours ».
-          if (fanEvent) {
+          // Les événements rejoints par le fan, lus depuis la BASE (+ cache local fusionné).
+          // S'ils sont programmés pour plus tard (starts_at futur), ils comptent comme
+          // « à venir » (réservation) ; sinon « en cours ».
+          for (const fanEvent of fanEvents as any[]) {
             const fanBucket = isVideo(fanEvent) ? counts.video : counts.event;
             fanBucket[categorize(fanEvent)] += 1;
           }
