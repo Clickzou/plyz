@@ -24,6 +24,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOrCreateDeviceId } from '@/utils/ratingsStorage';
+import { authedFetch } from '@/utils/authedFetch';
 import BottomNav from '@/components/BottomNav';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -72,7 +73,7 @@ export default function MyEarningsScreen() {
     }
     try {
       const celebrityId = user?.id || await getOrCreateDeviceId();
-      const response = await fetch(
+      const response = await authedFetch(
         `${STRIPE_SERVER_URL}/api/celebrity-earnings?celebrity_id=${celebrityId}`
       );
       const result = await response.json();

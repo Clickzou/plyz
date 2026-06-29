@@ -27,6 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getOrCreateDeviceId } from '@/utils/ratingsStorage';
 import { getStripeAccountId } from '@/utils/userProfile';
 import { scheduleCelebrityReminders } from '@/utils/scheduleReminders';
+import { authedFetch } from '@/utils/authedFetch';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import QRCodeSvg from 'react-native-qrcode-svg';
@@ -339,7 +340,7 @@ export default function CreateLiveSessionScreen() {
       
       const scheduledAt = getScheduledStartDate();
       try {
-        const response = await fetch(`${SERVER_URL}/api/create-session`, {
+        const response = await authedFetch(`${SERVER_URL}/api/create-session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

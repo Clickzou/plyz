@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import { upsertUserProfile } from '@/utils/userProfile';
 import { supabase } from '@/utils/supabase';
+import { authedFetch } from '@/utils/authedFetch';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 
@@ -63,7 +64,7 @@ export default function CelebrityOnboardingScreen() {
         if (data?.display_name) {
           setCelebrityName(data.display_name);
           await upsertUserProfile(user.id, { celebrity_name: data.display_name, bio: data.bio || '' });
-          await fetch(`${API_BASE}/api/update-celebrity-profile`, {
+          await authedFetch(`${API_BASE}/api/update-celebrity-profile`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user_id: user.id, bio: data.bio || '', stage_name: data.display_name }),

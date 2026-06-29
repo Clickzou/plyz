@@ -10,6 +10,7 @@ import {
   Share,
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
+import { authedFetch } from '@/utils/authedFetch';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye, PenSquare, Ticket, LogIn, Users, PenTool } from 'lucide-react-native';
@@ -151,7 +152,7 @@ export default function CelebrityMenuScreen() {
           const entries = await Promise.all(
             dedicationEvents.map(async (e) => {
               try {
-                const r = await fetch(
+                const r = await authedFetch(
                   `${STRIPE_SERVER_URL}/api/event-session-earnings?event_session_id=${e.id}`,
                 );
                 const data = await r.json();

@@ -384,21 +384,42 @@ app.get('/api/health', async (req, res) => {
 
 app.post('/api/create-session', async (req, res) => {
   try {
-    const supabase = getSupabase();
+    // 🔒 IDOR — AUTH + PROPRIÉTÉ : la session est TOUJOURS créée au nom de
+    // l'utilisateur authentifié. On ignore tout celebrity_id du body (un appelant
+    // ne peut pas créer une session pour le compte d'autrui).
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+
     const {
-      celebrity_id,
       celebrity_name,
       duration_minutes,
       duration_per_fan_minutes = 5,
       max_slots,
       price_cents = 0,
       cover_photo_url = null,
-      celebrity_stripe_account_id = null,
       scheduled_at = null
     } = req.body;
 
-    if (!celebrity_id || !celebrity_name || !duration_minutes || !max_slots) {
-      return res.status(400).json({ error: 'Missing required fields: celebrity_id, celebrity_name, duration_minutes, max_slots' });
+    // FORCÉ : la célébrité est l'utilisateur authentifié (jamais le body).
+    const celebrity_id = authUser.id;
+
+    if (!celebrity_name || !duration_minutes || !max_slots) {
+      return res.status(400).json({ error: 'Missing required fields: celebrity_name, duration_minutes, max_slots' });
+    }
+
+    // 🔒 IDOR — Le compte Stripe destinataire est rechargé depuis la base
+    // (celebrity_profiles.stripe_account_id de l'appelant), JAMAIS depuis le body
+    // (sinon détournement des fonds vers un compte Stripe arbitraire).
+    let celebrity_stripe_account_id = null;
+    try {
+      const { data: celebProfile } = await getSupabaseAdmin()
+        .from('celebrity_profiles')
+        .select('stripe_account_id')
+        .eq('user_id', celebrity_id)
+        .maybeSingle();
+      celebrity_stripe_account_id = celebProfile?.stripe_account_id || null;
+    } catch (stripeErr) {
+      console.warn('[create-session] stripe_account_id lookup failed:', stripeErr.message);
     }
 
     // Sécurité : seul un compte vérifié (célébrité, créateur ou club) peut créer une session vidéo.
@@ -456,7 +477,7 @@ app.post('/api/create-session', async (req, res) => {
       insertData.status = 'waiting';
     }
 
-    let { data, error } = await supabase
+    let { data, error } = await getSupabaseAdmin()
       .from('live_sessions')
       .insert(insertData)
       .select()
@@ -485,6 +506,10 @@ app.post('/api/launch-scheduled-session', async (req, res) => {
       return res.status(400).json({ error: 'Missing session_id' });
     }
 
+    // 🔒 IDOR — AUTH + PROPRIÉTÉ : seule la célébrité hôte peut lancer sa session.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+
     const { data: currentSession } = await supabase
       .from('live_sessions')
       .select('*')
@@ -493,6 +518,10 @@ app.post('/api/launch-scheduled-session', async (req, res) => {
 
     if (!currentSession) {
       return res.status(404).json({ error: 'Session not found' });
+    }
+
+    if (String(currentSession.celebrity_id) !== String(authUser.id)) {
+      return res.status(403).json({ error: 'Not the host of this session' });
     }
 
     if (currentSession.status === 'waiting' || currentSession.status === 'active') {
@@ -596,6 +625,25 @@ app.get('/api/connect-account-status', async (req, res) => {
 
     if (!account_id) {
       return res.status(400).json({ error: 'Account ID is required' });
+    }
+
+    // 🔒 IDOR — AUTH : JWT obligatoire. Ownership : si l'appelant a déjà un compte
+    // Stripe en base, l'account_id demandé doit être le sien. Si aucun compte n'est
+    // encore enregistré (onboarding en cours, account fraîchement créé côté Stripe),
+    // on tolère pour ne pas casser le flux d'onboarding.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    try {
+      const { data: prof } = await getSupabaseAdmin()
+        .from('celebrity_profiles')
+        .select('stripe_account_id')
+        .eq('user_id', authUser.id)
+        .maybeSingle();
+      if (prof?.stripe_account_id && String(prof.stripe_account_id) !== String(account_id)) {
+        return res.status(403).json({ error: 'forbidden' });
+      }
+    } catch (ownErr) {
+      console.warn('[Connect] ownership check failed (allowing, onboarding):', ownErr.message);
     }
 
     const account = await stripe.accounts.retrieve(account_id);
@@ -1126,6 +1174,10 @@ app.get('/api/session-earnings', async (req, res) => {
       return res.status(400).json({ error: 'Missing session_id' });
     }
 
+    // 🔒 IDOR — AUTH + PROPRIÉTÉ : seule la célébrité de la session lit ses gains.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+
     const { data: session } = await supabase
       .from('live_sessions')
       .select('celebrity_id, price_cents')
@@ -1134,6 +1186,10 @@ app.get('/api/session-earnings', async (req, res) => {
 
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
+    }
+
+    if (String(session.celebrity_id) !== String(authUser.id)) {
+      return res.status(403).json({ error: 'forbidden' });
     }
 
     const { data: capturedEntries } = await supabase
@@ -1171,6 +1227,13 @@ app.get('/api/celebrity-earnings', async (req, res) => {
 
     if (!celebrity_id) {
       return res.status(400).json({ error: 'Missing celebrity_id' });
+    }
+
+    // 🔒 IDOR — AUTH + PROPRIÉTÉ : une célébrité ne lit QUE ses propres gains.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    if (String(celebrity_id) !== String(authUser.id)) {
+      return res.status(403).json({ error: 'forbidden' });
     }
 
     const { data: sessions, error: sessionsError } = await supabase
@@ -1519,6 +1582,24 @@ app.get('/api/stripe/express/account-link', async (req, res) => {
       return res.status(400).json({ error: 'account_id is required' });
     }
 
+    // 🔒 IDOR — AUTH : JWT obligatoire. Ownership : si l'appelant a déjà un compte
+    // Stripe en base, l'account_id doit être le sien. Pendant l'onboarding (compte
+    // tout juste créé, pas encore en base), on tolère pour ne pas casser le flux.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    try {
+      const { data: prof } = await getSupabaseAdmin()
+        .from('celebrity_profiles')
+        .select('stripe_account_id')
+        .eq('user_id', authUser.id)
+        .maybeSingle();
+      if (prof?.stripe_account_id && String(prof.stripe_account_id) !== String(account_id)) {
+        return res.status(403).json({ error: 'forbidden' });
+      }
+    } catch (ownErr) {
+      console.warn('[Connect Express] ownership check failed (allowing, onboarding):', ownErr.message);
+    }
+
     const baseUrl = `https://${req.headers.host || '3aa55d0d-178c-4720-bdee-f8cea294f71b-00-3sqzk84ygwh7z.picard.replit.dev'}`;
 
     const accountLink = await stripe.accountLinks.create({
@@ -1824,6 +1905,23 @@ app.get('/api/event-session-earnings', async (req, res) => {
 
     if (!event_session_id) {
       return res.status(400).json({ error: 'Missing event_session_id' });
+    }
+
+    // 🔒 IDOR — AUTH + PROPRIÉTÉ : seul le créateur de l'événement lit ses gains.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    {
+      const { data: evt } = await getSupabaseAdmin()
+        .from('event_sessions')
+        .select('created_by')
+        .eq('id', event_session_id)
+        .maybeSingle();
+      if (!evt) {
+        return res.status(404).json({ error: 'Event session not found' });
+      }
+      if (String(evt.created_by) !== String(authUser.id)) {
+        return res.status(403).json({ error: 'forbidden' });
+      }
     }
 
     // Source de vérité : la base. On lit les paiements RÉELLEMENT capturés
@@ -3304,9 +3402,12 @@ app.get('/api/celebrity-events', async (req, res) => {
 app.post('/api/posts', async (req, res) => {
   try {
     const db = getSupabaseAdmin();
-    const { celebrity_id, kind, title, body, media_url, event_date, price_cents } = req.body;
+    const { kind, title, body, media_url, event_date, price_cents } = req.body;
 
-    if (!celebrity_id) return res.status(400).json({ error: 'celebrity_id required' });
+    // 🔒 IDOR — AUTH + PROPRIÉTÉ : le post est toujours créé au nom de l'appelant.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const celebrity_id = authUser.id;
 
     const { data, error } = await db
       .from('posts')
@@ -3623,8 +3724,12 @@ app.post('/api/autograph', async (req, res) => {
 app.get('/api/my-bookings', async (req, res) => {
   try {
     const db = getSupabaseAdmin();
-    const { user_id, role } = req.query;
-    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+    const { role } = req.query;
+
+    // 🔒 IDOR — AUTH + PROPRIÉTÉ : on ne lit QUE les réservations de l'appelant.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const user_id = authUser.id;
 
     const column = role === 'celebrity' ? 'celebrity_id' : 'fan_id';
     const { data, error } = await db
@@ -3650,8 +3755,12 @@ app.get('/api/my-bookings', async (req, res) => {
 app.get('/api/my-autographs', async (req, res) => {
   try {
     const db = getSupabaseAdmin();
-    const { user_id, role } = req.query;
-    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+    const { role } = req.query;
+
+    // 🔒 IDOR — AUTH + PROPRIÉTÉ : on ne lit QUE les dédicaces de l'appelant.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const user_id = authUser.id;
 
     const column = role === 'celebrity' ? 'celebrity_id' : 'fan_id';
     const { data, error } = await db
@@ -3822,8 +3931,14 @@ async function checkWebsiteSafety(rawUrl) {
 app.post('/api/upsert-celebrity-profile', async (req, res) => {
   try {
     const db = getSupabaseAdmin();
-    const { user_id, stage_name, bio, website } = req.body;
-    if (!user_id || !stage_name) return res.status(400).json({ error: 'user_id and stage_name required' });
+    const { stage_name, bio, website } = req.body;
+
+    // 🔒 IDOR — AUTH + PROPRIÉTÉ : on ne modifie QUE le profil de l'appelant.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const user_id = authUser.id;
+
+    if (!stage_name) return res.status(400).json({ error: 'stage_name required' });
 
     let safeWebsite = website || null;
     if (website && String(website).trim()) {
@@ -3860,8 +3975,12 @@ app.post('/api/upsert-celebrity-profile', async (req, res) => {
 app.post('/api/upsert-celebrity-pricing', async (req, res) => {
   try {
     const db = getSupabaseAdmin();
-    const { user_id, video_call_price_cents, video_call_unit, video_call_duration_minutes, autograph_price_cents, live_dedication_price_cents, currency } = req.body;
-    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+    const { video_call_price_cents, video_call_unit, video_call_duration_minutes, autograph_price_cents, live_dedication_price_cents, currency } = req.body;
+
+    // 🔒 IDOR — AUTH + PROPRIÉTÉ : on ne modifie QUE les tarifs de l'appelant.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const user_id = authUser.id;
 
     const { data, error } = await db
       .from('celebrity_pricing')
@@ -3889,8 +4008,12 @@ app.post('/api/upsert-celebrity-pricing', async (req, res) => {
 app.post('/api/update-celebrity-profile', async (req, res) => {
   try {
     const db = getSupabaseAdmin();
-    const { user_id, website, bio, stage_name } = req.body;
-    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+    const { website, bio, stage_name } = req.body;
+
+    // 🔒 IDOR — AUTH + PROPRIÉTÉ : on ne modifie QUE le profil de l'appelant.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const user_id = authUser.id;
 
     // Ne met à jour que les champs réellement fournis (mise à jour partielle).
     const fields = { updated_at: new Date().toISOString() };
@@ -3983,8 +4106,11 @@ app.post('/api/upload-celebrity-avatar', async (req, res) => {
 app.get('/api/my-celebrity-pricing', async (req, res) => {
   try {
     const db = getSupabaseAdmin();
-    const { user_id } = req.query;
-    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+
+    // 🔒 IDOR — AUTH + PROPRIÉTÉ : on ne lit QUE les tarifs de l'appelant.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const user_id = authUser.id;
 
     const { data: pricing } = await db
       .from('celebrity_pricing')
@@ -4107,8 +4233,15 @@ app.get('/api/wikidata/entity/:id', async (req, res) => {
 app.post('/api/wikidata/sync-celebrity', async (req, res) => {
   try {
     const db = getSupabaseAdmin();
-    const { celebrity_id, wikidata_id } = req.body;
-    if (!celebrity_id || !wikidata_id) return res.status(400).json({ error: 'celebrity_id and wikidata_id required' });
+    const { wikidata_id } = req.body;
+
+    // 🔒 IDOR — AUTH + PROPRIÉTÉ : on ne synchronise QUE le profil de l'appelant
+    // (l'auto-vérification official_verified ne doit pas être déclenchable pour autrui).
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const celebrity_id = authUser.id;
+
+    if (!wikidata_id) return res.status(400).json({ error: 'wikidata_id required' });
 
     const entityRes = await fetch(`http://localhost:${5000}/api/wikidata/entity/${wikidata_id}`);
     const entityData = await entityRes.json();
@@ -4178,13 +4311,20 @@ app.get('/api/verify-booking-payment', async (req, res) => {
 
 app.post('/api/org-verification-request', async (req, res) => {
   try {
+    // 🔒 IDOR — AUTH + PROPRIÉTÉ : la demande est toujours au nom de l'appelant
+    // (aligné sur creator/celebrity-verification-request).
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+
     const {
-      user_id, org_name, org_type, official_website,
+      org_name, org_type, official_website,
       contact_email, representative_name, representative_role,
       proof_description, proof_url, social_links
     } = req.body;
 
-    if (!user_id || !org_name || !org_type || !contact_email || !representative_name) {
+    const user_id = authUser.id;
+
+    if (!org_name || !org_type || !contact_email || !representative_name) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 

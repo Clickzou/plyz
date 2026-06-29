@@ -14,6 +14,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { showAlert } from '@/utils/alertHelper';
+import { authedFetch } from '@/utils/authedFetch';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 const LOCAL_POSTS_KEY = '@plyz_local_posts';
@@ -208,7 +209,7 @@ export default function CreatePostScreen() {
       };
 
       try {
-        const res = await fetch(`${API_BASE}/api/posts`, {
+        const res = await authedFetch(`${API_BASE}/api/posts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

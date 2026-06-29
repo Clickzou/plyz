@@ -13,6 +13,7 @@ import {
   Share,
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
+import { authedFetch } from '@/utils/authedFetch';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -561,7 +562,7 @@ export default function LiveSessionDashboardScreen() {
   const fetchSessionEarnings = useCallback(async () => {
     if (!sessionId || !session?.price_cents || session.price_cents <= 0 || !STRIPE_SERVER_URL) return;
     try {
-      const response = await fetch(`${STRIPE_SERVER_URL}/api/session-earnings?session_id=${sessionId}`);
+      const response = await authedFetch(`${STRIPE_SERVER_URL}/api/session-earnings?session_id=${sessionId}`);
       const data = await response.json();
       if (data.total_captured_cents !== undefined) {
         setSessionEarningsCents(data.total_captured_cents);
@@ -1168,7 +1169,7 @@ export default function LiveSessionDashboardScreen() {
   const handleLaunchSession = async () => {
     if (!session) return;
     try {
-      const response = await fetch(`${STRIPE_SERVER_URL}/api/launch-scheduled-session`, {
+      const response = await authedFetch(`${STRIPE_SERVER_URL}/api/launch-scheduled-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: session.id }),

@@ -142,7 +142,7 @@ export default function MySpaceScreen() {
     if (!user?.id) return;
     setSettingsLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/my-celebrity-pricing?user_id=${user.id}`);
+      const res = await authedFetch(`${API_BASE}/api/my-celebrity-pricing?user_id=${user.id}`);
       const data = await res.json();
       if (data.pricing) {
         setVideoCallPriceEur(String((data.pricing.video_call_price_cents || 0) / 100));
@@ -182,7 +182,7 @@ export default function MySpaceScreen() {
     if (!user?.id) return;
     setSettingsSaving(true);
     try {
-      const pricingRes = await fetch(`${API_BASE}/api/upsert-celebrity-pricing`, {
+      const pricingRes = await authedFetch(`${API_BASE}/api/upsert-celebrity-pricing`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -198,7 +198,7 @@ export default function MySpaceScreen() {
       const pricingData = await pricingRes.json();
       if (pricingData.error) throw new Error(pricingData.error);
 
-      const profileRes = await fetch(`${API_BASE}/api/update-celebrity-profile`, {
+      const profileRes = await authedFetch(`${API_BASE}/api/update-celebrity-profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -249,13 +249,13 @@ export default function MySpaceScreen() {
     try {
       setLoading(true);
       const fetches: Promise<Response>[] = [
-        fetch(`${API_BASE}/api/my-bookings?user_id=${user.id}&role=fan`),
-        fetch(`${API_BASE}/api/my-autographs?user_id=${user.id}&role=fan`),
+        authedFetch(`${API_BASE}/api/my-bookings?user_id=${user.id}&role=fan`),
+        authedFetch(`${API_BASE}/api/my-autographs?user_id=${user.id}&role=fan`),
       ];
       if (isCelebrity) {
         fetches.push(
-          fetch(`${API_BASE}/api/my-bookings?user_id=${user.id}&role=celebrity`),
-          fetch(`${API_BASE}/api/my-autographs?user_id=${user.id}&role=celebrity`),
+          authedFetch(`${API_BASE}/api/my-bookings?user_id=${user.id}&role=celebrity`),
+          authedFetch(`${API_BASE}/api/my-autographs?user_id=${user.id}&role=celebrity`),
         );
       }
       const responses = await Promise.all(fetches);

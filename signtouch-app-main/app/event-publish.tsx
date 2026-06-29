@@ -355,7 +355,7 @@ export default function EventPublishScreen() {
         setPublishedAssets(assets);
       });
       if (priceCents > 0 && STRIPE_SERVER_URL) {
-        fetch(`${STRIPE_SERVER_URL}/api/event-session-earnings?event_session_id=${sessionId}`)
+        authedFetch(`${STRIPE_SERVER_URL}/api/event-session-earnings?event_session_id=${sessionId}`)
           .then(r => r.json())
           .then(data => {
             if (data.net_cents !== undefined) setRealNetCents(data.net_cents);
@@ -373,7 +373,7 @@ export default function EventPublishScreen() {
       setViewerCount(count);
       if (priceCents > 0 && STRIPE_SERVER_URL) {
         try {
-          const r = await fetch(`${STRIPE_SERVER_URL}/api/event-session-earnings?event_session_id=${sessionId}`);
+          const r = await authedFetch(`${STRIPE_SERVER_URL}/api/event-session-earnings?event_session_id=${sessionId}`);
           const data = await r.json();
           if (data.net_cents !== undefined) setRealNetCents(data.net_cents);
           if (data.paid_fan_count !== undefined) setPaidFanCount(data.paid_fan_count);

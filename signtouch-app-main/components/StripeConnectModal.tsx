@@ -16,6 +16,7 @@ import { X, Shield, CreditCard, Clock, CheckCircle, ExternalLink, ArrowRight, Ho
 import { useTranslation } from '@/contexts/LanguageContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStripeAccountId, saveStripeAccountId } from '@/utils/userProfile';
+import { authedFetch } from '@/utils/authedFetch';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -87,7 +88,7 @@ export default function StripeConnectModal({
       if (savedAccountId) {
         setStep('checking');
         setAccountId(savedAccountId);
-        const response = await fetch(
+        const response = await authedFetch(
           `${STRIPE_SERVER_URL}/api/connect-account-status?account_id=${savedAccountId}`
         );
         const data = await response.json();
@@ -190,7 +191,7 @@ export default function StripeConnectModal({
         return;
       }
 
-      const response = await fetch(
+      const response = await authedFetch(
         `${STRIPE_SERVER_URL}/api/stripe/express/account-link?account_id=${savedAccountId}`
       );
 
@@ -222,7 +223,7 @@ export default function StripeConnectModal({
     setError(null);
 
     try {
-      const response = await fetch(
+      const response = await authedFetch(
         `${STRIPE_SERVER_URL}/api/stripe/express/account-link?account_id=${trimmed}`
       );
 
@@ -254,7 +255,7 @@ export default function StripeConnectModal({
     setError(null);
 
     try {
-      const response = await fetch(
+      const response = await authedFetch(
         `${STRIPE_SERVER_URL}/api/connect-account-status?account_id=${accountId}`
       );
       const data = await response.json();
@@ -290,7 +291,7 @@ export default function StripeConnectModal({
     setError(null);
 
     try {
-      const response = await fetch(
+      const response = await authedFetch(
         `${STRIPE_SERVER_URL}/api/stripe/express/account-link?account_id=${accountId}`
       );
       const data = await response.json();

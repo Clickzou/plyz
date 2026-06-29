@@ -186,7 +186,7 @@ export default function VideoCallScreen() {
     if (params.sessionId && STRIPE_SERVER_URL) {
       for (let attempt = 0; attempt < 5; attempt++) {
         try {
-          const response = await fetch(`${STRIPE_SERVER_URL}/api/session-earnings?session_id=${params.sessionId}`);
+          const response = await authedFetch(`${STRIPE_SERVER_URL}/api/session-earnings?session_id=${params.sessionId}`);
           const data = await response.json();
           const srvFans = typeof data.captured_count === 'number' ? data.captured_count : 0;
           const srvCents = typeof data.total_captured_cents === 'number' ? data.total_captured_cents : 0;

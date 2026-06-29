@@ -13,6 +13,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { authedFetch } from '@/utils/authedFetch';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
@@ -86,7 +87,7 @@ export default function OrgVerificationScreen() {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE}/api/org-verification-request`, {
+      const res = await authedFetch(`${API_BASE}/api/org-verification-request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
