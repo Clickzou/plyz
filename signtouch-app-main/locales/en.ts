@@ -219,6 +219,7 @@ export default {
   galleryInstruction: 'Click on a photo to edit it (colors, texts, signature, effects), share it or save it to your device.',
   select: 'Select',
   cancel: 'Cancel',
+  openSettings: 'Open Settings',
   selected: 'selected',
   selectedPlural: 'selected',
   memory: 'memory',

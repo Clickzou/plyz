@@ -219,6 +219,7 @@ export default {
   galleryInstruction: 'Cliquez sur une photo pour l\'éditer (couleurs, signature, effets), la partager ou l\'enregistrer sur votre appareil.',
   select: 'Sélectionner',
   cancel: 'Annuler',
+  openSettings: 'Ouvrir les réglages',
   selected: 'sélectionné',
   selectedPlural: 'sélectionnés',
   memory: 'souvenir',

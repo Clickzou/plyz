@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Modal,
   ScrollView,
+  Linking,
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -253,7 +254,14 @@ export default function GalleryScreen() {
       } else {
         const { status } = await MediaLibrary.requestPermissionsAsync(true);
         if (status !== 'granted') {
-          showAlert(t('permissionRequired'), t('galleryPermissionMessage'));
+          showConfirm(
+            t('permissionRequired'),
+            t('galleryPermissionMessage'),
+            [
+              { text: t('cancel') || 'Annuler', style: 'cancel' },
+              { text: t('openSettings') || 'Ouvrir les réglages', onPress: () => Linking.openSettings() },
+            ]
+          );
           return;
         }
 
@@ -826,6 +834,15 @@ export default function GalleryScreen() {
                     if (status === 'granted') {
                       await MediaLibrary.saveToLibraryAsync(selectedCollectorItem.imageUri || selectedCollectorItem.uri);
                       showAlert(t('success'), t('dedicationSaved'));
+                    } else {
+                      showConfirm(
+                        t('permissionRequired'),
+                        t('galleryPermissionMessage'),
+                        [
+                          { text: t('cancel') || 'Annuler', style: 'cancel' },
+                          { text: t('openSettings') || 'Ouvrir les réglages', onPress: () => Linking.openSettings() },
+                        ]
+                      );
                     }
                   } catch (err) {
                     console.error('Save collector error:', err);

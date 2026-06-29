@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Platform, Alert, Linking } from 'react-native';
 import { X, Share2, Download } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
@@ -6,6 +6,7 @@ import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { showAlert, showConfirm } from '@/utils/alertHelper';
 
 interface SocialShareModalProps {
   visible: boolean;
@@ -50,7 +51,7 @@ export default function SocialShareModal({ visible, onClose, imageUri, onSave, s
           });
           onClose();
         } else {
-          Alert.alert(t('error'), t('socialShareError'));
+          showAlert(t('error'), t('socialShareError'));
         }
       } else {
         const link = document.createElement('a');
@@ -66,7 +67,7 @@ export default function SocialShareModal({ visible, onClose, imageUri, onSave, s
       if (Platform.OS === 'web') {
         alert(t('socialShareError'));
       } else {
-        Alert.alert(t('error'), t('socialShareError'));
+        showAlert(t('error'), t('socialShareError'));
       }
     }
   };
@@ -88,7 +89,16 @@ export default function SocialShareModal({ visible, onClose, imageUri, onSave, s
         if (status === 'granted') {
           const localUri = await ensureLocalUri(imageUri);
           await MediaLibrary.saveToLibraryAsync(localUri);
-          Alert.alert(t('done'), t('storySaved'));
+          showAlert(t('downloaded'), t('imageSavedToGallery'));
+        } else {
+          showConfirm(
+            t('permissionRequired'),
+            t('galleryPermissionMessage'),
+            [
+              { text: t('cancel') || 'Annuler', style: 'cancel' },
+              { text: t('openSettings') || 'Ouvrir les réglages', onPress: () => Linking.openSettings() },
+            ]
+          );
         }
       } else {
         const link = document.createElement('a');

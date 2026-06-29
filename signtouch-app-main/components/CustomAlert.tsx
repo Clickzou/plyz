@@ -270,6 +270,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#ffffff',
+    textAlign: 'center',
   },
   buttonTextDestructive: {
     color: '#ef4444',

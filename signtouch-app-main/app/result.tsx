@@ -11,6 +11,7 @@ import {
   Dimensions,
   TextInput,
   Modal,
+  Linking,
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
@@ -2629,7 +2630,14 @@ export default function ResultScreen() {
       } else {
         const { status } = await MediaLibrary.requestPermissionsAsync(true);
         if (status !== 'granted') {
-          showAlert(t('permissionRequired'), t('galleryAccessRequired'));
+          showConfirm(
+            t('permissionRequired'),
+            t('galleryAccessRequired'),
+            [
+              { text: t('cancel') || 'Annuler', style: 'cancel' },
+              { text: t('openSettings') || 'Ouvrir les réglages', onPress: () => Linking.openSettings() },
+            ]
+          );
           setIsSaving(false);
           return;
         }
@@ -2716,7 +2724,24 @@ export default function ResultScreen() {
   const openShareModal = async () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setShareUri(null);
+      // Mobile : on capture la composition COMPLÈTE (photo + overlays signature/texte
+      // fusionnés) AVANT d'ouvrir le menu, pour que Partager ET Enregistrer portent
+      // sur l'image finale et non sur la seule photo de base. captureRef n'enregistre
+      // PAS en pellicule et ne demande aucune permission.
+      try {
+        if (viewShotRef.current) {
+          const capturedUri = await captureRef(viewShotRef.current, {
+            format: 'png',
+            quality: 1.0,
+          });
+          setShareUri(capturedUri);
+        } else {
+          setShareUri(null);
+        }
+      } catch (e) {
+        console.error('openShareModal capture failed:', e);
+        setShareUri(null);
+      }
       setShowShareModal(true);
       return;
     }
@@ -3209,8 +3234,7 @@ export default function ResultScreen() {
           visible={showShareModal}
           onClose={() => setShowShareModal(false)}
           imageUri={shareUri || displayUri}
-          onSave={downloadToDevice}
-          showSave={false}
+          showSave={true}
         />
 
         <AdModal
