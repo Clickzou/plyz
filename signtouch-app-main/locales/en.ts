@@ -286,6 +286,7 @@ export default {
   edit: 'Edit',
   saving: 'Saving...',
   saved: 'Saved',
+  infoSaved: 'The information has been saved.',
   downloaded: 'Downloaded',
   downloadedMessage: 'The image has been saved to your gallery.',
   savedToGallery: 'Photo saved to your Plyz gallery!',

@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Memory, SignatureOverlay, TextOverlay, PhotoAdjustments } from './memoriesStorage';
+import { Memory, SignatureOverlay, TextOverlay, PhotoAdjustments, MemoryMetadata } from './memoriesStorage';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 
@@ -16,6 +16,7 @@ interface CloudMemory {
   adjustments: PhotoAdjustments | null;
   is_edited: boolean;
   created_at: string;
+  metadata: MemoryMetadata | null;
 }
 
 export const uploadImage = async (imageUri: string, userId: string): Promise<string> => {
@@ -147,6 +148,7 @@ export const getAllMemoriesFromCloud = async (userId: string): Promise<Memory[]>
         filter: cloudMemory.filter || undefined,
         adjustments: cloudMemory.adjustments || undefined,
         isEdited: cloudMemory.is_edited,
+        metadata: cloudMemory.metadata || undefined,
       };
     });
   } catch (error) {
@@ -165,6 +167,7 @@ export const updateMemoryInCloud = async (
     filter?: string;
     adjustments?: PhotoAdjustments;
     isEdited?: boolean;
+    metadata?: MemoryMetadata;
   }
 ): Promise<void> => {
   try {
@@ -194,6 +197,10 @@ export const updateMemoryInCloud = async (
 
     if (updates.isEdited !== undefined) {
       updateData.is_edited = updates.isEdited;
+    }
+
+    if (updates.metadata !== undefined) {
+      updateData.metadata = updates.metadata;
     }
 
     const { error } = await supabase

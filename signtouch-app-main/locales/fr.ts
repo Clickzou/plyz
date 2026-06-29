@@ -286,6 +286,7 @@ export default {
   edit: 'Éditer',
   saving: 'Enregistrement...',
   saved: 'Enregistré',
+  infoSaved: 'Les informations ont été enregistrées.',
   downloaded: 'Téléchargé',
   downloadedMessage: 'L\'image a été enregistrée dans votre galerie.',
   savedToGallery: 'Photo enregistrée dans votre galerie Plyz !',

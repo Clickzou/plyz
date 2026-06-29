@@ -1616,6 +1616,7 @@ export default function ResultScreen() {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
+      showAlert(t('saved') || 'Enregistré', t('infoSaved') || 'Les informations ont été enregistrées.');
     } catch (error) {
       console.error('Error saving metadata:', error);
     }
@@ -3203,7 +3204,7 @@ export default function ResultScreen() {
                 </TouchableOpacity>
               )}
 
-              {memoryId && !isReEdit && (
+              {memoryId && (
                 <TouchableOpacity
                   style={styles.notebookButton}
                   onPress={() => setShowMetadataModal(true)}
