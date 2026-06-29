@@ -4994,6 +4994,134 @@ app.post('/api/daily/get-room', async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// Notation d'un utilisateur après une session (anti-triche).
+//
+// 🔒 SÉCURITÉ : autrefois le CLIENT calculait la moyenne et écrivait directement
+// average_rating / total_ratings / is_banned / ban_reason dans user_profiles.
+// Un utilisateur pouvait donc se débannir, bannir un concurrent ou truquer sa
+// note. On déplace ici, côté serveur (service role), TOUTE écriture de ces
+// colonnes. Le client ne fait plus qu'appeler cet endpoint.
+//
+// Body attendu :
+//   - session_id (string, requis)
+//   - rated_id   (string, requis)  : device_id de l'utilisateur noté
+//   - rating     (number, requis)  : 1..5
+//   - rater_id   (string, requis)  : device_id de l'auteur de la note
+//   - queue_entry_id (string, optionnel)
+//   - rater_type / rated_type ('fan' | 'celebrity', optionnels)
+//   - comment    (string, optionnel)
+//
+// Règle de ban (IDENTIQUE au client historique) : moyenne < 3 ET total >= 3.
+// Réponse : { ok: true, average, total, banned }
+// ---------------------------------------------------------------------------
+app.post('/api/submit-rating', async (req, res) => {
+  try {
+    // Auth obligatoire : seul un utilisateur connecté peut noter.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+
+    const admin = getSupabaseAdmin();
+    const {
+      session_id,
+      rated_id,
+      rating,
+      rater_id,
+      queue_entry_id,
+      rater_type,
+      rated_type,
+      comment,
+    } = req.body || {};
+
+    if (!session_id || !rated_id || !rater_id) {
+      return res.status(400).json({ error: 'Missing session_id, rated_id or rater_id' });
+    }
+
+    const numericRating = Number(rating);
+    if (!Number.isFinite(numericRating) || numericRating < 1 || numericRating > 5) {
+      return res.status(400).json({ error: 'rating must be a number between 1 and 5' });
+    }
+
+    // Anti-doublon : une seule note par (session_id, rater_id, rated_id).
+    const { data: existingRating } = await admin
+      .from('session_ratings')
+      .select('id')
+      .eq('session_id', session_id)
+      .eq('rater_id', rater_id)
+      .eq('rated_id', rated_id)
+      .maybeSingle();
+
+    if (!existingRating) {
+      const { error: insertErr } = await admin
+        .from('session_ratings')
+        .insert({
+          session_id,
+          queue_entry_id: queue_entry_id || null,
+          rater_id,
+          rater_type: rater_type || null,
+          rated_id,
+          rated_type: rated_type || null,
+          rating: numericRating,
+          comment: comment || null,
+        });
+
+      if (insertErr) {
+        console.error('[SubmitRating] Insert error:', insertErr.message);
+        return res.status(500).json({ error: insertErr.message });
+      }
+    } else {
+      console.log('[SubmitRating] Rating already exists, skipping insert');
+    }
+
+    // Recalcul SERVEUR de la moyenne du noté (toutes ses notes).
+    const { data: ratings, error: aggErr } = await admin
+      .from('session_ratings')
+      .select('rating')
+      .eq('rated_id', rated_id);
+
+    if (aggErr) {
+      console.error('[SubmitRating] Aggregate error:', aggErr.message);
+      return res.status(500).json({ error: aggErr.message });
+    }
+
+    const totalRatings = ratings ? ratings.length : 0;
+    if (totalRatings === 0) {
+      return res.json({ ok: true, average: 0, total: 0, banned: false });
+    }
+
+    const sumRatings = ratings.reduce((sum, r) => sum + Number(r.rating || 0), 0);
+    const averageRating = sumRatings / totalRatings;
+    const roundedAverage = Math.round(averageRating * 100) / 100;
+
+    // MÊME seuil que le client historique : avg < 3 ET total >= 3.
+    const shouldBan = averageRating < 3 && totalRatings >= 3;
+
+    const { error: updateErr } = await admin
+      .from('user_profiles')
+      .update({
+        average_rating: roundedAverage,
+        total_ratings: totalRatings,
+        is_banned: shouldBan,
+        ban_reason: shouldBan ? 'Note moyenne inférieure à 3 étoiles' : null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('device_id', rated_id);
+
+    if (updateErr) {
+      console.error('[SubmitRating] Profile update error:', updateErr.message);
+      return res.status(500).json({ error: updateErr.message });
+    }
+
+    console.log(
+      `[SubmitRating] rated=${rated_id} avg=${roundedAverage} total=${totalRatings} banned=${shouldBan}`
+    );
+    return res.json({ ok: true, average: roundedAverage, total: totalRatings, banned: shouldBan });
+  } catch (error) {
+    console.error('[SubmitRating] Error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 const EXPO_PORT = 19006;
 const PORT = 5000;
 

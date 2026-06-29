@@ -1,5 +1,8 @@
 import { supabase } from './supabase';
+import { authedFetch } from './authedFetch';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 const DEVICE_ID_KEY = '@plyz_device_id';
 
@@ -99,22 +102,18 @@ export const submitRating = async (
   comment?: string
 ): Promise<boolean> => {
   try {
-    const { data: existingRating } = await supabase
-      .from('session_ratings')
-      .select('id')
-      .eq('session_id', sessionId)
-      .eq('rater_id', raterId)
-      .eq('rated_id', ratedId)
-      .single();
-
-    if (existingRating) {
-      console.log('Rating already exists for this session');
-      return true;
+    // 🔒 SÉCURITÉ : l'insertion de la note ET le recalcul moyenne / ban se font
+    // désormais 100% côté SERVEUR (service role). Le client n'écrit JAMAIS
+    // average_rating / total_ratings / is_banned / ban_reason : sinon un
+    // utilisateur pourrait se débannir, bannir un concurrent ou truquer sa note.
+    if (!SERVER_URL) {
+      console.error('[Rating] Server URL not configured (EXPO_PUBLIC_STRIPE_SERVER_URL)');
+      return false;
     }
 
-    const { error } = await supabase
-      .from('session_ratings')
-      .insert({
+    const response = await authedFetch(`${SERVER_URL}/api/submit-rating`, {
+      method: 'POST',
+      body: JSON.stringify({
         session_id: sessionId,
         queue_entry_id: queueEntryId,
         rater_id: raterId,
@@ -123,49 +122,19 @@ export const submitRating = async (
         rated_type: ratedType,
         rating,
         comment: comment || null,
-      });
+      }),
+    });
 
-    if (error) {
-      console.error('Error submitting rating:', error);
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      console.error('Error submitting rating:', response.status, text);
       return false;
     }
-
-    await updateUserAverageRating(ratedId);
 
     return true;
   } catch (error) {
     console.error('Error in submitRating:', error);
     return false;
-  }
-};
-
-export const updateUserAverageRating = async (userId: string): Promise<void> => {
-  try {
-    const { data: ratings } = await supabase
-      .from('session_ratings')
-      .select('rating')
-      .eq('rated_id', userId);
-
-    if (!ratings || ratings.length === 0) return;
-
-    const totalRatings = ratings.length;
-    const sumRatings = ratings.reduce((sum, r) => sum + r.rating, 0);
-    const averageRating = sumRatings / totalRatings;
-
-    const shouldBan = averageRating < 3 && totalRatings >= 3;
-
-    await supabase
-      .from('user_profiles')
-      .update({
-        average_rating: Math.round(averageRating * 100) / 100,
-        total_ratings: totalRatings,
-        is_banned: shouldBan,
-        ban_reason: shouldBan ? 'Note moyenne inférieure à 3 étoiles' : null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('device_id', userId);
-  } catch (error) {
-    console.error('Error updating average rating:', error);
   }
 };
 

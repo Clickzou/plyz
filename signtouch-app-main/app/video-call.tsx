@@ -15,7 +15,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import RatingModal from '@/components/RatingModal';
 import { submitRating, getOrCreateDeviceId } from '@/utils/ratingsStorage';
 import { sendDedicationNotification, callNextFan, getFullQueue, completeFan } from '@/utils/sessionQueueStorage';
-import { markPaymentCaptured, subscribeToSession } from '@/utils/liveSessionStorage';
+import { subscribeToSession } from '@/utils/liveSessionStorage';
 import { recordTransaction } from '@/utils/transactionStorage';
 import { blockFan as blockFanInDb } from '@/utils/blockedFansStorage';
 import { supabase } from '@/utils/supabase';
@@ -994,11 +994,9 @@ export default function VideoCallScreen() {
           await capturePaymentAfterCall();
         }
 
-        if (params.queueEntryId) {
-          markPaymentCaptured(params.queueEntryId, true).catch((err) =>
-            console.error('[VideoCall] Error marking payment_captured:', err)
-          );
-        }
+        // payment_captured est désormais posé UNIQUEMENT par le serveur (capture-payment /
+        // end-fan-call) après la vraie capture Stripe. On ne l'écrit plus côté client
+        // (sécurité : empêche un fan de se marquer "payé" sans payer ; col. protégée en base).
 
         const fanDeviceId = await getOrCreateDeviceId();
         const storePlatform = Platform.OS === 'ios' ? 'apple' : 'google';
