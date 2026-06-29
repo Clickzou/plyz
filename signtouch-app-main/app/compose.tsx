@@ -1445,7 +1445,9 @@ export default function ComposeScreen() {
         console.log('🚀 Navigation vers la galerie');
         setIsSaving(false);
         setIsSaved(false);
-        router.push('/gallery');
+        // replace (et non push) : une fois la dédicace libre enregistrée,
+        // on arrive dans Ma Galerie sans pouvoir revenir en arrière sur l'éditeur.
+        router.replace('/gallery');
       }, 800);
     } catch (error) {
       console.error('❌ Erreur lors de la validation:', error);

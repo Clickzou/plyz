@@ -3,6 +3,7 @@ import { X, Share2, Download } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -19,6 +20,15 @@ export default function SocialShareModal({ visible, onClose, imageUri, onSave, s
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
 
+  // Le partage/sauvegarde natif n'accepte que des fichiers locaux (file://).
+  // Les photos du cloud sont des URLs https -> on les telecharge d'abord en local.
+  const ensureLocalUri = async (uri: string): Promise<string> => {
+    if (!uri || !/^https?:\/\//i.test(uri)) return uri;
+    const localUri = FileSystem.documentDirectory + `plyz-share-${Date.now()}.png`;
+    const res = await FileSystem.downloadAsync(uri, localUri);
+    return res.uri;
+  };
+
   const handleShare = async () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -33,7 +43,8 @@ export default function SocialShareModal({ visible, onClose, imageUri, onSave, s
       if (Platform.OS !== 'web') {
         const isAvailable = await Sharing.isAvailableAsync();
         if (isAvailable) {
-          await Sharing.shareAsync(imageUri, {
+          const localUri = await ensureLocalUri(imageUri);
+          await Sharing.shareAsync(localUri, {
             mimeType: 'image/png',
             dialogTitle: t('shareYourCreation'),
           });
@@ -75,7 +86,8 @@ export default function SocialShareModal({ visible, onClose, imageUri, onSave, s
       if (Platform.OS !== 'web') {
         const { status } = await MediaLibrary.requestPermissionsAsync();
         if (status === 'granted') {
-          await MediaLibrary.saveToLibraryAsync(imageUri);
+          const localUri = await ensureLocalUri(imageUri);
+          await MediaLibrary.saveToLibraryAsync(localUri);
           Alert.alert(t('done'), t('storySaved'));
         }
       } else {
