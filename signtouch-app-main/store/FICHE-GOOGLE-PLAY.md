@@ -14,15 +14,15 @@ Textes prêts à coller dans Google Play Console → « Présence sur le Store �
 
 ## Description courte (80 caractères max)
 
-**Stars, créateurs et clubs sportifs : dédicaces, autographes et vidéo en direct.**
+**Dédicaces, autographes et coulisses en vidéo live avec tes stars préférées.**
 
-> (79 caractères)
+> (75 caractères)
 
 ---
 
 ## Description complète (4000 caractères max)
 
-Plyz rapproche les fans de leurs célébrités, créateurs et clubs sportifs préférés. Demande une dédicace personnalisée, un autographe signé, un appel vidéo privé ou vis le sport de l'intérieur — le tout dans une application simple, sécurisée et conviviale.
+Plyz rapproche les fans de leurs artistes, chanteurs, sportifs, créateurs et clubs préférés. Demande une dédicace personnalisée, un autographe signé, un appel vidéo privé ou plonge dans les coulisses — le tout dans une application simple, sécurisée et conviviale.
 
 ★ POUR LES FANS
 
@@ -34,12 +34,12 @@ Plyz rapproche les fans de leurs célébrités, créateurs et clubs sportifs pr�
 • Retrouve toutes tes dédicaces et tes plus beaux souvenirs dans ta galerie
 • Paiement 100 % sécurisé
 
-★ VIS LE SPORT DE L'INTÉRIEUR
+★ PLONGE DANS LES COULISSES
 
-• Suis ton club et ton équipe en appel vidéo en direct
-• Accède aux coulisses : vestiaire, échauffements, entraînements
-• Vis l'avant-match et l'ambiance du terrain comme si tu y étais
-• Connecte-toi à tes joueurs préférés et soutiens-les au plus près
+• Vis des moments exclusifs en vidéo live, réservés aux vrais fans
+• Concerts : répétitions, loges, backstage, montée sur scène
+• Sport : vestiaire, échauffements, entraînements, avant-match
+• Suis tes artistes, tes clubs et tes équipes comme si tu y étais
 
 ★ POUR LES CÉLÉBRITÉS, CRÉATEURS & CLUBS
 
