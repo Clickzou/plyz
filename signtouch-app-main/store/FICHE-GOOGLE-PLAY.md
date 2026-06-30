@@ -14,15 +14,15 @@ Textes prêts à coller dans Google Play Console → « Présence sur le Store �
 
 ## Description courte (80 caractères max)
 
-**Tes célébrités préférées : dédicaces, autographes et appels vidéo en direct.**
+**Stars, créateurs et clubs sportifs : dédicaces, autographes et vidéo en direct.**
 
-> (78 caractères)
+> (79 caractères)
 
 ---
 
 ## Description complète (4000 caractères max)
 
-Plyz rapproche les fans et leurs célébrités préférées. Demande une dédicace personnalisée, un autographe signé ou un appel vidéo privé avec les stars que tu admires — le tout dans une application simple, sécurisée et conviviale.
+Plyz rapproche les fans de leurs célébrités, créateurs et clubs sportifs préférés. Demande une dédicace personnalisée, un autographe signé, un appel vidéo privé ou vis le sport de l'intérieur — le tout dans une application simple, sécurisée et conviviale.
 
 ★ POUR LES FANS
 
@@ -34,7 +34,14 @@ Plyz rapproche les fans et leurs célébrités préférées. Demande une dédica
 • Retrouve toutes tes dédicaces et tes plus beaux souvenirs dans ta galerie
 • Paiement 100 % sécurisé
 
-★ POUR LES CÉLÉBRITÉS & CRÉATEURS
+★ VIS LE SPORT DE L'INTÉRIEUR
+
+• Suis ton club et ton équipe en appel vidéo en direct
+• Accède aux coulisses : vestiaire, échauffements, entraînements
+• Vis l'avant-match et l'ambiance du terrain comme si tu y étais
+• Connecte-toi à tes joueurs préférés et soutiens-les au plus près
+
+★ POUR LES CÉLÉBRITÉS, CRÉATEURS & CLUBS
 
 • Active le Mode Célébrité en quelques secondes
 • Propose des dédicaces, des autographes et des appels vidéo à tes fans
@@ -50,7 +57,7 @@ Plyz rapproche les fans et leurs célébrités préférées. Demande une dédica
 • Appels vidéo chiffrés
 • Tes données sont protégées et ne sont jamais revendues
 
-Que tu sois fan d'un artiste, d'un sportif, d'un créateur ou d'une personnalité, Plyz te permet de vivre un moment unique et authentique avec celles et ceux qui comptent pour toi.
+Que tu sois fan d'un artiste, d'un sportif, d'un club, d'un créateur ou d'une personnalité, Plyz te permet de vivre un moment unique et authentique avec celles et ceux qui comptent pour toi.
 
 Télécharge Plyz et crée ton premier souvenir dès aujourd'hui !
 
