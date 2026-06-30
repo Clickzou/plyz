@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFollow } from '@/contexts/FollowContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { CelebrityDetailSkeleton } from '@/components/SkeletonLoader';
+import { useAutoTranslate } from '@/utils/translation';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
@@ -76,6 +77,12 @@ export default function CelebrityDetailScreen() {
   const [activeTab, setActiveTab] = useState<'about' | 'posts'>('about');
   const [events, setEvents] = useState<LiveEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
+
+  // Traduction automatique de la bio + des posts dans la langue de l'utilisateur
+  const tr = useAutoTranslate([
+    celebrity?.bio,
+    ...(celebrity?.posts || []).flatMap(p => [p.title, p.body]),
+  ]);
 
   useEffect(() => {
     if (id) fetchCelebrity();
@@ -468,7 +475,7 @@ export default function CelebrityDetailScreen() {
 
         {activeTab === 'about' && (
           <View style={styles.section}>
-            {celebrity.bio && <Text style={styles.bioText}>{celebrity.bio}</Text>}
+            {celebrity.bio && <Text style={styles.bioText}>{tr(celebrity.bio)}</Text>}
             {celebrity.website && (
               <TouchableOpacity style={styles.linkRow} onPress={() => Linking.openURL(celebrity.website!)}>
                 <Globe size={16} color="#10b981" />
@@ -583,8 +590,8 @@ export default function CelebrityDetailScreen() {
                       <Text style={styles.postEventBadgeText}>{t('eventLabel' as any) || 'Événement'}</Text>
                     </View>
                   )}
-                  {post.title && <Text style={styles.postTitle}>{post.title}</Text>}
-                  {post.body && <Text style={styles.postBody}>{post.body}</Text>}
+                  {post.title && <Text style={styles.postTitle}>{tr(post.title)}</Text>}
+                  {post.body && <Text style={styles.postBody}>{tr(post.body)}</Text>}
                   {post.media_url && (
                     <Image source={{ uri: post.media_url }} style={styles.postImage} />
                   )}

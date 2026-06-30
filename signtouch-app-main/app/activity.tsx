@@ -18,6 +18,7 @@ import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import PlyzHeader from '@/components/PlyzHeader';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { FeedSkeleton } from '@/components/SkeletonLoader';
+import { useAutoTranslate } from '@/utils/translation';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 const LIKES_KEY = '@plyz_post_likes';
@@ -164,6 +165,9 @@ export default function ActivityScreen() {
   const [allComments, setAllComments] = useState<Record<string, Comment[]>>({});
   const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
+
+  // Traduction automatique des posts (titre + texte) dans la langue de l'utilisateur
+  const tr = useAutoTranslate(posts.flatMap(p => [p.title, p.body]));
   const slideAnim = useRef(new RNAnimated.Value(Dimensions.get('window').height)).current;
 
   useEffect(() => {
@@ -411,8 +415,8 @@ export default function ActivityScreen() {
           </View>
         </TouchableOpacity>
 
-        {item.title && <Text style={styles.postTitle}>{item.title}</Text>}
-        {item.body && <Text style={styles.postBody}>{item.body}</Text>}
+        {item.title && <Text style={styles.postTitle}>{tr(item.title)}</Text>}
+        {item.body && <Text style={styles.postBody}>{tr(item.body)}</Text>}
         {item.media_url && (
           <Image source={{ uri: item.media_url }} style={styles.postImage} />
         )}

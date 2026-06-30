@@ -5122,6 +5122,105 @@ app.post('/api/submit-rating', async (req, res) => {
   }
 });
 
+// ============================================================
+// Traduction automatique du contenu UGC (posts, bios) via Claude.
+// Cache en base (table translations) → chaque texte n'est traduit
+// qu'UNE fois par langue. Le coût ne dépend donc pas du nombre de lecteurs.
+// ============================================================
+const TRANSLATE_LANG_NAMES = {
+  en: 'English', fr: 'French', es: 'Spanish', de: 'German', pt: 'Portuguese',
+  it: 'Italian', hi: 'Hindi', ur: 'Urdu', ar: 'Arabic', zh: 'Chinese',
+  bn: 'Bengali', ru: 'Russian', id: 'Indonesian', ja: 'Japanese', ms: 'Malay',
+};
+const MAX_TRANSLATE_ITEMS = 50;
+const MAX_TRANSLATE_CHARS = 2000;
+
+function translateHash(targetLang, text) {
+  return require('crypto').createHash('sha256').update(targetLang + '' + text).digest('hex');
+}
+
+async function claudeTranslateBatch(texts, langName) {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) throw new Error('ANTHROPIC_API_KEY missing');
+  const system = `You are a professional translation engine for a social app where celebrities post short messages, captions and bios. Translate each input string into ${langName}.
+Rules:
+- Preserve the meaning, tone, style, emojis, #hashtags, @mentions and line breaks.
+- Keep proper nouns (people, places, brands) unchanged.
+- Do NOT add quotes, notes or explanations.
+- If a string is already written in ${langName}, return it unchanged.
+- Output ONLY a JSON array of strings, exactly the same length and order as the input.`;
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: Math.min(8000, texts.length * 220 + 500),
+      system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+      messages: [{ role: 'user', content: JSON.stringify(texts) }],
+    }),
+  });
+  const j = await resp.json();
+  if (!j.content || !j.content[0] || !j.content[0].text) {
+    throw new Error('Anthropic error: ' + JSON.stringify(j).slice(0, 300));
+  }
+  let txt = j.content[0].text.trim();
+  txt = txt.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  const arr = JSON.parse(txt);
+  if (!Array.isArray(arr) || arr.length !== texts.length) {
+    throw new Error('Unexpected translation array length');
+  }
+  return arr.map((s) => String(s));
+}
+
+app.post('/api/translate', async (req, res) => {
+  try {
+    const { texts, targetLang } = req.body || {};
+    const langName = TRANSLATE_LANG_NAMES[targetLang];
+    if (!Array.isArray(texts) || !langName) {
+      return res.status(400).json({ error: 'texts[] and a supported targetLang are required' });
+    }
+    // Normalisation + garde-fous anti-abus
+    const clean = texts.slice(0, MAX_TRANSLATE_ITEMS).map((t) =>
+      typeof t === 'string' ? t.slice(0, MAX_TRANSLATE_CHARS) : ''
+    );
+    const uniq = Array.from(new Set(clean.filter((s) => s.trim().length > 0)));
+    if (uniq.length === 0) return res.json({ translations: clean });
+
+    const db = getSupabaseAdmin();
+    const hashes = uniq.map((s) => translateHash(targetLang, s));
+
+    // 1) Lecture du cache
+    const { data: cached } = await db
+      .from('translations')
+      .select('text_hash, translated_text')
+      .eq('target_lang', targetLang)
+      .in('text_hash', hashes);
+    const byHash = new Map((cached || []).map((r) => [r.text_hash, r.translated_text]));
+
+    // 2) Traduction des manquants via Claude, puis mise en cache
+    const missing = uniq.filter((s, i) => !byHash.has(hashes[i]));
+    if (missing.length > 0) {
+      const translated = await claudeTranslateBatch(missing, langName);
+      const rows = missing.map((s, i) => ({
+        text_hash: translateHash(targetLang, s),
+        target_lang: targetLang,
+        translated_text: translated[i],
+      }));
+      await db.from('translations').upsert(rows, { onConflict: 'text_hash,target_lang' });
+      missing.forEach((s, i) => byHash.set(translateHash(targetLang, s), translated[i]));
+    }
+
+    // 3) Réponse dans l'ordre d'entrée (texte vide => inchangé)
+    const out = clean.map((s) =>
+      s.trim().length > 0 ? byHash.get(translateHash(targetLang, s)) ?? s : s
+    );
+    return res.json({ translations: out });
+  } catch (e) {
+    console.error('[translate] error:', e.message);
+    return res.status(500).json({ error: 'translation_failed' });
+  }
+});
+
 const EXPO_PORT = 19006;
 const PORT = 5000;
 

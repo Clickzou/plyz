@@ -14,6 +14,7 @@ import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import PlyzHeader from '@/components/PlyzHeader';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { DiscoverSkeleton } from '@/components/SkeletonLoader';
+import { useAutoTranslate } from '@/utils/translation';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
@@ -68,6 +69,9 @@ export default function DiscoverScreen() {
   const [totalPages, setTotalPages] = useState(1);
   const [, setTotal] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Traduction automatique des bios dans la langue de l'utilisateur
+  const translateBio = useAutoTranslate(celebrities.map(c => c.bio));
 
   const fetchCelebrities = useCallback(async (p = 1, reset = false) => {
     try {
@@ -205,7 +209,7 @@ export default function DiscoverScreen() {
         <View style={styles.cardBody}>
           <Text style={styles.cardName} numberOfLines={1}>{item.stage_name}</Text>
           {item.bio && (
-            <Text style={styles.cardBio} numberOfLines={2}>{item.bio}</Text>
+            <Text style={styles.cardBio} numberOfLines={2}>{translateBio(item.bio)}</Text>
           )}
           {minPrice > 0 && item.pricing && (
             <Text style={styles.cardPrice}>
