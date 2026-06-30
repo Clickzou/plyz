@@ -35,7 +35,9 @@
     "production": {
       "env": {
         "EXPO_PUBLIC_STRIPE_SERVER_URL": "https://plyz-app.replit.app",
-        "EXPO_PUBLIC_SENTRY_DSN": "https://3cdd796e29aead42beeb5649a80cbfcf@o4511643437236224.ingest.de.sentry.io/4511643449360464"
+        "EXPO_PUBLIC_SENTRY_DSN": "https://3cdd796e29aead42beeb5649a80cbfcf@o4511643437236224.ingest.de.sentry.io/4511643449360464",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://qoitixdpcqlzgyusbgdx.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_YvUP4k1_BgMLYcX3x9M0FA_s-AhCNXo"
       },
       "ios": {
         "resourceClass": "m-medium"
