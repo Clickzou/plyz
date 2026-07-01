@@ -911,6 +911,19 @@ export default function MySpaceScreen() {
       </TouchableOpacity>
 
       <TouchableOpacity
+        style={styles.celVerifyBtn}
+        onPress={() => router.push('/tax-info' as any)}
+        activeOpacity={0.8}
+      >
+        <Shield size={20} color="#38bdf8" />
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={styles.celVerifyTitle}>{t('taxInfoMenuItem' as any) || 'Informations fiscales'}</Text>
+          <Text style={styles.celVerifySub}>{t('taxInfoMenuSub' as any) || 'Requis pour recevoir tes revenus (DAC7)'}</Text>
+        </View>
+        <ChevronRight size={18} color="#38bdf8" />
+      </TouchableOpacity>
+
+      <TouchableOpacity
         style={styles.publishBtn}
         onPress={() => router.push('/create-post' as any)}
         activeOpacity={0.8}

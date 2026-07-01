@@ -5221,6 +5221,61 @@ app.post('/api/translate', async (req, res) => {
   }
 });
 
+// ============================================================
+// Infos fiscales des Personnalités (conformité DAC7).
+// La collecte du NIF/statut est requise pour la déclaration annuelle
+// des revenus des prestataires (directive UE 2021/514).
+// ============================================================
+app.get('/api/celebrity/tax-info', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+    const db = getSupabaseAdmin();
+    const { data, error } = await db
+      .from('celebrity_profiles')
+      .select('tax_status, tax_country, tax_id, business_number, vat_number, tax_info_completed')
+      .eq('user_id', authUser.id)
+      .maybeSingle();
+    if (error) throw error;
+    return res.json({ taxInfo: data || null });
+  } catch (e) {
+    console.error('[tax-info GET] error:', e.message);
+    return res.status(500).json({ error: 'tax_info_read_failed' });
+  }
+});
+
+app.post('/api/celebrity/tax-info', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+    const { tax_status, tax_country, tax_id, business_number, vat_number } = req.body || {};
+    if (!['individual', 'business'].includes(tax_status)) {
+      return res.status(400).json({ error: 'tax_status must be individual or business' });
+    }
+    if (!tax_country || !tax_id) {
+      return res.status(400).json({ error: 'tax_country and tax_id are required' });
+    }
+    const db = getSupabaseAdmin();
+    const { error } = await db
+      .from('celebrity_profiles')
+      .update({
+        tax_status,
+        tax_country: String(tax_country).trim().toUpperCase().slice(0, 2),
+        tax_id: String(tax_id).trim().slice(0, 60),
+        business_number: business_number ? String(business_number).trim().slice(0, 60) : null,
+        vat_number: vat_number ? String(vat_number).trim().slice(0, 40) : null,
+        tax_info_completed: true,
+        tax_info_updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', authUser.id);
+    if (error) throw error;
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('[tax-info POST] error:', e.message);
+    return res.status(500).json({ error: 'tax_info_save_failed' });
+  }
+});
+
 const EXPO_PORT = 19006;
 const PORT = 5000;
 
