@@ -1,7 +1,7 @@
 # Plyz — Google Play (Chinese)
 
 ## Description courte (max 80 caractères)
-预订明星的个性化献礼、签名和私密视频通话。
+预订名人签名、亲笔签名和私密视频通话
 
 ## Description complète
 Plyz 是一个连接粉丝和他们喜爱的艺人、歌手、运动员、创作者及俱乐部的平台，提供个性化服务。预订私密实时视频通话，预订个性化签名或亲笔签名，或参加直播活动 — 全部在一个简单、安全、友好的应用中完成。

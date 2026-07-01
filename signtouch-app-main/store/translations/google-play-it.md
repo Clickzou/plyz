@@ -1,7 +1,7 @@
 # Plyz — Google Play (Italian)
 
 ## Description courte (max 80 caractères)
-Prenota dediche, autografi e chiamate video private con le tue star.
+Prenota dediche, autografi e videochiamate con le tue star.
 
 ## Description complète
 Plyz è la piattaforma che mette in contatto i fan con i loro artisti, cantanti, sportivi, creator e club preferiti per prestazioni personalizzate. Prenota una chiamata video privata dal vivo, ordina una dedica o un autografo firmato, o partecipa a un evento live — tutto in un'app semplice, sicura e user-friendly.

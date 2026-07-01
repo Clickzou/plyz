@@ -1,7 +1,7 @@
 # Plyz — Google Play (Indonesian)
 
 ## Description courte (max 80 caractères)
-Pesan dedikasi, autograf, dan panggilan video privat dengan bintang favoritmu.
+Pesan dedikasi, autograf, dan video call pribadi dengan bintang favoritmu.
 
 ## Description complète
 Plyz adalah platform yang menghubungkan fans dengan artis, penyanyi, atlet, kreator, dan klub pilihan mereka untuk layanan yang dipersonalisasi. Pesan panggilan video privat langsung, minta dedikasi atau autograf bertanda tangan, atau ikuti acara live — semuanya dalam satu aplikasi yang sederhana, aman, dan ramah pengguna.

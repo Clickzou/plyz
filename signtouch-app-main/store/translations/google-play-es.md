@@ -1,7 +1,7 @@
 # Plyz — Google Play (Spanish)
 
 ## Description courte (max 80 caractères)
-Reserva dedicatorias, autógrafos y llamadas de vídeo privadas con tus estrellas.
+Reserva dedicaciones, autógrafos y videollamadas con tus estrellas.
 
 ## Description complète
 Plyz es la plataforma que conecta a los fans con sus artistas, cantantes, deportistas, creadores y clubes favoritos para servicios personalizados. Reserva una llamada de vídeo privada en directo, encarga una dedicatoria o un autógrafo firmado, o participa en un evento en directo — todo en una aplicación simple, segura y fácil de usar.

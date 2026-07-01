@@ -1,7 +1,7 @@
 # Plyz — Google Play (English)
 
 ## Description courte (max 80 caractères)
-Book personalized dedications, autographs and private video calls with your favorite stars.
+Book dedications, autographs and video calls with stars
 
 ## Description complète
 Plyz is the platform connecting fans and their favorite artists, singers, athletes, creators and clubs for personalized services. Book a private live video call face-to-face with a star, order a personalized autograph or signed dedication, or join a live event — all in one simple, secure and user-friendly app.

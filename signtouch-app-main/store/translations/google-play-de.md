@@ -1,7 +1,7 @@
 # Plyz — Google Play (German)
 
 ## Description courte (max 80 caractères)
-Buche Widmungen, Autogramme und private Videoanrufe mit deinen Stars.
+Buche Widmungen, Autogramme und Videoanrufe mit Stars.
 
 ## Description complète
 Plyz ist die Plattform, die Fans und ihre liebsten Künstler, Sänger, Sportler, Creator und Clubs für personalisierte Dienstleistungen verbindet. Buche einen privaten Live-Videoanruf, bestelle eine personalisierte Widmung oder ein signiertes Autogramm, oder nimm an einem Live-Event teil — alles in einer einfachen, sicheren und benutzerfreundlichen App.

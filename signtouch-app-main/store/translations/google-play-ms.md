@@ -1,7 +1,7 @@
 # Plyz — Google Play (Malay)
 
 ## Description courte (max 80 caractères)
-Tempah dedikasi, tandatangan dan panggilan video peribadi dengan bintang-bintang kamu.
+Pesan dedikasi, tanda tangan & panggilan video privat bintang
 
 ## Description complète
 Plyz ialah platform yang menghubungkan peminat dengan artis, penyanyi, atlet, pencipta dan kelab pilihan mereka untuk perkhidmatan yang dipersonalisasi. Tempah panggilan video peribadi secara langsung, pesan tandatangan atau dedikasi yang ditandatangani, atau sertai acara langsung — semuanya dalam satu aplikasi yang mudah, selamat dan mesra pengguna.
