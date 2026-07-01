@@ -209,7 +209,7 @@ export default {
   drawing: 'رسم',
   effects: 'تأثيرات',
   validate: 'تأكيد',
-  promoCodeSuccess: 'تم تفعيل الرمز! استمتع بـ 30 يوماً من Premium مجاناً.',
+  promoCodeSuccess: "تم تفعيل رمز الترويج!",
   promoCodeInvalid: 'رمز غير صالح أو منتهي الصلاحية.',
   promoCodeAlreadyUsed: 'تم استخدام هذا الرمز بالفعل على هذا الجهاز.',
   tapToEdit: 'انقر على الصورة للبدء',
@@ -262,7 +262,7 @@ export default {
 
   // Ad Modal
   watchAdTitle: 'شاهد إعلاناً',
-  watchAdMessage: 'شاهد إعلاناً قصيراً لفتح هذه الميزة مجاناً',
+  watchAdMessage: "شاهد إعلانًا قصيرًا لحفظ هذه الصورة مجانًا.",
   watchAd: 'شاهد الإعلان',
 
   // Premium Modal
@@ -272,7 +272,7 @@ export default {
   writeMessage: 'اكتب رسالتك...',
   prepareComposition: 'قم بإعداد تكوينك...',
   chooseFont: 'اختر الخط',
-  textLimitEditMessage: 'لقد أضفت نصاً بالفعل. احذف النص القديم لإنشاء واحد جديد أو قم بالترقية إلى Premium لإنشاء نصوص متعددة وفتح جميع الميزات.',
+  textLimitEditMessage: "لقد أضفت نصًا بالفعل. احذف النص القديم لإنشاء نص جديد.",
 
   // Subscription Screen
   unlockAllFeatures: 'افتح جميع الميزات بدون قيود',
@@ -1031,7 +1031,7 @@ export default {
   payoutProcessing: 'قيد المعالجة',
   payoutPaid: 'مدفوع',
   payoutFailed: 'فشل',
-  purchaseSession: 'Purchase Session',
+  purchaseSession: "احجز جلسة",
   purchaseFailed: 'Purchase failed',
   celebrityAccountNotReady: "حساب الدفع لهذا المشهور غير مفعل بعد. يرجى المحاولة لاحقاً.",
   sessionCreationFailed: 'Failed to create session',

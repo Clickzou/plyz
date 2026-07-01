@@ -209,7 +209,7 @@ export default {
   drawing: 'ڈرائنگ',
   effects: 'اثرات',
   validate: 'تصدیق کریں',
-  promoCodeSuccess: 'کوڈ فعال ہو گیا! 30 دن کے مفت پریمیم سے لطف اندوز ہوں۔',
+  promoCodeSuccess: "پروموشن کوڈ فعال ہو گیا!",
   promoCodeInvalid: 'غلط یا ختم شدہ کوڈ۔',
   promoCodeAlreadyUsed: 'یہ کوڈ اس ڈیوائس پر پہلے ہی استعمال ہو چکا ہے۔',
   tapToEdit: 'شروع کرنے کے لیے تصویر پر ٹیپ کریں',
@@ -262,7 +262,7 @@ export default {
 
   // Ad Modal
   watchAdTitle: 'اشتہار دیکھیں',
-  watchAdMessage: 'اس فیچر کو مفت میں کھولنے کے لیے ایک مختصر اشتہار دیکھیں',
+  watchAdMessage: "اس فوٹو کو مفت میں محفوظ کرنے کے لیے ایک مختصر اشتہار دیکھیں۔",
   watchAd: 'اشتہار دیکھیں',
 
   // Premium Modal
@@ -272,7 +272,7 @@ export default {
   writeMessage: 'اپنا پیغام لکھیں...',
   prepareComposition: 'اپنی ترکیب تیار کریں...',
   chooseFont: 'فونٹ منتخب کریں',
-  textLimitEditMessage: 'آپ پہلے ہی متن شامل کر چکے ہیں۔ نیا بنانے کے لیے پرانا متن حذف کریں یا متعدد متن بنانے اور تمام خصوصیات کو کھولنے کے لیے پریمیم میں اپ گریڈ کریں۔',
+  textLimitEditMessage: "آپ نے پہلے سے ایک متن شامل کر دیا ہے۔ نیا متن بنانے کے لیے پرانے متن کو حذف کریں۔",
 
   // Subscription Screen
   unlockAllFeatures: 'تمام خصوصیات کو بغیر کسی پابندی کے کھولیں',
@@ -1036,7 +1036,7 @@ export default {
   payoutProcessing: 'پراسیسنگ',
   payoutPaid: 'ادا شدہ',
   payoutFailed: 'ناکام',
-  purchaseSession: 'Purchase Session',
+  purchaseSession: "سیشن بک کریں",
   purchaseFailed: 'Purchase failed',
   celebrityAccountNotReady: "اس مشہور شخصیت کا ادائیگی اکاؤنٹ ابھی فعال نہیں ہے۔ بعد میں دوبارہ کوشش کریں۔",
   sessionCreationFailed: 'Failed to create session',

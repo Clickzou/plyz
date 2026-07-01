@@ -209,7 +209,7 @@ export default {
   drawing: 'Рисование',
   effects: 'Эффекты',
   validate: 'Подтвердить',
-  promoCodeSuccess: 'Код активирован! Наслаждайтесь 30 днями бесплатного Premium.',
+  promoCodeSuccess: "Промокод активирован!",
   promoCodeInvalid: 'Недействительный или просроченный код.',
   promoCodeAlreadyUsed: 'Этот код уже использован на этом устройстве.',
   tapToEdit: 'Нажмите на изображение для начала',
@@ -262,7 +262,7 @@ export default {
 
   // Ad Modal
   watchAdTitle: 'Посмотреть рекламу',
-  watchAdMessage: 'Посмотрите короткую рекламу, чтобы разблокировать эту функцию бесплатно',
+  watchAdMessage: "Посмотрите короткое объявление, чтобы бесплатно сохранить это фото.",
   watchAd: 'Посмотреть рекламу',
 
   // Premium Modal
@@ -272,7 +272,7 @@ export default {
   writeMessage: 'Напишите ваше сообщение...',
   prepareComposition: 'Подготовьте вашу композицию...',
   chooseFont: 'Выбрать шрифт',
-  textLimitEditMessage: 'Вы уже добавили текст. Удалите старый текст, чтобы создать новый, или обновитесь до премиум, чтобы создавать несколько текстов и разблокировать все функции.',
+  textLimitEditMessage: "Вы уже добавили текст. Удалите старый текст, чтобы создать новый.",
 
   // Subscription Screen
   unlockAllFeatures: 'Разблокируйте все функции без ограничений',
@@ -1031,7 +1031,7 @@ export default {
   payoutProcessing: 'Обработка',
   payoutPaid: 'Выплачено',
   payoutFailed: 'Ошибка',
-  purchaseSession: 'Purchase Session',
+  purchaseSession: "Забронировать сеанс",
   purchaseFailed: 'Purchase failed',
   celebrityAccountNotReady: "Платёжный аккаунт этой знаменитости ещё не активирован. Попробуйте позже.",
   sessionCreationFailed: 'Failed to create session',

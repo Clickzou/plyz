@@ -209,7 +209,7 @@ export default {
   drawing: 'Lukisan',
   effects: 'Kesan',
   validate: 'Sahkan',
-  promoCodeSuccess: 'Kod diaktifkan! Nikmati 30 hari Premium percuma.',
+  promoCodeSuccess: "Kod promosi diaktifkan!",
   promoCodeInvalid: 'Kod tidak sah atau tamat tempoh.',
   promoCodeAlreadyUsed: 'Kod ini telah digunakan pada peranti ini.',
   tapToEdit: 'Ketik pada imej untuk mula',
@@ -262,7 +262,7 @@ export default {
 
   // Ad Modal
   watchAdTitle: 'Tonton iklan',
-  watchAdMessage: 'Tonton iklan ringkas untuk membuka ciri ini secara percuma',
+  watchAdMessage: "Tonton iklan pendek untuk simpan foto ini secara percuma.",
   watchAd: 'Tonton iklan',
 
   // Premium Modal
@@ -272,7 +272,7 @@ export default {
   writeMessage: 'Tulis mesej anda...',
   prepareComposition: 'Sediakan gubahan anda...',
   chooseFont: 'Pilih fon',
-  textLimitEditMessage: 'Anda sudah menambah teks. Padam teks lama untuk membuat yang baru atau naik taraf ke Premium untuk membuat berbilang teks dan membuka semua ciri.',
+  textLimitEditMessage: "Anda sudah menambah teks. Buang teks lama untuk membuat yang baru.",
 
   // Subscription Screen
   unlockAllFeatures: 'Buka kunci semua ciri tanpa had',
@@ -1036,7 +1036,7 @@ export default {
   payoutProcessing: 'Sedang diproses',
   payoutPaid: 'Dibayar',
   payoutFailed: 'Gagal',
-  purchaseSession: 'Purchase Session',
+  purchaseSession: "Tempah Sesi",
   purchaseFailed: 'Purchase failed',
   celebrityAccountNotReady: "Akaun pembayaran selebriti ini belum diaktifkan. Sila cuba lagi kemudian.",
   sessionCreationFailed: 'Failed to create session',

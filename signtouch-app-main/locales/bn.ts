@@ -209,7 +209,7 @@ export default {
   drawing: 'অঙ্কন',
   effects: 'প্রভাব',
   validate: 'যাচাই করুন',
-  promoCodeSuccess: 'কোড সক্রিয়! ৩০ দিনের বিনামূল্যে প্রিমিয়াম উপভোগ করুন।',
+  promoCodeSuccess: "প্রমো কোড সক্রিয় হয়েছে!",
   promoCodeInvalid: 'অবৈধ বা মেয়াদ উত্তীর্ণ কোড।',
   promoCodeAlreadyUsed: 'এই কোডটি ইতিমধ্যে এই ডিভাইসে ব্যবহার করা হয়েছে।',
   tapToEdit: 'শুরু করতে ছবিতে ট্যাপ করুন',
@@ -262,7 +262,7 @@ export default {
 
   // Ad Modal
   watchAdTitle: 'বিজ্ঞাপন দেখুন',
-  watchAdMessage: 'এই বৈশিষ্ট্যটি বিনামূল্যে আনলক করতে একটি ছোট বিজ্ঞাপন দেখুন',
+  watchAdMessage: "এই ছবিটি বিনামূল্যে সংরক্ষণ করতে একটি সংক্ষিপ্ত বিজ্ঞাপন দেখুন।",
   watchAd: 'বিজ্ঞাপন দেখুন',
 
   // Premium Modal
@@ -272,7 +272,7 @@ export default {
   writeMessage: 'আপনার বার্তা লিখুন...',
   prepareComposition: 'আপনার রচনা প্রস্তুত করুন...',
   chooseFont: 'ফন্ট নির্বাচন করুন',
-  textLimitEditMessage: 'আপনি ইতিমধ্যে পাঠ্য যুক্ত করেছেন। নতুন তৈরি করতে পুরানো পাঠ্য মুছুন বা একাধিক পাঠ্য তৈরি করতে এবং সমস্ত বৈশিষ্ট্য আনলক করতে প্রিমিয়ামে আপগ্রেড করুন।',
+  textLimitEditMessage: "আপনি ইতিমধ্যে একটি পাঠ্য যোগ করেছেন। নতুন পাঠ্য তৈরি করতে পুরানো পাঠ্যটি মুছুন।",
 
   // Subscription Screen
   unlockAllFeatures: 'সীমাবদ্ধতা ছাড়াই সমস্ত বৈশিষ্ট্য আনলক করুন',
@@ -1036,7 +1036,7 @@ export default {
   payoutProcessing: 'প্রক্রিয়াকরণ',
   payoutPaid: 'প্রদান করা হয়েছে',
   payoutFailed: 'ব্যর্থ',
-  purchaseSession: 'Purchase Session',
+  purchaseSession: "সেশন বুক করুন",
   purchaseFailed: 'Purchase failed',
   celebrityAccountNotReady: "এই সেলিব্রিটির পেমেন্ট অ্যাকাউন্ট এখনও সক্রিয় হয়নি। পরে আবার চেষ্টা করুন।",
   sessionCreationFailed: 'Failed to create session',

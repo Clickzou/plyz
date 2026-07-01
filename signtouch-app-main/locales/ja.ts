@@ -209,7 +209,7 @@ export default {
   drawing: '描画',
   effects: 'エフェクト',
   validate: '確認',
-  promoCodeSuccess: 'コードが有効になりました！30日間のプレミアム無料をお楽しみください。',
+  promoCodeSuccess: "プロモコードが有効になりました！",
   promoCodeInvalid: '無効または期限切れのコードです。',
   promoCodeAlreadyUsed: 'このコードはこのデバイスですでに使用されています。',
   tapToEdit: '画像をタップして開始',
@@ -262,7 +262,7 @@ export default {
 
   // Ad Modal
   watchAdTitle: '広告を見る',
-  watchAdMessage: '短い広告を見てこの機能を無料で解除',
+  watchAdMessage: "この写真を無料で保存するには、短い動画広告をご覧ください。",
   watchAd: '広告を見る',
 
   // Premium Modal
@@ -272,7 +272,7 @@ export default {
   writeMessage: 'メッセージを書く...',
   prepareComposition: '作品を準備...',
   chooseFont: 'フォントを選択',
-  textLimitEditMessage: 'すでにテキストを追加しています。古いテキストを削除して新しいものを作成するか、プレミアムにアップグレードして複数のテキストを作成し、すべての機能を解除しましょう。',
+  textLimitEditMessage: "テキストはすでに追加されています。新しいテキストを作成するには、古いテキストを削除してください。",
 
   // Subscription Screen
   unlockAllFeatures: 'すべての機能を制限なしで解除',
@@ -1031,7 +1031,7 @@ export default {
   payoutProcessing: '処理中',
   payoutPaid: '支払い済み',
   payoutFailed: '失敗',
-  purchaseSession: 'Purchase Session',
+  purchaseSession: "セッションを予約",
   purchaseFailed: 'Purchase failed',
   celebrityAccountNotReady: "このセレブの決済アカウントはまだ有効になっていません。後でもう一度お試しください。",
   sessionCreationFailed: 'Failed to create session',

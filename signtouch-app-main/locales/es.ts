@@ -209,7 +209,7 @@ export default {
   drawing: 'Dibujo',
   effects: 'Efectos',
   validate: 'Validar',
-  promoCodeSuccess: '¡Código activado! Disfruta de 30 días de Premium gratis.',
+  promoCodeSuccess: "¡Código promocional activado!",
   promoCodeInvalid: 'Código inválido o expirado.',
   promoCodeAlreadyUsed: 'Este código ya ha sido usado en este dispositivo.',
   tapToEdit: 'Toca la imagen para comenzar',
@@ -262,7 +262,7 @@ export default {
 
   // Ad Modal
   watchAdTitle: 'Ver un anuncio',
-  watchAdMessage: 'Mira un anuncio corto para desbloquear esta función gratis',
+  watchAdMessage: "Mira un anuncio breve para guardar esta foto gratis.",
   watchAd: 'Ver anuncio',
 
   // Premium Modal
@@ -272,7 +272,7 @@ export default {
   writeMessage: 'Escribe tu mensaje...',
   prepareComposition: 'Prepara tu composición...',
   chooseFont: 'Elegir fuente',
-  textLimitEditMessage: 'Ya has añadido un texto. Elimina el texto antiguo para crear uno nuevo o actualiza a Premium para crear varios textos y desbloquear todas las funciones.',
+  textLimitEditMessage: "Ya agregaste texto. Elimina el anterior para crear uno nuevo.",
 
   // Subscription Screen
   unlockAllFeatures: 'Desbloquea todas las funciones sin limitación',
@@ -1030,7 +1030,7 @@ export default {
   payoutProcessing: 'En proceso',
   payoutPaid: 'Pagado',
   payoutFailed: 'Fallido',
-  purchaseSession: 'Purchase Session',
+  purchaseSession: "Reservar una sesión",
   purchaseFailed: 'Purchase failed',
   celebrityAccountNotReady: "La cuenta de pago de esta celebridad aún no está activada. Inténtelo más tarde.",
   sessionCreationFailed: 'Failed to create session',

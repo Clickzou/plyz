@@ -209,7 +209,7 @@ export default {
   drawing: 'Gambar',
   effects: 'Efek',
   validate: 'Validasi',
-  promoCodeSuccess: 'Kode diaktifkan! Nikmati 30 hari Premium gratis.',
+  promoCodeSuccess: "Kode promo diaktifkan!",
   promoCodeInvalid: 'Kode tidak valid atau sudah kedaluwarsa.',
   promoCodeAlreadyUsed: 'Kode ini sudah digunakan di perangkat ini.',
   tapToEdit: 'Ketuk gambar untuk memulai',
@@ -262,7 +262,7 @@ export default {
 
   // Ad Modal
   watchAdTitle: 'Tonton iklan',
-  watchAdMessage: 'Tonton iklan singkat untuk membuka fitur ini gratis',
+  watchAdMessage: "Tonton iklan singkat untuk menyimpan foto ini secara gratis.",
   watchAd: 'Tonton iklan',
 
   // Premium Modal
@@ -272,7 +272,7 @@ export default {
   writeMessage: 'Tulis pesan Anda...',
   prepareComposition: 'Siapkan komposisi Anda...',
   chooseFont: 'Pilih font',
-  textLimitEditMessage: 'Anda sudah menambahkan teks. Hapus teks lama untuk membuat yang baru atau upgrade ke Premium untuk membuat beberapa teks dan membuka semua fitur.',
+  textLimitEditMessage: "Anda sudah menambahkan teks. Hapus teks lama untuk membuat yang baru.",
 
   // Subscription Screen
   unlockAllFeatures: 'Buka kunci semua fitur tanpa batasan',
@@ -1036,7 +1036,7 @@ export default {
   payoutProcessing: 'Sedang diproses',
   payoutPaid: 'Dibayarkan',
   payoutFailed: 'Gagal',
-  purchaseSession: 'Purchase Session',
+  purchaseSession: "Pesan Sesi",
   purchaseFailed: 'Purchase failed',
   celebrityAccountNotReady: "Akun pembayaran selebriti ini belum diaktifkan. Silakan coba lagi nanti.",
   sessionCreationFailed: 'Failed to create session',

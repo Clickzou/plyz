@@ -209,7 +209,7 @@ export default {
   drawing: '绘图',
   effects: '特效',
   validate: '确认',
-  promoCodeSuccess: '代码已激活！享受30天免费高级版。',
+  promoCodeSuccess: "促销码已激活！",
   promoCodeInvalid: '无效或已过期的代码。',
   promoCodeAlreadyUsed: '此代码已在此设备上使用过。',
   tapToEdit: '点击图片开始',
@@ -262,7 +262,7 @@ export default {
 
   // Ad Modal
   watchAdTitle: '观看广告',
-  watchAdMessage: '观看短广告即可免费解锁此功能',
+  watchAdMessage: "观看短视频免费保存此照片",
   watchAd: '观看广告',
 
   // Premium Modal
@@ -272,7 +272,7 @@ export default {
   writeMessage: '写下您的消息...',
   prepareComposition: '准备您的创作...',
   chooseFont: '选择字体',
-  textLimitEditMessage: '您已添加文字。删除旧文字以创建新文字，或升级到高级版以创建多个文字并解锁所有功能。',
+  textLimitEditMessage: "您已添加文本。删除旧文本以创建新的",
 
   // Subscription Screen
   unlockAllFeatures: '解锁所有功能，无限制',
@@ -1031,7 +1031,7 @@ export default {
   payoutProcessing: '处理中',
   payoutPaid: '已支付',
   payoutFailed: '失败',
-  purchaseSession: 'Purchase Session',
+  purchaseSession: "预订课程",
   purchaseFailed: 'Purchase failed',
   celebrityAccountNotReady: "该名人的支付账户尚未激活，请稍后再试。",
   sessionCreationFailed: 'Failed to create session',

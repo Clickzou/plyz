@@ -209,7 +209,7 @@ export default {
   drawing: 'ड्रॉइंग',
   effects: 'प्रभाव',
   validate: 'मान्य करें',
-  promoCodeSuccess: 'कोड सक्रिय! 30 दिनों के मुफ्त प्रीमियम का आनंद लें।',
+  promoCodeSuccess: "प्रोमो कोड सक्रिय हो गया!",
   promoCodeInvalid: 'अमान्य या समाप्त कोड।',
   promoCodeAlreadyUsed: 'यह कोड इस डिवाइस पर पहले ही उपयोग किया जा चुका है।',
   tapToEdit: 'शुरू करने के लिए छवि पर टैप करें',
@@ -262,7 +262,7 @@ export default {
 
   // Ad Modal
   watchAdTitle: 'विज्ञापन देखें',
-  watchAdMessage: 'इस सुविधा को मुफ्त में अनलॉक करने के लिए एक छोटा विज्ञापन देखें',
+  watchAdMessage: "इस फ़ोटो को मुफ्त में सहेजने के लिए एक छोटा विज्ञापन देखें।",
   watchAd: 'विज्ञापन देखें',
 
   // Premium Modal
@@ -272,7 +272,7 @@ export default {
   writeMessage: 'अपना संदेश लिखें...',
   prepareComposition: 'अपनी रचना तैयार करें...',
   chooseFont: 'फॉन्ट चुनें',
-  textLimitEditMessage: 'आपने पहले ही टेक्स्ट जोड़ दिया है। नया बनाने के लिए पुराना टेक्स्ट हटाएं या कई टेक्स्ट बनाने और सभी सुविधाओं को अनलॉक करने के लिए प्रीमियम में अपग्रेड करें।',
+  textLimitEditMessage: "आपने पहले से ही टेक्स्ट जोड़ा है। नया टेक्स्ट बनाने के लिए पुराने को हटाएं।",
 
   // Subscription Screen
   unlockAllFeatures: 'बिना किसी सीमा के सभी सुविधाओं को अनलॉक करें',
@@ -1031,7 +1031,7 @@ export default {
   payoutProcessing: 'प्रक्रिया में',
   payoutPaid: 'भुगतान किया',
   payoutFailed: 'विफल',
-  purchaseSession: 'Purchase Session',
+  purchaseSession: "सत्र बुक करें",
   purchaseFailed: 'Purchase failed',
   celebrityAccountNotReady: "इस सेलिब्रिटी का भुगतान खाता अभी सक्रिय नहीं है। कृपया बाद में पुनः प्रयास करें।",
   sessionCreationFailed: 'Failed to create session',
