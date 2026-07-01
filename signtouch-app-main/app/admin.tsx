@@ -9,6 +9,7 @@ import {
   TextInput,
   ActivityIndicator,
   Platform,
+  Linking,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft, Users, Euro, BadgeCheck, Search, Ban, ShieldAlert,
   Clock, CheckCircle2, XCircle, RefreshCw, Megaphone, Calendar, Video,
+  FileText, Download,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { SvgXml } from 'react-native-svg';
@@ -26,8 +28,9 @@ import { supabase } from '@/utils/supabase';
 import { useAutoTranslate } from '@/utils/translation';
 
 const ADMIN_EMAIL = 'jc@clickzou.fr';
+const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
-type TabKey = 'overview' | 'verifs' | 'revenue' | 'search' | 'reports';
+type TabKey = 'overview' | 'verifs' | 'revenue' | 'search' | 'reports' | 'accounting';
 
 const euro = (cents: number | null | undefined) =>
   `${((cents || 0) / 100).toFixed(2).replace('.', ',')} €`;
@@ -41,7 +44,7 @@ const fmtDate = (d?: string) => {
 export default function AdminScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const isAdmin = (user?.email || '').toLowerCase() === ADMIN_EMAIL;
 
   const [tab, setTab] = useState<TabKey>('overview');
@@ -50,6 +53,8 @@ export default function AdminScreen() {
   const [verifs, setVerifs] = useState<any[]>([]);
   const [verifFilter, setVerifFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [revenue, setRevenue] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [dac7, setDac7] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [lowRatings, setLowRatings] = useState<any[]>([]);
   const [searchQ, setSearchQ] = useState('');
@@ -135,6 +140,18 @@ export default function AdminScreen() {
     'Aucun signalement ni note basse.',
     'Signalement',
     'e-mail inconnu',
+    'Comptabilité',
+    'Toutes les factures',
+    'Aucune facture pour le moment.',
+    'Revenus par personnalité (DAC7)',
+    'Statut',
+    'NIF',
+    'Brut',
+    'Net versé',
+    'Non renseigné',
+    'Particulier',
+    'Professionnel',
+    'transactions',
   ]);
 
   const setupMfa = useCallback(async () => {
@@ -246,12 +263,35 @@ export default function AdminScreen() {
     }, [isAdmin, loadOverview])
   );
 
+  const loadAccounting = async () => {
+    setLoading(true);
+    const [inv, rep] = await Promise.all([
+      supabase.rpc('admin_list_invoices'),
+      supabase.rpc('admin_dac7_report'),
+    ]);
+    if (!inv.error) setInvoices(inv.data || []);
+    if (!rep.error) setDac7(rep.data || []);
+    setLoading(false);
+  };
+
+  const downloadInvoice = async (id: string) => {
+    try {
+      const headers: Record<string, string> = {};
+      if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+      const res = await fetch(`${API_BASE}/api/invoice/${id}/download`, { headers });
+      const data = await res.json();
+      if (data?.url) await Linking.openURL(data.url);
+      else showAlert('Erreur', 'Téléchargement impossible');
+    } catch { showAlert('Erreur', 'Téléchargement impossible'); }
+  };
+
   const switchTab = (t: TabKey) => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setTab(t);
     if (t === 'verifs') loadVerifs(verifFilter);
     if (t === 'revenue') loadRevenue();
     if (t === 'reports') loadReports();
+    if (t === 'accounting') loadAccounting();
   };
 
   const runSearch = async () => {
@@ -423,6 +463,7 @@ export default function AdminScreen() {
     { key: 'revenue', label: 'Revenus', icon: Euro },
     { key: 'search', label: 'Recherche', icon: Search },
     { key: 'reports', label: 'Signalements', icon: Megaphone },
+    { key: 'accounting', label: 'Comptabilité', icon: FileText },
   ];
 
   return (
@@ -536,6 +577,46 @@ export default function AdminScreen() {
                     <Text style={styles.revenueAmount}>{euro(r.gross_cents)}</Text>
                   </View>
                   <Text style={styles.itemSub}>{trUI('Net célébrité :')} {euro(r.net_cents)} · {r.tx_count} {trUI('transaction(s)')}</Text>
+                </View>
+              ))}
+          </View>
+        )}
+
+        {/* ---- COMPTABILITÉ ---- */}
+        {tab === 'accounting' && (
+          <View>
+            <Text style={styles.sectionLabel}>{trUI('Revenus par personnalité (DAC7)')}</Text>
+            {loading ? <ActivityIndicator color="#10b981" style={{ marginTop: 20 }} /> :
+              dac7.length === 0 ? <Text style={styles.empty}>{trUI('Aucune transaction pour le moment.')}</Text> :
+              dac7.map((d, i) => (
+                <View key={`dac7-${d.celebrity_id}-${i}`} style={styles.itemCard}>
+                  <View style={styles.itemRow}>
+                    <Text style={styles.itemName}>{d.celebrity_name || trUI('(inconnu)')}</Text>
+                    <Text style={styles.revenueAmount}>{euro(d.seller_net_cents)}</Text>
+                  </View>
+                  <Text style={styles.itemSub}>
+                    {trUI('Brut')}: {euro(d.gross_cents)} · {trUI('Net versé')}: {euro(d.seller_net_cents)} · {d.tx_count} {trUI('transactions')}
+                  </Text>
+                  <Text style={styles.itemSub}>
+                    {trUI('Statut')}: {d.tax_status === 'business' ? trUI('Professionnel') : d.tax_status === 'individual' ? trUI('Particulier') : trUI('Non renseigné')}
+                    {d.tax_country ? ` (${d.tax_country})` : ''} · {trUI('NIF')}: {d.tax_id || trUI('Non renseigné')}
+                  </Text>
+                </View>
+              ))}
+
+            <Text style={[styles.sectionLabel, { marginTop: 24 }]}>{trUI('Toutes les factures')}</Text>
+            {loading ? null :
+              invoices.length === 0 ? <Text style={styles.empty}>{trUI('Aucune facture pour le moment.')}</Text> :
+              invoices.map((f) => (
+                <View key={f.id} style={styles.itemCard}>
+                  <View style={styles.itemRow}>
+                    <Text style={styles.itemName}>{f.invoice_number}</Text>
+                    <TouchableOpacity onPress={() => downloadInvoice(f.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Download size={20} color="#38bdf8" />
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.itemSub}>{f.prestation_label} · {euro(f.amount_cents)}</Text>
+                  <Text style={styles.itemSub}>{f.celebrity_name} ← {f.fan_name} · {fmtDate(f.created_at)}</Text>
                 </View>
               ))}
           </View>
