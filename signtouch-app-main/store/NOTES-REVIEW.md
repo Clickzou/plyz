@@ -13,7 +13,7 @@ Plyz is a MARKETPLACE for real-time, one-to-one personal services between fans a
 HOW IT WORKS
 - Fans book and pay for a personalized service delivered by a real, identified person:
   1. A private 1:1 LIVE video call with the public figure (real-time).
-  2. A LIVE signing session during an event the fan attends (the celebrity signs the fan's photo in real time).
+  2. A LIVE DEDICATION: during an event, EACH fan is connected ONE-TO-ONE with the public figure in a private video room (2 participants), waits in an individual queue, and receives a PERSONALIZED dedication created live, specifically for them. It is a real-time, one-to-one, personalized interaction — NOT pre-made downloadable content, and NOT a simultaneous broadcast to a group.
   3. A personalized dedication/autograph requested from a specific identified person.
 - Payments are processed by Stripe Connect. Each public figure is an identified provider who completes KYC (identity + bank account) and receives 85% of the payment; Plyz keeps a 15% platform commission. Plyz never stores card data.
 - Payments use pre-authorization then capture AFTER the service is delivered. If the service does not take place, the fan is automatically refunded.
@@ -38,7 +38,7 @@ Plyz est une PLACE DE MARCHÉ de services personnalisés en temps réel, en têt
 FONCTIONNEMENT
 - Le fan réserve et paie une prestation personnalisée, réalisée par une personne réelle et identifiée :
   1. un appel vidéo privé 1:1 EN DIRECT avec la personnalité ;
-  2. une séance de dédicace EN DIRECT lors d'un événement auquel le fan participe (la personnalité signe la photo du fan en temps réel) ;
+  2. une DÉDICACE EN DIRECT : lors d'un événement, CHAQUE fan est connecté EN TÊTE-À-TÊTE avec la personnalité dans une salle vidéo privée (2 participants), attend dans une file individuelle, et reçoit une dédicace PERSONNALISÉE réalisée en direct, rien que pour lui. C'est une interaction individuelle, en temps réel et personnalisée — et NON un contenu pré-fabriqué téléchargeable, ni une diffusion simultanée à un groupe ;
   3. une dédicace/un autographe personnalisé commandé à une personne identifiée.
 - Les paiements passent par Stripe Connect. Chaque personnalité est un prestataire identifié (vérification KYC : identité + IBAN) qui reçoit 85 % ; Plyz prélève 15 % de commission de plateforme. Plyz ne stocke aucune donnée bancaire.
 - Pré-autorisation puis capture APRÈS la prestation. Si la prestation n'a pas lieu, le fan est remboursé automatiquement.
