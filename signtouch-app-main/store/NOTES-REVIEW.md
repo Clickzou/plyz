@@ -21,6 +21,8 @@ HOW IT WORKS
 WHY NOT IN-APP PURCHASE
 Per App Store Review Guideline 3.1.3(d), one-to-one real-time person-to-person experiences may use payment methods other than in-app purchase. Every paid interaction on Plyz is an individual, private, real-time service provided by an identified human provider — comparable to Cameo, Airbnb or Fiverr. Importantly, group "events" are in fact QUEUES of sequential private 1:1 calls (one fan at a time, each in a private 2-person room), NOT simultaneous one-to-many broadcasts.
 
+In addition, some dedication events take place at PHYSICAL, in-person gatherings (concerts, fan meets, signing sessions): fans who are physically present scan a QR code on site to receive their personalized dedication from the public figure they just met. These are in-person services (Guideline 3.1.3(e), goods and services used outside the app) — not digital content consumed within the app.
+
 There is NO subscription, NO virtual currency, NO tokens/credits, and NO downloadable premium content sold by Plyz. The app is free to download; only person-to-person services are paid.
 
 TEST ACCOUNTS (login by email + one-time code)
@@ -44,7 +46,7 @@ FONCTIONNEMENT
 - Pré-autorisation puis capture APRÈS la prestation. Si la prestation n'a pas lieu, le fan est remboursé automatiquement.
 
 POURQUOI PAS D'ACHAT INTÉGRÉ
-Les prestations sont des services de personne à personne, en temps réel, fournis par un prestataire humain identifié — comme Cameo, Airbnb ou Fiverr. Les « événements » de groupe sont en réalité des FILES d'appels 1:1 privés successifs (un fan à la fois, salle privée à 2 personnes), et non une diffusion 1-à-plusieurs simultanée. Aucun abonnement, aucune monnaie virtuelle, aucun crédit/jeton, aucun contenu premium téléchargeable vendu par Plyz.
+Les prestations sont des services de personne à personne, en temps réel, fournis par un prestataire humain identifié — comme Cameo, Airbnb ou Fiverr. Les « événements » de groupe sont en réalité des FILES d'appels 1:1 privés successifs (un fan à la fois, salle privée à 2 personnes), et non une diffusion 1-à-plusieurs simultanée. De plus, certains événements de dédicace ont lieu lors de rassemblements PHYSIQUES en personne (concerts, rencontres, séances de dédicaces) : les fans physiquement présents scannent un QR code sur place pour recevoir leur dédicace personnalisée de la personnalité qu'ils viennent de rencontrer — ce sont des services rendus en personne (règle 3.1.3(e), biens et services utilisés en dehors de l'app), et non du contenu numérique consommé dans l'app. Aucun abonnement, aucune monnaie virtuelle, aucun crédit/jeton, aucun contenu premium téléchargeable vendu par Plyz.
 
 COMPTES DE TEST (connexion par e-mail + code à usage unique)
 - Compte fan : __________________________
