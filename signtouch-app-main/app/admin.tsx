@@ -23,6 +23,7 @@ import { ShieldCheck } from 'lucide-react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/utils/supabase';
+import { useAutoTranslate } from '@/utils/translation';
 
 const ADMIN_EMAIL = 'jc@clickzou.fr';
 
@@ -64,6 +65,77 @@ export default function AdminScreen() {
   const [code, setCode] = useState('');
   const [mfaError, setMfaError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
+
+  const trUI = useAutoTranslate([
+    'Accès réservé',
+    "Cette page est réservée à l'administrateur de Plyz.",
+    'Retour',
+    'Vérification 2FA',
+    'Active la double authentification',
+    'Scanne ce QR avec Google Authenticator (ou saisis le code manuellement).',
+    'Clé manuelle :',
+    'Code de vérification',
+    "Ouvre ton application d'authentification et saisis le code à 6 chiffres.",
+    'Valider',
+    "Le 2FA n'est pas activé côté Supabase (Authentication > Multi-Factor).",
+    'Erreur lors de la configuration du 2FA.',
+    'Saisis le code à 6 chiffres.',
+    'Code invalide. Réessaie.',
+    'Administration',
+    "Vue d'ensemble",
+    'Vérifications',
+    'Revenus',
+    'Recherche',
+    'Signalements',
+    'Utilisateurs',
+    'Revenu total',
+    'Revenu net',
+    'Célébrités validées',
+    'Vérifs en attente',
+    'Vérifs refusées',
+    'Signalements ouverts',
+    'Bannissements actifs',
+    'Événements',
+    'Sessions vidéo',
+    'Transactions',
+    'En attente',
+    'Acceptées',
+    'Refusées',
+    'Aucune demande en attente.',
+    'Aucune demande acceptée.',
+    'Aucune demande refusée.',
+    '(sans nom)',
+    'Célébrité',
+    'Créateur',
+    'Club/Orga',
+    'Fan',
+    'Compte',
+    'Catégorie :',
+    'Info :',
+    'Raison du refus :',
+    'Demande du',
+    'Accepter',
+    'Refuser',
+    'Total généré :',
+    'Net :',
+    'Par célébrité',
+    'Aucune transaction pour le moment.',
+    '(inconnu)',
+    'Net célébrité :',
+    'transaction(s)',
+    '⛔ Actuellement banni',
+    'Lever le ban',
+    'Bannir',
+    'Saisis un nom ou un e-mail puis lance la recherche.',
+    '⭐ Notes basses (1-2 étoiles)',
+    'Noté par un',
+    'célébrité',
+    'fan',
+    '🐛 Problèmes signalés',
+    'Aucun signalement ni note basse.',
+    'Signalement',
+    'e-mail inconnu',
+  ]);
 
   const setupMfa = useCallback(async () => {
     setMfaMode('loading');
@@ -254,10 +326,10 @@ export default function AdminScreen() {
         <LinearGradient colors={['#0f172a', '#1e293b', '#0f172a']} style={StyleSheet.absoluteFill} />
         <View style={[styles.center, { paddingTop: insets.top + 80, paddingHorizontal: 32 }]}>
           <ShieldAlert size={56} color="#ef4444" />
-          <Text style={styles.deniedTitle}>Accès réservé</Text>
-          <Text style={styles.deniedText}>Cette page est réservée à l'administrateur de Plyz.</Text>
+          <Text style={styles.deniedTitle}>{trUI('Accès réservé')}</Text>
+          <Text style={styles.deniedText}>{trUI("Cette page est réservée à l'administrateur de Plyz.")}</Text>
           <TouchableOpacity style={styles.backBtnWide} onPress={() => router.back()}>
-            <Text style={styles.backBtnWideText}>Retour</Text>
+            <Text style={styles.backBtnWideText}>{trUI('Retour')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -273,7 +345,7 @@ export default function AdminScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <ArrowLeft size={24} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Vérification 2FA</Text>
+          <Text style={styles.headerTitle}>{trUI('Vérification 2FA')}</Text>
           <View style={styles.backBtn} />
         </View>
 
@@ -288,9 +360,9 @@ export default function AdminScreen() {
 
               {mfaMode === 'enroll' && (
                 <>
-                  <Text style={styles.mfaTitle}>Active la double authentification</Text>
+                  <Text style={styles.mfaTitle}>{trUI('Active la double authentification')}</Text>
                   <Text style={styles.mfaText}>
-                    Scanne ce QR avec Google Authenticator (ou saisis le code manuellement).
+                    {trUI('Scanne ce QR avec Google Authenticator (ou saisis le code manuellement).')}
                   </Text>
                   {!!qrXml && (
                     <View style={styles.qrBox}>
@@ -299,7 +371,7 @@ export default function AdminScreen() {
                   )}
                   {!!secret && (
                     <>
-                      <Text style={styles.mfaSecretLabel}>Clé manuelle :</Text>
+                      <Text style={styles.mfaSecretLabel}>{trUI('Clé manuelle :')}</Text>
                       <Text style={styles.mfaSecret} selectable>{secret}</Text>
                     </>
                   )}
@@ -308,9 +380,9 @@ export default function AdminScreen() {
 
               {mfaMode === 'challenge' && (
                 <>
-                  <Text style={styles.mfaTitle}>Code de vérification</Text>
+                  <Text style={styles.mfaTitle}>{trUI('Code de vérification')}</Text>
                   <Text style={styles.mfaText}>
-                    Ouvre ton application d'authentification et saisis le code à 6 chiffres.
+                    {trUI("Ouvre ton application d'authentification et saisis le code à 6 chiffres.")}
                   </Text>
                 </>
               )}
@@ -329,14 +401,14 @@ export default function AdminScreen() {
                 returnKeyType="done"
               />
 
-              {!!mfaError && <Text style={styles.mfaErrorText}>{mfaError}</Text>}
+              {!!mfaError && <Text style={styles.mfaErrorText}>{trUI(mfaError)}</Text>}
 
               <TouchableOpacity
                 style={[styles.mfaBtn, (verifying || code.length < 6) && { opacity: 0.5 }]}
                 onPress={verifyMfa}
                 disabled={verifying || code.length < 6}
               >
-                {verifying ? <ActivityIndicator color="#fff" /> : <Text style={styles.mfaBtnText}>Valider</Text>}
+                {verifying ? <ActivityIndicator color="#fff" /> : <Text style={styles.mfaBtnText}>{trUI('Valider')}</Text>}
               </TouchableOpacity>
             </View>
           )}
@@ -361,7 +433,7 @@ export default function AdminScreen() {
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Administration</Text>
+        <Text style={styles.headerTitle}>{trUI('Administration')}</Text>
         <TouchableOpacity style={styles.backBtn} onPress={() => { loadOverview(); switchTab(tab); }}>
           <RefreshCw size={20} color="#fff" />
         </TouchableOpacity>
@@ -374,7 +446,7 @@ export default function AdminScreen() {
           return (
             <TouchableOpacity key={tb.key} style={[styles.tabBtn, active && styles.tabBtnActive]} onPress={() => switchTab(tb.key)}>
               <Icon size={16} color={active ? '#0f172a' : '#94a3b8'} />
-              <Text style={[styles.tabText, active && styles.tabTextActive]}>{tb.label}</Text>
+              <Text style={[styles.tabText, active && styles.tabTextActive]}>{trUI(tb.label)}</Text>
             </TouchableOpacity>
           );
         })}
@@ -384,17 +456,17 @@ export default function AdminScreen() {
         {/* ---- VUE D'ENSEMBLE ---- */}
         {tab === 'overview' && (
           <View style={styles.cardsGrid}>
-            <StatCard icon={Users} color="#10b981" label="Utilisateurs" value={overview?.total_users ?? '—'} />
-            <StatCard icon={Euro} color="#f59e0b" label="Revenu total" value={overview ? euro(overview.revenue_total_cents) : '—'} />
-            <StatCard icon={Euro} color="#22c55e" label="Revenu net" value={overview ? euro(overview.revenue_net_cents) : '—'} />
-            <StatCard icon={BadgeCheck} color="#3b82f6" label="Célébrités validées" value={overview?.celebrities_approved ?? '—'} />
-            <StatCard icon={Clock} color="#eab308" label="Vérifs en attente" value={overview?.verifications_pending ?? '—'} />
-            <StatCard icon={XCircle} color="#ef4444" label="Vérifs refusées" value={overview?.verifications_rejected ?? '—'} />
-            <StatCard icon={Megaphone} color="#ec4899" label="Signalements ouverts" value={overview?.open_reports ?? '—'} />
-            <StatCard icon={Ban} color="#ef4444" label="Bannissements actifs" value={overview?.active_bans ?? '—'} />
-            <StatCard icon={Calendar} color="#14b8a6" label="Événements" value={overview?.total_events ?? '—'} />
-            <StatCard icon={Video} color="#8b5cf6" label="Sessions vidéo" value={overview?.total_live_sessions ?? '—'} />
-            <StatCard icon={Euro} color="#64748b" label="Transactions" value={overview?.transactions_count ?? '—'} />
+            <StatCard icon={Users} color="#10b981" label={trUI('Utilisateurs')} value={overview?.total_users ?? '—'} />
+            <StatCard icon={Euro} color="#f59e0b" label={trUI('Revenu total')} value={overview ? euro(overview.revenue_total_cents) : '—'} />
+            <StatCard icon={Euro} color="#22c55e" label={trUI('Revenu net')} value={overview ? euro(overview.revenue_net_cents) : '—'} />
+            <StatCard icon={BadgeCheck} color="#3b82f6" label={trUI('Célébrités validées')} value={overview?.celebrities_approved ?? '—'} />
+            <StatCard icon={Clock} color="#eab308" label={trUI('Vérifs en attente')} value={overview?.verifications_pending ?? '—'} />
+            <StatCard icon={XCircle} color="#ef4444" label={trUI('Vérifs refusées')} value={overview?.verifications_rejected ?? '—'} />
+            <StatCard icon={Megaphone} color="#ec4899" label={trUI('Signalements ouverts')} value={overview?.open_reports ?? '—'} />
+            <StatCard icon={Ban} color="#ef4444" label={trUI('Bannissements actifs')} value={overview?.active_bans ?? '—'} />
+            <StatCard icon={Calendar} color="#14b8a6" label={trUI('Événements')} value={overview?.total_events ?? '—'} />
+            <StatCard icon={Video} color="#8b5cf6" label={trUI('Sessions vidéo')} value={overview?.total_live_sessions ?? '—'} />
+            <StatCard icon={Euro} color="#64748b" label={trUI('Transactions')} value={overview?.transactions_count ?? '—'} />
           </View>
         )}
 
@@ -406,37 +478,37 @@ export default function AdminScreen() {
                 <TouchableOpacity key={f} style={[styles.filterChip, verifFilter === f && styles.filterChipActive]}
                   onPress={() => { setVerifFilter(f); loadVerifs(f); }}>
                   <Text style={[styles.filterChipText, verifFilter === f && styles.filterChipTextActive]}>
-                    {f === 'pending' ? 'En attente' : f === 'approved' ? 'Acceptées' : 'Refusées'}
+                    {f === 'pending' ? trUI('En attente') : f === 'approved' ? trUI('Acceptées') : trUI('Refusées')}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
             {loading ? <ActivityIndicator color="#10b981" style={{ marginTop: 30 }} /> :
-              verifs.length === 0 ? <Text style={styles.empty}>Aucune demande {verifFilter === 'pending' ? 'en attente' : verifFilter === 'approved' ? 'acceptée' : 'refusée'}.</Text> :
+              verifs.length === 0 ? <Text style={styles.empty}>{verifFilter === 'pending' ? trUI('Aucune demande en attente.') : verifFilter === 'approved' ? trUI('Aucune demande acceptée.') : trUI('Aucune demande refusée.')}</Text> :
               verifs.map((v) => (
                 <View key={`${v.kind}-${v.request_id}`} style={styles.itemCard}>
                   <View style={styles.itemRow}>
-                    <Text style={styles.itemName}>{v.name || '(sans nom)'}</Text>
+                    <Text style={styles.itemName}>{v.name || trUI('(sans nom)')}</Text>
                     <View style={[styles.badge, { backgroundColor: kindColor(v.kind) }]}>
-                      <Text style={styles.badgeText}>{kindLabel(v.kind)}</Text>
+                      <Text style={styles.badgeText}>{trUI(kindLabel(v.kind))}</Text>
                     </View>
                   </View>
                   {!!v.email && <Text style={styles.itemSub}>{v.email}</Text>}
-                  {!!v.category && <Text style={styles.itemSub}>Catégorie : {v.category}</Text>}
-                  {!!v.additional_info && <Text style={styles.itemSub}>Info : {v.additional_info}</Text>}
+                  {!!v.category && <Text style={styles.itemSub}>{trUI('Catégorie :')} {v.category}</Text>}
+                  {!!v.additional_info && <Text style={styles.itemSub}>{trUI('Info :')} {v.additional_info}</Text>}
                   {v.status === 'rejected' && !!v.admin_notes && (
-                    <Text style={styles.reasonText}>Raison du refus : {v.admin_notes}</Text>
+                    <Text style={styles.reasonText}>{trUI('Raison du refus :')} {v.admin_notes}</Text>
                   )}
-                  <Text style={styles.itemDate}>Demande du {fmtDate(v.created_at)}</Text>
+                  <Text style={styles.itemDate}>{trUI('Demande du')} {fmtDate(v.created_at)}</Text>
                   {verifFilter === 'pending' && (
                     <View style={styles.actionRow}>
                       <TouchableOpacity style={[styles.actionBtn, styles.approveBtn]} onPress={() => handleVerifAction(v, 'approved')}>
                         <CheckCircle2 size={16} color="#fff" />
-                        <Text style={styles.actionBtnText}>Accepter</Text>
+                        <Text style={styles.actionBtnText}>{trUI('Accepter')}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={[styles.actionBtn, styles.rejectBtn]} onPress={() => handleVerifAction(v, 'rejected')}>
                         <XCircle size={16} color="#fff" />
-                        <Text style={styles.actionBtnText}>Refuser</Text>
+                        <Text style={styles.actionBtnText}>{trUI('Refuser')}</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -451,19 +523,19 @@ export default function AdminScreen() {
             <View style={styles.totalBanner}>
               <Euro size={22} color="#f59e0b" />
               <Text style={styles.totalBannerText}>
-                Total généré : {overview ? euro(overview.revenue_total_cents) : '—'} · Net : {overview ? euro(overview.revenue_net_cents) : '—'}
+                {trUI('Total généré :')} {overview ? euro(overview.revenue_total_cents) : '—'} · {trUI('Net :')} {overview ? euro(overview.revenue_net_cents) : '—'}
               </Text>
             </View>
-            <Text style={styles.sectionLabel}>Par célébrité</Text>
+            <Text style={styles.sectionLabel}>{trUI('Par célébrité')}</Text>
             {loading ? <ActivityIndicator color="#10b981" style={{ marginTop: 30 }} /> :
-              revenue.length === 0 ? <Text style={styles.empty}>Aucune transaction pour le moment.</Text> :
+              revenue.length === 0 ? <Text style={styles.empty}>{trUI('Aucune transaction pour le moment.')}</Text> :
               revenue.map((r, i) => (
                 <View key={`${r.celebrity_id}-${i}`} style={styles.itemCard}>
                   <View style={styles.itemRow}>
-                    <Text style={styles.itemName}>{r.celebrity_name || r.celebrity_id || '(inconnu)'}</Text>
+                    <Text style={styles.itemName}>{r.celebrity_name || r.celebrity_id || trUI('(inconnu)')}</Text>
                     <Text style={styles.revenueAmount}>{euro(r.gross_cents)}</Text>
                   </View>
-                  <Text style={styles.itemSub}>Net célébrité : {euro(r.net_cents)} · {r.tx_count} transaction(s)</Text>
+                  <Text style={styles.itemSub}>{trUI('Net célébrité :')} {euro(r.net_cents)} · {r.tx_count} {trUI('transaction(s)')}</Text>
                 </View>
               ))}
           </View>
@@ -489,24 +561,24 @@ export default function AdminScreen() {
             {searchResults.map((p, i) => (
               <View key={`${p.user_id}-${i}`} style={styles.itemCard}>
                 <View style={styles.itemRow}>
-                  <Text style={styles.itemName}>{p.name || p.email || '(sans nom)'}</Text>
+                  <Text style={styles.itemName}>{p.name || p.email || trUI('(sans nom)')}</Text>
                   <View style={[styles.badge, { backgroundColor: kindColor(p.kind) }]}>
                     <Text style={styles.badgeText}>{p.detail || p.kind}</Text>
                   </View>
                 </View>
                 {!!p.email && p.name && <Text style={styles.itemSub}>{p.email}</Text>}
-                {p.is_banned && <Text style={styles.bannedTag}>⛔ Actuellement banni</Text>}
+                {p.is_banned && <Text style={styles.bannedTag}>{trUI('⛔ Actuellement banni')}</Text>}
                 {!!p.user_id && (
                   <View style={styles.actionRow}>
                     {p.is_banned ? (
                       <TouchableOpacity style={[styles.actionBtn, styles.approveBtn]} onPress={() => handleUnban(p)}>
                         <CheckCircle2 size={16} color="#fff" />
-                        <Text style={styles.actionBtnText}>Lever le ban</Text>
+                        <Text style={styles.actionBtnText}>{trUI('Lever le ban')}</Text>
                       </TouchableOpacity>
                     ) : (
                       <TouchableOpacity style={[styles.actionBtn, styles.rejectBtn]} onPress={() => handleBan(p)}>
                         <Ban size={16} color="#fff" />
-                        <Text style={styles.actionBtnText}>Bannir</Text>
+                        <Text style={styles.actionBtnText}>{trUI('Bannir')}</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -514,7 +586,7 @@ export default function AdminScreen() {
               </View>
             ))}
             {searchResults.length === 0 && !searching && (
-              <Text style={styles.empty}>Saisis un nom ou un e-mail puis lance la recherche.</Text>
+              <Text style={styles.empty}>{trUI('Saisis un nom ou un e-mail puis lance la recherche.')}</Text>
             )}
           </View>
         )}
@@ -527,36 +599,36 @@ export default function AdminScreen() {
             {/* Notes basses (1-2 étoiles) remontées comme signalements */}
             {lowRatings.length > 0 && (
               <>
-                <Text style={styles.sectionLabel}>⭐ Notes basses (1-2 étoiles)</Text>
+                <Text style={styles.sectionLabel}>{trUI('⭐ Notes basses (1-2 étoiles)')}</Text>
                 {lowRatings.map((r) => (
                   <View key={r.id} style={[styles.itemCard, { borderColor: 'rgba(239,68,68,0.3)' }]}>
                     <View style={styles.itemRow}>
                       <Text style={styles.itemName}>
-                        {'⭐'.repeat(r.rating)} · {r.rated_name || (r.rated_type === 'celebrity' ? 'Célébrité' : 'Fan')}
+                        {'⭐'.repeat(r.rating)} · {r.rated_name || (r.rated_type === 'celebrity' ? trUI('Célébrité') : trUI('Fan'))}
                       </Text>
                       <Text style={styles.itemDate}>{fmtDate(r.created_at)}</Text>
                     </View>
                     {!!r.comment && <Text style={styles.reportMsg}>« {r.comment} »</Text>}
-                    <Text style={styles.itemSub}>Noté par un {r.rater_type === 'celebrity' ? 'célébrité' : 'fan'}</Text>
+                    <Text style={styles.itemSub}>{trUI('Noté par un')} {r.rater_type === 'celebrity' ? trUI('célébrité') : trUI('fan')}</Text>
                   </View>
                 ))}
-                <Text style={[styles.sectionLabel, { marginTop: 18 }]}>🐛 Problèmes signalés</Text>
+                <Text style={[styles.sectionLabel, { marginTop: 18 }]}>{trUI('🐛 Problèmes signalés')}</Text>
               </>
             )}
 
             {!loading && reports.length === 0 && lowRatings.length === 0 && (
-              <Text style={styles.empty}>Aucun signalement ni note basse.</Text>
+              <Text style={styles.empty}>{trUI('Aucun signalement ni note basse.')}</Text>
             )}
 
             {reports.map((r) => (
               <View key={r.id} style={styles.itemCard}>
                 <View style={styles.itemRow}>
-                  <Text style={styles.itemName}>{r.subject || 'Signalement'}</Text>
+                  <Text style={styles.itemName}>{r.subject || trUI('Signalement')}</Text>
                   <Text style={styles.itemDate}>{fmtDate(r.created_at)}</Text>
                 </View>
                 <Text style={styles.reportMsg}>{r.message}</Text>
                 <Text style={styles.itemSub}>
-                  {(r.reporter_name ? r.reporter_name + ' · ' : '')}{r.reporter_email || 'e-mail inconnu'}{r.platform ? ' · ' + r.platform : ''}
+                  {(r.reporter_name ? r.reporter_name + ' · ' : '')}{r.reporter_email || trUI('e-mail inconnu')}{r.platform ? ' · ' + r.platform : ''}
                 </Text>
               </View>
             ))}

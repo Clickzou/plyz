@@ -85,6 +85,9 @@ export default function CelebrityDetailScreen() {
     ...(celebrity?.posts || []).flatMap(p => [p.title, p.body]),
   ]);
 
+  // Traduction des libellés de statut d'événement affichés en dur
+  const trStatus = useAutoTranslate(['En cours', 'En attente', 'Programmé']);
+
   useEffect(() => {
     if (id) fetchCelebrity();
   }, [id]);
@@ -504,7 +507,7 @@ export default function CelebrityDetailScreen() {
                     <View style={styles.eventHeader}>
                       <View style={[styles.eventStatusBadge, { backgroundColor: statusInfo.color + '22', borderColor: statusInfo.color }]}>
                         <View style={[styles.eventStatusDot, { backgroundColor: statusInfo.color }]} />
-                        <Text style={[styles.eventStatusText, { color: statusInfo.color }]}>{statusInfo.text}</Text>
+                        <Text style={[styles.eventStatusText, { color: statusInfo.color }]}>{trStatus(statusInfo.text)}</Text>
                       </View>
                       {event.price_cents > 0 && (
                         <Text style={styles.eventPrice}>{formatPrice(event.price_cents)}</Text>

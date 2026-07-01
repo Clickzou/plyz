@@ -24,6 +24,7 @@ import * as Clipboard from 'expo-clipboard';
 import Svg, { Path, G } from 'react-native-svg';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAutoTranslate } from '@/utils/translation';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import { getStripeAccountId } from '@/utils/userProfile';
@@ -115,6 +116,7 @@ export default function CreateEventScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
+  const trUI = useAutoTranslate(['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Fermer', 'Heures', 'Minutes', 'Valider']);
   const { user } = useAuth();
   const { requireAuth } = useAuthPrompt();
   const [showStripeConnect, setShowStripeConnect] = useState(false);
@@ -1294,7 +1296,7 @@ export default function CreateEventScreen() {
 
               <View style={styles.weekdaysRow}>
                 {WEEKDAYS.map((day) => (
-                  <Text key={day} style={styles.weekdayText}>{day}</Text>
+                  <Text key={day} style={styles.weekdayText}>{trUI(day)}</Text>
                 ))}
               </View>
 
@@ -1335,7 +1337,7 @@ export default function CreateEventScreen() {
                 style={styles.calendarCloseBtn}
                 onPress={() => setShowDatePicker(false)}
               >
-                <Text style={styles.calendarCloseBtnText}>Fermer</Text>
+                <Text style={styles.calendarCloseBtnText}>{trUI('Fermer')}</Text>
               </TouchableOpacity>
             </Pressable>
           </Pressable>
@@ -1356,7 +1358,7 @@ export default function CreateEventScreen() {
               
               <View style={styles.timePickerColumns}>
                 <View style={styles.timePickerColumn}>
-                  <Text style={styles.timePickerLabel}>Heures</Text>
+                  <Text style={styles.timePickerLabel}>{trUI('Heures')}</Text>
                   <ScrollView style={styles.timePickerScroll} showsVerticalScrollIndicator={false}>
                     {Array.from({ length: 24 }, (_, i) => (
                       <TouchableOpacity
@@ -1375,7 +1377,7 @@ export default function CreateEventScreen() {
                 <Text style={styles.timePickerSeparator}>:</Text>
                 
                 <View style={styles.timePickerColumn}>
-                  <Text style={styles.timePickerLabel}>Minutes</Text>
+                  <Text style={styles.timePickerLabel}>{trUI('Minutes')}</Text>
                   <ScrollView style={styles.timePickerScroll} showsVerticalScrollIndicator={false}>
                     {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => (
                       <TouchableOpacity
@@ -1399,7 +1401,7 @@ export default function CreateEventScreen() {
                   setShowTimePicker(false);
                 }}
               >
-                <Text style={styles.timePickerConfirmText}>Valider</Text>
+                <Text style={styles.timePickerConfirmText}>{trUI('Valider')}</Text>
               </TouchableOpacity>
             </Pressable>
           </Pressable>

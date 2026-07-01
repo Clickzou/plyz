@@ -167,7 +167,7 @@ export default function ActivityScreen() {
   const [commentText, setCommentText] = useState('');
 
   // Traduction automatique des posts (titre + texte) dans la langue de l'utilisateur
-  const tr = useAutoTranslate(posts.flatMap(p => [p.title, p.body]));
+  const tr = useAutoTranslate([...posts.flatMap(p => [p.title, p.body]), 'Suivi ✓', 'Suivre', 'Event']);
   const slideAnim = useRef(new RNAnimated.Value(Dimensions.get('window').height)).current;
 
   useEffect(() => {
@@ -395,7 +395,7 @@ export default function ActivityScreen() {
                       activeOpacity={0.7}
                     >
                       <Text style={[styles.followChipText, followed && styles.followChipTextActive]}>
-                        {followed ? 'Suivi ✓' : 'Suivre'}
+                        {followed ? tr('Suivi ✓') : tr('Suivre')}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -408,7 +408,7 @@ export default function ActivityScreen() {
                   activeOpacity={0.7}
                 >
                   <Calendar size={12} color="#fff" />
-                  <Text style={styles.eventBadgeText}>Event</Text>
+                  <Text style={styles.eventBadgeText}>{tr('Event')}</Text>
                 </TouchableOpacity>
               )}
             </View>

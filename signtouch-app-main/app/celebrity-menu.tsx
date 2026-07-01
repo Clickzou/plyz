@@ -23,6 +23,7 @@ import BottomNav from '@/components/BottomNav';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount, getMergedFanEvents, ActiveFanEvent, getSignedDedicationCount } from '@/utils/eventSessionStorage';
 import { getServedFansCountBySessions } from '@/utils/sessionQueueStorage';
+import { useAutoTranslate } from '@/utils/translation';
 import QRCodeSvg from 'react-native-qrcode-svg';
 
 type TabType = 'create' | 'events';
@@ -43,6 +44,8 @@ export default function CelebrityMenuScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { isCelebrity } = useCelebrityMode();
+  // Traduction automatique des libellés de statut affichés en dur.
+  const trUI = useAutoTranslate(['EN COURS', 'PRÊT', 'À VENIR', 'TERMINÉ']);
   // Params optionnels passés par l'écran « Événements » (fan-choice).
   const params = useLocalSearchParams<{ view?: string; kind?: string }>();
   const viewParam = Array.isArray(params.view) ? params.view[0] : params.view;
@@ -719,7 +722,7 @@ export default function CelebrityMenuScreen() {
                             ) : (
                               <Calendar size={10} color="#fff" />
                             )}
-                            <Text style={styles.eventStatusText}>{getStatusLabel(currentStatus, event)}</Text>
+                            <Text style={styles.eventStatusText}>{trUI(getStatusLabel(currentStatus, event))}</Text>
                           </View>
                         </View>
                         <TouchableOpacity

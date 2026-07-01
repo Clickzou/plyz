@@ -17,6 +17,7 @@ import { useTranslation } from '@/contexts/LanguageContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStripeAccountId, saveStripeAccountId } from '@/utils/userProfile';
 import { authedFetch } from '@/utils/authedFetch';
+import { useAutoTranslate } from '@/utils/translation';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -57,6 +58,15 @@ export default function StripeConnectModal({
   const [isVerified, setIsVerified] = React.useState(false);
   const [, setIsPolling] = React.useState(false);
   const pollingRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Traduction des messages d'erreur affichés (state `error`).
+  const trUI = useAutoTranslate([
+    'Une erreur est survenue',
+    'Erreur lors de la création du compte',
+    'Erreur lors de la génération du lien',
+    'Erreur',
+    "Veuillez d'abord compléter toutes les étapes sur Stripe, puis revenez ici.",
+  ]);
 
   const stopPolling = () => {
     if (pollingRef.current) {
@@ -386,7 +396,7 @@ export default function StripeConnectModal({
                   </View>
 
                   {error && (
-                    <Text style={styles.errorBanner}>{error}</Text>
+                    <Text style={styles.errorBanner}>{trUI(error)}</Text>
                   )}
 
                   <TouchableOpacity
@@ -437,7 +447,7 @@ export default function StripeConnectModal({
                   </View>
 
                   {error && (
-                    <Text style={styles.errorBanner}>{error}</Text>
+                    <Text style={styles.errorBanner}>{trUI(error)}</Text>
                   )}
 
                   <TouchableOpacity
@@ -608,7 +618,7 @@ export default function StripeConnectModal({
                   </View>
 
                   {error && (
-                    <Text style={styles.errorBanner}>{error}</Text>
+                    <Text style={styles.errorBanner}>{trUI(error)}</Text>
                   )}
 
                   <TouchableOpacity

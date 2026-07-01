@@ -13,6 +13,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAutoTranslate } from '@/utils/translation';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import StripeConnectModal from '@/components/StripeConnectModal';
@@ -44,6 +45,52 @@ export default function CelebrityOnboardingScreen() {
   const [, setStripeAccountId] = useState<string | null>(null);
   // Nom public récupéré du profil de base (transmis à StripeConnectModal)
   const [celebrityName, setCelebrityName] = useState('');
+
+  // Traduction des textes de secours français (affichés quand les clés celOnboard*
+  // ne sont pas encore présentes dans les 15 locales).
+  const trUI = useAutoTranslate([
+    'Sessions live vidéo',
+    'Organisez des appels vidéo en direct avec vos fans. Définissez votre prix et votre durée.',
+    'Événements dédicaces',
+    'Créez des événements avec QR codes pour offrir des autographes personnalisés.',
+    'Fil d\'actualité',
+    'Publiez des posts et des événements pour garder le contact avec votre communauté.',
+    'Profil public',
+    'Votre profil enrichi par Wikidata est visible par tous les fans sur Discover.',
+    'Étape',
+    'Bienvenue dans le Mode Célébrité',
+    'Monétisez votre notoriété et connectez-vous avec vos fans de manière unique.',
+    'CE QUE VOUS POUVEZ FAIRE',
+    'VOS REVENUS',
+    'Gardez 85% de vos revenus',
+    'Plyz prélève seulement 15% de commission. Les frais Stripe (2.9% + 0.30€) sont déduits séparément. Aucune commission Apple/Google.',
+    'Appel vidéo',
+    'net',
+    'Autographe',
+    'Dédicace',
+    'Recevoir les paiements',
+    'Pour recevoir l\'argent de tes fans, connecte un compte Stripe sécurisé. C\'est gratuit et tu peux le faire en 2 minutes.',
+    'Compte connecté',
+    'Connecter mon compte Stripe',
+    'Je le ferai plus tard',
+    'C\'est prêt !',
+    'Ton Mode Célébrité est activé. Voici un récapitulatif :',
+    'Photo de profil',
+    'Nom public et présentation',
+    'Paiements configurés',
+    'Paiements à configurer (depuis Mon Compte)',
+    'VÉRIFICATION (FACULTATIF)',
+    'Facultatif : fais vérifier ton profil pour obtenir un badge officiel.',
+    'Streamer / Créateur de contenu ?',
+    'Twitch, YouTube, TikTok, Instagram... Faites vérifier votre profil pour obtenir un badge vérifié.',
+    'Vous êtes une organisation ?',
+    'Clubs sportifs, marques, associations... Faites vérifier votre compte pour un badge spécial.',
+    'Vous êtes une célébrité / personnalité publique ?',
+    'Acteur, musicien, sportif… Faites vérifier votre profil pour un badge officiel.',
+    'Commencer',
+    'Continuer',
+    'Accéder à mon profil',
+  ]);
 
   useEffect(() => {
     checkStripeStatus();
@@ -88,23 +135,23 @@ export default function CelebrityOnboardingScreen() {
   const features = [
     {
       icon: <Video size={24} color="#3b82f6" />,
-      title: ct('celOnboardFeature1Title' as any) || 'Sessions live vidéo',
-      desc: ct('celOnboardFeature1Desc' as any) || 'Organisez des appels vidéo en direct avec vos fans. Définissez votre prix et votre durée.',
+      title: ct('celOnboardFeature1Title' as any) || trUI('Sessions live vidéo'),
+      desc: ct('celOnboardFeature1Desc' as any) || trUI('Organisez des appels vidéo en direct avec vos fans. Définissez votre prix et votre durée.'),
     },
     {
       icon: <QrCode size={24} color="#10b981" />,
-      title: ct('celOnboardFeature2Title' as any) || 'Événements dédicaces',
-      desc: ct('celOnboardFeature2Desc' as any) || 'Créez des événements avec QR codes pour offrir des autographes personnalisés.',
+      title: ct('celOnboardFeature2Title' as any) || trUI('Événements dédicaces'),
+      desc: ct('celOnboardFeature2Desc' as any) || trUI('Créez des événements avec QR codes pour offrir des autographes personnalisés.'),
     },
     {
       icon: <Users size={24} color="#8b5cf6" />,
-      title: ct('celOnboardFeature3Title' as any) || 'Fil d\'actualité',
-      desc: ct('celOnboardFeature3Desc' as any) || 'Publiez des posts et des événements pour garder le contact avec votre communauté.',
+      title: ct('celOnboardFeature3Title' as any) || trUI('Fil d\'actualité'),
+      desc: ct('celOnboardFeature3Desc' as any) || trUI('Publiez des posts et des événements pour garder le contact avec votre communauté.'),
     },
     {
       icon: <Globe size={24} color="#f59e0b" />,
-      title: ct('celOnboardFeature4Title' as any) || 'Profil public',
-      desc: ct('celOnboardFeature4Desc' as any) || 'Votre profil enrichi par Wikidata est visible par tous les fans sur Discover.',
+      title: ct('celOnboardFeature4Title' as any) || trUI('Profil public'),
+      desc: ct('celOnboardFeature4Desc' as any) || trUI('Votre profil enrichi par Wikidata est visible par tous les fans sur Discover.'),
     },
   ];
 
@@ -170,7 +217,7 @@ export default function CelebrityOnboardingScreen() {
         </TouchableOpacity>
         <View style={styles.progressWrap}>
           <Text style={styles.progressLabel}>
-            {`${ct('celOnboardStepLabel' as any) || 'Étape'} ${step + 1}/${TOTAL_STEPS}`}
+            {`${ct('celOnboardStepLabel' as any) || trUI('Étape')} ${step + 1}/${TOTAL_STEPS}`}
           </Text>
           <View style={styles.progressTrack}>
             <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
@@ -192,16 +239,16 @@ export default function CelebrityOnboardingScreen() {
                 <Star size={40} color="#f59e0b" fill="#f59e0b" />
               </View>
               <Text style={styles.heroTitle}>
-                {ct('celOnboardHeroTitle' as any) || 'Bienvenue dans le Mode Célébrité'}
+                {ct('celOnboardHeroTitle' as any) || trUI('Bienvenue dans le Mode Célébrité')}
               </Text>
               <Text style={styles.heroSubtitle}>
-                {ct('celOnboardHeroSubtitle' as any) || 'Monétisez votre notoriété et connectez-vous avec vos fans de manière unique.'}
+                {ct('celOnboardHeroSubtitle' as any) || trUI('Monétisez votre notoriété et connectez-vous avec vos fans de manière unique.')}
               </Text>
             </View>
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
-                {ct('celOnboardFeaturesSection' as any) || 'CE QUE VOUS POUVEZ FAIRE'}
+                {ct('celOnboardFeaturesSection' as any) || trUI('CE QUE VOUS POUVEZ FAIRE')}
               </Text>
               {features.map((f, i) => (
                 <View key={i} style={styles.featureCard}>
@@ -216,7 +263,7 @@ export default function CelebrityOnboardingScreen() {
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
-                {ct('celOnboardRevenueSection' as any) || 'VOS REVENUS'}
+                {ct('celOnboardRevenueSection' as any) || trUI('VOS REVENUS')}
               </Text>
               <View style={styles.revenueCard}>
                 <LinearGradient
@@ -229,10 +276,10 @@ export default function CelebrityOnboardingScreen() {
                   <DollarSign size={28} color="#f59e0b" />
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text style={styles.revenueTitle}>
-                      {ct('celOnboardRevenueTitle' as any) || 'Gardez 85% de vos revenus'}
+                      {ct('celOnboardRevenueTitle' as any) || trUI('Gardez 85% de vos revenus')}
                     </Text>
                     <Text style={styles.revenueDesc}>
-                      {ct('celOnboardRevenueDesc' as any) || 'Plyz prélève seulement 15% de commission. Les frais Stripe (2.9% + 0.30€) sont déduits séparément. Aucune commission Apple/Google.'}
+                      {ct('celOnboardRevenueDesc' as any) || trUI('Plyz prélève seulement 15% de commission. Les frais Stripe (2.9% + 0.30€) sont déduits séparément. Aucune commission Apple/Google.')}
                     </Text>
                   </View>
                 </View>
@@ -240,29 +287,29 @@ export default function CelebrityOnboardingScreen() {
                 <View style={styles.revenueExamples}>
                   <View style={styles.revenueExample}>
                     <Text style={styles.revenueExampleLabel}>
-                      {ct('celOnboardVideoCall' as any) || 'Appel vidéo'}
+                      {ct('celOnboardVideoCall' as any) || trUI('Appel vidéo')}
                     </Text>
                     <Text style={styles.revenueExamplePrice}>150€</Text>
                     <Text style={styles.revenueExampleNet}>
-                      → ~123€ {ct('celOnboardNet' as any) || 'net'}
+                      → ~123€ {ct('celOnboardNet' as any) || trUI('net')}
                     </Text>
                   </View>
                   <View style={styles.revenueExample}>
                     <Text style={styles.revenueExampleLabel}>
-                      {ct('celOnboardAutograph' as any) || 'Autographe'}
+                      {ct('celOnboardAutograph' as any) || trUI('Autographe')}
                     </Text>
                     <Text style={styles.revenueExamplePrice}>50€</Text>
                     <Text style={styles.revenueExampleNet}>
-                      → ~41€ {ct('celOnboardNet' as any) || 'net'}
+                      → ~41€ {ct('celOnboardNet' as any) || trUI('net')}
                     </Text>
                   </View>
                   <View style={styles.revenueExample}>
                     <Text style={styles.revenueExampleLabel}>
-                      {ct('celOnboardDedication' as any) || 'Dédicace'}
+                      {ct('celOnboardDedication' as any) || trUI('Dédicace')}
                     </Text>
                     <Text style={styles.revenueExamplePrice}>80€</Text>
                     <Text style={styles.revenueExampleNet}>
-                      → ~66€ {ct('celOnboardNet' as any) || 'net'}
+                      → ~66€ {ct('celOnboardNet' as any) || trUI('net')}
                     </Text>
                   </View>
                 </View>
@@ -278,17 +325,17 @@ export default function CelebrityOnboardingScreen() {
               <CreditCard size={40} color="#6366f1" />
             </View>
             <Text style={styles.stepHeadline}>
-              {ct('celOnboardStripeHeadline' as any) || 'Recevoir les paiements'}
+              {ct('celOnboardStripeHeadline' as any) || trUI('Recevoir les paiements')}
             </Text>
             <Text style={styles.stepSubtitle}>
-              {ct('celOnboardStripeSubtitle' as any) || 'Pour recevoir l\'argent de tes fans, connecte un compte Stripe sécurisé. C\'est gratuit et tu peux le faire en 2 minutes.'}
+              {ct('celOnboardStripeSubtitle' as any) || trUI('Pour recevoir l\'argent de tes fans, connecte un compte Stripe sécurisé. C\'est gratuit et tu peux le faire en 2 minutes.')}
             </Text>
 
             {stripeLinked ? (
               <View style={styles.stripeConnectedBox}>
                 <CheckCircle size={22} color="#10b981" />
                 <Text style={styles.stripeConnectedText}>
-                  {ct('celOnboardStripeConnected' as any) || 'Compte connecté'}
+                  {ct('celOnboardStripeConnected' as any) || trUI('Compte connecté')}
                 </Text>
               </View>
             ) : (
@@ -300,7 +347,7 @@ export default function CelebrityOnboardingScreen() {
                 >
                   <CreditCard size={20} color="#fff" />
                   <Text style={styles.stripeButtonText}>
-                    {ct('celOnboardConnectStripe' as any) || 'Connecter mon compte Stripe'}
+                    {ct('celOnboardConnectStripe' as any) || trUI('Connecter mon compte Stripe')}
                   </Text>
                 </TouchableOpacity>
 
@@ -310,7 +357,7 @@ export default function CelebrityOnboardingScreen() {
                   activeOpacity={0.7}
                 >
                   <Text style={styles.laterLinkText}>
-                    {ct('celOnboardStripeLater' as any) || 'Je le ferai plus tard'}
+                    {ct('celOnboardStripeLater' as any) || trUI('Je le ferai plus tard')}
                   </Text>
                 </TouchableOpacity>
               </>
@@ -325,23 +372,23 @@ export default function CelebrityOnboardingScreen() {
               <CheckCircle size={44} color="#10b981" />
             </View>
             <Text style={styles.stepHeadline}>
-              {ct('celOnboardDoneHeadline' as any) || 'C\'est prêt !'}
+              {ct('celOnboardDoneHeadline' as any) || trUI('C\'est prêt !')}
             </Text>
             <Text style={styles.stepSubtitle}>
-              {ct('celOnboardDoneSubtitle' as any) || 'Ton Mode Célébrité est activé. Voici un récapitulatif :'}
+              {ct('celOnboardDoneSubtitle' as any) || trUI('Ton Mode Célébrité est activé. Voici un récapitulatif :')}
             </Text>
 
             <View style={styles.recapBox}>
               <View style={styles.recapRow}>
                 <CheckCircle size={18} color="#10b981" />
                 <Text style={styles.recapText}>
-                  {ct('celOnboardRecapPhoto' as any) || 'Photo de profil'}
+                  {ct('celOnboardRecapPhoto' as any) || trUI('Photo de profil')}
                 </Text>
               </View>
               <View style={styles.recapRow}>
                 <CheckCircle size={18} color="#10b981" />
                 <Text style={styles.recapText}>
-                  {ct('celOnboardRecapProfile' as any) || 'Nom public et présentation'}
+                  {ct('celOnboardRecapProfile' as any) || trUI('Nom public et présentation')}
                 </Text>
               </View>
               <View style={styles.recapRow}>
@@ -352,18 +399,18 @@ export default function CelebrityOnboardingScreen() {
                 )}
                 <Text style={styles.recapText}>
                   {stripeLinked
-                    ? (ct('celOnboardRecapStripeOk' as any) || 'Paiements configurés')
-                    : (ct('celOnboardRecapStripeTodo' as any) || 'Paiements à configurer (depuis Mon Compte)')}
+                    ? (ct('celOnboardRecapStripeOk' as any) || trUI('Paiements configurés'))
+                    : (ct('celOnboardRecapStripeTodo' as any) || trUI('Paiements à configurer (depuis Mon Compte)'))}
                 </Text>
               </View>
             </View>
 
             <View style={[styles.section, { paddingHorizontal: 0, marginTop: 20 }]}>
               <Text style={styles.sectionTitle}>
-                {ct('celOnboardVerifSection' as any) || 'VÉRIFICATION (FACULTATIF)'}
+                {ct('celOnboardVerifSection' as any) || trUI('VÉRIFICATION (FACULTATIF)')}
               </Text>
               <Text style={styles.verifIntro}>
-                {ct('celOnboardVerifIntro' as any) || 'Facultatif : fais vérifier ton profil pour obtenir un badge officiel.'}
+                {ct('celOnboardVerifIntro' as any) || trUI('Facultatif : fais vérifier ton profil pour obtenir un badge officiel.')}
               </Text>
 
               <TouchableOpacity
@@ -377,10 +424,10 @@ export default function CelebrityOnboardingScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.orgCardTitle}>
-                      {ct('celOnboardCreatorTitle' as any) || 'Streamer / Créateur de contenu ?'}
+                      {ct('celOnboardCreatorTitle' as any) || trUI('Streamer / Créateur de contenu ?')}
                     </Text>
                     <Text style={styles.orgCardDesc}>
-                      {ct('celOnboardCreatorDesc' as any) || 'Twitch, YouTube, TikTok, Instagram... Faites vérifier votre profil pour obtenir un badge vérifié.'}
+                      {ct('celOnboardCreatorDesc' as any) || trUI('Twitch, YouTube, TikTok, Instagram... Faites vérifier votre profil pour obtenir un badge vérifié.')}
                     </Text>
                   </View>
                   <ArrowRight size={18} color="#3b82f6" />
@@ -398,10 +445,10 @@ export default function CelebrityOnboardingScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.orgCardTitle}>
-                      {ct('celOnboardOrgTitle' as any) || 'Vous êtes une organisation ?'}
+                      {ct('celOnboardOrgTitle' as any) || trUI('Vous êtes une organisation ?')}
                     </Text>
                     <Text style={styles.orgCardDesc}>
-                      {ct('celOnboardOrgDesc' as any) || 'Clubs sportifs, marques, associations... Faites vérifier votre compte pour un badge spécial.'}
+                      {ct('celOnboardOrgDesc' as any) || trUI('Clubs sportifs, marques, associations... Faites vérifier votre compte pour un badge spécial.')}
                     </Text>
                   </View>
                   <ArrowRight size={18} color="#8b5cf6" />
@@ -419,10 +466,10 @@ export default function CelebrityOnboardingScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.orgCardTitle}>
-                      {ct('celOnboardCelebTitle' as any) || 'Vous êtes une célébrité / personnalité publique ?'}
+                      {ct('celOnboardCelebTitle' as any) || trUI('Vous êtes une célébrité / personnalité publique ?')}
                     </Text>
                     <Text style={styles.orgCardDesc}>
-                      {ct('celOnboardCelebDesc' as any) || 'Acteur, musicien, sportif… Faites vérifier votre profil pour un badge officiel.'}
+                      {ct('celOnboardCelebDesc' as any) || trUI('Acteur, musicien, sportif… Faites vérifier votre profil pour un badge officiel.')}
                     </Text>
                   </View>
                   <ArrowRight size={18} color="#10b981" />
@@ -443,7 +490,7 @@ export default function CelebrityOnboardingScreen() {
           <TouchableOpacity style={styles.primaryButton} onPress={goNext} activeOpacity={0.85}>
             <Zap size={20} color="#000" />
             <Text style={styles.primaryButtonText}>
-              {ct('celOnboardBegin' as any) || 'Commencer'}
+              {ct('celOnboardBegin' as any) || trUI('Commencer')}
             </Text>
           </TouchableOpacity>
         )}
@@ -456,7 +503,7 @@ export default function CelebrityOnboardingScreen() {
             activeOpacity={0.85}
           >
             <Text style={[styles.primaryButtonText, !canContinue() && styles.primaryButtonTextDisabled]}>
-              {ct('celOnboardContinue' as any) || 'Continuer'}
+              {ct('celOnboardContinue' as any) || trUI('Continuer')}
             </Text>
             <ArrowRight size={20} color={canContinue() ? '#000' : '#6b7280'} />
           </TouchableOpacity>
@@ -465,7 +512,7 @@ export default function CelebrityOnboardingScreen() {
         {step === 2 && (
           <TouchableOpacity style={styles.primaryButton} onPress={finish} activeOpacity={0.85}>
             <Text style={styles.primaryButtonText}>
-              {ct('celOnboardFinish' as any) || 'Accéder à mon profil'}
+              {ct('celOnboardFinish' as any) || trUI('Accéder à mon profil')}
             </Text>
             <ArrowRight size={20} color="#000" />
           </TouchableOpacity>

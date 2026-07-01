@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAutoTranslate } from '@/utils/translation';
 import { createLiveSession } from '@/utils/liveSessionStorage';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -96,6 +97,7 @@ export default function CreateLiveSessionScreen() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
+  const trUI = useAutoTranslate(['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Fermer', 'Heures', 'Minutes', 'Valider']);
   const { user } = useAuth();
 
   const [celebrityName, setCelebrityName] = useState('');
@@ -957,8 +959,8 @@ export default function CreateLiveSessionScreen() {
             </View>
 
             <View style={styles.weekdaysRow}>
-              {WEEKDAYS.map((day) => (
-                <Text key={day} style={styles.weekdayText}>{day}</Text>
+              {WEEKDAYS.map((day, wdIndex) => (
+                <Text key={day} style={styles.weekdayText}>{trUI(WEEKDAYS_FR[wdIndex])}</Text>
               ))}
             </View>
 
@@ -995,7 +997,7 @@ export default function CreateLiveSessionScreen() {
             </View>
 
             <TouchableOpacity style={styles.calendarCloseBtn} onPress={() => setShowDatePicker(false)}>
-              <Text style={styles.calendarCloseBtnText}>Fermer</Text>
+              <Text style={styles.calendarCloseBtnText}>{trUI('Fermer')}</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
@@ -1012,7 +1014,7 @@ export default function CreateLiveSessionScreen() {
             <Text style={styles.timePickerTitle}>{t('eventTime') || 'Heure'}</Text>
             <View style={styles.timePickerColumns}>
               <View style={styles.timePickerColumn}>
-                <Text style={styles.timePickerLabel}>Heures</Text>
+                <Text style={styles.timePickerLabel}>{trUI('Heures')}</Text>
                 <ScrollView style={styles.timePickerScroll} showsVerticalScrollIndicator={false}>
                   {Array.from({ length: 24 }, (_, i) => (
                     <TouchableOpacity
@@ -1029,7 +1031,7 @@ export default function CreateLiveSessionScreen() {
               </View>
               <Text style={styles.timePickerSeparator}>:</Text>
               <View style={styles.timePickerColumn}>
-                <Text style={styles.timePickerLabel}>Minutes</Text>
+                <Text style={styles.timePickerLabel}>{trUI('Minutes')}</Text>
                 <ScrollView style={styles.timePickerScroll} showsVerticalScrollIndicator={false}>
                   {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => (
                     <TouchableOpacity
@@ -1052,7 +1054,7 @@ export default function CreateLiveSessionScreen() {
                 setShowTimePicker(false);
               }}
             >
-              <Text style={styles.timePickerConfirmText}>Valider</Text>
+              <Text style={styles.timePickerConfirmText}>{trUI('Valider')}</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>

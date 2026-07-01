@@ -23,6 +23,7 @@ import BottomNav from '@/components/BottomNav';
 import PlyzHeader from '@/components/PlyzHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from '@/contexts/LanguageContext';
+import { useAutoTranslate } from '@/utils/translation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { Language } from '@/locales';
@@ -83,6 +84,13 @@ export default function AccountScreen() {
   const { isCelebrity, toggleCelebrityMode, profilePhoto, setProfilePhoto } = useCelebrityMode();
   const { startOnboarding } = useOnboarding();
   const insets = useSafeAreaInsets();
+  const trUI = useAutoTranslate([
+    'Administration',
+    'Mode Célébrité — Validé',
+    'En cours de vérification',
+    'Tu seras validé sous 5 à 10 min',
+    'Tableau de bord admin',
+  ]);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
 
   const [loginEmail, setLoginEmail] = useState('');
@@ -731,14 +739,14 @@ export default function AccountScreen() {
               isVerified ? (
                 <View style={styles.statusBadgeVerified}>
                   <Check size={18} color="#10b981" />
-                  <Text style={styles.statusBadgeVerifiedText}>Mode Célébrité — Validé</Text>
+                  <Text style={styles.statusBadgeVerifiedText}>{trUI('Mode Célébrité — Validé')}</Text>
                 </View>
               ) : (
                 <View style={styles.statusBadgePending}>
                   <Clock size={18} color="#f59e0b" />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.statusBadgePendingText}>En cours de vérification</Text>
-                    <Text style={styles.statusBadgePendingSub}>Tu seras validé sous 5 à 10 min</Text>
+                    <Text style={styles.statusBadgePendingText}>{trUI('En cours de vérification')}</Text>
+                    <Text style={styles.statusBadgePendingSub}>{trUI('Tu seras validé sous 5 à 10 min')}</Text>
                   </View>
                 </View>
               )
@@ -897,7 +905,7 @@ export default function AccountScreen() {
 
         {(user?.email || '').toLowerCase() === 'jc@clickzou.fr' && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>Administration</Text>
+            <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>{trUI('Administration')}</Text>
             <TouchableOpacity
               style={[styles.menuItem, isRTL && styles.menuItemRTL]}
               onPress={() => handlePress('admin')}
@@ -906,7 +914,7 @@ export default function AccountScreen() {
               <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
                 <Shield size={24} color="#f59e0b" strokeWidth={2} />
               </View>
-              <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>Tableau de bord admin</Text>
+              <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{trUI('Tableau de bord admin')}</Text>
             </TouchableOpacity>
           </View>
         )}
