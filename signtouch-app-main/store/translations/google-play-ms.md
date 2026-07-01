@@ -1,40 +1,44 @@
-# Plyz — Google Play (Bahasa Melayu)
+# Plyz — Google Play (Malay)
 
-## Description courte
-Tempah dedikasi, tandatangan & detik di sebalik tabir melalui video langsung dengan idolamu.
+## Description courte (max 80 caractères)
+Tempah dedikasi, tandatangan dan panggilan video peribadi dengan bintang-bintang kamu.
 
 ## Description complète
-Plyz mendekatkan peminat dengan artis, penyanyi, atlet, pencipta kandungan, dan kelab kegemaran mereka. Mohon dedikasi peribadi, tandatangan eksklusif, panggilan video persendirian, atau hayati suasana di sebalik tabir — semuanya dalam satu aplikasi yang mudah, selamat, dan mesra.
+Plyz ialah platform yang menghubungkan peminat dengan artis, penyanyi, atlet, pencipta dan kelab pilihan mereka untuk perkhidmatan yang dipersonalisasi. Tempah panggilan video peribadi secara langsung, pesan tandatangan atau dedikasi yang ditandatangani, atau sertai acara langsung — semuanya dalam satu aplikasi yang mudah, selamat dan mesra pengguna.
 
 ★ UNTUK PEMINAT
-• Terokai deretan selebriti yang disahkan
-• Mohon tandatangan peribadi terus pada fotomu
-• Tempah panggilan video persendirian bersemuka dengan idolamu
-• Sertai acara dedikasi secara langsung menerusi kod QR atau kod acara
-• Peribadikan fotomu dengan tandatangan tulisan tangan atau dedikasi, daripada lebih 50 jenis fon
-• Simpan semua dedikasi dan kenangan terindahmu dalam galeri peribadi
+
+• Temui dinding selebriti yang disahkan
+• Minta tandatangan peribadi di atas foto kamu
+• Tempah panggilan video peribadi bersama-sama dengan bintang
+• Sertai acara dedikasi langsung melalui kod QR atau kod acara
+• Suaikan foto kamu dengan tandatangan tulisan tangan atau dedikasi, dari lebih 50 fon
+• Cari semua dedikasi kamu dan kenangan terindah dalam galeri kamu
 • Pembayaran 100% selamat
 
-★ HAYATI DETIK DI SEBALIK TABIR
-• Alami detik eksklusif menerusi video langsung, khas untuk peminat sejati
-• Konsert: latihan, bilik persalinan artis, di belakang pentas, naik ke pentas
-• Sukan: bilik persalinan, memanaskan badan, latihan, sebelum perlawanan
-• Ikuti artis, kelab, dan pasukanmu seolah-olah kamu berada di sana
+★ SELAMI KERJA LINTANG
 
-★ UNTUK SELEBRITI, PENCIPTA KANDUNGAN & KELAB
-• Aktifkan Mod Selebriti hanya dalam beberapa saat
-• Tawarkan dedikasi, tandatangan, dan panggilan video kepada peminatmu
-• Cipta acara langsungmu sendiri dengan kod QR
-• Tetapkan kadar harga dan terima bayaranmu secara terus
-• Kongsikan berita terkini agar sentiasa berhubung dengan komunitimu
-• Pantau pendapatanmu daripada papan pemuka khusus
+• Tempah sesi langsung dengan personaliti yang membawa kamu ke kerja lintang
+• Konsert: latihan, bilik solek, kerja lintang, naik ke pentas
+• Sukan: bilik ganti, pemanasan, latihan, pra-perlawanan
+• Ikuti artis, kelab dan pasukan kamu seolah-olah kamu berada di sana
 
-★ MUDAH, SELAMAT, DAN MENGHORMATI
+★ UNTUK SELEBRITI, PENCIPTA & KELAB
+
+• Aktifkan Mode Selebriti dalam beberapa saat
+• Tawarkan dedikasi, tandatangan dan panggilan video kepada peminat kamu
+• Cipta acara langsung kamu sendiri dengan kod QR
+• Tetapkan harga kamu dan terima pembayaran terus-terus
+• Siarkan berita untuk kekal berhubung dengan komuniti kamu
+• Pantau pendapatan kamu dari ruang khusus kamu
+
+★ MUDAH, SELAMAT, BERTANGGUNGJAWAB
+
 • Akaun selebriti yang disahkan
-• Pembayaran diproses oleh Stripe — Plyz tidak pernah menyimpan maklumat bankmu
-• Panggilan video tersulit
-• Datamu dilindungi dan tidak pernah dijual
+• Pembayaran diproses oleh Stripe — Plyz tidak pernah merekod butiran bank kamu
+• Panggilan video yang disulitkan
+• Data kamu dilindungi dan tidak pernah dijual semula
 
-Sama ada kamu peminat seorang artis, atlet, kelab, pencipta kandungan, atau tokoh terkenal, Plyz membolehkanmu menghayati detik yang unik dan tulen bersama mereka yang bermakna bagimu.
+Sama ada kamu peminat artis, atlet, kelab, pencipta atau personaliti, Plyz membenarkan kamu mengalami momen unik dan autentik dengan mereka yang penting bagi kamu.
 
-Muat turun Plyz dan ciptakan kenangan pertamamu hari ini juga!
+Muat turun Plyz dan cipta kenangan pertama kamu hari ini!

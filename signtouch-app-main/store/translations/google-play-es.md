@@ -1,40 +1,44 @@
-# Plyz — Google Play (Español)
+# Plyz — Google Play (Spanish)
 
 ## Description courte (max 80 caractères)
-Dedicatorias, autógrafos y backstage en vídeo en directo con tus estrellas.
+Reserva dedicatorias, autógrafos y llamadas de vídeo privadas con tus estrellas.
 
 ## Description complète
-Plyz acerca a los fans a sus artistas, cantantes, deportistas, creadores y clubes favoritos. Pide una dedicatoria personalizada, un autógrafo firmado, una videollamada privada o sumérgete entre bastidores — todo en una app sencilla, segura y cercana.
+Plyz es la plataforma que conecta a los fans con sus artistas, cantantes, deportistas, creadores y clubes favoritos para servicios personalizados. Reserva una llamada de vídeo privada en directo, encarga una dedicatoria o un autógrafo firmado, o participa en un evento en directo — todo en una aplicación simple, segura y fácil de usar.
 
 ★ PARA LOS FANS
+
 • Descubre un muro de celebridades verificadas
-• Pide un autógrafo personalizado en tu foto
-• Reserva una videollamada privada cara a cara con una estrella
-• Únete a eventos de dedicatorias en directo con un código QR o un código de evento
+• Solicita un autógrafo personalizado en tu foto
+• Reserva una llamada de vídeo privada cara a cara con una estrella
+• Únete a eventos de dedicatorias en directo gracias a un código QR o un código de evento
 • Personaliza tus fotos con una firma manuscrita o una dedicatoria, entre más de 50 fuentes
-• Guarda todas tus dedicatorias y tus mejores recuerdos en tu galería
+• Encuentra todas tus dedicatorias y tus mejores recuerdos en tu galería
 • Pago 100 % seguro
 
-★ SUMÉRGETE ENTRE BASTIDORES
-• Vive momentos exclusivos en vídeo en directo, reservados a los verdaderos fans
+★ SUMÉRGETE EN LOS BASTIDORES
+
+• Reserva sesiones en directo con personalidades que te llevan a los bastidores
 • Conciertos: ensayos, camerinos, backstage, subida al escenario
-• Deporte: vestuario, calentamientos, entrenamientos, antes del partido
+• Deporte: vestuario, calentamientos, entrenamientos, previa del partido
 • Sigue a tus artistas, tus clubes y tus equipos como si estuvieras allí
 
 ★ PARA CELEBRIDADES, CREADORES Y CLUBES
+
 • Activa el Modo Celebridad en unos segundos
-• Ofrece dedicatorias, autógrafos y videollamadas a tus fans
+• Ofrece dedicatorias, autógrafos y llamadas de vídeo a tus fans
 • Crea tus propios eventos en directo con código QR
 • Fija tus tarifas y recibe tus pagos directamente
-• Publica novedades para mantener el contacto con tu comunidad
-• Controla tus ingresos desde tu espacio dedicado
+• Publica noticias para mantener el contacto con tu comunidad
+• Supervisa tus ingresos desde tu espacio dedicado
 
-★ SENCILLO, SEGURO, RESPETUOSO
-• Cuentas de celebridades verificadas
-• Pagos gestionados por Stripe — Plyz nunca guarda tus datos bancarios
-• Videollamadas cifradas
+★ SIMPLE, SEGURO, RESPETUOSO
+
+• Cuentas de celebridad verificadas
+• Pagos procesados por Stripe — Plyz nunca registra tus datos bancarios
+• Llamadas de vídeo cifradas
 • Tus datos están protegidos y nunca se revenden
 
-Seas fan de un artista, un deportista, un club, un creador o una personalidad, Plyz te permite vivir un momento único y auténtico con quienes de verdad te importan.
+Sea que seas fan de un artista, un deportista, un club, un creador o una personalidad, Plyz te permite vivir un momento único y auténtico con aquellos que te importan.
 
 ¡Descarga Plyz y crea tu primer recuerdo hoy mismo!

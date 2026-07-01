@@ -1,40 +1,44 @@
-# Plyz — Google Play (Deutsch)
+# Plyz — Google Play (German)
 
 ## Description courte (max 80 caractères)
-Widmungen, Autogramme & Backstage per Live-Video mit deinen Stars.
+Buche Widmungen, Autogramme und private Videoanrufe mit deinen Stars.
 
 ## Description complète
-Plyz bringt Fans näher an ihre Lieblingskünstler, -sänger, -sportler, -creator und -clubs. Fordere eine persönliche Widmung, ein signiertes Autogramm oder einen privaten Videoanruf an oder tauche hinter die Kulissen ein — alles in einer App, die einfach, sicher und herzlich ist.
+Plyz ist die Plattform, die Fans und ihre liebsten Künstler, Sänger, Sportler, Creator und Clubs für personalisierte Dienstleistungen verbindet. Buche einen privaten Live-Videoanruf, bestelle eine personalisierte Widmung oder ein signiertes Autogramm, oder nimm an einem Live-Event teil — alles in einer einfachen, sicheren und benutzerfreundlichen App.
 
 ★ FÜR FANS
-• Entdecke eine Wand voller verifizierter Stars
-• Fordere ein persönliches Autogramm auf deinem Foto an
+
+• Entdecke eine Wand mit verifizierten Prominenten
+• Bestelle ein personalisiertes Autogramm auf deinem Foto
 • Buche einen privaten Videoanruf von Angesicht zu Angesicht mit einem Star
-• Nimm an Live-Widmungs-Events per QR-Code oder Event-Code teil
-• Gestalte deine Fotos mit einer handschriftlichen Signatur oder Widmung, aus über 50 Schriftarten
-• Sammle all deine Widmungen und schönsten Erinnerungen in deiner Galerie
-• 100 % sichere Bezahlung
+• Nimm an Live-Widmungs-Events teil über QR-Code oder Event-Code
+• Personalisiere deine Fotos mit einer handschriftlichen Signatur oder Widmung aus über 50 Schriftarten
+• Finde alle deine Widmungen und deine schönsten Erinnerungen in deiner Galerie
+• 100 % sichere Zahlungen
 
-★ TAUCHE HINTER DIE KULISSEN
-• Erlebe exklusive Momente im Live-Video, nur für echte Fans
-• Konzerte: Proben, Garderoben, Backstage, Auftritt auf der Bühne
-• Sport: Umkleidekabine, Aufwärmen, Training, vor dem Spiel
-• Folge deinen Künstlern, Clubs und Teams, als wärst du mittendrin
+★ BLICK HINTER DIE KULISSEN
 
-★ FÜR STARS, CREATOR & CLUBS
-• Aktiviere den Star-Modus in Sekunden
-• Biete deinen Fans Widmungen, Autogramme und Videoanrufe an
-• Erstelle eigene Live-Events mit QR-Code
+• Buche Live-Sessions mit Persönlichkeiten, die dir die Kulissen zeigen
+• Konzerte: Proben, Garderoben, Backstage, Bühneneintritt
+• Sport: Umkleideraum, Aufwärmung, Training, vor dem Spiel
+• Folge deinen Künstlern, Clubs und Teams, als würdest du dabei sein
+
+★ FÜR PROMINENTE, CREATOR & CLUBS
+
+• Aktiviere den Celebrity-Modus in wenigen Sekunden
+• Biete Widmungen, Autogramme und Videoanrufe deinen Fans an
+• Erstelle deine eigenen Live-Events mit QR-Code
 • Lege deine Preise fest und erhalte deine Zahlungen direkt
-• Veröffentliche News, um mit deiner Community in Kontakt zu bleiben
-• Behalte deine Einnahmen in deinem eigenen Bereich im Blick
+• Poste News, um den Kontakt zu deiner Community zu halten
+• Überwache deine Einnahmen in deinem dedizierten Bereich
 
 ★ EINFACH, SICHER, RESPEKTVOLL
-• Verifizierte Star-Konten
-• Zahlungen über Stripe — Plyz speichert niemals deine Bankdaten
+
+• Verifizierte Celebrity-Konten
+• Zahlungen werden von Stripe abgewickelt — Plyz speichert deine Bankdaten nie
 • Verschlüsselte Videoanrufe
-• Deine Daten sind geschützt und werden niemals weiterverkauft
+• Deine Daten sind geschützt und werden niemals weitergegeben
 
-Ob du Fan eines Künstlers, Sportlers, Clubs, Creators oder einer Persönlichkeit bist — mit Plyz erlebst du einen einzigartigen und echten Moment mit den Menschen, die dir wichtig sind.
+Ob du Fan eines Künstlers, eines Sportlers, eines Clubs, eines Creators oder einer Persönlichkeit bist — Plyz ermöglicht dir einen einzigartigen und authentischen Moment mit denjenigen, die dir wichtig sind.
 
-Lade Plyz herunter und schaffe noch heute deine erste Erinnerung!
+Lade Plyz herunter und erschaffe noch heute deine erste Erinnerung!

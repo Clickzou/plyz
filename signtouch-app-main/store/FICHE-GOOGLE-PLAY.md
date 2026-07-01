@@ -14,15 +14,15 @@ Textes prêts à coller dans Google Play Console → « Présence sur le Store �
 
 ## Description courte (80 caractères max)
 
-**Dédicaces, autographes et coulisses en vidéo live avec tes stars préférées.**
+**Réserve dédicaces, autographes et appels vidéo privés avec tes stars.**
 
-> (75 caractères)
+> (69 caractères)
 
 ---
 
 ## Description complète (4000 caractères max)
 
-Plyz rapproche les fans de leurs artistes, chanteurs, sportifs, créateurs et clubs préférés. Demande une dédicace personnalisée, un autographe signé, un appel vidéo privé ou plonge dans les coulisses — le tout dans une application simple, sécurisée et conviviale.
+Plyz est la plateforme qui met en relation les fans et leurs artistes, chanteurs, sportifs, créateurs et clubs préférés pour des prestations personnalisées. Réserve un appel vidéo privé en direct, commande une dédicace ou un autographe signé, ou participe à un événement live — le tout dans une application simple, sécurisée et conviviale.
 
 ★ POUR LES FANS
 
@@ -36,7 +36,7 @@ Plyz rapproche les fans de leurs artistes, chanteurs, sportifs, créateurs et cl
 
 ★ PLONGE DANS LES COULISSES
 
-• Vis des moments exclusifs en vidéo live, réservés aux vrais fans
+• Réserve des sessions en direct avec les personnalités qui te font vivre les coulisses
 • Concerts : répétitions, loges, backstage, montée sur scène
 • Sport : vestiaire, échauffements, entraînements, avant-match
 • Suis tes artistes, tes clubs et tes équipes comme si tu y étais
