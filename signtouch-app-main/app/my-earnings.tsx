@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { getDateLocale } from '@/utils/dateLocale';
 import {
   View,
   Text,
@@ -97,7 +98,7 @@ export default function MyEarningsScreen() {
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleDateString('fr-FR', {
+    return d.toLocaleDateString(getDateLocale(), {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -106,7 +107,7 @@ export default function MyEarningsScreen() {
 
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleTimeString('fr-FR', {
+    return d.toLocaleTimeString(getDateLocale(), {
       hour: '2-digit',
       minute: '2-digit',
     });

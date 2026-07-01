@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getDateLocale } from '@/utils/dateLocale';
 import {
   View,
   Text,
@@ -178,7 +179,7 @@ export default function AccountScreen() {
       : videoMonthClientCents;
 
   const formatEuros = (cents: number) =>
-    (cents / 100).toLocaleString('fr-FR', {
+    (cents / 100).toLocaleString(getDateLocale(), {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }) + ' €';

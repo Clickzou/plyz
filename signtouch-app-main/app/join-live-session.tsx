@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { getDateLocale } from '@/utils/dateLocale';
 import {
   View,
   Text,
@@ -741,7 +742,7 @@ export default function JoinLiveSessionScreen() {
   const formatScheduledDate = (iso?: string | null): string => {
     if (!iso) return '';
     try {
-      return new Date(iso).toLocaleString('fr-FR', {
+      return new Date(iso).toLocaleString(getDateLocale(), {
         weekday: 'long',
         day: 'numeric',
         month: 'long',

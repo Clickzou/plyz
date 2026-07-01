@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useTranslation } from '@/contexts/LanguageContext';
+import { useAutoTranslate } from '@/utils/translation';
 
 interface FaqItem {
   q: string;
@@ -101,6 +102,11 @@ export default function FaqScreen() {
   const { t } = useTranslation();
   const [open, setOpen] = useState<string | null>(null);
 
+  // Traduction automatique de la FAQ (contenu FR) dans la langue de l'utilisateur
+  const trFaq = useAutoTranslate(
+    FAQ_SECTIONS.flatMap((s) => [s.title, ...s.items.flatMap((i) => [i.q, i.a])])
+  );
+
   const toggle = (key: string) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -133,7 +139,7 @@ export default function FaqScreen() {
 
         {FAQ_SECTIONS.map((section, si) => (
           <View key={`sec-${si}`} style={styles.section}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <Text style={styles.sectionTitle}>{trFaq(section.title)}</Text>
             {section.items.map((item, ii) => {
               const key = `${si}-${ii}`;
               const isOpen = open === key;
@@ -144,14 +150,14 @@ export default function FaqScreen() {
                     onPress={() => toggle(key)}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.question}>{item.q}</Text>
+                    <Text style={styles.question}>{trFaq(item.q)}</Text>
                     {isOpen ? (
                       <ChevronUp size={20} color="#10b981" />
                     ) : (
                       <ChevronDown size={20} color="#94a3b8" />
                     )}
                   </TouchableOpacity>
-                  {isOpen && <Text style={styles.answer}>{item.a}</Text>}
+                  {isOpen && <Text style={styles.answer}>{trFaq(item.a)}</Text>}
                 </View>
               );
             })}

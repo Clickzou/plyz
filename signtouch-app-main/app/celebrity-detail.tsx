@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { getDateLocale } from '@/utils/dateLocale';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Image, ActivityIndicator, Alert, TextInput, Linking, Platform,
@@ -149,13 +150,13 @@ export default function CelebrityDetailScreen() {
   const formatEventDate = (dateStr: string | null) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
-    return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    return d.toLocaleDateString(getDateLocale(), { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   const formatEventTime = (dateStr: string | null) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
-    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString(getDateLocale(), { hour: '2-digit', minute: '2-digit' });
   };
 
   const showAlert = (msg: string) => {

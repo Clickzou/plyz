@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { getDateLocale } from '@/utils/dateLocale';
 import {
   View,
   Text,
@@ -32,7 +33,7 @@ const euro = (cents: number | null | undefined) =>
 
 const fmtDate = (d?: string) => {
   if (!d) return '';
-  try { return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+  try { return new Date(d).toLocaleDateString(getDateLocale(), { day: '2-digit', month: '2-digit', year: 'numeric' }); }
   catch { return d; }
 };
 

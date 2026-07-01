@@ -3,6 +3,7 @@ import * as Localization from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { I18nManager } from 'react-native';
 import { translations, Language, TranslationKeys, getLanguageFromLocale } from '@/locales';
+import { setDateLocale } from '@/utils/dateLocale';
 
 const RTL_LANGUAGES = ['ar', 'ur'];
 
@@ -21,6 +22,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en');
 
   const isRTL = RTL_LANGUAGES.includes(language);
+
+  // Synchronise le formatage des dates avec la langue active de l'app
+  setDateLocale(language);
 
   // Initialize language from storage or device locale
   useEffect(() => {

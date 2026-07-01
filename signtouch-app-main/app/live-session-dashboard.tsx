@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { getDateLocale } from '@/utils/dateLocale';
 import {
   View,
   Text,
@@ -769,7 +770,7 @@ export default function LiveSessionDashboardScreen() {
     try {
       const scheduledDate = session.scheduled_at ? new Date(session.scheduled_at) : new Date();
       if (!isNaN(scheduledDate.getTime())) {
-        when = scheduledDate.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', {
+        when = scheduledDate.toLocaleString(language === 'fr' ? getDateLocale() : 'en-US', {
           weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
         });
       }
@@ -1203,7 +1204,7 @@ export default function LiveSessionDashboardScreen() {
 
   if (session.status === 'scheduled') {
     const scheduledDate = session.scheduled_at ? new Date(session.scheduled_at) : null;
-    const locale = language === 'fr' ? 'fr-FR' : 'en-US';
+    const locale = language === 'fr' ? getDateLocale() : 'en-US';
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />

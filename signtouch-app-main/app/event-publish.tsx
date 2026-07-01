@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { getDateLocale } from '@/utils/dateLocale';
 import {
   View,
   Text,
@@ -95,7 +96,7 @@ export default function EventPublishScreen() {
     if (!dateStr) return '';
     try {
       const date = new Date(dateStr);
-      return date.toLocaleString('fr-FR', { 
+      return date.toLocaleString(getDateLocale(), { 
         day: '2-digit', 
         month: '2-digit', 
         year: 'numeric',

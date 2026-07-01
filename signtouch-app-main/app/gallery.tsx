@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { getDateLocale } from '@/utils/dateLocale';
 import {
   View,
   Text,
@@ -82,7 +83,7 @@ export default function GalleryScreen() {
   const formatDate = (dateString?: string, timestamp?: number) => {
     const date = dateString ? new Date(dateString) : timestamp ? new Date(timestamp) : null;
     if (!date) return '';
-    return date.toLocaleDateString('fr-FR', { 
+    return date.toLocaleDateString(getDateLocale(), { 
       day: 'numeric', 
       month: 'long', 
       year: 'numeric' 
@@ -104,8 +105,8 @@ export default function GalleryScreen() {
       .map(([key, mems]) => ({
         key,
         label: mems[0].metadata?.eventDate 
-          ? new Date(mems[0].metadata.eventDate).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
-          : new Date(mems[0].timestamp).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }),
+          ? new Date(mems[0].metadata.eventDate).toLocaleDateString(getDateLocale(), { month: 'long', year: 'numeric' })
+          : new Date(mems[0].timestamp).toLocaleDateString(getDateLocale(), { month: 'long', year: 'numeric' }),
         memories: mems
       }));
   };

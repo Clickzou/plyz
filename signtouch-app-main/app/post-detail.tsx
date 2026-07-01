@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { getDateLocale } from '@/utils/dateLocale';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Image,
 } from 'react-native';
@@ -34,19 +35,19 @@ export default function PostDetailScreen() {
   const formatEventDate = (dateStr: string | null) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
-    return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    return d.toLocaleDateString(getDateLocale(), { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   const formatEventTime = (dateStr: string | null) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
-    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString(getDateLocale(), { hour: '2-digit', minute: '2-digit' });
   };
 
   const formatPostDate = (dateStr: string | null) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
-    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    return d.toLocaleDateString(getDateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
   if (!post) {

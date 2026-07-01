@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getDateLocale } from '@/utils/dateLocale';
 import {
   View,
   Text,
@@ -143,7 +144,7 @@ export default function CreateLiveSessionScreen() {
 
   const formatDisplayDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    const locale = language === 'fr' ? 'fr-FR' : 'en-US';
+    const locale = language === 'fr' ? getDateLocale() : 'en-US';
     return date.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   };
 
@@ -433,7 +434,7 @@ export default function CreateLiveSessionScreen() {
     try {
       const scheduledDate = new Date(scheduledConfirmation.scheduledAt);
       if (!isNaN(scheduledDate.getTime())) {
-        when = scheduledDate.toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', {
+        when = scheduledDate.toLocaleString(language === 'fr' ? getDateLocale() : 'en-US', {
           weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
         });
       }
@@ -476,7 +477,7 @@ export default function CreateLiveSessionScreen() {
           </Text>
           <Text style={{ fontSize: 14, color: '#9ca3af', textAlign: 'center', marginBottom: 24, paddingHorizontal: 20 }}>
             {language === 'fr' 
-              ? `Votre session live est programmée pour le ${new Date(scheduledConfirmation.scheduledAt).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' })} à ${new Date(scheduledConfirmation.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+              ? `Votre session live est programmée pour le ${new Date(scheduledConfirmation.scheduledAt).toLocaleDateString(language === 'fr' ? getDateLocale() : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' })} à ${new Date(scheduledConfirmation.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
               : `Your live session is scheduled for ${new Date(scheduledConfirmation.scheduledAt).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at ${new Date(scheduledConfirmation.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
             }
           </Text>
@@ -948,7 +949,7 @@ export default function CreateLiveSessionScreen() {
                 <Text style={styles.calendarNavText}>{'<'}</Text>
               </TouchableOpacity>
               <Text style={styles.calendarMonthText}>
-                {calendarMonth.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' })}
+                {calendarMonth.toLocaleDateString(language === 'fr' ? getDateLocale() : 'en-US', { month: 'long', year: 'numeric' })}
               </Text>
               <TouchableOpacity onPress={() => changeMonth(1)} style={styles.calendarNavBtn}>
                 <Text style={styles.calendarNavText}>{'>'}</Text>

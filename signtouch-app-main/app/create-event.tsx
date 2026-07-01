@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { getDateLocale } from '@/utils/dateLocale';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   View,
@@ -620,7 +621,7 @@ export default function CreateEventScreen() {
 
   const formatDisplayDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', { 
+    return date.toLocaleDateString(getDateLocale(), { 
       weekday: 'long', 
       day: 'numeric', 
       month: 'long', 
@@ -932,7 +933,7 @@ export default function CreateEventScreen() {
                   <Text style={styles.eventSummaryText}>
                     {t('eventSummary') || 'Votre événement commence le'}{' '}
                     <Text style={styles.eventSummaryHighlight}>
-                      {new Date(eventDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+                      {new Date(eventDate).toLocaleDateString(getDateLocale(), { day: 'numeric', month: 'long' })}
                     </Text>
                     {eventTime ? (
                       <>
@@ -949,7 +950,7 @@ export default function CreateEventScreen() {
                           startDate.setHours(h, m, 0, 0);
                         }
                         const endDate = new Date(startDate.getTime() + selectedDuration * 60 * 1000);
-                        return endDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+                        return endDate.toLocaleDateString(getDateLocale(), { day: 'numeric', month: 'long' });
                       })()}
                     </Text>
                     {' '}{t('at') || 'à'}{' '}
@@ -963,7 +964,7 @@ export default function CreateEventScreen() {
                           startDate.setHours(new Date().getHours(), new Date().getMinutes(), 0, 0);
                         }
                         const endDate = new Date(startDate.getTime() + selectedDuration * 60 * 1000);
-                        return endDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                        return endDate.toLocaleTimeString(getDateLocale(), { hour: '2-digit', minute: '2-digit' });
                       })()}
                     </Text>
                   </Text>
@@ -1284,7 +1285,7 @@ export default function CreateEventScreen() {
                   <Text style={styles.calendarNavText}>{'<'}</Text>
                 </TouchableOpacity>
                 <Text style={styles.calendarMonthText}>
-                  {calendarMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                  {calendarMonth.toLocaleDateString(getDateLocale(), { month: 'long', year: 'numeric' })}
                 </Text>
                 <TouchableOpacity onPress={() => changeMonth(1)} style={styles.calendarNavBtn}>
                   <Text style={styles.calendarNavText}>{'>'}</Text>

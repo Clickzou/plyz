@@ -1,10 +1,11 @@
 import { showAlert } from './alertHelper';
+import { getDateLocale } from '@/utils/dateLocale';
 
 // Texte lisible de la date de fin de bannissement.
 export const banUntilText = (banUntil: string | null): string => {
   if (!banUntil) return 'définitivement';
   try {
-    return `jusqu'au ${new Date(banUntil).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`;
+    return `jusqu'au ${new Date(banUntil).toLocaleDateString(getDateLocale(), { day: '2-digit', month: 'long', year: 'numeric' })}`;
   } catch {
     return 'définitivement';
   }
