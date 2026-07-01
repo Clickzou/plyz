@@ -1573,4 +1573,13 @@ export default {
   taxInfoWhyText: "作为平台，Plyz必须每年向税务部门申报支付给创作者的收入（欧洲指令DAC7）。你的数据以安全的方式保存，仅用于满足这一法律义务。",
   taxInfoMenuItem: "税务信息",
   taxInfoMenuSub: "接收你的收入所需（DAC7）",
+  docsTitle: "我的文件",
+  docsSubtitle: "在这里查找您的服务发票，可下载或打印。",
+  docsEmpty: "暂无发票。",
+  docsBuyer: "已支付",
+  docsSeller: "收入",
+  docsRevenueTotal: "您的开票总收入",
+  docsError: "无法打开文件。",
+  docsMenuItem: "我的文件",
+  docsMenuSub: "您的发票和凭证",
 };

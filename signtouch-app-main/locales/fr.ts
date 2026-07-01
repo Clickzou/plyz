@@ -1592,4 +1592,13 @@ export default {
   taxInfoWhyText: "En tant que plateforme, Plyz doit déclarer chaque année aux administrations fiscales les revenus versés aux créateurs (directive européenne DAC7). Tes données sont conservées de façon sécurisée et servent uniquement à cette obligation légale.",
   taxInfoMenuItem: "Informations fiscales",
   taxInfoMenuSub: "Requis pour recevoir tes revenus (DAC7)",
+  docsTitle: "Mes documents",
+  docsSubtitle: "Retrouve ici les factures de tes prestations, à télécharger ou imprimer.",
+  docsEmpty: "Aucune facture pour le moment.",
+  docsBuyer: "Payé",
+  docsSeller: "Revenu",
+  docsRevenueTotal: "Total de tes revenus facturés",
+  docsError: "Impossible d'ouvrir le document.",
+  docsMenuItem: "Mes documents",
+  docsMenuSub: "Tes factures et justificatifs",
 };

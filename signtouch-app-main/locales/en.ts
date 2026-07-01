@@ -1608,4 +1608,13 @@ export default {
   taxInfoWhyText: "As a platform, Plyz must report annually to tax authorities the income paid to creators (European directive DAC7). Your data is stored securely and used solely for this legal obligation.",
   taxInfoMenuItem: "Tax Information",
   taxInfoMenuSub: "Required to receive your earnings (DAC7)",
+  docsTitle: "My documents",
+  docsSubtitle: "Find your invoices here for your services, ready to download or print.",
+  docsEmpty: "No invoices yet.",
+  docsBuyer: "Paid",
+  docsSeller: "Earnings",
+  docsRevenueTotal: "Your total billed earnings",
+  docsError: "Unable to open the document.",
+  docsMenuItem: "My documents",
+  docsMenuSub: "Your invoices and receipts",
 };

@@ -1578,4 +1578,13 @@ export default {
   taxInfoWhyText: "Sebagai platform, Plyz mesti mengisytiharkan setiap tahun kepada pihak berkuasa cukai pendapatan yang dibayar kepada pencipta (arahan Eropah DAC7). Data anda disimpan dengan selamat dan digunakan semata-mata untuk pemenuhan kewajipan undang-undang ini.",
   taxInfoMenuItem: "Maklumat Cukai",
   taxInfoMenuSub: "Diperlukan untuk menerima pendapatan anda (DAC7)",
+  docsTitle: "Dokumen Saya",
+  docsSubtitle: "Cari invois untuk perkhidmatan anda di sini, boleh dimuat turun atau dicetak.",
+  docsEmpty: "Tiada invois buat masa ini.",
+  docsBuyer: "Dibayar",
+  docsSeller: "Pendapatan",
+  docsRevenueTotal: "Jumlah pendapatan invois anda",
+  docsError: "Tidak dapat membuka dokumen.",
+  docsMenuItem: "Dokumen Saya",
+  docsMenuSub: "Invois dan bukti anda",
 };

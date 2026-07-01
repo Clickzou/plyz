@@ -1578,4 +1578,13 @@ export default {
   taxInfoWhyText: "Sebagai platform, Plyz harus melaporkan setiap tahun kepada otoritas fiskal penghasilan yang dibayarkan kepada kreator (direktif Eropa DAC7). Data Anda disimpan dengan aman dan hanya digunakan untuk memenuhi kewajiban hukum ini.",
   taxInfoMenuItem: "Informasi Fiskal",
   taxInfoMenuSub: "Diperlukan untuk menerima penghasilan Anda (DAC7)",
+  docsTitle: "Dokumen Saya",
+  docsSubtitle: "Temukan di sini faktur layanan Anda, siap diunduh atau dicetak.",
+  docsEmpty: "Tidak ada faktur untuk saat ini.",
+  docsBuyer: "Dibayar",
+  docsSeller: "Pendapatan",
+  docsRevenueTotal: "Total pendapatan faktur Anda",
+  docsError: "Tidak dapat membuka dokumen.",
+  docsMenuItem: "Dokumen Saya",
+  docsMenuSub: "Faktur dan bukti Anda",
 };

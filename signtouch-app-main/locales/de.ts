@@ -1573,4 +1573,13 @@ export default {
   taxInfoWhyText: "Als Plattform ist Plyz verpflichtet, jedes Jahr den Steuerbehörden die an Creator ausgezahlten Einnahmen zu melden (Europäische Richtlinie DAC7). Deine Daten werden sicher gespeichert und dienen ausschließlich dieser gesetzlichen Verpflichtung.",
   taxInfoMenuItem: "Steuerinformationen",
   taxInfoMenuSub: "Erforderlich, um deine Einnahmen zu erhalten (DAC7)",
+  docsTitle: "Meine Dokumente",
+  docsSubtitle: "Hier findest du deine Rechnungen für deine Leistungen zum Herunterladen oder Drucken.",
+  docsEmpty: "Momentan keine Rechnungen vorhanden.",
+  docsBuyer: "Bezahlt",
+  docsSeller: "Einnahmen",
+  docsRevenueTotal: "Deine gesamten abgerechneten Einnahmen",
+  docsError: "Dokument konnte nicht geöffnet werden.",
+  docsMenuItem: "Meine Dokumente",
+  docsMenuSub: "Deine Rechnungen und Nachweise",
 };

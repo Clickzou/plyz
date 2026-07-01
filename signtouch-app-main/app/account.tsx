@@ -287,6 +287,8 @@ export default function AccountScreen() {
       router.push('/legal');
     } else if (action === 'faq') {
       router.push('/faq' as any);
+    } else if (action === 'documents') {
+      router.push('/documents' as any);
     } else if (action === 'report') {
       router.push('/report-problem' as any);
     } else if (action === 'admin') {
@@ -858,6 +860,17 @@ export default function AccountScreen() {
               <Info size={24} color="#10b981" strokeWidth={2} />
             </View>
             <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('about')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
+            onPress={() => handlePress('documents')}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
+              <FileText size={24} color="#10b981" strokeWidth={2} />
+            </View>
+            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('docsMenuItem' as any) || 'Mes documents'}</Text>
           </TouchableOpacity>
         </View>
 

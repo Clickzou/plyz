@@ -1573,4 +1573,13 @@ export default {
   taxInfoWhyText: "プラットフォームとして、Plyzは毎年、クリエイターに支払われた収入を税務当局に報告する必要があります（欧州指令DAC7）。あなたのデータは安全に保管され、この法的義務の目的でのみ使用されます。",
   taxInfoMenuItem: "税務情報",
   taxInfoMenuSub: "収入を受け取るために必要（DAC7）",
+  docsTitle: "マイドキュメント",
+  docsSubtitle: "ここであなたのサービスの請求書を見つけて、ダウンロードまたは印刷できます。",
+  docsEmpty: "現在、請求書はありません。",
+  docsBuyer: "支払済み",
+  docsSeller: "収入",
+  docsRevenueTotal: "請求された収入の合計",
+  docsError: "ドキュメントを開くことができません。",
+  docsMenuItem: "マイドキュメント",
+  docsMenuSub: "あなたの請求書と証拠書類",
 };

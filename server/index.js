@@ -1108,6 +1108,24 @@ app.post('/api/end-fan-call', async (req, res) => {
         if (pi.status === 'requires_capture') {
           const captured = await stripe.paymentIntents.capture(paymentIntentId);
           console.log('[EndFanCall] Payment captured:', paymentIntentId, '| Amount:', captured.amount, captured.currency);
+          // Facture (best-effort : n'interrompt jamais l'encaissement)
+          try {
+            const { data: qf } = await supabase.from('session_queue').select('fan_id, session_id').eq('id', queueEntryId).maybeSingle();
+            let celebId = null;
+            if (qf?.session_id) {
+              const { data: ls } = await supabase.from('live_sessions').select('celebrity_id').eq('id', qf.session_id).maybeSingle();
+              celebId = ls?.celebrity_id || null;
+            }
+            await createInvoice({
+              transactionRef: 'vc_' + queueEntryId,
+              fanId: qf?.fan_id || null,
+              celebrityId: celebId,
+              prestationType: 'video_call',
+              prestationLabel: 'Appel vidéo privé',
+              amountCents: captured.amount,
+              currency: captured.currency,
+            });
+          } catch (invErr) { console.error('[EndFanCall] invoice error:', invErr.message); }
         } else if (pi.status === 'succeeded') {
           console.log('[EndFanCall] PaymentIntent already succeeded (idempotent OK):', paymentIntentId);
         } else if (pi.status === 'canceled') {
@@ -2522,6 +2540,23 @@ app.post('/api/capture-event-payments', async (req, res) => {
         if (pi.status === 'requires_capture') {
           const cap = await stripe.paymentIntents.capture(paymentIntentId);
           console.log('[EventCapture] Captured:', paymentIntentId, '| fan:', fan.fan_id, '| amount:', cap.amount, cap.currency);
+          // Facture (best-effort : n'interrompt jamais l'encaissement)
+          try {
+            let celebId = null;
+            if (fan.event_session_id) {
+              const { data: ev } = await supabase.from('event_sessions').select('created_by').eq('id', fan.event_session_id).maybeSingle();
+              celebId = ev?.created_by || null;
+            }
+            await createInvoice({
+              transactionRef: 'evt_' + fan.event_session_id + '_' + fan.fan_id,
+              fanId: fan.fan_id,
+              celebrityId: celebId,
+              prestationType: 'event_dedication',
+              prestationLabel: 'Dédicace en événement',
+              amountCents: cap.amount,
+              currency: cap.currency,
+            });
+          } catch (invErr) { console.error('[EventCapture] invoice error:', invErr.message); }
           capturedCount++;
         } else if (pi.status === 'succeeded') {
           console.log('[EventCapture] Already succeeded (idempotent OK):', paymentIntentId, '| fan:', fan.fan_id);
@@ -5273,6 +5308,130 @@ app.post('/api/celebrity/tax-info', async (req, res) => {
   } catch (e) {
     console.error('[tax-info POST] error:', e.message);
     return res.status(500).json({ error: 'tax_info_save_failed' });
+  }
+});
+
+// ============================================================
+// Factures : émises par Plyz au nom de la Personnalité (mandat de
+// facturation, art. 289 CGI). Une facture par prestation payée (idempotent).
+// ============================================================
+function invEscape(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function invMoney(cents, currency) {
+  const sym = { eur: '€', usd: '$', gbp: '£' }[String(currency || 'eur').toLowerCase()] || (currency || '');
+  return (Number(cents || 0) / 100).toFixed(2).replace('.', ',') + ' ' + sym;
+}
+function renderInvoiceHtml(inv) {
+  const s = inv.seller_snapshot || {};
+  const b = inv.buyer_snapshot || {};
+  const dateStr = new Date(inv.prestation_date || Date.now()).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const sellerLegal = [
+    s.name ? invEscape(s.name) : 'Personnalité',
+    s.status === 'business' ? 'Professionnel' : (s.status === 'individual' ? 'Particulier' : ''),
+    s.country ? ('Pays : ' + invEscape(s.country)) : '',
+    s.business_number ? ('SIREN : ' + invEscape(s.business_number)) : '',
+    s.vat_number ? ('TVA : ' + invEscape(s.vat_number)) : '',
+    s.tax_id ? ('NIF : ' + invEscape(s.tax_id)) : '',
+  ].filter(Boolean).join('<br>');
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Facture ${invEscape(inv.invoice_number)}</title>
+<style>body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111;max-width:720px;margin:0 auto;padding:32px;font-size:14px;line-height:1.5}h1{font-size:22px;margin:0 0 4px}.muted{color:#666}.row{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}.box{border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin:12px 0}.total{font-size:18px;font-weight:700}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{text-align:left;padding:8px;border-bottom:1px solid #eee}th{color:#666;font-weight:600}.right{text-align:right}.small{font-size:12px;color:#666}</style></head>
+<body>
+<h1>FACTURE</h1>
+<div class="muted">N° ${invEscape(inv.invoice_number)} — ${dateStr}</div>
+<div class="box small">Facture émise par <strong>Plyz — CLICKZOU (SAS)</strong>, 5 impasse de la Colombette, 31000 Toulouse, France, <strong>au nom et pour le compte</strong> de la Personnalité ci-dessous (mandat de facturation, art. 289 CGI).</div>
+<div class="row">
+  <div class="box" style="flex:1;min-width:240px"><div class="muted">Prestataire (vendeur)</div><strong>${sellerLegal}</strong></div>
+  <div class="box" style="flex:1;min-width:240px"><div class="muted">Client</div><strong>${invEscape(b.name || 'Client')}</strong></div>
+</div>
+<table><thead><tr><th>Prestation</th><th>Date</th><th class="right">Montant</th></tr></thead>
+<tbody><tr><td>${invEscape(inv.prestation_label || 'Prestation')}</td><td>${dateStr}</td><td class="right">${invMoney(inv.amount_cents, inv.currency)}</td></tr></tbody></table>
+<div class="row"><div></div><div class="total">Total payé : ${invMoney(inv.amount_cents, inv.currency)}</div></div>
+<div class="box small">La Personnalité est seule responsable, le cas échéant, de la TVA applicable à sa prestation. Plyz a perçu une commission de service de ${invMoney(inv.commission_cents, inv.currency)} au titre de la mise en relation.</div>
+<div class="small">Plyz est un service édité par CLICKZOU (SAS) — contact@plyz.io — Toulouse, France.</div>
+</body></html>`;
+}
+async function createInvoice(params) {
+  try {
+    if (!params || !params.transactionRef || !params.amountCents) return null;
+    const db = getSupabaseAdmin();
+    const ref = String(params.transactionRef);
+    const { data: existing } = await db.from('invoices').select('id, invoice_number').eq('transaction_ref', ref).maybeSingle();
+    if (existing) return existing;
+    const cleanId = (v) => (v ? String(v).replace(/^fan_user_/, '') : null);
+    const fanId = cleanId(params.fanId);
+    const celebId = cleanId(params.celebrityId);
+    let celeb = null, fan = null;
+    if (celebId) { const r = await db.from('celebrity_profiles').select('stage_name, tax_status, tax_country, tax_id, business_number, vat_number').eq('user_id', celebId).maybeSingle(); celeb = r.data; }
+    if (fanId) { const r = await db.from('profiles').select('display_name').eq('id', fanId).maybeSingle(); fan = r.data; }
+    const seller_snapshot = { name: celeb?.stage_name || null, status: celeb?.tax_status || null, country: celeb?.tax_country || null, tax_id: celeb?.tax_id || null, business_number: celeb?.business_number || null, vat_number: celeb?.vat_number || null };
+    const buyer_snapshot = { name: fan?.display_name || null };
+    let seq = null;
+    try { const { data } = await db.rpc('next_invoice_seq'); if (data != null) seq = Number(data); } catch {}
+    if (seq == null) seq = Date.now() % 1000000;
+    const invoice_number = 'PLYZ-' + new Date().getFullYear() + '-' + String(seq).padStart(6, '0');
+    const inv = {
+      invoice_number, transaction_ref: ref, fan_id: fanId, celebrity_id: celebId,
+      prestation_type: params.prestationType || null, prestation_label: params.prestationLabel || 'Prestation',
+      prestation_date: params.prestationDate || new Date().toISOString(),
+      amount_cents: params.amountCents, currency: (params.currency || 'eur').toLowerCase(),
+      commission_cents: params.commissionCents != null ? params.commissionCents : Math.round(params.amountCents * 0.15),
+      seller_snapshot, buyer_snapshot,
+    };
+    const html = renderInvoiceHtml(inv);
+    const html_path = (celebId || 'x') + '/' + invoice_number + '.html';
+    await db.storage.from('invoices').upload(html_path, Buffer.from(html, 'utf8'), { contentType: 'text/html; charset=utf-8', upsert: true });
+    const { error } = await db.from('invoices').insert({ ...inv, html_path });
+    if (error) throw error;
+    console.log('[Invoice] created', invoice_number, 'for', ref);
+    return { invoice_number };
+  } catch (e) {
+    console.error('[createInvoice] error:', e.message);
+    return null;
+  }
+}
+
+// Liste des factures de l'utilisateur (comme fan OU comme personnalité)
+app.get('/api/invoices', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+    const db = getSupabaseAdmin();
+    const { data, error } = await db
+      .from('invoices')
+      .select('id, invoice_number, prestation_label, prestation_date, amount_cents, currency, commission_cents, fan_id, celebrity_id, created_at')
+      .or(`fan_id.eq.${authUser.id},celebrity_id.eq.${authUser.id}`)
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    const invoices = (data || []).map((i) => ({
+      ...i,
+      role: String(i.celebrity_id) === String(authUser.id) ? 'seller' : 'buyer',
+    }));
+    return res.json({ invoices });
+  } catch (e) {
+    console.error('[invoices GET] error:', e.message);
+    return res.status(500).json({ error: 'invoices_read_failed' });
+  }
+});
+
+// Lien de téléchargement signé d'une facture (accès réservé au fan ou à la personnalité concernée)
+app.get('/api/invoice/:id/download', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+    const db = getSupabaseAdmin();
+    const { data: inv } = await db.from('invoices').select('html_path, fan_id, celebrity_id').eq('id', req.params.id).maybeSingle();
+    if (!inv) return res.status(404).json({ error: 'not_found' });
+    if (String(inv.fan_id) !== String(authUser.id) && String(inv.celebrity_id) !== String(authUser.id)) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+    const { data: signed, error } = await db.storage.from('invoices').createSignedUrl(inv.html_path, 300);
+    if (error) throw error;
+    return res.json({ url: signed.signedUrl });
+  } catch (e) {
+    console.error('[invoice download] error:', e.message);
+    return res.status(500).json({ error: 'download_failed' });
   }
 });
 
