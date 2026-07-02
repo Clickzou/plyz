@@ -64,13 +64,17 @@ Le traitement de vos données repose sur :
 - Stripe (traitement des paiements aux célébrités)
 - Apple / Google (achats in-app)
 - Daily.co (service de vidéo pour les sessions live)
+- Replit (hébergement du serveur applicatif)
+- Anthropic (traduction et modération automatiques du contenu)
+- Sentry (rapports d'erreurs techniques pour la stabilité du service)
+- Zoho Mail (envoi des e-mails du service)
 
 5.2 Partage avec les autres utilisateurs
 - Lors des sessions live, les célébrités peuvent voir le nom d'utilisateur des fans participants
 - Les signatures créées sont partagées avec le fan destinataire
 
 5.3 Transferts hors UE
-Certains prestataires peuvent être situés hors de l'Union Européenne. Dans ce cas, des garanties appropriées sont mises en place (clauses contractuelles types, Privacy Shield).
+Certains prestataires peuvent être situés hors de l'Union Européenne. Dans ce cas, des garanties appropriées sont mises en place (clauses contractuelles types, EU-US Data Privacy Framework).
 
 6. DURÉE DE CONSERVATION
 
@@ -204,13 +208,17 @@ The processing of your data is based on:
 - Stripe (celebrity payment processing)
 - Apple / Google (in-app purchases)
 - Daily.co (video service for live sessions)
+- Replit (application server hosting)
+- Anthropic (automatic content translation and moderation)
+- Sentry (technical error reporting for service stability)
+- Zoho Mail (service e-mail delivery)
 
 5.2 Sharing with Other Users
 - During live sessions, celebrities can see the usernames of participating fans
 - Created signatures are shared with the recipient fan
 
 5.3 Transfers Outside the EU
-Some service providers may be located outside the European Union. In such cases, appropriate safeguards are implemented (standard contractual clauses, Privacy Shield).
+Some service providers may be located outside the European Union. In such cases, appropriate safeguards are implemented (standard contractual clauses, EU-US Data Privacy Framework).
 
 6. RETENTION PERIOD
 
@@ -350,7 +358,7 @@ El tratamiento de sus datos se basa en:
 - Las firmas creadas se comparten con el fan destinatario
 
 5.3 Transferencias fuera de la UE
-Algunos proveedores pueden estar ubicados fuera de la Unión Europea. En tal caso, se implementan garantías apropiadas (cláusulas contractuales tipo, Privacy Shield).
+Algunos proveedores pueden estar ubicados fuera de la Unión Europea. En tal caso, se implementan garantías apropiadas (cláusulas contractuales tipo, EU-US Data Privacy Framework).
 
 6. PERÍODO DE CONSERVACIÓN
 
@@ -490,7 +498,7 @@ Die Verarbeitung Ihrer Daten basiert auf:
 - Erstellte Unterschriften werden mit dem Empfänger-Fan geteilt
 
 5.3 Übermittlungen außerhalb der EU
-Einige Dienstleister können außerhalb der Europäischen Union ansässig sein. In diesem Fall werden angemessene Garantien umgesetzt (Standardvertragsklauseln, Privacy Shield).
+Einige Dienstleister können außerhalb der Europäischen Union ansässig sein. In diesem Fall werden angemessene Garantien umgesetzt (Standardvertragsklauseln, EU-US Data Privacy Framework).
 
 6. AUFBEWAHRUNGSDAUER
 
@@ -630,7 +638,7 @@ Il trattamento dei vostri dati si basa su:
 - Le firme create vengono condivise con il fan destinatario
 
 5.3 Trasferimenti al di fuori dell'UE
-Alcuni fornitori possono essere situati al di fuori dell'Unione Europea. In tal caso, vengono implementate garanzie appropriate (clausole contrattuali standard, Privacy Shield).
+Alcuni fornitori possono essere situati al di fuori dell'Unione Europea. In tal caso, vengono implementate garanzie appropriate (clausole contrattuali standard, EU-US Data Privacy Framework).
 
 6. PERIODO DI CONSERVAZIONE
 
@@ -770,7 +778,7 @@ O tratamento dos seus dados baseia-se em:
 - As assinaturas criadas são partilhadas com o fã destinatário
 
 5.3 Transferências para fora da UE
-Alguns prestadores podem estar localizados fora da União Europeia. Nesse caso, são implementadas garantias apropriadas (cláusulas contratuais padrão, Privacy Shield).
+Alguns prestadores podem estar localizados fora da União Europeia. Nesse caso, são implementadas garantias apropriadas (cláusulas contratuais padrão, EU-US Data Privacy Framework).
 
 6. PERÍODO DE CONSERVAÇÃO
 
@@ -910,7 +918,7 @@ Email: contact@clickzou.fr
 - Созданные подписи передаются фанату-получателю
 
 5.3 Передача за пределы ЕС
-Некоторые поставщики услуг могут находиться за пределами Европейского Союза. В таких случаях применяются соответствующие гарантии (стандартные договорные положения, Privacy Shield).
+Некоторые поставщики услуг могут находиться за пределами Европейского Союза. В таких случаях применяются соответствующие гарантии (стандартные договорные положения, EU-US Data Privacy Framework).
 
 6. СРОК ХРАНЕНИЯ
 
@@ -1050,7 +1058,7 @@ SIRET：950 814 426 00025
 - 作成された署名は受取人のファンと共有されます
 
 5.3 EU外への転送
-一部のサービスプロバイダーは欧州連合外に所在する場合があります。その場合、適切な保護措置（標準契約条項、Privacy Shield）が実施されます。
+一部のサービスプロバイダーは欧州連合外に所在する場合があります。その場合、適切な保護措置（標準契約条項、EU-US Data Privacy Framework）が実施されます。
 
 6. 保存期間
 
@@ -1330,7 +1338,7 @@ SIRET: 950 814 426 00025
 - تتم مشاركة التوقيعات المنشأة مع المعجب المستلم
 
 5.3 عمليات النقل خارج الاتحاد الأوروبي
-قد يكون بعض مقدمي الخدمات موجودين خارج الاتحاد الأوروبي. في هذه الحالة، يتم تنفيذ ضمانات مناسبة (بنود تعاقدية نموذجية، Privacy Shield).
+قد يكون بعض مقدمي الخدمات موجودين خارج الاتحاد الأوروبي. في هذه الحالة، يتم تنفيذ ضمانات مناسبة (بنود تعاقدية نموذجية، EU-US Data Privacy Framework).
 
 6. فترة الاحتفاظ
 
@@ -1470,7 +1478,7 @@ SIRET: 950 814 426 00025
 - बनाए गए हस्ताक्षर प्राप्तकर्ता प्रशंसक के साथ साझा किए जाते हैं
 
 5.3 EU के बाहर स्थानांतरण
-कुछ सेवा प्रदाता यूरोपीय संघ के बाहर स्थित हो सकते हैं। ऐसे मामलों में, उचित सुरक्षा उपाय लागू किए जाते हैं (मानक संविदात्मक खंड, Privacy Shield)।
+कुछ सेवा प्रदाता यूरोपीय संघ के बाहर स्थित हो सकते हैं। ऐसे मामलों में, उचित सुरक्षा उपाय लागू किए जाते हैं (मानक संविदात्मक खंड, EU-US Data Privacy Framework)।
 
 6. संरक्षण अवधि
 
@@ -1610,7 +1618,7 @@ SIRET: 950 814 426 00025
 - তৈরি স্বাক্ষর প্রাপক ভক্তের সাথে ভাগ করা হয়
 
 5.3 EU এর বাইরে স্থানান্তর
-কিছু সেবা প্রদানকারী ইউরোপীয় ইউনিয়নের বাইরে অবস্থিত হতে পারে। এই ক্ষেত্রে, উপযুক্ত সুরক্ষা ব্যবস্থা বাস্তবায়ন করা হয় (মানক চুক্তিমূলক ধারা, Privacy Shield)।
+কিছু সেবা প্রদানকারী ইউরোপীয় ইউনিয়নের বাইরে অবস্থিত হতে পারে। এই ক্ষেত্রে, উপযুক্ত সুরক্ষা ব্যবস্থা বাস্তবায়ন করা হয় (মানক চুক্তিমূলক ধারা, EU-US Data Privacy Framework)।
 
 6. সংরক্ষণ সময়কাল
 
@@ -1750,7 +1758,7 @@ SIRET: 950 814 426 00025
 - بنائے گئے دستخط وصول کنندہ مداح کے ساتھ شیئر کیے جاتے ہیں
 
 5.3 EU سے باہر منتقلی
-کچھ سروس فراہم کنندگان یورپی یونین سے باہر واقع ہو سکتے ہیں۔ ایسے معاملات میں، مناسب تحفظات نافذ کیے جاتے ہیں (معیاری معاہداتی شقیں، Privacy Shield)۔
+کچھ سروس فراہم کنندگان یورپی یونین سے باہر واقع ہو سکتے ہیں۔ ایسے معاملات میں، مناسب تحفظات نافذ کیے جاتے ہیں (معیاری معاہداتی شقیں، EU-US Data Privacy Framework)۔
 
 6. تحفظ کی مدت
 
@@ -1890,7 +1898,7 @@ Pemprosesan data anda berdasarkan:
 - Tandatangan yang dicipta dikongsi dengan peminat penerima
 
 5.3 Pemindahan ke Luar EU
-Sesetengah penyedia perkhidmatan mungkin terletak di luar Kesatuan Eropah. Dalam kes sedemikian, perlindungan yang sesuai dilaksanakan (klausa kontrak standard, Privacy Shield).
+Sesetengah penyedia perkhidmatan mungkin terletak di luar Kesatuan Eropah. Dalam kes sedemikian, perlindungan yang sesuai dilaksanakan (klausa kontrak standard, EU-US Data Privacy Framework).
 
 6. TEMPOH PENYIMPANAN
 
@@ -2030,7 +2038,7 @@ Pemrosesan data Anda didasarkan pada:
 - Tanda tangan yang dibuat dibagikan dengan penggemar penerima
 
 5.3 Transfer ke Luar UE
-Beberapa penyedia layanan mungkin berlokasi di luar Uni Eropa. Dalam kasus tersebut, perlindungan yang sesuai diterapkan (klausul kontrak standar, Privacy Shield).
+Beberapa penyedia layanan mungkin berlokasi di luar Uni Eropa. Dalam kasus tersebut, perlindungan yang sesuai diterapkan (klausul kontrak standar, EU-US Data Privacy Framework).
 
 6. PERIODE PENYIMPANAN
 
