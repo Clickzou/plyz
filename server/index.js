@@ -5871,13 +5871,15 @@ app.post('/api/unreserve-event', async (req, res) => {
   } catch (e) { console.error('[unreserve-event]', e.message); res.status(500).json({ error: e.message }); }
 });
 
-// Compteur public « X ont réservé » pour un événement à venir.
+// Compteur public « X ont réservé » pour un événement à venir (réservations gratuites
+// + fans ayant déjà payé/pré-autorisé, sans doublon).
 app.get('/api/event-reservation-count', async (req, res) => {
   try {
     const event_id = req.query.event_id;
     if (!event_id) return res.status(400).json({ error: 'event_id required' });
-    const { count } = await getSupabaseAdmin().from('event_reservations').select('id', { count: 'exact', head: true }).eq('event_id', String(event_id));
-    res.json({ count: count || 0 });
+    const { data, error } = await getSupabaseAdmin().rpc('event_attendee_count', { p_event_id: String(event_id) });
+    if (error) throw error;
+    res.json({ count: Number(data) || 0 });
   } catch (e) { console.error('[event-reservation-count]', e.message); res.status(500).json({ error: e.message }); }
 });
 

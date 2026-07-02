@@ -651,6 +651,13 @@ export default function JoinEventScreen() {
       if (sessionResult.reason === 'scheduled' && sessionResult.session) {
         setEventScheduled(true);
         setScheduledSession(sessionResult.session);
+        // Charge la config de prix pour proposer la RÉSERVATION PAYANTE (place garantie).
+        if (STRIPE_SERVER_URL) {
+          try {
+            const pr = await fetch(`${STRIPE_SERVER_URL}/api/get-event-payment-config?event_session_id=${sessionResult.session.id}`);
+            setEventPaymentConfig(await pr.json());
+          } catch { setEventPaymentConfig({ priceCents: 0 }); }
+        }
         return;
       }
 
@@ -1081,6 +1088,66 @@ export default function JoinEventScreen() {
     } catch (e) {
       console.warn('[handleReserveScheduled] Error:', e);
       showAlert(t('error') || 'Error', t('reservationFailed' as any) || 'La réservation a échoué');
+    }
+  };
+
+  // Réserve un événement PAYANT en payant tout de suite (pré-autorisation = place
+  // garantie). Le fan atterrit dans event_paid_fans (compté « X ont payé »), reçoit
+  // les rappels, et le débit n'a lieu qu'au jour J (capture à la 1ère dédicace).
+  // Réutilise EXACTEMENT le flux de paiement d'événement déjà en place et testé.
+  const handleReserveAndPay = async () => {
+    if (!scheduledSession || !eventPaymentConfig) return;
+    if (!ensureCanPay(isBanned, banUntil)) return;
+    if (!(await isAgeCertified())) { setShowAgeModal(true); return; }
+    setIsProcessingPayment(true);
+    try {
+      // Mémorise localement pour « À venir » (avant de partir vers Stripe).
+      const reserveSigners = await getEventSigners(scheduledSession.id).catch(() => [] as EventSigner[]);
+      await saveActiveFanEvent({
+        sessionId: scheduledSession.id,
+        sessionTitle: scheduledSession.title,
+        joinCode: scheduledSession.join_code,
+        endsAt: scheduledSession.ends_at,
+        signers: JSON.stringify(reserveSigners),
+        savedAt: Date.now(),
+        event_type: scheduledSession.event_type || 'qr',
+        starts_at: scheduledSession.starts_at,
+      });
+      const viewerId = await getOrCreateDeviceId();
+      const origin = Platform.OS === 'web' ? window.location.origin : 'https://plyz.app';
+      if (Platform.OS !== 'web') {
+        await AsyncStorage.setItem('@event_pending_payment_session', scheduledSession.id);
+      }
+      const response = await fetch(`${STRIPE_SERVER_URL}/api/create-event-checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventSessionId: scheduledSession.id,
+          fanId: viewerId,
+          priceCents: eventPaymentConfig.priceCents,
+          celebrityStripeAccountId: eventPaymentConfig.celebrityStripeAccountId,
+          celebrityName: eventPaymentConfig.celebrityName,
+          successUrl: `${origin}/join-event?code=${scheduledSession.join_code}&payment_success=true&checkout_session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${origin}/join-event?code=${scheduledSession.join_code}&payment_cancelled=true`,
+        }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        if (Platform.OS === 'web') {
+          window.location.href = data.url;
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const { Linking } = require('react-native');
+          Linking.openURL(data.url);
+        }
+      } else {
+        showAlert(t('error') || 'Error', t('paymentFailed') || 'Payment initialization failed');
+      }
+    } catch (e) {
+      console.error('[handleReserveAndPay] Error:', e);
+      showAlert(t('error') || 'Error', t('paymentFailed') || 'Payment failed');
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -1715,10 +1782,34 @@ export default function JoinEventScreen() {
               </Text>
             )}
             {!reserved ? (
-              <TouchableOpacity style={styles.reserveButton} onPress={handleReserveScheduled}>
-                <Check size={20} color="#fff" />
-                <Text style={styles.reserveButtonText}>{t('reserveEvent' as any) || 'Réserver'}</Text>
-              </TouchableOpacity>
+              (() => {
+                const price = eventPaymentConfig?.priceCents || 0;
+                const startsMs = scheduledSession.starts_at ? new Date(scheduledSession.starts_at).getTime() : 0;
+                const within7d = !!startsMs && (startsMs - Date.now()) <= 7 * 24 * 3600 * 1000;
+                if (price > 0 && within7d) {
+                  return (
+                    <TouchableOpacity style={styles.reserveButton} onPress={handleReserveAndPay} disabled={isProcessingPayment}>
+                      <Check size={20} color="#fff" />
+                      <Text style={styles.reserveButtonText}>
+                        {`${t('reserveMyPlace' as any) || 'Réserver ma place'} — ${(price / 100).toFixed(2).replace('.', ',')}€`}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                }
+                return (
+                  <>
+                    <TouchableOpacity style={styles.reserveButton} onPress={handleReserveScheduled}>
+                      <Check size={20} color="#fff" />
+                      <Text style={styles.reserveButtonText}>{t('reserveEvent' as any) || 'Réserver'}</Text>
+                    </TouchableOpacity>
+                    {price > 0 && !within7d && (
+                      <Text style={styles.scheduledMessage}>
+                        {t('paymentOpens7days' as any) || "Le paiement pour garantir ta place ouvrira 7 jours avant l'événement."}
+                      </Text>
+                    )}
+                  </>
+                );
+              })()
             ) : (
               <View style={styles.notificationSetCard}>
                 <Check size={20} color="#10B981" />
