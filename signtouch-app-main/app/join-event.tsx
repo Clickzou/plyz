@@ -255,6 +255,7 @@ export default function JoinEventScreen() {
   const [scheduledSession, setScheduledSession] = useState<EventSession | null>(null);
   const [notificationSet, setNotificationSet] = useState(false);
   const [reserved, setReserved] = useState(false);
+  const [reservationCount, setReservationCount] = useState<number | null>(null);
 
   const [showScanner, setShowScanner] = useState(false);
   const [, setHasPermission] = useState<boolean | null>(null);
@@ -1029,6 +1030,18 @@ export default function JoinEventScreen() {
     }
   };
 
+  // Charge le nombre de fans ayant déjà réservé cet événement programmé.
+  useEffect(() => {
+    if (!eventScheduled || !scheduledSession?.id) { setReservationCount(null); return; }
+    (async () => {
+      try {
+        const r = await fetch(`${STRIPE_SERVER_URL}/api/event-reservation-count?event_id=${scheduledSession.id}`);
+        const j = await r.json();
+        if (typeof j?.count === 'number') setReservationCount(j.count);
+      } catch { /* non bloquant */ }
+    })();
+  }, [eventScheduled, scheduledSession?.id]);
+
   // Réserve un événement dédicace PROGRAMMÉ : on le mémorise comme événement
   // fan actif. Comme starts_at est futur, il apparaîtra dans « À venir » côté fan,
   // puis basculera tout seul en « En cours » une fois l'heure de début atteinte.
@@ -1047,6 +1060,21 @@ export default function JoinEventScreen() {
         starts_at: scheduledSession.starts_at,
       });
       setReserved(true);
+      // Persiste la réservation côté SERVEUR : permet de compter « X ont réservé »
+      // et d'envoyer les rappels push (même app fermée), y compris pour les lives.
+      try {
+        const viewerId = await getOrCreateDeviceId();
+        const pushToken = await getFanPushToken();
+        const r = await fetch(`${STRIPE_SERVER_URL}/api/reserve-event`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event_id: scheduledSession.id, fan_id: viewerId, fan_name: fanName || null, push_token: pushToken }),
+        });
+        const rj = await r.json().catch(() => null);
+        if (rj && typeof rj.count === 'number') setReservationCount(rj.count);
+      } catch (srvErr) {
+        console.warn('[reserve-event] enregistrement serveur échoué (non bloquant):', srvErr);
+      }
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
@@ -1681,6 +1709,11 @@ export default function JoinEventScreen() {
                 </Text>
               </View>
             </View>
+            {reservationCount != null && reservationCount > 0 && (
+              <Text style={styles.reservationCountText}>
+                {`👥 ${reservationCount} ${reservationCount > 1 ? (t('fansReserved' as any) || 'fans ont déjà réservé') : (t('fanReserved' as any) || 'fan a déjà réservé')}`}
+              </Text>
+            )}
             {!reserved ? (
               <TouchableOpacity style={styles.reserveButton} onPress={handleReserveScheduled}>
                 <Check size={20} color="#fff" />
@@ -2110,6 +2143,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 12,
     marginBottom: 16,
+  },
+  reservationCountText: {
+    color: '#3b82f6',
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 12,
   },
   reserveButton: {
     flexDirection: 'row',

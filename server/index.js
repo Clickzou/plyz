@@ -5843,6 +5843,44 @@ app.post('/api/register-push-token', async (req, res) => {
   } catch (e) { console.error('[register-push-token]', e.message); res.status(500).json({ error: e.message }); }
 });
 
+// Réservation d'un événement PROGRAMMÉ (fan ↔ événement). Persiste en base pour :
+// (1) compter « X fans ont réservé », (2) envoyer les rappels push aux réservés.
+app.post('/api/reserve-event', async (req, res) => {
+  try {
+    const { event_id, fan_id, fan_name, push_token } = req.body || {};
+    if (!event_id || !fan_id) return res.status(400).json({ error: 'event_id and fan_id required' });
+    const authUser = await verifySupabaseJWT(req);
+    const fid = authUser ? authUser.id : String(fan_id); // si connecté, on force l'identité
+    const db = getSupabaseAdmin();
+    await db.from('event_reservations').upsert(
+      { event_id: String(event_id), fan_id: fid, fan_name: fan_name || null, push_token: push_token || null },
+      { onConflict: 'event_id,fan_id' });
+    const { count } = await db.from('event_reservations').select('id', { count: 'exact', head: true }).eq('event_id', String(event_id));
+    res.json({ success: true, count: count || 0 });
+  } catch (e) { console.error('[reserve-event]', e.message); res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/unreserve-event', async (req, res) => {
+  try {
+    const { event_id, fan_id } = req.body || {};
+    if (!event_id || !fan_id) return res.status(400).json({ error: 'event_id and fan_id required' });
+    const authUser = await verifySupabaseJWT(req);
+    const fid = authUser ? authUser.id : String(fan_id);
+    await getSupabaseAdmin().from('event_reservations').delete().eq('event_id', String(event_id)).eq('fan_id', fid);
+    res.json({ success: true });
+  } catch (e) { console.error('[unreserve-event]', e.message); res.status(500).json({ error: e.message }); }
+});
+
+// Compteur public « X ont réservé » pour un événement à venir.
+app.get('/api/event-reservation-count', async (req, res) => {
+  try {
+    const event_id = req.query.event_id;
+    if (!event_id) return res.status(400).json({ error: 'event_id required' });
+    const { count } = await getSupabaseAdmin().from('event_reservations').select('id', { count: 'exact', head: true }).eq('event_id', String(event_id));
+    res.json({ count: count || 0 });
+  } catch (e) { console.error('[event-reservation-count]', e.message); res.status(500).json({ error: e.message }); }
+});
+
 // Envoie les push en attente dans push_outbox (ex: "compte validé").
 async function processPushOutbox() {
   const db = getSupabaseAdmin();
@@ -5878,6 +5916,9 @@ async function sendEventReminders(table, timeCol, creatorCol, fanTable, fanKeyCo
         const { data: fans } = await db.from(fanTable).select('push_token').eq(fanKeyCol, String(ev.id));
         (fans || []).forEach((f) => { if (f && f.push_token) tokens.push(f.push_token); });
       }
+      // Fans ayant RÉSERVÉ (dédicace ET live) — débloque les rappels des lives programmés.
+      const { data: resv } = await db.from('event_reservations').select('push_token').eq('event_id', String(ev.id));
+      (resv || []).forEach((f) => { if (f && f.push_token) tokens.push(f.push_token); });
       const when = minutes >= 60 ? 'dans 1 heure' : 'dans quelques minutes';
       const name = (titleCol && ev[titleCol]) ? ev[titleCol] : fallbackName;
       await sendExpoPush(tokens, 'Plyz', `⏰ « ${name} » commence ${when} !`, { type: 'event_reminder', eventId: ev.id });
