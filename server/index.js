@@ -36,6 +36,41 @@ function getMailTransporter() {
 
 const SUPPORT_EMAIL = 'jc@clickzou.fr';
 
+// ============================================================
+// Alertes de service : enregistre un incident (Claude limite atteinte, Stripe,
+// Supabase, e-mail...) dans la table service_alerts ET envoie un e-mail à
+// l'admin (throttlé : au plus 1 e-mail / heure / service pour éviter le spam).
+// Consultable sur le tableau de bord (carte « État des services »).
+// ============================================================
+const _alertEmailThrottle = {};
+async function recordServiceAlert(service, severity, message) {
+  const msg = String(message == null ? '' : message).slice(0, 1000);
+  try {
+    await getSupabaseAdmin().from('service_alerts').insert({ service, severity: severity || 'warning', message: msg });
+    console.warn('[Alert]', service, '-', severity, '-', msg);
+  } catch (e) { console.error('[Alert] insert failed:', e.message); }
+  try {
+    const now = Date.now();
+    if (_alertEmailThrottle[service] && (now - _alertEmailThrottle[service]) < 3600000) return;
+    _alertEmailThrottle[service] = now;
+    const transporter = getMailTransporter();
+    if (!transporter) return;
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: SUPPORT_EMAIL,
+      subject: `[Plyz] ⚠️ Alerte service : ${service}`,
+      text:
+        `Une alerte vient d'être déclenchée sur Plyz.\n\n` +
+        `Service : ${service}\n` +
+        `Gravité : ${severity || 'warning'}\n` +
+        `Détail : ${msg}\n` +
+        `Heure : ${new Date().toISOString()}\n\n` +
+        `→ Tableau de bord : https://plyz.io/tableaustats`,
+    });
+    console.log('[Alert] email sent for', service);
+  } catch (e) { console.error('[Alert] email failed:', e.message); }
+}
+
 let tf = null;
 try {
   tf = require('@tensorflow/tfjs-node');
@@ -97,6 +132,16 @@ Respond ONLY with a compact JSON object: {"safe": boolean, "category": "sexual"|
       }),
     });
     const j = await resp.json();
+    if (j.error) {
+      const et = j.error.type || '', em = j.error.message || '';
+      // On alerte seulement sur une VRAIE panne de service (quota/limite/auth/surcharge),
+      // pas sur une image invalide ponctuelle.
+      if (['rate_limit_error', 'overloaded_error', 'authentication_error', 'api_error'].includes(et)
+          || /credit|quota|balance|limit/i.test(em)) {
+        recordServiceAlert('anthropic', 'critical', 'Claude indisponible — la MODÉRATION des images est dégradée : ' + (em || et));
+      }
+      return null;
+    }
     if (!j.content || !j.content[0] || !j.content[0].text) return null;
     let txt = j.content[0].text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
     const parsed = JSON.parse(txt);
@@ -372,6 +417,7 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
     );
   } catch (err) {
     console.error('❌ Webhook signature invalide :', err.message);
+    logSecurityEvent(req, 'webhook Stripe falsifié', 'signature invalide (tentative de forge ou mauvaise config)');
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -3718,6 +3764,8 @@ app.post('/api/book-video', async (req, res) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
     if (user.id !== fan_id) {
+      req.__authUserId = user.id;
+      logSecurityEvent(req, 'IDOR prestation payante', `tentative d'agir au nom d'un autre compte (fan_id ${fan_id})`);
       return res.status(403).json({ error: 'fan_id does not match authenticated user' });
     }
 
@@ -3857,6 +3905,8 @@ app.post('/api/autograph', async (req, res) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
     if (user.id !== fan_id) {
+      req.__authUserId = user.id;
+      logSecurityEvent(req, 'IDOR prestation payante', `tentative d'agir au nom d'un autre compte (fan_id ${fan_id})`);
       return res.status(403).json({ error: 'fan_id does not match authenticated user' });
     }
 
@@ -4369,7 +4419,11 @@ app.post('/api/upload-celebrity-avatar', async (req, res) => {
 
     const { user_id, image_base64, content_type } = req.body;
     if (!user_id || !image_base64) return res.status(400).json({ error: 'Missing required fields' });
-    if (user_id !== authUser.id) return res.status(403).json({ error: 'user_id does not match authenticated user' });
+    if (user_id !== authUser.id) {
+      req.__authUserId = authUser.id;
+      logSecurityEvent(req, 'IDOR photo de profil', `tentative de modifier l'avatar d'un autre compte (user_id ${user_id})`);
+      return res.status(403).json({ error: 'user_id does not match authenticated user' });
+    }
 
     const db = getSupabaseAdmin();
     const isPng = (content_type || '').includes('png');
@@ -5336,6 +5390,11 @@ Rules:
   });
   const j = await resp.json();
   if (!j.content || !j.content[0] || !j.content[0].text) {
+    const et = j.error?.type || '', em = j.error?.message || '';
+    if (['rate_limit_error', 'overloaded_error', 'authentication_error', 'api_error'].includes(et)
+        || /credit|quota|balance|limit/i.test(em)) {
+      recordServiceAlert('anthropic', 'critical', 'Claude indisponible — la TRADUCTION est dégradée : ' + (em || et));
+    }
     throw new Error('Anthropic error: ' + JSON.stringify(j).slice(0, 300));
   }
   let txt = j.content[0].text.trim();
@@ -5584,6 +5643,8 @@ app.get('/api/admin/stripe-account', async (req, res) => {
     const authUser = await verifySupabaseJWT(req);
     const ADMIN_UID = 'e7c06a67-2cd0-4aa1-bbf6-477fbb162ce8';
     if (!authUser || String(authUser.id) !== ADMIN_UID) {
+      req.__authUserId = authUser ? authUser.id : null;
+      logSecurityEvent(req, 'accès admin refusé', 'appel de /api/admin/stripe-account sans droits admin');
       return res.status(403).json({ error: 'forbidden' });
     }
     let acct = req.query.account;
@@ -5633,6 +5694,64 @@ app.get('/api/admin/stripe-account', async (req, res) => {
     console.error('[admin stripe-account] error:', e.message);
     return res.status(500).json({ error: e.message });
   }
+});
+
+// ============================================================
+// SÉCURITÉ : journalise une tentative suspecte (intrusion) + alerte admin.
+// ============================================================
+function clientIp(req) {
+  return String(req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+    || (req.socket && req.socket.remoteAddress) || 'inconnue';
+}
+function logSecurityEvent(req, kind, detail) {
+  try {
+    const who = req.__authUserId ? ('user ' + req.__authUserId) : 'non authentifié';
+    const ctx = `${req.method} ${(req.originalUrl || req.url || '').split('?')[0]} | IP ${clientIp(req)} | ${who}`;
+    // service='security' → visible sur le dashboard + email throttlé (1/h).
+    recordServiceAlert('security', 'critical', `🔒 ${kind} : ${detail} — ${ctx}`);
+  } catch (e) { console.error('[Security] log failed:', e.message); }
+}
+
+// [ADMIN] Vérifie en direct l'état des services critiques (Claude, Stripe, Supabase,
+// e-mail). Enregistre une alerte pour chaque service en panne. Réservé à l'admin.
+app.get('/api/admin/health-check', async (req, res) => {
+  const authUser = await verifySupabaseJWT(req);
+  const ADMIN_UID = 'e7c06a67-2cd0-4aa1-bbf6-477fbb162ce8';
+  if (!authUser || String(authUser.id) !== ADMIN_UID) {
+    req.__authUserId = authUser ? authUser.id : null;
+    logSecurityEvent(req, 'accès admin refusé', 'appel de /api/admin/health-check sans droits admin');
+    return res.status(403).json({ error: 'forbidden' });
+  }
+  const out = {};
+  // Anthropic (Claude) — petit appel réel
+  try {
+    const key = process.env.ANTHROPIC_API_KEY;
+    if (!key) { out.anthropic = { ok: false, detail: 'clé absente' }; }
+    else {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 5, messages: [{ role: 'user', content: 'ping' }] }),
+      });
+      const j = await r.json();
+      if (j.error) { out.anthropic = { ok: false, detail: j.error.message || j.error.type }; recordServiceAlert('anthropic', 'critical', 'Health-check: ' + (j.error.message || j.error.type)); }
+      else out.anthropic = { ok: true };
+    }
+  } catch (e) { out.anthropic = { ok: false, detail: e.message }; }
+  // Stripe
+  try {
+    const stripe = await getStripe();
+    await stripe.balance.retrieve();
+    out.stripe = { ok: true };
+  } catch (e) { out.stripe = { ok: false, detail: e.message }; recordServiceAlert('stripe', 'critical', 'Health-check Stripe: ' + e.message); }
+  // Supabase
+  try {
+    const { error } = await getSupabaseAdmin().from('service_alerts').select('id').limit(1);
+    if (error) throw error;
+    out.supabase = { ok: true };
+  } catch (e) { out.supabase = { ok: false, detail: e.message }; recordServiceAlert('supabase', 'critical', 'Health-check Supabase: ' + e.message); }
+  // E-mail (configuré ?)
+  out.email = { ok: !!getMailTransporter(), detail: getMailTransporter() ? undefined : 'SMTP non configuré' };
+  res.json({ checked_at: new Date().toISOString(), services: out });
 });
 
 const EXPO_PORT = 19006;
