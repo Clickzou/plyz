@@ -63,7 +63,64 @@ async function loadNsfwModel() {
   return nsfwModel;
 }
 
-async function moderateImage(imageBuffer) {
+// Modération d'image via Claude vision (couvre le contenu sexuel ET la violence/
+// guerre/armes/haine — ce que le modèle NSFW local ne détecte pas). Réutilise
+// ANTHROPIC_API_KEY (déjà présent pour la traduction). Renvoie null en cas
+// d'indisponibilité/erreur → le code appelant retombe sur le modèle local.
+async function moderateImageWithClaude(imageBuffer, mimeType) {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return null;
+  try {
+    let mt = String(mimeType || 'image/jpeg').toLowerCase();
+    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mt)) mt = 'image/jpeg';
+    const b64 = imageBuffer.toString('base64');
+    const system = `You are an image content-moderation classifier for a public social app where verified public figures post profile photos and news posts. Decide whether an image is allowed to be published.
+BLOCK (unsafe) if the image contains any of:
+- sexual or pornographic content, explicit nudity, or sexually suggestive content
+- graphic violence, gore, blood, serious injuries, death, or war scenes
+- weapons shown in a threatening or violent context
+- hate symbols, extremist or terrorist content
+- other clearly illegal content
+ALLOW (safe) ordinary photos: portraits, selfies, sport, concerts, events, landscapes, everyday non-graphic scenes.
+Respond ONLY with a compact JSON object: {"safe": boolean, "category": "sexual"|"violence"|"hate"|"illegal"|"none", "reason": "<=8 words"}.`;
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 100,
+        system: [{ type: 'text', text: system }],
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: mt, data: b64 } },
+          { type: 'text', text: 'Classify this image for publication.' },
+        ] }],
+      }),
+    });
+    const j = await resp.json();
+    if (!j.content || !j.content[0] || !j.content[0].text) return null;
+    let txt = j.content[0].text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    const parsed = JSON.parse(txt);
+    if (typeof parsed.safe !== 'boolean') return null;
+    return {
+      safe: parsed.safe,
+      engine: 'claude',
+      reason: parsed.safe ? null : (parsed.category || parsed.reason || 'inappropriate_content'),
+    };
+  } catch (e) {
+    console.error('[Moderation/Claude] error:', e.message);
+    return null;
+  }
+}
+
+async function moderateImage(imageBuffer, mimeType) {
+  // 1) Claude vision en priorité (sexuel + violence/guerre/haine)
+  const claude = await moderateImageWithClaude(imageBuffer, mimeType);
+  if (claude) {
+    console.log('[Moderation] Claude verdict →', claude.safe ? 'OK' : ('BLOCKED (' + claude.reason + ')'));
+    return claude;
+  }
+
+  // 2) Repli : modèle NSFW local (contenu sexuel uniquement), si disponible
   if (!canModerateImages) {
     return { safe: true, skipped: true, reason: 'moderation_unavailable' };
   }
@@ -3440,7 +3497,7 @@ app.post('/api/moderate-image', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });
 
-    const result = await moderateImage(req.file.buffer);
+    const result = await moderateImage(req.file.buffer, req.file.mimetype);
     if (!result.safe) {
       return res.status(403).json({
         error: 'content_rejected',
@@ -3460,7 +3517,7 @@ app.post('/api/upload-post-image', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });
 
-    const modResult = await moderateImage(req.file.buffer);
+    const modResult = await moderateImage(req.file.buffer, req.file.mimetype);
     if (!modResult.safe) {
       return res.status(403).json({
         error: 'content_rejected',
@@ -4319,6 +4376,17 @@ app.post('/api/upload-celebrity-avatar', async (req, res) => {
     const ext = isPng ? 'png' : 'jpg';
     const cleanB64 = String(image_base64).replace(/^data:[^;]+;base64,/, '');
     const buffer = Buffer.from(cleanB64, 'base64');
+
+    // 🛡️ Modération : bloque les photos de profil à caractère sexuel/violent/interdit.
+    const mod = await moderateImage(buffer, content_type || (isPng ? 'image/png' : 'image/jpeg'));
+    if (!mod.safe) {
+      return res.status(403).json({
+        error: 'content_rejected',
+        reason: mod.reason,
+        message: 'Cette image ne respecte pas nos règles de contenu et ne peut pas être utilisée comme photo de profil.',
+      });
+    }
+
     const path = `avatars/${user_id}-${Date.now()}.${ext}`;
 
     const { error: upErr } = await db.storage.from('events').upload(path, buffer, {
