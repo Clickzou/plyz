@@ -42,13 +42,58 @@ const SUPPORT_EMAIL = 'jc@clickzou.fr';
 // l'admin (throttlé : au plus 1 e-mail / heure / service pour éviter le spam).
 // Consultable sur le tableau de bord (carte « État des services »).
 // ============================================================
+// Analyse IA (texte FR) d'une alerte : ce qui s'est passé, intention, risque, action.
+// Réutilisée par l'auto-analyse et par l'endpoint manuel de ré-analyse.
+async function analyzeAlertText(service, severity, message) {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return null;
+  try {
+    const system = `Tu es un analyste sécurité pour l'application Plyz (marketplace de prestations de célébrités : appels vidéo, dédicaces, paiements Stripe, base Supabase). On te donne une alerte technique/sécurité. Réponds en FRANÇAIS, clair pour un non-technicien, en 4 sections courtes :
+1) CE QUI S'EST PASSÉ : explique simplement ce que la personne a tenté.
+2) INTENTION PROBABLE : quel était vraisemblablement son but.
+3) RISQUE : a-t-elle pu réussir/accéder à des données ? niveau (faible/moyen/élevé) et pourquoi.
+4) ACTION RECOMMANDÉE : quoi faire concrètement.
+Sois factuel, ne dramatise pas. N'invente pas de détails absents de l'alerte.`;
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001', max_tokens: 700,
+        system: [{ type: 'text', text: system }],
+        messages: [{ role: 'user', content: `Alerte à analyser :\nService : ${service || 'inconnu'}\nGravité : ${severity || 'inconnue'}\nDétail : ${message || '(vide)'}` }],
+      }),
+    });
+    const j = await r.json();
+    if (j.error || !j.content || !j.content[0] || !j.content[0].text) return null;
+    return j.content[0].text.trim();
+  } catch (e) { console.error('[analyzeAlertText]', e.message); return null; }
+}
+
+// Auto-analyse DÉDUPLIQUÉE : 1 seul appel Claude par TYPE d'alerte (signature =
+// service + début du message), réutilisé pour toutes les suivantes → tient même
+// avec des milliers d'alertes sans exploser les coûts / la limite Claude.
+const _analysisCache = {};
+async function autoAnalyzeAlert(id, service, severity, message) {
+  try {
+    const sig = service + '|' + String(message || '').slice(0, 80);
+    if (!(sig in _analysisCache)) {
+      _analysisCache[sig] = await analyzeAlertText(service, severity, message); // en cache même si null
+    }
+    const text = _analysisCache[sig];
+    if (text) await getSupabaseAdmin().from('service_alerts').update({ analysis: text }).eq('id', id);
+  } catch (e) { console.error('[autoAnalyzeAlert]', e.message); }
+}
+
 const _alertEmailThrottle = {};
 async function recordServiceAlert(service, severity, message) {
   const msg = String(message == null ? '' : message).slice(0, 1000);
+  let insertedId = null;
   try {
-    await getSupabaseAdmin().from('service_alerts').insert({ service, severity: severity || 'warning', message: msg });
+    const { data } = await getSupabaseAdmin().from('service_alerts').insert({ service, severity: severity || 'warning', message: msg }).select('id').single();
+    insertedId = data ? data.id : null;
     console.warn('[Alert]', service, '-', severity, '-', msg);
   } catch (e) { console.error('[Alert] insert failed:', e.message); }
+  // Auto-analyse IA en tâche de fond (non bloquant, dédupliqué par type)
+  if (insertedId) autoAnalyzeAlert(insertedId, service, severity, msg);
   try {
     const now = Date.now();
     if (_alertEmailThrottle[service] && (now - _alertEmailThrottle[service]) < 3600000) return;
@@ -5765,26 +5810,12 @@ app.post('/api/admin/analyze-alert', async (req, res) => {
     return res.status(403).json({ error: 'forbidden' });
   }
   try {
-    const key = process.env.ANTHROPIC_API_KEY;
-    if (!key) return res.status(503).json({ error: 'anthropic_unavailable' });
-    const { service, severity, message } = req.body || {};
-    const system = `Tu es un analyste sécurité pour l'application Plyz (marketplace de prestations de célébrités : appels vidéo, dédicaces, paiements Stripe, base Supabase). On te donne une alerte technique/sécurité. Réponds en FRANÇAIS, de façon claire pour un non-technicien, en 4 sections courtes :
-1) CE QUI S'EST PASSÉ : explique simplement ce que la personne a tenté.
-2) INTENTION PROBABLE : quel était vraisemblablement son but.
-3) RISQUE : a-t-elle pu réussir/accéder à des données ? niveau (faible/moyen/élevé) et pourquoi.
-4) ACTION RECOMMANDÉE : quoi faire concrètement.
-Sois factuel, ne dramatise pas inutilement. N'invente pas de détails absents de l'alerte.`;
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001', max_tokens: 700,
-        system: [{ type: 'text', text: system }],
-        messages: [{ role: 'user', content: `Alerte à analyser :\nService : ${service || 'inconnu'}\nGravité : ${severity || 'inconnue'}\nDétail : ${message || '(vide)'}` }],
-      }),
-    });
-    const j = await r.json();
-    if (j.error) return res.status(502).json({ error: j.error.message || j.error.type });
-    const analysis = (j.content && j.content[0] && j.content[0].text) ? j.content[0].text.trim() : '';
+    if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'anthropic_unavailable' });
+    const { id, service, severity, message } = req.body || {};
+    const analysis = await analyzeAlertText(service, severity, message);
+    if (!analysis) return res.status(502).json({ error: 'analysis_failed' });
+    // Si un id est fourni, on persiste l'analyse (ré-analyse manuelle).
+    if (id) { try { await getSupabaseAdmin().from('service_alerts').update({ analysis }).eq('id', id); } catch {} }
     res.json({ analysis });
   } catch (e) {
     console.error('[analyze-alert] error:', e.message);
