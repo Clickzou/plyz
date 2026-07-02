@@ -337,6 +337,31 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
         global.eventPaidRecords[key] = { paid: true, checkoutSessionId: session.id, paidAt: new Date().toISOString() };
         console.log('[Webhook] Recorded event paid access via webhook:', key);
       }
+
+      // Facture pour les DÉDICACES AUTOGRAPHE (capture immédiate) — best-effort, idempotent.
+      // Les autres prestations (appel vidéo, dédicace événement) sont facturées à leur
+      // point de capture ; l'autographe est encaissé tout de suite, donc facturé ici.
+      if (session.metadata?.type === 'autograph_request'
+          && session.payment_status === 'paid'
+          && session.metadata?.test_mode !== 'true') {
+        try {
+          const db = getSupabaseAdmin();
+          const meta = session.metadata;
+          if (meta.autograph_id) {
+            await db.from('autograph_requests').update({ status: 'paid' }).eq('id', meta.autograph_id);
+          }
+          await createInvoice({
+            transactionRef: 'autograph_' + (meta.autograph_id || session.id),
+            fanId: meta.fan_id || null,
+            celebrityId: meta.celebrity_id || null,
+            prestationType: 'autograph',
+            prestationLabel: 'Dédicace (autographe)',
+            amountCents: session.amount_total,
+            currency: session.currency,
+          });
+          console.log('[Webhook] Autograph invoice generated for', meta.autograph_id || session.id);
+        } catch (e) { console.error('[Webhook] autograph invoice error:', e.message); }
+      }
       break;
     }
 
@@ -3988,6 +4013,53 @@ app.post('/api/update-booking-status', async (req, res) => {
       .single();
 
     if (error) throw error;
+
+    // 💶 CAPTURE du paiement pré-autorisé quand la réservation est TERMINÉE (best-effort,
+    // idempotent : ne capture que si le PaymentIntent est encore 'requires_capture').
+    if (status === 'completed' && data?.stripe_session_id) {
+      try {
+        const stripe = await getStripe();
+        const sess = await stripe.checkout.sessions.retrieve(data.stripe_session_id);
+        const piId = sess.payment_intent;
+        if (piId) {
+          const pi = await stripe.paymentIntents.retrieve(piId);
+          if (pi.status === 'requires_capture') {
+            const captured = await stripe.paymentIntents.capture(piId);
+            console.log('[Update Booking] Payment captured:', piId, '| Amount:', captured.amount, captured.currency);
+            try {
+              await createInvoice({
+                transactionRef: 'booking_' + booking_id,
+                fanId: data.fan_id || null,
+                celebrityId: data.celebrity_id || null,
+                prestationType: 'video_booking',
+                prestationLabel: 'Appel vidéo (réservation)',
+                amountCents: captured.amount,
+                currency: captured.currency,
+              });
+            } catch (invErr) { console.error('[Update Booking] invoice error:', invErr.message); }
+          } else {
+            console.log('[Update Booking] PaymentIntent not capturable (status:', pi.status, ') — skip');
+          }
+        }
+      } catch (capErr) { console.error('[Update Booking] capture error:', capErr.message); }
+    }
+
+    // 🔓 LIBÈRE la pré-autorisation (empreinte bancaire du fan) si la réservation est REFUSÉE/ANNULÉE.
+    if (['declined', 'cancelled', 'canceled', 'rejected'].includes(status) && data?.stripe_session_id) {
+      try {
+        const stripe = await getStripe();
+        const sess = await stripe.checkout.sessions.retrieve(data.stripe_session_id);
+        const piId = sess.payment_intent;
+        if (piId) {
+          const pi = await stripe.paymentIntents.retrieve(piId);
+          if (pi.status === 'requires_capture') {
+            await stripe.paymentIntents.cancel(piId);
+            console.log('[Update Booking] Pre-auth released for declined booking:', piId);
+          }
+        }
+      } catch (relErr) { console.error('[Update Booking] release error:', relErr.message); }
+    }
+
     res.json({ booking: data });
   } catch (error) {
     console.error('[Update Booking] Error:', error.message);
