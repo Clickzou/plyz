@@ -47,6 +47,7 @@ import { supabase } from '@/utils/supabase';
 import { isFanBlocked } from '@/utils/blockedFansStorage';
 import { createMeetingToken } from '@/utils/dailyService';
 import { saveActiveFanEvent, getOrCreateDeviceId } from '@/utils/eventSessionStorage';
+import { getExpoPushToken } from '@/utils/notifications';
 import { authedFetch } from '@/utils/authedFetch';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -73,6 +74,7 @@ export default function JoinLiveSessionScreen() {
   const [step, setStep] = useState<'code' | 'scheduled' | 'upload' | 'queue' | 'signing'>('code');
   const [isReserving, setIsReserving] = useState(false);
   const [reservationDone, setReservationDone] = useState(false);
+  const [reservationCount, setReservationCount] = useState<number | null>(null);
   const [fanName, setFanName] = useState('');
   const [message, setMessage] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -770,6 +772,35 @@ export default function JoinLiveSessionScreen() {
     return `${Math.round(minutes)} min`;
   };
 
+  // Charge le nombre de fans ayant déjà réservé ce live programmé.
+  useEffect(() => {
+    if (step !== 'scheduled' || !session?.id) return;
+    (async () => {
+      try {
+        const r = await fetch(`${STRIPE_SERVER_URL}/api/event-reservation-count?event_id=${session.id}`);
+        const j = await r.json();
+        if (typeof j?.count === 'number') setReservationCount(j.count);
+      } catch { /* non bloquant */ }
+    })();
+  }, [step, session?.id]);
+
+  const persistLiveReservation = async () => {
+    if (!session) return;
+    try {
+      const viewerId = await getOrCreateDeviceId();
+      const pushToken = await getExpoPushToken();
+      const r = await fetch(`${STRIPE_SERVER_URL}/api/reserve-event`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_id: session.id, fan_id: viewerId, fan_name: fanName || null, push_token: pushToken }),
+      });
+      const rj = await r.json().catch(() => null);
+      if (rj && typeof rj.count === 'number') setReservationCount(rj.count);
+    } catch (e) {
+      console.warn('[live reserve-event] enregistrement serveur échoué (non bloquant):', e);
+    }
+  };
+
   const handleReserve = async () => {
     if (!session) return;
     setIsReserving(true);
@@ -791,10 +822,63 @@ export default function JoinLiveSessionScreen() {
         event_type: 'live_video',
       });
 
+      // Persiste côté serveur (compteur « X ont réservé » + rappels push, même app fermée).
+      await persistLiveReservation();
+
       setReservationDone(true);
       showAlert(t('success') || 'OK', t('eventReservedMessage'));
     } catch (error) {
       console.error('Error reserving event:', error);
+      showAlert(t('error'), t('reservationFailed'));
+    } finally {
+      setIsReserving(false);
+    }
+  };
+
+  // Réserve un live PAYANT en payant maintenant (place garantie). Réutilise le flux
+  // de paiement existant (purchase-session → pré-autorisation) : au retour, l'entrée
+  // de file pré-payée est créée, et le jour J le fan la reprend SANS re-payer
+  // (check-active-payment). Débit seulement à la fin de l'appel (capture).
+  const handleReserveAndPayLive = async () => {
+    if (!session) return;
+    setIsReserving(true);
+    try {
+      // Anti double-paiement : si ce fan a déjà une place pré-payée, on n'en repropose pas.
+      if (STRIPE_SERVER_URL) {
+        try {
+          const deviceId = await getOrCreateDeviceId();
+          const res = await authedFetch(`${STRIPE_SERVER_URL}/api/check-active-payment?type=video&session_id=${encodeURIComponent(session.id)}&device_id=${encodeURIComponent(deviceId)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.hasActivePayment) {
+              setReservationDone(true);
+              showAlert(t('success') || 'OK', t('eventReservedMessage'));
+              setIsReserving(false);
+              return;
+            }
+          }
+        } catch { /* non bloquant */ }
+      }
+      // Compte la réservation (payante) pour le « X ont réservé » + rappels.
+      await persistLiveReservation();
+      const resolvedFanName = fanName.trim() || (t('liveSessionAnonymousFan' as any) || 'Un fan');
+      router.push({
+        pathname: '/purchase-session',
+        params: {
+          celebrityId: session.celebrity_id || '',
+          celebrityName: session.celebrity_name || '',
+          sessionId: session.id,
+          priceCents: String(session.price_cents),
+          durationMinutes: String(session.duration_per_fan_minutes || 5),
+          celebrityStripeAccountId: session.celebrity_stripe_account_id || '',
+          fanName: resolvedFanName,
+          flow: 'video',
+          resumePhotoUrl: '',
+          resumeMessage: '',
+        },
+      });
+    } catch (error) {
+      console.error('Error reserving+paying live:', error);
       showAlert(t('error'), t('reservationFailed'));
     } finally {
       setIsReserving(false);
@@ -894,6 +978,11 @@ export default function JoinLiveSessionScreen() {
           )}
         </View>
 
+        {reservationCount != null && reservationCount > 0 && (
+          <Text style={{ color: '#818cf8', fontSize: 14, fontWeight: '700', textAlign: 'center', marginTop: 16 }}>
+            {`👥 ${reservationCount} ${reservationCount > 1 ? (t('fansReserved' as any) || 'fans ont déjà réservé') : (t('fanReserved' as any) || 'fan a déjà réservé')}`}
+          </Text>
+        )}
         {reservationDone ? (
           <View style={{ alignItems: 'center' }}>
             <View style={[styles.signingIconContainer, { marginTop: 12 }]}>
@@ -904,19 +993,53 @@ export default function JoinLiveSessionScreen() {
               <Text style={styles.primaryButtonText}>{t('back') || 'Retour'}</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          <TouchableOpacity
-            style={[styles.primaryButton, { marginTop: 24 }, isReserving && styles.buttonDisabled]}
-            onPress={handleReserve}
-            disabled={isReserving}
-          >
-            {isReserving ? (
-              <ActivityIndicator color="#6366f1" />
-            ) : (
-              <Text style={styles.primaryButtonText}>{t('reserveEvent')}</Text>
-            )}
-          </TouchableOpacity>
-        )}
+        ) : (() => {
+          const price = session?.price_cents || 0;
+          const startsMs = session?.scheduled_at ? new Date(session.scheduled_at).getTime() : 0;
+          const within7d = !!startsMs && (startsMs - Date.now()) <= 7 * 24 * 3600 * 1000;
+          if (price > 0 && within7d) {
+            return (
+              <>
+                <TouchableOpacity
+                  style={[styles.primaryButton, { marginTop: 24 }, isReserving && styles.buttonDisabled]}
+                  onPress={handleReserveAndPayLive}
+                  disabled={isReserving}
+                >
+                  {isReserving ? (
+                    <ActivityIndicator color="#6366f1" />
+                  ) : (
+                    <Text style={styles.primaryButtonText}>
+                      {`${t('reserveMyPlace' as any) || 'Réserver ma place'} — ${(price / 100).toFixed(2).replace('.', ',')}€`}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+                <Text style={[styles.infoValueMuted, { textAlign: 'center', marginTop: 10 }]}>
+                  {t('reserveHeldNotCharged' as any) || 'Ta place est garantie — tu n\'es débité qu\'au moment de l\'appel.'}
+                </Text>
+              </>
+            );
+          }
+          return (
+            <>
+              <TouchableOpacity
+                style={[styles.primaryButton, { marginTop: 24 }, isReserving && styles.buttonDisabled]}
+                onPress={handleReserve}
+                disabled={isReserving}
+              >
+                {isReserving ? (
+                  <ActivityIndicator color="#6366f1" />
+                ) : (
+                  <Text style={styles.primaryButtonText}>{t('reserveEvent')}</Text>
+                )}
+              </TouchableOpacity>
+              {price > 0 && !within7d && (
+                <Text style={[styles.infoValueMuted, { textAlign: 'center', marginTop: 10 }]}>
+                  {t('paymentOpens7days' as any) || "Le paiement pour garantir ta place ouvrira 7 jours avant l'événement."}
+                </Text>
+              )}
+            </>
+          );
+        })()}
       </ScrollView>
     );
   };

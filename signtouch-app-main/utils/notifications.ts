@@ -82,6 +82,24 @@ export async function initNotifications(): Promise<void> {
 
 const PUSH_API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
+/** Récupère le token push Expo du fan (best-effort, mobile uniquement). null sur web/refus. */
+export async function getExpoPushToken(): Promise<string | null> {
+  try {
+    if (Platform.OS === 'web' || !Notifications) return null;
+    const perm = await Notifications.getPermissionsAsync();
+    let status = perm?.status;
+    if (status !== 'granted') {
+      const r = await Notifications.requestPermissionsAsync();
+      status = r?.status;
+    }
+    if (status !== 'granted') return null;
+    const d = await Notifications.getExpoPushTokenAsync();
+    return d?.data || null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Enregistre le token push Expo de l'utilisateur connecté côté serveur
  * (table user_push_tokens) pour qu'il puisse recevoir les notifications même
