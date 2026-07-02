@@ -1283,7 +1283,7 @@ app.post('/api/end-fan-call', async (req, res) => {
           console.log('[EndFanCall] Payment captured:', paymentIntentId, '| Amount:', captured.amount, captured.currency);
           // Facture (best-effort : n'interrompt jamais l'encaissement)
           try {
-            const { data: qf } = await supabase.from('session_queue').select('fan_id, session_id').eq('id', queueEntryId).maybeSingle();
+            const { data: qf } = await supabase.from('session_queue').select('fan_id, session_id, push_token').eq('id', queueEntryId).maybeSingle();
             let celebId = null;
             if (qf?.session_id) {
               const { data: ls } = await supabase.from('live_sessions').select('celebrity_id').eq('id', qf.session_id).maybeSingle();
@@ -1298,7 +1298,11 @@ app.post('/api/end-fan-call', async (req, res) => {
               amountCents: captured.amount,
               currency: captured.currency,
             });
-          } catch (invErr) { console.error('[EndFanCall] invoice error:', invErr.message); }
+            // Invite le fan à noter sa rencontre (best-effort, ne bloque rien)
+            if (qf?.push_token) {
+              sendExpoPush([qf.push_token], 'Plyz', '⭐ Comment s\'est passée ta rencontre ? Laisse une note à la personnalité.', { type: 'rate_prestation', queueEntryId });
+            }
+          } catch (invErr) { console.error('[EndFanCall] invoice/notif error:', invErr.message); }
         } else if (pi.status === 'succeeded') {
           console.log('[EndFanCall] PaymentIntent already succeeded (idempotent OK):', paymentIntentId);
         } else if (pi.status === 'canceled') {
@@ -5823,6 +5827,76 @@ app.post('/api/admin/analyze-alert', async (req, res) => {
   }
 });
 
+// ============================================================
+// NOTIFICATIONS PUSH — enregistrement du token + worker (outbox + rappels)
+// ============================================================
+app.post('/api/register-push-token', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const { token, platform } = req.body || {};
+    if (!token) return res.status(400).json({ error: 'token required' });
+    await getSupabaseAdmin().from('user_push_tokens').upsert(
+      { user_id: authUser.id, token: String(token), platform: platform || null, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' });
+    res.json({ success: true });
+  } catch (e) { console.error('[register-push-token]', e.message); res.status(500).json({ error: e.message }); }
+});
+
+// Envoie les push en attente dans push_outbox (ex: "compte validé").
+async function processPushOutbox() {
+  const db = getSupabaseAdmin();
+  const { data: rows } = await db.from('push_outbox').select('id, user_id, title, body, data').eq('sent', false).limit(50);
+  for (const row of (rows || [])) {
+    try {
+      let token = null;
+      if (row.user_id) {
+        const { data: t } = await db.from('user_push_tokens').select('token').eq('user_id', row.user_id).maybeSingle();
+        token = t && t.token;
+      }
+      if (token) await sendExpoPush([token], row.title || 'Plyz', row.body || '', row.data || {});
+      await db.from('push_outbox').update({ sent: true, sent_at: new Date().toISOString() }).eq('id', row.id);
+    } catch (e) { console.error('[Outbox]', e.message); }
+  }
+}
+
+// Rappels d'événement : envoie aux inscrits (fans) + à la personnalité (créateur),
+// dans une fenêtre autour de T-minutes, une seule fois (drapeau flagCol).
+async function sendEventReminders(table, timeCol, creatorCol, fanTable, fanKeyCol, titleCol, fallbackName, minutes, flagCol) {
+  const db = getSupabaseAdmin();
+  const lo = new Date(Date.now() + (minutes * 60 - 90) * 1000).toISOString();
+  const hi = new Date(Date.now() + (minutes * 60 + 90) * 1000).toISOString();
+  const { data: rows } = await db.from(table).select('*').eq(flagCol, false).gte(timeCol, lo).lte(timeCol, hi);
+  for (const ev of (rows || [])) {
+    try {
+      const tokens = [];
+      if (ev[creatorCol]) {
+        const { data: t } = await db.from('user_push_tokens').select('token').eq('user_id', ev[creatorCol]).maybeSingle();
+        if (t && t.token) tokens.push(t.token);
+      }
+      if (fanTable) {
+        const { data: fans } = await db.from(fanTable).select('push_token').eq(fanKeyCol, String(ev.id));
+        (fans || []).forEach((f) => { if (f && f.push_token) tokens.push(f.push_token); });
+      }
+      const when = minutes >= 60 ? 'dans 1 heure' : 'dans quelques minutes';
+      const name = (titleCol && ev[titleCol]) ? ev[titleCol] : fallbackName;
+      await sendExpoPush(tokens, 'Plyz', `⏰ « ${name} » commence ${when} !`, { type: 'event_reminder', eventId: ev.id });
+      await db.from(table).update({ [flagCol]: true }).eq('id', ev.id);
+      if (tokens.length) console.log(`[Reminder] ${table} ${ev.id} (${minutes}min) → ${tokens.length} destinataire(s)`);
+    } catch (e) { console.error('[Reminder]', e.message); }
+  }
+}
+
+async function runNotificationWorker() {
+  try {
+    await processPushOutbox();
+    await sendEventReminders('event_sessions', 'starts_at', 'created_by', 'event_paid_fans', 'event_session_id', 'title', 'Ton événement', 60, 'reminded_1h');
+    await sendEventReminders('event_sessions', 'starts_at', 'created_by', 'event_paid_fans', 'event_session_id', 'title', 'Ton événement', 2, 'reminded_2m');
+    await sendEventReminders('live_sessions', 'scheduled_at', 'celebrity_id', 'session_queue', 'session_id', null, 'Ton live vidéo', 60, 'reminded_1h');
+    await sendEventReminders('live_sessions', 'scheduled_at', 'celebrity_id', 'session_queue', 'session_id', null, 'Ton live vidéo', 2, 'reminded_2m');
+  } catch (e) { console.error('[NotifWorker]', e.message); }
+}
+
 const EXPO_PORT = 19006;
 const PORT = 5000;
 
@@ -5853,4 +5927,8 @@ app.listen(PORT, '0.0.0.0', () => {
   getStripe()
     .then(() => console.log('[Server] Stripe credentials loaded successfully'))
     .catch((err) => console.warn('[Server] Warning: Stripe credentials will be loaded on first request:', err.message));
+  // Worker notifications : outbox (compte validé) + rappels d'événement, chaque minute.
+  setTimeout(runNotificationWorker, 8000);
+  setInterval(runNotificationWorker, 60000);
+  console.log('[Server] Notification worker started (outbox + event reminders, every 60s)');
 });

@@ -79,3 +79,33 @@ export async function initNotifications(): Promise<void> {
   configureNotificationHandler();
   await ensureNotificationChannels();
 }
+
+const PUSH_API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+
+/**
+ * Enregistre le token push Expo de l'utilisateur connecté côté serveur
+ * (table user_push_tokens) pour qu'il puisse recevoir les notifications même
+ * app fermée (compte validé, rappels d'événement...). Best-effort, safe sur web.
+ */
+export async function registerPushTokenWithServer(accessToken: string | null | undefined): Promise<void> {
+  if (Platform.OS === 'web' || !Notifications || !accessToken) return;
+  try {
+    const perm = await Notifications.getPermissionsAsync();
+    let status = perm?.status;
+    if (status !== 'granted') {
+      const req = await Notifications.requestPermissionsAsync();
+      status = req?.status;
+    }
+    if (status !== 'granted') return;
+    const tokenData = await Notifications.getExpoPushTokenAsync();
+    const token = tokenData?.data;
+    if (!token) return;
+    await fetch(`${PUSH_API_BASE}/api/register-push-token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({ token, platform: Platform.OS }),
+    });
+  } catch {
+    // best-effort, ne bloque jamais l'app
+  }
+}

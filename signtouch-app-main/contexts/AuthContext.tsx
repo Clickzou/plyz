@@ -3,6 +3,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/utils/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import { registerPushTokenWithServer } from '@/utils/notifications';
 
 const POST_AUTH_REDIRECT_KEY = '@post_auth_redirect';
 
@@ -95,6 +96,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     refreshBanStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
+
+  // Enregistre le token push de l'utilisateur connecté côté serveur (pour recevoir
+  // "compte validé", rappels d'événement... même app fermée). Best-effort.
+  useEffect(() => {
+    if (session?.access_token) {
+      registerPushTokenWithServer(session.access_token);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.access_token]);
 
   // ✅ SIGN UP (Confirm sign-up) + redirection vers l’app
   const signUp = async (email: string, password: string) => {
