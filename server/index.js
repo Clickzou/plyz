@@ -5754,6 +5754,44 @@ app.get('/api/admin/health-check', async (req, res) => {
   res.json({ checked_at: new Date().toISOString(), services: out });
 });
 
+// [ADMIN] Analyse une alerte (surtout sécurité/intrusion) avec Claude :
+// intentions probables, ce qui a été tenté, niveau de risque, action recommandée.
+app.post('/api/admin/analyze-alert', async (req, res) => {
+  const authUser = await verifySupabaseJWT(req);
+  const ADMIN_UID = 'e7c06a67-2cd0-4aa1-bbf6-477fbb162ce8';
+  if (!authUser || String(authUser.id) !== ADMIN_UID) {
+    req.__authUserId = authUser ? authUser.id : null;
+    logSecurityEvent(req, 'accès admin refusé', 'appel de /api/admin/analyze-alert sans droits admin');
+    return res.status(403).json({ error: 'forbidden' });
+  }
+  try {
+    const key = process.env.ANTHROPIC_API_KEY;
+    if (!key) return res.status(503).json({ error: 'anthropic_unavailable' });
+    const { service, severity, message } = req.body || {};
+    const system = `Tu es un analyste sécurité pour l'application Plyz (marketplace de prestations de célébrités : appels vidéo, dédicaces, paiements Stripe, base Supabase). On te donne une alerte technique/sécurité. Réponds en FRANÇAIS, de façon claire pour un non-technicien, en 4 sections courtes :
+1) CE QUI S'EST PASSÉ : explique simplement ce que la personne a tenté.
+2) INTENTION PROBABLE : quel était vraisemblablement son but.
+3) RISQUE : a-t-elle pu réussir/accéder à des données ? niveau (faible/moyen/élevé) et pourquoi.
+4) ACTION RECOMMANDÉE : quoi faire concrètement.
+Sois factuel, ne dramatise pas inutilement. N'invente pas de détails absents de l'alerte.`;
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001', max_tokens: 700,
+        system: [{ type: 'text', text: system }],
+        messages: [{ role: 'user', content: `Alerte à analyser :\nService : ${service || 'inconnu'}\nGravité : ${severity || 'inconnue'}\nDétail : ${message || '(vide)'}` }],
+      }),
+    });
+    const j = await r.json();
+    if (j.error) return res.status(502).json({ error: j.error.message || j.error.type });
+    const analysis = (j.content && j.content[0] && j.content[0].text) ? j.content[0].text.trim() : '';
+    res.json({ analysis });
+  } catch (e) {
+    console.error('[analyze-alert] error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 const EXPO_PORT = 19006;
 const PORT = 5000;
 
