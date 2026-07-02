@@ -5436,6 +5436,65 @@ app.get('/api/invoice/:id/download', async (req, res) => {
   }
 });
 
+// [ADMIN] Récupère les infos KYC d'un compte Stripe Connect (vrai nom/prénom,
+// adresse, date de naissance, statut de vérification...). Réservé à l'admin.
+// Usage : GET /api/admin/stripe-account?user_id=<uuid>  (ou ?account=<acct_id>)
+app.get('/api/admin/stripe-account', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    const ADMIN_UID = 'e7c06a67-2cd0-4aa1-bbf6-477fbb162ce8';
+    if (!authUser || String(authUser.id) !== ADMIN_UID) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+    let acct = req.query.account;
+    if (!acct && req.query.user_id) {
+      const db = getSupabaseAdmin();
+      const { data: cp } = await db.from('celebrity_profiles')
+        .select('stripe_account_id').eq('user_id', req.query.user_id).maybeSingle();
+      acct = cp && cp.stripe_account_id;
+    }
+    if (!acct) return res.status(404).json({ error: 'no_stripe_account' });
+
+    const stripe = await getStripe();
+    const a = await stripe.accounts.retrieve(String(acct));
+    const ind = a.individual || {};
+    const comp = a.company || {};
+    const fmtAddr = (ad) => ad ? [ad.line1, ad.line2, ad.postal_code, ad.city, ad.country].filter(Boolean).join(', ') : null;
+    const fmtDob = (d) => d && d.year ? `${String(d.day||'').padStart(2,'0')}/${String(d.month||'').padStart(2,'0')}/${d.year}` : null;
+
+    return res.json({
+      id: a.id,
+      business_type: a.business_type,
+      email: a.email,
+      country: a.country,
+      default_currency: a.default_currency,
+      charges_enabled: a.charges_enabled,
+      payouts_enabled: a.payouts_enabled,
+      details_submitted: a.details_submitted,
+      individual: {
+        first_name: ind.first_name || null,
+        last_name: ind.last_name || null,
+        dob: fmtDob(ind.dob),
+        email: ind.email || null,
+        phone: ind.phone || null,
+        address: fmtAddr(ind.address),
+        verification_status: (ind.verification && ind.verification.status) || null,
+      },
+      company: {
+        name: comp.name || null,
+        phone: comp.phone || null,
+        address: fmtAddr(comp.address),
+        tax_id_provided: comp.tax_id_provided || false,
+        vat_id_provided: comp.vat_id_provided || false,
+      },
+      requirements_due: (a.requirements && a.requirements.currently_due) || [],
+    });
+  } catch (e) {
+    console.error('[admin stripe-account] error:', e.message);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 const EXPO_PORT = 19006;
 const PORT = 5000;
 
