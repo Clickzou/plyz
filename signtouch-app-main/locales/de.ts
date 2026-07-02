@@ -1582,4 +1582,11 @@ export default {
   docsError: "Dokument konnte nicht geöffnet werden.",
   docsMenuItem: "Meine Dokumente",
   docsMenuSub: "Deine Rechnungen und Nachweise",
+  celebVerifCriteriaTitle: "Kriterien für die Akzeptanz",
+  celebVerifCriteriaIntro: "Bevor du deine Anfrage sendest, überprüfe, ob du diese Kriterien erfüllst — andernfalls wird sie abgelehnt:",
+  celebVerifCrit1: "Überprüfbare öffentliche Bekanntheit: verifiziertes Konto, Wikipedia-Seite, mindestens 100 000 Follower in einem offiziellen Netzwerk oder Pressebericht.",
+  celebVerifCrit2: "Wahre Identität, die der Person entspricht (keine Identitätsdiebstahl).",
+  celebVerifCrit3: "Mindestens ein überprüfbarer offizieller Link (verifiziertes Netzwerk, offizielle Website, Wikipedia oder Presse).",
+  celebVerifCrit4: "Volljährig (oder rechtlich vertreten) und in der Lage, Videobotschaften oder Live-Sessions zu erstellen.",
+  celebVerifCrit5: "Einhaltung von Gesetzen und Content-Richtlinien (nichts Illegales, Hasserfülltes oder explizit Sexuelles).",
 };

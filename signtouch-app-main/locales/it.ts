@@ -1582,4 +1582,11 @@ export default {
   docsError: "Impossibile aprire il documento.",
   docsMenuItem: "I miei documenti",
   docsMenuSub: "Le tue fatture e giustificativi",
+  celebVerifCriteriaTitle: "Criteri per essere accettato",
+  celebVerifCriteriaIntro: "Prima di inviare la tua richiesta, verifica di soddisfare questi criteri — altrimenti sarà rifiutata:",
+  celebVerifCrit1: "Notorietà pubblica verificabile: account certificato, pagina Wikipedia, almeno 100 000 follower su un profilo ufficiale, o copertura stampa.",
+  celebVerifCrit2: "Identità reale corrispondente alla persona (nessuna usurpazione).",
+  celebVerifCrit3: "Almeno un collegamento ufficiale verificabile (profilo certificato, sito ufficiale, Wikipedia o stampa).",
+  celebVerifCrit4: "Essere maggiorenne (o rappresentato legalmente) e in grado di realizzare dediche video o live.",
+  celebVerifCrit5: "Rispetto della legge e delle regole sui contenuti (niente di illegale, odioso o esplicitamente sessuale).",
 };

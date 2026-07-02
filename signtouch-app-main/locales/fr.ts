@@ -1601,4 +1601,11 @@ export default {
   docsError: "Impossible d'ouvrir le document.",
   docsMenuItem: "Mes documents",
   docsMenuSub: "Tes factures et justificatifs",
+  celebVerifCriteriaTitle: "Critères pour être accepté",
+  celebVerifCriteriaIntro: "Avant d'envoyer ta demande, vérifie que tu remplis ces critères — sinon elle sera refusée :",
+  celebVerifCrit1: "Notoriété publique vérifiable : compte certifié, page Wikipédia, au moins 100 000 abonnés sur un réseau officiel, ou couverture presse.",
+  celebVerifCrit2: "Identité réelle correspondant à la personne (aucune usurpation).",
+  celebVerifCrit3: "Au moins un lien officiel vérifiable (réseau certifié, site officiel, Wikipédia ou presse).",
+  celebVerifCrit4: "Être majeur (ou représenté légalement) et capable de réaliser des dédicaces vidéo ou des lives.",
+  celebVerifCrit5: "Respect de la loi et des règles de contenu (rien d'illégal, haineux ou à caractère sexuel explicite).",
 };

@@ -172,6 +172,19 @@ export default function CelebrityVerificationScreen() {
               </Text>
             </View>
 
+            <View style={styles.criteriaBox}>
+              <Text style={styles.criteriaTitle}>{t('celebVerifCriteriaTitle' as any) || 'Critères pour être accepté'}</Text>
+              <Text style={styles.criteriaIntro}>
+                {t('celebVerifCriteriaIntro' as any) || "Avant d'envoyer ta demande, vérifie que tu remplis ces critères — sinon elle sera refusée :"}
+              </Text>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <View key={n} style={styles.criteriaItem}>
+                  <CheckCircle size={15} color="#10b981" style={{ marginTop: 2 }} />
+                  <Text style={styles.criteriaText}>{t(`celebVerifCrit${n}` as any) || ''}</Text>
+                </View>
+              ))}
+            </View>
+
             <Text style={styles.label}>{t('celebVerifCategory' as any) || 'Votre catégorie'}</Text>
             <View style={styles.categoryRow}>
               {CATEGORIES.map(c => (
@@ -260,6 +273,11 @@ const styles = StyleSheet.create({
   backButton: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
   intro: { alignItems: 'center', marginBottom: 24 },
+  criteriaBox: { backgroundColor: 'rgba(16,185,129,0.08)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.35)', borderRadius: 14, padding: 16, marginBottom: 24 },
+  criteriaTitle: { color: '#34d399', fontSize: 15, fontWeight: '700', marginBottom: 6 },
+  criteriaIntro: { color: 'rgba(255,255,255,0.75)', fontSize: 13, lineHeight: 19, marginBottom: 12 },
+  criteriaItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 8 },
+  criteriaText: { color: 'rgba(255,255,255,0.85)', fontSize: 13, lineHeight: 19, flex: 1 },
   introIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(139,92,246,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
   introTitle: { color: '#fff', fontSize: 20, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
   introDesc: { color: 'rgba(255,255,255,0.6)', fontSize: 14, textAlign: 'center', lineHeight: 20, paddingHorizontal: 8 },

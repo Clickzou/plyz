@@ -1587,4 +1587,11 @@ export default {
   docsError: "Tidak dapat membuka dokumen.",
   docsMenuItem: "Dokumen Saya",
   docsMenuSub: "Faktur dan bukti Anda",
+  celebVerifCriteriaTitle: "Kriteria untuk Diterima",
+  celebVerifCriteriaIntro: "Sebelum mengirim permintaanmu, pastikan kamu memenuhi kriteria ini — jika tidak, permintaanmu akan ditolak:",
+  celebVerifCrit1: "Notoritas publik yang dapat diverifikasi: akun terverifikasi, halaman Wikipedia, minimal 100 000 pengikut di jaringan resmi, atau liputan pers.",
+  celebVerifCrit2: "Identitas nyata sesuai dengan orang tersebut (tanpa penyalahgunaan identitas).",
+  celebVerifCrit3: "Minimal satu tautan resmi yang dapat diverifikasi (jaringan terverifikasi, situs resmi, Wikipedia, atau pers).",
+  celebVerifCrit4: "Berusia dewasa (atau diwakili secara hukum) dan mampu membuat dedikasi video atau siaran langsung.",
+  celebVerifCrit5: "Kepatuhan terhadap hukum dan aturan konten (tidak ada yang ilegal, penuh kebencian, atau seksual eksplisit).",
 };

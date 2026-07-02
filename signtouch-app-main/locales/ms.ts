@@ -1587,4 +1587,11 @@ export default {
   docsError: "Tidak dapat membuka dokumen.",
   docsMenuItem: "Dokumen Saya",
   docsMenuSub: "Invois dan bukti anda",
+  celebVerifCriteriaTitle: "Kriteria untuk Diterima",
+  celebVerifCriteriaIntro: "Sebelum menghantar permintaan anda, sahkan bahawa anda memenuhi kriteria ini — jika tidak, ia akan ditolak:",
+  celebVerifCrit1: "Ketenaran awam yang boleh disahkan: akaun tersertifikat, halaman Wikipedia, sekurang-kurangnya 100 000 pengikut di rangkaian rasmi, atau liputan akhbar.",
+  celebVerifCrit2: "Identiti sebenar yang sepadan dengan orang tersebut (tiada penipuan identiti).",
+  celebVerifCrit3: "Sekurang-kurangnya satu pautan rasmi yang boleh disahkan (rangkaian tersertifikat, laman web rasmi, Wikipedia atau akhbar).",
+  celebVerifCrit4: "Berusia dewasa (atau diwakili secara sah) dan mampu membuat dedikasi video atau siaran langsung.",
+  celebVerifCrit5: "Mematuhi undang-undang dan peraturan kandungan (tiada yang menyalahi undang-undang, membenci, atau bersifat lucah secara eksplisit).",
 };
