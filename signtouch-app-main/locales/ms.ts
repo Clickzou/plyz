@@ -1594,4 +1594,11 @@ export default {
   celebVerifCrit3: "Sekurang-kurangnya satu pautan rasmi yang boleh disahkan (rangkaian tersertifikat, laman web rasmi, Wikipedia atau akhbar).",
   celebVerifCrit4: "Berusia dewasa (atau diwakili secara sah) dan mampu membuat dedikasi video atau siaran langsung.",
   celebVerifCrit5: "Mematuhi undang-undang dan peraturan kandungan (tiada yang menyalahi undang-undang, membenci, atau bersifat lucah secara eksplisit).",
+  reserveMyPlace: "Tempah Tempat Saya",
+  reserveHeldNotCharged: "Tempat anda terjamin — anda hanya akan dikenakan bayaran apabila acara dimulai.",
+  waitlistJoin: "Daftar pada Senarai Tunggu",
+  waitlistInfo: "Pembayaran dibuka 7 hari sebelum acara — siapa cepat dia dapat.",
+  waitlistDone: "Anda berada pada senarai tunggu! Pembayaran dibuka 7 hari sebelum — siapa cepat dia dapat.",
+  fansReserved: "peminat telah menempah",
+  fanReserved: "peminat telah menempah",
 };

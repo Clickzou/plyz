@@ -1589,4 +1589,11 @@ export default {
   celebVerifCrit3: "至少一个可验证的官方链接（认证社交网络、官方网站、Wikipedia或新闻报道）。",
   celebVerifCrit4: "年满18岁（或有法律代理）且能够录制视频祝福或进行直播。",
   celebVerifCrit5: "遵守法律和内容规则（不含任何非法、仇恨或明确的性内容）。",
+  reserveMyPlace: "预订我的位置",
+  reserveHeldNotCharged: "您的位置已确保 — 仅在活动开始时扣费。",
+  waitlistJoin: "加入等待名单",
+  waitlistInfo: "付款将在活动前7天开放 — 先到先得。",
+  waitlistDone: "您已加入等待名单！付款将在7天前开放 — 先到先得。",
+  fansReserved: "位粉丝已预订",
+  fanReserved: "位粉丝已预订",
 };

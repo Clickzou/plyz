@@ -1624,4 +1624,11 @@ export default {
   celebVerifCrit3: "At least one verifiable official link (certified network, official website, Wikipedia or press).",
   celebVerifCrit4: "Be of legal age (or legally represented) and able to create video dedications or go live.",
   celebVerifCrit5: "Compliance with the law and content rules (nothing illegal, hateful or explicitly sexual).",
+  reserveMyPlace: "Book my spot",
+  reserveHeldNotCharged: "Your spot is guaranteed — you'll only be charged when the event is called.",
+  waitlistJoin: "Join the waitlist",
+  waitlistInfo: "Payment opens 7 days before the event — first come, first served.",
+  waitlistDone: "You're on the waitlist! Payment opens 7 days before — first come, first served.",
+  fansReserved: "fans have already booked",
+  fanReserved: "fan has already booked",
 };

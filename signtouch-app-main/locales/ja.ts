@@ -1589,4 +1589,11 @@ export default {
   celebVerifCrit3: "少なくとも1つの確認可能な公式リンク（認証済みネットワーク、公式サイト、Wikipedia またはメディア）。",
   celebVerifCrit4: "成人であること（または法定代理人に代理されていること）、かつビデオメッセージやライブ配信を提供できること。",
   celebVerifCrit5: "法律およびコンテンツルールの遵守（違法、憎悪的、または露骨な性的内容を含まない）。",
+  reserveMyPlace: "予約する",
+  reserveHeldNotCharged: "席が確保されました。イベント開始時にお支払いいただきます。",
+  waitlistJoin: "ウェイトリストに登録",
+  waitlistInfo: "イベント7日前に支払いが開始されます。先着順です。",
+  waitlistDone: "ウェイトリストに登録されました。イベント7日前に支払いが開始されます。先着順です。",
+  fansReserved: "人が既に予約済み",
+  fanReserved: "人が既に予約済み",
 };

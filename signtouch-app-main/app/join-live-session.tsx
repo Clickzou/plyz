@@ -1029,12 +1029,14 @@ export default function JoinLiveSessionScreen() {
                 {isReserving ? (
                   <ActivityIndicator color="#6366f1" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>{t('reserveEvent')}</Text>
+                  <Text style={styles.primaryButtonText}>
+                    {price > 0 ? (t('waitlistJoin' as any) || "S'inscrire sur la liste d'attente") : t('reserveEvent')}
+                  </Text>
                 )}
               </TouchableOpacity>
-              {price > 0 && !within7d && (
+              {price > 0 && (
                 <Text style={[styles.infoValueMuted, { textAlign: 'center', marginTop: 10 }]}>
-                  {t('paymentOpens7days' as any) || "Le paiement pour garantir ta place ouvrira 7 jours avant l'événement."}
+                  {t('waitlistInfo' as any) || "Le paiement ouvrira 7 jours avant l'événement — premier inscrit, premier servi."}
                 </Text>
               )}
             </>

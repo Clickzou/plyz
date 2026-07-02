@@ -1594,4 +1594,11 @@ export default {
   celebVerifCrit3: "Minimal satu tautan resmi yang dapat diverifikasi (jaringan terverifikasi, situs resmi, Wikipedia, atau pers).",
   celebVerifCrit4: "Berusia dewasa (atau diwakili secara hukum) dan mampu membuat dedikasi video atau siaran langsung.",
   celebVerifCrit5: "Kepatuhan terhadap hukum dan aturan konten (tidak ada yang ilegal, penuh kebencian, atau seksual eksplisit).",
+  reserveMyPlace: "Pesan Tempat Saya",
+  reserveHeldNotCharged: "Tempat Anda dijamin — Anda hanya dikenai biaya saat acara dimulai.",
+  waitlistJoin: "Daftar ke Daftar Tunggu",
+  waitlistInfo: "Pembayaran dibuka 7 hari sebelum acara — siapa cepat dia dapat.",
+  waitlistDone: "Anda sudah terdaftar di daftar tunggu! Pembayaran dibuka 7 hari sebelumnya — siapa cepat dia dapat.",
+  fansReserved: "penggemar sudah memesan",
+  fanReserved: "penggemar sudah memesan",
 };

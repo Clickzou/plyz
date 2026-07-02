@@ -1589,4 +1589,11 @@ export default {
   celebVerifCrit3: "Almeno un collegamento ufficiale verificabile (profilo certificato, sito ufficiale, Wikipedia o stampa).",
   celebVerifCrit4: "Essere maggiorenne (o rappresentato legalmente) e in grado di realizzare dediche video o live.",
   celebVerifCrit5: "Rispetto della legge e delle regole sui contenuti (niente di illegale, odioso o esplicitamente sessuale).",
+  reserveMyPlace: "Prenota il mio posto",
+  reserveHeldNotCharged: "Il tuo posto è garantito — sarai addebitato solo al momento della chiamata.",
+  waitlistJoin: "Iscriviti alla lista d'attesa",
+  waitlistInfo: "Il pagamento si aprirà 7 giorni prima dell'evento — primo arrivato, primo servito.",
+  waitlistDone: "Sei in lista d'attesa! Il pagamento si aprirà 7 giorni prima — primo arrivato, primo servito.",
+  fansReserved: "fan hanno già prenotato",
+  fanReserved: "fan ha già prenotato",
 };
