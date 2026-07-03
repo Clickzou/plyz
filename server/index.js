@@ -581,14 +581,26 @@ app.post('/api/auth-email-hook', express.raw({ type: '*/*' }), async (req, res) 
     if (!email || !code) return res.status(200).json({}); // rien à envoyer (ex: type non géré)
     const lang = (user.user_metadata && user.user_metadata.preferred_language) || 'fr';
     const tpl = AUTH_EMAIL_I18N[lang] || AUTH_EMAIL_I18N.fr || { subject: 'Ton code de connexion Plyz', body: '{{code}}' };
-    const text = String(tpl.body).replace(/\{\{code\}\}/g, code);
+    const bodyRaw = String(tpl.body);
+    const text = bodyRaw.replace(/\{\{code\}\}/g, code);
+    // Version HTML habillée (logo Plyz + code stylé), traduite. On garde le corps
+    // traduit et on remplace {{code}} par un bloc code bien visible.
+    const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    const codeBlock = `<div style="font-size:34px;font-weight:800;letter-spacing:8px;background:#f4f4f5;border-radius:12px;padding:18px 0;text-align:center;color:#0f172a;margin:18px 0;">${esc(code)}</div>`;
+    const bodyHtml = esc(bodyRaw).replace(/\{\{code\}\}/g, codeBlock).replace(/\n/g, '<br>');
+    const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#0f172a;">
+<div style="text-align:center;margin-bottom:18px;"><img src="https://plyz.io/logo-plyz.png" alt="Plyz" style="height:34px"></div>
+<div style="font-size:15px;line-height:1.6;">${bodyHtml}</div>
+<div style="margin-top:22px;border-top:1px solid #eee;padding-top:12px;color:#94a3b8;font-size:12px;text-align:center;">Plyz — CLICKZOU (SAS), Toulouse</div>
+</div>`;
     const transporter = getMailTransporter();
     if (!transporter) { console.warn('[AuthEmail] SMTP non configuré'); return res.status(500).json({ error: 'smtp_unavailable' }); }
     await transporter.sendMail({
-      from: `Plyz <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+      from: process.env.SMTP_FROM || `Plyz <${process.env.SMTP_USER}>`,
       to: email,
       subject: tpl.subject,
       text,
+      html,
     });
     console.log('[AuthEmail] code envoyé à', email, '| langue:', lang);
     return res.status(200).json({});
