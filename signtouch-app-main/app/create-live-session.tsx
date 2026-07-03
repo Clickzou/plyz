@@ -445,13 +445,14 @@ export default function CreateLiveSessionScreen() {
     // Durée par fan formatée (« X sec » / « X min ») via formatDuration
     const duration = formatDuration(durationPerFan);
 
+    const link = `https://plyz.io/evenement/${code}`;
     let message = (t('shareEventMessage') || 'Rejoins ma session live sur Plyz ! Code : {code}')
       .replace('{code}', code)
       .replace('{date}', when)
-      .replace('{duration}', duration);
+      .replace('{duration}', duration) + `\n\n👉 ${link}`;
 
     try {
-      await Share.share({ message });
+      await Share.share({ message, url: link });
     } catch (error) {
       // Sur web, Share.share peut échouer -> fallback presse-papier
       try {

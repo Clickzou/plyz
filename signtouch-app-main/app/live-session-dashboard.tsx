@@ -778,13 +778,16 @@ export default function LiveSessionDashboardScreen() {
 
     const duration = formatPerFanDuration(session.duration_per_fan_minutes || 0);
 
+    // Lien vers la page web de l'événement : affiche une belle carte au partage
+    // (photo + date) et permet de rejoindre en 1 clic dans l'app.
+    const link = `https://plyz.io/evenement/${session.code}`;
     const message = (t('shareEventMessage') || 'Rejoins ma session live sur Plyz ! Code : {code}')
       .replace('{code}', session.code)
       .replace('{date}', when)
-      .replace('{duration}', duration);
+      .replace('{duration}', duration) + `\n\n👉 ${link}`;
 
     try {
-      await Share.share({ message });
+      await Share.share({ message, url: link });
     } catch (error) {
       try {
         await Clipboard.setStringAsync(message);

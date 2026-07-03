@@ -265,10 +265,14 @@ export default function ActivityScreen() {
 
   const sharePost = async (item: FeedPost) => {
     try {
-      const message = item.title
-        ? `${item.celebrity.stage_name} - ${item.title}\n\n${item.body || ''}\n\nVia Plyz`
-        : `${item.celebrity.stage_name}\n\n${item.body || ''}\n\nVia Plyz`;
-      await Share.share({ message });
+      // Lien vers la page web du post : au partage (WhatsApp, Insta, X...), il
+      // affiche une belle carte (photo + texte) qui incite à découvrir Plyz.
+      const link = `https://plyz.io/post/${item.id}`;
+      const intro = item.title
+        ? `${item.celebrity.stage_name} — ${item.title}`
+        : `${item.celebrity.stage_name} sur Plyz`;
+      const message = `${intro}\n\n${item.body || ''}\n\n👉 ${link}`;
+      await Share.share({ message, url: link });
     } catch {}
   };
 

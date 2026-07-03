@@ -446,17 +446,19 @@ export default function EventPublishScreen() {
   };
 
   const handleShareCode = async () => {
+    const link = `https://plyz.io/evenement/${joinCode}`;
     try {
       if (navigator.share) {
         await navigator.share({
           title: sessionTitle,
-          text: `Rejoignez mon événement Plyz avec le code: ${joinCode}`,
+          text: `Rejoignez mon événement Plyz avec le code ${joinCode}`,
+          url: link,
         });
       } else {
-        showAlert(t('share'), `Code: ${joinCode}`);
+        showAlert(t('share'), link);
       }
     } catch {
-      showAlert(t('share'), `Code: ${joinCode}`);
+      showAlert(t('share'), link);
     }
   };
 

@@ -580,8 +580,10 @@ export default function CreateEventScreen() {
   const shareEvent = async () => {
     if (createdSession) {
       try {
+        const link = `https://plyz.io/evenement/${createdSession.join_code}`;
         await Share.share({
-          message: `${t('joinMyEvent') || 'Join my event'} "${createdSession.title}"!\n\n${t('eventCode') || 'Code'}: ${createdSession.join_code}\n\n${t('openPlyz') || 'Open Plyz and enter this code!'}`,
+          message: `${t('joinMyEvent') || 'Join my event'} "${createdSession.title}"!\n\n${t('eventCode') || 'Code'}: ${createdSession.join_code}\n\n👉 ${link}`,
+          url: link,
         });
       } catch (error) {
         console.error('Error sharing:', error);
