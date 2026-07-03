@@ -150,10 +150,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const sendOtpCode = async (email: string) => {
     try {
       console.log('[Auth] Sending OTP code to:', email);
+      // Langue du fan (choisie dans l'app) → enregistrée dans le compte pour que
+      // l'email de code parte dans la bonne langue (cf. Send Email Hook serveur).
+      let lang = 'fr';
+      try { lang = (await AsyncStorage.getItem('@app_language')) || 'fr'; } catch {}
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
           shouldCreateUser: true,
+          data: { preferred_language: lang },
         },
       });
 
@@ -183,6 +188,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { error };
       }
       console.log('[Auth] OTP verified successfully');
+      // Persiste la langue dans le compte (utile pour les comptes existants dont
+      // la langue n'était pas encore enregistrée) → emails suivants dans la bonne langue.
+      try {
+        const lang = (await AsyncStorage.getItem('@app_language')) || 'fr';
+        await supabase.auth.updateUser({ data: { preferred_language: lang } });
+      } catch {}
       return { error: null };
     } catch (error) {
       console.log('[Auth] OTP verify exception:', error);
@@ -199,6 +210,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email,
         options: {
           emailRedirectTo: redirectTo,
+          data: { preferred_language: language },
         },
       });
 

@@ -1,0 +1,62 @@
+{
+  "fr": {
+    "subject": "Ton code de connexion Plyz",
+    "body": "Bonjour,\n\nVoici ton code de connexion à Plyz :\n\n{{code}}\n\nCe code est valable 1 heure. Si tu n'es pas à l'origine de cette demande, ignore simplement ce message.\n\nÀ très vite sur Plyz,\nL'équipe Plyz"
+  },
+  "en": {
+    "subject": "Your Plyz Login Code",
+    "body": "Hello,\n\nHere is your Plyz login code:\n\n{{code}}\n\nThis code is valid for 1 hour. If you did not request this, simply ignore this message.\n\nSee you soon on Plyz,\nThe Plyz Team"
+  },
+  "es": {
+    "subject": "Tu código de conexión a Plyz",
+    "body": "Hola,\n\nAquí está tu código de conexión a Plyz:\n\n{{code}}\n\nEste código es válido durante 1 hora. Si no solicitaste este código, simplemente ignora este mensaje.\n\nHasta pronto en Plyz,\nEl equipo Plyz"
+  },
+  "de": {
+    "subject": "Dein Plyz-Anmeldecode",
+    "body": "Hallo,\n\nHier ist dein Anmeldecode für Plyz:\n\n{{code}}\n\nDieser Code ist 1 Stunde lang gültig. Falls du diese Anfrage nicht gestellt hast, ignoriere diese Nachricht einfach.\n\nBis bald auf Plyz,\nDas Plyz-Team"
+  },
+  "it": {
+    "subject": "Il tuo codice di accesso Plyz",
+    "body": "Ciao,\n\nEcco il tuo codice di accesso a Plyz:\n\n{{code}}\n\nQuesto codice è valido per 1 ora. Se non hai richiesto questo accesso, ignora semplicemente questo messaggio.\n\nA presto su Plyz,\nIl team Plyz"
+  },
+  "pt": {
+    "subject": "Seu código de acesso Plyz",
+    "body": "Olá,\n\nAqui está seu código de acesso ao Plyz:\n\n{{code}}\n\nEste código é válido por 1 hora. Se você não solicitou este código, simplesmente ignore esta mensagem.\n\nAté em breve no Plyz,\nEquipe Plyz"
+  },
+  "ru": {
+    "subject": "Твой код входа в Plyz",
+    "body": "Привет,\n\nВот твой код входа в Plyz:\n\n{{code}}\n\nЭтот код действителен в течение 1 часа. Если ты не запрашивал этот код, просто проигнорируй это письмо.\n\nДо скорого на Plyz,\nКоманда Plyz"
+  },
+  "ja": {
+    "subject": "Plyzログインコード",
+    "body": "こんにちは、\n\nPlyzのログインコードはこちらです：\n\n{{code}}\n\nこのコードは1時間有効です。このリクエストに心当たりがない場合は、このメッセージを無視してください。\n\nPlyzでお会いしましょう。\nPlyzチーム"
+  },
+  "zh": {
+    "subject": "你的 Plyz 登录代码",
+    "body": "你好，\n\n以下是你的 Plyz 登录代码：\n\n{{code}}\n\n此代码有效期为 1 小时。如果你没有发起此请求，请忽略此邮件。\n\n期待在 Plyz 上见到你，\nPlyz 团队"
+  },
+  "ar": {
+    "subject": "رمز تسجيل الدخول إلى Plyz",
+    "body": "مرحبًا،\n\nإليك رمز تسجيل الدخول إلى Plyz:\n\n{{code}}\n\nهذا الرمز صالح لمدة ساعة واحدة. إذا لم تكن أنت من طلب هذا، فيرجى تجاهل هذه الرسالة.\n\nنراك قريبًا على Plyz،\nفريق Plyz"
+  },
+  "hi": {
+    "subject": "आपका Plyz लॉगिन कोड",
+    "body": "नमस्ते,\n\nयहाँ आपका Plyz लॉगिन कोड है:\n\n{{code}}\n\nयह कोड 1 घंटे के लिए वैध है। यदि आपने यह अनुरोध नहीं किया है, तो बस इस संदेश को अनदेखा करें।\n\nPlyz पर जल्द मिलेंगे,\nPlyz टीम"
+  },
+  "bn": {
+    "subject": "আপনার Plyz লগইন কোড",
+    "body": "নমস্কার,\n\nPlyz-এ লগইন করার জন্য আপনার কোডটি এখানে রয়েছে:\n\n{{code}}\n\nএই কোডটি ১ ঘণ্টার জন্য বৈধ। যদি আপনি এই অনুরোধটি করেননি, তাহলে এই বার্তাটি উপেক্ষা করুন।\n\nPlyz-এ শীঘ্রই দেখা হবে,\nPlyz টিম"
+  },
+  "ur": {
+    "subject": "آپ کا Plyz لاگ ان کوڈ",
+    "body": "السلام علیکم،\n\nیہاں آپ کا Plyz میں لاگ ان کرنے کے لیے کوڈ ہے:\n\n{{code}}\n\nیہ کوڈ 1 گھنٹے کے لیے درست ہے۔ اگر آپ نے یہ درخواست نہیں کی ہے تو براہ کرم اس پیغام کو نظر انداز کریں۔\n\nPlyz پر جلد ملتے ہیں،\nPlyz ٹیم"
+  },
+  "ms": {
+    "subject": "Kod Log Masuk Plyz Anda",
+    "body": "Halo,\n\nBerikut adalah kod log masuk Plyz anda:\n\n{{code}}\n\nKod ini sah selama 1 jam. Jika anda tidak membuat permintaan ini, abaikan sahaja mesej ini.\n\nSampai jumpa di Plyz,\nPasukan Plyz"
+  },
+  "id": {
+    "subject": "Kode login Plyz Anda",
+    "body": "Halo,\n\nBerikut adalah kode login Plyz Anda:\n\n{{code}}\n\nKode ini berlaku selama 1 jam. Jika Anda tidak meminta kode ini, abaikan pesan ini.\n\nSampai jumpa di Plyz,\nTim Plyz"
+  }
+}

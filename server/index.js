@@ -541,6 +541,63 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
   res.status(200).json({ received: true });
 });
 
+// ============================================================
+// SEND EMAIL HOOK Supabase — envoie les emails d'authentification (code OTP)
+// dans la LANGUE du fan (user_metadata.preferred_language), via nodemailer.
+// Défini AVANT express.json car la vérification de signature a besoin du corps BRUT.
+// ============================================================
+let AUTH_EMAIL_I18N = {};
+try { AUTH_EMAIL_I18N = require('./auth-email-i18n.json'); }
+catch (e) { console.warn('[AuthEmail] auth-email-i18n.json introuvable'); }
+
+function verifyStandardWebhook(secret, id, timestamp, signatureHeader, body) {
+  try {
+    if (!secret) return false;
+    const key = String(secret).replace(/^v1,/, '').replace(/^whsec_/, '');
+    const secretBytes = Buffer.from(key, 'base64');
+    const signed = `${id}.${timestamp}.${body}`;
+    const expected = require('crypto').createHmac('sha256', secretBytes).update(signed).digest('base64');
+    const sigs = String(signatureHeader || '').split(' ').map((s) => s.split(',')[1]).filter(Boolean);
+    return sigs.some((s) => {
+      try { return require('crypto').timingSafeEqual(Buffer.from(s), Buffer.from(expected)); } catch { return false; }
+    });
+  } catch { return false; }
+}
+
+app.post('/api/auth-email-hook', express.raw({ type: '*/*' }), async (req, res) => {
+  try {
+    const raw = Buffer.isBuffer(req.body) ? req.body.toString('utf8')
+      : (typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {}));
+    const secret = process.env.SEND_EMAIL_HOOK_SECRET;
+    if (secret) {
+      const ok = verifyStandardWebhook(secret, req.headers['webhook-id'], req.headers['webhook-timestamp'], req.headers['webhook-signature'], raw);
+      if (!ok) { console.warn('[AuthEmail] signature invalide'); return res.status(401).json({ error: 'invalid_signature' }); }
+    }
+    const payload = JSON.parse(raw);
+    const user = payload.user || {};
+    const ed = payload.email_data || {};
+    const email = user.email;
+    const code = ed.token || ed.otp || '';
+    if (!email || !code) return res.status(200).json({}); // rien à envoyer (ex: type non géré)
+    const lang = (user.user_metadata && user.user_metadata.preferred_language) || 'fr';
+    const tpl = AUTH_EMAIL_I18N[lang] || AUTH_EMAIL_I18N.fr || { subject: 'Ton code de connexion Plyz', body: '{{code}}' };
+    const text = String(tpl.body).replace(/\{\{code\}\}/g, code);
+    const transporter = getMailTransporter();
+    if (!transporter) { console.warn('[AuthEmail] SMTP non configuré'); return res.status(500).json({ error: 'smtp_unavailable' }); }
+    await transporter.sendMail({
+      from: `Plyz <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+      to: email,
+      subject: tpl.subject,
+      text,
+    });
+    console.log('[AuthEmail] code envoyé à', email, '| langue:', lang);
+    return res.status(200).json({});
+  } catch (e) {
+    console.error('[auth-email-hook] error:', e.message);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 // Limite relevée pour accepter les photos/avatars envoyés en base64 (sinon
 // PayloadTooLargeError : la limite par défaut d'express.json est ~100 ko).
 app.use(express.json({ limit: '50mb' }));
@@ -5852,11 +5909,31 @@ app.post('/api/reserve-event', async (req, res) => {
     const authUser = await verifySupabaseJWT(req);
     const fid = authUser ? authUser.id : String(fan_id); // si connecté, on force l'identité
     const db = getSupabaseAdmin();
+    // Nouvelle réservation ? (pour ne notifier la personnalité qu'une seule fois)
+    const { data: existingResv } = await db.from('event_reservations').select('id').eq('event_id', String(event_id)).eq('fan_id', fid).maybeSingle();
     await db.from('event_reservations').upsert(
       { event_id: String(event_id), fan_id: fid, fan_name: fan_name || null, push_token: push_token || null },
       { onConflict: 'event_id,fan_id' });
     const { count } = await db.from('event_reservations').select('id', { count: 'exact', head: true }).eq('event_id', String(event_id));
     res.json({ success: true, count: count || 0 });
+
+    // 🔔 Notifie la personnalité qu'un fan vient de réserver (best-effort, uniquement si NOUVELLE résa).
+    if (!existingResv) {
+      try {
+        let creatorId = null;
+        const { data: es } = await db.from('event_sessions').select('created_by').eq('id', String(event_id)).maybeSingle();
+        if (es && es.created_by) creatorId = es.created_by;
+        else {
+          const { data: ls } = await db.from('live_sessions').select('celebrity_id').eq('id', String(event_id)).maybeSingle();
+          if (ls && ls.celebrity_id) creatorId = ls.celebrity_id;
+        }
+        if (creatorId) {
+          const { data: tk } = await db.from('user_push_tokens').select('token').eq('user_id', creatorId).maybeSingle();
+          if (tk && tk.token) sendExpoPush([tk.token], 'Plyz', '🎉 Un nouveau fan a réservé ton événement !', { type: 'new_reservation', eventId: String(event_id) });
+        }
+      } catch (nErr) { console.error('[reserve-event notif]', nErr.message); }
+    }
+    return;
   } catch (e) { console.error('[reserve-event]', e.message); res.status(500).json({ error: e.message }); }
 });
 
@@ -5921,9 +5998,11 @@ async function sendEventReminders(table, timeCol, creatorCol, fanTable, fanKeyCo
       // Fans ayant RÉSERVÉ (dédicace ET live) — débloque les rappels des lives programmés.
       const { data: resv } = await db.from('event_reservations').select('push_token').eq('event_id', String(ev.id));
       (resv || []).forEach((f) => { if (f && f.push_token) tokens.push(f.push_token); });
-      const when = minutes >= 60 ? 'dans 1 heure' : 'dans quelques minutes';
       const name = (titleCol && ev[titleCol]) ? ev[titleCol] : fallbackName;
-      await sendExpoPush(tokens, 'Plyz', `⏰ « ${name} » commence ${when} !`, { type: 'event_reminder', eventId: ev.id });
+      const body = minutes <= 0
+        ? `🔴 C'est parti ! « ${name} » commence maintenant.`
+        : `⏰ « ${name} » commence ${minutes >= 60 ? 'dans 1 heure' : 'dans quelques minutes'} !`;
+      await sendExpoPush(tokens, 'Plyz', body, { type: 'event_reminder', eventId: ev.id });
       await db.from(table).update({ [flagCol]: true }).eq('id', ev.id);
       if (tokens.length) console.log(`[Reminder] ${table} ${ev.id} (${minutes}min) → ${tokens.length} destinataire(s)`);
     } catch (e) { console.error('[Reminder]', e.message); }
@@ -5937,6 +6016,9 @@ async function runNotificationWorker() {
     await sendEventReminders('event_sessions', 'starts_at', 'created_by', 'event_paid_fans', 'event_session_id', 'title', 'Ton événement', 2, 'reminded_2m');
     await sendEventReminders('live_sessions', 'scheduled_at', 'celebrity_id', 'session_queue', 'session_id', null, 'Ton live vidéo', 60, 'reminded_1h');
     await sendEventReminders('live_sessions', 'scheduled_at', 'celebrity_id', 'session_queue', 'session_id', null, 'Ton live vidéo', 2, 'reminded_2m');
+    // « Ta session commence » : à l'heure de début (T≈0), aux fans inscrits + à la personnalité.
+    await sendEventReminders('event_sessions', 'starts_at', 'created_by', 'event_paid_fans', 'event_session_id', 'title', 'Ton événement', 0, 'reminded_start');
+    await sendEventReminders('live_sessions', 'scheduled_at', 'celebrity_id', 'session_queue', 'session_id', null, 'Ton live vidéo', 0, 'reminded_start');
   } catch (e) { console.error('[NotifWorker]', e.message); }
 }
 
