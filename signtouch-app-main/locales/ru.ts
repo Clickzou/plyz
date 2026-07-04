@@ -1145,6 +1145,8 @@ export default {
   galleryPermission: 'Пожалуйста, разрешите доступ к вашей фотогалерее.',
   celVerifiedStripe: "Платежи активированы",
   celActivatePayments: 'Включить платежи',
+  profilePhotoTitle: 'Фото профиля',
+  profilePhotoChooseSource: 'Как вы хотите добавить фото?',
   celebrityModeVerified: 'Режим знаменитости — Подтверждён',
   celOnboardVerifSection: 'ВЕРИФИКАЦИЯ',
   celOnboardCreatorTitle: 'Стример / Контент-мейкер?',

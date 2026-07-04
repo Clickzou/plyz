@@ -1145,6 +1145,8 @@ export default {
   galleryPermission: '请授予访问您相册的权限。',
   celVerifiedStripe: "支付已激活",
   celActivatePayments: '启用收款',
+  profilePhotoTitle: '头像照片',
+  profilePhotoChooseSource: '您想如何添加照片？',
   celebrityModeVerified: '名人模式 — 已验证',
   celOnboardVerifSection: '验证',
   celOnboardCreatorTitle: '主播 / 内容创作者？',

@@ -1145,6 +1145,8 @@ export default {
   galleryPermission: 'フォトギャラリーへのアクセスを許可してください。',
   celVerifiedStripe: "お支払い有効化",
   celActivatePayments: '支払いを有効にする',
+  profilePhotoTitle: 'プロフィール写真',
+  profilePhotoChooseSource: '写真をどのように追加しますか？',
   celebrityModeVerified: '有名人モード — 認証済み',
   celOnboardVerifSection: '認証',
   celOnboardCreatorTitle: '配信者 / コンテンツクリエイターですか？',

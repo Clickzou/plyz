@@ -29,6 +29,8 @@ export default {
   celOnboardActivated: 'Activated',
   celVerifiedStripe: "Payments activated",
   celActivatePayments: 'Enable my payments',
+  profilePhotoTitle: 'Profile photo',
+  profilePhotoChooseSource: 'How would you like to add your photo?',
   celebrityModeVerified: 'Celebrity Mode — Verified',
   celDashModeFan: 'Fan',
   celDashModeCelebrity: 'Celebrity',

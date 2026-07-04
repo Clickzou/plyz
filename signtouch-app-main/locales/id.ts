@@ -1150,6 +1150,8 @@ export default {
   galleryPermission: 'Mohon izinkan akses ke galeri foto Anda.',
   celVerifiedStripe: "Pembayaran Diaktifkan",
   celActivatePayments: 'Aktifkan pembayaran saya',
+  profilePhotoTitle: 'Foto profil',
+  profilePhotoChooseSource: 'Bagaimana Anda ingin menambahkan foto?',
   celebrityModeVerified: 'Mode Selebritas — Terverifikasi',
   celOnboardVerifSection: 'VERIFIKASI',
   celOnboardCreatorTitle: 'Streamer / Kreator konten?',

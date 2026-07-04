@@ -1145,6 +1145,8 @@ export default {
   galleryPermission: 'कृपया अपनी फोटो गैलरी तक पहुंच की अनुमति दें।',
   celVerifiedStripe: "भुगतान सक्रिय",
   celActivatePayments: 'मेरे भुगतान सक्रिय करें',
+  profilePhotoTitle: 'प्रोफ़ाइल फ़ोटो',
+  profilePhotoChooseSource: 'आप अपनी फ़ोटो कैसे जोड़ना चाहते हैं?',
   celebrityModeVerified: 'सेलिब्रिटी मोड — सत्यापित',
   celOnboardVerifSection: 'सत्यापन',
   celOnboardCreatorTitle: 'स्ट्रीमर / कंटेंट क्रिएटर?',

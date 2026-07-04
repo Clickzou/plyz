@@ -1150,6 +1150,8 @@ export default {
   galleryPermission: 'براہ کرم اپنی فوٹو گیلری تک رسائی کی اجازت دیں۔',
   celVerifiedStripe: "ادائیگیاں فعال ہو گئیں",
   celActivatePayments: 'میری ادائیگیاں فعال کریں',
+  profilePhotoTitle: 'پروفائل تصویر',
+  profilePhotoChooseSource: 'آپ اپنی تصویر کیسے شامل کرنا چاہتے ہیں؟',
   celebrityModeVerified: 'سیلیبریٹی موڈ — تصدیق شدہ',
   celOnboardVerifSection: 'تصدیق',
   celOnboardCreatorTitle: 'اسٹریمر / مواد تخلیق کار؟',

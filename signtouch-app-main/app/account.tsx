@@ -10,6 +10,7 @@ import {
   Modal,
   TextInput,
   ActivityIndicator,
+  Alert,
   Image,
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
@@ -389,28 +390,57 @@ export default function AccountScreen() {
     }
   };
 
-  const pickProfilePhoto = async () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      showAlert(t('permissionRequired' as any) || 'Permission required', t('galleryPermission' as any) || 'Please allow access to your photo library.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-      base64: true,
-    });
+  const applyPhotoResult = async (result: ImagePicker.ImagePickerResult) => {
     if (!result.canceled && result.assets[0]) {
       const asset = result.assets[0];
       await setProfilePhoto(asset.uri);
       // Publie la photo sur le profil public (upload + profiles.avatar_url).
       uploadAvatarToServer(asset.base64, asset.mimeType);
     }
+  };
+
+  const pickFromLibrary = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      showAlert(t('permissionRequired' as any) || 'Permission required', t('galleryPermission' as any) || 'Please allow access to your photo library.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.7, base64: true,
+    });
+    await applyPhotoResult(result);
+  };
+
+  const takeWithCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      showAlert(t('permissionRequired' as any) || 'Permission required', t('cameraPermission' as any) || 'Please allow access to your camera.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true, aspect: [1, 1], quality: 0.7, base64: true,
+    });
+    await applyPhotoResult(result);
+  };
+
+  const pickProfilePhoto = async () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    // Sur le web, l'appareil photo natif n'est pas disponible → galerie directe.
+    if (Platform.OS === 'web') {
+      pickFromLibrary();
+      return;
+    }
+    Alert.alert(
+      t('profilePhotoTitle' as any) || 'Photo de profil',
+      t('profilePhotoChooseSource' as any) || 'Comment veux-tu ajouter ta photo ?',
+      [
+        { text: t('camera' as any) || 'Appareil photo', onPress: () => takeWithCamera() },
+        { text: t('gallery' as any) || 'Galerie', onPress: () => pickFromLibrary() },
+        { text: t('cancel' as any) || 'Annuler', style: 'cancel' },
+      ],
+    );
   };
 
   const saveCelebrityName = async () => {
@@ -423,8 +453,28 @@ export default function AccountScreen() {
       <ScrollView style={[styles.content, { paddingTop: insets.top }]}>
         <PlyzHeader />
         <View style={styles.header}>
-          <Text style={styles.title}>{t('account')}</Text>
-          <Text style={styles.subtitle}>Plyz</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.title}>{t('account')}</Text>
+            <Text style={styles.subtitle}>Plyz</Text>
+          </View>
+          {/* Avatar de profil célébrité, bien visible en haut à droite, cliquable
+              pour ajouter/changer sa photo (photo ou appareil). */}
+          {isCelebrity && (
+            <TouchableOpacity
+              style={styles.headerAvatar}
+              onPress={pickProfilePhoto}
+              activeOpacity={0.8}
+            >
+              {profilePhoto ? (
+                <Image source={{ uri: profilePhoto }} style={styles.headerAvatarImg} />
+              ) : (
+                <Camera size={24} color="#10b981" />
+              )}
+              <View style={styles.headerAvatarBadge}>
+                <Camera size={11} color="#ffffff" />
+              </View>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.section}>
@@ -669,7 +719,7 @@ export default function AccountScreen() {
                 {profilePhoto ? (
                   <Image source={{ uri: profilePhoto }} style={styles.profilePhotoImage} />
                 ) : (
-                  <Star size={28} color={isCelebrity ? '#10b981' : '#888'} fill={isCelebrity ? '#10b981' : 'transparent'} />
+                  <Camera size={28} color={isCelebrity ? '#10b981' : '#888'} />
                 )}
                 <View style={[styles.profilePhotoBadge, isCelebrity && { backgroundColor: '#10b981' }]}>
                   <Camera size={10} color="#fff" />
@@ -1039,6 +1089,36 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(16,185,129,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#10b981',
+  },
+  headerAvatarImg: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  headerAvatarBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#000000',
   },
   title: {
     fontSize: 32,

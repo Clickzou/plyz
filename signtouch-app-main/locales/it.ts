@@ -1145,6 +1145,8 @@ export default {
   galleryPermission: 'Per favore, autorizza l\'accesso alla tua galleria foto.',
   celVerifiedStripe: "Pagamenti attivati",
   celActivatePayments: 'Attiva i miei pagamenti',
+  profilePhotoTitle: 'Foto profilo',
+  profilePhotoChooseSource: 'Come vuoi aggiungere la tua foto?',
   celebrityModeVerified: 'Modalità Celebrità — Verificata',
   celOnboardVerifSection: 'VERIFICA',
   celOnboardCreatorTitle: 'Streamer / Content creator?',
