@@ -317,12 +317,23 @@ export default function MySpaceScreen() {
 
   const checkStripeStatus = useCallback(async () => {
     try {
-      if (user?.id) {
-        const acctId = await getStripeAccountId(user.id);
-        if (acctId) { setStripeConnected(true); return; }
-      }
-      const local = await AsyncStorage.getItem('stripe_connect_account_id');
-      setStripeConnected(!!local);
+      let acctId: string | null = null;
+      if (user?.id) acctId = await getStripeAccountId(user.id);
+      if (!acctId) acctId = await AsyncStorage.getItem('stripe_connect_account_id');
+      if (!acctId) { setStripeConnected(false); return; }
+      // Un compte Stripe existe : on affiche « activé » UNIQUEMENT si Stripe
+      // confirme que le compte peut réellement encaisser (charges_enabled).
+      // Sinon l'onboarding n'est pas terminé (compte créé mais pas validé).
+      try {
+        const res = await authedFetch(`${API_BASE}/api/connect-account-status?account_id=${encodeURIComponent(acctId)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setStripeConnected(!!data?.charges_enabled);
+          return;
+        }
+      } catch { /* endpoint injoignable : repli best-effort ci-dessous */ }
+      // Repli si le statut réel est indisponible : on garde l'info « compte présent »
+      setStripeConnected(!!acctId);
     } catch { setStripeConnected(false); }
   }, [user?.id]);
 
