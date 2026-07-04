@@ -910,6 +910,24 @@ app.get('/api/connect-account-status', async (req, res) => {
   }
 });
 
+// [DIAG] Indique quel compte Stripe le serveur DÉPLOYÉ utilise réellement + si
+// Connect répond. Ne renvoie que le PRÉFIXE (14 car.) de la clé = partie qui
+// identifie le compte (non secret, présent aussi dans la clé publique).
+app.get('/api/_diag/stripe', async (req, res) => {
+  try {
+    const { secretKey, mode } = getStripeCredentials();
+    const stripe = await getStripe();
+    let connectOk = false, connectError = null;
+    try {
+      await stripe.accounts.list({ limit: 1 });
+      connectOk = true;
+    } catch (e) { connectError = e.message; }
+    res.json({ mode, keyPrefix: String(secretKey).substring(0, 14), connectOk, connectError });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
     const stripe = await getStripe();
