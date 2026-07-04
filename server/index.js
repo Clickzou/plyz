@@ -5754,7 +5754,15 @@ async function createInvoice(params) {
     const ref = String(params.transactionRef);
     const { data: existing } = await db.from('invoices').select('id, invoice_number').eq('transaction_ref', ref).maybeSingle();
     if (existing) return existing;
-    const cleanId = (v) => (v ? String(v).replace(/^fan_user_/, '') : null);
+    // fan_id / celebrity_id sont des colonnes UUID. Or un fan ANONYME a un id
+    // « device_... » (pas un UUID) → l'insert échouait et AUCUNE facture n'était
+    // créée. On ne garde donc que les vrais UUID ; sinon null (acheteur anonyme).
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const cleanId = (v) => {
+      if (!v) return null;
+      const s = String(v).replace(/^fan_user_/, '');
+      return UUID_RE.test(s) ? s : null;
+    };
     const fanId = cleanId(params.fanId);
     const celebId = cleanId(params.celebrityId);
     let celeb = null, fan = null;
