@@ -27,7 +27,7 @@ import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import AdModal from '@/components/AdModal';
 import SocialShareModal from '@/components/SocialShareModal';
-import { CollectorLiveItem, getAllCollectorLive, deleteCollectorLive, downloadImageWeb } from '@/utils/collectorLiveStorage';
+import { CollectorLiveItem, getAllCollectorLive, deleteCollectorLive, downloadImageWeb, getCollectorUnseenCount, markCollectorSeen } from '@/utils/collectorLiveStorage';
 import AccountModal from '@/components/AccountModal';
 
 type GalleryTab = 'photos' | 'collector';
@@ -57,6 +57,8 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
 export default function GalleryScreen() {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [collectorItems, setCollectorItems] = useState<CollectorLiveItem[]>([]);
+  // Nombre de nouvelles dédicaces reçues non encore vues (badge sur l'onglet Collector).
+  const [collectorUnseen, setCollectorUnseen] = useState(0);
   const [activeTab, setActiveTab] = useState<GalleryTab>('photos');
   const [loading, setLoading] = useState(true);
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
@@ -178,6 +180,13 @@ export default function GalleryScreen() {
     try {
       const items = await getAllCollectorLive();
       setCollectorItems(items);
+      // Si le fan est déjà sur l'onglet Collector, tout est considéré comme vu.
+      if (activeTab === 'collector') {
+        await markCollectorSeen();
+        setCollectorUnseen(0);
+      } else {
+        setCollectorUnseen(await getCollectorUnseenCount());
+      }
     } catch (error) {
       console.error('Error loading collector live:', error);
     }
@@ -484,11 +493,19 @@ export default function GalleryScreen() {
             onPress={() => {
               if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setActiveTab('collector');
+              // Le fan consulte ses dédicaces → on efface le badge.
+              markCollectorSeen();
+              setCollectorUnseen(0);
             }}
           >
             <Text style={[styles.tabText, activeTab === 'collector' && styles.tabTextActive]}>
               {t('collectorLive') || 'Collector Live'}
             </Text>
+            {collectorUnseen > 0 && (
+              <View style={styles.tabBadge}>
+                <Text style={styles.tabBadgeText}>{collectorUnseen > 99 ? '99+' : collectorUnseen}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -1255,6 +1272,23 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: '#ffffff',
+  },
+  tabBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 8,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#ef4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  tabBadgeText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '700',
   },
   storiesGrid: {
     flex: 1,

@@ -21,7 +21,41 @@ export interface CollectorLiveItem {
 }
 
 const STORAGE_KEY = '@plyz_collector_live';
+const SEEN_KEY = '@plyz_collector_seen_ts';
 const MAX_ITEMS_WEB = 10;
+
+// Suivi « nouvelles dédicaces » : on mémorise l'horodatage de la dernière
+// ouverture de l'onglet Collector. Le badge = nombre de photos plus récentes.
+export const getCollectorLastSeen = async (): Promise<number> => {
+  try {
+    const v = Platform.OS === 'web'
+      ? localStorage.getItem(SEEN_KEY)
+      : await AsyncStorage.getItem(SEEN_KEY);
+    return v ? (Number(v) || 0) : 0;
+  } catch {
+    return 0;
+  }
+};
+
+export const markCollectorSeen = async (): Promise<void> => {
+  const now = Date.now();
+  try {
+    if (Platform.OS === 'web') localStorage.setItem(SEEN_KEY, String(now));
+    else await AsyncStorage.setItem(SEEN_KEY, String(now));
+  } catch {
+    /* best-effort */
+  }
+};
+
+// Nombre de dédicaces reçues depuis la dernière ouverture de l'onglet Collector.
+export const getCollectorUnseenCount = async (): Promise<number> => {
+  try {
+    const [items, lastSeen] = await Promise.all([getAllCollectorLive(), getCollectorLastSeen()]);
+    return items.filter((i) => (i.timestamp || 0) > lastSeen).length;
+  } catch {
+    return 0;
+  }
+};
 
 const compressImageDataUrl = async (dataUrl: string, maxWidth: number = 800, quality: number = 0.6): Promise<string> => {
   return new Promise((resolve, reject) => {
