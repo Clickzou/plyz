@@ -595,15 +595,18 @@ app.post('/api/auth-email-hook', express.raw({ type: '*/*' }), async (req, res) 
 </div>`;
     const transporter = getMailTransporter();
     if (!transporter) { console.warn('[AuthEmail] SMTP non configuré'); return res.status(500).json({ error: 'smtp_unavailable' }); }
-    await transporter.sendMail({
+    // ⏱️ Supabase impose une réponse < 5s : on répond IMMÉDIATEMENT puis on envoie
+    // l'email en arrière-plan (le SMTP Zoho peut être lent, surtout au 1er envoi).
+    res.status(200).json({});
+    transporter.sendMail({
       from: process.env.SMTP_FROM || `Plyz <${process.env.SMTP_USER}>`,
       to: email,
       subject: tpl.subject,
       text,
       html,
-    });
-    console.log('[AuthEmail] code envoyé à', email, '| langue:', lang);
-    return res.status(200).json({});
+    }).then(() => console.log('[AuthEmail] code envoyé à', email, '| langue:', lang))
+      .catch((e) => console.error('[AuthEmail] send failed:', e.message));
+    return;
   } catch (e) {
     console.error('[auth-email-hook] error:', e.message);
     return res.status(500).json({ error: e.message });
