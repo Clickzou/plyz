@@ -98,6 +98,9 @@ export default function AccountScreen() {
   const [loginStep, setLoginStep] = useState<'idle' | 'email' | 'otp' | 'sending' | 'verifying'>('idle');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [stripeLinked, setStripeLinked] = useState(false);
+  // Vrai statut Stripe : le compte peut-il RÉELLEMENT encaisser ? (charges_enabled)
+  // ≠ « un compte existe » (stripeLinked). Un compte peut exister sans être activé.
+  const [stripeChargesEnabled, setStripeChargesEnabled] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [, setStripeLoading] = useState(false);
@@ -199,12 +202,26 @@ export default function AccountScreen() {
     }
   }, [user?.id]);
 
+  // Interroge Stripe (via le serveur) pour savoir si le compte peut vraiment
+  // encaisser. Met à jour stripeChargesEnabled. Best-effort (silencieux).
+  const refreshStripeCharges = async (acctId: string | null) => {
+    if (!acctId || !STRIPE_SERVER_URL) { setStripeChargesEnabled(false); return; }
+    try {
+      const res = await authedFetch(`${STRIPE_SERVER_URL}/api/connect-account-status?account_id=${encodeURIComponent(acctId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setStripeChargesEnabled(!!data?.charges_enabled);
+      }
+    } catch { /* réseau indisponible : on laisse la valeur précédente */ }
+  };
+
   const checkLocalStripeConnect = async () => {
     setStripeLoading(true);
     try {
       const localStripeId = await AsyncStorage.getItem('stripe_connect_account_id');
       setStripeLinked(!!localStripeId);
       setStripeAccountId(localStripeId);
+      refreshStripeCharges(localStripeId);
     } catch (error) {
       console.error('[Account] Error checking local Stripe:', error);
       setStripeLinked(false);
@@ -223,10 +240,12 @@ export default function AccountScreen() {
         await saveStripeAccountId(user.id, localStripeId);
         setStripeLinked(true);
         setStripeAccountId(localStripeId);
+        refreshStripeCharges(localStripeId);
       } else {
         const dbStripeId = await getStripeAccountId(user.id);
         setStripeLinked(!!dbStripeId);
         setStripeAccountId(dbStripeId);
+        refreshStripeCharges(dbStripeId);
       }
     } catch (error) {
       console.error('[Account] Error syncing Stripe:', error);
@@ -663,9 +682,14 @@ export default function AccountScreen() {
                 <Text style={styles.accountCardSubtitle}>
                   {isCelebrity ? (t('celebrityModeActiveDesc')) : (t('celebrityModeInactiveDesc'))}
                 </Text>
-                {isCelebrity && stripeLinked && (
+                {isCelebrity && stripeChargesEnabled && (
                   <Text style={styles.verifiedText}>
                     {t('celVerifiedStripe' as any) || 'Stripe Connect vérifié'}
+                  </Text>
+                )}
+                {isCelebrity && stripeLinked && !stripeChargesEnabled && (
+                  <Text style={[styles.verifiedText, { color: '#f59e0b' }]}>
+                    {t('celStripePending' as any) || 'Paiements à activer'}
                   </Text>
                 )}
               </View>
@@ -685,6 +709,27 @@ export default function AccountScreen() {
                   placeholderTextColor="#6b7280"
                 />
               </View>
+            )}
+
+            {/* Un compte Stripe existe mais n'est pas encore activé (charges_enabled=false) :
+                bouton pour rouvrir/terminer l'onboarding Stripe via la fenêtre dédiée. */}
+            {isCelebrity && stripeLinked && !stripeChargesEnabled && (
+              <TouchableOpacity
+                style={[styles.activateButton, { backgroundColor: '#f59e0b' }]}
+                onPress={() => {
+                  if (Platform.OS !== 'web') {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                  setShowStripeModal(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <CreditCard size={18} color="#000" />
+                <Text style={styles.activateButtonText}>
+                  {t('celActivatePayments' as any) || 'Activer mes paiements'}
+                </Text>
+                <ArrowRight size={18} color="#000" />
+              </TouchableOpacity>
             )}
 
             {isCelebrity && !stripeLinked && (
@@ -1002,6 +1047,7 @@ export default function AccountScreen() {
           setStripeLinked(true);
           setStripeAccountId(accountId);
           setShowStripeModal(false);
+          refreshStripeCharges(accountId);
         }}
         userId={user?.id}
       />
