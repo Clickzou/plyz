@@ -2537,6 +2537,57 @@ app.get('/api/my-ongoing-events', async (req, res) => {
       console.warn('[MyOngoing] dedication branch error (ignored):', dedicErr.message);
     }
 
+    // ---- LISTE D'ATTENTE : event_reservations (réservations « gratuites », dédicace OU live) ----
+    // Un fan qui a RÉSERVÉ sans (encore) payer n'est ni dans event_paid_fans ni dans
+    // session_queue → sans cette branche, il ne retrouvait pas son événement réservé.
+    try {
+      const fanIdsR = [String(user.id)];
+      if (deviceId) fanIdsR.push(deviceId);
+      const { data: resvRows, error: rErr } = await admin
+        .from('event_reservations')
+        .select('event_id, created_at')
+        .in('fan_id', fanIdsR)
+        .order('created_at', { ascending: false });
+      if (rErr) {
+        console.warn('[MyOngoing] event_reservations read failed:', rErr.message);
+      } else if (resvRows && resvRows.length > 0) {
+        // On évite les doublons avec les événements déjà ajoutés (payés / dans la file).
+        const already = new Set(events.map((e) => String(e.session_id || e.event_session_id || '')));
+        const resvIds = [...new Set(resvRows.map((r) => String(r.event_id)).filter((id) => id && !already.has(id)))];
+        if (resvIds.length > 0) {
+          const [{ data: evts }, { data: lives }] = await Promise.all([
+            admin.from('event_sessions').select('id, title, join_code, status, starts_at, created_by').in('id', resvIds),
+            admin.from('live_sessions').select('id, code, celebrity_name, status, scheduled_at').in('id', resvIds),
+          ]);
+          const evtById = {}; for (const e of (evts || [])) evtById[e.id] = e;
+          const liveById = {}; for (const l of (lives || [])) liveById[l.id] = l;
+          const creatorIds = [...new Set((evts || []).map((e) => e.created_by).filter(Boolean))];
+          let nameByCreator = {};
+          if (creatorIds.length > 0) {
+            try {
+              const { data: profs } = await admin.from('user_profiles').select('id, display_name').in('id', creatorIds);
+              for (const p of (profs || [])) nameByCreator[p.id] = p.display_name;
+            } catch {}
+          }
+          const seenR = new Set();
+          for (const id of resvIds) {
+            if (seenR.has(id)) continue; seenR.add(id);
+            if (liveById[id]) {
+              const l = liveById[id];
+              if (LIVE_SESSION_TERMINAL_STATUSES.includes(l.status)) continue;
+              events.push({ type: 'video', session_id: id, code: l.code || null, celebrity_name: l.celebrity_name || null, status: l.status, scheduled_at: l.scheduled_at || null, reserved: true });
+            } else if (evtById[id]) {
+              const e = evtById[id];
+              if (EVENT_SESSION_TERMINAL_STATUSES.includes(e.status)) continue;
+              events.push({ type: 'dedication', event_session_id: id, code: e.join_code || null, celebrity_name: nameByCreator[e.created_by] || e.title || null, status: e.status, scheduled_at: e.starts_at || null, reserved: true });
+            }
+          }
+        }
+      }
+    } catch (resvErr) {
+      console.warn('[MyOngoing] reservation branch error (ignored):', resvErr.message);
+    }
+
     return res.json({ events });
   } catch (error) {
     console.error('[MyOngoing] Error:', error.message);
