@@ -21,6 +21,18 @@ import { useAutoTranslate } from '@/utils/translation';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
+// Détecte une erreur Stripe indiquant que le compte mémorisé n'existe pas /
+// n'appartient pas à la plateforme actuelle (ex: ancien compte d'une autre
+// plateforme après changement de compte Stripe). Plusieurs formulations possibles.
+const isStaleAccountError = (msg?: string): boolean => {
+  const m = String(msg || '').toLowerCase();
+  return (
+    m.includes('no such account') ||
+    m.includes('not connected to your platform') ||
+    m.includes('does not exist')
+  );
+};
+
 interface StripeConnectModalProps {
   visible: boolean;
   onClose: () => void;
@@ -105,7 +117,7 @@ export default function StripeConnectModal({
           const err = await response.json().catch(() => ({}));
           // Compte inexistant sur la plateforme actuelle → on nettoie et on
           // repart sur une création de compte propre.
-          if (String(err?.error || '').toLowerCase().includes('no such account')) {
+          if (isStaleAccountError(err?.error)) {
             if (userId) await clearStripeAccountId(userId);
             else await AsyncStorage.removeItem('stripe_connect_account_id');
             setAccountId(null);
@@ -231,6 +243,14 @@ export default function StripeConnectModal({
       setStep('onboarding');
     } catch (err: any) {
       console.error('[StripeConnect] Erreur compte existant:', err);
+      if (isStaleAccountError(err?.message)) {
+        if (userId) await clearStripeAccountId(userId);
+        else await AsyncStorage.removeItem('stripe_connect_account_id');
+        setAccountId(null);
+        setError(null);
+        setStep('main');
+        return;
+      }
       setError(err.message || 'Une erreur est survenue');
     } finally {
       setIsConnecting(false);
@@ -327,6 +347,15 @@ export default function StripeConnectModal({
 
       openUrl(data.url);
     } catch (err: any) {
+      // Compte obsolète (autre plateforme) → on nettoie et on propose d'en créer un neuf.
+      if (isStaleAccountError(err?.message)) {
+        if (userId) await clearStripeAccountId(userId);
+        else await AsyncStorage.removeItem('stripe_connect_account_id');
+        setAccountId(null);
+        setError(null);
+        setStep('main');
+        return;
+      }
       setError(err.message || 'Une erreur est survenue');
     } finally {
       setIsConnecting(false);

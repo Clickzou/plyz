@@ -216,7 +216,8 @@ export default function AccountScreen() {
       // Le compte mémorisé n'existe pas sur la plateforme Stripe actuelle
       // (ex: ancien compte d'une autre plateforme) → on nettoie pour repartir propre.
       const err = await res.json().catch(() => ({}));
-      if (String(err?.error || '').toLowerCase().includes('no such account')) {
+      const msg = String(err?.error || '').toLowerCase();
+      if (msg.includes('no such account') || msg.includes('not connected to your platform') || msg.includes('does not exist')) {
         await clearStripeAccountId(user?.id);
         setStripeAccountId(null);
         setStripeLinked(false);
