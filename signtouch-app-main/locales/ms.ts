@@ -1593,7 +1593,7 @@ export default {
   docsMenuSub: "Invois dan bukti anda",
   celebVerifCriteriaTitle: "Kriteria untuk Diterima",
   celebVerifCriteriaIntro: "Sebelum menghantar permintaan anda, sahkan bahawa anda memenuhi kriteria ini — jika tidak, ia akan ditolak:",
-  celebVerifCrit1: "Ketenaran awam yang boleh disahkan: akaun tersertifikat, halaman Wikipedia, sekurang-kurangnya 100 000 pengikut di rangkaian rasmi, atau liputan akhbar.",
+  celebVerifCrit1: 'Kemasyhuran awam boleh disahkan: akaun disahkan, halaman Wikipedia, atau sekurang-kurangnya 100,000 pengikut.',
   celebVerifCrit2: "Identiti sebenar yang sepadan dengan orang tersebut (tiada penipuan identiti).",
   celebVerifCrit3: "Sekurang-kurangnya satu pautan rasmi yang boleh disahkan (rangkaian tersertifikat, laman web rasmi, Wikipedia atau akhbar).",
   celebVerifCrit4: "Berusia dewasa (atau diwakili secara sah) dan mampu membuat dedikasi video atau siaran langsung.",

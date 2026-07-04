@@ -1588,7 +1588,7 @@ export default {
   docsMenuSub: "あなたの請求書と証拠書類",
   celebVerifCriteriaTitle: "受け入れられるための条件",
   celebVerifCriteriaIntro: "リクエストを送信する前に、以下の条件を満たしていることを確認してください。満たしていない場合、リクエストは却下されます：",
-  celebVerifCrit1: "確認可能な公的知名度：認証済みアカウント、Wikipedia ページ、公式ネットワーク上で少なくとも 100 000 人のフォロワー、またはメディア掲載実績。",
+  celebVerifCrit1: '検証可能な知名度：認証済みアカウント、Wikipediaページ、または10万人以上のフォロワー。',
   celebVerifCrit2: "本人確認済みの身元が一致していること（なりすまし無し）。",
   celebVerifCrit3: "少なくとも1つの確認可能な公式リンク（認証済みネットワーク、公式サイト、Wikipedia またはメディア）。",
   celebVerifCrit4: "成人であること（または法定代理人に代理されていること）、かつビデオメッセージやライブ配信を提供できること。",

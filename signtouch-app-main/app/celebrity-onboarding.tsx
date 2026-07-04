@@ -345,7 +345,7 @@ export default function CelebrityOnboardingScreen() {
           </TouchableOpacity>
           <TouchableOpacity style={[styles.primaryButton, { flex: 1, marginLeft: 10 }]} onPress={acceptCriteria} activeOpacity={0.85}>
             <Zap size={18} color="#000" />
-            <Text style={styles.primaryButtonText}>{ct('celOnboardCriteriaAccept' as any) || trUI("J'accepte et je commence")}</Text>
+            <Text style={styles.primaryButtonText}>{ct('celOnboardCriteriaAccept' as any) || trUI('Commencer')}</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -1587,7 +1587,7 @@ export default {
   docsMenuSub: "Tus facturas y comprobantes",
   celebVerifCriteriaTitle: "Criterios para ser aceptado",
   celebVerifCriteriaIntro: "Antes de enviar tu solicitud, verifica que cumples estos criterios —de lo contrario será rechazada:",
-  celebVerifCrit1: "Notoriedad pública verificable: cuenta certificada, página Wikipedia, al menos 100 000 seguidores en una red oficial, o cobertura de prensa.",
+  celebVerifCrit1: 'Notoriedad pública verificable: cuenta certificada, página de Wikipedia, o al menos 100 000 seguidores.',
   celebVerifCrit2: "Identidad real correspondiente a la persona (ninguna suplantación).",
   celebVerifCrit3: "Al menos un enlace oficial verificable (red certificada, sitio oficial, Wikipedia o prensa).",
   celebVerifCrit4: "Ser mayor de edad (o representado legalmente) y capaz de realizar dedicatorias en video o en vivo.",

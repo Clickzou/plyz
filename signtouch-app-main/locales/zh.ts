@@ -1588,7 +1588,7 @@ export default {
   docsMenuSub: "您的发票和凭证",
   celebVerifCriteriaTitle: "接受条件",
   celebVerifCriteriaIntro: "提交申请前，请确保你符合以下条件——否则申请将被拒绝：",
-  celebVerifCrit1: "可验证的公众知名度：认证账户、Wikipedia页面、官方社交网络至少100 000粉丝，或新闻报道。",
+  celebVerifCrit1: '可验证的公众知名度：认证账号、维基百科页面，或至少10万粉丝。',
   celebVerifCrit2: "真实身份与本人相符（禁止冒充）。",
   celebVerifCrit3: "至少一个可验证的官方链接（认证社交网络、官方网站、Wikipedia或新闻报道）。",
   celebVerifCrit4: "年满18岁（或有法律代理）且能够录制视频祝福或进行直播。",

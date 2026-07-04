@@ -1623,7 +1623,7 @@ export default {
   docsMenuSub: "Your invoices and receipts",
   celebVerifCriteriaTitle: "Criteria to be accepted",
   celebVerifCriteriaIntro: "Before sending your request, verify that you meet these criteria — otherwise it will be rejected:",
-  celebVerifCrit1: "Verifiable public recognition: certified account, Wikipedia page, at least 100 000 followers on an official network, or press coverage.",
+  celebVerifCrit1: 'Verifiable public fame: certified account, Wikipedia page, or at least 100,000 followers.',
   celebVerifCrit2: "Real identity matching the person (no impersonation).",
   celebVerifCrit3: "At least one verifiable official link (certified network, official website, Wikipedia or press).",
   celebVerifCrit4: "Be of legal age (or legally represented) and able to create video dedications or go live.",

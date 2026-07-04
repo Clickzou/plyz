@@ -1588,7 +1588,7 @@ export default {
   docsMenuSub: "Suas faturas e comprovantes",
   celebVerifCriteriaTitle: "Critérios para ser aceito",
   celebVerifCriteriaIntro: "Antes de enviar seu pedido, verifique se atende a estes critérios — caso contrário, será recusado:",
-  celebVerifCrit1: "Notoriedade pública verificável: conta certificada, página Wikipédia, pelo menos 100 000 seguidores em uma rede oficial, ou cobertura de imprensa.",
+  celebVerifCrit1: 'Notoriedade pública verificável: conta certificada, página da Wikipédia, ou pelo menos 100 000 seguidores.',
   celebVerifCrit2: "Identidade real correspondente à pessoa (nenhuma usurpação).",
   celebVerifCrit3: "Pelo menos um link oficial verificável (rede certificada, site oficial, Wikipédia ou imprensa).",
   celebVerifCrit4: "Ser maior de idade (ou representado legalmente) e capaz de realizar dedicatórias em vídeo ou lives.",

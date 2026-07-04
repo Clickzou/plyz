@@ -1593,7 +1593,7 @@ export default {
   docsMenuSub: "Faktur dan bukti Anda",
   celebVerifCriteriaTitle: "Kriteria untuk Diterima",
   celebVerifCriteriaIntro: "Sebelum mengirim permintaanmu, pastikan kamu memenuhi kriteria ini — jika tidak, permintaanmu akan ditolak:",
-  celebVerifCrit1: "Notoritas publik yang dapat diverifikasi: akun terverifikasi, halaman Wikipedia, minimal 100 000 pengikut di jaringan resmi, atau liputan pers.",
+  celebVerifCrit1: 'Ketenaran publik terverifikasi: akun terverifikasi, halaman Wikipedia, atau minimal 100.000 pengikut.',
   celebVerifCrit2: "Identitas nyata sesuai dengan orang tersebut (tanpa penyalahgunaan identitas).",
   celebVerifCrit3: "Minimal satu tautan resmi yang dapat diverifikasi (jaringan terverifikasi, situs resmi, Wikipedia, atau pers).",
   celebVerifCrit4: "Berusia dewasa (atau diwakili secara hukum) dan mampu membuat dedikasi video atau siaran langsung.",

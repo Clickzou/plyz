@@ -780,11 +780,12 @@ export default function AccountScreen() {
               </TouchableOpacity>
             )}
 
-            {/* 🧪 ADMIN uniquement : repasser en fan pour re-tester l'onboarding célébrité.
-                N'apparaît PAS pour les vraies célébrités (garde-fou par email admin). */}
-            {isCelebrity && user?.email === 'jc@clickzou.fr' && (
+            {/* 🧪 TEST : repasser en fan pour re-tester l'onboarding célébrité.
+                ⚠️ TEMPORAIRE — visible pour toute célébrité le temps des tests JC.
+                À re-restreindre à l'admin (email/uid) ou retirer avant le lancement. */}
+            {isCelebrity && (
               <TouchableOpacity
-                style={{ marginTop: 10, paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(239,68,68,0.4)', alignItems: 'center' }}
+                style={{ marginTop: 12, paddingVertical: 14, borderRadius: 12, borderWidth: 1.5, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)', alignItems: 'center' }}
                 onPress={() => {
                   Alert.alert(
                     '🧪 Test — repasser en fan',
