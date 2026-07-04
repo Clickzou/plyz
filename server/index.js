@@ -589,7 +589,7 @@ app.post('/api/auth-email-hook', express.raw({ type: '*/*' }), async (req, res) 
     const codeBlock = `<div style="font-size:34px;font-weight:800;letter-spacing:8px;background:#f4f4f5;border-radius:12px;padding:18px 0;text-align:center;color:#0f172a;margin:18px 0;">${esc(code)}</div>`;
     const bodyHtml = esc(bodyRaw).replace(/\{\{code\}\}/g, codeBlock).replace(/\n/g, '<br>');
     const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#0f172a;">
-<div style="background:#0a1420;border-radius:14px;text-align:center;padding:22px 0;margin-bottom:22px;"><img src="https://plyz.io/logo-plyz.png" alt="Plyz" style="height:34px"></div>
+<div style="text-align:center;padding:6px 0 24px;"><img src="https://plyz-app.replit.app/plyz-logo-email.png" alt="Plyz" style="height:40px"></div>
 <div style="font-size:15px;line-height:1.6;">${bodyHtml}</div>
 <div style="margin-top:22px;border-top:1px solid #eee;padding-top:12px;color:#94a3b8;font-size:12px;text-align:center;">Plyz — CLICKZOU (SAS), Toulouse</div>
 </div>`;
@@ -908,6 +908,13 @@ app.get('/api/connect-account-status', async (req, res) => {
     console.error('[Connect] Error checking account status:', error.message);
     res.status(500).json({ error: error.message });
   }
+});
+
+// Logo Plyz servi pour les e-mails (fond clair, texte foncé). Fichier livré avec
+// le serveur → URL stable https://plyz-app.replit.app/plyz-logo-email.png
+app.get('/plyz-logo-email.png', (req, res) => {
+  res.set('Cache-Control', 'public, max-age=86400');
+  res.sendFile(path.join(__dirname, 'plyz-logo-email.png'));
 });
 
 // [DIAG] Indique quel compte Stripe le serveur DÉPLOYÉ utilise réellement + si
