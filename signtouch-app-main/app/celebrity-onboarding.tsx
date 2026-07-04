@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Platform,
+  Platform, TextInput, Image, ActivityIndicator, Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,8 +10,11 @@ import {
   ArrowLeft, Star, Video, QrCode,
   DollarSign, Users, CreditCard, ArrowRight,
   CheckCircle, Zap, TrendingUp, Globe, Building2, Award,
+  Camera, Link2, ShieldCheck,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
+import { showAlert } from '@/utils/alertHelper';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAutoTranslate } from '@/utils/translation';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
@@ -25,7 +28,7 @@ import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
 
-const TOTAL_STEPS = 3; // étapes 0..2
+const TOTAL_STEPS = 4; // étapes 0..3 : Bienvenue, Profil, Stripe, Récap
 
 export default function CelebrityOnboardingScreen() {
   const router = useRouter();
@@ -37,7 +40,10 @@ export default function CelebrityOnboardingScreen() {
   const ct = (key: any) => { const v = t(key); return v === key ? undefined : v; };
   const { user } = useAuth();
   const { requireAuth } = useAuthPrompt();
-  const { setProfilePhoto } = useCelebrityMode();
+  const { profilePhoto, setProfilePhoto, enableCelebrityMode } = useCelebrityMode();
+
+  // Écran de critères d'admission affiché AVANT tout (dès le clic « devenir célébrité »).
+  const [accepted, setAccepted] = useState(false);
 
   const [step, setStep] = useState(0);
   const [showStripeModal, setShowStripeModal] = useState(false);
@@ -45,6 +51,10 @@ export default function CelebrityOnboardingScreen() {
   const [, setStripeAccountId] = useState<string | null>(null);
   // Nom public récupéré du profil de base (transmis à StripeConnectModal)
   const [celebrityName, setCelebrityName] = useState('');
+  // Profil célébrité : présentation (bio) + site web officiel.
+  const [bio, setBio] = useState('');
+  const [website, setWebsite] = useState('');
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Traduction des textes de secours français (affichés quand les clés celOnboard*
   // ne sont pas encore présentes dans les 15 locales).
@@ -90,7 +100,31 @@ export default function CelebrityOnboardingScreen() {
     'Commencer',
     'Continuer',
     'Accéder à mon profil',
+    // Écran critères
+    'Critères pour devenir célébrité',
+    'Avant de commencer, vérifie que tu remplis ces critères — sinon ta demande sera refusée :',
+    'Retour',
+    "J'accepte et je commence",
+    // Étape profil
+    'Ton profil public',
+    'Ajoute une photo, une présentation et ton site — c\'est ce que verront tes fans.',
+    'Ajouter une photo',
+    'Nom public',
+    'Ton nom de scène (ex : Omar Sy)',
+    'Présentation',
+    'Présente-toi : qui es-tu, ce que tu fais, pourquoi te suivre…',
+    'Site web officiel (optionnel)',
   ]);
+
+  // Les 5 critères d'admission (clés déjà traduites dans les 15 langues,
+  // réutilisées depuis l'écran de vérification célébrité).
+  const criteria = [
+    t('celebVerifCrit1' as any),
+    t('celebVerifCrit2' as any),
+    t('celebVerifCrit3' as any),
+    t('celebVerifCrit4' as any),
+    t('celebVerifCrit5' as any),
+  ];
 
   useEffect(() => {
     checkStripeStatus();
@@ -108,16 +142,17 @@ export default function CelebrityOnboardingScreen() {
           .select('display_name, bio, avatar_url')
           .eq('id', user.id)
           .maybeSingle();
-        if (data?.display_name) {
-          setCelebrityName(data.display_name);
-          await upsertUserProfile(user.id, { celebrity_name: data.display_name, bio: data.bio || '' });
-          await authedFetch(`${API_BASE}/api/update-celebrity-profile`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: user.id, bio: data.bio || '', stage_name: data.display_name }),
-          }).catch(() => {});
-          if (data.avatar_url) setProfilePhoto(data.avatar_url);
-        }
+        if (data?.display_name) setCelebrityName(data.display_name);
+        if (data?.bio) setBio(data.bio);
+        if (data?.avatar_url) setProfilePhoto(data.avatar_url);
+        // Pré-remplit bio + site web déjà enregistrés côté profil célébrité.
+        const { data: cp } = await supabase
+          .from('celebrity_profiles')
+          .select('bio, website')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (cp?.bio) setBio((b) => b || cp.bio);
+        if (cp?.website) setWebsite(cp.website);
       } catch (e) {
         console.warn('[celebrity-onboarding] sync profil de base échouée', e);
       }
@@ -130,6 +165,67 @@ export default function CelebrityOnboardingScreen() {
       setStripeLinked(!!id);
       setStripeAccountId(id);
     } catch {}
+  };
+
+  // --- Photo de profil (galerie ou appareil) + upload public ---
+  const applyPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
+    setProfilePhoto(asset.uri); // aperçu immédiat
+    if (!asset.base64 || !user?.id) return;
+    try {
+      setUploadingPhoto(true);
+      const res = await authedFetch(`${API_BASE}/api/upload-celebrity-avatar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id, image_base64: asset.base64, content_type: asset.mimeType || 'image/jpeg' }),
+      });
+      const data = await res.json();
+      if (data?.avatar_url) setProfilePhoto(data.avatar_url);
+    } catch (e) {
+      console.warn('[celebrity-onboarding] upload photo échoué', e);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const pickFromLibrary = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') { showAlert(ct('permissionRequired' as any) || 'Permission', ct('galleryPermission' as any) || 'Autorise l\'accès à la galerie.'); return; }
+    const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.7, base64: true });
+    if (!r.canceled && r.assets[0]) applyPhoto(r.assets[0]);
+  };
+  const takeWithCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') { showAlert(ct('permissionRequired' as any) || 'Permission', ct('cameraPermission' as any) || 'Autorise l\'accès à l\'appareil photo.'); return; }
+    const r = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.7, base64: true });
+    if (!r.canceled && r.assets[0]) applyPhoto(r.assets[0]);
+  };
+  const pickPhoto = () => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS === 'web') { pickFromLibrary(); return; }
+    Alert.alert(
+      t('profilePhotoTitle' as any) || 'Photo de profil',
+      t('profilePhotoChooseSource' as any) || 'Comment veux-tu ajouter ta photo ?',
+      [
+        { text: t('camera' as any) || 'Appareil photo', onPress: () => takeWithCamera() },
+        { text: t('gallery' as any) || 'Galerie', onPress: () => pickFromLibrary() },
+        { text: t('cancel' as any) || 'Annuler', style: 'cancel' },
+      ],
+    );
+  };
+
+  // Enregistre nom public + bio + site web sur le profil célébrité (best-effort).
+  const saveProfile = async () => {
+    if (!user?.id) return;
+    try {
+      await upsertUserProfile(user.id, { celebrity_name: celebrityName.trim(), bio: bio.trim() });
+      await authedFetch(`${API_BASE}/api/update-celebrity-profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id, stage_name: celebrityName.trim(), bio: bio.trim(), website: website.trim() }),
+      }).catch(() => {});
+    } catch (e) {
+      console.warn('[celebrity-onboarding] save profil échoué', e);
+    }
   };
 
   const features = [
@@ -160,7 +256,8 @@ export default function CelebrityOnboardingScreen() {
 
   // Bouton « Continuer » : actif ? + hint si bloqué
   const canContinue = (): boolean => {
-    if (step === 1) return stripeDone; // « Je le ferai plus tard » contourne ce blocage
+    if (step === 1) return celebrityName.trim().length > 0; // profil : nom public requis
+    if (step === 2) return stripeDone; // « Je le ferai plus tard » contourne ce blocage
     return true;
   };
 
@@ -179,6 +276,8 @@ export default function CelebrityOnboardingScreen() {
       });
       return;
     }
+    // En quittant l'étape Profil, on enregistre nom public + bio + site web.
+    if (step === 1) { await saveProfile(); }
     setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
   };
 
@@ -202,6 +301,56 @@ export default function CelebrityOnboardingScreen() {
 
   // --- Barre de progression ---
   const progressPct = ((step + 1) / TOTAL_STEPS) * 100;
+
+  const acceptCriteria = async () => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const proceed = async () => { await enableCelebrityMode(); setAccepted(true); };
+    if (!user) { requireAuth(() => proceed(), { reason: 'Crée ton compte pour passer en mode célébrité' }); return; }
+    await proceed();
+  };
+
+  // ===================== ÉCRAN CRITÈRES (avant l'onboarding) =====================
+  if (!accepted) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={['#0f172a', '#1e293b', '#0f172a']} style={StyleSheet.absoluteFill} />
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <ArrowLeft size={22} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.critHeaderTitle} numberOfLines={1}>
+            {ct('celOnboardCriteriaTitle' as any) || trUI('Critères pour devenir célébrité')}
+          </Text>
+          <View style={{ width: 40 }} />
+        </View>
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.critIconWrap}>
+            <ShieldCheck size={40} color="#10b981" />
+          </View>
+          <Text style={styles.critIntro}>
+            {ct('celOnboardCriteriaIntro' as any) || trUI('Avant de commencer, vérifie que tu remplis ces critères — sinon ta demande sera refusée :')}
+          </Text>
+          <View style={styles.critBox}>
+            {criteria.map((c, i) => (
+              <View key={i} style={styles.critRow}>
+                <CheckCircle size={18} color="#10b981" style={{ marginTop: 2 }} />
+                <Text style={styles.critText}>{c}</Text>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+        <View style={[styles.footer, styles.critFooter, { paddingBottom: insets.bottom + 14 }]}>
+          <TouchableOpacity style={styles.critBackBtn} onPress={() => router.back()} activeOpacity={0.8}>
+            <Text style={styles.critBackText}>{ct('celOnboardCriteriaBack' as any) || trUI('Retour')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.primaryButton, { flex: 1, marginLeft: 10 }]} onPress={acceptCriteria} activeOpacity={0.85}>
+            <Zap size={18} color="#000" />
+            <Text style={styles.primaryButtonText}>{ct('celOnboardCriteriaAccept' as any) || trUI("J'accepte et je commence")}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -318,8 +467,73 @@ export default function CelebrityOnboardingScreen() {
           </>
         )}
 
-        {/* ===================== ÉTAPE 1 — STRIPE ===================== */}
+        {/* ===================== ÉTAPE 1 — PROFIL ===================== */}
         {step === 1 && (
+          <View style={styles.stepContent}>
+            <View style={styles.heroIconWrap}>
+              <Star size={40} color="#f59e0b" fill="#f59e0b" />
+            </View>
+            <Text style={styles.stepHeadline}>
+              {ct('celOnboardProfileHeadline' as any) || trUI('Ton profil public')}
+            </Text>
+            <Text style={styles.stepSubtitle}>
+              {ct('celOnboardProfileSubtitle' as any) || trUI('Ajoute une photo, une présentation et ton site — c\'est ce que verront tes fans.')}
+            </Text>
+
+            <TouchableOpacity style={styles.profilePhotoPicker} onPress={pickPhoto} activeOpacity={0.8}>
+              {profilePhoto ? (
+                <Image source={{ uri: profilePhoto }} style={styles.profilePhotoImg} />
+              ) : (
+                <Camera size={30} color="#10b981" />
+              )}
+              {uploadingPhoto && (
+                <View style={styles.profilePhotoLoading}><ActivityIndicator color="#10b981" /></View>
+              )}
+              <View style={styles.profilePhotoBadge}><Camera size={13} color="#fff" /></View>
+            </TouchableOpacity>
+            <Text style={styles.profilePhotoLabel}>
+              {ct('celOnboardAddPhoto' as any) || trUI('Ajouter une photo')}
+            </Text>
+
+            <Text style={styles.profileFieldLabel}>{ct('celOnboardNameLabel' as any) || trUI('Nom public')}</Text>
+            <TextInput
+              style={styles.profileFieldInput}
+              value={celebrityName}
+              onChangeText={setCelebrityName}
+              placeholder={ct('celOnboardNamePlaceholder' as any) || trUI('Ton nom de scène (ex : Omar Sy)')}
+              placeholderTextColor="#64748b"
+            />
+
+            <Text style={styles.profileFieldLabel}>{ct('celOnboardBioLabel' as any) || trUI('Présentation')}</Text>
+            <TextInput
+              style={[styles.profileFieldInput, styles.profileFieldTextarea]}
+              value={bio}
+              onChangeText={setBio}
+              placeholder={ct('celOnboardBioPlaceholder' as any) || trUI('Présente-toi : qui es-tu, ce que tu fais, pourquoi te suivre…')}
+              placeholderTextColor="#64748b"
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+
+            <Text style={styles.profileFieldLabel}>{ct('celOnboardWebsiteLabel' as any) || trUI('Site web officiel (optionnel)')}</Text>
+            <View style={styles.websiteRow}>
+              <Link2 size={18} color="#64748b" />
+              <TextInput
+                style={styles.websiteInput}
+                value={website}
+                onChangeText={setWebsite}
+                placeholder="https://..."
+                placeholderTextColor="#64748b"
+                autoCapitalize="none"
+                keyboardType="url"
+              />
+            </View>
+          </View>
+        )}
+
+        {/* ===================== ÉTAPE 2 — STRIPE ===================== */}
+        {step === 2 && (
           <View style={styles.stepContent}>
             <View style={styles.stripeIconWrap}>
               <CreditCard size={40} color="#6366f1" />
@@ -365,8 +579,8 @@ export default function CelebrityOnboardingScreen() {
           </View>
         )}
 
-        {/* ===================== ÉTAPE 2 — C'EST PRÊT ===================== */}
-        {step === 2 && (
+        {/* ===================== ÉTAPE 3 — C'EST PRÊT ===================== */}
+        {step === 3 && (
           <View style={styles.stepContent}>
             <View style={styles.heroIconWrap}>
               <CheckCircle size={44} color="#10b981" />
@@ -510,6 +724,20 @@ export default function CelebrityOnboardingScreen() {
         )}
 
         {step === 2 && (
+          <TouchableOpacity
+            style={[styles.primaryButton, !canContinue() && styles.primaryButtonDisabled]}
+            onPress={goNext}
+            disabled={!canContinue()}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.primaryButtonText, !canContinue() && styles.primaryButtonTextDisabled]}>
+              {ct('celOnboardContinue' as any) || trUI('Continuer')}
+            </Text>
+            <ArrowRight size={20} color={canContinue() ? '#000' : '#6b7280'} />
+          </TouchableOpacity>
+        )}
+
+        {step === 3 && (
           <TouchableOpacity style={styles.primaryButton} onPress={finish} activeOpacity={0.85}>
             <Text style={styles.primaryButtonText}>
               {ct('celOnboardFinish' as any) || trUI('Accéder à mon profil')}
@@ -767,4 +995,56 @@ const styles = StyleSheet.create({
   primaryButtonDisabled: { backgroundColor: 'rgba(255,255,255,0.1)' },
   primaryButtonText: { color: '#000', fontSize: 17, fontWeight: '700' },
   primaryButtonTextDisabled: { color: '#6b7280' },
+
+  // --- Écran critères ---
+  critHeaderTitle: { flex: 1, color: '#fff', fontSize: 17, fontWeight: '700', textAlign: 'center' },
+  critIconWrap: {
+    alignSelf: 'center', width: 76, height: 76, borderRadius: 38,
+    backgroundColor: 'rgba(16,185,129,0.12)', alignItems: 'center', justifyContent: 'center',
+    marginTop: 8, marginBottom: 16,
+  },
+  critIntro: { color: 'rgba(255,255,255,0.75)', fontSize: 15, lineHeight: 22, textAlign: 'center', paddingHorizontal: 16, marginBottom: 18 },
+  critBox: {
+    backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 16, gap: 14,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginHorizontal: 4,
+  },
+  critRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  critText: { flex: 1, color: 'rgba(255,255,255,0.9)', fontSize: 14, lineHeight: 20 },
+  critFooter: { flexDirection: 'row', alignItems: 'center' },
+  critBackBtn: {
+    paddingVertical: 16, paddingHorizontal: 18, borderRadius: 14,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+  },
+  critBackText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+
+  // --- Étape profil ---
+  profilePhotoPicker: {
+    width: 96, height: 96, borderRadius: 48, marginTop: 8,
+    backgroundColor: 'rgba(16,185,129,0.12)', borderWidth: 2, borderColor: '#10b981',
+    alignItems: 'center', justifyContent: 'center', alignSelf: 'center',
+  },
+  profilePhotoImg: { width: 96, height: 96, borderRadius: 48 },
+  profilePhotoLoading: {
+    ...StyleSheet.absoluteFillObject, borderRadius: 48,
+    backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center',
+  },
+  profilePhotoBadge: {
+    position: 'absolute', bottom: -2, right: -2, width: 30, height: 30, borderRadius: 15,
+    backgroundColor: '#10b981', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: '#0f172a',
+  },
+  profilePhotoLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 13, textAlign: 'center', marginTop: 8, marginBottom: 16 },
+  profileFieldLabel: { alignSelf: 'stretch', color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 8 },
+  profileFieldInput: {
+    alignSelf: 'stretch', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, color: '#fff', fontSize: 15,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+  },
+  profileFieldTextarea: { minHeight: 100 },
+  websiteRow: {
+    alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, paddingHorizontal: 14,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+  },
+  websiteInput: { flex: 1, color: '#fff', fontSize: 15, paddingVertical: 12 },
 });

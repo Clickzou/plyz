@@ -787,10 +787,10 @@ export default function AccountScreen() {
                   if (Platform.OS !== 'web') {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   }
-                  // Devenir célébrité est irréversible ; activer exige un compte.
-                  requireAuth(() => toggleCelebrityMode(), {
-                    reason: 'Crée ton compte pour passer en mode célébrité',
-                  });
+                  // Ouvre l'onboarding célébrité : il commence par l'écran des
+                  // CRITÈRES d'admission (Retour / J'accepte), puis collecte
+                  // photo + présentation + site avant d'activer le mode.
+                  router.push('/celebrity-onboarding' as any);
                 }}
                 activeOpacity={0.7}
               >
