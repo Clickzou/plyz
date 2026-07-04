@@ -1145,6 +1145,7 @@ export default {
   galleryPermission: 'Por favor, autorize o acesso à sua galeria de fotos.',
   celVerifiedStripe: "Pagamentos ativados",
   celActivatePayments: 'Ativar os meus pagamentos',
+  celebrityModeVerified: 'Modo Celebridade — Verificado',
   celOnboardVerifSection: 'VERIFICAÇÃO',
   celOnboardCreatorTitle: 'Streamer / Criador de conteúdo?',
   celOnboardCreatorDesc: 'Twitch, YouTube, TikTok, Instagram... Verifique o seu perfil para obter um selo verificado.',

@@ -1145,6 +1145,7 @@ export default {
   galleryPermission: 'Пожалуйста, разрешите доступ к вашей фотогалерее.',
   celVerifiedStripe: "Платежи активированы",
   celActivatePayments: 'Включить платежи',
+  celebrityModeVerified: 'Режим знаменитости — Подтверждён',
   celOnboardVerifSection: 'ВЕРИФИКАЦИЯ',
   celOnboardCreatorTitle: 'Стример / Контент-мейкер?',
   celOnboardCreatorDesc: 'Twitch, YouTube, TikTok, Instagram… Подтвердите свой профиль, чтобы получить значок верификации.',

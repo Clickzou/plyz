@@ -1150,6 +1150,7 @@ export default {
   galleryPermission: 'Sila benarkan akses ke galeri foto anda.',
   celVerifiedStripe: "Pembayaran Diaktifkan",
   celActivatePayments: 'Aktifkan pembayaran saya',
+  celebrityModeVerified: 'Mod Selebriti — Disahkan',
   celOnboardVerifSection: 'PENGESAHAN',
   celOnboardCreatorTitle: 'Streamer / Pencipta kandungan?',
   celOnboardCreatorDesc: 'Twitch, YouTube, TikTok, Instagram... Sahkan profil anda untuk mendapatkan lencana disahkan.',

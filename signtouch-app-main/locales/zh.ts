@@ -1145,6 +1145,7 @@ export default {
   galleryPermission: '请授予访问您相册的权限。',
   celVerifiedStripe: "支付已激活",
   celActivatePayments: '启用收款',
+  celebrityModeVerified: '名人模式 — 已验证',
   celOnboardVerifSection: '验证',
   celOnboardCreatorTitle: '主播 / 内容创作者？',
   celOnboardCreatorDesc: 'Twitch、YouTube、TikTok、Instagram… 通过验证您的资料获得认证徽章。',

@@ -1150,6 +1150,7 @@ export default {
   galleryPermission: 'براہ کرم اپنی فوٹو گیلری تک رسائی کی اجازت دیں۔',
   celVerifiedStripe: "ادائیگیاں فعال ہو گئیں",
   celActivatePayments: 'میری ادائیگیاں فعال کریں',
+  celebrityModeVerified: 'سیلیبریٹی موڈ — تصدیق شدہ',
   celOnboardVerifSection: 'تصدیق',
   celOnboardCreatorTitle: 'اسٹریمر / مواد تخلیق کار؟',
   celOnboardCreatorDesc: 'Twitch، YouTube، TikTok، Instagram... تصدیق شدہ بیج حاصل کرنے کے لیے اپنا پروفائل تصدیق کریں۔',

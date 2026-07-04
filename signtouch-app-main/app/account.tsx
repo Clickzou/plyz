@@ -756,7 +756,7 @@ export default function AccountScreen() {
               isVerified ? (
                 <View style={styles.statusBadgeVerified}>
                   <Check size={18} color="#10b981" />
-                  <Text style={styles.statusBadgeVerifiedText}>{trUI('Mode Célébrité — Validé')}</Text>
+                  <Text style={styles.statusBadgeVerifiedText}>{t('celebrityModeVerified' as any) || 'Mode Célébrité — Validé'}</Text>
                 </View>
               ) : (
                 <View style={styles.statusBadgePending}>

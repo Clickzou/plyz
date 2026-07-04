@@ -1145,6 +1145,7 @@ export default {
   galleryPermission: 'कृपया अपनी फोटो गैलरी तक पहुंच की अनुमति दें।',
   celVerifiedStripe: "भुगतान सक्रिय",
   celActivatePayments: 'मेरे भुगतान सक्रिय करें',
+  celebrityModeVerified: 'सेलिब्रिटी मोड — सत्यापित',
   celOnboardVerifSection: 'सत्यापन',
   celOnboardCreatorTitle: 'स्ट्रीमर / कंटेंट क्रिएटर?',
   celOnboardCreatorDesc: 'Twitch, YouTube, TikTok, Instagram... सत्यापित बैज पाने के लिए अपनी प्रोफ़ाइल सत्यापित करें।',

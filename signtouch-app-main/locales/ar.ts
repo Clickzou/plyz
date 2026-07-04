@@ -1145,6 +1145,7 @@ export default {
   galleryPermission: 'يرجى السماح بالوصول إلى معرض الصور الخاص بك.',
   celVerifiedStripe: "تم تفعيل المدفوعات",
   celActivatePayments: 'تفعيل مدفوعاتي',
+  celebrityModeVerified: 'وضع المشاهير — تم التحقق',
   celOnboardVerifSection: 'التحقق',
   celOnboardCreatorTitle: 'بثاث / صانع محتوى؟',
   celOnboardCreatorDesc: 'Twitch وYouTube وTikTok وInstagram... قم بالتحقق من ملفك الشخصي للحصول على شارة موثقة.',

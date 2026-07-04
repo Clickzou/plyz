@@ -29,6 +29,7 @@ export default {
   celOnboardActivated: 'Activated',
   celVerifiedStripe: "Payments activated",
   celActivatePayments: 'Enable my payments',
+  celebrityModeVerified: 'Celebrity Mode — Verified',
   celDashModeFan: 'Fan',
   celDashModeCelebrity: 'Celebrity',
   celDashPublish: 'Publish a post',

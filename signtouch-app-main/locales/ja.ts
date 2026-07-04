@@ -1145,6 +1145,7 @@ export default {
   galleryPermission: 'フォトギャラリーへのアクセスを許可してください。',
   celVerifiedStripe: "お支払い有効化",
   celActivatePayments: '支払いを有効にする',
+  celebrityModeVerified: '有名人モード — 認証済み',
   celOnboardVerifSection: '認証',
   celOnboardCreatorTitle: '配信者 / コンテンツクリエイターですか？',
   celOnboardCreatorDesc: 'Twitch、YouTube、TikTok、Instagram… プロフィールを認証して認証バッジを取得しましょう。',
