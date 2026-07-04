@@ -5825,13 +5825,22 @@ app.get('/api/invoice/:id/download', async (req, res) => {
     const authUser = await verifySupabaseJWT(req);
     if (!authUser) return res.status(401).json({ error: 'Authentication required' });
     const db = getSupabaseAdmin();
-    const { data: inv } = await db.from('invoices').select('html_path, fan_id, celebrity_id').eq('id', req.params.id).maybeSingle();
+    const { data: inv } = await db.from('invoices').select('*').eq('id', req.params.id).maybeSingle();
     if (!inv) return res.status(404).json({ error: 'not_found' });
     const ADMIN_UID = 'e7c06a67-2cd0-4aa1-bbf6-477fbb162ce8';
     if (String(inv.fan_id) !== String(authUser.id) && String(inv.celebrity_id) !== String(authUser.id) && String(authUser.id) !== ADMIN_UID) {
       return res.status(403).json({ error: 'forbidden' });
     }
-    const { data: signed, error } = await db.storage.from('invoices').createSignedUrl(inv.html_path, 300);
+    // Auto-réparation : certaines factures n'ont pas de fichier HTML stocké
+    // (ex. créées avant, ou insert partiel) → on le génère et on le stocke.
+    let htmlPath = inv.html_path;
+    if (!htmlPath) {
+      const html = renderInvoiceHtml(inv);
+      htmlPath = (inv.celebrity_id || 'x') + '/' + inv.invoice_number + '.html';
+      await db.storage.from('invoices').upload(htmlPath, Buffer.from(html, 'utf8'), { contentType: 'text/html; charset=utf-8', upsert: true });
+      await db.from('invoices').update({ html_path: htmlPath }).eq('id', inv.id);
+    }
+    const { data: signed, error } = await db.storage.from('invoices').createSignedUrl(htmlPath, 300);
     if (error) throw error;
     return res.json({ url: signed.signedUrl });
   } catch (e) {

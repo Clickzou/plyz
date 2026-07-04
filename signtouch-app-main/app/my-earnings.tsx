@@ -10,7 +10,9 @@ import {
   RefreshControl,
   Platform,
   Linking,
+  Modal,
 } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -24,6 +26,8 @@ import {
   CreditCard,
   FileText,
   Download,
+  X,
+  Eye,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -88,6 +92,10 @@ export default function MyEarningsScreen() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [invLoading, setInvLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  // Aperçu de facture (WebView) avant téléchargement.
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLabel, setPreviewLabel] = useState('');
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const fetchEarnings = useCallback(async () => {
     if (!STRIPE_SERVER_URL) {
@@ -149,6 +157,26 @@ export default function MyEarningsScreen() {
       showAlert(t('error') || 'Erreur', t('docsError') || 'Impossible d\'ouvrir le document.');
     } finally {
       setDownloadingId(null);
+    }
+  };
+
+  // Aperçu (visualiser la facture avant de la télécharger).
+  const viewInvoice = async (inv: Invoice) => {
+    try {
+      setPreviewLoading(true);
+      setPreviewLabel(inv.invoice_number);
+      const res = await authedFetch(`${STRIPE_SERVER_URL}/api/invoice/${inv.id}/download`);
+      const d = await res.json();
+      if (!d?.url) throw new Error('no url');
+      if (Platform.OS === 'web') {
+        if (typeof window !== 'undefined') window.open(d.url, '_blank');
+      } else {
+        setPreviewUrl(d.url);
+      }
+    } catch (e) {
+      showAlert(t('error') || 'Erreur', t('docsError') || 'Impossible d\'ouvrir le document.');
+    } finally {
+      setPreviewLoading(false);
     }
   };
 
@@ -258,9 +286,14 @@ export default function MyEarningsScreen() {
                       </View>
                     </View>
                   </View>
-                  <TouchableOpacity style={styles.invDlBtn} onPress={() => handleDownloadInvoice(inv)} disabled={downloadingId === inv.id}>
-                    {downloadingId === inv.id ? <ActivityIndicator size="small" color="#38bdf8" /> : <Download size={20} color="#38bdf8" />}
-                  </TouchableOpacity>
+                  <View style={styles.invActions}>
+                    <TouchableOpacity style={styles.invViewBtn} onPress={() => viewInvoice(inv)} disabled={previewLoading}>
+                      {previewLoading && previewLabel === inv.invoice_number ? <ActivityIndicator size="small" color="#10b981" /> : <Eye size={20} color="#10b981" />}
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.invDlBtn} onPress={() => handleDownloadInvoice(inv)} disabled={downloadingId === inv.id}>
+                      {downloadingId === inv.id ? <ActivityIndicator size="small" color="#38bdf8" /> : <Download size={20} color="#38bdf8" />}
+                    </TouchableOpacity>
+                  </View>
                 </View>
               ))
             )}
@@ -404,6 +437,34 @@ export default function MyEarningsScreen() {
       )}
 
       <BottomNav />
+
+      {/* Aperçu de la facture (WebView) avant téléchargement */}
+      <Modal visible={!!previewUrl} animationType="slide" onRequestClose={() => setPreviewUrl(null)}>
+        <View style={styles.previewContainer}>
+          <View style={[styles.previewHeader, { paddingTop: insets.top + 10 }]}>
+            <TouchableOpacity style={styles.previewIconBtn} onPress={() => setPreviewUrl(null)}>
+              <X size={22} color="#0f172a" />
+            </TouchableOpacity>
+            <Text style={styles.previewTitle} numberOfLines={1}>{previewLabel}</Text>
+            <TouchableOpacity
+              style={styles.previewIconBtn}
+              onPress={() => { if (previewUrl) Linking.openURL(previewUrl); }}
+            >
+              <Download size={20} color="#2563eb" />
+            </TouchableOpacity>
+          </View>
+          {previewUrl && (
+            <WebView
+              source={{ uri: previewUrl }}
+              style={{ flex: 1, backgroundColor: '#fff' }}
+              startInLoadingState
+              renderLoading={() => (
+                <View style={styles.previewLoading}><ActivityIndicator size="large" color="#10b981" /></View>
+              )}
+            />
+          )}
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -715,4 +776,17 @@ const styles = StyleSheet.create({
   invBadgeBuyer: { backgroundColor: 'rgba(56,189,248,0.2)' },
   invBadgeText: { color: '#cbd5e1', fontSize: 11, fontWeight: '600' },
   invDlBtn: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(56,189,248,0.12)', justifyContent: 'center', alignItems: 'center' },
+  invActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  invViewBtn: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(16,185,129,0.12)', justifyContent: 'center', alignItems: 'center' },
+
+  // --- Aperçu facture (WebView) ---
+  previewContainer: { flex: 1, backgroundColor: '#fff' },
+  previewHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 12, paddingBottom: 12, backgroundColor: '#f1f5f9',
+    borderBottomWidth: 1, borderBottomColor: '#e2e8f0',
+  },
+  previewIconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#e2e8f0', justifyContent: 'center', alignItems: 'center' },
+  previewTitle: { flex: 1, textAlign: 'center', color: '#0f172a', fontSize: 15, fontWeight: '700', marginHorizontal: 8 },
+  previewLoading: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
 });
