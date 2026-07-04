@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { X, Shield, CreditCard, Clock, CheckCircle, ExternalLink, ArrowRight, Home, Mail, RefreshCw } from 'lucide-react-native';
 import { useTranslation } from '@/contexts/LanguageContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getStripeAccountId, saveStripeAccountId } from '@/utils/userProfile';
+import { getStripeAccountId, saveStripeAccountId, clearStripeAccountId } from '@/utils/userProfile';
 import { authedFetch } from '@/utils/authedFetch';
 import { useAutoTranslate } from '@/utils/translation';
 
@@ -101,6 +101,21 @@ export default function StripeConnectModal({
         const response = await authedFetch(
           `${STRIPE_SERVER_URL}/api/connect-account-status?account_id=${savedAccountId}`
         );
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          // Compte inexistant sur la plateforme actuelle → on nettoie et on
+          // repart sur une création de compte propre.
+          if (String(err?.error || '').toLowerCase().includes('no such account')) {
+            if (userId) await clearStripeAccountId(userId);
+            else await AsyncStorage.removeItem('stripe_connect_account_id');
+            setAccountId(null);
+            setStep('main');
+            return;
+          }
+          // Autre erreur (réseau, serveur endormi…) : on propose la reprise d'onboarding.
+          setStep('onboarding');
+          return;
+        }
         const data = await response.json();
         if (data.onboarding_complete) {
           setIsVerified(true);

@@ -28,7 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { Language } from '@/locales';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getStripeAccountId, saveStripeAccountId, getUserProfile, upsertUserProfile } from '@/utils/userProfile';
+import { getStripeAccountId, saveStripeAccountId, getUserProfile, upsertUserProfile, clearStripeAccountId } from '@/utils/userProfile';
 import StripeConnectModal from '@/components/StripeConnectModal';
 import { authedFetch } from '@/utils/authedFetch';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
@@ -211,6 +211,16 @@ export default function AccountScreen() {
       if (res.ok) {
         const data = await res.json();
         setStripeChargesEnabled(!!data?.charges_enabled);
+        return;
+      }
+      // Le compte mémorisé n'existe pas sur la plateforme Stripe actuelle
+      // (ex: ancien compte d'une autre plateforme) → on nettoie pour repartir propre.
+      const err = await res.json().catch(() => ({}));
+      if (String(err?.error || '').toLowerCase().includes('no such account')) {
+        await clearStripeAccountId(user?.id);
+        setStripeAccountId(null);
+        setStripeLinked(false);
+        setStripeChargesEnabled(false);
       }
     } catch { /* réseau indisponible : on laisse la valeur précédente */ }
   };
@@ -697,9 +707,10 @@ export default function AccountScreen() {
               </View>
             )}
 
-            {/* Un compte Stripe existe mais n'est pas encore activé (charges_enabled=false) :
-                bouton pour rouvrir/terminer l'onboarding Stripe via la fenêtre dédiée. */}
-            {isCelebrity && stripeLinked && !stripeChargesEnabled && (
+            {/* Célébrité dont les paiements ne sont pas encore activés (aucun compte Stripe
+                OU compte pas encore validé) : un seul bouton qui ouvre la fenêtre Stripe,
+                laquelle gère aussi bien la création que la reprise d'un onboarding. */}
+            {isCelebrity && !stripeChargesEnabled && (
               <TouchableOpacity
                 style={[styles.activateButton, { backgroundColor: '#f59e0b' }]}
                 onPress={() => {
@@ -715,34 +726,6 @@ export default function AccountScreen() {
                   {t('celActivatePayments' as any) || 'Activer mes paiements'}
                 </Text>
                 <ArrowRight size={18} color="#000" />
-              </TouchableOpacity>
-            )}
-
-            {isCelebrity && !stripeLinked && (
-              <TouchableOpacity
-                style={[styles.activateButton]}
-                onPress={() => {
-                  if (Platform.OS !== 'web') {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }
-                  requireAuth(() => router.push('/celebrity-onboarding' as any), {
-                    reason: 'Crée ton compte pour passer en mode célébrité',
-                  });
-                }}
-                activeOpacity={0.8}
-              >
-                {stripeLinked ? (
-                  <Check size={18} color="#fff" />
-                ) : (
-                  <Star size={18} color="#000" fill="#000" />
-                )}
-                <Text style={[styles.activateButtonText, stripeLinked && { color: '#fff' }]}>
-                  {stripeLinked
-                    ? (t('celOnboardActivated' as any) || 'Activé')
-                    : (t('celOnboardActivate' as any) || 'Activer')
-                  }
-                </Text>
-                <ArrowRight size={18} color={stripeLinked ? '#fff' : '#000'} />
               </TouchableOpacity>
             )}
 

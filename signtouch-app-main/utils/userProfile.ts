@@ -111,6 +111,20 @@ export const getStripeAccountId = async (userId: string): Promise<string | null>
   }
 };
 
+// Efface le compte Stripe mémorisé (local + base). À utiliser quand le compte
+// stocké n'existe plus sur la plateforme Stripe actuelle (ex: changement de
+// compte plateforme) → l'utilisateur repart sur une création propre.
+export const clearStripeAccountId = async (userId?: string): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem('stripe_connect_account_id');
+    if (userId) {
+      await upsertUserProfile(userId, { stripe_connect_account_id: null as any });
+    }
+  } catch (error) {
+    console.error('[UserProfile] Error clearing Stripe account:', error);
+  }
+};
+
 export const saveStripeAccountId = async (userId: string, stripeAccountId: string): Promise<boolean> => {
   try {
     await AsyncStorage.setItem('stripe_connect_account_id', stripeAccountId);
