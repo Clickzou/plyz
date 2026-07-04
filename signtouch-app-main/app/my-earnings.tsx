@@ -8,6 +8,8 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
+  Platform,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,12 +22,15 @@ import {
   Video,
   DollarSign,
   CreditCard,
+  FileText,
+  Download,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOrCreateDeviceId } from '@/utils/ratingsStorage';
 import { authedFetch } from '@/utils/authedFetch';
+import { showAlert } from '@/utils/alertHelper';
 import BottomNav from '@/components/BottomNav';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -57,6 +62,17 @@ interface EarningsData {
   sessions: SessionStat[];
 }
 
+interface Invoice {
+  id: string;
+  invoice_number: string;
+  prestation_label: string;
+  prestation_date: string;
+  amount_cents: number;
+  currency: string;
+  role: 'buyer' | 'seller';
+  created_at: string;
+}
+
 export default function MyEarningsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -66,6 +82,12 @@ export default function MyEarningsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState<EarningsData | null>(null);
+
+  // Onglet Revenus / Factures (les factures étaient dans un écran séparé « Mes documents »).
+  const [tab, setTab] = useState<'revenus' | 'factures'>('revenus');
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invLoading, setInvLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const fetchEarnings = useCallback(async () => {
     if (!STRIPE_SERVER_URL) {
@@ -94,6 +116,40 @@ export default function MyEarningsScreen() {
   const onRefresh = () => {
     setRefreshing(true);
     fetchEarnings();
+    fetchInvoices();
+  };
+
+  const fetchInvoices = useCallback(async () => {
+    if (!STRIPE_SERVER_URL) { setInvLoading(false); return; }
+    try {
+      const res = await authedFetch(`${STRIPE_SERVER_URL}/api/invoices`);
+      const d = await res.json();
+      setInvoices(d?.invoices || []);
+    } catch (e) {
+      console.warn('[MyEarnings] invoices error', e);
+    } finally {
+      setInvLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchInvoices(); }, [fetchInvoices]);
+
+  const formatMoney = (cents: number, currency: string) => {
+    const sym: Record<string, string> = { eur: '€', usd: '$', gbp: '£' };
+    return `${(cents / 100).toFixed(2)} ${sym[currency] || currency}`;
+  };
+
+  const handleDownloadInvoice = async (inv: Invoice) => {
+    try {
+      setDownloadingId(inv.id);
+      const res = await authedFetch(`${STRIPE_SERVER_URL}/api/invoice/${inv.id}/download`);
+      const d = await res.json();
+      if (d?.url) await Linking.openURL(d.url); else throw new Error('no url');
+    } catch (e) {
+      showAlert(t('error') || 'Erreur', t('docsError') || 'Impossible d\'ouvrir le document.');
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -154,7 +210,64 @@ export default function MyEarningsScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      {loading ? (
+      {/* Onglets Revenus / Factures */}
+      <View style={styles.tabBar}>
+        <TouchableOpacity
+          style={[styles.tabBtn, tab === 'revenus' && styles.tabBtnActive]}
+          onPress={() => setTab('revenus')}
+          activeOpacity={0.8}
+        >
+          <TrendingUp size={16} color={tab === 'revenus' ? '#4ade80' : 'rgba(255,255,255,0.5)'} />
+          <Text style={[styles.tabTxt, tab === 'revenus' && styles.tabTxtActive]}>{t('myEarningsTab' as any) || 'Revenus'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabBtn, tab === 'factures' && styles.tabBtnActive]}
+          onPress={() => setTab('factures')}
+          activeOpacity={0.8}
+        >
+          <FileText size={16} color={tab === 'factures' ? '#4ade80' : 'rgba(255,255,255,0.5)'} />
+          <Text style={[styles.tabTxt, tab === 'factures' && styles.tabTxtActive]}>{t('invoicesTab' as any) || 'Factures'}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {tab === 'factures' ? (
+        invLoading ? (
+          <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#fff" /></View>
+        ) : (
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.contentContainer}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
+          >
+            {invoices.length === 0 ? (
+              <View style={styles.emptyState}>
+                <FileText size={48} color="rgba(255,255,255,0.3)" />
+                <Text style={styles.emptyText}>{t('docsEmpty' as any) || 'Aucune facture pour le moment.'}</Text>
+              </View>
+            ) : (
+              invoices.map((inv) => (
+                <View key={inv.id} style={styles.invCard}>
+                  <View style={styles.invIcon}><FileText size={20} color="#10b981" /></View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.invTitle} numberOfLines={1}>{inv.prestation_label}</Text>
+                    <Text style={styles.invSub}>{inv.invoice_number}</Text>
+                    <View style={styles.invMetaRow}>
+                      <Text style={styles.invAmount}>{formatMoney(inv.amount_cents, inv.currency)}</Text>
+                      <View style={[styles.invBadge, inv.role === 'seller' ? styles.invBadgeSeller : styles.invBadgeBuyer]}>
+                        <Text style={styles.invBadgeText}>{inv.role === 'seller' ? (t('docsSeller' as any) || 'Revenu') : (t('docsBuyer' as any) || 'Payé')}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  <TouchableOpacity style={styles.invDlBtn} onPress={() => handleDownloadInvoice(inv)} disabled={downloadingId === inv.id}>
+                    {downloadingId === inv.id ? <ActivityIndicator size="small" color="#38bdf8" /> : <Download size={20} color="#38bdf8" />}
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+            <View style={{ height: 100 }} />
+          </ScrollView>
+        )
+      ) : loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#fff" />
         </View>
@@ -562,4 +675,44 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.4)',
     fontStyle: 'italic',
   },
+
+  // --- Onglets Revenus / Factures ---
+  tabBar: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 12,
+    padding: 4,
+    gap: 4,
+  },
+  tabBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 9,
+  },
+  tabBtnActive: { backgroundColor: 'rgba(74,222,128,0.15)' },
+  tabTxt: { color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: '600' },
+  tabTxtActive: { color: '#4ade80' },
+
+  // --- Cartes factures ---
+  invCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12, padding: 14, marginBottom: 10,
+  },
+  invIcon: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(16,185,129,0.12)', justifyContent: 'center', alignItems: 'center' },
+  invTitle: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  invSub: { color: '#94a3b8', fontSize: 12, marginTop: 2 },
+  invMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
+  invAmount: { color: '#e2e8f0', fontSize: 14, fontWeight: '700' },
+  invBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  invBadgeSeller: { backgroundColor: 'rgba(16,185,129,0.2)' },
+  invBadgeBuyer: { backgroundColor: 'rgba(56,189,248,0.2)' },
+  invBadgeText: { color: '#cbd5e1', fontSize: 11, fontWeight: '600' },
+  invDlBtn: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(56,189,248,0.12)', justifyContent: 'center', alignItems: 'center' },
 });
