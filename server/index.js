@@ -589,7 +589,7 @@ app.post('/api/auth-email-hook', express.raw({ type: '*/*' }), async (req, res) 
     const codeBlock = `<div style="font-size:34px;font-weight:800;letter-spacing:8px;background:#f4f4f5;border-radius:12px;padding:18px 0;text-align:center;color:#0f172a;margin:18px 0;">${esc(code)}</div>`;
     const bodyHtml = esc(bodyRaw).replace(/\{\{code\}\}/g, codeBlock).replace(/\n/g, '<br>');
     const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#0f172a;">
-<div style="text-align:center;margin-bottom:18px;"><img src="https://plyz.io/logo-plyz.png" alt="Plyz" style="height:34px"></div>
+<div style="background:#0a1420;border-radius:14px;text-align:center;padding:22px 0;margin-bottom:22px;"><img src="https://plyz.io/logo-plyz.png" alt="Plyz" style="height:34px"></div>
 <div style="font-size:15px;line-height:1.6;">${bodyHtml}</div>
 <div style="margin-top:22px;border-top:1px solid #eee;padding-top:12px;color:#94a3b8;font-size:12px;text-align:center;">Plyz — CLICKZOU (SAS), Toulouse</div>
 </div>`;
