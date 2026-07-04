@@ -780,6 +780,29 @@ export default function AccountScreen() {
               </TouchableOpacity>
             )}
 
+            {/* 🧪 ADMIN uniquement : repasser en fan pour re-tester l'onboarding célébrité.
+                N'apparaît PAS pour les vraies célébrités (garde-fou par email admin). */}
+            {isCelebrity && user?.email === 'jc@clickzou.fr' && (
+              <TouchableOpacity
+                style={{ marginTop: 10, paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(239,68,68,0.4)', alignItems: 'center' }}
+                onPress={() => {
+                  Alert.alert(
+                    '🧪 Test — repasser en fan',
+                    'Réinitialise ton statut célébrité sur cet appareil pour refaire l\'onboarding depuis le début. (Ton compte, ton Stripe et tes données ne sont PAS supprimés.)',
+                    [
+                      { text: 'Annuler', style: 'cancel' },
+                      { text: 'Repasser en fan', style: 'destructive', onPress: () => toggleCelebrityMode() },
+                    ],
+                  );
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: '#ef4444', fontSize: 13, fontWeight: '600' }}>
+                  🧪 Repasser en fan (test admin)
+                </Text>
+              </TouchableOpacity>
+            )}
+
             {!isCelebrity && (
               <TouchableOpacity
                 style={[styles.createAccountButton, { backgroundColor: '#f59e0b' }]}
