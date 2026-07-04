@@ -1144,6 +1144,7 @@ export default {
   removePhoto: 'Foto entfernen',
   galleryPermission: 'Bitte erlaube den Zugriff auf deine Fotogalerie.',
   celVerifiedStripe: "Zahlungen aktiviert",
+  celActivatePayments: 'Meine Zahlungen aktivieren',
   celOnboardVerifSection: 'VERIFIZIERUNG',
   celOnboardCreatorTitle: 'Streamer / Content Creator?',
   celOnboardCreatorDesc: 'Twitch, YouTube, TikTok, Instagram... Lasse dein Profil verifizieren, um ein Verifiziert-Abzeichen zu erhalten.',

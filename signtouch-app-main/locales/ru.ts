@@ -1144,6 +1144,7 @@ export default {
   removePhoto: 'Удалить фото',
   galleryPermission: 'Пожалуйста, разрешите доступ к вашей фотогалерее.',
   celVerifiedStripe: "Платежи активированы",
+  celActivatePayments: 'Включить платежи',
   celOnboardVerifSection: 'ВЕРИФИКАЦИЯ',
   celOnboardCreatorTitle: 'Стример / Контент-мейкер?',
   celOnboardCreatorDesc: 'Twitch, YouTube, TikTok, Instagram… Подтвердите свой профиль, чтобы получить значок верификации.',

@@ -440,15 +440,6 @@ export default function AccountScreen() {
                 </View>
               </View>
 
-              {isCelebrity && stripeLinked && (
-                <View style={styles.stripeLinkedBadge}>
-                  <CreditCard size={14} color="#635BFF" />
-                  <Text style={styles.stripeLinkedText}>
-                    Stripe Connect
-                  </Text>
-                </View>
-              )}
-
               <TouchableOpacity
                 style={styles.signOutButton}
                 onPress={handleSignOut}
@@ -684,12 +675,7 @@ export default function AccountScreen() {
                 </Text>
                 {isCelebrity && stripeChargesEnabled && (
                   <Text style={styles.verifiedText}>
-                    {t('celVerifiedStripe' as any) || 'Stripe Connect vérifié'}
-                  </Text>
-                )}
-                {isCelebrity && stripeLinked && !stripeChargesEnabled && (
-                  <Text style={[styles.verifiedText, { color: '#f59e0b' }]}>
-                    {t('celStripePending' as any) || 'Paiements à activer'}
+                    {t('celVerifiedStripe' as any) || 'Paiements activés'}
                   </Text>
                 )}
               </View>

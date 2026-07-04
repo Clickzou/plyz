@@ -1149,6 +1149,7 @@ export default {
   removePhoto: 'ছবি সরান',
   galleryPermission: 'অনুগ্রহ করে আপনার ফটো গ্যালারিতে অ্যাক্সেসের অনুমতি দিন।',
   celVerifiedStripe: "পেমেন্ট সক্রিয়",
+  celActivatePayments: 'আমার পেমেন্ট চালু করুন',
   celOnboardVerifSection: 'যাচাইকরণ',
   celOnboardCreatorTitle: 'স্ট্রিমার / কন্টেন্ট ক্রিয়েটর?',
   celOnboardCreatorDesc: 'Twitch, YouTube, TikTok, Instagram... যাচাইকৃত ব্যাজ পেতে আপনার প্রোফাইল যাচাই করুন।',

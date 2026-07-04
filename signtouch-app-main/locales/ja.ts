@@ -1144,6 +1144,7 @@ export default {
   removePhoto: '写真を削除',
   galleryPermission: 'フォトギャラリーへのアクセスを許可してください。',
   celVerifiedStripe: "お支払い有効化",
+  celActivatePayments: '支払いを有効にする',
   celOnboardVerifSection: '認証',
   celOnboardCreatorTitle: '配信者 / コンテンツクリエイターですか？',
   celOnboardCreatorDesc: 'Twitch、YouTube、TikTok、Instagram… プロフィールを認証して認証バッジを取得しましょう。',

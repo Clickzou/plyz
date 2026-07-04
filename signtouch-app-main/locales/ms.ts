@@ -1149,6 +1149,7 @@ export default {
   removePhoto: 'Buang foto',
   galleryPermission: 'Sila benarkan akses ke galeri foto anda.',
   celVerifiedStripe: "Pembayaran Diaktifkan",
+  celActivatePayments: 'Aktifkan pembayaran saya',
   celOnboardVerifSection: 'PENGESAHAN',
   celOnboardCreatorTitle: 'Streamer / Pencipta kandungan?',
   celOnboardCreatorDesc: 'Twitch, YouTube, TikTok, Instagram... Sahkan profil anda untuk mendapatkan lencana disahkan.',
