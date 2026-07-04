@@ -470,9 +470,6 @@ export default function CelebrityOnboardingScreen() {
         {/* ===================== ÉTAPE 1 — PROFIL ===================== */}
         {step === 1 && (
           <View style={styles.stepContent}>
-            <View style={styles.heroIconWrap}>
-              <Star size={40} color="#f59e0b" fill="#f59e0b" />
-            </View>
             <Text style={styles.stepHeadline}>
               {ct('celOnboardProfileHeadline' as any) || trUI('Ton profil public')}
             </Text>
@@ -480,54 +477,58 @@ export default function CelebrityOnboardingScreen() {
               {ct('celOnboardProfileSubtitle' as any) || trUI('Ajoute une photo, une présentation et ton site — c\'est ce que verront tes fans.')}
             </Text>
 
-            <TouchableOpacity style={styles.profilePhotoPicker} onPress={pickPhoto} activeOpacity={0.8}>
+            {/* Photo de profil : élément central, mise en avant */}
+            <TouchableOpacity style={styles.profilePhotoPicker} onPress={pickPhoto} activeOpacity={0.85}>
               {profilePhoto ? (
                 <Image source={{ uri: profilePhoto }} style={styles.profilePhotoImg} />
               ) : (
-                <Camera size={30} color="#10b981" />
+                <Camera size={34} color="#10b981" />
               )}
               {uploadingPhoto && (
                 <View style={styles.profilePhotoLoading}><ActivityIndicator color="#10b981" /></View>
               )}
-              <View style={styles.profilePhotoBadge}><Camera size={13} color="#fff" /></View>
+              <View style={styles.profilePhotoBadge}><Camera size={14} color="#fff" /></View>
             </TouchableOpacity>
             <Text style={styles.profilePhotoLabel}>
               {ct('celOnboardAddPhoto' as any) || trUI('Ajouter une photo')}
             </Text>
 
-            <Text style={styles.profileFieldLabel}>{ct('celOnboardNameLabel' as any) || trUI('Nom public')}</Text>
-            <TextInput
-              style={styles.profileFieldInput}
-              value={celebrityName}
-              onChangeText={setCelebrityName}
-              placeholder={ct('celOnboardNamePlaceholder' as any) || trUI('Ton nom de scène (ex : Omar Sy)')}
-              placeholderTextColor="#64748b"
-            />
-
-            <Text style={styles.profileFieldLabel}>{ct('celOnboardBioLabel' as any) || trUI('Présentation')}</Text>
-            <TextInput
-              style={[styles.profileFieldInput, styles.profileFieldTextarea]}
-              value={bio}
-              onChangeText={setBio}
-              placeholder={ct('celOnboardBioPlaceholder' as any) || trUI('Présente-toi : qui es-tu, ce que tu fais, pourquoi te suivre…')}
-              placeholderTextColor="#64748b"
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-
-            <Text style={styles.profileFieldLabel}>{ct('celOnboardWebsiteLabel' as any) || trUI('Site web officiel (optionnel)')}</Text>
-            <View style={styles.websiteRow}>
-              <Link2 size={18} color="#64748b" />
+            {/* Formulaire regroupé */}
+            <View style={styles.profileForm}>
+              <Text style={styles.profileFieldLabel}>{ct('celOnboardNameLabel' as any) || trUI('Nom public')}</Text>
               <TextInput
-                style={styles.websiteInput}
-                value={website}
-                onChangeText={setWebsite}
-                placeholder="https://..."
+                style={styles.profileFieldInput}
+                value={celebrityName}
+                onChangeText={setCelebrityName}
+                placeholder={ct('celOnboardNamePlaceholder' as any) || trUI('Ton nom de scène (ex : Omar Sy)')}
                 placeholderTextColor="#64748b"
-                autoCapitalize="none"
-                keyboardType="url"
               />
+
+              <Text style={styles.profileFieldLabel}>{ct('celOnboardBioLabel' as any) || trUI('Présentation')}</Text>
+              <TextInput
+                style={[styles.profileFieldInput, styles.profileFieldTextarea]}
+                value={bio}
+                onChangeText={setBio}
+                placeholder={ct('celOnboardBioPlaceholder' as any) || trUI('Présente-toi : qui es-tu, ce que tu fais, pourquoi te suivre…')}
+                placeholderTextColor="#64748b"
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+
+              <Text style={styles.profileFieldLabel}>{ct('celOnboardWebsiteLabel' as any) || trUI('Site web officiel (optionnel)')}</Text>
+              <View style={styles.websiteRow}>
+                <Link2 size={18} color="#64748b" />
+                <TextInput
+                  style={styles.websiteInput}
+                  value={website}
+                  onChangeText={setWebsite}
+                  placeholder="https://..."
+                  placeholderTextColor="#64748b"
+                  autoCapitalize="none"
+                  keyboardType="url"
+                />
+              </View>
             </View>
           </View>
         )}
@@ -1019,11 +1020,12 @@ const styles = StyleSheet.create({
 
   // --- Étape profil ---
   profilePhotoPicker: {
-    width: 96, height: 96, borderRadius: 48, marginTop: 8,
+    width: 108, height: 108, borderRadius: 54, marginTop: 20,
     backgroundColor: 'rgba(16,185,129,0.12)', borderWidth: 2, borderColor: '#10b981',
     alignItems: 'center', justifyContent: 'center', alignSelf: 'center',
   },
-  profilePhotoImg: { width: 96, height: 96, borderRadius: 48 },
+  profilePhotoImg: { width: 108, height: 108, borderRadius: 54 },
+  profileForm: { alignSelf: 'stretch', marginTop: 10 },
   profilePhotoLoading: {
     ...StyleSheet.absoluteFillObject, borderRadius: 48,
     backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center',
