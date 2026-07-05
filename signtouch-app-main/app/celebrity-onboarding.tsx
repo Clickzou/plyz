@@ -26,7 +26,7 @@ import { authedFetch } from '@/utils/authedFetch';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 
-const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 const TOTAL_STEPS = 4; // étapes 0..3 : Bienvenue, Profil, Stripe, Récap
 

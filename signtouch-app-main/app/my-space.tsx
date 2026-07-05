@@ -30,7 +30,7 @@ import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalVi
 import { getServedFansCountBySessions } from '@/utils/sessionQueueStorage';
 import QRCodeSvg from 'react-native-qrcode-svg';
 
-const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 type ModeType = 'fan' | 'celebrity';
 type CelTabType = 'dashboard' | 'events' | 'settings';

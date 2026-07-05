@@ -22,7 +22,7 @@ import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/utils/supabase';
 
-const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

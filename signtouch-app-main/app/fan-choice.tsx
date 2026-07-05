@@ -25,7 +25,7 @@ import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { getMyScheduledEvents, getMergedFanEvents } from '@/utils/eventSessionStorage';
 
 // Base API serveur (vérification de compte). Sur web on passe par le proxy local.
-const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 export default function FanChoiceScreen() {
   const router = useRouter();

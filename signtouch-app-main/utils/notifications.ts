@@ -80,7 +80,7 @@ export async function initNotifications(): Promise<void> {
   await ensureNotificationChannels();
 }
 
-const PUSH_API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+const PUSH_API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 /** Récupère le token push Expo du fan (best-effort, mobile uniquement). null sur web/refus. */
 export async function getExpoPushToken(): Promise<string | null> {

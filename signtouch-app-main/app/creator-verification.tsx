@@ -16,7 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { authedFetch } from '@/utils/authedFetch';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
-const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 const PLATFORMS = [
   { key: 'twitch', label: 'Twitch', placeholder: 'https://twitch.tv/votre_chaine', color: '#9146FF' },

@@ -20,7 +20,7 @@ import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { FeedSkeleton } from '@/components/SkeletonLoader';
 import { useAutoTranslate } from '@/utils/translation';
 
-const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 const LIKES_KEY = '@plyz_post_likes';
 const COMMENTS_KEY = '@plyz_post_comments';
 const LOCAL_POSTS_KEY = '@plyz_local_posts';

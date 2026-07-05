@@ -38,7 +38,7 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 import { FanBadgeCard } from '@/components/FanBadge';
 import { supabase } from '@/utils/supabase';
 
-const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 // Réponse de GET /api/celebrity-earnings (cf. app/my-earnings.tsx)

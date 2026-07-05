@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from '@/contexts/LanguageContext';
 
 // Même serveur que le reste de l'app (sur web : chemin relatif via le proxy).
-const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 // Cache mémoire (session) : `${lang}${texte}` -> traduction
 const memCache = new Map<string, string>();

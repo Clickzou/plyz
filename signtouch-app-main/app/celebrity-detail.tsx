@@ -19,7 +19,7 @@ import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { CelebrityDetailSkeleton } from '@/components/SkeletonLoader';
 import { useAutoTranslate } from '@/utils/translation';
 
-const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 interface CelebrityDetail {
   user_id: string;

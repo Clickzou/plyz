@@ -28,7 +28,7 @@ import { supabase } from '@/utils/supabase';
 import { useAutoTranslate } from '@/utils/translation';
 
 const ADMIN_EMAIL = 'jc@clickzou.fr';
-const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 type TabKey = 'overview' | 'verifs' | 'revenue' | 'search' | 'reports' | 'accounting';
 
