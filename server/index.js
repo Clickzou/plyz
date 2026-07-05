@@ -5832,6 +5832,41 @@ app.get('/api/invoices', async (req, res) => {
   }
 });
 
+// Export groupé : toutes les factures de l'utilisateur sur une période, réunies
+// en UN seul document HTML (imprimable/PDF). ?period=month|3months|6months|year|all
+app.get('/api/invoices/export', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+    const db = getSupabaseAdmin();
+    const DAYS = { month: 30, '3months': 91, '6months': 183, year: 365, all: null };
+    const period = String(req.query.period || 'all');
+    const days = DAYS[period] !== undefined ? DAYS[period] : null;
+    const cutoff = days != null ? new Date(Date.now() - days * 86400000).toISOString() : null;
+    let q = db.from('invoices').select('*')
+      .or(`fan_id.eq.${authUser.id},celebrity_id.eq.${authUser.id}`)
+      .order('created_at', { ascending: false }).limit(500);
+    if (cutoff) q = q.gte('created_at', cutoff);
+    const { data, error } = await q;
+    if (error) throw error;
+    const rows = data || [];
+    if (rows.length === 0) return res.json({ html: null, count: 0 });
+    const styleMatch = renderInvoiceHtml(rows[0], 'buyer').match(/<style>[\s\S]*?<\/style>/);
+    const style = styleMatch ? styleMatch[0] : '';
+    const parts = rows.map((inv) => {
+      const role = String(inv.celebrity_id) === String(authUser.id) ? 'seller' : 'buyer';
+      const full = renderInvoiceHtml(inv, role);
+      const body = (full.match(/<body>([\s\S]*)<\/body>/) || [null, ''])[1];
+      return `<div style="page-break-after:always;border-bottom:2px dashed #ccc;padding-bottom:28px;margin-bottom:28px">${body}</div>`;
+    });
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Factures Plyz</title>${style}</head><body>${parts.join('')}</body></html>`;
+    return res.json({ html, count: rows.length });
+  } catch (e) {
+    console.error('[invoices export] error:', e.message);
+    return res.status(500).json({ error: 'export_failed' });
+  }
+});
+
 // Lien de téléchargement signé d'une facture (accès réservé au fan ou à la personnalité concernée)
 app.get('/api/invoice/:id/download', async (req, res) => {
   try {
