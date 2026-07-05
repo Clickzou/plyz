@@ -18,6 +18,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/utils/supabase';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
@@ -46,6 +47,12 @@ export default function WelcomeAuthScreen({
   const insets = useSafeAreaInsets();
   const { user, sendOtpCode, verifyOtpCode } = useAuth();
   const { setProfilePhoto } = useCelebrityMode();
+  const { t } = useLanguage();
+  // Raccourci : t() renvoie la clé si absente → on garde un repli français lisible.
+  const tr = (key: string, fallback: string, params?: Record<string, string | number>) => {
+    const v = t(key as any, params);
+    return v === key ? fallback : v;
+  };
 
   const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
@@ -140,7 +147,7 @@ export default function WelcomeAuthScreen({
   const handleSendCode = async () => {
     const trimmed = email.trim();
     if (!EMAIL_REGEX.test(trimmed)) {
-      setError('Adresse email invalide');
+      setError(tr('waEmailInvalid', 'Adresse email invalide'));
       return;
     }
     setLoading(true);
@@ -153,7 +160,7 @@ export default function WelcomeAuthScreen({
         setStep('code');
       }
     } catch (err: any) {
-      setError(err?.message || 'Une erreur est survenue');
+      setError(err?.message || tr('waGenericError', 'Une erreur est survenue'));
     } finally {
       setLoading(false);
     }
@@ -167,7 +174,7 @@ export default function WelcomeAuthScreen({
       const { error: sendError } = await sendOtpCode(email.trim());
       if (sendError) setError(sendError.message);
     } catch (err: any) {
-      setError(err?.message || 'Une erreur est survenue');
+      setError(err?.message || tr('waGenericError', 'Une erreur est survenue'));
     } finally {
       setLoading(false);
     }
@@ -175,7 +182,7 @@ export default function WelcomeAuthScreen({
 
   const handleVerifyCode = async () => {
     if (code.trim().length < 6) {
-      setError('Code invalide');
+      setError(tr('waCodeInvalid', 'Code invalide'));
       return;
     }
     setLoading(true);
@@ -189,7 +196,7 @@ export default function WelcomeAuthScreen({
         setAwaitingProfileCheck(true);
       }
     } catch (err: any) {
-      setError(err?.message || 'Une erreur est survenue');
+      setError(err?.message || tr('waGenericError', 'Une erreur est survenue'));
     } finally {
       setLoading(false);
     }
@@ -199,7 +206,7 @@ export default function WelcomeAuthScreen({
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        setError("Autorise l'accès à tes photos pour ajouter une image.");
+        setError(tr('waErrPhotoPerm', "Autorise l'accès à tes photos pour ajouter une image."));
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -217,22 +224,22 @@ export default function WelcomeAuthScreen({
         setError('');
       }
     } catch (err: any) {
-      setError(err?.message || "Impossible de charger la photo");
+      setError(err?.message || tr('waErrPhotoLoad', 'Impossible de charger la photo'));
     }
   };
 
   const handleFinish = async () => {
     if (!user?.id) return;
     if (!firstName.trim() || !lastName.trim() || !address.trim()) {
-      setError('Renseigne ton prénom, ton nom et ton adresse pour continuer.');
+      setError(tr('waErrNames', 'Renseigne ton prénom, ton nom et ton adresse pour continuer.'));
       return;
     }
     if (!name.trim()) {
-      setError('Choisis un pseudo public.');
+      setError(tr('waErrPseudo', 'Choisis un pseudo public.'));
       return;
     }
     if (!photoBase64 && !photoUri) {
-      setError('Ajoute une photo de profil pour continuer.');
+      setError(tr('waErrPhoto', 'Ajoute une photo de profil pour continuer.'));
       return;
     }
     setLoading(true);
@@ -286,7 +293,7 @@ export default function WelcomeAuthScreen({
       // Profile saved -> stop rendering this screen and reveal the app.
       setProfileDone(true);
     } catch (err: any) {
-      setError(err?.message || "Impossible d'enregistrer le profil");
+      setError(err?.message || tr('waErrProfileSave', "Impossible d'enregistrer le profil"));
     } finally {
       setLoading(false);
     }
@@ -333,19 +340,19 @@ export default function WelcomeAuthScreen({
           {step === 'email' && (
             <View style={styles.card}>
               <View style={styles.freeBadge}>
-                <Text style={styles.freeBadgeText}>GRATUIT</Text>
+                <Text style={styles.freeBadgeText}>{tr('waFree', 'GRATUIT')}</Text>
               </View>
               <View style={styles.iconCircle}>
                 <Mail size={40} color="#10b981" />
               </View>
-              <Text style={styles.title}>Bienvenue sur Plyz</Text>
+              <Text style={styles.title}>{tr('waWelcomeTitle', 'Bienvenue sur Plyz')}</Text>
               <Text style={styles.subtitle}>
-                Crée ton compte gratuit en 30 secondes (ou connecte-toi)
+                {tr('waWelcomeSubtitle', 'Crée ton compte gratuit en 30 secondes (ou connecte-toi)')}
               </Text>
 
               <TextInput
                 style={styles.input}
-                placeholder="Ton adresse email"
+                placeholder={tr('waEmailPlaceholder', 'Ton adresse email')}
                 placeholderTextColor="#64748b"
                 value={email}
                 onChangeText={setEmail}
@@ -366,12 +373,12 @@ export default function WelcomeAuthScreen({
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Recevoir mon code</Text>
+                  <Text style={styles.primaryButtonText}>{tr('waSendCode', 'Recevoir mon code')}</Text>
                 )}
               </TouchableOpacity>
 
               <Text style={styles.hint}>
-                100% gratuit, sans engagement. Aucun mot de passe : tu recevras un code à 6 chiffres par email.
+                {tr('waEmailHint', '100% gratuit, sans engagement. Aucun mot de passe : tu recevras un code à 6 chiffres par email.')}
               </Text>
             </View>
           )}
@@ -381,9 +388,9 @@ export default function WelcomeAuthScreen({
               <View style={styles.iconCircle}>
                 <KeyRound size={40} color="#f59e0b" />
               </View>
-              <Text style={styles.title}>Entre le code reçu par email</Text>
+              <Text style={styles.title}>{tr('waCodeTitle', 'Entre le code reçu par email')}</Text>
               <Text style={styles.subtitle}>
-                Nous avons envoyé un code à 6 chiffres à {email.trim()}.
+                {tr('waCodeSubtitle', `Nous avons envoyé un code à 6 chiffres à ${email.trim()}.`, { email: email.trim() })}
               </Text>
 
               <TextInput
@@ -412,7 +419,7 @@ export default function WelcomeAuthScreen({
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Valider</Text>
+                  <Text style={styles.primaryButtonText}>{tr('waValidate', 'Valider')}</Text>
                 )}
               </TouchableOpacity>
 
@@ -421,7 +428,7 @@ export default function WelcomeAuthScreen({
                 disabled={loading}
                 style={styles.linkButton}
               >
-                <Text style={styles.linkGreen}>Renvoyer le code</Text>
+                <Text style={styles.linkGreen}>{tr('waResend', 'Renvoyer le code')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -432,7 +439,7 @@ export default function WelcomeAuthScreen({
                 }}
                 style={styles.linkButton}
               >
-                <Text style={styles.linkMuted}>Changer d'email</Text>
+                <Text style={styles.linkMuted}>{tr('waChangeEmail', "Changer d'email")}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -442,11 +449,9 @@ export default function WelcomeAuthScreen({
               <View style={styles.iconCircle}>
                 <Sparkles size={40} color="#10b981" />
               </View>
-              <Text style={styles.title}>Tes informations</Text>
+              <Text style={styles.title}>{tr('waProfileTitle', 'Tes informations')}</Text>
               <Text style={styles.subtitle}>
-                Ta photo et ton pseudo seront visibles publiquement. Ton prénom,
-                ton nom et ton adresse restent privés : ils sont nécessaires pour
-                établir tes factures de paiement, téléchargeables depuis ton compte.
+                {tr('waProfileSubtitle', 'Ta photo et ton pseudo seront visibles publiquement. Ton prénom, ton nom et ton adresse restent privés : ils sont nécessaires pour établir tes factures de paiement, téléchargeables depuis ton compte.')}
               </Text>
 
               <TouchableOpacity
@@ -464,12 +469,12 @@ export default function WelcomeAuthScreen({
                 )}
               </TouchableOpacity>
               <Text style={styles.avatarLabel}>
-                {photoUri ? 'Changer la photo' : 'Ajouter une photo *'}
+                {photoUri ? tr('waChangePhoto', 'Changer la photo') : tr('waAddPhoto', 'Ajouter une photo *')}
               </Text>
 
               <TextInput
                 style={styles.input}
-                placeholder="Prénom *"
+                placeholder={tr('waFirstName', 'Prénom *')}
                 placeholderTextColor="#64748b"
                 value={firstName}
                 onChangeText={setFirstName}
@@ -480,7 +485,7 @@ export default function WelcomeAuthScreen({
 
               <TextInput
                 style={styles.input}
-                placeholder="Nom *"
+                placeholder={tr('waLastName', 'Nom *')}
                 placeholderTextColor="#64748b"
                 value={lastName}
                 onChangeText={setLastName}
@@ -491,7 +496,7 @@ export default function WelcomeAuthScreen({
 
               <TextInput
                 style={[styles.input, styles.bioInput]}
-                placeholder="Adresse (n°, rue, code postal, ville, pays) *"
+                placeholder={tr('waAddress', 'Adresse (n°, rue, code postal, ville, pays) *')}
                 placeholderTextColor="#64748b"
                 value={address}
                 onChangeText={setAddress}
@@ -502,7 +507,7 @@ export default function WelcomeAuthScreen({
 
               <TextInput
                 style={styles.input}
-                placeholder="Pseudo public *"
+                placeholder={tr('waPseudo', 'Pseudo public *')}
                 placeholderTextColor="#64748b"
                 value={name}
                 onChangeText={setName}
@@ -529,7 +534,7 @@ export default function WelcomeAuthScreen({
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Terminer</Text>
+                  <Text style={styles.primaryButtonText}>{tr('waFinish', 'Terminer')}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -539,7 +544,7 @@ export default function WelcomeAuthScreen({
             <View style={styles.card}>
               <ActivityIndicator color="#10b981" size="large" />
               <Text style={[styles.subtitle, { marginTop: 16 }]}>
-                Connexion en cours...
+                {tr('waConnecting', 'Connexion en cours...')}
               </Text>
             </View>
           )}
