@@ -6,7 +6,7 @@ import {
 import { WebView } from 'react-native-webview';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, FileText, Download, X } from 'lucide-react-native';
+import { ArrowLeft, FileText, Download, X, Eye } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -44,6 +44,8 @@ export default function DocumentsScreen() {
   const [period, setPeriod] = useState<PeriodKey>('all');
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [previewTitle, setPreviewTitle] = useState('');
+  const [viewingId, setViewingId] = useState<string | null>(null);
 
   const authHeaders = (): Record<string, string> => {
     const h: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -72,6 +74,31 @@ export default function DocumentsScreen() {
   const formatDate = (d: string) => {
     try { return new Date(d).toLocaleDateString(language, { day: '2-digit', month: 'short', year: 'numeric' }); }
     catch { return d; }
+  };
+
+  // Aperçu : visualiser la facture avant de la télécharger (WebView / nouvel onglet web).
+  const viewInvoice = async (inv: Invoice) => {
+    try {
+      setViewingId(inv.id);
+      const res = await fetch(`${API_BASE}/api/invoice/${inv.id}/download`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data?.html && !data?.url) throw new Error('no data');
+      if (Platform.OS === 'web') {
+        if (typeof window !== 'undefined') {
+          if (data.html) { const w = window.open('', '_blank'); if (w) { w.document.write(data.html); w.document.close(); } }
+          else if (data.url) window.open(data.url, '_blank');
+        }
+      } else if (data.html) {
+        setPreviewTitle(inv.invoice_number);
+        setPreviewHtml(data.html);
+      } else if (data.url) {
+        await Linking.openURL(data.url);
+      }
+    } catch (e) {
+      showAlert(t('error') || 'Erreur', t('docsError') || 'Impossible d\'ouvrir le document.');
+    } finally {
+      setViewingId(null);
+    }
   };
 
   const handleDownload = async (inv: Invoice) => {
@@ -106,6 +133,7 @@ export default function DocumentsScreen() {
           if (w) { w.document.write(data.html); w.document.close(); }
         }
       } else {
+        setPreviewTitle(t('docsExportTitle' as any) || 'Toutes mes factures');
         setPreviewHtml(data.html);
       }
     } catch (e) {
@@ -196,9 +224,14 @@ export default function DocumentsScreen() {
                     </View>
                   </View>
                 </View>
-                <TouchableOpacity style={styles.dlBtn} onPress={() => handleDownload(inv)} disabled={downloadingId === inv.id}>
-                  {downloadingId === inv.id ? <ActivityIndicator size="small" color="#38bdf8" /> : <Download size={20} color="#38bdf8" />}
-                </TouchableOpacity>
+                <View style={styles.cardActions}>
+                  <TouchableOpacity style={styles.viewBtn} onPress={() => viewInvoice(inv)} disabled={viewingId === inv.id}>
+                    {viewingId === inv.id ? <ActivityIndicator size="small" color="#10b981" /> : <Eye size={20} color="#10b981" />}
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.dlBtn} onPress={() => handleDownload(inv)} disabled={downloadingId === inv.id}>
+                    {downloadingId === inv.id ? <ActivityIndicator size="small" color="#38bdf8" /> : <Download size={20} color="#38bdf8" />}
+                  </TouchableOpacity>
+                </View>
               </View>
             ))
           )}
@@ -209,7 +242,7 @@ export default function DocumentsScreen() {
       <Modal visible={!!previewHtml} animationType="slide" onRequestClose={() => setPreviewHtml(null)}>
         <View style={{ flex: 1, backgroundColor: '#fff' }}>
           <View style={[styles.previewHeader, { paddingTop: insets.top + 8 }]}>
-            <Text style={styles.previewTitle} numberOfLines={1}>{t('docsExportTitle' as any) || 'Toutes mes factures'}</Text>
+            <Text style={styles.previewTitle} numberOfLines={1}>{previewTitle || (t('docsExportTitle' as any) || 'Toutes mes factures')}</Text>
             <TouchableOpacity onPress={() => setPreviewHtml(null)} style={styles.previewClose}>
               <X size={22} color="#0f172a" />
             </TouchableOpacity>
@@ -246,6 +279,8 @@ const styles = StyleSheet.create({
   badgeSeller: { backgroundColor: 'rgba(16,185,129,0.2)' },
   badgeBuyer: { backgroundColor: 'rgba(56,189,248,0.2)' },
   badgeText: { color: '#cbd5e1', fontSize: 11, fontWeight: '600' },
+  cardActions: { flexDirection: 'row', gap: 8 },
+  viewBtn: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(16,185,129,0.12)', justifyContent: 'center', alignItems: 'center' },
   dlBtn: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(56,189,248,0.12)', justifyContent: 'center', alignItems: 'center' },
   periodRow: { marginBottom: 12 },
   periodRowContent: { gap: 8, paddingRight: 8 },
