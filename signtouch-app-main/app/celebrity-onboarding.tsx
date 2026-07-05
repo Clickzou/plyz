@@ -213,18 +213,28 @@ export default function CelebrityOnboardingScreen() {
     );
   };
 
-  // Enregistre nom public + bio + site web sur le profil célébrité (best-effort).
-  const saveProfile = async () => {
-    if (!user?.id) return;
+  // Enregistre nom public + bio + site web sur le profil célébrité.
+  // Renvoie true si OK ; false si rejet (modération bio/nom/site web) ou erreur
+  // → l'appelant ne fait PAS avancer l'étape et un message est affiché.
+  const saveProfile = async (): Promise<boolean> => {
+    if (!user?.id) return false;
     try {
       await upsertUserProfile(user.id, { celebrity_name: celebrityName.trim(), bio: bio.trim() });
-      await authedFetch(`${API_BASE}/api/update-celebrity-profile`, {
+      const res = await authedFetch(`${API_BASE}/api/update-celebrity-profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: user.id, stage_name: celebrityName.trim(), bio: bio.trim(), website: website.trim() }),
-      }).catch(() => {});
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data?.error) {
+        showAlert(t('error') || 'Erreur', data?.message || data?.error || (ct('saveFailed' as any) || 'Enregistrement impossible. Vérifie tes informations.'));
+        return false;
+      }
+      return true;
     } catch (e) {
       console.warn('[celebrity-onboarding] save profil échoué', e);
+      showAlert(t('error') || 'Erreur', ct('saveFailed' as any) || 'Enregistrement impossible. Réessaie.');
+      return false;
     }
   };
 
@@ -277,7 +287,7 @@ export default function CelebrityOnboardingScreen() {
       return;
     }
     // En quittant l'étape Profil, on enregistre nom public + bio + site web.
-    if (step === 1) { await saveProfile(); }
+    if (step === 1) { const ok = await saveProfile(); if (!ok) return; }
     setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
   };
 

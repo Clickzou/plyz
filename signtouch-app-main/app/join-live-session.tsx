@@ -12,7 +12,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { showAlert } from '@/utils/alertHelper';
+import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -494,7 +494,12 @@ export default function JoinLiveSessionScreen() {
   const handleSessionEndedForFan = () => {
     if (sessionEndedHandledRef.current) return;
     sessionEndedHandledRef.current = true;
-    showAlert(t('info'), t('liveSessionEndedByCelebrity' as any) || t('liveSessionHasEnded'));
+    // On ne laisse PAS le fan bloqué sur le spinner : OK → retour à l'accueil.
+    showConfirm(
+      t('info'),
+      t('liveSessionEndedByCelebrity' as any) || t('liveSessionHasEnded'),
+      [{ text: 'OK', onPress: () => router.replace('/activity' as any) }]
+    );
   };
 
   // Réagit au changement de statut de l'entrée du fan : si appelé -> rejoint la visio.

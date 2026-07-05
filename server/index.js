@@ -2257,10 +2257,13 @@ app.post('/api/create-event-checkout', async (req, res) => {
 
 if (!global.eventPaidRecords) global.eventPaidRecords = {};
 
-app.get('/api/verify-event-payment', async (req, res) => {
+// Accepté en GET (query) ET en POST (body) : l'app appelle en POST → évite un 404
+// qui empêchait l'enregistrement du push_token de remboursement.
+app.all('/api/verify-event-payment', async (req, res) => {
   try {
+    if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ error: 'method_not_allowed' });
     const stripe = await getStripe();
-    const { checkout_session_id } = req.query;
+    const checkout_session_id = req.query.checkout_session_id || req.body?.checkout_session_id;
 
     if (!checkout_session_id) {
       return res.status(400).json({ error: 'Missing checkout_session_id' });
@@ -5854,7 +5857,7 @@ app.post('/api/celebrity/tax-info', async (req, res) => {
       return res.status(400).json({ error: 'tax_country and tax_id are required' });
     }
     const db = getSupabaseAdmin();
-    const { error } = await db
+    const { data: updated, error } = await db
       .from('celebrity_profiles')
       .update({
         tax_status,
@@ -5865,8 +5868,17 @@ app.post('/api/celebrity/tax-info', async (req, res) => {
         tax_info_completed: true,
         tax_info_updated_at: new Date().toISOString(),
       })
-      .eq('user_id', authUser.id);
+      .eq('user_id', authUser.id)
+      .select('user_id');
     if (error) throw error;
+    // 0 ligne modifiée = pas de profil célébrité → on NE prétend PAS avoir enregistré
+    // (sinon les infos DAC7 seraient perdues avec un faux succès).
+    if (!updated || updated.length === 0) {
+      return res.status(409).json({
+        error: 'no_celebrity_profile',
+        message: "Complète d'abord ton profil (nom public de personnalité) avant de renseigner tes informations fiscales.",
+      });
+    }
     return res.json({ ok: true });
   } catch (e) {
     console.error('[tax-info POST] error:', e.message);

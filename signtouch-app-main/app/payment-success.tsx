@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AlertCircle, Shield } from 'lucide-react-native';
@@ -107,8 +107,22 @@ export default function PaymentSuccessScreen() {
           <AlertCircle size={80} color="#f59e0b" />
           <Text style={styles.errorTitle}>{t('error') || 'Erreur'}</Text>
           <Text style={styles.message}>
-            {t('paymentVerificationFailed') || 'La vérification du paiement a échoué. Contactez le support.'}
+            {t('paymentVerificationFailed') || 'La vérification du paiement a échoué. Ton argent n\'a PAS été débité (simple pré-autorisation). Réessaie.'}
           </Text>
+          <TouchableOpacity
+            style={styles.primaryBtn}
+            onPress={() => { setError(false); verifyAndRedirect(); }}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.primaryBtnText}>{t('retry') || 'Réessayer'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondaryBtn}
+            onPress={() => router.replace('/activity' as any)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.secondaryBtnText}>{t('backToHome') || "Retour à l'accueil"}</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -160,4 +174,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
     lineHeight: 22,
   },
+  primaryBtn: {
+    marginTop: 28,
+    backgroundColor: '#10B981',
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 14,
+  },
+  primaryBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  secondaryBtn: { marginTop: 14, paddingVertical: 12, paddingHorizontal: 24 },
+  secondaryBtnText: { color: 'rgba(255,255,255,0.6)', fontSize: 15, textDecorationLine: 'underline' },
 });

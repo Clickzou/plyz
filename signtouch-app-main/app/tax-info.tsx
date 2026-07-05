@@ -73,12 +73,13 @@ export default function TaxInfoScreen() {
         }),
       });
       const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'save failed');
+      if (!res.ok || data.error) throw new Error(data.message || data.error || 'save failed');
       showAlert(t('saved') || 'Enregistré', t('taxInfoSavedMsg') || 'Informations enregistrées.');
       router.back();
-    } catch (e) {
+    } catch (e: any) {
       console.error('[TaxInfo] save error', e);
-      showAlert(t('error') || 'Erreur', t('taxInfoErrorMsg') || 'Erreur lors de l\'enregistrement.');
+      // Fait remonter le message serveur (ex : « complète d'abord ton profil »).
+      showAlert(t('error') || 'Erreur', e?.message && e.message !== 'save failed' ? e.message : (t('taxInfoErrorMsg') || 'Erreur lors de l\'enregistrement.'));
     } finally {
       setSaving(false);
     }
