@@ -112,6 +112,20 @@ const EVENT_FORM_STORAGE_KEY = '@create_event_form_data';
 const EVENT_PENDING_CREATE_KEY = '@create_event_pending';
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
+// Vérifie que le compte Stripe de la personnalité peut RÉELLEMENT encaisser
+// (charges_enabled), pas seulement qu'il existe. Sinon les fans pré-paient mais la
+// capture échoue → argent bloqué. Fail-open réseau (le serveur bloque aussi à la capture).
+async function ensureCanCharge(accountId: string | null): Promise<boolean> {
+  if (!accountId || !STRIPE_SERVER_URL) return true;
+  try {
+    const r = await authedFetch(`${STRIPE_SERVER_URL}/api/connect-account-status?account_id=${accountId}`);
+    const st = await r.json();
+    return st?.charges_enabled !== false;
+  } catch {
+    return true;
+  }
+}
+
 export default function CreateEventScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -239,6 +253,13 @@ export default function CreateEventScreen() {
         return;
       }
       if (effectiveStripeAccount !== stripeAccountId) setStripeAccountId(effectiveStripeAccount);
+      if (!(await ensureCanCharge(effectiveStripeAccount))) {
+        showAlert(
+          t('stripeNotReadyTitle' as any) || 'Paiements pas encore actifs',
+          t('stripeNotReadyMsg' as any) || "Ton compte de paiement n'est pas encore actif. Termine l'activation Stripe avant de créer un événement payant (sinon les fans paieraient sans que tu puisses être crédité)."
+        );
+        return;
+      }
     }
 
     setIsCreating(true);
@@ -497,6 +518,13 @@ export default function CreateEventScreen() {
         return;
       }
       if (effectiveStripeAccount !== stripeAccountId) setStripeAccountId(effectiveStripeAccount);
+      if (!(await ensureCanCharge(effectiveStripeAccount))) {
+        showAlert(
+          t('stripeNotReadyTitle' as any) || 'Paiements pas encore actifs',
+          t('stripeNotReadyMsg' as any) || "Ton compte de paiement n'est pas encore actif. Termine l'activation Stripe avant de créer un événement payant (sinon les fans paieraient sans que tu puisses être crédité)."
+        );
+        return;
+      }
     }
 
     setIsCreating(true);

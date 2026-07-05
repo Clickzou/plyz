@@ -256,7 +256,10 @@ export default function JoinLiveSessionScreen() {
         const distinctFanIds = new Set(
           (allEntries || []).map((e: { fan_id: string }) => e.fan_id)
         );
-        const alreadyInQueue = !!(user?.id && distinctFanIds.has(user.id));
+        // On compare avec le MÊME format que celui stocké en base (`fan_user_<id>`),
+        // sinon un fan qui revient est vu comme nouveau → fausse « session pleine »
+        // + double-comptage de sa place.
+        const alreadyInQueue = distinctFanIds.has(fanId);
         if (distinctFanIds.size >= s.max_slots && !alreadyInQueue) {
           showAlert(t('error'), t('liveSessionFull'));
           setIsLoading(false);

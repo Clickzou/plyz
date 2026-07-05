@@ -219,51 +219,25 @@ export default function CelebrityDetailScreen() {
   };
 
   const handleRegisterEvent = (event: LiveEvent) => {
-    if (!user) {
-      showAlert(t('mySpaceSignInTitle') || 'Connectez-vous pour vous inscrire');
+    // On route vers le flux de participation ÉPROUVÉ (join-live-session auto-charge
+    // via le code, gère le paiement + la file d'attente + la reprise). L'ancien
+    // push vers /purchase-session envoyait des params incomplets (ni celebrityId ni
+    // flow) → le fan payait puis atterrissait sur le mauvais écran, hors file.
+    if (!event.code) {
+      showAlert(t('liveSessionNotFound') || 'Événement introuvable.');
       return;
     }
-    if (event.price_cents > 0 && celebrity?.stripe_account_id) {
-      router.push({
-        pathname: '/purchase-session',
-        params: {
-          sessionCode: event.code,
-          sessionId: event.id,
-          priceCents: String(event.price_cents),
-          celebrityName: event.celebrity_name || celebrity?.stage_name || '',
-          celebrityStripeAccountId: celebrity?.stripe_account_id || '',
-        },
-      } as any);
-    } else {
-      Alert.alert(
-        t('registerEvent' as any) || "S'inscrire",
-        t('registerEventConfirm' as any) || 'Voulez-vous vous inscrire à cet événement ?',
-        [
-          { text: t('cancel' as any) || 'Annuler', style: 'cancel' },
-          { text: t('confirm' as any) || 'Confirmer', onPress: () => Alert.alert('', t('registerEventSuccess' as any) || 'Inscription confirmée !') },
-        ]
-      );
-    }
+    router.push({ pathname: '/join-live-session', params: { code: event.code } } as any);
   };
 
   const handleRegisterPostEvent = (post: any) => {
-    if (!user) {
-      Alert.alert('', t('mySpaceSignInTitle') || 'Connectez-vous pour vous inscrire');
-      return;
-    }
-    if (post.price_cents > 0 && celebrity?.stripe_account_id) {
-      router.push({
-        pathname: '/purchase-session',
-        params: {
-          sessionCode: post.id,
-          sessionId: post.id,
-          priceCents: String(post.price_cents),
-          celebrityName: celebrity?.stage_name || '',
-          celebrityStripeAccountId: celebrity?.stripe_account_id || '',
-        },
-      } as any);
+    // Un post « événement » possède un code de session → on rejoint via le flux
+    // éprouvé ; sinon on ouvre le détail du post (plus de fausse « Inscription
+    // confirmée » qui n'enregistrait rien).
+    if (post?.code) {
+      router.push({ pathname: '/join-live-session', params: { code: post.code } } as any);
     } else {
-      Alert.alert('', t('registerEventSuccess' as any) || 'Inscription confirmée !');
+      openPostDetail(post);
     }
   };
 

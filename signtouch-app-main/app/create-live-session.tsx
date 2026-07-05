@@ -92,6 +92,20 @@ const PLYZ_FEES = 0.15; // 15% Plyz
 const STRIPE_PERCENT = 0.029; // 2.9% Stripe
 const STRIPE_FIXED = 30; // 0.30€ par transaction (en centimes)
 
+// Vérifie que le compte Stripe peut RÉELLEMENT encaisser (charges_enabled).
+// Fail-open réseau (le serveur bloque aussi à la capture en mode live).
+async function ensureCanCharge(accountId: string | null): Promise<boolean> {
+  const SERVER = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
+  if (!accountId || !SERVER) return true;
+  try {
+    const r = await authedFetch(`${SERVER}/api/connect-account-status?account_id=${accountId}`);
+    const st = await r.json();
+    return st?.charges_enabled !== false;
+  } catch {
+    return true;
+  }
+}
+
 export default function CreateLiveSessionScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -316,6 +330,14 @@ export default function CreateLiveSessionScreen() {
     const existingAccountId = stripeAccountId || await checkStripeConnectStatus();
     if (!existingAccountId) {
       setShowStripeConnect(true);
+      return;
+    }
+    // Il doit aussi pouvoir ENCAISSER (pas seulement exister).
+    if (!(await ensureCanCharge(existingAccountId))) {
+      showAlert(
+        t('stripeNotReadyTitle' as any) || 'Paiements pas encore actifs',
+        t('stripeNotReadyMsg' as any) || "Ton compte de paiement n'est pas encore actif. Termine l'activation Stripe avant de lancer une session payante (sinon les fans paieraient sans que tu puisses être crédité)."
+      );
       return;
     }
 
