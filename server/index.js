@@ -3608,10 +3608,13 @@ app.get('/api/celebrities', async (req, res) => {
   }
 });
 
-app.get('/api/celebrity/:id', async (req, res) => {
+app.get('/api/celebrity/:id', async (req, res, next) => {
   try {
     const db = getSupabaseAdmin();
     const { id } = req.params;
+    // `/api/celebrity/tax-info` est une AUTRE route (enregistrée plus bas) : sans
+    // ça, `:id` la capturerait (id="tax-info") et l'écran fiscal planterait.
+    if (id === 'tax-info') return next();
 
     const { data: celeb, error: celebError } = await db
       .from('celebrity_profiles')

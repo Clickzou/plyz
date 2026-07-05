@@ -665,13 +665,17 @@ export default function JoinLiveSessionScreen() {
 
     setIsLoading(true);
     try {
+      // Token push : sans lui, le fan ne reçoit PAS la notif « c'est ton tour »
+      // quand la célébrité l'appelle (app en arrière-plan).
+      const joinPushToken = await getExpoPushToken().catch(() => null);
       const entry = await joinSessionQueue(
         sess.id,
         fanId,
         queueFanName,
         photoUrl,
         queueMessage,
-        checkoutSessionIdRef.current
+        checkoutSessionIdRef.current,
+        joinPushToken
       );
 
       if (!entry) {

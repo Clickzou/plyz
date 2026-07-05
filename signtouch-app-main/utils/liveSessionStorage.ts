@@ -570,7 +570,8 @@ export const joinSessionQueue = async (
   fanName: string,
   photoUrl: string | null,
   message: string | null,
-  checkoutSessionId?: string | null
+  checkoutSessionId?: string | null,
+  pushToken?: string | null
 ): Promise<QueueEntry | null> => {
   try {
     // ANTI-DOUBLON : si ce fan a déjà une entrée ACTIVE dans cette session
@@ -588,19 +589,23 @@ export const joinSessionQueue = async (
         .maybeSingle();
       if (existingActive) {
         console.log('[Queue] Reusing existing active entry for fan:', fanId);
-        // Si l'entrée existante n'a pas encore de checkout_session_id, on le renseigne
-        // (cas où le fan paye après une 1re tentative sans paiement).
-        if (checkoutSessionId && !existingActive.checkout_session_id) {
+        // Renseigne les champs manquants sur l'entrée existante : checkout_session_id
+        // (paiement après 1re tentative) ET push_token (indispensable pour la notif
+        // « c'est ton tour »).
+        const patch: any = {};
+        if (checkoutSessionId && !existingActive.checkout_session_id) patch.checkout_session_id = checkoutSessionId;
+        if (pushToken && !existingActive.push_token) patch.push_token = pushToken;
+        if (Object.keys(patch).length > 0) {
           try {
             const { data: updated } = await supabase
               .from('session_queue')
-              .update({ checkout_session_id: checkoutSessionId })
+              .update(patch)
               .eq('id', existingActive.id)
               .select()
               .single();
             if (updated) return updated as QueueEntry;
           } catch (e) {
-            console.warn('[Queue] Could not backfill checkout_session_id:', e);
+            console.warn('[Queue] Could not backfill queue entry:', e);
           }
         }
         return existingActive as QueueEntry;
@@ -688,6 +693,12 @@ export const joinSessionQueue = async (
     }
     if (checkoutSessionId) {
       insertData.checkout_session_id = checkoutSessionId;
+    }
+    // ⚠️ push_token = INDISPENSABLE : sans lui, quand la célébrité appelle ce fan,
+    // aucune notification « c'est ton tour » ne part (fan en arrière-plan jamais
+    // connecté). Cause racine du bug « fan appelé jamais connecté ».
+    if (pushToken) {
+      insertData.push_token = pushToken;
     }
 
     const { data, error } = await supabase
