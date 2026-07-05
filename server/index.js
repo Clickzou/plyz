@@ -5718,8 +5718,13 @@ function invMoney(cents, currency) {
   const sym = { eur: '€', usd: '$', gbp: '£' }[String(currency || 'eur').toLowerCase()] || (currency || '');
   return (Number(cents || 0) / 100).toFixed(2).replace('.', ',') + ' ' + sym;
 }
-function renderInvoiceHtml(inv, role) {
-  // 'seller' = vue célébrité (montant − commission = net) ; sinon vue fan (total payé).
+const INVOICE_STYLE = `<style>body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111;max-width:720px;margin:0 auto;padding:32px;font-size:14px;line-height:1.5}h1{font-size:22px;margin:0 0 4px}.muted{color:#666}.row{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}.box{border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin:12px 0}.total{font-size:18px;font-weight:700}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{text-align:left;padding:8px;border-bottom:1px solid #eee}th{color:#666;font-weight:600}.right{text-align:right}.small{font-size:12px;color:#666}</style>`;
+// Coordonnées légales de la plateforme (émetteur des factures de commission).
+const CLICKZOU_LEGAL = 'Plyz — CLICKZOU (SAS), 5 impasse de la Colombette, 31000 Toulouse, France · SIREN 950 814 426 · TVA FR 83 950 814 426';
+
+function renderInvoiceHtml(inv, role, type) {
+  // type='commission' → facture CLICKZOU→célébrité (mise en relation, TVA 20%).
+  // Sinon 'prestation' : facture célébrité→fan (role 'seller'=net / sinon total payé).
   const isSeller = role === 'seller';
   // Commission Plyz : CLICKZOU (SAS) assujettie → TVA 20 %. La commission collectée
   // est un montant TTC → on l'éclate en HT + TVA (décision JC 2026-07-05).
@@ -5727,6 +5732,9 @@ function renderInvoiceHtml(inv, role) {
   const commHT = Math.round(commTTC / 1.2);
   const commTVA = commTTC - commHT;
   const s = inv.seller_snapshot || {};
+  // Mention TVA de la PRESTATION : si la célébrité n'a pas de n° de TVA → franchise
+  // en base (cas le plus fréquent) → mention obligatoire art. 293 B du CGI.
+  const vatMention = (inv.seller_snapshot || {}).vat_number ? '' : 'TVA non applicable, art. 293 B du CGI.';
   const b = inv.buyer_snapshot || {};
   const dateStr = new Date(inv.prestation_date || Date.now()).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
   const sellerLegal = [
@@ -5737,8 +5745,33 @@ function renderInvoiceHtml(inv, role) {
     s.vat_number ? ('TVA : ' + invEscape(s.vat_number)) : '',
     s.tax_id ? ('NIF : ' + invEscape(s.tax_id)) : '',
   ].filter(Boolean).join('<br>');
-  return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Facture ${invEscape(inv.invoice_number)}</title>
-<style>body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111;max-width:720px;margin:0 auto;padding:32px;font-size:14px;line-height:1.5}h1{font-size:22px;margin:0 0 4px}.muted{color:#666}.row{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}.box{border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin:12px 0}.total{font-size:18px;font-weight:700}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{text-align:left;padding:8px;border-bottom:1px solid #eee}th{color:#666;font-weight:600}.right{text-align:right}.small{font-size:12px;color:#666}</style></head>
+
+  // ===== FACTURE DE COMMISSION (CLICKZOU → célébrité) =====
+  if (type === 'commission') {
+    const comNum = String(inv.invoice_number || '').replace(/^PLYZ-/, 'CLKZ-');
+    return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Facture de commission ${invEscape(comNum)}</title>${INVOICE_STYLE}</head>
+<body>
+<h1>FACTURE DE COMMISSION</h1>
+<div class="muted">N° ${invEscape(comNum)} — ${dateStr}</div>
+<div class="box small">${CLICKZOU_LEGAL}</div>
+<div class="row">
+  <div class="box" style="flex:1;min-width:240px"><div class="muted">Émetteur</div><strong>Plyz — CLICKZOU (SAS)</strong></div>
+  <div class="box" style="flex:1;min-width:240px"><div class="muted">Client (Personnalité)</div><strong>${invEscape(s.name || 'Personnalité')}</strong></div>
+</div>
+<table><thead><tr><th>Désignation</th><th>Date</th><th class="right">Montant HT</th></tr></thead>
+<tbody><tr><td>Commission de mise en relation (Plyz) — prestation ${invEscape(inv.invoice_number || '')}</td><td>${dateStr}</td><td class="right">${invMoney(commHT, inv.currency)}</td></tr></tbody></table>
+<div class="box">
+  <div class="row"><div class="muted">Total HT</div><div>${invMoney(commHT, inv.currency)}</div></div>
+  <div class="row"><div class="muted">TVA (20 %)</div><div>${invMoney(commTVA, inv.currency)}</div></div>
+  <div class="row total" style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:10px"><div>Total TTC</div><div>${invMoney(commTTC, inv.currency)}</div></div>
+</div>
+<div class="box small">Commission de service prélevée par Plyz au titre de la mise en relation, réglée par compensation sur le versement de la prestation. TVA au taux normal (20 %).</div>
+<div class="small">Plyz est un service édité par CLICKZOU (SAS) — contact@plyz.io — Toulouse, France.</div>
+</body></html>`;
+  }
+
+  // ===== FACTURE DE PRESTATION (Célébrité → Fan) =====
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Facture ${invEscape(inv.invoice_number)}</title>${INVOICE_STYLE}</head>
 <body>
 <h1>FACTURE</h1>
 <div class="muted">N° ${invEscape(inv.invoice_number)} — ${dateStr}</div>
@@ -5749,6 +5782,7 @@ function renderInvoiceHtml(inv, role) {
 </div>
 <table><thead><tr><th>Prestation</th><th>Date</th><th class="right">Montant</th></tr></thead>
 <tbody><tr><td>${invEscape(inv.prestation_label || 'Prestation')}</td><td>${dateStr}</td><td class="right">${invMoney(inv.amount_cents, inv.currency)}</td></tr></tbody></table>
+${vatMention ? `<div class="small" style="margin:-4px 0 8px">${vatMention}</div>` : ''}
 ${isSeller ? `<div class="box">
   <div class="row"><div class="muted">Montant de la prestation (payé par le client)</div><div>${invMoney(inv.amount_cents, inv.currency)}</div></div>
   <div class="row"><div class="muted">Commission Plyz — mise en relation<br><span style="font-size:12px">${invMoney(commHT, inv.currency)} HT + ${invMoney(commTVA, inv.currency)} TVA (20 %)</span></div><div>− ${invMoney(commTTC, inv.currency)}</div></div>
@@ -5849,17 +5883,18 @@ app.get('/api/invoices/export', async (req, res) => {
     if (cutoff) q = q.gte('created_at', cutoff);
     const { data, error } = await q;
     if (error) throw error;
-    const rows = data || [];
+    // ?type=commission → factures de commission (seul le vendeur/célébrité en a).
+    const isCommission = req.query.type === 'commission';
+    let rows = data || [];
+    if (isCommission) rows = rows.filter((inv) => String(inv.celebrity_id) === String(authUser.id));
     if (rows.length === 0) return res.json({ html: null, count: 0 });
-    const styleMatch = renderInvoiceHtml(rows[0], 'buyer').match(/<style>[\s\S]*?<\/style>/);
-    const style = styleMatch ? styleMatch[0] : '';
     const parts = rows.map((inv) => {
       const role = String(inv.celebrity_id) === String(authUser.id) ? 'seller' : 'buyer';
-      const full = renderInvoiceHtml(inv, role);
+      const full = renderInvoiceHtml(inv, role, isCommission ? 'commission' : 'prestation');
       const body = (full.match(/<body>([\s\S]*)<\/body>/) || [null, ''])[1];
       return `<div style="page-break-after:always;border-bottom:2px dashed #ccc;padding-bottom:28px;margin-bottom:28px">${body}</div>`;
     });
-    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Factures Plyz</title>${style}</head><body>${parts.join('')}</body></html>`;
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Factures Plyz</title>${INVOICE_STYLE}</head><body>${parts.join('')}</body></html>`;
     return res.json({ html, count: rows.length });
   } catch (e) {
     console.error('[invoices export] error:', e.message);
@@ -5882,15 +5917,19 @@ app.get('/api/invoice/:id/download', async (req, res) => {
     // Rôle du lecteur : la célébrité (vendeur) voit le NET après commission ;
     // le fan (acheteur) voit le TOTAL payé.
     const viewerRole = String(inv.celebrity_id) === String(authUser.id) ? 'seller' : 'buyer';
+    // ?type=commission → facture de commission CLICKZOU→célébrité (réservée au vendeur).
+    const isCommission = req.query.type === 'commission';
     // On rend toujours le HTML : renvoyé au client pour un aperçu FIABLE dans le
     // WebView (source={{ html }}), car les URLs signées Supabase peuvent être
     // servies en text/plain → sinon le HTML s'affiche « brut ».
-    const html = renderInvoiceHtml(inv, viewerRole);
-    // On (re)génère TOUJOURS le fichier stocké pour qu'il reflète le format actuel
-    // (les anciennes factures avaient un HTML figé sans le détail « net »).
-    const htmlPath = inv.html_path || ((inv.celebrity_id || 'x') + '/' + inv.invoice_number + '.html');
+    const html = renderInvoiceHtml(inv, viewerRole, isCommission ? 'commission' : 'prestation');
+    // On (re)génère TOUJOURS le fichier stocké pour qu'il reflète le format actuel.
+    // Chemin distinct pour la commission (ne pas écraser la facture de prestation).
+    const htmlPath = isCommission
+      ? ((inv.celebrity_id || 'x') + '/' + inv.invoice_number + '-com.html')
+      : (inv.html_path || ((inv.celebrity_id || 'x') + '/' + inv.invoice_number + '.html'));
     await db.storage.from('invoices').upload(htmlPath, Buffer.from(html, 'utf8'), { contentType: 'text/html; charset=utf-8', upsert: true });
-    if (!inv.html_path) await db.from('invoices').update({ html_path: htmlPath }).eq('id', inv.id);
+    if (!isCommission && !inv.html_path) await db.from('invoices').update({ html_path: htmlPath }).eq('id', inv.id);
     const { data: signed, error } = await db.storage.from('invoices').createSignedUrl(htmlPath, 300);
     if (error) throw error;
     return res.json({ url: signed.signedUrl, html });
