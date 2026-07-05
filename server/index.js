@@ -6435,10 +6435,50 @@ async function reconcileMissingInvoices() {
   } catch (e) { console.warn('[Reconcile/video]', e.message); }
 }
 
+// LIBÉRATION DES PRÉ-AUTORISATIONS des sessions live TERMINÉES : un fan resté
+// en file (called/in_call/waiting) sans que son appel ait eu lieu garde une
+// pré-autorisation Stripe active (argent bloqué ~7 j). À la fin de session,
+// personne ne libère ces holds. Ce sweep les annule (cancel PI) — idempotent
+// via le drapeau hold_released. Ne touche JAMAIS un paiement déjà capturé.
+async function releaseEndedSessionHolds() {
+  try {
+    const admin = getSupabaseAdmin();
+    const stripe = await getStripe();
+    const cutoff = new Date(Date.now() - 7 * 86400000).toISOString();
+    const { data: sessions } = await admin.from('live_sessions')
+      .select('id').eq('status', 'ended').gte('started_at', cutoff).limit(100);
+    const ids = (sessions || []).map((s) => String(s.id));
+    if (!ids.length) return;
+    const { data: entries } = await admin.from('session_queue')
+      .select('id, payment_intent_id, payment_captured, hold_released')
+      .in('session_id', ids)
+      .not('payment_intent_id', 'is', null)
+      .neq('hold_released', true)
+      .limit(200);
+    for (const e of (entries || [])) {
+      if (e.payment_captured === true) { // déjà encaissé → on marque juste comme traité
+        await admin.from('session_queue').update({ hold_released: true }).eq('id', e.id);
+        continue;
+      }
+      try {
+        const pi = await stripe.paymentIntents.retrieve(e.payment_intent_id);
+        if (pi.status === 'requires_capture') {
+          await stripe.paymentIntents.cancel(e.payment_intent_id);
+          console.log('[HoldSweep] pré-autorisation libérée (session terminée):', e.payment_intent_id);
+        }
+        await admin.from('session_queue').update({ hold_released: true }).eq('id', e.id);
+      } catch (err) {
+        console.warn('[HoldSweep] entry', e.id, err.message);
+      }
+    }
+  } catch (e) { console.warn('[HoldSweep]', e.message); }
+}
+
 async function runNotificationWorker() {
   try {
     await processPushOutbox();
     await reconcileMissingInvoices();
+    await releaseEndedSessionHolds();
     await sendEventReminders('event_sessions', 'starts_at', 'created_by', 'event_paid_fans', 'event_session_id', 'title', 'Ton événement', 60, 'reminded_1h');
     await sendEventReminders('event_sessions', 'starts_at', 'created_by', 'event_paid_fans', 'event_session_id', 'title', 'Ton événement', 2, 'reminded_2m');
     await sendEventReminders('live_sessions', 'scheduled_at', 'celebrity_id', 'session_queue', 'session_id', null, 'Ton live vidéo', 60, 'reminded_1h');

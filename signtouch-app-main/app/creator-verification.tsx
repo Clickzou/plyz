@@ -128,7 +128,7 @@ export default function CreatorVerificationScreen() {
         } else if (data.error === 'already_verified') {
           Alert.alert('', t('creatorVerifAlreadyVerified' as any) || 'Votre profil cr\u00e9ateur est d\u00e9j\u00e0 v\u00e9rifi\u00e9.');
         } else {
-          Alert.alert('Erreur', data.error || data.message);
+          Alert.alert(t('error') || 'Erreur', data.error || data.message || 'Une erreur est survenue.');
         }
         setSubmitting(false);
         return;
@@ -148,7 +148,7 @@ export default function CreatorVerificationScreen() {
         );
       }
     } catch (e: any) {
-      Alert.alert('Erreur', e.message);
+      Alert.alert(t('error') || 'Erreur', e?.message || 'Une erreur est survenue.');
     }
     setSubmitting(false);
   };

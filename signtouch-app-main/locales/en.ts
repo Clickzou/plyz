@@ -1662,6 +1662,7 @@ export default {
   docsEmptyPeriod: "No invoice for this period.",
   docsExportTitle: "All my invoices",
   dedicationEventsHistory: "Dedication events",
+  notVerifiedToCreate: "Your account must be verified to create a live session.",
   stripeNotReadyTitle: "Payments not active yet",
   stripeNotReadyMsg: "Your payout account isn't active yet. Finish the Stripe activation before creating a paid event (otherwise fans would pay but you couldn't be credited).",
   docsRevenueTotal: "Your total billed earnings",

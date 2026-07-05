@@ -364,6 +364,11 @@ export default function CreateLiveSessionScreen() {
       console.log('[CreateSession] Calling server to create session, celebrityId:', celebrityId);
       
       const scheduledAt = getScheduledStartDate();
+      // Si le serveur REFUSE explicitement (403 = compte non vérifié / non autorisé),
+      // on NE doit PAS contourner via un insert Supabase direct (sinon le garde-fou
+      // « vérifié » serait inutile). Le repli direct ne sert que pour une vraie
+      // erreur réseau/transitoire.
+      let serverRefused = false;
       try {
         const response = await authedFetch(`${SERVER_URL}/api/create-session`, {
           method: 'POST',
@@ -380,21 +385,33 @@ export default function CreateLiveSessionScreen() {
             scheduled_at: scheduledAt || null,
           }),
         });
-        
+
         const result = await response.json();
-        
+
         if (response.ok && result.session) {
           session = result.session;
           console.log('[CreateSession] Server created session successfully:', session.id, session.code);
         } else {
           console.error('[CreateSession] Server error:', JSON.stringify(result));
+          if (response.status === 403 || response.status === 401) {
+            serverRefused = true;
+            showAlert(
+              t('error') || 'Erreur',
+              result?.message || result?.error || (t('notVerifiedToCreate' as any) || 'Ton compte doit être vérifié pour créer une session live.')
+            );
+          }
         }
       } catch (serverError) {
         console.error('[CreateSession] Server call failed:', serverError);
       }
-      
+
+      if (serverRefused) {
+        setIsCreating(false);
+        return;
+      }
+
       if (!session) {
-        console.log('[CreateSession] Server failed, trying direct Supabase insert...');
+        console.log('[CreateSession] Server failed (transient), trying direct Supabase insert...');
         session = await createLiveSession(
           celebrityId,
           celebrityName.trim(),

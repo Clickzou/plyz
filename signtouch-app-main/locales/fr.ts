@@ -1646,6 +1646,7 @@ export default {
   docsEmptyPeriod: "Aucune facture sur cette période.",
   docsExportTitle: "Toutes mes factures",
   dedicationEventsHistory: "Événements dédicace",
+  notVerifiedToCreate: "Ton compte doit être vérifié pour créer une session live.",
   stripeNotReadyTitle: "Paiements pas encore actifs",
   stripeNotReadyMsg: "Ton compte de paiement n'est pas encore actif. Termine l'activation Stripe avant de créer un événement payant (sinon les fans paieraient sans que tu puisses être crédité).",
   docsRevenueTotal: "Total de tes revenus facturés",
