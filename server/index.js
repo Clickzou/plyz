@@ -6362,9 +6362,66 @@ async function sendEventReminders(table, timeCol, creatorCol, fanTable, fanKeyCo
   }
 }
 
+// RÉCONCILIATION FACTURES : garantit que CHAQUE paiement capturé a une facture
+// (conformité mandat art. 289). La création à la capture est « best-effort » ; si
+// elle échoue (upload, transitoire…), on la rattrape ici, idempotent via
+// transaction_ref. Alerte si une capture reste sans facture > 10 min.
+async function reconcileMissingInvoices() {
+  const admin = getSupabaseAdmin();
+  const alertOld = (createdAt, refLabel) => {
+    const ageMin = (Date.now() - new Date(createdAt).getTime()) / 60000;
+    if (ageMin > 10) recordServiceAlert('billing', 'critical', 'Paiement capturé SANS facture depuis ' + Math.round(ageMin) + ' min : ' + refLabel);
+  };
+  // --- 1) Dédicaces événement ---
+  try {
+    const { data: caps } = await admin.from('event_paid_fans')
+      .select('event_session_id, fan_id, amount_cents, created_at')
+      .eq('payment_captured', true).not('amount_cents', 'is', null)
+      .order('created_at', { ascending: false }).limit(200);
+    const rows = (caps || []).filter((c) => c.event_session_id && c.fan_id);
+    if (rows.length) {
+      const refs = rows.map((c) => 'evt_' + c.event_session_id + '_' + c.fan_id);
+      const { data: existRows } = await admin.from('invoices').select('transaction_ref').in('transaction_ref', refs);
+      const have = new Set((existRows || []).map((r) => r.transaction_ref));
+      for (const c of rows) {
+        const ref = 'evt_' + c.event_session_id + '_' + c.fan_id;
+        if (have.has(ref)) continue;
+        const { data: ev } = await admin.from('event_sessions').select('created_by, title, join_code').eq('id', c.event_session_id).maybeSingle();
+        const label = ev?.title ? ('Dédicace — événement « ' + ev.title + ' »' + (ev.join_code ? ' (code ' + ev.join_code + ')' : '')) : 'Dédicace en événement';
+        const inv = await createInvoice({ transactionRef: ref, fanId: c.fan_id, celebrityId: ev?.created_by || null, prestationType: 'event_dedication', prestationLabel: label, amountCents: c.amount_cents, currency: 'eur' });
+        if (inv) console.log('[Reconcile] facture dédicace rattrapée:', ref);
+        else alertOld(c.created_at, ref);
+      }
+    }
+  } catch (e) { console.warn('[Reconcile/dedicace]', e.message); }
+  // --- 2) Appels vidéo ---
+  try {
+    const { data: vcaps } = await admin.from('session_queue')
+      .select('id, fan_id, session_id, created_at')
+      .eq('payment_captured', true)
+      .order('created_at', { ascending: false }).limit(200);
+    const rows = vcaps || [];
+    if (rows.length) {
+      const refs = rows.map((q) => 'vc_' + q.id);
+      const { data: existRows } = await admin.from('invoices').select('transaction_ref').in('transaction_ref', refs);
+      const have = new Set((existRows || []).map((r) => r.transaction_ref));
+      for (const q of rows) {
+        const ref = 'vc_' + q.id;
+        if (have.has(ref)) continue;
+        const { data: ls } = await admin.from('live_sessions').select('celebrity_id, price_cents').eq('id', q.session_id).maybeSingle();
+        if (!ls || !ls.price_cents) continue; // session gratuite → pas de facture
+        const inv = await createInvoice({ transactionRef: ref, fanId: q.fan_id, celebrityId: ls.celebrity_id || null, prestationType: 'video_call', prestationLabel: 'Appel vidéo privé', amountCents: ls.price_cents, currency: 'eur' });
+        if (inv) console.log('[Reconcile] facture vidéo rattrapée:', ref);
+        else alertOld(q.created_at, ref);
+      }
+    }
+  } catch (e) { console.warn('[Reconcile/video]', e.message); }
+}
+
 async function runNotificationWorker() {
   try {
     await processPushOutbox();
+    await reconcileMissingInvoices();
     await sendEventReminders('event_sessions', 'starts_at', 'created_by', 'event_paid_fans', 'event_session_id', 'title', 'Ton événement', 60, 'reminded_1h');
     await sendEventReminders('event_sessions', 'starts_at', 'created_by', 'event_paid_fans', 'event_session_id', 'title', 'Ton événement', 2, 'reminded_2m');
     await sendEventReminders('live_sessions', 'scheduled_at', 'celebrity_id', 'session_queue', 'session_id', null, 'Ton live vidéo', 60, 'reminded_1h');
