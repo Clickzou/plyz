@@ -5879,16 +5879,21 @@ app.get('/api/invoices/export', async (req, res) => {
     const period = String(req.query.period || 'all');
     const days = DAYS[period] !== undefined ? DAYS[period] : null;
     const cutoff = days != null ? new Date(Date.now() - days * 86400000).toISOString() : null;
+    // L'admin (CLICKZOU) peut exporter TOUTES les factures (ex. commissions à
+    // remettre à l'expert-comptable), pas seulement les siennes.
+    const ADMIN_UID = 'e7c06a67-2cd0-4aa1-bbf6-477fbb162ce8';
+    const isAdmin = String(authUser.id) === ADMIN_UID;
     let q = db.from('invoices').select('*')
-      .or(`fan_id.eq.${authUser.id},celebrity_id.eq.${authUser.id}`)
       .order('created_at', { ascending: false }).limit(500);
+    if (!isAdmin) q = q.or(`fan_id.eq.${authUser.id},celebrity_id.eq.${authUser.id}`);
     if (cutoff) q = q.gte('created_at', cutoff);
     const { data, error } = await q;
     if (error) throw error;
-    // ?type=commission → factures de commission (seul le vendeur/célébrité en a).
+    // ?type=commission → factures de commission (seul le vendeur/célébrité en a ;
+    // l'admin les voit toutes).
     const isCommission = req.query.type === 'commission';
     let rows = data || [];
-    if (isCommission) rows = rows.filter((inv) => String(inv.celebrity_id) === String(authUser.id));
+    if (isCommission && !isAdmin) rows = rows.filter((inv) => String(inv.celebrity_id) === String(authUser.id));
     if (rows.length === 0) return res.json({ html: null, count: 0 });
     const parts = rows.map((inv) => {
       const role = String(inv.celebrity_id) === String(authUser.id) ? 'seller' : 'buyer';
