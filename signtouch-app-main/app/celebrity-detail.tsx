@@ -172,50 +172,47 @@ export default function CelebrityDetailScreen() {
 
   const handleBookCall = () => {
     if (!celebrity) return;
-    if (!user) {
-      showAlert(t('mySpaceSignInTitle') || 'Please sign in first');
-      return;
-    }
-    if (!celebrity.stripe_account_id) {
-      showAlert(t('celebrityNoPayments') || 'This celebrity has not set up payments yet');
-      return;
-    }
-    const p = celebrity.pricing;
-    if (!p) return;
-    router.push({
-      pathname: '/book-video-call',
-      params: {
-        celebrityId: celebrity.user_id,
-        celebrityName: celebrity.stage_name,
-        priceCents: String(p.video_call_price_cents),
-        currency: p.currency,
-        durationMinutes: String(p.video_call_duration_minutes),
-        unit: p.video_call_unit,
-      },
-    } as any);
+    // Déconnecté → on PROPOSE la connexion (au lieu d'une impasse) via requireAuth.
+    requireAuth(() => {
+      if (!celebrity.stripe_account_id) {
+        showAlert(t('celebrityNoPayments') || 'This celebrity has not set up payments yet');
+        return;
+      }
+      const p = celebrity.pricing;
+      if (!p) return;
+      router.push({
+        pathname: '/book-video-call',
+        params: {
+          celebrityId: celebrity.user_id,
+          celebrityName: celebrity.stage_name,
+          priceCents: String(p.video_call_price_cents),
+          currency: p.currency,
+          durationMinutes: String(p.video_call_duration_minutes),
+          unit: p.video_call_unit,
+        },
+      } as any);
+    });
   };
 
   const handleAutograph = () => {
     if (!celebrity) return;
-    if (!user) {
-      showAlert(t('mySpaceSignInTitle') || 'Please sign in first');
-      return;
-    }
-    if (!celebrity.stripe_account_id) {
-      showAlert(t('celebrityNoPayments') || 'This celebrity has not set up payments yet');
-      return;
-    }
-    const p = celebrity.pricing;
-    if (!p) return;
-    router.push({
-      pathname: '/request-autograph',
-      params: {
-        celebrityId: celebrity.user_id,
-        celebrityName: celebrity.stage_name,
-        priceCents: String(p.autograph_price_cents),
-        currency: p.currency,
-      },
-    } as any);
+    requireAuth(() => {
+      if (!celebrity.stripe_account_id) {
+        showAlert(t('celebrityNoPayments') || 'This celebrity has not set up payments yet');
+        return;
+      }
+      const p = celebrity.pricing;
+      if (!p) return;
+      router.push({
+        pathname: '/request-autograph',
+        params: {
+          celebrityId: celebrity.user_id,
+          celebrityName: celebrity.stage_name,
+          priceCents: String(p.autograph_price_cents),
+          currency: p.currency,
+        },
+      } as any);
+    });
   };
 
   const handleRegisterEvent = (event: LiveEvent) => {

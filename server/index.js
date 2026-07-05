@@ -2029,7 +2029,7 @@ app.get('/api/stripe/express/account-link', async (req, res) => {
       console.warn('[Connect Express] ownership check failed (allowing, onboarding):', ownErr.message);
     }
 
-    const baseUrl = `https://${req.headers.host || '3aa55d0d-178c-4720-bdee-f8cea294f71b-00-3sqzk84ygwh7z.picard.replit.dev'}`;
+    const baseUrl = `https://${req.headers.host || 'plyz-app.replit.app'}`;
 
     const accountLink = await stripe.accountLinks.create({
       account: account_id,

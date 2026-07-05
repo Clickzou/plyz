@@ -9,6 +9,7 @@ import { ArrowLeft, Video, Clock, CreditCard, ChevronRight, Shield } from 'lucid
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { showAlert } from '@/utils/alertHelper';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -18,6 +19,7 @@ export default function BookVideoCallScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user, session } = useAuth();
+  const { requireAuth } = useAuthPrompt();
   const params = useLocalSearchParams<{
     celebrityId: string;
     celebrityName: string;
@@ -53,10 +55,8 @@ export default function BookVideoCallScreen() {
   };
 
   const handlePay = async () => {
-    if (!user) {
-      showAlert(t('info') || 'Info', t('mySpaceSignInTitle') || 'Please sign in first');
-      return;
-    }
+    // Déconnecté → on propose la connexion puis on relance le paiement.
+    if (!user) { requireAuth(() => handlePay()); return; }
     try {
       setLoading(true);
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -73,9 +73,9 @@ export default function BookVideoCallScreen() {
           message: message.trim() || undefined,
         }),
       });
-      const data = await res.json();
-      if (data.error) {
-        showAlert(t('error') || 'Error', data.error);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) {
+        showAlert(t('error') || 'Error', data.message || data.error || (t('bookingError') || 'Failed to create booking'));
         return;
       }
       if (data.checkout_url) {
@@ -84,6 +84,9 @@ export default function BookVideoCallScreen() {
         } else {
           Linking.openURL(data.checkout_url);
         }
+      } else {
+        // Ni erreur ni URL → on ne laisse PAS le bouton muet.
+        showAlert(t('error') || 'Error', t('bookingError') || 'Failed to create booking');
       }
     } catch (err) {
       console.error('Booking error:', err);

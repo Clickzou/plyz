@@ -28,14 +28,18 @@ export interface QueueStats {
   sessionStatus: string;
 }
 
-const DEVICE_ID_KEY = '@plyz_device_id';
+// ⚠️ Clé DÉDIÉE (préfixe `fan_`). Avant, ce module partageait `@plyz_device_id`
+// avec eventSessionStorage/ratingsStorage (préfixe `device_`) → collision : le
+// premier appelant fixait l'identité de l'appareil pour tous. Clé isolée = plus
+// de contamination croisée.
+const FAN_ID_KEY = '@plyz_fan_id';
 
 export const getOrCreateFanId = async (): Promise<string> => {
   try {
-    let deviceId = await AsyncStorage.getItem(DEVICE_ID_KEY);
+    let deviceId = await AsyncStorage.getItem(FAN_ID_KEY);
     if (!deviceId) {
       deviceId = `fan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      await AsyncStorage.setItem(DEVICE_ID_KEY, deviceId);
+      await AsyncStorage.setItem(FAN_ID_KEY, deviceId);
     }
     return deviceId;
   } catch {

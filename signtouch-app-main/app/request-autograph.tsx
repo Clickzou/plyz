@@ -9,6 +9,7 @@ import { ArrowLeft, PenTool, CreditCard, ChevronRight, Shield } from 'lucide-rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { showAlert } from '@/utils/alertHelper';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -18,6 +19,7 @@ export default function RequestAutographScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user, session } = useAuth();
+  const { requireAuth } = useAuthPrompt();
   const params = useLocalSearchParams<{
     celebrityId: string;
     celebrityName: string;
@@ -43,10 +45,7 @@ export default function RequestAutographScreen() {
   };
 
   const handlePay = async () => {
-    if (!user) {
-      showAlert(t('info') || 'Info', t('mySpaceSignInTitle') || 'Please sign in first');
-      return;
-    }
+    if (!user) { requireAuth(() => handlePay()); return; }
     try {
       setLoading(true);
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -62,9 +61,9 @@ export default function RequestAutographScreen() {
           message: message.trim() || undefined,
         }),
       });
-      const data = await res.json();
-      if (data.error) {
-        showAlert(t('error') || 'Error', data.error);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) {
+        showAlert(t('error') || 'Error', data.message || data.error || (t('autographError') || 'Failed to create autograph request'));
         return;
       }
       if (data.checkout_url) {
@@ -73,6 +72,8 @@ export default function RequestAutographScreen() {
         } else {
           Linking.openURL(data.checkout_url);
         }
+      } else {
+        showAlert(t('error') || 'Error', t('autographError') || 'Failed to create autograph request');
       }
     } catch (err) {
       console.error('Autograph error:', err);
