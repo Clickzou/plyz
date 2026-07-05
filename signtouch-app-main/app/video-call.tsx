@@ -839,7 +839,17 @@ export default function VideoCallScreen() {
     setTimeWarning(false);
 
     try {
-      const nextFan = await callNextFan(params.sessionId);
+      // 🔒 Anti-course « fan appelé jamais connecté » : si un fan est DÉJÀ 'called'/
+      // 'in_call' (ex : appelé par le poller de file vide), on le RÉUTILISE au lieu
+      // d'appeler callNextFan — qui le marquerait 'completed' et le sauterait.
+      let nextFan: any = null;
+      try {
+        const fq = await getFullQueue(params.sessionId);
+        nextFan = fq.find((e: any) => e.status === 'called' || e.status === 'in_call') || null;
+      } catch {}
+      if (!nextFan) {
+        nextFan = await callNextFan(params.sessionId);
+      }
       if (nextFan) {
         // Le fan précédent a déjà été résolu côté serveur dans handleCallEnded (appelé AVANT
         // handleCallNextFan). On bascule maintenant le ref sur le NOUVEAU fan en appel, pour que
