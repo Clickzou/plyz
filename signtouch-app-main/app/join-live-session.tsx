@@ -33,6 +33,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import {
   LiveSession,
   QueueEntry,
@@ -68,6 +69,7 @@ export default function JoinLiveSessionScreen() {
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
   const { user } = useAuth();
+  const { requireAuth } = useAuthPrompt();
 
   const [code, setCode] = useState(paramCode || '');
   const [session, setSession] = useState<LiveSession | null>(null);
@@ -787,7 +789,7 @@ export default function JoinLiveSessionScreen() {
   const persistLiveReservation = async () => {
     if (!session) return;
     try {
-      const viewerId = await getOrCreateDeviceId();
+      const viewerId = user?.id || await getOrCreateDeviceId();
       const pushToken = await getExpoPushToken();
       const r = await fetch(`${STRIPE_SERVER_URL}/api/reserve-event`, {
         method: 'POST',
@@ -841,6 +843,13 @@ export default function JoinLiveSessionScreen() {
   // (check-active-payment). Débit seulement à la fin de l'appel (capture).
   const handleReserveAndPayLive = async () => {
     if (!session) return;
+    // 🔒 Connexion OBLIGATOIRE avant tout paiement (live vidéo).
+    if (!user) {
+      requireAuth(() => handleReserveAndPayLive(), {
+        reason: 'Connecte-toi pour payer — tu retrouveras ta facture et ton appel sur ton compte.',
+      });
+      return;
+    }
     setIsReserving(true);
     try {
       // Anti double-paiement : si ce fan a déjà une place pré-payée, on n'en repropose pas.

@@ -369,7 +369,7 @@ export default function JoinEventScreen() {
             await AsyncStorage.removeItem('@event_pending_payment_session');
           } else {
             try {
-              const viewerId = await getOrCreateDeviceId();
+              const viewerId = user?.id || await getOrCreateDeviceId();
               const checkRes = await authedFetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${pendingSessionId}&fan_id=${viewerId}`);
               const checkData = await checkRes.json();
               if (hasEventAccess(checkData)) {
@@ -598,7 +598,7 @@ export default function JoinEventScreen() {
       }
 
       // Then try event_sessions
-      const viewerId = await getOrCreateDeviceId();
+      const viewerId = user?.id || await getOrCreateDeviceId();
       const sessionResult = await joinEventSession(codeToSearch, viewerId);
       
       if (sessionResult.allowed && sessionResult.session) {
@@ -764,6 +764,13 @@ export default function JoinEventScreen() {
 
   const handleEventPayment = async () => {
     if (!foundSession || !eventPaymentConfig) return;
+    // 🔒 Connexion OBLIGATOIRE avant tout paiement.
+    if (!user) {
+      requireAuth(() => handleEventPayment(), {
+        reason: 'Connecte-toi pour payer — tu retrouveras ta facture et ta dédicace sur ton compte.',
+      });
+      return;
+    }
     if (!ensureCanPay(isBanned, banUntil)) return;
     if (!(await isAgeCertified())) {
       setShowAgeModal(true);
@@ -772,7 +779,7 @@ export default function JoinEventScreen() {
     setIsProcessingPayment(true);
 
     try {
-      const viewerId = await getOrCreateDeviceId();
+      const viewerId = user?.id || await getOrCreateDeviceId();
       const origin = Platform.OS === 'web' ? window.location.origin : 'https://plyz.app';
 
       if (Platform.OS !== 'web') {
@@ -846,7 +853,7 @@ export default function JoinEventScreen() {
 
       if (eventPaymentConfig && eventPaymentConfig.priceCents > 0 && !alreadyPaid) {
         try {
-          const viewerId = await getOrCreateDeviceId();
+          const viewerId = user?.id || await getOrCreateDeviceId();
           const checkRes = await authedFetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${foundSession.id}&fan_id=${viewerId}`);
           const checkData = await checkRes.json();
           if (hasEventAccess(checkData)) {
@@ -1070,7 +1077,7 @@ export default function JoinEventScreen() {
       // Persiste la réservation côté SERVEUR : permet de compter « X ont réservé »
       // et d'envoyer les rappels push (même app fermée), y compris pour les lives.
       try {
-        const viewerId = await getOrCreateDeviceId();
+        const viewerId = user?.id || await getOrCreateDeviceId();
         const pushToken = await getFanPushToken();
         const r = await fetch(`${STRIPE_SERVER_URL}/api/reserve-event`, {
           method: 'POST',
@@ -1097,6 +1104,14 @@ export default function JoinEventScreen() {
   // Réutilise EXACTEMENT le flux de paiement d'événement déjà en place et testé.
   const handleReserveAndPay = async () => {
     if (!scheduledSession || !eventPaymentConfig) return;
+    // 🔒 Connexion OBLIGATOIRE avant tout paiement (sinon facture/dédicace non
+    // rattachées à un compte). On relance l'action après connexion.
+    if (!user) {
+      requireAuth(() => handleReserveAndPay(), {
+        reason: 'Connecte-toi pour payer — tu retrouveras ta facture et ta dédicace sur ton compte.',
+      });
+      return;
+    }
     if (!ensureCanPay(isBanned, banUntil)) return;
     if (!(await isAgeCertified())) { setShowAgeModal(true); return; }
     setIsProcessingPayment(true);
@@ -1113,7 +1128,7 @@ export default function JoinEventScreen() {
         event_type: scheduledSession.event_type || 'qr',
         starts_at: scheduledSession.starts_at,
       });
-      const viewerId = await getOrCreateDeviceId();
+      const viewerId = user?.id || await getOrCreateDeviceId();
       const origin = Platform.OS === 'web' ? window.location.origin : 'https://plyz.app';
       if (Platform.OS !== 'web') {
         await AsyncStorage.setItem('@event_pending_payment_session', scheduledSession.id);
@@ -1617,7 +1632,7 @@ export default function JoinEventScreen() {
                 style={styles.rejoinBanner}
                 onPress={async () => {
                   try {
-                    const viewerId = await getOrCreateDeviceId();
+                    const viewerId = user?.id || await getOrCreateDeviceId();
                     const storedPaid = await AsyncStorage.getItem(`@event_paid_${activeFanEvent.sessionId}`);
                     if (storedPaid !== 'true' && STRIPE_SERVER_URL) {
                       const checkRes = await authedFetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${activeFanEvent.sessionId}&fan_id=${viewerId}`);
