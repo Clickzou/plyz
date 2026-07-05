@@ -11,6 +11,7 @@ import {
   ScrollView,
   Image,
   Modal,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Mail, KeyRound, Camera, Sparkles, X } from 'lucide-react-native';
@@ -204,7 +205,14 @@ export default function WelcomeAuthScreen({
     }
   };
 
-  const pickPhoto = async () => {
+  const applyPhoto = (asset: ImagePicker.ImagePickerAsset) => {
+    setPhotoUri(asset.uri);
+    setPhotoBase64(asset.base64 || null);
+    setPhotoContentType(asset.mimeType || 'image/jpeg');
+    setError('');
+  };
+
+  const pickFromLibrary = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
@@ -212,22 +220,43 @@ export default function WelcomeAuthScreen({
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.7,
-        base64: true,
+        mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.7, base64: true,
       });
-      if (!result.canceled && result.assets[0]) {
-        const asset = result.assets[0];
-        setPhotoUri(asset.uri);
-        setPhotoBase64(asset.base64 || null);
-        setPhotoContentType(asset.mimeType || 'image/jpeg');
-        setError('');
-      }
+      if (!result.canceled && result.assets[0]) applyPhoto(result.assets[0]);
     } catch (err: any) {
       setError(err?.message || tr('waErrPhotoLoad', 'Impossible de charger la photo'));
     }
+  };
+
+  const takeWithCamera = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        setError(tr('waErrCameraPerm', "Autorise l'accès à l'appareil photo pour prendre une photo."));
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true, aspect: [1, 1], quality: 0.7, base64: true,
+      });
+      if (!result.canceled && result.assets[0]) applyPhoto(result.assets[0]);
+    } catch (err: any) {
+      setError(err?.message || tr('waErrPhotoLoad', 'Impossible de charger la photo'));
+    }
+  };
+
+  // Sur mobile : propose Appareil photo OU Galerie. Sur web : galerie directe
+  // (l'appareil photo n'est pas disponible via ImagePicker sur navigateur).
+  const pickPhoto = () => {
+    if (Platform.OS === 'web') { pickFromLibrary(); return; }
+    Alert.alert(
+      tr('profilePhotoTitle', 'Photo de profil'),
+      tr('profilePhotoChooseSource', 'Comment veux-tu ajouter ta photo ?'),
+      [
+        { text: tr('camera', 'Appareil photo'), onPress: () => takeWithCamera() },
+        { text: tr('gallery', 'Galerie'), onPress: () => pickFromLibrary() },
+        { text: tr('cancel', 'Annuler'), style: 'cancel' },
+      ],
+    );
   };
 
   const handleFinish = async () => {
