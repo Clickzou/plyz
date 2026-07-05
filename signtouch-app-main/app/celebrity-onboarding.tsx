@@ -178,10 +178,18 @@ export default function CelebrityOnboardingScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: user.id, image_base64: asset.base64, content_type: asset.mimeType || 'image/jpeg' }),
       });
-      const data = await res.json();
-      if (data?.avatar_url) setProfilePhoto(data.avatar_url);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.avatar_url) {
+        // Échec / rejet modération : on prévient et on retire l'aperçu trompeur.
+        setProfilePhoto(null);
+        showAlert(t('error') || 'Erreur', data?.message || (ct('photoUploadFailed' as any) || "Ta photo n'a pas pu être enregistrée (réessaie avec une autre image)."));
+        return;
+      }
+      setProfilePhoto(data.avatar_url);
     } catch (e) {
       console.warn('[celebrity-onboarding] upload photo échoué', e);
+      setProfilePhoto(null);
+      showAlert(t('error') || 'Erreur', ct('photoUploadFailed' as any) || "Ta photo n'a pas pu être enregistrée. Réessaie.");
     } finally {
       setUploadingPhoto(false);
     }

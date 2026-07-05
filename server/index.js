@@ -6478,7 +6478,7 @@ async function releaseEndedSessionHolds() {
       .select('id, payment_intent_id, payment_captured, hold_released')
       .in('session_id', ids)
       .not('payment_intent_id', 'is', null)
-      .neq('hold_released', true)
+      .or('hold_released.is.null,hold_released.eq.false')
       .limit(200);
     for (const e of (entries || [])) {
       if (e.payment_captured === true) { // déjà encaissé → on marque juste comme traité

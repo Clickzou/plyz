@@ -229,10 +229,17 @@ export default function CreatePostScreen() {
         }
       } catch {}
 
-      const stored = await AsyncStorage.getItem(LOCAL_POSTS_KEY);
-      const localPosts = stored ? JSON.parse(stored) : [];
-      localPosts.unshift(newPost);
-      await AsyncStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(localPosts));
+      // Cache local dans son PROPRE try/catch : un cache corrompu ne doit pas
+      // faire croire à un échec de publication (→ le créateur republierait = doublon).
+      try {
+        const stored = await AsyncStorage.getItem(LOCAL_POSTS_KEY);
+        let localPosts: any[] = [];
+        try { localPosts = stored ? JSON.parse(stored) : []; } catch { localPosts = []; }
+        localPosts.unshift(newPost);
+        await AsyncStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(localPosts));
+      } catch (cacheErr) {
+        console.warn('[create-post] cache local échoué (non bloquant):', cacheErr);
+      }
 
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
