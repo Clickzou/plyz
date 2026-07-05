@@ -5721,6 +5721,11 @@ function invMoney(cents, currency) {
 function renderInvoiceHtml(inv, role) {
   // 'seller' = vue célébrité (montant − commission = net) ; sinon vue fan (total payé).
   const isSeller = role === 'seller';
+  // Commission Plyz : CLICKZOU (SAS) assujettie → TVA 20 %. La commission collectée
+  // est un montant TTC → on l'éclate en HT + TVA (décision JC 2026-07-05).
+  const commTTC = inv.commission_cents || 0;
+  const commHT = Math.round(commTTC / 1.2);
+  const commTVA = commTTC - commHT;
   const s = inv.seller_snapshot || {};
   const b = inv.buyer_snapshot || {};
   const dateStr = new Date(inv.prestation_date || Date.now()).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -5746,10 +5751,10 @@ function renderInvoiceHtml(inv, role) {
 <tbody><tr><td>${invEscape(inv.prestation_label || 'Prestation')}</td><td>${dateStr}</td><td class="right">${invMoney(inv.amount_cents, inv.currency)}</td></tr></tbody></table>
 ${isSeller ? `<div class="box">
   <div class="row"><div class="muted">Montant de la prestation (payé par le client)</div><div>${invMoney(inv.amount_cents, inv.currency)}</div></div>
-  <div class="row"><div class="muted">Commission Plyz (mise en relation)</div><div>− ${invMoney(inv.commission_cents, inv.currency)}</div></div>
-  <div class="row total" style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:10px"><div>Net qui te revient</div><div>${invMoney(inv.amount_cents - inv.commission_cents, inv.currency)}</div></div>
+  <div class="row"><div class="muted">Commission Plyz — mise en relation<br><span style="font-size:12px">${invMoney(commHT, inv.currency)} HT + ${invMoney(commTVA, inv.currency)} TVA (20 %)</span></div><div>− ${invMoney(commTTC, inv.currency)}</div></div>
+  <div class="row total" style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:10px"><div>Net qui te revient</div><div>${invMoney(inv.amount_cents - commTTC, inv.currency)}</div></div>
 </div>
-<div class="box small">La commission de service de ${invMoney(inv.commission_cents, inv.currency)} est perçue par Plyz au titre de la mise en relation. Tu es seul(e) responsable, le cas échéant, de la TVA applicable à ta prestation.</div>`
+<div class="box small">La commission de service de ${invMoney(commTTC, inv.currency)} TTC (dont ${invMoney(commTVA, inv.currency)} de TVA à 20 %) est perçue par Plyz — CLICKZOU (SAS) au titre de la mise en relation. Tu es seul(e) responsable, le cas échéant, de la TVA applicable à ta prestation.</div>`
 : `<div class="row"><div></div><div class="total">Total payé : ${invMoney(inv.amount_cents, inv.currency)}</div></div>
 <div class="box small">La Personnalité est seule responsable, le cas échéant, de la TVA applicable à sa prestation.</div>`}
 <div class="small">Plyz est un service édité par CLICKZOU (SAS) — contact@plyz.io — Toulouse, France.</div>
