@@ -73,7 +73,9 @@ export default function WelcomeAuthScreen({
   // After successful OTP verification we wait for `user` to be set, then decide
   // whether the profile is incomplete (-> show 'profile' step) or not (-> let
   // the gate fall through and enter the app).
-  const [awaitingProfileCheck, setAwaitingProfileCheck] = useState(false);
+  // Init à true si l'utilisateur est DÉJÀ connecté à l'ouverture (cas d'un profil
+  // incomplet ouvert via requireAuth) : on lance la vérification de profil au montage.
+  const [awaitingProfileCheck, setAwaitingProfileCheck] = useState<boolean>(!!user);
 
   // Once the profile step is finished we render nothing so the (already
   // authenticated) app behind the gate becomes visible.
@@ -337,7 +339,7 @@ export default function WelcomeAuthScreen({
             {reason ? <Text style={styles.reasonText}>{reason}</Text> : null}
           </View>
 
-          {step === 'email' && (
+          {step === 'email' && !awaitingProfileCheck && (
             <View style={styles.card}>
               <View style={styles.freeBadge}>
                 <Text style={styles.freeBadgeText}>{tr('waFree', 'GRATUIT')}</Text>

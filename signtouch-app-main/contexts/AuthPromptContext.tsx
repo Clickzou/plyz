@@ -7,6 +7,27 @@ import React, {
 } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import WelcomeAuthScreen from '@/components/WelcomeAuthScreen';
+import { supabase } from '@/utils/supabase';
+
+// Profil « complet » = identité de facturation présente (prénom + nom + adresse).
+// Nécessaire avant tout paiement pour établir une facture nominative.
+async function isBillingProfileComplete(userId: string): Promise<boolean> {
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('first_name, last_name, address')
+      .eq('id', userId)
+      .maybeSingle();
+    return !!(
+      (data?.first_name || '').trim() &&
+      (data?.last_name || '').trim() &&
+      (data?.address || '').trim()
+    );
+  } catch {
+    // En cas d'erreur réseau, on ne bloque pas l'utilisateur.
+    return true;
+  }
+}
 
 interface RequireAuthOptions {
   /** Petit texte d'accroche affiché en haut du modal de connexion. */
@@ -44,13 +65,18 @@ export const AuthPromptProvider = ({ children }: { children: React.ReactNode }) 
   }, []);
 
   const requireAuth = useCallback(
-    (onSuccess: () => void, options?: RequireAuthOptions) => {
-      // Déjà connecté : on exécute tout de suite.
+    async (onSuccess: () => void, options?: RequireAuthOptions) => {
+      // Déjà connecté ET profil de facturation complet : on exécute tout de suite.
       if (user) {
-        onSuccess();
-        return;
+        const complete = await isBillingProfileComplete(user.id);
+        if (complete) {
+          onSuccess();
+          return;
+        }
+        // Connecté mais profil incomplet : on ouvre le modal (il ira directement
+        // à l'étape « Tes informations » pour collecter prénom/nom/adresse).
       }
-      // Pas connecté : on mémorise et on ouvre le modal.
+      // Pas connecté (ou profil incomplet) : on mémorise et on ouvre le modal.
       pendingCallbackRef.current = onSuccess;
       setReason(options?.reason);
       setIsAuthModalOpen(true);
