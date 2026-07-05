@@ -227,6 +227,14 @@ export default function WelcomeAuthScreen({
       setError('Renseigne ton prénom, ton nom et ton adresse pour continuer.');
       return;
     }
+    if (!name.trim()) {
+      setError('Choisis un pseudo public.');
+      return;
+    }
+    if (!photoBase64 && !photoUri) {
+      setError('Ajoute une photo de profil pour continuer.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -436,9 +444,9 @@ export default function WelcomeAuthScreen({
               </View>
               <Text style={styles.title}>Tes informations</Text>
               <Text style={styles.subtitle}>
-                Ton prénom, ton nom et ton adresse sont nécessaires pour établir
-                et te permettre de télécharger tes factures de paiement depuis ton
-                compte. Ces informations restent privées.
+                Ta photo et ton pseudo seront visibles publiquement. Ton prénom,
+                ton nom et ton adresse restent privés : ils sont nécessaires pour
+                établir tes factures de paiement, téléchargeables depuis ton compte.
               </Text>
 
               <TouchableOpacity
@@ -456,7 +464,7 @@ export default function WelcomeAuthScreen({
                 )}
               </TouchableOpacity>
               <Text style={styles.avatarLabel}>
-                {photoUri ? 'Changer la photo' : 'Ajouter une photo (optionnel)'}
+                {photoUri ? 'Changer la photo' : 'Ajouter une photo *'}
               </Text>
 
               <TextInput
@@ -494,7 +502,7 @@ export default function WelcomeAuthScreen({
 
               <TextInput
                 style={styles.input}
-                placeholder="Pseudo public (optionnel)"
+                placeholder="Pseudo public *"
                 placeholderTextColor="#64748b"
                 value={name}
                 onChangeText={setName}
@@ -507,12 +515,16 @@ export default function WelcomeAuthScreen({
               <TouchableOpacity
                 style={[
                   styles.primaryButton,
-                  (loading || !firstName.trim() || !lastName.trim() || !address.trim()) &&
+                  (loading || !firstName.trim() || !lastName.trim() || !address.trim() ||
+                    !name.trim() || (!photoBase64 && !photoUri)) &&
                     styles.buttonDisabled,
                 ]}
                 onPress={handleFinish}
                 activeOpacity={0.85}
-                disabled={loading || !firstName.trim() || !lastName.trim() || !address.trim()}
+                disabled={
+                  loading || !firstName.trim() || !lastName.trim() || !address.trim() ||
+                  !name.trim() || (!photoBase64 && !photoUri)
+                }
               >
                 {loading ? (
                   <ActivityIndicator color="#fff" />
