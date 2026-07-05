@@ -94,6 +94,7 @@ export default function MyEarningsScreen() {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   // Aperçu de facture (WebView) avant téléchargement.
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [previewLabel, setPreviewLabel] = useState('');
   const [previewLoading, setPreviewLoading] = useState(false);
 
@@ -167,11 +168,12 @@ export default function MyEarningsScreen() {
       setPreviewLabel(inv.invoice_number);
       const res = await authedFetch(`${STRIPE_SERVER_URL}/api/invoice/${inv.id}/download`);
       const d = await res.json();
-      if (!d?.url) throw new Error('no url');
+      if (!d?.url && !d?.html) throw new Error('no data');
       if (Platform.OS === 'web') {
         if (typeof window !== 'undefined') window.open(d.url, '_blank');
       } else {
-        setPreviewUrl(d.url);
+        setPreviewUrl(d.url || null);
+        setPreviewHtml(d.html || null);
       }
     } catch (e) {
       showAlert(t('error') || 'Erreur', t('docsError') || 'Impossible d\'ouvrir le document.');
@@ -439,10 +441,14 @@ export default function MyEarningsScreen() {
       <BottomNav />
 
       {/* Aperçu de la facture (WebView) avant téléchargement */}
-      <Modal visible={!!previewUrl} animationType="slide" onRequestClose={() => setPreviewUrl(null)}>
+      <Modal
+        visible={!!previewHtml}
+        animationType="slide"
+        onRequestClose={() => { setPreviewHtml(null); setPreviewUrl(null); }}
+      >
         <View style={styles.previewContainer}>
           <View style={[styles.previewHeader, { paddingTop: insets.top + 10 }]}>
-            <TouchableOpacity style={styles.previewIconBtn} onPress={() => setPreviewUrl(null)}>
+            <TouchableOpacity style={styles.previewIconBtn} onPress={() => { setPreviewHtml(null); setPreviewUrl(null); }}>
               <X size={22} color="#0f172a" />
             </TouchableOpacity>
             <Text style={styles.previewTitle} numberOfLines={1}>{previewLabel}</Text>
@@ -453,9 +459,10 @@ export default function MyEarningsScreen() {
               <Download size={20} color="#2563eb" />
             </TouchableOpacity>
           </View>
-          {previewUrl && (
+          {previewHtml && (
             <WebView
-              source={{ uri: previewUrl }}
+              originWhitelist={['*']}
+              source={{ html: previewHtml }}
               style={{ flex: 1, backgroundColor: '#fff' }}
               startInLoadingState
               renderLoading={() => (

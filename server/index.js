@@ -5831,18 +5831,20 @@ app.get('/api/invoice/:id/download', async (req, res) => {
     if (String(inv.fan_id) !== String(authUser.id) && String(inv.celebrity_id) !== String(authUser.id) && String(authUser.id) !== ADMIN_UID) {
       return res.status(403).json({ error: 'forbidden' });
     }
-    // Auto-réparation : certaines factures n'ont pas de fichier HTML stocké
-    // (ex. créées avant, ou insert partiel) → on le génère et on le stocke.
+    // On rend toujours le HTML : renvoyé au client pour un aperçu FIABLE dans le
+    // WebView (source={{ html }}), car les URLs signées Supabase peuvent être
+    // servies en text/plain → sinon le HTML s'affiche « brut ».
+    const html = renderInvoiceHtml(inv);
+    // Auto-réparation : stocke le fichier HTML s'il manque (pour le téléchargement).
     let htmlPath = inv.html_path;
     if (!htmlPath) {
-      const html = renderInvoiceHtml(inv);
       htmlPath = (inv.celebrity_id || 'x') + '/' + inv.invoice_number + '.html';
       await db.storage.from('invoices').upload(htmlPath, Buffer.from(html, 'utf8'), { contentType: 'text/html; charset=utf-8', upsert: true });
       await db.from('invoices').update({ html_path: htmlPath }).eq('id', inv.id);
     }
     const { data: signed, error } = await db.storage.from('invoices').createSignedUrl(htmlPath, 300);
     if (error) throw error;
-    return res.json({ url: signed.signedUrl });
+    return res.json({ url: signed.signedUrl, html });
   } catch (e) {
     console.error('[invoice download] error:', e.message);
     return res.status(500).json({ error: 'download_failed' });
