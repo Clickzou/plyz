@@ -1622,6 +1622,8 @@ export default {
   docsMenuItem: 'My invoices',
   myEarningsTab: 'Earnings',
   invoicesTab: 'Invoices',
+  earningsVideoPart: 'Video',
+  earningsDedicPart: 'Dedications',
   docsMenuSub: "Your invoices and receipts",
   celebVerifCriteriaTitle: "Criteria to be accepted",
   celebVerifCriteriaIntro: "Before sending your request, verify that you meet these criteria — otherwise it will be rejected:",

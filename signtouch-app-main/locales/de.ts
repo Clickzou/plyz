@@ -1587,6 +1587,8 @@ export default {
   docsMenuItem: 'Meine Rechnungen',
   myEarningsTab: 'Einnahmen',
   invoicesTab: 'Rechnungen',
+  earningsVideoPart: 'Video',
+  earningsDedicPart: 'Widmungen',
   docsMenuSub: "Deine Rechnungen und Nachweise",
   celebVerifCriteriaTitle: "Kriterien für die Akzeptanz",
   celebVerifCriteriaIntro: "Bevor du deine Anfrage sendest, überprüfe, ob du diese Kriterien erfüllst — andernfalls wird sie abgelehnt:",

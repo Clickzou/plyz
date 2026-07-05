@@ -1592,6 +1592,8 @@ export default {
   docsMenuItem: 'Invois saya',
   myEarningsTab: 'Pendapatan',
   invoicesTab: 'Invois',
+  earningsVideoPart: 'Video',
+  earningsDedicPart: 'Dedikasi',
   docsMenuSub: "Invois dan bukti anda",
   celebVerifCriteriaTitle: "Kriteria untuk Diterima",
   celebVerifCriteriaIntro: "Sebelum menghantar permintaan anda, sahkan bahawa anda memenuhi kriteria ini — jika tidak, ia akan ditolak:",

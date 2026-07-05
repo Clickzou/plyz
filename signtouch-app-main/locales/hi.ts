@@ -1587,6 +1587,8 @@ export default {
   docsMenuItem: 'मेरे चालान',
   myEarningsTab: 'आय',
   invoicesTab: 'चालान',
+  earningsVideoPart: 'वीडियो',
+  earningsDedicPart: 'समर्पण',
   docsMenuSub: "आपके चालान और प्रमाण पत्र",
   celebVerifCriteriaTitle: "स्वीकृति के लिए मानदंड",
   celebVerifCriteriaIntro: "अपनी अनुरोध भेजने से पहले, सुनिश्चित करें कि तुम इन मानदंडों को पूरा करते हो — अन्यथा इसे अस्वीकार कर दिया जाएगा:",

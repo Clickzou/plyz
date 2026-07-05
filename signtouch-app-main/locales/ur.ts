@@ -1592,6 +1592,8 @@ export default {
   docsMenuItem: 'میرے انوائس',
   myEarningsTab: 'آمدنی',
   invoicesTab: 'انوائس',
+  earningsVideoPart: 'ویڈیو',
+  earningsDedicPart: 'ڈیڈیکیشنز',
   docsMenuSub: "آپ کے انوائسز اور رسیدیں",
   celebVerifCriteriaTitle: "قبول ہونے کی شرائط",
   celebVerifCriteriaIntro: "اپنی درخواست بھیجنے سے پہلے، یقینی بنائیں کہ آپ ان شرائط کو پورا کرتے ہیں — ورنہ آپ کی درخواست مسترد کر دی جائے گی:",

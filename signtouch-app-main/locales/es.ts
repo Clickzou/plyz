@@ -1586,6 +1586,8 @@ export default {
   docsMenuItem: 'Mis facturas',
   myEarningsTab: 'Ingresos',
   invoicesTab: 'Facturas',
+  earningsVideoPart: 'Vídeo',
+  earningsDedicPart: 'Dedicatorias',
   docsMenuSub: "Tus facturas y comprobantes",
   celebVerifCriteriaTitle: "Criterios para ser aceptado",
   celebVerifCriteriaIntro: "Antes de enviar tu solicitud, verifica que cumples estos criterios —de lo contrario será rechazada:",

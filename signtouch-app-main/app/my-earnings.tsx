@@ -64,6 +64,11 @@ interface EarningsData {
   total_sessions: number;
   estimated_payout_date: string;
   sessions: SessionStat[];
+  // Ajoutés serveur : total incluant les dédicaces (événements), pas seulement la vidéo.
+  dedication_total_cents?: number;
+  grand_total_cents?: number;
+  video_month_cents?: number;
+  dedication_month_cents?: number;
 }
 
 interface Invoice {
@@ -320,7 +325,7 @@ export default function MyEarningsScreen() {
             </View>
             <Text style={styles.totalLabel}>{t('totalEarnings') || 'Revenus totaux'}</Text>
             <Text style={styles.totalAmount}>
-              {((data?.total_earnings_cents || 0) / 100).toFixed(2)}€
+              {(((data?.grand_total_cents ?? data?.total_earnings_cents) || 0) / 100).toFixed(2)}€
             </Text>
             <View style={styles.totalStatsRow}>
               <View style={styles.totalStatItem}>
@@ -336,6 +341,16 @@ export default function MyEarningsScreen() {
                 </Text>
               </View>
             </View>
+            {/* Détail Vidéo / Dédicaces (le total additionne les deux). */}
+            {(data?.dedication_total_cents || 0) > 0 && (
+              <View style={styles.breakdownRow}>
+                <Text style={styles.breakdownText}>
+                  {t('earningsVideoPart' as any) || 'Vidéo'} {((data?.total_earnings_cents || 0) / 100).toFixed(2)}€
+                  {'   ·   '}
+                  {t('earningsDedicPart' as any) || 'Dédicaces'} {((data?.dedication_total_cents || 0) / 100).toFixed(2)}€
+                </Text>
+              </View>
+            )}
           </View>
 
           {data?.estimated_payout_date && (data?.total_earnings_cents || 0) > 0 && (
@@ -796,4 +811,6 @@ const styles = StyleSheet.create({
   previewIconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#e2e8f0', justifyContent: 'center', alignItems: 'center' },
   previewTitle: { flex: 1, textAlign: 'center', color: '#0f172a', fontSize: 15, fontWeight: '700', marginHorizontal: 8 },
   previewLoading: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
+  breakdownRow: { marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)', alignItems: 'center' },
+  breakdownText: { color: 'rgba(255,255,255,0.65)', fontSize: 13, fontWeight: '600' },
 });

@@ -1587,6 +1587,8 @@ export default {
   docsMenuItem: 'Мои счета',
   myEarningsTab: 'Доходы',
   invoicesTab: 'Счета',
+  earningsVideoPart: 'Видео',
+  earningsDedicPart: 'Автографы',
   docsMenuSub: "Твои счета и подтверждающие документы",
   celebVerifCriteriaTitle: "Критерии для принятия",
   celebVerifCriteriaIntro: "Перед тем как отправить заявку, убедись, что ты соответствуешь этим критериям — иначе она будет отклонена:",

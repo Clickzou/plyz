@@ -1587,6 +1587,8 @@ export default {
   docsMenuItem: 'فواتيري',
   myEarningsTab: 'الإيرادات',
   invoicesTab: 'الفواتير',
+  earningsVideoPart: 'فيديو',
+  earningsDedicPart: 'إهداءات',
   docsMenuSub: "فواتيرك والمستندات الداعمة",
   celebVerifCriteriaTitle: "معايير القبول",
   celebVerifCriteriaIntro: "قبل إرسال طلبك، تحقق من استيفائك لهذه المعايير — وإلا سيتم رفضه:",

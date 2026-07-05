@@ -1592,6 +1592,8 @@ export default {
   docsMenuItem: 'আমার চালান',
   myEarningsTab: 'আয়',
   invoicesTab: 'চালান',
+  earningsVideoPart: 'ভিডিও',
+  earningsDedicPart: 'উৎসর্গ',
   docsMenuSub: "আপনার চালান এবং প্রমাণপত্র",
   celebVerifCriteriaTitle: "গৃহীত হওয়ার মানদণ্ড",
   celebVerifCriteriaIntro: "আপনার আবেদন পাঠানোর আগে, যাচাই করুন যে আপনি এই মানদণ্ড পূরণ করেন — অন্যথায় এটি প্রত্যাখ্যান করা হবে:",

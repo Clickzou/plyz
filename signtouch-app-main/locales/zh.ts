@@ -1587,6 +1587,8 @@ export default {
   docsMenuItem: '我的发票',
   myEarningsTab: '收入',
   invoicesTab: '发票',
+  earningsVideoPart: '视频',
+  earningsDedicPart: '签名',
   docsMenuSub: "您的发票和凭证",
   celebVerifCriteriaTitle: "接受条件",
   celebVerifCriteriaIntro: "提交申请前，请确保你符合以下条件——否则申请将被拒绝：",

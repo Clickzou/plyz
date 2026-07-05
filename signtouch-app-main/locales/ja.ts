@@ -1587,6 +1587,8 @@ export default {
   docsMenuItem: '請求書',
   myEarningsTab: '収益',
   invoicesTab: '請求書',
+  earningsVideoPart: 'ビデオ',
+  earningsDedicPart: '献辞',
   docsMenuSub: "あなたの請求書と証拠書類",
   celebVerifCriteriaTitle: "受け入れられるための条件",
   celebVerifCriteriaIntro: "リクエストを送信する前に、以下の条件を満たしていることを確認してください。満たしていない場合、リクエストは却下されます：",

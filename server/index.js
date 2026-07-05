@@ -5742,8 +5742,12 @@ function renderInvoiceHtml(inv) {
 </div>
 <table><thead><tr><th>Prestation</th><th>Date</th><th class="right">Montant</th></tr></thead>
 <tbody><tr><td>${invEscape(inv.prestation_label || 'Prestation')}</td><td>${dateStr}</td><td class="right">${invMoney(inv.amount_cents, inv.currency)}</td></tr></tbody></table>
-<div class="row"><div></div><div class="total">Total payé : ${invMoney(inv.amount_cents, inv.currency)}</div></div>
-<div class="box small">La Personnalité est seule responsable, le cas échéant, de la TVA applicable à sa prestation. Plyz a perçu une commission de service de ${invMoney(inv.commission_cents, inv.currency)} au titre de la mise en relation.</div>
+<div class="box">
+  <div class="row"><div class="muted">Montant de la prestation (payé par le client)</div><div>${invMoney(inv.amount_cents, inv.currency)}</div></div>
+  <div class="row"><div class="muted">Commission Plyz (mise en relation)</div><div>− ${invMoney(inv.commission_cents, inv.currency)}</div></div>
+  <div class="row total" style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:10px"><div>Net reversé à la Personnalité</div><div>${invMoney(inv.amount_cents - inv.commission_cents, inv.currency)}</div></div>
+</div>
+<div class="box small">La Personnalité est seule responsable, le cas échéant, de la TVA applicable à sa prestation. La commission de service de ${invMoney(inv.commission_cents, inv.currency)} est perçue par Plyz au titre de la mise en relation.</div>
 <div class="small">Plyz est un service édité par CLICKZOU (SAS) — contact@plyz.io — Toulouse, France.</div>
 </body></html>`;
 }
@@ -5835,13 +5839,11 @@ app.get('/api/invoice/:id/download', async (req, res) => {
     // WebView (source={{ html }}), car les URLs signées Supabase peuvent être
     // servies en text/plain → sinon le HTML s'affiche « brut ».
     const html = renderInvoiceHtml(inv);
-    // Auto-réparation : stocke le fichier HTML s'il manque (pour le téléchargement).
-    let htmlPath = inv.html_path;
-    if (!htmlPath) {
-      htmlPath = (inv.celebrity_id || 'x') + '/' + inv.invoice_number + '.html';
-      await db.storage.from('invoices').upload(htmlPath, Buffer.from(html, 'utf8'), { contentType: 'text/html; charset=utf-8', upsert: true });
-      await db.from('invoices').update({ html_path: htmlPath }).eq('id', inv.id);
-    }
+    // On (re)génère TOUJOURS le fichier stocké pour qu'il reflète le format actuel
+    // (les anciennes factures avaient un HTML figé sans le détail « net »).
+    const htmlPath = inv.html_path || ((inv.celebrity_id || 'x') + '/' + inv.invoice_number + '.html');
+    await db.storage.from('invoices').upload(htmlPath, Buffer.from(html, 'utf8'), { contentType: 'text/html; charset=utf-8', upsert: true });
+    if (!inv.html_path) await db.from('invoices').update({ html_path: htmlPath }).eq('id', inv.id);
     const { data: signed, error } = await db.storage.from('invoices').createSignedUrl(htmlPath, 300);
     if (error) throw error;
     return res.json({ url: signed.signedUrl, html });
