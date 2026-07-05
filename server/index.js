@@ -202,6 +202,57 @@ Respond ONLY with a compact JSON object: {"safe": boolean, "category": "sexual"|
   }
 }
 
+// Modération de TEXTE public (bio, pseudo, titre d'événement, texte de post) via
+// Claude. Renvoie { safe, reason } — fail-open : en cas d'indisponibilité/erreur,
+// on renvoie safe:true (ne bloque jamais un utilisateur légitime sur une panne).
+async function moderateTextWithClaude(text) {
+  const key = process.env.ANTHROPIC_API_KEY;
+  const clean = String(text || '').trim();
+  if (!key || clean.length === 0) return { safe: true, skipped: true };
+  try {
+    const system = `You are a text content-moderation classifier for a public social app where verified public figures write short profile texts (bio, public username/nickname) and posts. Decide whether a text is allowed to be published.
+BLOCK (unsafe) if the text contains any of:
+- sexual, pornographic or sexually explicit content, or solicitation
+- hate speech, racism, slurs, harassment or serious insults targeting people/groups
+- threats, incitement to violence, terrorist/extremist content
+- promotion of clearly illegal activities (drugs sale, weapons, scams)
+ALLOW (safe) ordinary texts: normal bios, greetings, sport/music/event descriptions, brand names, emojis, everyday language, mild slang.
+Respond ONLY with a compact JSON object: {"safe": boolean, "category": "sexual"|"hate"|"violence"|"illegal"|"none", "reason": "<=8 words"}.`;
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 100,
+        system: [{ type: 'text', text: system }],
+        messages: [{ role: 'user', content: [
+          { type: 'text', text: 'Classify this text for publication:\n\n' + clean.slice(0, 2000) },
+        ] }],
+      }),
+    });
+    const j = await resp.json();
+    if (j.error) {
+      const et = j.error.type || '', em = j.error.message || '';
+      if (['rate_limit_error', 'overloaded_error', 'authentication_error', 'api_error'].includes(et)
+          || /credit|quota|balance|limit/i.test(em)) {
+        recordServiceAlert('anthropic', 'critical', 'Claude indisponible — la MODÉRATION des textes est dégradée : ' + (em || et));
+      }
+      return { safe: true, skipped: true };
+    }
+    if (!j.content || !j.content[0] || !j.content[0].text) return { safe: true, skipped: true };
+    let txt = j.content[0].text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    const parsed = JSON.parse(txt);
+    if (typeof parsed.safe !== 'boolean') return { safe: true, skipped: true };
+    return {
+      safe: parsed.safe,
+      reason: parsed.safe ? null : (parsed.category || parsed.reason || 'inappropriate_content'),
+    };
+  } catch (e) {
+    console.error('[Moderation/Text] error:', e.message);
+    return { safe: true, skipped: true };
+  }
+}
+
 async function moderateImage(imageBuffer, mimeType) {
   // 1) Claude vision en priorité (sexuel + violence/guerre/haine)
   const claude = await moderateImageWithClaude(imageBuffer, mimeType);
@@ -4521,6 +4572,22 @@ app.post('/api/upsert-celebrity-profile', async (req, res) => {
       safeWebsite = check.normalized || website;
     }
 
+    // Modération du TEXTE public (nom + bio) — refuse le contenu choquant.
+    {
+      const mn = await moderateTextWithClaude(stage_name);
+      if (!mn.safe) {
+        logSecurityEvent(req, 'content_rejected', 'nom public rejeté (' + (mn.reason || '') + ')');
+        return res.status(400).json({ error: 'text_rejected', field: 'stage_name', message: "Ce nom public n'est pas autorisé." });
+      }
+      if (bio && String(bio).trim()) {
+        const mb = await moderateTextWithClaude(bio);
+        if (!mb.safe) {
+          logSecurityEvent(req, 'content_rejected', 'bio rejetée (' + (mb.reason || '') + ')');
+          return res.status(400).json({ error: 'text_rejected', field: 'bio', message: "Ta bio contient un contenu non autorisé et n'a pas été enregistrée." });
+        }
+      }
+    }
+
     const { error: profileError } = await db
       .from('profiles')
       .upsert({ id: user_id, role: 'celebrity', updated_at: new Date().toISOString() }, { onConflict: 'id' });
@@ -4598,6 +4665,22 @@ app.post('/api/update-celebrity-profile', async (req, res) => {
         fields.website = check.normalized || website;
       } else {
         fields.website = website; // vide/null = la célébrité efface son site (autorisé)
+      }
+    }
+    // Modération du TEXTE public : bio + nom public. Refuse le contenu choquant
+    // (sexuel/haine/violence/illégal). Fail-open si Claude indispo.
+    if (bio !== undefined && String(bio).trim()) {
+      const m = await moderateTextWithClaude(bio);
+      if (!m.safe) {
+        logSecurityEvent(req, 'content_rejected', 'bio rejetée (' + (m.reason || '') + ')');
+        return res.status(400).json({ error: 'text_rejected', field: 'bio', message: "Ta bio contient un contenu non autorisé et n'a pas été enregistrée." });
+      }
+    }
+    if (stage_name !== undefined && String(stage_name).trim()) {
+      const m = await moderateTextWithClaude(stage_name);
+      if (!m.safe) {
+        logSecurityEvent(req, 'content_rejected', 'nom public rejeté (' + (m.reason || '') + ')');
+        return res.status(400).json({ error: 'text_rejected', field: 'stage_name', message: "Ce nom public n'est pas autorisé." });
       }
     }
     if (bio !== undefined) fields.bio = bio;
