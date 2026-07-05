@@ -1116,7 +1116,9 @@ app.post('/api/create-checkout-session', async (req, res) => {
 app.get('/api/verify-payment', async (req, res) => {
   try {
     const stripe = await getStripe();
-    const { checkout_session_id } = req.query;
+    // Certains écrans (booking-success, autograph-success) passent `session_id` ;
+    // on accepte les deux noms pour ne pas bloquer un fan qui a payé.
+    const checkout_session_id = req.query.checkout_session_id || req.query.session_id;
 
     if (!checkout_session_id) {
       return res.status(400).json({ error: 'Missing checkout_session_id' });

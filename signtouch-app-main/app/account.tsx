@@ -324,6 +324,12 @@ export default function AccountScreen() {
       router.push('/report-problem' as any);
     } else if (action === 'admin') {
       router.push('/admin' as any);
+    } else if (action === 'rate') {
+      // TODO au lancement : ouvrir la fiche store (StoreReview / Linking store URL).
+      showAlert(
+        t('rateThanksTitle' as any) || 'Merci beaucoup ! 🙏',
+        t('rateComingSoon' as any) || "L'app n'est pas encore publiée sur les stores — tu pourras la noter dès sa sortie."
+      );
     } else if (action === 'replayTutorial') {
       AsyncStorage.removeItem('@plyz_onboarding_done').then(() => {
         startOnboarding();

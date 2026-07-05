@@ -38,6 +38,7 @@ type FilterType = 'all' | 'live' | 'ended' | 'scheduled';
 
 interface Booking {
   id: string;
+  celebrity_id?: string;
   status: string;
   duration_minutes: number;
   price_cents: number;
@@ -220,27 +221,40 @@ export default function MySpaceScreen() {
 
   const handleUpdateBookingStatus = async (bookingId: string, status: string) => {
     try {
-      await authedFetch(`${API_BASE}/api/update-booking-status`, {
+      const res = await authedFetch(`${API_BASE}/api/update-booking-status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ booking_id: bookingId, status }),
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data?.error) {
+        // On NE prétend PAS que c'est fait : une action refus = remboursement.
+        showAlert(t('error') || 'Erreur', data?.message || data?.error || (t('actionFailed' as any) || "L'action a échoué. Réessaie."));
+        return;
+      }
       fetchData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Update booking status error:', err);
+      showAlert(t('error') || 'Erreur', t('actionFailed' as any) || "L'action a échoué. Réessaie.");
     }
   };
 
   const handleUpdateAutographStatus = async (autographId: string, status: string) => {
     try {
-      await authedFetch(`${API_BASE}/api/update-autograph-status`, {
+      const res = await authedFetch(`${API_BASE}/api/update-autograph-status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ autograph_id: autographId, status }),
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data?.error) {
+        showAlert(t('error') || 'Erreur', data?.message || data?.error || (t('actionFailed' as any) || "L'action a échoué. Réessaie."));
+        return;
+      }
       fetchData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Update autograph status error:', err);
+      showAlert(t('error') || 'Erreur', t('actionFailed' as any) || "L'action a échoué. Réessaie.");
     }
   };
 
@@ -589,7 +603,7 @@ export default function MySpaceScreen() {
     return (
       <TouchableOpacity
         style={styles.itemCard}
-        onPress={() => celeb && router.push(`/celebrity-detail?id=${item.id}` as any)}
+        onPress={() => item.celebrity_id && router.push(`/celebrity-detail?id=${item.celebrity_id}` as any)}
         activeOpacity={0.8}
       >
         <View style={styles.itemIcon}>
