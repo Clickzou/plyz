@@ -23,8 +23,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const isRTL = RTL_LANGUAGES.includes(language);
 
-  // Synchronise le formatage des dates avec la langue active de l'app
-  setDateLocale(language);
+  // Synchronise le formatage des dates avec la langue active (effet, PAS pendant le
+  // render — évite un effet de bord répété + comportement erratique en StrictMode).
+  useEffect(() => {
+    setDateLocale(language);
+  }, [language]);
 
   // Initialize language from storage or device locale
   useEffect(() => {

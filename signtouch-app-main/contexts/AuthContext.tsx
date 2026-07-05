@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   useEffect(() => {
+    let cancelled = false;
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       // Session fantôme : le JWT en cache peut pointer vers un compte qui n'existe
       // plus côté serveur (ex: compte supprimé). On le détecte via getUser() et on
@@ -52,15 +53,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // les actions échouent (FK profiles, 403 user_not_found...).
       if (session?.user) {
         const { error } = await supabase.auth.getUser();
+        if (cancelled) return;
         if (error) {
           console.warn('[Auth] Session invalide (compte inexistant) -> purge', error.message);
           await supabase.auth.signOut();
+          if (cancelled) return;
           setSession(null);
           setUser(null);
           setLoading(false);
           return;
         }
       }
+      if (cancelled) return;
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -69,11 +73,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (cancelled) return;
       setSession(session);
       setUser(session?.user ?? null);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Vérifie si le compte connecté est banni (fonction Supabase sécurisée).

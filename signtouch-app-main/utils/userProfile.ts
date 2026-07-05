@@ -59,23 +59,31 @@ export const upsertUserProfile = async (
     if (updates.bio !== undefined) payload.bio = updates.bio;
     if (updates.stripe_connect_account_id !== undefined) payload.stripe_account_id = updates.stripe_connect_account_id;
 
-    let error;
+    let error: any;
+    let rows: any[] | null = null;
     if (payload.stage_name !== undefined) {
       // stage_name est fourni : on peut créer la ligne au besoin (stage_name est NOT NULL)
-      ({ error } = await supabase
+      ({ error, data: rows } = await supabase
         .from('celebrity_profiles')
-        .upsert({ user_id: userId, ...payload }, { onConflict: 'user_id' }));
+        .upsert({ user_id: userId, ...payload }, { onConflict: 'user_id' })
+        .select('user_id'));
     } else {
       // pas de stage_name : mise à jour de la ligne existante uniquement
       // (évite de violer la contrainte NOT NULL sur stage_name)
-      ({ error } = await supabase
+      ({ error, data: rows } = await supabase
         .from('celebrity_profiles')
         .update(payload)
-        .eq('user_id', userId));
+        .eq('user_id', userId)
+        .select('user_id'));
     }
 
     if (error) {
       console.error('[UserProfile] Error upserting profile:', error);
+      return false;
+    }
+    // supabase ne lève pas si RLS bloque / ligne absente : 0 ligne = échec réel.
+    if (!rows || rows.length === 0) {
+      console.warn('[UserProfile] upsert/update a affecté 0 ligne (RLS ou profil absent)');
       return false;
     }
 

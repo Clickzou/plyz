@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FOLLOWS_KEY = '@plyz_followed_celebrities';
@@ -102,7 +102,9 @@ export function FollowProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const followedIds = new Set(followedCelebrities.map(c => c.user_id));
+  // Mémoïsé sur followedCelebrities : sinon le Set (et donc isFollowing) change
+  // d'identité à chaque render → re-renders inutiles dans toutes les lignes de liste.
+  const followedIds = useMemo(() => new Set(followedCelebrities.map(c => c.user_id)), [followedCelebrities]);
 
   const isFollowing = useCallback((userId: string) => followedIds.has(userId), [followedIds]);
 
