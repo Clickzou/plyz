@@ -77,10 +77,16 @@ interface Invoice {
   prestation_label: string;
   prestation_date: string;
   amount_cents: number;
+  commission_cents?: number;
   currency: string;
   role: 'buyer' | 'seller';
   created_at: string;
 }
+
+type PeriodKey = 'month' | '3months' | '6months' | 'year' | 'all';
+const PERIOD_DAYS: Record<PeriodKey, number | null> = {
+  month: 30, '3months': 90, '6months': 180, year: 365, all: null,
+};
 
 export default function MyEarningsScreen() {
   const router = useRouter();
@@ -94,6 +100,9 @@ export default function MyEarningsScreen() {
 
   // Onglet Revenus / Factures (les factures étaient dans un écran séparé « Mes documents »).
   const [tab, setTab] = useState<'revenus' | 'factures'>('revenus');
+  const [invSub, setInvSub] = useState<'fans' | 'plyz'>('fans');
+  const [period, setPeriod] = useState<PeriodKey>('all');
+  const [downloadingAll, setDownloadingAll] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [invLoading, setInvLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -153,10 +162,13 @@ export default function MyEarningsScreen() {
     return `${(cents / 100).toFixed(2)} ${sym[currency] || currency}`;
   };
 
+  // type='commission' → facture de commission Plyz ; sinon facture de prestation.
+  const typeParam = () => (invSub === 'plyz' ? '?type=commission' : '');
+
   const handleDownloadInvoice = async (inv: Invoice) => {
     try {
       setDownloadingId(inv.id);
-      const res = await authedFetch(`${STRIPE_SERVER_URL}/api/invoice/${inv.id}/download`);
+      const res = await authedFetch(`${STRIPE_SERVER_URL}/api/invoice/${inv.id}/download${typeParam()}`);
       const d = await res.json();
       if (d?.url) await Linking.openURL(d.url); else throw new Error('no url');
     } catch (e) {
@@ -166,12 +178,40 @@ export default function MyEarningsScreen() {
     }
   };
 
+  // Télécharge TOUTES les factures de la période en un seul document.
+  const downloadAll = async () => {
+    try {
+      setDownloadingAll(true);
+      const type = invSub === 'plyz' ? '&type=commission' : '';
+      const res = await authedFetch(`${STRIPE_SERVER_URL}/api/invoices/export?period=${period}${type}`);
+      const d = await res.json();
+      if (!d?.html || !d?.count) {
+        showAlert(t('docsEmptyTitle' as any) || 'Aucune facture', t('docsEmptyPeriod' as any) || 'Aucune facture sur cette période.');
+        return;
+      }
+      if (Platform.OS === 'web') {
+        if (typeof window !== 'undefined') {
+          const w = window.open('', '_blank');
+          if (w) { w.document.write(d.html); w.document.close(); }
+        }
+      } else {
+        setPreviewLabel(t('docsExportTitle' as any) || 'Toutes mes factures');
+        setPreviewUrl(null);
+        setPreviewHtml(d.html);
+      }
+    } catch (e) {
+      showAlert(t('error') || 'Erreur', t('docsError') || 'Impossible d\'ouvrir le document.');
+    } finally {
+      setDownloadingAll(false);
+    }
+  };
+
   // Aperçu (visualiser la facture avant de la télécharger).
   const viewInvoice = async (inv: Invoice) => {
     try {
       setPreviewLoading(true);
       setPreviewLabel(inv.invoice_number);
-      const res = await authedFetch(`${STRIPE_SERVER_URL}/api/invoice/${inv.id}/download`);
+      const res = await authedFetch(`${STRIPE_SERVER_URL}/api/invoice/${inv.id}/download${typeParam()}`);
       const d = await res.json();
       if (!d?.url && !d?.html) throw new Error('no data');
       if (Platform.OS === 'web') {
@@ -233,6 +273,17 @@ export default function MyEarningsScreen() {
 
   const paidSessions = (data?.sessions || []).filter(s => s.price_cents > 0);
 
+  // Factures affichées : uniquement les ventes de la personnalité (role seller),
+  // filtrées par la période choisie. L'onglet Plyz montre les MÊMES factures mais
+  // sous l'angle « commission » (montant = commission_cents).
+  const periodDays = PERIOD_DAYS[period];
+  const visibleInvoices = invoices
+    .filter((i) => i.role === 'seller')
+    .filter((i) => {
+      if (!periodDays) return true;
+      return Date.now() - new Date(i.created_at).getTime() <= periodDays * 86400000;
+    });
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={StyleSheet.absoluteFill} />
@@ -274,22 +325,77 @@ export default function MyEarningsScreen() {
             contentContainerStyle={styles.contentContainer}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
           >
-            {invoices.length === 0 ? (
+            {/* Sous-onglets : Factures fans / Factures Plyz */}
+            <View style={styles.subTabBar}>
+              <TouchableOpacity
+                style={[styles.subTabBtn, invSub === 'fans' && styles.subTabBtnActive]}
+                onPress={() => setInvSub('fans')}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.subTabTxt, invSub === 'fans' && styles.subTabTxtActive]}>
+                  {t('invFansTab' as any) || 'Factures fans'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.subTabBtn, invSub === 'plyz' && styles.subTabBtnActive]}
+                onPress={() => setInvSub('plyz')}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.subTabTxt, invSub === 'plyz' && styles.subTabTxtActive]}>
+                  {t('invPlyzTab' as any) || 'Factures Plyz'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.subTabHint}>
+              {invSub === 'fans'
+                ? (t('invFansHint' as any) || 'Factures des prestations que tu as vendues à tes fans.')
+                : (t('invPlyzHint' as any) || 'Factures de commission de Plyz (mise en relation, 15 %).')}
+            </Text>
+
+            {/* Filtre par période */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.periodRow} contentContainerStyle={styles.periodRowContent}>
+              {(['month', '3months', '6months', 'year', 'all'] as PeriodKey[]).map((p) => (
+                <TouchableOpacity
+                  key={p}
+                  style={[styles.periodChip, period === p && styles.periodChipActive]}
+                  onPress={() => setPeriod(p)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.periodChipTxt, period === p && styles.periodChipTxtActive]}>
+                    {t(('period_' + p) as any) || ({ month: '1 mois', '3months': '3 mois', '6months': '6 mois', year: '1 an', all: 'Tout' } as Record<PeriodKey, string>)[p]}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {/* Tout télécharger */}
+            {visibleInvoices.length > 0 && (
+              <TouchableOpacity style={styles.downloadAllBtn} onPress={downloadAll} disabled={downloadingAll} activeOpacity={0.85}>
+                {downloadingAll ? <ActivityIndicator size="small" color="#fff" /> : <Download size={18} color="#fff" />}
+                <Text style={styles.downloadAllTxt}>{t('invDownloadAll' as any) || 'Tout télécharger'}</Text>
+              </TouchableOpacity>
+            )}
+
+            {visibleInvoices.length === 0 ? (
               <View style={styles.emptyState}>
                 <FileText size={48} color="rgba(255,255,255,0.3)" />
                 <Text style={styles.emptyText}>{t('docsEmpty' as any) || 'Aucune facture pour le moment.'}</Text>
               </View>
             ) : (
-              invoices.map((inv) => (
+              visibleInvoices.map((inv) => {
+                const isPlyz = invSub === 'plyz';
+                const shownCents = isPlyz ? (inv.commission_cents || 0) : inv.amount_cents;
+                return (
                 <View key={inv.id} style={styles.invCard}>
-                  <View style={styles.invIcon}><FileText size={20} color="#10b981" /></View>
+                  <View style={styles.invIcon}><FileText size={20} color={isPlyz ? '#f59e0b' : '#10b981'} /></View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.invTitle} numberOfLines={1}>{inv.prestation_label}</Text>
-                    <Text style={styles.invSub}>{inv.invoice_number}</Text>
+                    <Text style={styles.invSub}>{inv.invoice_number}{isPlyz ? ' · commission' : ''}</Text>
                     <View style={styles.invMetaRow}>
-                      <Text style={styles.invAmount}>{formatMoney(inv.amount_cents, inv.currency)}</Text>
-                      <View style={[styles.invBadge, inv.role === 'seller' ? styles.invBadgeSeller : styles.invBadgeBuyer]}>
-                        <Text style={styles.invBadgeText}>{inv.role === 'seller' ? (t('docsSeller' as any) || 'Revenu') : (t('docsBuyer' as any) || 'Payé')}</Text>
+                      <Text style={styles.invAmount}>{formatMoney(shownCents, inv.currency)}</Text>
+                      <View style={[styles.invBadge, isPlyz ? styles.invBadgeBuyer : styles.invBadgeSeller]}>
+                        <Text style={styles.invBadgeText}>{isPlyz ? (t('invPlyzBadge' as any) || 'Commission') : (t('docsSeller' as any) || 'Revenu')}</Text>
                       </View>
                     </View>
                   </View>
@@ -302,7 +408,7 @@ export default function MyEarningsScreen() {
                     </TouchableOpacity>
                   </View>
                 </View>
-              ))
+              );})
             )}
             <View style={{ height: 100 }} />
           </ScrollView>
@@ -781,6 +887,53 @@ const styles = StyleSheet.create({
   tabBtnActive: { backgroundColor: 'rgba(74,222,128,0.15)' },
   tabTxt: { color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: '600' },
   tabTxtActive: { color: '#4ade80' },
+
+  // --- Sous-onglets factures fans / Plyz ---
+  subTabBar: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 10,
+    padding: 3,
+    gap: 3,
+  },
+  subTabBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 9,
+    borderRadius: 8,
+  },
+  subTabBtnActive: { backgroundColor: 'rgba(56,189,248,0.18)' },
+  subTabTxt: { color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: '700' },
+  subTabTxtActive: { color: '#38bdf8' },
+  subTabHint: { color: 'rgba(255,255,255,0.45)', fontSize: 12, lineHeight: 17, marginBottom: 12 },
+
+  // --- Filtre période ---
+  periodRow: { marginBottom: 12 },
+  periodRowContent: { gap: 8, paddingRight: 8 },
+  periodChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  periodChipActive: { backgroundColor: 'rgba(74,222,128,0.18)', borderColor: 'rgba(74,222,128,0.5)' },
+  periodChipTxt: { color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: '600' },
+  periodChipTxtActive: { color: '#4ade80' },
+  downloadAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#38bdf8',
+    borderRadius: 12,
+    paddingVertical: 12,
+    marginBottom: 16,
+  },
+  downloadAllTxt: { color: '#fff', fontSize: 15, fontWeight: '700' },
 
   // --- Cartes factures ---
   invCard: {
