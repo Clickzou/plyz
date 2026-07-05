@@ -2235,10 +2235,20 @@ app.post('/api/create-event-checkout', async (req, res) => {
           sessionParams.payment_intent_data.transfer_data = {
             destination: celebrityStripeAccountId,
           };
+        } else if (!isStripeTestMode()) {
+          // 💶 LIVE : sans transfert possible, l'argent serait capturé sur la PLATEFORME
+          // sans reversement à la personnalité. On BLOQUE (comme le flux vidéo).
+          console.error('[EventCheckout] Blocked (live): celebrity account cannot receive transfers:', celebrityStripeAccountId);
+          return res.status(403).json({ error: 'CHARGES_NOT_ENABLED', message: "Le compte de paiement de la personnalité n'est pas encore actif." });
         }
       } catch (e) {
         console.warn('[EventCheckout] Could not verify Stripe account:', e.message);
+        if (!isStripeTestMode()) {
+          return res.status(403).json({ error: 'stripe_account_unverifiable', message: "Impossible de vérifier le compte de paiement de la personnalité." });
+        }
       }
+    } else if (!isStripeTestMode()) {
+      return res.status(403).json({ error: 'CHARGES_NOT_ENABLED', message: "Compte de paiement de la personnalité manquant." });
     }
 
     const checkoutSession = await stripe.checkout.sessions.create(sessionParams);
@@ -4473,20 +4483,46 @@ app.post('/api/update-autograph-status', async (req, res) => {
     // 🔒 C2 — AUTH + PROPRIÉTÉ : autorisé si user == celebrity_id OU fan_id de la dédicace.
     const authUser = await verifySupabaseJWT(req);
     if (!authUser) return res.status(401).json({ error: 'Authentication required' });
-    {
-      const { data: ag } = await db
-        .from('autograph_requests')
-        .select('celebrity_id, fan_id')
-        .eq('id', autograph_id)
-        .maybeSingle();
-      if (!ag) {
-        if (isStripeTestMode()) {
-          console.warn('[Update Autograph] TEST: dédicace introuvable', autograph_id, '→ toléré');
-        } else {
-          return res.status(403).json({ error: 'Ownership could not be verified' });
+    const { data: ag } = await db
+      .from('autograph_requests')
+      .select('celebrity_id, fan_id, stripe_session_id')
+      .eq('id', autograph_id)
+      .maybeSingle();
+    if (!ag) {
+      if (isStripeTestMode()) {
+        console.warn('[Update Autograph] TEST: dédicace introuvable', autograph_id, '→ toléré');
+      } else {
+        return res.status(403).json({ error: 'Ownership could not be verified' });
+      }
+    } else if (String(ag.celebrity_id) !== String(authUser.id) && String(ag.fan_id) !== String(authUser.id)) {
+      return res.status(403).json({ error: 'Not authorized for this autograph' });
+    }
+
+    // 💶 REMBOURSEMENT : l'autographe est encaissé IMMÉDIATEMENT (pas de pré-auth).
+    // Si la célébrité refuse/annule, il FAUT rembourser le fan (sinon débité sans
+    // prestation). Idempotent, et on ne marque le statut qu'après un refund réussi.
+    const REFUND_STATUSES = ['cancelled', 'canceled', 'declined', 'rejected', 'refused'];
+    if (REFUND_STATUSES.includes(String(status).toLowerCase()) && ag?.stripe_session_id) {
+      try {
+        const stripe = await getStripe();
+        const cs = await stripe.checkout.sessions.retrieve(ag.stripe_session_id);
+        const pi = cs.payment_intent;
+        if (pi) {
+          const piObj = await stripe.paymentIntents.retrieve(pi);
+          if (piObj.status === 'succeeded') {
+            const existing = await stripe.refunds.list({ payment_intent: pi, limit: 1 });
+            if (!existing.data.length) {
+              await stripe.refunds.create({ payment_intent: pi, reverse_transfer: true, refund_application_fee: true });
+              console.log('[Update Autograph] Remboursement effectué (refus):', pi);
+            }
+          } else if (piObj.status === 'requires_capture') {
+            // Cas d'une éventuelle pré-auth : on libère plutôt que rembourser.
+            await stripe.paymentIntents.cancel(pi);
+          }
         }
-      } else if (String(ag.celebrity_id) !== String(authUser.id) && String(ag.fan_id) !== String(authUser.id)) {
-        return res.status(403).json({ error: 'Not authorized for this autograph' });
+      } catch (refErr) {
+        console.error('[Update Autograph] Remboursement échoué:', refErr.message);
+        return res.status(500).json({ error: 'refund_failed', message: 'Le remboursement a échoué. Réessaie.' });
       }
     }
 
@@ -5452,12 +5488,24 @@ app.post('/api/daily/meeting-token', async (req, res) => {
     const {
       roomName,
       userName,
-      userId,
-      isOwner = false,
       expiryMinutes = 120,
     } = req.body || {};
 
     if (!roomName) return res.status(400).json({ error: 'roomName required' });
+
+    // 🔒 SÉCURITÉ : is_owner et user_id NE viennent PAS du client — sinon n'importe
+    // quel fan connecté pourrait obtenir un jeton OWNER (kick/mute) sur la room
+    // d'une célébrité (noms de room prévisibles = `session-<id>`). On dérive
+    // is_owner de la base : owner = célébrité créatrice de la session.
+    let isOwner = false;
+    const roomMatch = String(roomName).match(/^session-([0-9a-fA-F-]{36})$/);
+    if (roomMatch) {
+      try {
+        const { data: ls } = await getSupabaseAdmin()
+          .from('live_sessions').select('celebrity_id').eq('id', roomMatch[1]).maybeSingle();
+        if (ls && String(ls.celebrity_id) === String(authUser.id)) isOwner = true;
+      } catch (e) { console.warn('[Daily token] owner check failed:', e.message); }
+    }
 
     const response = await fetch(`${DAILY_API_URL}/meeting-tokens`, {
       method: 'POST',
@@ -5469,7 +5517,7 @@ app.post('/api/daily/meeting-token', async (req, res) => {
         properties: {
           room_name: roomName,
           user_name: userName,
-          user_id: userId,
+          user_id: authUser.id,
           is_owner: isOwner,
           enable_screenshare: false,
           enable_prejoin_ui: false,
