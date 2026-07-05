@@ -5984,23 +5984,31 @@ async function createInvoice(params) {
     // Identité de facturation de l'acheteur : « Prénom Nom » si disponible, sinon le pseudo.
     const fanFullName = [fan?.first_name, fan?.last_name].filter(Boolean).join(' ').trim();
     const buyer_snapshot = { name: fanFullName || fan?.display_name || null, address: fan?.address || null };
-    let seq = null;
-    try { const { data } = await db.rpc('next_invoice_seq'); if (data != null) seq = Number(data); } catch {}
-    if (seq == null) seq = Date.now() % 1000000;
-    const invoice_number = 'PLYZ-' + new Date().getFullYear() + '-' + String(seq).padStart(6, '0');
     const inv = {
-      invoice_number, transaction_ref: ref, fan_id: fanId, celebrity_id: celebId,
+      transaction_ref: ref, fan_id: fanId, celebrity_id: celebId,
       prestation_type: params.prestationType || null, prestation_label: params.prestationLabel || 'Prestation',
       prestation_date: params.prestationDate || new Date().toISOString(),
       amount_cents: params.amountCents, currency: (params.currency || 'eur').toLowerCase(),
       commission_cents: params.commissionCents != null ? params.commissionCents : Math.round(params.amountCents * 0.15),
       seller_snapshot, buyer_snapshot,
     };
-    const html = renderInvoiceHtml(inv);
-    const html_path = (celebId || 'x') + '/' + invoice_number + '.html';
-    await db.storage.from('invoices').upload(html_path, Buffer.from(html, 'utf8'), { contentType: 'text/html; charset=utf-8', upsert: true });
-    const { error } = await db.from('invoices').insert({ ...inv, html_path });
+    // ⚖️ Numérotation SANS TROU : on insère SANS invoice_number, le trigger
+    // `assign_invoice_number` l'assigne dans la transaction (un insert annulé
+    // annule aussi l'incrément du compteur). On récupère le numéro assigné.
+    const { data: inserted, error } = await db.from('invoices').insert(inv).select('invoice_number').single();
     if (error) throw error;
+    const invoice_number = inserted.invoice_number;
+    inv.invoice_number = invoice_number;
+    // HTML APRÈS l'insert (best-effort : la facture existe déjà, l'endpoint de
+    // téléchargement régénère le HTML à la volée si besoin).
+    try {
+      const html = renderInvoiceHtml(inv);
+      const html_path = (celebId || 'x') + '/' + invoice_number + '.html';
+      await db.storage.from('invoices').upload(html_path, Buffer.from(html, 'utf8'), { contentType: 'text/html; charset=utf-8', upsert: true });
+      await db.from('invoices').update({ html_path }).eq('transaction_ref', ref);
+    } catch (htmlErr) {
+      console.warn('[Invoice] html upload failed (non-bloquant):', htmlErr.message);
+    }
     console.log('[Invoice] created', invoice_number, 'for', ref);
     return { invoice_number };
   } catch (e) {
