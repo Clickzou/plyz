@@ -5718,7 +5718,9 @@ function invMoney(cents, currency) {
   const sym = { eur: '€', usd: '$', gbp: '£' }[String(currency || 'eur').toLowerCase()] || (currency || '');
   return (Number(cents || 0) / 100).toFixed(2).replace('.', ',') + ' ' + sym;
 }
-function renderInvoiceHtml(inv) {
+function renderInvoiceHtml(inv, role) {
+  // 'seller' = vue célébrité (montant − commission = net) ; sinon vue fan (total payé).
+  const isSeller = role === 'seller';
   const s = inv.seller_snapshot || {};
   const b = inv.buyer_snapshot || {};
   const dateStr = new Date(inv.prestation_date || Date.now()).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -5742,12 +5744,14 @@ function renderInvoiceHtml(inv) {
 </div>
 <table><thead><tr><th>Prestation</th><th>Date</th><th class="right">Montant</th></tr></thead>
 <tbody><tr><td>${invEscape(inv.prestation_label || 'Prestation')}</td><td>${dateStr}</td><td class="right">${invMoney(inv.amount_cents, inv.currency)}</td></tr></tbody></table>
-<div class="box">
+${isSeller ? `<div class="box">
   <div class="row"><div class="muted">Montant de la prestation (payé par le client)</div><div>${invMoney(inv.amount_cents, inv.currency)}</div></div>
   <div class="row"><div class="muted">Commission Plyz (mise en relation)</div><div>− ${invMoney(inv.commission_cents, inv.currency)}</div></div>
-  <div class="row total" style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:10px"><div>Net reversé à la Personnalité</div><div>${invMoney(inv.amount_cents - inv.commission_cents, inv.currency)}</div></div>
+  <div class="row total" style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:10px"><div>Net qui te revient</div><div>${invMoney(inv.amount_cents - inv.commission_cents, inv.currency)}</div></div>
 </div>
-<div class="box small">La Personnalité est seule responsable, le cas échéant, de la TVA applicable à sa prestation. La commission de service de ${invMoney(inv.commission_cents, inv.currency)} est perçue par Plyz au titre de la mise en relation.</div>
+<div class="box small">La commission de service de ${invMoney(inv.commission_cents, inv.currency)} est perçue par Plyz au titre de la mise en relation. Tu es seul(e) responsable, le cas échéant, de la TVA applicable à ta prestation.</div>`
+: `<div class="row"><div></div><div class="total">Total payé : ${invMoney(inv.amount_cents, inv.currency)}</div></div>
+<div class="box small">La Personnalité est seule responsable, le cas échéant, de la TVA applicable à sa prestation.</div>`}
 <div class="small">Plyz est un service édité par CLICKZOU (SAS) — contact@plyz.io — Toulouse, France.</div>
 </body></html>`;
 }
@@ -5835,10 +5839,13 @@ app.get('/api/invoice/:id/download', async (req, res) => {
     if (String(inv.fan_id) !== String(authUser.id) && String(inv.celebrity_id) !== String(authUser.id) && String(authUser.id) !== ADMIN_UID) {
       return res.status(403).json({ error: 'forbidden' });
     }
+    // Rôle du lecteur : la célébrité (vendeur) voit le NET après commission ;
+    // le fan (acheteur) voit le TOTAL payé.
+    const viewerRole = String(inv.celebrity_id) === String(authUser.id) ? 'seller' : 'buyer';
     // On rend toujours le HTML : renvoyé au client pour un aperçu FIABLE dans le
     // WebView (source={{ html }}), car les URLs signées Supabase peuvent être
     // servies en text/plain → sinon le HTML s'affiche « brut ».
-    const html = renderInvoiceHtml(inv);
+    const html = renderInvoiceHtml(inv, viewerRole);
     // On (re)génère TOUJOURS le fichier stocké pour qu'il reflète le format actuel
     // (les anciennes factures avaient un HTML figé sans le détail « net »).
     const htmlPath = inv.html_path || ((inv.celebrity_id || 'x') + '/' + inv.invoice_number + '.html');
