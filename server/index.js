@@ -5778,7 +5778,7 @@ function renderInvoiceHtml(inv, role, type) {
 <div class="box small">Facture émise par <strong>Plyz — CLICKZOU (SAS)</strong>, 5 impasse de la Colombette, 31000 Toulouse, France, <strong>au nom et pour le compte</strong> de la Personnalité ci-dessous (mandat de facturation, art. 289 CGI).</div>
 <div class="row">
   <div class="box" style="flex:1;min-width:240px"><div class="muted">Prestataire (vendeur)</div><strong>${sellerLegal}</strong></div>
-  <div class="box" style="flex:1;min-width:240px"><div class="muted">Client</div><strong>${invEscape(b.name || 'Client')}</strong></div>
+  <div class="box" style="flex:1;min-width:240px"><div class="muted">Client</div><strong>${invEscape(b.name || 'Client')}</strong>${b.address ? `<div class="small" style="margin-top:4px;white-space:pre-line">${invEscape(b.address)}</div>` : ''}</div>
 </div>
 <table><thead><tr><th>Prestation</th><th>Date</th><th class="right">Montant</th></tr></thead>
 <tbody><tr><td>${invEscape(inv.prestation_label || 'Prestation')}</td><td>${dateStr}</td><td class="right">${invMoney(inv.amount_cents, inv.currency)}</td></tr></tbody></table>
@@ -5814,9 +5814,11 @@ async function createInvoice(params) {
     const celebId = cleanId(params.celebrityId);
     let celeb = null, fan = null;
     if (celebId) { const r = await db.from('celebrity_profiles').select('stage_name, tax_status, tax_country, tax_id, business_number, vat_number').eq('user_id', celebId).maybeSingle(); celeb = r.data; }
-    if (fanId) { const r = await db.from('profiles').select('display_name').eq('id', fanId).maybeSingle(); fan = r.data; }
+    if (fanId) { const r = await db.from('profiles').select('display_name, first_name, last_name, address').eq('id', fanId).maybeSingle(); fan = r.data; }
     const seller_snapshot = { name: celeb?.stage_name || null, status: celeb?.tax_status || null, country: celeb?.tax_country || null, tax_id: celeb?.tax_id || null, business_number: celeb?.business_number || null, vat_number: celeb?.vat_number || null };
-    const buyer_snapshot = { name: fan?.display_name || null };
+    // Identité de facturation de l'acheteur : « Prénom Nom » si disponible, sinon le pseudo.
+    const fanFullName = [fan?.first_name, fan?.last_name].filter(Boolean).join(' ').trim();
+    const buyer_snapshot = { name: fanFullName || fan?.display_name || null, address: fan?.address || null };
     let seq = null;
     try { const { data } = await db.rpc('next_invoice_seq'); if (data != null) seq = Number(data); } catch {}
     if (seq == null) seq = Date.now() % 1000000;

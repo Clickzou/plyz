@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Plyz — Vivez un moment unique avec vos stars préférées. Dédicaces personnalisées en direct et appels vidéo privés 1-à-1 avec vos célébrités, artistes et clubs préférés." />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Plyz — Vos stars. En vrai. Rien que pour vous.</title>
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Plyz — Vos stars. En vrai. Rien que pour vous." />
+  <meta property="og:description" content="Dédicaces en direct et appels vidéo privés avec vos stars préférées." />
+  <meta property="og:type" content="website" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ============ HEADER ============ -->
+  <header class="site-header" id="siteHeader">
+    <div class="container header-inner">
+      <a href="#hero" class="logo" aria-label="Plyz, accueil">
+        <span class="logo-mark">P</span>
+        <span class="logo-text">Ply<span class="logo-z">z</span></span>
+      </a>
+
+      <nav class="nav" aria-label="Navigation principale">
+        <a href="#features">Fonctionnalités</a>
+        <a href="#creators">Créateurs</a>
+        <a href="#download">Télécharger</a>
+      </nav>
+
+      <a href="#download" class="btn btn-primary btn-sm header-cta">Télécharger</a>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Ouvrir le menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <!-- Mobile menu -->
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="#features">Fonctionnalités</a>
+      <a href="#how">Comment ça marche</a>
+      <a href="#creators">Créateurs</a>
+      <a href="#download" class="btn btn-primary">Télécharger</a>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="hero">
+      <div class="hero-glow hero-glow-green"></div>
+      <div class="hero-glow hero-glow-purple"></div>
+
+      <div class="container hero-inner">
+        <div class="hero-copy reveal">
+          <div class="hero-badge">⚡ La rencontre nouvelle génération</div>
+          <h1 class="hero-title">
+            Vos stars. <span class="grad-green">En vrai.</span><br />
+            Rien que <span class="grad-purple">pour vous.</span>
+          </h1>
+          <p class="hero-sub">
+            Vivez un moment unique avec vos célébrités préférées : recevez une
+            <strong>dédicace personnalisée en direct</strong> ou vivez un
+            <strong>appel vidéo privé 1-à-1</strong>. Simple, sécurisé, inoubliable.
+          </p>
+
+          <div class="store-badges">
+            <!-- TODO: remplacer href="#" par l'URL App Store une fois l'app publiée -->
+            <a href="#" class="store-badge" aria-label="Télécharger dans l'App Store">
+              <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M16.365 1.43c0 1.14-.42 2.2-1.12 2.98-.84.95-2.22 1.68-3.36 1.59-.14-1.11.42-2.27 1.07-2.99.74-.82 2.07-1.45 3.13-1.51.06.31.28.62.28.93zM20.94 17.2c-.55 1.27-.82 1.84-1.53 2.96-.99 1.57-2.39 3.52-4.12 3.54-1.54.02-1.93-.99-4.02-.98-2.09.01-2.52 1-4.06.97-1.73-.02-3.05-1.78-4.04-3.35-2.77-4.39-3.06-9.55-1.35-12.29 1.22-1.95 3.14-3.09 4.95-3.09 1.84 0 3 1.01 4.52 1.01 1.48 0 2.38-1.01 4.51-1.01 1.61 0 3.31.87 4.53 2.38-3.98 2.17-3.33 7.85.61 9.86z"/></svg>
+              <span class="store-badge-text">
+                <small>Télécharger dans l'</small>
+                <strong>App Store</strong>
+              </span>
+            </a>
+            <!-- TODO: remplacer href="#" par l'URL Google Play une fois l'app publiée -->
+            <a href="#" class="store-badge" aria-label="Disponible sur Google Play">
+              <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="#34d399" d="M3.6 1.6 13 11 3.6 20.4c-.36-.2-.6-.6-.6-1.05V2.65c0-.45.24-.85.6-1.05z"/><path fill="#60a5fa" d="M16.7 14.7 13 11l3.7-3.7 3.2 1.84c.86.5.86 1.72 0 2.22l-3.2 1.84z"/><path fill="#f472b6" d="M3.6 1.6c.18-.1.4-.15.62-.13.2.02.4.09.58.19L16.7 7.3 13 11 3.6 1.6z"/><path fill="#fbbf24" d="M13 11l3.7 3.7L4.8 21.04c-.18.1-.38.17-.58.19a1.1 1.1 0 0 1-.62-.13L13 11z"/></svg>
+              <span class="store-badge-text">
+                <small>Disponible sur</small>
+                <strong>Google Play</strong>
+              </span>
+            </a>
+          </div>
+
+          <div class="hero-trust">
+            <div class="avatars" aria-hidden="true">
+              <span style="background:linear-gradient(135deg,#10b981,#34d399)">★</span>
+              <span style="background:linear-gradient(135deg,#8b5cf6,#6366f1)">♪</span>
+              <span style="background:linear-gradient(135deg,#f59e0b,#ef4444)">⚽</span>
+            </div>
+            <p>Stars · Artistes · Clubs sportifs · Créateurs vous attendent</p>
+          </div>
+        </div>
+
+        <!-- PHONE MOCKUP (CSS pur) -->
+        <div class="hero-phone reveal" aria-hidden="true">
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <div class="app-statusbar">
+                <span>9:41</span>
+                <span class="app-statusbar-icons">📶 🔋</span>
+              </div>
+              <div class="app-topbar">
+                <span class="app-logo">Ply<span class="logo-z">z</span></span>
+                <span class="app-bell">🔔</span>
+              </div>
+              <p class="app-greeting">Bonsoir 👋<br /><strong>Événements en direct</strong></p>
+
+              <div class="app-card app-card-green">
+                <div class="app-card-head">
+                  <span class="app-tag app-tag-green">Dédicace</span>
+                  <span class="app-live">● EN DIRECT</span>
+                </div>
+                <p class="app-card-title">Léa Martin</p>
+                <p class="app-card-sub">Photo signée personnalisée</p>
+                <button class="app-join app-join-green">Rejoindre</button>
+              </div>
+
+              <div class="app-card app-card-purple">
+                <div class="app-card-head">
+                  <span class="app-tag app-tag-purple">Live vidéo</span>
+                  <span class="app-queue">3 en attente</span>
+                </div>
+                <p class="app-card-title">DJ Karim</p>
+                <p class="app-card-sub">Appel vidéo privé 1-à-1</p>
+                <button class="app-join app-join-purple">Rejoindre</button>
+              </div>
+
+              <div class="app-tabbar">
+                <span class="active">🏠</span><span>🎬</span><span>🖼️</span><span>👤</span>
+              </div>
+            </div>
+          </div>
+          <div class="phone-shadow"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MARQUEE / SOCIAL PROOF ============ -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>DÉDICACES EN DIRECT</span><span>•</span>
+        <span>APPELS VIDÉO PRIVÉS</span><span>•</span>
+        <span>ÉVÉNEMENTS PROGRAMMÉS</span><span>•</span>
+        <span>PAIEMENT 100% SÉCURISÉ</span><span>•</span>
+        <span>DÉDICACES EN DIRECT</span><span>•</span>
+        <span>APPELS VIDÉO PRIVÉS</span><span>•</span>
+        <span>ÉVÉNEMENTS PROGRAMMÉS</span><span>•</span>
+        <span>PAIEMENT 100% SÉCURISÉ</span><span>•</span>
+      </div>
+    </div>
+
+    <!-- ============ FONCTIONNALITÉS ============ -->
+    <section class="section" id="features">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Fonctionnalités</span>
+          <h2 class="section-title">Tout pour vivre l'instant</h2>
+          <p class="section-lead">Une expérience pensée pour rapprocher les fans et leurs stars, en toute simplicité.</p>
+        </div>
+
+        <div class="features-grid">
+          <article class="feature-card glass reveal">
+            <div class="feature-icon icon-green">
+              <svg viewBox="0 0 24 24" width="26" height="26"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 17.5 17.5 3a2.1 2.1 0 0 1 3 3L6 20.5l-4 1 1-4z"/></svg>
+            </div>
+            <h3>Dédicaces live</h3>
+            <p>Recevez une photo signée et dédicacée <strong>en direct</strong> par votre célébrité, avec votre prénom et un message rien que pour vous.</p>
+          </article>
+
+          <article class="feature-card glass reveal">
+            <div class="feature-icon icon-purple">
+              <svg viewBox="0 0 24 24" width="26" height="26"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M15 10l5-3v10l-5-3v-4zM2 6h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6z"/></svg>
+            </div>
+            <h3>Appels vidéo privés</h3>
+            <p>Un face-à-face <strong>1-à-1</strong> en visio avec votre star. Rejoignez la file d'attente et vivez votre moment privilégié.</p>
+          </article>
+
+          <article class="feature-card glass reveal">
+            <div class="feature-icon icon-green">
+              <svg viewBox="0 0 24 24" width="26" height="26"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 2v4M16 2v4M3 9h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>
+            </div>
+            <h3>Événements programmés</h3>
+            <p>Découvrez l'agenda des sessions à venir, <strong>réservez à l'avance</strong> et soyez prévenu dès le début de l'événement.</p>
+          </article>
+
+          <article class="feature-card glass reveal">
+            <div class="feature-icon icon-purple">
+              <svg viewBox="0 0 24 24" width="26" height="26"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="9" r="1.5" fill="currentColor"/></svg>
+            </div>
+            <h3>Galerie de dédicaces</h3>
+            <p>Toutes vos dédicaces réunies dans une <strong>galerie collector</strong>. Revivez vos souvenirs et partagez-les quand vous voulez.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ COMMENT ÇA MARCHE ============ -->
+    <section class="section section-alt" id="how">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Comment ça marche</span>
+          <h2 class="section-title">3 étapes, et c'est à vous</h2>
+          <p class="section-lead">De la découverte au souvenir, tout se passe en quelques secondes.</p>
+        </div>
+
+        <div class="steps">
+          <div class="step reveal">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h3>Rejoignez un événement</h3>
+              <p>Parcourez les sessions en direct ou scannez le <strong>QR code</strong> de votre star pour la rejoindre instantanément.</p>
+            </div>
+          </div>
+          <div class="step-line" aria-hidden="true"></div>
+          <div class="step reveal">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h3>Payez en toute sécurité</h3>
+              <p>Réglez votre dédicace ou votre appel en quelques tap. <strong>Paiement 100% sécurisé</strong>, sans engagement.</p>
+            </div>
+          </div>
+          <div class="step-line" aria-hidden="true"></div>
+          <div class="step reveal">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h3>Vivez votre moment</h3>
+              <p>Recevez votre <strong>dédicace personnalisée</strong> ou démarrez votre <strong>appel vidéo privé</strong>. Magique.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CRÉATEURS ============ -->
+    <section class="section" id="creators">
+      <div class="container creators-inner">
+        <div class="creators-copy reveal">
+          <span class="eyebrow">Pour les créateurs</span>
+          <h2 class="section-title">Star, artiste, club ou créateur ?<br /><span class="grad-purple">Monétisez votre communauté.</span></h2>
+          <p class="section-lead">Plyz transforme votre audience en revenus, tout en créant un lien direct et authentique avec vos fans.</p>
+
+          <ul class="benefits">
+            <li>
+              <span class="bullet bullet-green">💸</span>
+              <div><strong>De nouveaux revenus</strong><br />Fixez vos tarifs pour vos dédicaces et appels. Vous gardez la part du lion sur chaque vente.</div>
+            </li>
+            <li>
+              <span class="bullet bullet-purple">💜</span>
+              <div><strong>Un lien direct avec vos fans</strong><br />Offrez des moments inoubliables et fidélisez votre communauté comme jamais.</div>
+            </li>
+            <li>
+              <span class="bullet bullet-green">⚡</span>
+              <div><strong>D'une simplicité totale</strong><br />Créez un événement live en quelques secondes. Aucune compétence technique requise.</div>
+            </li>
+          </ul>
+
+          <a href="#download" class="btn btn-primary">Devenir créateur Plyz</a>
+        </div>
+
+        <div class="creators-visual reveal" aria-hidden="true">
+          <div class="stat-card glass">
+            <div class="stat-row"><span>Revenus du mois</span><strong class="grad-green">+ 2 480 €</strong></div>
+            <div class="stat-bars">
+              <span style="height:38%"></span><span style="height:55%"></span>
+              <span style="height:42%"></span><span style="height:70%"></span>
+              <span style="height:60%"></span><span style="height:88%"></span>
+              <span style="height:75%"></span>
+            </div>
+            <div class="stat-foot">
+              <span class="stat-pill stat-pill-green">▲ 24% de fans</span>
+              <span class="stat-pill stat-pill-purple">128 dédicaces</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CAPTURES D'ÉCRAN ============ -->
+    <!--
+      JC : dépose ici tes vraies captures d'écran de l'app.
+      → Crée un dossier "screenshots" À CÔTÉ de index.html
+      → Nomme tes images : screenshot-1.png, screenshot-2.png, screenshot-3.png
+      Tant qu'aucune image n'est présente, un cadre stylé "À venir" reste visible.
+    -->
+    <section class="section section-alt" id="screens">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">L'application</span>
+          <h2 class="section-title">Pensée dans les moindres détails</h2>
+          <p class="section-lead">Une interface fluide, claire et élégante, sur iPhone comme sur Android.</p>
+        </div>
+
+        <div class="screens-grid">
+          <div class="screen-phone reveal">
+            <div class="phone phone-sm">
+              <div class="phone-notch"></div>
+              <div class="phone-screen screen-shot">
+                <img src="screenshots/screenshot-1.png" alt="Écran d'accueil Plyz" loading="lazy"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                <div class="screen-fallback"><span>📱</span><p>Capture 1<br /><small>screenshots/screenshot-1.png</small></p></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="screen-phone screen-phone-up reveal">
+            <div class="phone phone-sm">
+              <div class="phone-notch"></div>
+              <div class="phone-screen screen-shot">
+                <img src="screenshots/screenshot-2.png" alt="Écran événement live Plyz" loading="lazy"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                <div class="screen-fallback"><span>🎬</span><p>Capture 2<br /><small>screenshots/screenshot-2.png</small></p></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="screen-phone reveal">
+            <div class="phone phone-sm">
+              <div class="phone-notch"></div>
+              <div class="phone-screen screen-shot">
+                <img src="screenshots/screenshot-3.png" alt="Galerie de dédicaces Plyz" loading="lazy"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                <div class="screen-fallback"><span>🖼️</span><p>Capture 3<br /><small>screenshots/screenshot-3.png</small></p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CTA FINAL ============ -->
+    <section class="section cta-final" id="download">
+      <div class="cta-glow"></div>
+      <div class="container cta-inner reveal">
+        <h2 class="cta-title">Téléchargez <span class="logo-text">Ply<span class="logo-z">z</span></span></h2>
+        <p class="cta-sub">Votre prochaine rencontre avec votre star préférée commence ici.</p>
+        <div class="store-badges store-badges-center">
+          <!-- TODO: remplacer href="#" par l'URL App Store une fois l'app publiée -->
+          <a href="#" class="store-badge" aria-label="Télécharger dans l'App Store">
+            <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M16.365 1.43c0 1.14-.42 2.2-1.12 2.98-.84.95-2.22 1.68-3.36 1.59-.14-1.11.42-2.27 1.07-2.99.74-.82 2.07-1.45 3.13-1.51.06.31.28.62.28.93zM20.94 17.2c-.55 1.27-.82 1.84-1.53 2.96-.99 1.57-2.39 3.52-4.12 3.54-1.54.02-1.93-.99-4.02-.98-2.09.01-2.52 1-4.06.97-1.73-.02-3.05-1.78-4.04-3.35-2.77-4.39-3.06-9.55-1.35-12.29 1.22-1.95 3.14-3.09 4.95-3.09 1.84 0 3 1.01 4.52 1.01 1.48 0 2.38-1.01 4.51-1.01 1.61 0 3.31.87 4.53 2.38-3.98 2.17-3.33 7.85.61 9.86z"/></svg>
+            <span class="store-badge-text"><small>Télécharger dans l'</small><strong>App Store</strong></span>
+          </a>
+          <!-- TODO: remplacer href="#" par l'URL Google Play une fois l'app publiée -->
+          <a href="#" class="store-badge" aria-label="Disponible sur Google Play">
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="#34d399" d="M3.6 1.6 13 11 3.6 20.4c-.36-.2-.6-.6-.6-1.05V2.65c0-.45.24-.85.6-1.05z"/><path fill="#60a5fa" d="M16.7 14.7 13 11l3.7-3.7 3.2 1.84c.86.5.86 1.72 0 2.22l-3.2 1.84z"/><path fill="#f472b6" d="M3.6 1.6c.18-.1.4-.15.62-.13.2.02.4.09.58.19L16.7 7.3 13 11 3.6 1.6z"/><path fill="#fbbf24" d="M13 11l3.7 3.7L4.8 21.04c-.18.1-.38.17-.58.19a1.1 1.1 0 0 1-.62-.13L13 11z"/></svg>
+            <span class="store-badge-text"><small>Disponible sur</small><strong>Google Play</strong></span>
+          </a>
+        </div>
+        <p class="cta-note">Gratuit · Sans abonnement · Vous ne payez que vos moments</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a href="#hero" class="logo">
+          <span class="logo-mark">P</span>
+          <span class="logo-text">Ply<span class="logo-z">z</span></span>
+        </a>
+        <p>Vivez un moment unique avec vos stars préférées.</p>
+        <div class="socials" aria-label="Réseaux sociaux">
+          <!-- TODO: remplacer href="#" par vos liens réseaux sociaux -->
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" width="20" height="20"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg></a>
+          <a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M16 3c.3 2.1 1.6 3.7 3.7 4v2.3c-1.4 0-2.7-.4-3.7-1.1v5.9a5.6 5.6 0 1 1-5.6-5.6c.3 0 .6 0 .9.1v2.4a3.2 3.2 0 1 0 2.3 3.1V3H16z"/></svg></a>
+          <a href="#" aria-label="X"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M17.5 3h3l-6.6 7.5L21.5 21h-6l-4.3-5.6L6.2 21H3.2l7-8L2.8 3h6.1l3.9 5.2L17.5 3zm-1 16h1.6L8 4.7H6.3L16.5 19z"/></svg></a>
+          <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" width="20" height="20"><rect x="2" y="5" width="20" height="14" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><path fill="currentColor" d="M10 9l5 3-5 3z"/></svg></a>
+        </div>
+      </div>
+
+      <nav class="footer-links" aria-label="Liens de pied de page">
+        <div>
+          <h4>Plyz</h4>
+          <a href="#features">Fonctionnalités</a>
+          <a href="#how">Comment ça marche</a>
+          <a href="#creators">Créateurs</a>
+          <a href="#download">Télécharger</a>
+        </div>
+        <div>
+          <h4>Légal</h4>
+          <!-- TODO: créer ces pages -->
+          <a href="#">Mentions légales</a>
+          <a href="#">CGV</a>
+          <a href="#">Confidentialité</a>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <a href="mailto:contact@plyz.io">contact@plyz.io</a>
+          <a href="#">Support</a>
+        </div>
+      </nav>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>© <span id="year"></span> Clickzou SAS — Tous droits réservés.</p>
+      <p>Fait avec 💚💜 en France</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

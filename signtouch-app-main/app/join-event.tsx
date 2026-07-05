@@ -1321,11 +1321,17 @@ export default function JoinEventScreen() {
         <TouchableOpacity 
           style={styles.backButton} 
           onPress={() => {
-            if (foundLiveSession) {
+            // Recherche manuelle d'un code sur cet écran → on revient à la
+            // saisie du code. Sinon (arrivé via un lien, une réservation ou un
+            // paiement confirmé) → on quitte réellement l'écran.
+            const manualSearch = foundLiveSession && !paymentAuthorized && !params.code;
+            if (manualSearch) {
               setFoundLiveSession(null);
               setCode('');
-            } else {
+            } else if (router.canGoBack()) {
               router.back();
+            } else {
+              router.replace('/');
             }
           }}
         >

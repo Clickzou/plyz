@@ -55,6 +55,9 @@ export default function WelcomeAuthScreen({
 
   // Profile step state
   const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [address, setAddress] = useState('');
   const [bio, setBio] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
@@ -95,7 +98,7 @@ export default function WelcomeAuthScreen({
       try {
         const { data, error: selErr } = await supabase
           .from('profiles')
-          .select('display_name')
+          .select('display_name, first_name, last_name, address')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -107,8 +110,16 @@ export default function WelcomeAuthScreen({
           return;
         }
 
-        const displayName = (data?.display_name || '').trim();
-        if (!displayName) {
+        // Profil complet = identité de facturation présente (prénom + nom + adresse).
+        const hasBilling =
+          !!(data?.first_name || '').trim() &&
+          !!(data?.last_name || '').trim() &&
+          !!(data?.address || '').trim();
+        if (!hasBilling) {
+          // Pré-remplit les champs déjà connus.
+          setFirstName((data?.first_name || '').trim());
+          setLastName((data?.last_name || '').trim());
+          setAddress((data?.address || '').trim());
           setStep('profile');
           setAwaitingProfileCheck(false);
         } else {
@@ -211,7 +222,11 @@ export default function WelcomeAuthScreen({
   };
 
   const handleFinish = async () => {
-    if (!user?.id || !name.trim()) return;
+    if (!user?.id) return;
+    if (!firstName.trim() || !lastName.trim() || !address.trim()) {
+      setError('Renseigne ton prénom, ton nom et ton adresse pour continuer.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -246,10 +261,15 @@ export default function WelcomeAuthScreen({
       }
 
       // 2. Update the profile row.
+      // display_name (nom public) = pseudo si fourni, sinon « Prénom Nom ».
+      const publicName = name.trim() || `${firstName.trim()} ${lastName.trim()}`.trim();
       await supabase
         .from('profiles')
         .update({
-          display_name: name.trim(),
+          display_name: publicName,
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          address: address.trim(),
           bio: bio.trim() || null,
           ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
         })
@@ -414,9 +434,11 @@ export default function WelcomeAuthScreen({
               <View style={styles.iconCircle}>
                 <Sparkles size={40} color="#10b981" />
               </View>
-              <Text style={styles.title}>Crée ton profil</Text>
+              <Text style={styles.title}>Tes informations</Text>
               <Text style={styles.subtitle}>
-                Ton pseudo et ta photo seront visibles par les autres.
+                Ton prénom, ton nom et ton adresse sont nécessaires pour établir
+                et te permettre de télécharger tes factures de paiement depuis ton
+                compte. Ces informations restent privées.
               </Text>
 
               <TouchableOpacity
@@ -439,22 +461,44 @@ export default function WelcomeAuthScreen({
 
               <TextInput
                 style={styles.input}
-                placeholder="Ton pseudo (nom public)"
+                placeholder="Prénom *"
                 placeholderTextColor="#64748b"
-                value={name}
-                onChangeText={setName}
+                value={firstName}
+                onChangeText={setFirstName}
                 autoCapitalize="words"
+                autoComplete="name-given"
+                editable={!loading}
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="Nom *"
+                placeholderTextColor="#64748b"
+                value={lastName}
+                onChangeText={setLastName}
+                autoCapitalize="words"
+                autoComplete="name-family"
                 editable={!loading}
               />
 
               <TextInput
                 style={[styles.input, styles.bioInput]}
-                placeholder="Décris-toi en quelques mots (optionnel)"
+                placeholder="Adresse (n°, rue, code postal, ville, pays) *"
                 placeholderTextColor="#64748b"
-                value={bio}
-                onChangeText={(text) => setBio(text.slice(0, 200))}
+                value={address}
+                onChangeText={setAddress}
                 multiline
-                maxLength={200}
+                autoComplete="street-address"
+                editable={!loading}
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="Pseudo public (optionnel)"
+                placeholderTextColor="#64748b"
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
                 editable={!loading}
               />
 
@@ -463,11 +507,12 @@ export default function WelcomeAuthScreen({
               <TouchableOpacity
                 style={[
                   styles.primaryButton,
-                  (loading || !name.trim()) && styles.buttonDisabled,
+                  (loading || !firstName.trim() || !lastName.trim() || !address.trim()) &&
+                    styles.buttonDisabled,
                 ]}
                 onPress={handleFinish}
                 activeOpacity={0.85}
-                disabled={loading || !name.trim()}
+                disabled={loading || !firstName.trim() || !lastName.trim() || !address.trim()}
               >
                 {loading ? (
                   <ActivityIndicator color="#fff" />

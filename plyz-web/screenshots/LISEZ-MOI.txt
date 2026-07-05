@@ -1,0 +1,15 @@
+DÉPOSE TES CAPTURES D'ÉCRAN ICI
+================================
+
+Mets tes vraies captures de l'app Plyz dans ce dossier, nommées exactement :
+
+  screenshot-1.png
+  screenshot-2.png
+  screenshot-3.png
+
+Conseils :
+- Format vertical (capture de téléphone), idéalement même taille pour les 3.
+- .png ou .jpg (si .jpg, renomme l'extension dans index.html : screenshot-1.jpg, etc.)
+- Tant qu'aucune image n'est présente, un joli cadre "Capture X" reste affiché.
+
+C'est tout : rafraîchis la page, tes captures apparaissent dans les cadres téléphone.
