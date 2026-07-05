@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Platform, Linking,
+  ActivityIndicator, Platform, Linking, Modal,
 } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, FileText, Download } from 'lucide-react-native';
+import { ArrowLeft, FileText, Download, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,6 +25,11 @@ interface Invoice {
   created_at: string;
 }
 
+type PeriodKey = 'month' | '3months' | '6months' | 'year' | 'all';
+const PERIOD_DAYS: Record<PeriodKey, number | null> = {
+  month: 30, '3months': 90, '6months': 180, year: 365, all: null,
+};
+
 export default function DocumentsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -32,6 +38,9 @@ export default function DocumentsScreen() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [period, setPeriod] = useState<PeriodKey>('all');
+  const [downloadingAll, setDownloadingAll] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
 
   const authHeaders = (): Record<string, string> => {
     const h: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -79,6 +88,36 @@ export default function DocumentsScreen() {
     }
   };
 
+  const downloadAll = async () => {
+    try {
+      setDownloadingAll(true);
+      const res = await fetch(`${API_BASE}/api/invoices/export?period=${period}`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data?.html || !data?.count) {
+        showAlert(t('docsEmptyTitle' as any) || 'Aucune facture', t('docsEmptyPeriod' as any) || 'Aucune facture sur cette période.');
+        return;
+      }
+      if (Platform.OS === 'web') {
+        if (typeof window !== 'undefined') {
+          const w = window.open('', '_blank');
+          if (w) { w.document.write(data.html); w.document.close(); }
+        }
+      } else {
+        setPreviewHtml(data.html);
+      }
+    } catch (e) {
+      showAlert(t('error') || 'Erreur', t('docsError') || 'Impossible d\'ouvrir le document.');
+    } finally {
+      setDownloadingAll(false);
+    }
+  };
+
+  const periodDays = PERIOD_DAYS[period];
+  const visibleInvoices = invoices.filter((i) => {
+    if (!periodDays) return true;
+    return Date.now() - new Date(i.created_at).getTime() <= periodDays * 86400000;
+  });
+
   const revenueTotal = invoices
     .filter((i) => i.role === 'seller')
     .reduce((sum, i) => sum + (i.amount_cents || 0), 0);
@@ -108,13 +147,36 @@ export default function DocumentsScreen() {
             </View>
           )}
 
-          {invoices.length === 0 ? (
+          {/* Filtre par période */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.periodRow} contentContainerStyle={styles.periodRowContent}>
+            {(['month', '3months', '6months', 'year', 'all'] as PeriodKey[]).map((p) => (
+              <TouchableOpacity
+                key={p}
+                style={[styles.periodChip, period === p && styles.periodChipActive]}
+                onPress={() => setPeriod(p)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.periodChipTxt, period === p && styles.periodChipTxtActive]}>
+                  {t(('period_' + p) as any) || ({ month: '1 mois', '3months': '3 mois', '6months': '6 mois', year: '1 an', all: 'Tout' } as Record<PeriodKey, string>)[p]}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {visibleInvoices.length > 0 && (
+            <TouchableOpacity style={styles.downloadAllBtn} onPress={downloadAll} disabled={downloadingAll} activeOpacity={0.85}>
+              {downloadingAll ? <ActivityIndicator size="small" color="#fff" /> : <Download size={18} color="#fff" />}
+              <Text style={styles.downloadAllTxt}>{t('invDownloadAll' as any) || 'Tout télécharger'}</Text>
+            </TouchableOpacity>
+          )}
+
+          {visibleInvoices.length === 0 ? (
             <View style={styles.emptyBox}>
               <FileText size={48} color="#334155" />
               <Text style={styles.emptyText}>{t('docsEmpty') || 'Aucune facture pour le moment.'}</Text>
             </View>
           ) : (
-            invoices.map((inv) => (
+            visibleInvoices.map((inv) => (
               <View key={inv.id} style={styles.card}>
                 <View style={styles.cardIcon}><FileText size={20} color="#10b981" /></View>
                 <View style={{ flex: 1 }}>
@@ -139,6 +201,21 @@ export default function DocumentsScreen() {
           )}
         </ScrollView>
       )}
+
+      {/* Aperçu « Toutes mes factures » (mobile) */}
+      <Modal visible={!!previewHtml} animationType="slide" onRequestClose={() => setPreviewHtml(null)}>
+        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+          <View style={[styles.previewHeader, { paddingTop: insets.top + 8 }]}>
+            <Text style={styles.previewTitle} numberOfLines={1}>{t('docsExportTitle' as any) || 'Toutes mes factures'}</Text>
+            <TouchableOpacity onPress={() => setPreviewHtml(null)} style={styles.previewClose}>
+              <X size={22} color="#0f172a" />
+            </TouchableOpacity>
+          </View>
+          {previewHtml ? (
+            <WebView originWhitelist={['*']} source={{ html: previewHtml }} style={{ flex: 1 }} />
+          ) : null}
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -167,4 +244,15 @@ const styles = StyleSheet.create({
   badgeBuyer: { backgroundColor: 'rgba(56,189,248,0.2)' },
   badgeText: { color: '#cbd5e1', fontSize: 11, fontWeight: '600' },
   dlBtn: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(56,189,248,0.12)', justifyContent: 'center', alignItems: 'center' },
+  periodRow: { marginBottom: 12 },
+  periodRowContent: { gap: 8, paddingRight: 8 },
+  periodChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  periodChipActive: { backgroundColor: 'rgba(16,185,129,0.18)', borderColor: 'rgba(16,185,129,0.5)' },
+  periodChipTxt: { color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: '600' },
+  periodChipTxtActive: { color: '#10b981' },
+  downloadAllBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#38bdf8', borderRadius: 12, paddingVertical: 12, marginBottom: 16 },
+  downloadAllTxt: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  previewHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#e5e7eb' },
+  previewTitle: { fontSize: 16, fontWeight: '700', color: '#0f172a', flex: 1 },
+  previewClose: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' },
 });
