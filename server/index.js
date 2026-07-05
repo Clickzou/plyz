@@ -2081,9 +2081,13 @@ app.post('/api/set-event-payment-config', async (req, res) => {
       creatorId: creatorId || null,
     };
 
+    // ⚠️ supabase-js ne LÈVE pas sur erreur : il la renvoie dans { error }. Il faut
+    // donc la lire explicitement, sinon un échec de persistance passe inaperçu et la
+    // config n'existe qu'en mémoire (perdue au redémarrage Replit → paiements cassés).
+    let persisted = true;
     try {
       const admin = getSupabaseAdmin();
-      await admin
+      const { error: upErr } = await admin
         .from('event_payment_configs')
         .upsert({
           event_session_id: eventSessionId,
@@ -2092,12 +2096,15 @@ app.post('/api/set-event-payment-config', async (req, res) => {
           celebrity_name: celebrityName || null,
           creator_id: creatorId || null,
         }, { onConflict: 'event_session_id' });
+      if (upErr) throw upErr;
     } catch (dbErr) {
+      persisted = false;
       console.warn('[EventPayment] DB store failed (using in-memory):', dbErr.message);
+      recordServiceAlert('billing', 'critical', 'Config de paiement événement NON persistée (en mémoire seulement, perdue au redémarrage) : ' + eventSessionId + ' — ' + dbErr.message);
     }
 
-    console.log('[EventPayment] Config stored for event:', eventSessionId, '| Price:', priceCents);
-    res.json({ success: true });
+    console.log('[EventPayment] Config stored for event:', eventSessionId, '| Price:', priceCents, '| persisted:', persisted);
+    res.json({ success: true, persisted });
   } catch (error) {
     console.error('[EventPayment] Error:', error.message);
     if (req.body.eventSessionId) {
@@ -4745,6 +4752,16 @@ app.post('/api/upload-celebrity-avatar', async (req, res) => {
         error: 'content_rejected',
         reason: mod.reason,
         message: 'Cette image ne respecte pas nos règles de contenu et ne peut pas être utilisée comme photo de profil.',
+      });
+    }
+    // FAIL-CLOSED pour la photo de profil : si la modération n'a PAS pu s'exécuter
+    // (Claude + modèle local indisponibles), on REFUSE plutôt que de laisser passer
+    // une image non vérifiée (contenu très visible + exigence des stores). Action
+    // rare (onboarding) → friction acceptable ; une alerte admin est déjà levée.
+    if (mod.skipped) {
+      return res.status(503).json({
+        error: 'moderation_unavailable',
+        message: "La vérification de l'image est momentanément indisponible. Réessaie dans un instant.",
       });
     }
 
