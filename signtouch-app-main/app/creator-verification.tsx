@@ -13,6 +13,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { authedFetch } from '@/utils/authedFetch';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
 const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
@@ -62,7 +63,7 @@ export default function CreatorVerificationScreen() {
   const checkStatus = async () => {
     if (!user?.id) { setLoading(false); return; }
     try {
-      const res = await fetch(`${API_BASE}/api/creator-verification-status?user_id=${user.id}`);
+      const res = await authedFetch(`${API_BASE}/api/creator-verification-status?user_id=${user.id}`);
       const data = await res.json();
       setExistingStatus(data);
     } catch (e) {

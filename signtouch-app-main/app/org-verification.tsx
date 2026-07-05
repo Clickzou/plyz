@@ -63,7 +63,7 @@ export default function OrgVerificationScreen() {
   const checkStatus = async () => {
     if (!user?.id) { setLoading(false); return; }
     try {
-      const res = await fetch(`${API_BASE}/api/org-verification-status?user_id=${user.id}`);
+      const res = await authedFetch(`${API_BASE}/api/org-verification-status?user_id=${user.id}`);
       const data = await res.json();
       setExistingStatus(data);
     } catch (e) {

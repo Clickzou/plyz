@@ -971,20 +971,8 @@ app.get('/plyz-logo-email.png', (req, res) => {
 // [DIAG] Indique quel compte Stripe le serveur DÉPLOYÉ utilise réellement + si
 // Connect répond. Ne renvoie que le PRÉFIXE (14 car.) de la clé = partie qui
 // identifie le compte (non secret, présent aussi dans la clé publique).
-app.get('/api/_diag/stripe', async (req, res) => {
-  try {
-    const { secretKey, mode } = getStripeCredentials();
-    const stripe = await getStripe();
-    let connectOk = false, connectError = null;
-    try {
-      await stripe.accounts.list({ limit: 1 });
-      connectOk = true;
-    } catch (e) { connectError = e.message; }
-    res.json({ mode, keyPrefix: String(secretKey).substring(0, 14), connectOk, connectError });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
+// (Route de diagnostic /api/_diag/stripe RETIRÉE — elle exposait le mode + le
+// préfixe de clé Stripe sans authentification. Ne pas réintroduire en prod.)
 
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
@@ -3680,7 +3668,8 @@ app.get('/api/celebrity/:id', async (req, res) => {
               wikidata_types: types.length > 0 ? types : celeb.wikidata_types,
               wikidata_confidence: 100,
               wikidata_last_sync: new Date().toISOString(),
-              official_verified: true,
+              // ⚠️ SÉCURITÉ : ne PAS (re)mettre official_verified ici — le simple
+              // fait qu'un profil ait un wikidata_id ne prouve pas l'identité.
               updated_at: new Date().toISOString(),
             };
 
@@ -3722,9 +3711,17 @@ app.get('/api/celebrity/:id', async (req, res) => {
       .eq('celebrity_id', id)
       .eq('status', 'completed');
 
+    // ⚠️ SÉCURITÉ : cet endpoint est PUBLIC (fiche célébrité). On ne renvoie JAMAIS
+    // les données fiscales/DAC7 ni l'identifiant de compte Stripe.
+    const {
+      tax_id: _t, vat_number: _v, business_number: _b, stripe_account_id: _s,
+      tax_status: _ts, tax_country: _tc, stripe_charges_enabled: _sc,
+      ...publicCeleb
+    } = celeb;
+
     res.json({
       celebrity: {
-        ...celeb,
+        ...publicCeleb,
         avatar_url: celeb.profiles?.avatar_url || celeb.wikidata_image_url,
         display_name: celeb.profiles?.display_name,
         pricing: celeb.celebrity_pricing?.[0] || null,
@@ -4931,14 +4928,16 @@ app.post('/api/wikidata/sync-celebrity', async (req, res) => {
         wikidata_types: ent.types,
         wikidata_confidence: 100,
         wikidata_last_sync: new Date().toISOString(),
-        official_verified: true,
+        // ⚠️ SÉCURITÉ : NE PAS auto-vérifier ici. L'utilisateur peut choisir le
+        // wikidata_id de n'importe quelle célébrité → usurpation. Les données
+        // Wikidata sont un SIGNAL pour la revue manuelle, pas une preuve d'identité.
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', celebrity_id);
 
     if (error) throw error;
-    console.log(`[Wikidata Sync] Auto-verified celebrity ${celebrity_id} (found on Wikidata: ${ent.wikidata_id})`);
-    res.json({ success: true, entity: ent, auto_verified: true });
+    console.log(`[Wikidata Sync] Wikidata data stored for ${celebrity_id} (${ent.wikidata_id}) — NOT auto-verified`);
+    res.json({ success: true, entity: ent, auto_verified: false });
   } catch (error) {
     console.error('[Wikidata Sync] Error:', error.message);
     res.status(500).json({ error: error.message });
@@ -5057,7 +5056,10 @@ app.post('/api/org-verification-request', async (req, res) => {
 app.get('/api/org-verification-status', async (req, res) => {
   try {
     const { user_id } = req.query;
-    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+    // 🔒 Auth + propriété : on ne consulte QUE sa propre demande.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    if (!user_id || String(user_id) !== String(authUser.id)) return res.status(403).json({ error: 'forbidden' });
 
     const supabase = getSupabaseAdmin();
 
@@ -5136,12 +5138,10 @@ app.post('/api/creator-verification-request', async (req, res) => {
       return res.status(409).json({ error: 'request_pending', message: 'A verification request is already pending' });
     }
 
-    const validLinkPattern = /^https?:\/\/(www\.)?(twitch\.tv|youtube\.com|tiktok\.com|instagram\.com|x\.com|twitter\.com)\//i;
-    const hasValidLinks = Object.values(platform_links).some(link => validLinkPattern.test(link));
-    const followerNum = parseInt(follower_count, 10) || 0;
-    const autoApproved = hasValidLinks && followerNum >= 10000;
-    const assignedStatus = autoApproved ? 'approved' : 'pending';
-
+    // ⚠️ SÉCURITÉ : le nombre d'abonnés est DÉCLARÉ par l'utilisateur (non vérifiable).
+    // Toute auto-approbation serait une escalade de privilèges triviale (taper 10000).
+    // → Toute demande passe en REVUE MANUELLE (statut 'pending'). Aucun octroi
+    // automatique de official_verified ici.
     const { data, error } = await supabase
       .from('creator_verification_requests')
       .insert({
@@ -5152,23 +5152,14 @@ app.post('/api/creator-verification-request', async (req, res) => {
         follower_count: follower_count || null,
         content_category: content_category || null,
         additional_info: additional_info || null,
-        status: assignedStatus,
-        ...(autoApproved ? { reviewed_at: new Date().toISOString(), admin_notes: 'Auto-approved: valid social links + 10,000+ followers' } : {}),
+        status: 'pending',
       })
       .select()
       .single();
 
     if (error) throw error;
 
-    if (autoApproved) {
-      await supabase
-        .from('celebrity_profiles')
-        .update({ official_verified: true, updated_at: new Date().toISOString() })
-        .eq('user_id', user_id);
-      console.log(`[Creator Verification] Auto-approved ${display_name} (${followerNum} followers)`);
-    }
-
-    res.json({ success: true, request: data, auto_approved: autoApproved });
+    res.json({ success: true, request: data, auto_approved: false });
   } catch (error) {
     console.error('[creator-verification-request]', error);
     res.status(500).json({ error: error.message });
@@ -5178,7 +5169,10 @@ app.post('/api/creator-verification-request', async (req, res) => {
 app.get('/api/creator-verification-status', async (req, res) => {
   try {
     const { user_id } = req.query;
-    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+    // 🔒 Auth + propriété : on ne consulte QUE sa propre demande.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    if (!user_id || String(user_id) !== String(authUser.id)) return res.status(403).json({ error: 'forbidden' });
 
     const supabase = getSupabaseAdmin();
 
@@ -5276,7 +5270,10 @@ app.post('/api/celebrity-verification-request', async (req, res) => {
 app.get('/api/celebrity-verification-status', async (req, res) => {
   try {
     const { user_id } = req.query;
-    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+    // 🔒 Auth + propriété : on ne consulte QUE sa propre demande.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    if (!user_id || String(user_id) !== String(authUser.id)) return res.status(403).json({ error: 'forbidden' });
 
     const supabase = getSupabaseAdmin();
 
@@ -5579,6 +5576,44 @@ app.post('/api/submit-rating', async (req, res) => {
     const numericRating = Number(rating);
     if (!Number.isFinite(numericRating) || numericRating < 1 || numericRating > 5) {
       return res.status(400).json({ error: 'rating must be a number between 1 and 5' });
+    }
+
+    // On ne se note pas soi-même.
+    if (String(rated_id) === String(rater_id)) {
+      return res.status(400).json({ error: 'cannot_rate_self' });
+    }
+
+    // 🔒 SÉCURITÉ : l'appelant authentifié doit AVOIR PARTICIPÉ à cette session
+    // (célébrité créatrice OU fan inscrit). Sinon un utilisateur pourrait noter/
+    // bannir des inconnus en masse (avg<3 & total>=3 → is_banned). On accepte les
+    // formats fan_id `fan_user_<uid>` / `<uid>`.
+    {
+      const uid = String(authUser.id);
+      let isParticipant = false;
+      const { data: ls } = await admin.from('live_sessions').select('celebrity_id').eq('id', session_id).maybeSingle();
+      if (ls) {
+        if (String(ls.celebrity_id) === uid) isParticipant = true;
+        else {
+          const { data: q } = await admin.from('session_queue').select('id')
+            .eq('session_id', session_id).or(`fan_id.eq.fan_user_${uid},fan_id.eq.${uid}`).limit(1);
+          if (q && q.length) isParticipant = true;
+        }
+      }
+      if (!isParticipant) {
+        const { data: es } = await admin.from('event_sessions').select('created_by').eq('id', session_id).maybeSingle();
+        if (es) {
+          if (String(es.created_by) === uid) isParticipant = true;
+          else {
+            const { data: pf } = await admin.from('event_paid_fans').select('id')
+              .eq('event_session_id', session_id).or(`fan_id.eq.fan_user_${uid},fan_id.eq.${uid}`).limit(1);
+            if (pf && pf.length) isParticipant = true;
+          }
+        }
+      }
+      if (!isParticipant) {
+        logSecurityEvent(req, 'rating_forged', `notation refusée : ${uid} n'a pas participé à la session ${session_id}`);
+        return res.status(403).json({ error: 'not_a_participant' });
+      }
     }
 
     // Anti-doublon : une seule note par (session_id, rater_id, rated_id).

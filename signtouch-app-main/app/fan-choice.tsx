@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import { supabase } from '@/utils/supabase';
+import { authedFetch } from '@/utils/authedFetch';
 import { showAlert } from '@/utils/alertHelper';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
@@ -83,7 +84,7 @@ export default function FanChoiceScreen() {
       const types = ['celebrity', 'creator', 'org'];
       const results = await Promise.all(
         types.map((type) =>
-          fetch(`${API_BASE}/api/${type}-verification-status?user_id=${user.id}`)
+          authedFetch(`${API_BASE}/api/${type}-verification-status?user_id=${user.id}`)
             .then((r) => r.json())
             .catch(() => null)
         )
