@@ -12,7 +12,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { showAlert } from '@/utils/alertHelper';
 
-const API_BASE = Platform.OS === 'web' ? '' : (process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '');
+// On utilise toujours l'URL serveur complète (y compris sur web) : il n'y a pas
+// de version web publique servie par le serveur, donc same-origin ('') ne marche
+// pas en dev. Le serveur autorise le CORS.
+const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
 interface Invoice {
   id: string;

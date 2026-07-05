@@ -69,6 +69,19 @@ interface EarningsData {
   grand_total_cents?: number;
   video_month_cents?: number;
   dedication_month_cents?: number;
+  events?: EventStat[];
+}
+
+interface EventStat {
+  id: string;
+  title: string;
+  code: string;
+  status: string;
+  created_at: string;
+  starts_at?: string;
+  ended_at?: string;
+  paid_fans: number;
+  net_earnings_cents: number;
 }
 
 interface Invoice {
@@ -553,6 +566,49 @@ export default function MyEarningsScreen() {
                 </View>
               );
             })
+          )}
+
+          {/* Historique des ÉVÉNEMENTS DÉDICACE (revenus dédicaces) */}
+          {(data?.events || []).length > 0 && (
+            <>
+              <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
+                {t('dedicationEventsHistory' as any) || 'Événements dédicace'}
+              </Text>
+              {(data?.events || []).map((ev) => (
+                <View key={ev.id} style={styles.sessionCard}>
+                  <View style={styles.sessionTitleRow}>
+                    <View style={styles.sessionTitleContainer}>
+                      <Calendar size={16} color="#fff" />
+                      <Text style={styles.sessionTitle} numberOfLines={1}>{ev.title || ev.code}</Text>
+                    </View>
+                    <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(ev.status)}20`, borderColor: getStatusColor(ev.status) }]}>
+                      <Text style={[styles.statusText, { color: getStatusColor(ev.status) }]}>{getStatusLabel(ev.status)}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.sessionHeader}>
+                    <View style={styles.sessionDateContainer}>
+                      <Calendar size={14} color="rgba(255,255,255,0.5)" />
+                      <Text style={styles.sessionDate}>
+                        Code {ev.code} · {formatDate(ev.created_at)}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.sessionEarningsRow}>
+                    <View>
+                      <Text style={styles.sessionEarningsLabel}>{t('sessionEarnings') || 'Revenus nets'}</Text>
+                      <Text style={styles.sessionEarningsDetail}>
+                        {ev.paid_fans} {t('completedFans') || 'fans'}
+                      </Text>
+                    </View>
+                    <Text style={styles.sessionEarningsAmount}>
+                      {(ev.net_earnings_cents / 100).toFixed(2)}€
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </>
           )}
 
           <View style={{ height: 100 }} />

@@ -1661,6 +1661,7 @@ export default {
   docsEmptyTitle: "No invoice",
   docsEmptyPeriod: "No invoice for this period.",
   docsExportTitle: "All my invoices",
+  dedicationEventsHistory: "Dedication events",
   docsRevenueTotal: "Your total billed earnings",
   docsError: "Unable to open the document.",
   docsMenuItem: 'My invoices',

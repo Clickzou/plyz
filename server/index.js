@@ -1631,23 +1631,25 @@ app.get('/api/celebrity-earnings', async (req, res) => {
     // Date de référence = event_paid_fans.created_at (pas de colonne captured_at).
     let dedicationTotalCents = 0;
     let dedicationMonthCents = 0;
+    let eventStats = []; // détail par événement dédicace (pour l'historique)
     try {
       const admin = getSupabaseAdmin();
 
       // 1) Événements créés par cette célébrité (id en uuid -> comparé en text).
       const { data: myEvents, error: evErr } = await admin
         .from('event_sessions')
-        .select('id')
+        .select('id, title, join_code, status, created_at, starts_at, ends_at')
         .eq('created_by', authUser.id);
       if (evErr) throw new Error(`event_sessions read failed: ${evErr.message}`);
 
       const myEventIds = (myEvents || []).map((e) => String(e.id));
+      const perEvent = {}; // id -> { net, fans }
 
       if (myEventIds.length > 0) {
         // 2) Paiements dédicace CAPTURÉS rattachés à ces événements.
         const { data: paidRows, error: pErr } = await admin
           .from('event_paid_fans')
-          .select('amount_cents, created_at')
+          .select('event_session_id, amount_cents, created_at')
           .in('event_session_id', myEventIds)
           .eq('payment_captured', true);
         if (pErr) throw new Error(`event_paid_fans read failed: ${pErr.message}`);
@@ -1661,8 +1663,28 @@ app.get('/api/celebrity-earnings', async (req, res) => {
           if (isCurrentMonth(r.created_at)) {
             dedicationMonthCents += net;
           }
+          const k = String(r.event_session_id);
+          if (!perEvent[k]) perEvent[k] = { net: 0, fans: 0 };
+          perEvent[k].net += net;
+          perEvent[k].fans += 1;
         }
       }
+
+      // 3) Détail par événement (on ne garde que ceux ayant généré des revenus).
+      eventStats = (myEvents || [])
+        .map((e) => ({
+          id: e.id,
+          title: e.title,
+          code: e.join_code,
+          status: e.status,
+          created_at: e.created_at,
+          starts_at: e.starts_at,
+          ended_at: e.ends_at,
+          paid_fans: (perEvent[String(e.id)] || {}).fans || 0,
+          net_earnings_cents: (perEvent[String(e.id)] || {}).net || 0,
+        }))
+        .filter((e) => e.paid_fans > 0)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     } catch (dedErr) {
       // Catch silencieux : si le calcul dédicace échoue, on renvoie 0 pour cette
       // portion sans casser la réponse vidéo (rétrocompatible).
@@ -1681,6 +1703,7 @@ app.get('/api/celebrity-earnings', async (req, res) => {
       dedication_total_cents: dedicationTotalCents,
       dedication_month_cents: dedicationMonthCents,
       grand_total_cents: totalEarningsCents + dedicationTotalCents,
+      events: eventStats,
     });
   } catch (error) {
     console.error('[CelebrityEarnings] Error:', error.message);
@@ -2867,17 +2890,24 @@ app.post('/api/capture-event-payments', async (req, res) => {
           console.log('[EventCapture] Captured:', paymentIntentId, '| fan:', fan.fan_id, '| amount:', cap.amount, cap.currency);
           // Facture (best-effort : n'interrompt jamais l'encaissement)
           try {
-            let celebId = null;
+            let celebId = null, evTitle = null, evCode = null;
             if (fan.event_session_id) {
-              const { data: ev } = await supabase.from('event_sessions').select('created_by').eq('id', fan.event_session_id).maybeSingle();
+              const { data: ev } = await supabase.from('event_sessions').select('created_by, title, join_code').eq('id', fan.event_session_id).maybeSingle();
               celebId = ev?.created_by || null;
+              evTitle = ev?.title || null;
+              evCode = ev?.join_code || null;
             }
+            // Libellé identifiant l'événement (titre + code) pour permettre le
+            // rapprochement comptable facture <-> événement.
+            const evLabel = evTitle
+              ? ('Dédicace — événement « ' + evTitle + ' »' + (evCode ? ' (code ' + evCode + ')' : ''))
+              : 'Dédicace en événement';
             await createInvoice({
               transactionRef: 'evt_' + fan.event_session_id + '_' + fan.fan_id,
               fanId: fan.fan_id,
               celebrityId: celebId,
               prestationType: 'event_dedication',
-              prestationLabel: 'Dédicace en événement',
+              prestationLabel: evLabel,
               amountCents: cap.amount,
               currency: cap.currency,
             });

@@ -1645,6 +1645,7 @@ export default {
   docsEmptyTitle: "Aucune facture",
   docsEmptyPeriod: "Aucune facture sur cette période.",
   docsExportTitle: "Toutes mes factures",
+  dedicationEventsHistory: "Événements dédicace",
   docsRevenueTotal: "Total de tes revenus facturés",
   docsError: "Impossible d'ouvrir le document.",
   docsMenuItem: 'Mes factures',
