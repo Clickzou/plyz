@@ -28,6 +28,8 @@ import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { saveMemory } from '@/utils/storageService';
+import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
 import { downloadImageWeb } from '@/utils/collectorLiveStorage';
 import ViewShot from 'react-native-view-shot';
 import { SvgUri, SvgXml, default as Svg, Path } from 'react-native-svg';
@@ -340,9 +342,13 @@ export default function EventPhotoEditorScreen() {
 
       if (Platform.OS === 'web') {
         downloadImageWeb(uri, `plyz_${signerName}_${Date.now()}.png`);
-      }
-
-      if (Platform.OS !== 'web') {
+      } else {
+        // Sauvegarde AUSSI dans la galerie de l'appareil (best-effort) pour que le
+        // message « enregistré dans ta galerie » soit exact.
+        try {
+          const { status } = await MediaLibrary.requestPermissionsAsync();
+          if (status === 'granted') await MediaLibrary.saveToLibraryAsync(uri);
+        } catch (e) { console.warn('[event-photo-editor] gallery save failed', e); }
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
       showAlert(t('done') || 'Done', (t as any)('savedToGallery') || 'Photo saved to your gallery!');
@@ -372,6 +378,13 @@ export default function EventPhotoEditorScreen() {
         }
         if (uri) {
           downloadImageWeb(uri, `plyz_${signerName}_${Date.now()}.png`);
+        }
+      } else if (uri) {
+        // MOBILE : partage natif du fichier image (le bouton ne faisait rien avant).
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: `${signerName} - Plyz` });
+        } else {
+          showAlert(t('error') || 'Erreur', t('shareUnavailable' as any) || 'Le partage n\'est pas disponible sur cet appareil.');
         }
       }
     } catch (error) {

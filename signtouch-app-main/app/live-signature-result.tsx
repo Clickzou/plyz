@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,10 @@ import {
   Image,
   Share,
   Dimensions,
+  Platform,
 } from 'react-native';
+import { captureRef } from 'react-native-view-shot';
+import * as MediaLibrary from 'expo-media-library';
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -33,6 +36,7 @@ export default function LiveSignatureResultScreen() {
 
   const [entry, setEntry] = useState<QueueEntry | null>(null);
   const [paths, setPaths] = useState<string[]>([]);
+  const cardRef = useRef<View>(null);
 
   useEffect(() => {
     if (!entryId) return;
@@ -60,7 +64,29 @@ export default function LiveSignatureResultScreen() {
   };
 
   const handleSave = async () => {
-    showAlert(t('success'), t('liveSessionSignatureSaved'));
+    try {
+      // Capture réelle de la carte (photo + signature) → image.
+      const uri = await captureRef(cardRef, { format: 'png', quality: 1 });
+      if (Platform.OS === 'web') {
+        if (typeof document !== 'undefined') {
+          const a = document.createElement('a');
+          a.href = uri;
+          a.download = `plyz_signature_${Date.now()}.png`;
+          a.click();
+        }
+      } else {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status !== 'granted') {
+          showAlert(t('error') || 'Erreur', t('mediaPermissionNeeded' as any) || "Autorise l'accès à tes photos pour enregistrer l'image.");
+          return;
+        }
+        await MediaLibrary.saveToLibraryAsync(uri);
+      }
+      showAlert(t('success'), t('liveSessionSignatureSaved'));
+    } catch (e) {
+      console.error('Error saving signature:', e);
+      showAlert(t('error') || 'Erreur', t('downloadFailed' as any) || 'Enregistrement impossible.');
+    }
   };
 
   if (!entry) {
@@ -84,7 +110,7 @@ export default function LiveSignatureResultScreen() {
       </View>
 
       <View style={styles.content}>
-        <View style={styles.signatureCard}>
+        <View style={styles.signatureCard} ref={cardRef} collapsable={false}>
           {entry.photo_url && (
             <Image
               source={{ uri: entry.photo_url }}

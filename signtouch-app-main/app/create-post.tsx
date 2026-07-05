@@ -208,6 +208,7 @@ export default function CreatePostScreen() {
         },
       };
 
+      let serverPublished = false;
       try {
         const res = await authedFetch(`${API_BASE}/api/posts`, {
           method: 'POST',
@@ -223,9 +224,8 @@ export default function CreatePostScreen() {
         });
         if (res.ok) {
           const data = await res.json();
-          if (data.post) {
-            newPost.id = data.post.id;
-          }
+          if (data.post) { newPost.id = data.post.id; }
+          serverPublished = true;
         }
       } catch {}
 
@@ -236,6 +236,15 @@ export default function CreatePostScreen() {
 
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      // Si le serveur n'a PAS publié (compte non vérifié / réseau), on le DIT :
+      // sinon le créateur croit que son post est visible par ses fans alors qu'il
+      // n'est enregistré qu'en local.
+      if (!serverPublished) {
+        showAlert(
+          t('postNotOnFeedTitle' as any) || 'Post non publié sur le fil',
+          t('postNotOnFeedMsg' as any) || "Ton post est enregistré sur cet appareil mais n'a pas pu être publié pour tes fans (compte pas encore vérifié ou problème réseau)."
+        );
       }
       router.back();
     } catch (err) {

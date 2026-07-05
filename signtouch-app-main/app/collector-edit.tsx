@@ -235,12 +235,15 @@ export default function CollectorEditScreen() {
         if (Platform.OS === 'web') {
           downloadImageWeb(uri, `dedication_${item.celebrityName}_${Date.now()}.png`);
         } else {
-          try {
-            const { status } = await MediaLibrary.requestPermissionsAsync();
-            if (status === 'granted') {
-              await MediaLibrary.saveToLibraryAsync(uri);
-            }
-          } catch {}
+          // On ne prétend PAS avoir enregistré si la permission est refusée ou si
+          // l'écriture échoue (sinon le fan croit avoir sa dédicace alors que non).
+          const { status } = await MediaLibrary.requestPermissionsAsync();
+          if (status !== 'granted') {
+            setSaving(false);
+            showAlert(t('error') || 'Erreur', t('mediaPermissionNeeded' as any) || "Autorise l'accès à tes photos pour enregistrer l'image.");
+            return;
+          }
+          await MediaLibrary.saveToLibraryAsync(uri);
         }
       }
 
@@ -298,10 +301,24 @@ export default function CollectorEditScreen() {
         </Text>
 
         <View style={styles.actionsRow}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => {
+          <TouchableOpacity style={styles.actionButton} onPress={async () => {
             const imgUri = item.imageUri || item.uri;
+            if (!imgUri) return;
             if (Platform.OS === 'web') {
               downloadImageWeb(imgUri, `dedication_${item.celebrityName}_${Date.now()}.png`);
+            } else {
+              // Avant : ne faisait RIEN sur mobile. Maintenant : enregistre en galerie.
+              const { status } = await MediaLibrary.requestPermissionsAsync();
+              if (status !== 'granted') {
+                showAlert(t('error') || 'Erreur', t('mediaPermissionNeeded' as any) || "Autorise l'accès à tes photos pour enregistrer l'image.");
+                return;
+              }
+              try {
+                await MediaLibrary.saveToLibraryAsync(imgUri);
+                showAlert(t('success') || 'Success', t('dedicationSaved') || 'Saved!');
+              } catch {
+                showAlert(t('error') || 'Erreur', t('dedicationSaveError') || 'Save failed');
+              }
             }
           }}>
             <Download size={20} color="#fff" />
