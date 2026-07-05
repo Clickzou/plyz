@@ -562,7 +562,7 @@ export default function AccountScreen() {
                     </Text>
                     <TouchableOpacity
                       style={styles.createAccountButton}
-                      onPress={() => setLoginStep('email')}
+                      onPress={() => requireAuth(() => {})}
                       activeOpacity={0.7}
                     >
                       <Mail size={18} color="#ffffff" />
@@ -591,7 +591,7 @@ export default function AccountScreen() {
 
                   <TouchableOpacity
                     style={styles.createAccountButton}
-                    onPress={() => setLoginStep('email')}
+                    onPress={() => requireAuth(() => {})}
                     activeOpacity={0.7}
                   >
                     <Mail size={18} color="#ffffff" />
