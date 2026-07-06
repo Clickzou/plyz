@@ -1251,7 +1251,7 @@ export default function LiveSessionDashboardScreen() {
           </Text>
 
           <View style={{ backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 16 }}>
-            <QRCode value={`plyz://live/${session.code}`} size={160} />
+            <QRCode value={`https://plyz.io/evenement/${session.code}`} size={160} />
           </View>
 
           <TouchableOpacity 
@@ -1410,7 +1410,7 @@ export default function LiveSessionDashboardScreen() {
           <View style={styles.qrSection}>
             <Text style={styles.qrTitle}>{t('liveSessionShareCode')}</Text>
             <View style={[styles.qrContainer, { padding: 12 }]}>
-              <QRCode value={`plyz://live/${session.code}`} size={120} />
+              <QRCode value={`https://plyz.io/evenement/${session.code}`} size={120} />
             </View>
             <TouchableOpacity style={[styles.codeContainer, { marginTop: 8, paddingVertical: 8, paddingHorizontal: 14 }]} onPress={copyCode}>
               <Text style={[styles.codeText, { fontSize: 18 }]}>{session.code}</Text>
@@ -1784,7 +1784,7 @@ export default function LiveSessionDashboardScreen() {
             {showQR && (
               <View style={styles.qrSection}>
                 <View style={styles.qrContainer}>
-                  <QRCode value={`plyz://live/${session.code}`} size={120} />
+                  <QRCode value={`https://plyz.io/evenement/${session.code}`} size={120} />
                 </View>
                 <TouchableOpacity style={styles.codeContainer} onPress={copyCode}>
                   <Text style={styles.codeText}>{session.code}</Text>

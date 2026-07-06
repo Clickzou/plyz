@@ -30,7 +30,7 @@ export default function ShareScreen() {
 
   const appName = 'Plyz';
   const appDescription = t('appDescriptionShare');
-  const appUrl = 'https://plyz.app';
+  const appUrl = 'https://plyz.io';
   const shareMessage = t('shareMessageTemplate')
     .replace('{{appName}}', appName)
     .replace('{{description}}', appDescription)

@@ -18,6 +18,7 @@ import { useFollow } from '@/contexts/FollowContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { CelebrityDetailSkeleton } from '@/components/SkeletonLoader';
 import { useAutoTranslate } from '@/utils/translation';
+import { authedFetch } from '@/utils/authedFetch';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -252,11 +253,9 @@ export default function CelebrityDetailScreen() {
   const handleReport = async () => {
     if (!reportReason.trim()) return;
     try {
-      await fetch(`${API_BASE}/api/report`, {
+      await authedFetch(`${API_BASE}/api/report`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          reporter_id: user?.id || null,
           celebrity_id: celebrity?.user_id,
           reason: reportReason.trim(),
         }),

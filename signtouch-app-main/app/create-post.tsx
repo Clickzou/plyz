@@ -32,7 +32,7 @@ async function compressImage(uri: string): Promise<string> {
   }
 }
 
-async function moderateImageOnServer(uri: string): Promise<{ safe: boolean; error?: string }> {
+async function moderateImageOnServer(uri: string, token?: string): Promise<{ safe: boolean; error?: string }> {
   try {
     const formData = new FormData();
     if (Platform.OS === 'web') {
@@ -47,8 +47,11 @@ async function moderateImageOnServer(uri: string): Promise<{ safe: boolean; erro
       } as any);
     }
 
+    // Auth requise côté serveur : on envoie le Bearer (sans fixer Content-Type,
+    // laissé à fetch pour la frontière multipart).
     const res = await fetch(`${API_BASE}/api/moderate-image`, {
       method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       body: formData,
     });
 
@@ -66,7 +69,7 @@ async function moderateImageOnServer(uri: string): Promise<{ safe: boolean; erro
   }
 }
 
-async function uploadImageToServer(uri: string): Promise<{ url: string | null; rejected?: boolean }> {
+async function uploadImageToServer(uri: string, token?: string): Promise<{ url: string | null; rejected?: boolean }> {
   try {
     const formData = new FormData();
 
@@ -84,6 +87,7 @@ async function uploadImageToServer(uri: string): Promise<{ url: string | null; r
 
     const res = await fetch(`${API_BASE}/api/upload-post-image`, {
       method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       body: formData,
     });
 
@@ -105,7 +109,7 @@ export default function CreatePostScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const params = useLocalSearchParams<{
     prefillTitle?: string;
     prefillBody?: string;
@@ -144,7 +148,7 @@ export default function CreatePostScreen() {
         const compressed = await compressImage(result.assets[0].uri);
 
         setModerating(true);
-        const modResult = await moderateImageOnServer(compressed);
+        const modResult = await moderateImageOnServer(compressed, session?.access_token);
         setModerating(false);
 
         if (!modResult.safe) {
@@ -175,7 +179,7 @@ export default function CreatePostScreen() {
       let mediaUrl: string | null = null;
 
       if (imageUri) {
-        const uploadResult = await uploadImageToServer(imageUri);
+        const uploadResult = await uploadImageToServer(imageUri, session?.access_token);
         if (uploadResult.rejected) {
           showAlert(
             t('contentRejected' as any) || 'Content Rejected',

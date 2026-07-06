@@ -1547,7 +1547,7 @@ export default function MySpaceScreen() {
 
             <View style={styles.qrContainer}>
               <QRCodeSvg
-                value={`plyz://join/${selectedEvent.join_code}`}
+                value={`https://plyz.io/evenement/${selectedEvent.join_code}`}
                 size={200}
                 backgroundColor="#ffffff"
                 color="#1a1a2e"

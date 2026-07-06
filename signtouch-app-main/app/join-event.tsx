@@ -780,7 +780,7 @@ export default function JoinEventScreen() {
 
     try {
       const viewerId = user?.id || await getOrCreateDeviceId();
-      const origin = Platform.OS === 'web' ? window.location.origin : 'https://plyz.app';
+      const origin = Platform.OS === 'web' ? window.location.origin : 'https://plyz.io';
 
       if (Platform.OS !== 'web') {
         await AsyncStorage.setItem('@event_pending_payment_session', foundSession.id);
@@ -1129,7 +1129,7 @@ export default function JoinEventScreen() {
         starts_at: scheduledSession.starts_at,
       });
       const viewerId = user?.id || await getOrCreateDeviceId();
-      const origin = Platform.OS === 'web' ? window.location.origin : 'https://plyz.app';
+      const origin = Platform.OS === 'web' ? window.location.origin : 'https://plyz.io';
       if (Platform.OS !== 'web') {
         await AsyncStorage.setItem('@event_pending_payment_session', scheduledSession.id);
       }

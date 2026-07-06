@@ -126,6 +126,51 @@ const canModerateImages = !!(tf && tf.node && typeof tf.node.decodeImage === 'fu
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
+// ---------------------------------------------------------------------------
+// Rate limiting léger (en mémoire, zéro dépendance). Protège les endpoints
+// sensibles contre les rafales d'abus (spam d'uploads, création en boucle de
+// comptes Stripe ou de checkouts, spam de signalements/traductions). Limite
+// PAR IP + PAR "seau" (route). Se réinitialise au redémarrage (acceptable pour
+// une instance unique). Fenêtres larges : jamais bloquant pour un usage normal.
+// En cas d'erreur interne du limiteur, on laisse passer (fail-open) pour ne
+// jamais casser un flux légitime.
+// ---------------------------------------------------------------------------
+const rateLimitBuckets = new Map(); // `${ip}:${bucket}` -> { count, resetAt }
+function rateLimit(bucket, max, windowMs) {
+  return (req, res, next) => {
+    try {
+      const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown')
+        .split(',')[0].trim();
+      const key = `${ip}:${bucket}`;
+      const now = Date.now();
+      let entry = rateLimitBuckets.get(key);
+      if (!entry || entry.resetAt < now) {
+        entry = { count: 0, resetAt: now + windowMs };
+        rateLimitBuckets.set(key, entry);
+      }
+      entry.count++;
+      if (entry.count > max) {
+        const retryAfter = Math.max(1, Math.ceil((entry.resetAt - now) / 1000));
+        res.set('Retry-After', String(retryAfter));
+        return res.status(429).json({
+          error: 'rate_limited',
+          message: 'Trop de requêtes, réessayez dans un instant.',
+          retryAfter,
+        });
+      }
+      next();
+    } catch (e) {
+      next(); // fail-open : ne jamais bloquer un flux légitime sur une erreur du limiteur
+    }
+  };
+}
+// Purge périodique des entrées expirées (évite toute fuite mémoire).
+const _rlCleanup = setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of rateLimitBuckets) if (v.resetAt < now) rateLimitBuckets.delete(k);
+}, 5 * 60 * 1000);
+if (_rlCleanup.unref) _rlCleanup.unref();
+
 let nsfwModel = null;
 async function loadNsfwModel() {
   if (!canModerateImages) {
@@ -373,6 +418,16 @@ async function verifySupabaseJWT(req) {
     console.error('[Auth] JWT verification failed:', e.message);
     return null;
   }
+}
+
+// Middleware d'auth : rejette (401) tout appel sans JWT valide AVANT le reste du
+// traitement (utile pour couper un upload anonyme avant de bufferiser le fichier).
+// Expose l'utilisateur vérifié sur req.authUser.
+async function requireAuthMw(req, res, next) {
+  const user = await verifySupabaseJWT(req);
+  if (!user) return res.status(401).json({ error: 'unauthorized' });
+  req.authUser = user;
+  next();
 }
 
 // True si la plateforme tourne sur une clé Stripe de TEST (sk_test_...).
@@ -854,10 +909,16 @@ app.post('/api/launch-scheduled-session', async (req, res) => {
   }
 });
 
-app.post('/api/create-connect-account', async (req, res) => {
+app.post('/api/create-connect-account', rateLimit('connect-account', 5, 10 * 60 * 1000), async (req, res) => {
   try {
+    // 🔒 Auth obligatoire : seul un utilisateur connecté peut créer SON compte Stripe.
+    // Empêche la création anonyme en boucle de comptes Connect. L'identité vient
+    // du JWT (jamais du body), le compte est toujours rattaché à l'appelant.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
     const stripe = await getStripe();
-    const { celebrityName, celebrityEmail, celebrityId } = req.body;
+    const { celebrityName, celebrityEmail } = req.body;
+    const celebrityId = authUser.id;
 
     const accountParams = {
       type: 'express',
@@ -974,7 +1035,7 @@ app.get('/plyz-logo-email.png', (req, res) => {
 // (Route de diagnostic /api/_diag/stripe RETIRÉE — elle exposait le mode + le
 // préfixe de clé Stripe sans authentification. Ne pas réintroduire en prod.)
 
-app.post('/api/create-checkout-session', async (req, res) => {
+app.post('/api/create-checkout-session', rateLimit('checkout', 20, 60 * 1000), async (req, res) => {
   try {
     const stripe = await getStripe();
     const {
@@ -2153,7 +2214,7 @@ app.get('/api/get-event-payment-config', async (req, res) => {
   }
 });
 
-app.post('/api/create-event-checkout', async (req, res) => {
+app.post('/api/create-event-checkout', rateLimit('event-checkout', 20, 60 * 1000), async (req, res) => {
   try {
     const stripe = await getStripe();
     const { eventSessionId, fanId, successUrl, cancelUrl } = req.body;
@@ -3839,7 +3900,7 @@ app.get('/api/feed', async (req, res) => {
   }
 });
 
-app.post('/api/moderate-image', upload.single('image'), async (req, res) => {
+app.post('/api/moderate-image', rateLimit('moderate-image', 30, 60 * 1000), requireAuthMw, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });
 
@@ -3859,7 +3920,7 @@ app.post('/api/moderate-image', upload.single('image'), async (req, res) => {
   }
 });
 
-app.post('/api/upload-post-image', upload.single('image'), async (req, res) => {
+app.post('/api/upload-post-image', rateLimit('upload-post-image', 20, 60 * 1000), requireAuthMw, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });
 
@@ -4027,18 +4088,23 @@ app.post('/api/posts', async (req, res) => {
   }
 });
 
-app.post('/api/report', async (req, res) => {
+app.post('/api/report', rateLimit('report', 10, 60 * 1000), async (req, res) => {
   try {
     const db = getSupabaseAdmin();
-    const { reporter_id, celebrity_id, reason } = req.body;
+    const { celebrity_id, reason } = req.body;
 
     if (!celebrity_id || !reason) {
       return res.status(400).json({ error: 'celebrity_id and reason required' });
     }
 
+    // Le déclarant vient du JWT quand il est connecté (jamais usurpable via le body) ;
+    // reste possible en anonyme (explorer libre) → reporter_id null.
+    const authUser = await verifySupabaseJWT(req);
+    const reporter_id = authUser ? authUser.id : null;
+
     const { data, error } = await db
       .from('reports')
-      .insert({ reporter_id: reporter_id || null, celebrity_id, reason })
+      .insert({ reporter_id, celebrity_id, reason })
       .select()
       .single();
 
@@ -4050,7 +4116,7 @@ app.post('/api/report', async (req, res) => {
   }
 });
 
-app.post('/api/book-video', async (req, res) => {
+app.post('/api/book-video', rateLimit('book-video', 20, 60 * 1000), async (req, res) => {
   try {
     const stripe = await getStripe();
     const { fan_id, celebrity_id, duration_minutes } = req.body;
@@ -4191,7 +4257,7 @@ app.post('/api/book-video', async (req, res) => {
   }
 });
 
-app.post('/api/autograph', async (req, res) => {
+app.post('/api/autograph', rateLimit('autograph', 20, 60 * 1000), async (req, res) => {
   try {
     const stripe = await getStripe();
     const { fan_id, celebrity_id, message } = req.body;
@@ -5041,7 +5107,7 @@ app.get('/api/verify-booking-payment', async (req, res) => {
 // Organization Verification Endpoints
 // ============================================================
 
-app.post('/api/org-verification-request', async (req, res) => {
+app.post('/api/org-verification-request', rateLimit('org-verif', 5, 60 * 60 * 1000), async (req, res) => {
   try {
     // 🔒 IDOR — AUTH + PROPRIÉTÉ : la demande est toujours au nom de l'appelant
     // (aligné sur creator/celebrity-verification-request).
@@ -5153,7 +5219,7 @@ app.get('/api/org-verification-status', async (req, res) => {
   }
 });
 
-app.post('/api/creator-verification-request', async (req, res) => {
+app.post('/api/creator-verification-request', rateLimit('creator-verif', 5, 60 * 60 * 1000), async (req, res) => {
   try {
     const authUser = await verifySupabaseJWT(req);
     if (!authUser) {
@@ -5267,7 +5333,7 @@ app.get('/api/creator-verification-status', async (req, res) => {
 });
 
 // --- Vérification "personnalité publique" (sportif / acteur / chanteur / artiste) ---
-app.post('/api/celebrity-verification-request', async (req, res) => {
+app.post('/api/celebrity-verification-request', rateLimit('celeb-verif', 5, 60 * 60 * 1000), async (req, res) => {
   try {
     const authUser = await verifySupabaseJWT(req);
     if (!authUser) {
@@ -5368,7 +5434,7 @@ app.get('/api/celebrity-verification-status', async (req, res) => {
 });
 
 // Signalement d'un problème : envoie un e-mail au support (jc@clickzou.fr).
-app.post('/api/report-problem', async (req, res) => {
+app.post('/api/report-problem', rateLimit('report-problem', 5, 60 * 1000), async (req, res) => {
   try {
     const { subject, message, userEmail, platform, appVersion } = req.body || {};
     if (!message || !String(message).trim()) {
@@ -5824,7 +5890,7 @@ Rules:
   return arr.map((s) => String(s));
 }
 
-app.post('/api/translate', async (req, res) => {
+app.post('/api/translate', rateLimit('translate', 60, 60 * 1000), async (req, res) => {
   try {
     const { texts, targetLang } = req.body || {};
     const langName = TRANSLATE_LANG_NAMES[targetLang];
@@ -6506,6 +6572,49 @@ async function reconcileMissingInvoices() {
       }
     }
   } catch (e) { console.warn('[Reconcile/video]', e.message); }
+  // --- 3) Dédicaces autographe (encaissées IMMÉDIATEMENT au paiement) ---
+  // Argent conservé dès status='paid' (webhook). On rattrape toute dédicace
+  // payée et NON remboursée dont la facture manque. price_cents est stocké en base.
+  try {
+    const REFUND_OR_PENDING = ['pending', 'cancelled', 'canceled', 'declined', 'rejected', 'refused'];
+    const { data: ags } = await admin.from('autograph_requests')
+      .select('id, fan_id, celebrity_id, price_cents, currency, status, stripe_session_id, created_at')
+      .not('stripe_session_id', 'is', null).not('price_cents', 'is', null)
+      .order('created_at', { ascending: false }).limit(200);
+    const rows = (ags || []).filter((a) => a.id && !REFUND_OR_PENDING.includes(String(a.status).toLowerCase()));
+    if (rows.length) {
+      const refs = rows.map((a) => 'autograph_' + a.id);
+      const { data: existRows } = await admin.from('invoices').select('transaction_ref').in('transaction_ref', refs);
+      const have = new Set((existRows || []).map((r) => r.transaction_ref));
+      for (const a of rows) {
+        const ref = 'autograph_' + a.id;
+        if (have.has(ref)) continue;
+        const inv = await createInvoice({ transactionRef: ref, fanId: a.fan_id, celebrityId: a.celebrity_id || null, prestationType: 'autograph', prestationLabel: 'Dédicace (autographe)', amountCents: a.price_cents, currency: a.currency || 'eur' });
+        if (inv) console.log('[Reconcile] facture autographe rattrapée:', ref);
+        else alertOld(a.created_at, ref);
+      }
+    }
+  } catch (e) { console.warn('[Reconcile/autographe]', e.message); }
+  // --- 4) Réservations d'appel vidéo (capturées à la fin → status='completed') ---
+  try {
+    const { data: bks } = await admin.from('booking_requests')
+      .select('id, fan_id, celebrity_id, price_cents, currency, status, created_at')
+      .eq('status', 'completed').not('price_cents', 'is', null)
+      .order('created_at', { ascending: false }).limit(200);
+    const rows = bks || [];
+    if (rows.length) {
+      const refs = rows.map((b) => 'booking_' + b.id);
+      const { data: existRows } = await admin.from('invoices').select('transaction_ref').in('transaction_ref', refs);
+      const have = new Set((existRows || []).map((r) => r.transaction_ref));
+      for (const b of rows) {
+        const ref = 'booking_' + b.id;
+        if (have.has(ref)) continue;
+        const inv = await createInvoice({ transactionRef: ref, fanId: b.fan_id, celebrityId: b.celebrity_id || null, prestationType: 'video_booking', prestationLabel: 'Appel vidéo (réservation)', amountCents: b.price_cents, currency: b.currency || 'eur' });
+        if (inv) console.log('[Reconcile] facture réservation rattrapée:', ref);
+        else alertOld(b.created_at, ref);
+      }
+    }
+  } catch (e) { console.warn('[Reconcile/booking]', e.message); }
 }
 
 // LIBÉRATION DES PRÉ-AUTORISATIONS des sessions live TERMINÉES : un fan resté

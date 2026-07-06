@@ -1153,7 +1153,7 @@ export default function EventPublishScreen() {
             
             <View style={styles.qrCodeContainer}>
               <QRCodeSvg
-                value={`plyz://join/${joinCode}`}
+                value={`https://plyz.io/evenement/${joinCode}`}
                 size={200}
                 backgroundColor="#ffffff"
                 color="#1a1a2e"

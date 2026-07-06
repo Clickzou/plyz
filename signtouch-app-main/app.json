@@ -35,7 +35,7 @@
         ]
       },
       "associatedDomains": [
-        "applinks:plyz.app"
+        "applinks:plyz.io"
       ]
     },
     "android": {
@@ -68,8 +68,13 @@
           "data": [
             {
               "scheme": "https",
-              "host": "plyz.app",
-              "pathPrefix": "/join"
+              "host": "plyz.io",
+              "pathPrefix": "/evenement"
+            },
+            {
+              "scheme": "https",
+              "host": "plyz.io",
+              "pathPrefix": "/post"
             }
           ],
           "category": [

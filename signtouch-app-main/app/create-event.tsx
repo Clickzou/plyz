@@ -678,9 +678,9 @@ export default function CreateEventScreen() {
 
   const WEEKDAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
-  const WEB_BASE_URL = 'https://plyz.app';
-  const qrValue = createdSession 
-    ? `${WEB_BASE_URL}/join?code=${createdSession.join_code}` 
+  const WEB_BASE_URL = 'https://plyz.io';
+  const qrValue = createdSession
+    ? `${WEB_BASE_URL}/evenement/${createdSession.join_code}`
     : '';
   const activeSigner = signers[activeSignerIndex];
 

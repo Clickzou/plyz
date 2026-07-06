@@ -529,7 +529,7 @@ export default function CreateLiveSessionScreen() {
           </Text>
 
           <View style={{ backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 16 }}>
-            <QRCodeSvg value={`plyz://join/${scheduledConfirmation.code}`} size={180} />
+            <QRCodeSvg value={`https://plyz.io/evenement/${scheduledConfirmation.code}`} size={180} />
           </View>
 
           <Text style={{ fontSize: 28, fontWeight: '800', color: '#10B981', letterSpacing: 6, marginBottom: 8 }}>

@@ -14,7 +14,7 @@ interface ShareButtonProps {
 const defaultConfig: ShareConfig = {
   appName: 'Plyz',
   appDescription: 'Créez vos souvenirs avec des signatures personnalisées',
-  appUrl: 'https://plyz.app',
+  appUrl: 'https://plyz.io',
 };
 
 export default function ShareButton({
