@@ -2156,8 +2156,7 @@ app.post('/api/set-event-payment-config', async (req, res) => {
           event_session_id: eventSessionId,
           price_cents: priceCents || 0,
           celebrity_stripe_account_id: celebrityStripeAccountId || null,
-          celebrity_name: celebrityName || null,
-          creator_id: creatorId || null,
+          celebrity_id: creatorId || authUser.id || null,
         }, { onConflict: 'event_session_id' });
       if (upErr) throw upErr;
     } catch (dbErr) {
@@ -2231,7 +2230,7 @@ app.post('/api/create-event-checkout', rateLimit('event-checkout', 20, 60 * 1000
     const adminDb = getSupabaseAdmin();
     const { data: cfg } = await adminDb
       .from('event_payment_configs')
-      .select('price_cents, celebrity_stripe_account_id, celebrity_name')
+      .select('price_cents, celebrity_stripe_account_id')
       .eq('event_session_id', eventSessionId)
       .maybeSingle();
 
@@ -2239,7 +2238,9 @@ app.post('/api/create-event-checkout', rateLimit('event-checkout', 20, 60 * 1000
     if (cfg) {
       priceCents = cfg.price_cents;
       celebrityStripeAccountId = cfg.celebrity_stripe_account_id;
-      celebrityName = cfg.celebrity_name;
+      // Le nom n'est qu'un libellé d'affichage sur le reçu Stripe (non sensible) :
+      // le prix et le destinataire, eux, viennent bien de la config serveur.
+      celebrityName = req.body.celebrityName || null;
     } else if (isTestMode) {
       // Mode TEST uniquement : config absente en base → repli sur les valeurs client.
       priceCents = req.body.priceCents;
