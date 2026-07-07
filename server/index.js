@@ -6127,7 +6127,18 @@ async function createInvoice(params) {
     // `assign_invoice_number` l'assigne dans la transaction (un insert annulé
     // annule aussi l'incrément du compteur). On récupère le numéro assigné.
     const { data: inserted, error } = await db.from('invoices').insert(inv).select('invoice_number').single();
-    if (error) throw error;
+    if (error) {
+      // Idempotence / course : si la facture a été créée entre-temps (violation de
+      // contrainte unique sur transaction_ref, code 23505) OU si le pré-contrôle
+      // ci-dessus a raté sur une erreur transitoire, on RÉCUPÈRE la facture existante
+      // et on la renvoie (truthy). Sans ça, la réconciliation croyait à tort que la
+      // facture manquait et déclenchait une FAUSSE alerte « paiement capturé sans facture ».
+      if (error.code === '23505' || /duplicate key|unique/i.test(error.message || '')) {
+        const { data: already } = await db.from('invoices').select('invoice_number').eq('transaction_ref', ref).maybeSingle();
+        if (already) return already;
+      }
+      throw error;
+    }
     const invoice_number = inserted.invoice_number;
     inv.invoice_number = invoice_number;
     // HTML APRÈS l'insert (best-effort : la facture existe déjà, l'endpoint de
