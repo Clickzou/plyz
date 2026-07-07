@@ -1535,7 +1535,7 @@ export default {
   celOnboardBioSub: 'এই টেক্সটটি আপনার সর্বজনীন প্রোফাইলের "সম্পর্কে" বিভাগে প্রদর্শিত হবে।',
   celOnboardBioPlaceholder: 'যেমন ফরাসি অভিনেতা ও কৌতুকশিল্পী, যিনি পরিচিত...',
   celebrityPublicName: 'সর্বজনীন নাম',
-  celebrityPublicNamePlaceholder: 'আপনার মঞ্চ নাম (যেমন Omar Sy)',
+  celebrityPublicNamePlaceholder: 'আপনার মঞ্চ নাম (যেমন Alex Martin)',
   confirm: 'নিশ্চিত করুন',
   creatorVerifApprovedTitle: 'প্রোফাইল যাচাই হয়েছে!',
   creatorVerifApprovedMsg: 'অভিনন্দন! আপনার ক্রিয়েটর প্রোফাইল স্বয়ংক্রিয়ভাবে যাচাই করা হয়েছে। আপনার অফিশিয়াল ব্যাজ এখন সক্রিয়।',

@@ -1529,7 +1529,7 @@ export default {
   celOnboardBioSub: 'Este texto aparecerá en la sección «Acerca de» de tu perfil público.',
   celOnboardBioPlaceholder: 'Ej.: Actor y humorista francés, conocido por...',
   celebrityPublicName: 'Nombre público',
-  celebrityPublicNamePlaceholder: 'Tu nombre artístico (ej.: Omar Sy)',
+  celebrityPublicNamePlaceholder: 'Tu nombre artístico (ej.: Alex Martin)',
   confirm: 'Confirmar',
   creatorVerifApprovedTitle: '¡Perfil verificado!',
   creatorVerifApprovedMsg: '¡Felicidades! Tu perfil de creador se ha verificado automáticamente. Tu insignia oficial ya está activa.',

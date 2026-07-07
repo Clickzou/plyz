@@ -122,7 +122,7 @@ export default function MetadataModal({ visible, onClose, onSave, onSkip, initia
                 style={styles.input}
                 value={personMet}
                 onChangeText={setPersonMet}
-                placeholder={t('personMetPlaceholder') || 'Ex: Zinedine Zidane'}
+                placeholder={t('personMetPlaceholder') || 'Ex: Alex Martin'}
                 placeholderTextColor="#6b7280"
               />
             </View>

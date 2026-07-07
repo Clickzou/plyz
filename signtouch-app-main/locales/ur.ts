@@ -1535,7 +1535,7 @@ export default {
   celOnboardBioSub: 'یہ متن آپ کے عوامی پروفائل کے "میرے بارے میں" حصے میں ظاہر ہوگا۔',
   celOnboardBioPlaceholder: 'مثلاً: فرانسیسی اداکار اور مزاح نگار، جو اس کے لیے مشہور ہیں...',
   celebrityPublicName: 'عوامی نام',
-  celebrityPublicNamePlaceholder: 'آپ کا اسٹیج نام (مثلاً Omar Sy)',
+  celebrityPublicNamePlaceholder: 'آپ کا اسٹیج نام (مثلاً Alex Martin)',
   confirm: 'تصدیق کریں',
   creatorVerifApprovedTitle: 'پروفائل تصدیق شدہ!',
   creatorVerifApprovedMsg: 'مبارک ہو! آپ کا تخلیق کار پروفائل خود بخود تصدیق ہو گیا ہے۔ آپ کا آفیشل بیج اب فعال ہے۔',

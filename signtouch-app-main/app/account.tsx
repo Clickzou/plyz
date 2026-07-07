@@ -752,7 +752,7 @@ export default function AccountScreen() {
                   value={celebrityName}
                   onChangeText={setCelebrityName}
                   onBlur={saveCelebrityName}
-                  placeholder={t('celebrityPublicNamePlaceholder' as any) || 'Votre nom de scène (ex : Omar Sy)'}
+                  placeholder={t('celebrityPublicNamePlaceholder' as any) || 'Votre nom de scène (ex : Alex Martin)'}
                   placeholderTextColor="#6b7280"
                 />
               </View>

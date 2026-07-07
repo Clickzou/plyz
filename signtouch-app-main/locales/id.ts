@@ -1535,7 +1535,7 @@ export default {
   celOnboardBioSub: 'Teks ini akan muncul di bagian "Tentang" pada profil publik Anda.',
   celOnboardBioPlaceholder: 'Mis. Aktor dan komedian Prancis, dikenal karena...',
   celebrityPublicName: 'Nama publik',
-  celebrityPublicNamePlaceholder: 'Nama panggung Anda (mis. Omar Sy)',
+  celebrityPublicNamePlaceholder: 'Nama panggung Anda (mis. Alex Martin)',
   confirm: 'Konfirmasi',
   creatorVerifApprovedTitle: 'Profil terverifikasi!',
   creatorVerifApprovedMsg: 'Selamat! Profil kreator Anda telah diverifikasi secara otomatis. Lencana resmi Anda kini aktif.',

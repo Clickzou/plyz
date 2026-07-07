@@ -1535,7 +1535,7 @@ export default {
   celOnboardBioSub: 'Teks ini akan muncul di bahagian "Perihal" pada profil awam anda.',
   celOnboardBioPlaceholder: 'Cth. Pelakon dan pelawak Perancis, terkenal kerana...',
   celebrityPublicName: 'Nama awam',
-  celebrityPublicNamePlaceholder: 'Nama pentas anda (cth. Omar Sy)',
+  celebrityPublicNamePlaceholder: 'Nama pentas anda (cth. Alex Martin)',
   confirm: 'Sahkan',
   creatorVerifApprovedTitle: 'Profil disahkan!',
   creatorVerifApprovedMsg: 'Tahniah! Profil pencipta anda telah disahkan secara automatik. Lencana rasmi anda kini aktif.',

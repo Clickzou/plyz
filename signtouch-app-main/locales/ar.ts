@@ -1530,7 +1530,7 @@ export default {
   celOnboardBioSub: 'سيظهر هذا النص في قسم "نبذة عني" من ملفك الشخصي العام.',
   celOnboardBioPlaceholder: 'مثال: ممثل وكوميدي فرنسي، معروف بـ...',
   celebrityPublicName: 'الاسم العلني',
-  celebrityPublicNamePlaceholder: 'اسمك الفني (مثال: Omar Sy)',
+  celebrityPublicNamePlaceholder: 'اسمك الفني (مثال: Alex Martin)',
   confirm: 'تأكيد',
   creatorVerifApprovedTitle: 'تم التحقق من الملف الشخصي!',
   creatorVerifApprovedMsg: 'تهانينا! تم التحقق تلقائيًا من ملفك الشخصي كصانع محتوى. شارتك الرسمية مفعّلة الآن.',

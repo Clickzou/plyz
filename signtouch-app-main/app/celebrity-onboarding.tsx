@@ -112,7 +112,7 @@ export default function CelebrityOnboardingScreen() {
     'Ajoute une photo, une présentation et ton site — c\'est ce que verront tes fans.',
     'Ajouter une photo',
     'Nom public',
-    'Ton nom de scène (ex : Omar Sy)',
+    'Ton nom de scène (ex : Alex Martin)',
     'Présentation',
     'Présente-toi : qui es-tu, ce que tu fais, pourquoi te suivre…',
     'Site web officiel (optionnel)',
@@ -513,7 +513,7 @@ export default function CelebrityOnboardingScreen() {
                 style={styles.profileFieldInput}
                 value={celebrityName}
                 onChangeText={setCelebrityName}
-                placeholder={ct('celOnboardNamePlaceholder' as any) || trUI('Ton nom de scène (ex : Omar Sy)')}
+                placeholder={ct('celOnboardNamePlaceholder' as any) || trUI('Ton nom de scène (ex : Alex Martin)')}
                 placeholderTextColor="#64748b"
               />
 

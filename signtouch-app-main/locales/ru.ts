@@ -1530,7 +1530,7 @@ export default {
   celOnboardBioSub: 'Этот текст появится в разделе «О себе» вашего публичного профиля.',
   celOnboardBioPlaceholder: 'Напр.: Французский актёр и комик, известный по...',
   celebrityPublicName: 'Публичное имя',
-  celebrityPublicNamePlaceholder: 'Ваш сценический псевдоним (напр., Omar Sy)',
+  celebrityPublicNamePlaceholder: 'Ваш сценический псевдоним (напр., Alex Martin)',
   confirm: 'Подтвердить',
   creatorVerifApprovedTitle: 'Профиль подтверждён!',
   creatorVerifApprovedMsg: 'Поздравляем! Ваш профиль автора был автоматически подтверждён. Ваш официальный значок теперь активен.',

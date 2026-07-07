@@ -1530,7 +1530,7 @@ export default {
   celOnboardBioSub: 'Questo testo apparirà nella sezione «Informazioni» del tuo profilo pubblico.',
   celOnboardBioPlaceholder: 'Es.: Attore e comico francese, noto per...',
   celebrityPublicName: 'Nome pubblico',
-  celebrityPublicNamePlaceholder: 'Il tuo nome d\'arte (es.: Omar Sy)',
+  celebrityPublicNamePlaceholder: 'Il tuo nome d\'arte (es.: Alex Martin)',
   confirm: 'Conferma',
   creatorVerifApprovedTitle: 'Profilo verificato!',
   creatorVerifApprovedMsg: 'Congratulazioni! Il tuo profilo creatore è stato verificato automaticamente. Il tuo badge ufficiale è ora attivo.',

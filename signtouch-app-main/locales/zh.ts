@@ -1530,7 +1530,7 @@ export default {
   celOnboardBioSub: '此文本将显示在您公开个人资料的"关于"部分。',
   celOnboardBioPlaceholder: '例如：法国演员兼喜剧演员，因…而闻名',
   celebrityPublicName: '公开名称',
-  celebrityPublicNamePlaceholder: '您的艺名（例如 Omar Sy）',
+  celebrityPublicNamePlaceholder: '您的艺名（例如 Alex Martin）',
   confirm: '确认',
   creatorVerifApprovedTitle: '个人资料已验证！',
   creatorVerifApprovedMsg: '恭喜！您的创作者个人资料已自动验证。您的官方徽章现已激活。',

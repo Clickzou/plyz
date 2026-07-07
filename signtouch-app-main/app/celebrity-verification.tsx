@@ -207,7 +207,7 @@ export default function CelebrityVerificationScreen() {
               style={styles.input}
               value={displayName}
               onChangeText={setDisplayName}
-              placeholder={t('celebVerifNamePlaceholder' as any) || 'Ex : Omar Sy'}
+              placeholder={t('celebVerifNamePlaceholder' as any) || 'Ex : Alex Martin'}
               placeholderTextColor="#6b7280"
             />
 
