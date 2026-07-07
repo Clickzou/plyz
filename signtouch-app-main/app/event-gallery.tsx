@@ -307,6 +307,21 @@ export default function EventGalleryScreen() {
           const newIds = newAssets.map(a => a.id);
           newIds.forEach(id => knownAssetIdsRef.current.add(id));
           setAssets(newAssets);
+          // Collecte AUSSI les dédicaces signées présentes au chargement initial —
+          // inclut celles publiées AVANT que le fan rejoigne. dedupKey = asset.id.
+          newAssets
+            .filter(a => a.asset_type === 'photo_signed' || a.asset_type === 'signed_photo')
+            .forEach(a => {
+              saveCollectorLive(
+                a.asset_url,
+                a.signer?.display_name || 'Celebrity',
+                user?.email || 'Fan',
+                session.id || undefined,
+                session.join_code || undefined,
+                undefined,
+                a.id,
+              ).catch(() => {});
+            });
         } else {
           const trulyNew = newAssets.filter(a => !knownAssetIdsRef.current.has(a.id));
 
