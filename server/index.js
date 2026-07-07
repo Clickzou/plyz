@@ -6533,23 +6533,32 @@ async function sendEventReminders(table, timeCol, creatorCol, fanTable, fanKeyCo
   const { data: rows } = await db.from(table).select('*').eq(flagCol, false).gte(timeCol, lo).lte(timeCol, hi);
   for (const ev of (rows || [])) {
     try {
-      const tokens = [];
+      // On sépare les destinataires : la CÉLÉBRITÉ (hôte) et les FANS reçoivent des
+      // messages ADAPTÉS à leur rôle (le fan « rejoins », l'hôte « c'est à toi »).
+      const creatorTokens = [];
+      const fanTokens = [];
       if (ev[creatorCol]) {
         const { data: t } = await db.from('user_push_tokens').select('token').eq('user_id', ev[creatorCol]).maybeSingle();
-        if (t && t.token) tokens.push(t.token);
+        if (t && t.token) creatorTokens.push(t.token);
       }
       if (fanTable) {
         const { data: fans } = await db.from(fanTable).select('push_token').eq(fanKeyCol, String(ev.id));
-        (fans || []).forEach((f) => { if (f && f.push_token) tokens.push(f.push_token); });
+        (fans || []).forEach((f) => { if (f && f.push_token) fanTokens.push(f.push_token); });
       }
       // Fans ayant RÉSERVÉ (dédicace ET live) — débloque les rappels des lives programmés.
       const { data: resv } = await db.from('event_reservations').select('push_token').eq('event_id', String(ev.id));
-      (resv || []).forEach((f) => { if (f && f.push_token) tokens.push(f.push_token); });
+      (resv || []).forEach((f) => { if (f && f.push_token) fanTokens.push(f.push_token); });
       const name = (titleCol && ev[titleCol]) ? ev[titleCol] : fallbackName;
-      const body = minutes <= 0
+      const when = minutes >= 60 ? 'dans 1 heure' : 'dans quelques minutes';
+      const fanBody = minutes <= 0
         ? `🔴 C'est parti ! « ${name} » commence maintenant.`
-        : `⏰ « ${name} » commence ${minutes >= 60 ? 'dans 1 heure' : 'dans quelques minutes'} !`;
-      await sendExpoPush(tokens, 'Plyz', body, { type: 'event_reminder', eventId: ev.id });
+        : `⏰ « ${name} » commence ${when} !`;
+      const hostBody = minutes <= 0
+        ? `🔴 « ${name} » démarre — c'est à toi de jouer !`
+        : `⏰ « ${name} » commence ${when} — prépare-toi.`;
+      if (fanTokens.length) await sendExpoPush(fanTokens, 'Plyz', fanBody, { type: 'event_reminder', eventId: ev.id });
+      if (creatorTokens.length) await sendExpoPush(creatorTokens, 'Plyz', hostBody, { type: 'event_reminder', eventId: ev.id });
+      const tokens = fanTokens.concat(creatorTokens);
       await db.from(table).update({ [flagCol]: true }).eq('id', ev.id);
       if (tokens.length) console.log(`[Reminder] ${table} ${ev.id} (${minutes}min) → ${tokens.length} destinataire(s)`);
     } catch (e) { console.error('[Reminder]', e.message); }
