@@ -13,6 +13,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
+import CelebrityAvatar from '@/components/CelebrityAvatar';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -932,8 +933,12 @@ export default function JoinLiveSessionScreen() {
           </View>
         )}
 
+        <View style={{ alignItems: 'center', marginTop: 16 }}>
+          <CelebrityAvatar celebrityId={session?.celebrity_id} name={session?.celebrity_name} size={84} />
+        </View>
+
         {/* Celebrity name + badge */}
-        <Text style={[styles.title, { marginTop: 20 }]}>{session?.celebrity_name}</Text>
+        <Text style={[styles.title, { marginTop: 12 }]}>{session?.celebrity_name}</Text>
 
         <View style={styles.liveBadge}>
           <Video size={14} color="#fff" />
@@ -1172,8 +1177,12 @@ export default function JoinLiveSessionScreen() {
           </View>
         )}
 
+        <View style={{ alignItems: 'center', marginTop: 16 }}>
+          <CelebrityAvatar celebrityId={session?.celebrity_id} name={session?.celebrity_name} size={84} />
+        </View>
+
         {/* Celebrity name */}
-        <Text style={[styles.title, { marginTop: 20 }]}>{session?.celebrity_name}</Text>
+        <Text style={[styles.title, { marginTop: 12 }]}>{session?.celebrity_name}</Text>
 
         {/* Live badge (red) */}
         <View

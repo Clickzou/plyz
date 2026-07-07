@@ -45,6 +45,7 @@ import { saveMemory } from '@/utils/storageService';
 import { saveCollectorLive } from '@/utils/collectorLiveStorage';
 import { useAuth } from '@/contexts/AuthContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
+import CelebrityAvatar from '@/components/CelebrityAvatar';
 
 let Notifications: any = null;
 try {
@@ -669,6 +670,14 @@ export default function EventGalleryScreen() {
         </View>
       ) : (
       <>
+      <View style={{ alignItems: 'center', marginBottom: 12 }}>
+        <CelebrityAvatar
+          celebrityId={session.created_by}
+          name={signers[0]?.display_name || session.title}
+          size={72}
+        />
+      </View>
+
       <View style={styles.signersRow}>
         {signers.slice(0, 5).map((signer) => (
           <View key={signer.id} style={styles.signerChip}>

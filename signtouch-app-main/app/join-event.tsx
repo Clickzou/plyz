@@ -24,6 +24,7 @@ import { authedFetch } from '@/utils/authedFetch';
 import { ensureCanPay } from '@/utils/banGuard';
 import { isAgeCertified, certifyAge } from '@/utils/ageCertification';
 import AgeCertificationModal from '@/components/AgeCertificationModal';
+import CelebrityAvatar from '@/components/CelebrityAvatar';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -1361,21 +1362,11 @@ export default function JoinEventScreen() {
             
             <View style={styles.celebritySection}>
               <View style={styles.celebrityAvatarContainer}>
-                {foundLiveSession.cover_photo_url ? (
-                  <Image 
-                    source={{ uri: foundLiveSession.cover_photo_url }} 
-                    style={styles.celebrityCoverPhoto} 
-                  />
-                ) : (
-                  <LinearGradient
-                    colors={['#10B981', '#059669', '#047857']}
-                    style={styles.celebrityAvatarGradient}
-                  >
-                    <Text style={styles.celebrityInitial}>
-                      {foundLiveSession.celebrity_name.charAt(0).toUpperCase()}
-                    </Text>
-                  </LinearGradient>
-                )}
+                <CelebrityAvatar
+                  celebrityId={foundLiveSession.celebrity_id}
+                  name={foundLiveSession.celebrity_name}
+                  size={100}
+                />
               </View>
               <Text style={styles.celebrityNameLarge}>{foundLiveSession.celebrity_name}</Text>
               <Text style={styles.sessionFoundText}>
@@ -1859,7 +1850,15 @@ export default function JoinEventScreen() {
         ) : foundSession ? (
           <View style={styles.resultContainer}>
             <Text style={styles.foundTitle}>{foundSession.title}</Text>
-            
+
+            <View style={{ alignItems: 'center', marginBottom: 16 }}>
+              <CelebrityAvatar
+                celebrityId={foundSession.created_by}
+                name={sessionSigners[0]?.display_name || foundSession.title}
+                size={88}
+              />
+            </View>
+
             <View style={styles.eventDetailsCard}>
               <View style={styles.eventDetailRow}>
                 <View style={styles.eventDetailIconCircle}>
