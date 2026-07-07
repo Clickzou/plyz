@@ -36,16 +36,21 @@ interface Celebrity {
   } | null;
 }
 
+// ⚠️ Personnalités FICTIVES uniquement (aucun nom ni photo de vraie personne) —
+// simple repli d'affichage si l'API est momentanément indisponible. Ne JAMAIS y mettre
+// de vraie célébrité (droit à l'image + refus store). Le vrai contenu vient de l'API.
 const DEMO_CELEBRITIES: Celebrity[] = [
-  { user_id: 'mock-001', stage_name: 'Zinedine Zidane', bio: "Ballon d'Or 1998. Légende du Real Madrid et de l'Équipe de France.", avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg/440px-Zinedine_Zidane_by_Tasnim_03.jpg', display_name: 'Zinedine Zidane', stripe_verified: true, official_verified: true, occupations: ['footballer'], types: ['sports'], popularity_score: 98, pricing: { video_call_price_cents: 15000, autograph_price_cents: 5000, currency: 'eur' } },
-  { user_id: 'mock-003', stage_name: 'Kylian Mbappé', bio: 'Champion du Monde 2018. Attaquant du Real Madrid.', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg/440px-2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg', display_name: 'Kylian Mbappé', stripe_verified: true, official_verified: true, occupations: ['footballer'], types: ['sports'], popularity_score: 97, pricing: { video_call_price_cents: 25000, autograph_price_cents: 10000, currency: 'eur' } },
-  { user_id: 'mock-005', stage_name: 'Omar Sy', bio: 'Acteur français. "Intouchables" et "Lupin" sur Netflix.', avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Omar_Sy_Cannes_2022.jpg/440px-Omar_Sy_Cannes_2022.jpg', display_name: 'Omar Sy', stripe_verified: true, official_verified: true, occupations: ['actor'], types: ['entertainment'], popularity_score: 93, pricing: { video_call_price_cents: 22000, autograph_price_cents: 8000, currency: 'eur' } },
-  { user_id: 'mock-002', stage_name: 'Marion Cotillard', bio: "Oscar de la meilleure actrice pour 'La Môme'.", avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Marion_Cotillard_2019.jpg/440px-Marion_Cotillard_2019.jpg', display_name: 'Marion Cotillard', stripe_verified: true, official_verified: true, occupations: ['actress'], types: ['entertainment'], popularity_score: 92, pricing: { video_call_price_cents: 20000, autograph_price_cents: 7500, currency: 'eur' } },
-  { user_id: 'mock-004', stage_name: 'Aya Nakamura', bio: 'Artiste francophone la plus écoutée au monde.', avatar_url: null, display_name: 'Aya Nakamura', stripe_verified: true, official_verified: true, occupations: ['singer'], types: ['music'], popularity_score: 90, pricing: { video_call_price_cents: 18000, autograph_price_cents: 6000, currency: 'eur' } },
-  { user_id: 'mock-006', stage_name: 'Teddy Riner', bio: 'Triple champion olympique de judo. 10 titres de champion du monde.', avatar_url: null, display_name: 'Teddy Riner', stripe_verified: true, official_verified: true, occupations: ['judoka'], types: ['sports'], popularity_score: 88, pricing: { video_call_price_cents: 12000, autograph_price_cents: 4000, currency: 'eur' } },
-  { user_id: 'mock-007', stage_name: 'Léa Seydoux', bio: "James Bond Girl. Palme d'Or à Cannes.", avatar_url: null, display_name: 'Léa Seydoux', stripe_verified: false, official_verified: true, occupations: ['actress'], types: ['entertainment'], popularity_score: 85, pricing: { video_call_price_cents: 18000, autograph_price_cents: 6500, currency: 'eur' } },
-  { user_id: 'mock-008', stage_name: 'DJ Snake', bio: '"Turn Down for What", "Lean On", "Taki Taki". Milliards de streams.', avatar_url: null, display_name: 'DJ Snake', stripe_verified: true, official_verified: false, occupations: ['DJ'], types: ['music'], popularity_score: 82, pricing: { video_call_price_cents: 15000, autograph_price_cents: 5000, currency: 'eur' } },
+  { user_id: 'mock-001', stage_name: 'Rafael Mendez', bio: 'Milieu de terrain international. Champion en titre.', avatar_url: null, display_name: 'Rafael Mendez', stripe_verified: true, official_verified: true, occupations: ['footballer'], types: ['sports'], popularity_score: 98, pricing: { video_call_price_cents: 15000, autograph_price_cents: 5000, currency: 'eur' } },
+  { user_id: 'mock-003', stage_name: 'Léo Farel', bio: 'Attaquant vedette. Ballon de la saison.', avatar_url: null, display_name: 'Léo Farel', stripe_verified: true, official_verified: true, occupations: ['footballer'], types: ['sports'], popularity_score: 97, pricing: { video_call_price_cents: 25000, autograph_price_cents: 10000, currency: 'eur' } },
+  { user_id: 'mock-005', stage_name: 'Adrien Vasquez', bio: "Acteur de cinéma. Révélation de l'année.", avatar_url: null, display_name: 'Adrien Vasquez', stripe_verified: true, official_verified: true, occupations: ['actor'], types: ['entertainment'], popularity_score: 93, pricing: { video_call_price_cents: 22000, autograph_price_cents: 8000, currency: 'eur' } },
+  { user_id: 'mock-002', stage_name: 'Clara Belmont', bio: 'Actrice et productrice primée.', avatar_url: null, display_name: 'Clara Belmont', stripe_verified: true, official_verified: true, occupations: ['actress'], types: ['entertainment'], popularity_score: 92, pricing: { video_call_price_cents: 20000, autograph_price_cents: 7500, currency: 'eur' } },
+  { user_id: 'mock-004', stage_name: 'Nora Lys', bio: 'Chanteuse pop-soul en tournée européenne.', avatar_url: null, display_name: 'Nora Lys', stripe_verified: true, official_verified: true, occupations: ['singer'], types: ['music'], popularity_score: 90, pricing: { video_call_price_cents: 18000, autograph_price_cents: 6000, currency: 'eur' } },
+  { user_id: 'mock-006', stage_name: 'Malik Dorsay', bio: 'Champion olympique. Plusieurs titres mondiaux.', avatar_url: null, display_name: 'Malik Dorsay', stripe_verified: true, official_verified: true, occupations: ['athlete'], types: ['sports'], popularity_score: 88, pricing: { video_call_price_cents: 12000, autograph_price_cents: 4000, currency: 'eur' } },
+  { user_id: 'mock-007', stage_name: 'Elsa Marchand', bio: 'Actrice, plusieurs longs-métrages à succès.', avatar_url: null, display_name: 'Elsa Marchand', stripe_verified: false, official_verified: true, occupations: ['actress'], types: ['entertainment'], popularity_score: 85, pricing: { video_call_price_cents: 18000, autograph_price_cents: 6500, currency: 'eur' } },
+  { user_id: 'mock-008', stage_name: 'Neo Vibe', bio: 'DJ et producteur électro. Millions d\'auditeurs mensuels.', avatar_url: null, display_name: 'Neo Vibe', stripe_verified: true, official_verified: false, occupations: ['DJ'], types: ['music'], popularity_score: 82, pricing: { video_call_price_cents: 15000, autograph_price_cents: 5000, currency: 'eur' } },
 ];
+// Photos IA générées (FAL), fictives — nommées par user_id.
+DEMO_CELEBRITIES.forEach((c) => { c.avatar_url = `https://qoitixdpcqlzgyusbgdx.supabase.co/storage/v1/object/public/events/mock-avatars/${c.user_id}.jpg`; });
 
 const SORT_OPTIONS = [
   { key: 'popular', label: 'sortPopularity' },
@@ -329,7 +334,7 @@ export default function DiscoverScreen() {
             <Text style={styles.trendingTitle}>{t('trendingNow') || 'Popular now'}</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trendingList}>
-            {DEMO_CELEBRITIES.slice(0, 5).map(celeb => (
+            {[...celebrities].sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0)).slice(0, 8).map(celeb => (
               <TouchableOpacity
                 key={`trending-${celeb.user_id}`}
                 style={styles.trendingChip}
