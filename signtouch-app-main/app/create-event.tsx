@@ -138,6 +138,10 @@ export default function CreateEventScreen() {
   // Verrou SYNCHRONE anti-double-création : le state isCreating est posé trop tard
   // (après des vérifs Stripe asynchrones) → un double-déclenchement créait 2 événements.
   const isCreatingRef = useRef(false);
+  // Horodatage de la dernière création lancée : bloque une 2e création rapprochée
+  // (double-clic) même si la 1ère s'est déjà terminée avant la 2e (le verrou booléen
+  // seul ne suffit pas car il se relâche à la fin).
+  const lastCreateAtRef = useRef(0);
 
   const [step, setStep] = useState<'config' | 'signers' | 'success'>('config');
   const [eventName, setEventName] = useState('');
@@ -265,8 +269,9 @@ export default function CreateEventScreen() {
       }
     }
 
-    if (isCreatingRef.current) return; // 2e déclenchement → on ignore (anti-doublon)
+    if (isCreatingRef.current || Date.now() - lastCreateAtRef.current < 4000) return; // double-clic → ignore
     isCreatingRef.current = true;
+    lastCreateAtRef.current = Date.now();
     setIsCreating(true);
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -534,6 +539,10 @@ export default function CreateEventScreen() {
       }
     }
 
+    // Verrou anti-doublon (le plus important : c'est la voie principale de création).
+    if (isCreatingRef.current || Date.now() - lastCreateAtRef.current < 4000) return; // double-clic → ignore
+    isCreatingRef.current = true;
+    lastCreateAtRef.current = Date.now();
     setIsCreating(true);
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
