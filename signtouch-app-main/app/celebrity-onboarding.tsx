@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Platform, TextInput, Image, ActivityIndicator, Alert,
+  Platform, TextInput, Image, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,6 +20,7 @@ import { useAutoTranslate } from '@/utils/translation';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import StripeConnectModal from '@/components/StripeConnectModal';
+import PhotoSourceSheet from '@/components/PhotoSourceSheet';
 import { upsertUserProfile } from '@/utils/userProfile';
 import { supabase } from '@/utils/supabase';
 import { authedFetch } from '@/utils/authedFetch';
@@ -55,6 +56,7 @@ export default function CelebrityOnboardingScreen() {
   const [bio, setBio] = useState('');
   const [website, setWebsite] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [showPhotoSheet, setShowPhotoSheet] = useState(false);
 
   // Traduction des textes de secours français (affichés quand les clés celOnboard*
   // ne sont pas encore présentes dans les 15 locales).
@@ -210,15 +212,7 @@ export default function CelebrityOnboardingScreen() {
   const pickPhoto = () => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (Platform.OS === 'web') { pickFromLibrary(); return; }
-    Alert.alert(
-      t('profilePhotoTitle' as any) || 'Photo de profil',
-      t('profilePhotoChooseSource' as any) || 'Comment veux-tu ajouter ta photo ?',
-      [
-        { text: t('camera' as any) || 'Appareil photo', onPress: () => takeWithCamera() },
-        { text: t('gallery' as any) || 'Galerie', onPress: () => pickFromLibrary() },
-        { text: t('cancel' as any) || 'Annuler', style: 'cancel' },
-      ],
-    );
+    setShowPhotoSheet(true);
   };
 
   // Enregistre nom public + bio + site web sur le profil célébrité.
@@ -779,6 +773,13 @@ export default function CelebrityOnboardingScreen() {
         }}
         celebrityName={celebrityName}
         userId={user?.id}
+      />
+
+      <PhotoSourceSheet
+        visible={showPhotoSheet}
+        onClose={() => setShowPhotoSheet(false)}
+        onCamera={takeWithCamera}
+        onGallery={pickFromLibrary}
       />
     </View>
   );

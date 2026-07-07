@@ -11,10 +11,10 @@ import {
   ScrollView,
   Image,
   Modal,
-  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, KeyRound, Camera, Sparkles, X } from 'lucide-react-native';
+import { Mail, KeyRound, Camera, X } from 'lucide-react-native';
+import PhotoSourceSheet from './PhotoSourceSheet';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
@@ -70,6 +70,7 @@ export default function WelcomeAuthScreen({
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [photoContentType, setPhotoContentType] = useState<string | null>(null);
+  const [showPhotoSheet, setShowPhotoSheet] = useState(false);
 
   // After successful OTP verification we wait for `user` to be set, then decide
   // whether the profile is incomplete (-> show 'profile' step) or not (-> let
@@ -248,15 +249,7 @@ export default function WelcomeAuthScreen({
   // (l'appareil photo n'est pas disponible via ImagePicker sur navigateur).
   const pickPhoto = () => {
     if (Platform.OS === 'web') { pickFromLibrary(); return; }
-    Alert.alert(
-      tr('profilePhotoTitle', 'Photo de profil'),
-      tr('profilePhotoChooseSource', 'Comment veux-tu ajouter ta photo ?'),
-      [
-        { text: tr('camera', 'Appareil photo'), onPress: () => takeWithCamera() },
-        { text: tr('gallery', 'Galerie'), onPress: () => pickFromLibrary() },
-        { text: tr('cancel', 'Annuler'), style: 'cancel' },
-      ],
-    );
+    setShowPhotoSheet(true);
   };
 
   const handleFinish = async () => {
@@ -477,14 +470,9 @@ export default function WelcomeAuthScreen({
 
           {step === 'profile' && (
             <View style={styles.card}>
-              <View style={styles.iconCircle}>
-                <Sparkles size={40} color="#10b981" />
-              </View>
               <Text style={styles.title}>{tr('waProfileTitle', 'Tes informations')}</Text>
-              <Text style={styles.subtitle}>
-                {tr('waProfileSubtitle', 'Ta photo et ton pseudo seront visibles publiquement. Ton prénom, ton nom et ton adresse restent privés : ils sont nécessaires pour établir tes factures de paiement, téléchargeables depuis ton compte.')}
-              </Text>
 
+              {/* Photo = élément central, mise en avant (juste sous le titre) */}
               <TouchableOpacity
                 style={styles.avatarPicker}
                 onPress={pickPhoto}
@@ -495,12 +483,16 @@ export default function WelcomeAuthScreen({
                   <Image source={{ uri: photoUri }} style={styles.avatarImage} />
                 ) : (
                   <View style={styles.avatarPlaceholder}>
-                    <Camera size={28} color="#10b981" />
+                    <Camera size={32} color="#10b981" />
                   </View>
                 )}
               </TouchableOpacity>
               <Text style={styles.avatarLabel}>
                 {photoUri ? tr('waChangePhoto', 'Changer la photo') : tr('waAddPhoto', 'Ajouter une photo *')}
+              </Text>
+
+              <Text style={styles.subtitle}>
+                {tr('waProfileSubtitle', 'Ta photo et ton pseudo seront visibles publiquement. Ton prénom, ton nom et ton adresse restent privés : ils sont nécessaires pour établir tes factures de paiement, téléchargeables depuis ton compte.')}
               </Text>
 
               <TextInput
@@ -581,6 +573,13 @@ export default function WelcomeAuthScreen({
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <PhotoSourceSheet
+        visible={showPhotoSheet}
+        onClose={() => setShowPhotoSheet(false)}
+        onCamera={takeWithCamera}
+        onGallery={pickFromLibrary}
+      />
     </LinearGradient>
   );
 
@@ -763,19 +762,20 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   avatarPicker: {
-    marginBottom: 8,
+    marginTop: 4,
+    marginBottom: 10,
   },
   avatarImage: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 104,
+    height: 104,
+    borderRadius: 52,
     borderWidth: 2,
     borderColor: '#10b981',
   },
   avatarPlaceholder: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 104,
+    height: 104,
+    borderRadius: 52,
     backgroundColor: 'rgba(16, 185, 129, 0.12)',
     borderWidth: 2,
     borderColor: 'rgba(16, 185, 129, 0.4)',
@@ -785,7 +785,8 @@ const styles = StyleSheet.create({
   },
   avatarLabel: {
     fontSize: 13,
+    fontWeight: '600',
     color: '#10b981',
-    marginBottom: 20,
+    marginBottom: 14,
   },
 });
