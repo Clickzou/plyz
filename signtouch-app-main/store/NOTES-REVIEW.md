@@ -25,9 +25,14 @@ In addition, some dedication events take place at PHYSICAL, in-person gatherings
 
 There is NO subscription, NO virtual currency, NO tokens/credits, and NO downloadable premium content sold by Plyz. The app is free to download; only person-to-person services are paid.
 
-TEST ACCOUNTS (login by email + one-time code)
-- Fan account: __________________________
-- Public-figure account: __________________________
+HOW TO TEST (no shared account required — login is by email + one-time code)
+1. Open the app: you can browse public figures, posts and events WITHOUT an account ("free explore").
+2. Pick a public figure and a paid service (e.g. a live dedication event, or an autograph).
+3. When prompted, create an account with YOUR OWN email — a one-time login code is sent to that email.
+4. At payment, the app opens Stripe Checkout. The app is in Stripe TEST mode for the review, so use the Stripe test card: 4242 4242 4242 4242, any future expiry (e.g. 12/34), any 3-digit CVC, any postal code. No real charge occurs.
+(Stripe switches to live mode only after approval, at public release. The user flow is identical.)
+
+If you need a pre-provisioned public-figure (seller) account to review that side, please request one via the contact below and we will provide credentials.
 
 Thank you for your review.
 
@@ -48,9 +53,14 @@ FONCTIONNEMENT
 POURQUOI PAS D'ACHAT INTÉGRÉ
 Les prestations sont des services de personne à personne, en temps réel, fournis par un prestataire humain identifié — comme Cameo, Airbnb ou Fiverr. Les « événements » de groupe sont en réalité des FILES d'appels 1:1 privés successifs (un fan à la fois, salle privée à 2 personnes), et non une diffusion 1-à-plusieurs simultanée. De plus, certains événements de dédicace ont lieu lors de rassemblements PHYSIQUES en personne (concerts, rencontres, séances de dédicaces) : les fans physiquement présents scannent un QR code sur place pour recevoir leur dédicace personnalisée de la personnalité qu'ils viennent de rencontrer — ce sont des services rendus en personne (règle 3.1.3(e), biens et services utilisés en dehors de l'app), et non du contenu numérique consommé dans l'app. Aucun abonnement, aucune monnaie virtuelle, aucun crédit/jeton, aucun contenu premium téléchargeable vendu par Plyz.
 
-COMPTES DE TEST (connexion par e-mail + code à usage unique)
-- Compte fan : __________________________
-- Compte personnalité : __________________________
+COMMENT TESTER (aucun compte à partager — connexion par e-mail + code à usage unique)
+1. Ouvre l'app : tu peux parcourir les personnalités, posts et événements SANS compte (« explorer libre »).
+2. Choisis une personnalité et une prestation payante (ex. une dédicace en direct, ou un autographe).
+3. Au moment demandé, crée un compte avec TON PROPRE e-mail — un code de connexion à usage unique est envoyé à cet e-mail.
+4. Au paiement, l'app ouvre Stripe Checkout. L'app est en mode TEST Stripe pour la revue : utilise la carte de test 4242 4242 4242 4242, date future (ex. 12/34), CVC 3 chiffres, code postal quelconque. Aucun débit réel.
+(Stripe passe en mode live seulement après approbation, à l'ouverture publique. Le parcours est identique.)
+
+Si tu as besoin d'un compte personnalité (vendeur) pré-configuré pour tester ce côté, demande-le via le contact ci-dessous et nous le fournirons.
 
 ---
 
