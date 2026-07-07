@@ -25,6 +25,7 @@ import { ensureCanPay } from '@/utils/banGuard';
 import { isAgeCertified, certifyAge } from '@/utils/ageCertification';
 import AgeCertificationModal from '@/components/AgeCertificationModal';
 import CelebrityAvatar from '@/components/CelebrityAvatar';
+import { supabase } from '@/utils/supabase';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -248,6 +249,22 @@ export default function JoinEventScreen() {
   const [foundSession, setFoundSession] = useState<EventSession | null>(null);
   const [foundLiveSession, setFoundLiveSession] = useState<LiveSession | null>(null);
   const [sessionSigners, setSessionSigners] = useState<EventSigner[]>([]);
+  // id du créateur (célébrité) de l'événement dédicace, pour afficher sa PHOTO DE
+  // PROFIL de façon fiable (foundSession.created_by peut manquer selon l'état).
+  const [dedicaceCelebId, setDedicaceCelebId] = useState<string | null>(null);
+  useEffect(() => {
+    const evId = foundSession?.id;
+    if (!evId) { setDedicaceCelebId(null); return; }
+    if (foundSession?.created_by) { setDedicaceCelebId(foundSession.created_by); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase.from('event_sessions').select('created_by').eq('id', evId).maybeSingle();
+        if (!cancelled && data?.created_by) setDedicaceCelebId(data.created_by);
+      } catch { /* repli sur l'initiale */ }
+    })();
+    return () => { cancelled = true; };
+  }, [foundSession?.id, foundSession?.created_by]);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [eventFull, setEventFull] = useState(false);
@@ -1853,7 +1870,7 @@ export default function JoinEventScreen() {
 
             <View style={{ alignItems: 'center', marginBottom: 16 }}>
               <CelebrityAvatar
-                celebrityId={foundSession.created_by}
+                celebrityId={foundSession.created_by || dedicaceCelebId}
                 name={sessionSigners[0]?.display_name || foundSession.title}
                 size={88}
               />

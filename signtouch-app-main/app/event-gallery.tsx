@@ -317,10 +317,11 @@ export default function EventGalleryScreen() {
             triggerNewPhotoAlert(signerName);
           }
 
-          // Auto-enregistrement « Collector Live » : chaque NOUVELLE dédicace reçue
-          // est sauvée dans Ma Galerie (onglet Collector Live), en fire-and-forget.
-          // dedupKey = asset.id → un même asset n'est jamais ajouté 2 fois.
-          if (trulyNew.length > 0 && initialLoadDoneRef.current) {
+          // Auto-enregistrement « Collector Live » : CHAQUE dédicace signée reçue est
+          // sauvée dans Ma Galerie (onglet Collector), en fire-and-forget. PAS de garde
+          // initialLoadDoneRef ici (contrairement à l'alerte) : le fan doit AUSSI collecter
+          // les dédicaces publiées AVANT qu'il rejoigne. dedupKey = asset.id → jamais 2 fois.
+          if (trulyNew.length > 0) {
             trulyNew
               .filter(a => a.asset_type === 'photo_signed' || a.asset_type === 'signed_photo')
               .forEach(a => {
