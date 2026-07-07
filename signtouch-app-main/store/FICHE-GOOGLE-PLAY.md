@@ -68,7 +68,7 @@ Télécharge Plyz et crée ton premier souvenir dès aujourd'hui !
 - **E-mail** : jc@clickzou.fr
 - **Site web** : https://plyz.io (ou clickzou.fr)
 - **Adresse** : CLICKZOU, 5 impasse de la Colombette, 31000 Toulouse, France
-- **URL Politique de confidentialité** : (à héberger — voir POLITIQUE-CONFIDENTIALITE.md)
+- **URL Politique de confidentialité** : https://plyz.io/confidentialite  ✅ (en ligne, à jour, conforme RGPD/sous-traitants)
 
 ---
 
