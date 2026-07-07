@@ -2027,7 +2027,9 @@ app.post('/api/stripe/express/create-and-onboard', async (req, res) => {
         card_payments: { requested: true },
         transfers: { requested: true },
       },
-      business_type: 'individual',
+      // On NE force PLUS business_type : Stripe demande à la célébrité, pendant
+      // l'onboarding, si elle est un PARTICULIER ou une SOCIÉTÉ. La facture reflète
+      // ensuite ce choix (société → raison sociale ; particulier → nom + prénom).
       metadata: {
         celebrity_id: celebrityId || '',
         celebrity_name: celebrityName || '',
