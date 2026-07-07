@@ -651,6 +651,19 @@ export default function EventPublishScreen() {
     const doEnd = async () => {
       setEnding(true);
       try {
+        // Capture FINALE avant de terminer : encaisse les fans ayant payé après la
+        // dernière dédicace (sinon prestation offerte). Uniquement si au moins une
+        // dédicace a été publiée (sinon la fin déclenche le remboursement). Le serveur
+        // est idempotent par fan.
+        if (priceCents > 0 && eventType !== 'live_video' && signedCount > 0 && STRIPE_SERVER_URL) {
+          try {
+            await authedFetch(`${STRIPE_SERVER_URL}/api/capture-event-payments`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ eventSessionId: sessionId }),
+            });
+          } catch (capErr) { console.error('[EndSession] capture finale échouée (non bloquant):', capErr); }
+        }
         await endEventSession(sessionId);
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

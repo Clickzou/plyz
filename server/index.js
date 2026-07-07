@@ -2937,12 +2937,14 @@ app.post('/api/capture-event-payments', async (req, res) => {
       return res.status(500).json({ ok: false, error: triggerErr.message });
     }
 
-    if (!triggered || triggered.length === 0) {
-      console.log('[EventCapture] Already triggered (idempotent no-op):', eventSessionId);
-      return res.json({ ok: true, already: true });
-    }
-
-    console.log('[EventCapture] Triggered mass capture for event:', eventSessionId);
+    // ⚠️ On NE s'arrête PAS si le drapeau était déjà posé. L'ancien code renvoyait
+    // ici → les fans ayant payé APRÈS la 1ère dédicace (ligne inexistante au 1er
+    // déclenchement) n'étaient JAMAIS capturés = prestation offerte, célébrité non
+    // créditée. On relance donc TOUJOURS la capture par fan (idempotente via le
+    // compare-and-set par fan plus bas). Le drapeau reste utile ailleurs (release).
+    console.log(triggered && triggered.length
+      ? '[EventCapture] Triggered mass capture for event: ' + eventSessionId
+      : '[EventCapture] Flag already set — capture des fans en retard: ' + eventSessionId);
 
     // 2. Tous les fans pré-autorisés non encore capturés.
     const { data: fans, error: fansErr } = await supabase
