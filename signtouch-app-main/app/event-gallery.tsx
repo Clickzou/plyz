@@ -46,6 +46,7 @@ import { saveCollectorLive } from '@/utils/collectorLiveStorage';
 import { useAuth } from '@/contexts/AuthContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import CelebrityAvatar from '@/components/CelebrityAvatar';
+import { supabase } from '@/utils/supabase';
 
 let Notifications: any = null;
 try {
@@ -239,6 +240,23 @@ export default function EventGalleryScreen() {
   };
 
   const signers: EventSigner[] = params.signers ? JSON.parse(params.signers as string) : [];
+
+  // Récupère le créateur (célébrité) pour afficher sa PHOTO DE PROFIL — l'objet
+  // `session` reconstitué depuis les params n'a pas created_by. event_sessions est
+  // lisible par tous (policy « Anyone can read events »).
+  const [celebrityId, setCelebrityId] = useState<string | null>(null);
+  useEffect(() => {
+    const sid = params.sessionId as string;
+    if (!sid) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase.from('event_sessions').select('created_by').eq('id', sid).maybeSingle();
+        if (!cancelled && data?.created_by) setCelebrityId(data.created_by);
+      } catch { /* silencieux : on retombe sur l'initiale */ }
+    })();
+    return () => { cancelled = true; };
+  }, [params.sessionId]);
 
   const triggerNewPhotoAlert = useCallback(async (signerName: string) => {
     playNewPhotoChime();
@@ -672,7 +690,7 @@ export default function EventGalleryScreen() {
       <>
       <View style={{ alignItems: 'center', marginBottom: 12 }}>
         <CelebrityAvatar
-          celebrityId={session.created_by}
+          celebrityId={celebrityId}
           name={signers[0]?.display_name || session.title}
           size={72}
         />
