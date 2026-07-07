@@ -31,6 +31,7 @@ import { Language } from '@/locales';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStripeAccountId, saveStripeAccountId, getUserProfile, upsertUserProfile, clearStripeAccountId } from '@/utils/userProfile';
 import StripeConnectModal from '@/components/StripeConnectModal';
+import PhotoSourceSheet from '@/components/PhotoSourceSheet';
 import { authedFetch } from '@/utils/authedFetch';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
@@ -109,6 +110,7 @@ export default function AccountScreen() {
   const [isVerified, setIsVerified] = useState(false);
   const [earnings, setEarnings] = useState<EarningsData | null>(null);
   const [earningsLoading, setEarningsLoading] = useState(false);
+  const [showPhotoSheet, setShowPhotoSheet] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -438,15 +440,7 @@ export default function AccountScreen() {
       pickFromLibrary();
       return;
     }
-    Alert.alert(
-      t('profilePhotoTitle' as any) || 'Photo de profil',
-      t('profilePhotoChooseSource' as any) || 'Comment veux-tu ajouter ta photo ?',
-      [
-        { text: t('camera' as any) || 'Appareil photo', onPress: () => takeWithCamera() },
-        { text: t('gallery' as any) || 'Galerie', onPress: () => pickFromLibrary() },
-        { text: t('cancel' as any) || 'Annuler', style: 'cancel' },
-      ],
-    );
+    setShowPhotoSheet(true);
   };
 
   const saveCelebrityName = async () => {
@@ -1100,6 +1094,13 @@ export default function AccountScreen() {
           refreshStripeCharges(accountId);
         }}
         userId={user?.id}
+      />
+
+      <PhotoSourceSheet
+        visible={showPhotoSheet}
+        onClose={() => setShowPhotoSheet(false)}
+        onCamera={takeWithCamera}
+        onGallery={pickFromLibrary}
       />
 
       <BottomNav />
