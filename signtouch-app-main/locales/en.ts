@@ -1633,6 +1633,7 @@ export default {
   waCodeInvalid: "Invalid code",
   waProfileTitle: "Your details",
   waProfileSubtitle: "Your photo and username will be public. Your first name, last name and address stay private: they're required to issue your payment invoices, downloadable from your account.",
+  waProfileSubtitlePublic: "Your photo and username will be public.",
   waChangePhoto: "Change photo",
   waAddPhoto: "Add a photo *",
   waFirstName: "First name *",

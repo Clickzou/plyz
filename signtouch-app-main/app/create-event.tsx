@@ -476,6 +476,7 @@ export default function CreateEventScreen() {
     // (modal in-app), donc on relance simplement la création après connexion.
     requireAuth(() => performCreateEvent(), {
       reason: 'Crée ton compte pour organiser un événement',
+      requireBillingIdentity: false,
     });
   };
 

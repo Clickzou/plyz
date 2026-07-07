@@ -217,7 +217,7 @@ export default function ActivityScreen() {
   };
 
   const handleLike = (postId: string) => {
-    requireAuth(() => toggleLike(postId), { reason: 'Crée un compte pour aimer ce post' });
+    requireAuth(() => toggleLike(postId), { reason: 'Crée un compte pour aimer ce post', requireBillingIdentity: false });
   };
 
   const openComments = (postId: string) => {
@@ -393,7 +393,7 @@ export default function ActivityScreen() {
                             stage_name: item.celebrity.stage_name,
                             avatar_url: item.celebrity.avatar_url,
                           }),
-                          { reason: 'Crée un compte pour suivre cette célébrité' }
+                          { reason: 'Crée un compte pour suivre cette célébrité', requireBillingIdentity: false }
                         );
                       }}
                       activeOpacity={0.7}
@@ -458,7 +458,7 @@ export default function ActivityScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionGroup}
-            onPress={() => requireAuth(() => sharePost(item), { reason: 'Crée un compte pour partager' })}
+            onPress={() => requireAuth(() => sharePost(item), { reason: 'Crée un compte pour partager', requireBillingIdentity: false })}
             activeOpacity={0.7}
           >
             <View style={styles.actionBtn}>

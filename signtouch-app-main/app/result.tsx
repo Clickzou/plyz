@@ -1584,6 +1584,7 @@ export default function ResultScreen() {
         fourPhotoPromptShownRef.current = true;
         requireAuth(() => {}, {
           reason: 'Crée un compte gratuit pour sauvegarder et ne pas perdre tes photos',
+          requireBillingIdentity: false,
         });
       }
     } catch {}
@@ -3197,7 +3198,7 @@ export default function ResultScreen() {
               {memoryId && (
                 <TouchableOpacity
                   style={styles.shareButton}
-                  onPress={() => requireAuth(() => openShareModal(), { reason: 'Crée un compte pour partager ta photo' })}
+                  onPress={() => requireAuth(() => openShareModal(), { reason: 'Crée un compte pour partager ta photo', requireBillingIdentity: false })}
                   activeOpacity={0.7}
                 >
                   <Share2 size={24} color="#ffffff" strokeWidth={2} />

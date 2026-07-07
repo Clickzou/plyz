@@ -1617,6 +1617,7 @@ export default {
   waCodeInvalid: "Code invalide",
   waProfileTitle: "Tes informations",
   waProfileSubtitle: "Ta photo et ton pseudo seront visibles publiquement. Ton prénom, ton nom et ton adresse restent privés : ils sont nécessaires pour établir tes factures de paiement, téléchargeables depuis ton compte.",
+  waProfileSubtitlePublic: "Ta photo et ton pseudo seront visibles publiquement.",
   waChangePhoto: "Changer la photo",
   waAddPhoto: "Ajouter une photo *",
   waFirstName: "Prénom *",

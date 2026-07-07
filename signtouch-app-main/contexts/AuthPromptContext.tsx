@@ -32,6 +32,14 @@ async function isBillingProfileComplete(userId: string): Promise<boolean> {
 interface RequireAuthOptions {
   /** Petit texte d'accroche affiché en haut du modal de connexion. */
   reason?: string;
+  /**
+   * Exiger l'identité de facturation (prénom + nom + adresse) avant de continuer.
+   * Par défaut true. Mettre à false pour les actions qui n'émettent PAS de facture
+   * au nom de l'utilisateur (organiser un événement, liker, suivre, partager…) :
+   * seul un compte est alors requis. Pour une célébrité, l'identité légale de ses
+   * factures est récupérée depuis Stripe, pas ressaisie.
+   */
+  requireBillingIdentity?: boolean;
 }
 
 interface AuthPromptContextType {
@@ -53,6 +61,7 @@ export const AuthPromptProvider = ({ children }: { children: React.ReactNode }) 
   const { user } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [reason, setReason] = useState<string | undefined>(undefined);
+  const [billingRequired, setBillingRequired] = useState(true);
 
   // Le callback en attente est conservé dans une ref pour éviter des re-renders
   // inutiles et garantir qu'on exécute toujours la dernière version demandée.
@@ -66,19 +75,21 @@ export const AuthPromptProvider = ({ children }: { children: React.ReactNode }) 
 
   const requireAuth = useCallback(
     async (onSuccess: () => void, options?: RequireAuthOptions) => {
-      // Déjà connecté ET profil de facturation complet : on exécute tout de suite.
+      const needBilling = options?.requireBillingIdentity !== false;
+      // Déjà connecté : on exécute tout de suite si l'identité de facturation
+      // n'est pas requise (organiser/social), ou si elle est déjà complète.
       if (user) {
-        const complete = await isBillingProfileComplete(user.id);
-        if (complete) {
+        if (!needBilling || (await isBillingProfileComplete(user.id))) {
           onSuccess();
           return;
         }
-        // Connecté mais profil incomplet : on ouvre le modal (il ira directement
-        // à l'étape « Tes informations » pour collecter prénom/nom/adresse).
+        // Connecté mais identité de facturation manquante alors qu'elle est requise :
+        // on ouvre le modal (il ira directement à l'étape « Tes informations »).
       }
-      // Pas connecté (ou profil incomplet) : on mémorise et on ouvre le modal.
+      // Pas connecté (ou identité requise manquante) : on mémorise et on ouvre le modal.
       pendingCallbackRef.current = onSuccess;
       setReason(options?.reason);
+      setBillingRequired(needBilling);
       setIsAuthModalOpen(true);
     },
     [user]
@@ -105,6 +116,7 @@ export const AuthPromptProvider = ({ children }: { children: React.ReactNode }) 
         <WelcomeAuthScreen
           asModal
           reason={reason}
+          requireBillingIdentity={billingRequired}
           onAuthenticated={handleAuthenticated}
           onClose={handleClose}
         />

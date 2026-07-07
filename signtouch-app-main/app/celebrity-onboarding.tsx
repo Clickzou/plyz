@@ -285,6 +285,7 @@ export default function CelebrityOnboardingScreen() {
     if (step === 0 && !user) {
       requireAuth(() => goNext(), {
         reason: 'Crée ton compte pour passer en mode célébrité',
+        requireBillingIdentity: false,
       });
       return;
     }
@@ -317,7 +318,7 @@ export default function CelebrityOnboardingScreen() {
   const acceptCriteria = async () => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const proceed = async () => { await enableCelebrityMode(); setAccepted(true); };
-    if (!user) { requireAuth(() => proceed(), { reason: 'Crée ton compte pour passer en mode célébrité' }); return; }
+    if (!user) { requireAuth(() => proceed(), { reason: 'Crée ton compte pour passer en mode célébrité', requireBillingIdentity: false }); return; }
     await proceed();
   };
 

@@ -37,6 +37,14 @@ interface WelcomeAuthScreenProps {
   onAuthenticated?: () => void;
   /** Appelé quand l'utilisateur ferme le modal (croix). Ignoré hors mode modal. */
   onClose?: () => void;
+  /**
+   * Exiger l'identité de facturation (prénom + nom + adresse). Par défaut true.
+   * Mis à false pour les actions qui n'émettent PAS de facture au nom de
+   * l'utilisateur (organiser un événement, liker, suivre, partager…) : dans ce
+   * cas seuls la photo et le pseudo sont demandés. Pour une célébrité, l'identité
+   * légale de ses factures est récupérée depuis Stripe, pas ressaisie ici.
+   */
+  requireBillingIdentity?: boolean;
 }
 
 export default function WelcomeAuthScreen({
@@ -44,7 +52,9 @@ export default function WelcomeAuthScreen({
   reason,
   onAuthenticated,
   onClose,
+  requireBillingIdentity = true,
 }: WelcomeAuthScreenProps = {}) {
+  const needBilling = requireBillingIdentity !== false;
   const insets = useSafeAreaInsets();
   const { user, sendOtpCode, verifyOtpCode } = useAuth();
   const { setProfilePhoto } = useCelebrityMode();
@@ -121,16 +131,21 @@ export default function WelcomeAuthScreen({
           return;
         }
 
-        // Profil complet = identité de facturation présente (prénom + nom + adresse).
+        // Complétude requise selon le contexte :
+        // - paiement (needBilling) : identité de facturation (prénom + nom + adresse) ;
+        // - organiser/social (!needBilling) : simple identité publique (pseudo).
         const hasBilling =
           !!(data?.first_name || '').trim() &&
           !!(data?.last_name || '').trim() &&
           !!(data?.address || '').trim();
-        if (!hasBilling) {
+        const hasPublic = !!(data?.display_name || '').trim();
+        const complete = needBilling ? hasBilling : hasPublic;
+        if (!complete) {
           // Pré-remplit les champs déjà connus.
           setFirstName((data?.first_name || '').trim());
           setLastName((data?.last_name || '').trim());
           setAddress((data?.address || '').trim());
+          setName((data?.display_name || '').trim());
           setStep('profile');
           setAwaitingProfileCheck(false);
         } else {
@@ -254,7 +269,7 @@ export default function WelcomeAuthScreen({
 
   const handleFinish = async () => {
     if (!user?.id) return;
-    if (!firstName.trim() || !lastName.trim() || !address.trim()) {
+    if (needBilling && (!firstName.trim() || !lastName.trim() || !address.trim())) {
       setError(tr('waErrNames', 'Renseigne ton prénom, ton nom et ton adresse pour continuer.'));
       return;
     }
@@ -492,41 +507,47 @@ export default function WelcomeAuthScreen({
               </Text>
 
               <Text style={styles.subtitle}>
-                {tr('waProfileSubtitle', 'Ta photo et ton pseudo seront visibles publiquement. Ton prénom, ton nom et ton adresse restent privés : ils sont nécessaires pour établir tes factures de paiement, téléchargeables depuis ton compte.')}
+                {needBilling
+                  ? tr('waProfileSubtitle', 'Ta photo et ton pseudo seront visibles publiquement. Ton prénom, ton nom et ton adresse restent privés : ils sont nécessaires pour établir tes factures de paiement, téléchargeables depuis ton compte.')
+                  : tr('waProfileSubtitlePublic', 'Ta photo et ton pseudo seront visibles publiquement.')}
               </Text>
 
-              <TextInput
-                style={styles.input}
-                placeholder={tr('waFirstName', 'Prénom *')}
-                placeholderTextColor="#64748b"
-                value={firstName}
-                onChangeText={setFirstName}
-                autoCapitalize="words"
-                autoComplete="name-given"
-                editable={!loading}
-              />
+              {needBilling && (
+                <>
+                  <TextInput
+                    style={styles.input}
+                    placeholder={tr('waFirstName', 'Prénom *')}
+                    placeholderTextColor="#64748b"
+                    value={firstName}
+                    onChangeText={setFirstName}
+                    autoCapitalize="words"
+                    autoComplete="name-given"
+                    editable={!loading}
+                  />
 
-              <TextInput
-                style={styles.input}
-                placeholder={tr('waLastName', 'Nom *')}
-                placeholderTextColor="#64748b"
-                value={lastName}
-                onChangeText={setLastName}
-                autoCapitalize="words"
-                autoComplete="name-family"
-                editable={!loading}
-              />
+                  <TextInput
+                    style={styles.input}
+                    placeholder={tr('waLastName', 'Nom *')}
+                    placeholderTextColor="#64748b"
+                    value={lastName}
+                    onChangeText={setLastName}
+                    autoCapitalize="words"
+                    autoComplete="name-family"
+                    editable={!loading}
+                  />
 
-              <TextInput
-                style={[styles.input, styles.bioInput]}
-                placeholder={tr('waAddress', 'Adresse (n°, rue, code postal, ville, pays) *')}
-                placeholderTextColor="#64748b"
-                value={address}
-                onChangeText={setAddress}
-                multiline
-                autoComplete="street-address"
-                editable={!loading}
-              />
+                  <TextInput
+                    style={[styles.input, styles.bioInput]}
+                    placeholder={tr('waAddress', 'Adresse (n°, rue, code postal, ville, pays) *')}
+                    placeholderTextColor="#64748b"
+                    value={address}
+                    onChangeText={setAddress}
+                    multiline
+                    autoComplete="street-address"
+                    editable={!loading}
+                  />
+                </>
+              )}
 
               <TextInput
                 style={styles.input}
@@ -543,14 +564,14 @@ export default function WelcomeAuthScreen({
               <TouchableOpacity
                 style={[
                   styles.primaryButton,
-                  (loading || !firstName.trim() || !lastName.trim() || !address.trim() ||
+                  (loading || (needBilling && (!firstName.trim() || !lastName.trim() || !address.trim())) ||
                     !name.trim() || (!photoBase64 && !photoUri)) &&
                     styles.buttonDisabled,
                 ]}
                 onPress={handleFinish}
                 activeOpacity={0.85}
                 disabled={
-                  loading || !firstName.trim() || !lastName.trim() || !address.trim() ||
+                  loading || (needBilling && (!firstName.trim() || !lastName.trim() || !address.trim())) ||
                   !name.trim() || (!photoBase64 && !photoUri)
                 }
               >

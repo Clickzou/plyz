@@ -6033,10 +6033,14 @@ function renderInvoiceHtml(inv, role, type) {
   const vatMention = (inv.seller_snapshot || {}).vat_number ? '' : 'TVA non applicable, art. 293 B du CGI.';
   const b = inv.buyer_snapshot || {};
   const dateStr = new Date(inv.prestation_date || Date.now()).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  // Nom légal (depuis Stripe) en principal ; nom de scène entre parenthèses s'il diffère.
+  const sellerName = s.legal_name || s.name || 'Personnalité';
+  const sellerAka = (s.legal_name && s.name && s.name !== s.legal_name) ? (' (' + invEscape(s.name) + ')') : '';
   const sellerLegal = [
-    s.name ? invEscape(s.name) : 'Personnalité',
+    invEscape(sellerName) + sellerAka,
+    s.address ? invEscape(s.address) : '',
     s.status === 'business' ? 'Professionnel' : (s.status === 'individual' ? 'Particulier' : ''),
-    s.country ? ('Pays : ' + invEscape(s.country)) : '',
+    (!s.address && s.country) ? ('Pays : ' + invEscape(s.country)) : '',
     s.business_number ? ('SIREN : ' + invEscape(s.business_number)) : '',
     s.vat_number ? ('TVA : ' + invEscape(s.vat_number)) : '',
     s.tax_id ? ('NIF : ' + invEscape(s.tax_id)) : '',
@@ -6052,7 +6056,7 @@ function renderInvoiceHtml(inv, role, type) {
 <div class="box small">${CLICKZOU_LEGAL}</div>
 <div class="row">
   <div class="box" style="flex:1;min-width:240px"><div class="muted">Émetteur</div><strong>Plyz — CLICKZOU (SAS)</strong></div>
-  <div class="box" style="flex:1;min-width:240px"><div class="muted">Client (Personnalité)</div><strong>${invEscape(s.name || 'Personnalité')}</strong></div>
+  <div class="box" style="flex:1;min-width:240px"><div class="muted">Client (Personnalité)</div><strong>${invEscape(s.legal_name || s.name || 'Personnalité')}</strong>${s.address ? `<div class="small" style="margin-top:4px;white-space:pre-line">${invEscape(s.address)}</div>` : ''}</div>
 </div>
 <table><thead><tr><th>Désignation</th><th>Date</th><th class="right">Montant HT</th></tr></thead>
 <tbody><tr><td>Commission de mise en relation (Plyz) — prestation ${invEscape(inv.invoice_number || '')}</td><td>${dateStr}</td><td class="right">${invMoney(commHT, inv.currency)}</td></tr></tbody></table>
@@ -6109,9 +6113,31 @@ async function createInvoice(params) {
     const fanId = cleanId(params.fanId);
     const celebId = cleanId(params.celebrityId);
     let celeb = null, fan = null;
-    if (celebId) { const r = await db.from('celebrity_profiles').select('stage_name, tax_status, tax_country, tax_id, business_number, vat_number').eq('user_id', celebId).maybeSingle(); celeb = r.data; }
+    if (celebId) { const r = await db.from('celebrity_profiles').select('stage_name, tax_status, tax_country, tax_id, business_number, vat_number, stripe_account_id').eq('user_id', celebId).maybeSingle(); celeb = r.data; }
     if (fanId) { const r = await db.from('profiles').select('display_name, first_name, last_name, address').eq('id', fanId).maybeSingle(); fan = r.data; }
-    const seller_snapshot = { name: celeb?.stage_name || null, status: celeb?.tax_status || null, country: celeb?.tax_country || null, tax_id: celeb?.tax_id || null, business_number: celeb?.business_number || null, vat_number: celeb?.vat_number || null };
+    // Identité LÉGALE du prestataire (nom + adresse) récupérée depuis STRIPE : ces
+    // infos ont déjà été fournies par la célébrité lors de « Activer mes paiements »
+    // (KYC Stripe), on ne les redemande donc pas. Rend la facture conforme (nom réel
+    // + adresse du vendeur, art. 242 nonies A). Best-effort : si Stripe échoue, on
+    // retombe sur le nom de scène seul.
+    let sellerLegalName = null, sellerAddress = null;
+    if (celeb?.stripe_account_id) {
+      try {
+        const stripeCli = await getStripe();
+        const acct = await stripeCli.accounts.retrieve(String(celeb.stripe_account_id));
+        const ind = acct.individual || {};
+        const comp = acct.company || {};
+        const fmtAddr = (ad) => ad ? [ad.line1, ad.line2, ad.postal_code, ad.city, ad.country].filter(Boolean).join(', ') : null;
+        if (acct.business_type === 'company' && comp.name) {
+          sellerLegalName = comp.name;
+          sellerAddress = fmtAddr(comp.address);
+        } else {
+          sellerLegalName = [ind.first_name, ind.last_name].filter(Boolean).join(' ').trim() || null;
+          sellerAddress = fmtAddr(ind.address);
+        }
+      } catch (e) { console.warn('[Invoice] identité vendeur Stripe indisponible:', e.message); }
+    }
+    const seller_snapshot = { name: celeb?.stage_name || null, legal_name: sellerLegalName, address: sellerAddress, status: celeb?.tax_status || null, country: celeb?.tax_country || null, tax_id: celeb?.tax_id || null, business_number: celeb?.business_number || null, vat_number: celeb?.vat_number || null };
     // Identité de facturation de l'acheteur : « Prénom Nom » si disponible, sinon le pseudo.
     const fanFullName = [fan?.first_name, fan?.last_name].filter(Boolean).join(' ').trim();
     const buyer_snapshot = { name: fanFullName || fan?.display_name || null, address: fan?.address || null };
