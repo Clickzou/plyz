@@ -135,6 +135,9 @@ export default function CreateEventScreen() {
   const { requireAuth } = useAuthPrompt();
   const [showStripeConnect, setShowStripeConnect] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  // Verrou SYNCHRONE anti-double-création : le state isCreating est posé trop tard
+  // (après des vérifs Stripe asynchrones) → un double-déclenchement créait 2 événements.
+  const isCreatingRef = useRef(false);
 
   const [step, setStep] = useState<'config' | 'signers' | 'success'>('config');
   const [eventName, setEventName] = useState('');
@@ -262,6 +265,8 @@ export default function CreateEventScreen() {
       }
     }
 
+    if (isCreatingRef.current) return; // 2e déclenchement → on ignore (anti-doublon)
+    isCreatingRef.current = true;
     setIsCreating(true);
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -331,6 +336,7 @@ export default function CreateEventScreen() {
       console.error('Error creating session:', error);
       showAlert(t('error') || 'Error', t('eventCreationFailed') || 'Failed to create event');
     } finally {
+      isCreatingRef.current = false;
       setIsCreating(false);
     }
   };
@@ -591,6 +597,7 @@ export default function CreateEventScreen() {
       console.error('Error creating session:', error);
       showAlert(t('error') || 'Error', t('eventCreationFailed') || 'Failed to create event');
     } finally {
+      isCreatingRef.current = false;
       setIsCreating(false);
     }
   };
