@@ -31,13 +31,11 @@
         "NSPhotoLibraryAddUsageDescription": "Plyz a besoin d'accéder à votre galerie pour sauvegarder vos photos signées.",
         "NSMicrophoneUsageDescription": "Plyz a besoin d'accéder à votre microphone pour les appels vidéo en direct.",
         "UIBackgroundModes": [
-          "voip",
           "voip"
         ],
         "ITSAppUsesNonExemptEncryption": false
       },
       "associatedDomains": [
-        "applinks:plyz.io",
         "applinks:plyz.io"
       ]
     },

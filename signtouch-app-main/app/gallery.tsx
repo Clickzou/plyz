@@ -116,18 +116,25 @@ export default function GalleryScreen() {
   const eventTypes: (EventType | 'all')[] = ['all', 'concert', 'match', 'expo', 'salon', 'dedicace', 'rencontre', 'autre'];
 
   const getMemoryImageUri = (memory: Memory): string => {
+    // Cache-buster : force le rechargement des vignettes rééditées (même logique que le plein écran).
+    const withBust = (uri: string): string => {
+      if (uri && memory.updatedAt && !uri.startsWith('data:')) {
+        return `${uri}?t=${memory.updatedAt}`;
+      }
+      return uri;
+    };
     const baseKey = `base_${memory.id}`;
     const uriKey = `uri_${memory.id}`;
     if (failedImages.has(baseKey) && failedImages.has(uriKey)) {
       return '';
     }
     if (memory.baseUri && !failedImages.has(baseKey)) {
-      return memory.baseUri;
+      return withBust(memory.baseUri);
     }
     if (memory.uri && !failedImages.has(uriKey)) {
-      return memory.uri;
+      return withBust(memory.uri);
     }
-    return memory.uri || memory.baseUri || '';
+    return withBust(memory.uri || memory.baseUri || '');
   };
 
   const handleImageError = (memory: Memory) => {
@@ -448,25 +455,31 @@ export default function GalleryScreen() {
   };
 
   const handleDeleteSelected = async () => {
+    setIsDeleting(true);
+    let failures = 0;
     try {
-      setIsDeleting(true);
-
+      // Suppression élément par élément : un échec n'interrompt pas les autres.
       for (const memoryId of selectedMemories) {
-        await StorageService.deleteMemory(memoryId, user?.id || null);
+        try {
+          await StorageService.deleteMemory(memoryId, user?.id || null);
+        } catch (error) {
+          failures++;
+          console.error('❌ Erreur lors de la suppression du souvenir', memoryId, error);
+        }
       }
 
-      if (Platform.OS !== 'web') {
+      if (failures === 0 && Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      if (failures > 0) {
+        showAlert(t('error'), t('deleteError' as any) || 'Some items could not be deleted.');
       }
 
       setSelectionMode(false);
       setSelectedMemories(new Set());
-      await loadMemories();
-      console.log(`✅ ${selectedMemories.size} souvenirs supprimés`);
-    } catch (error) {
-      console.error('❌ Erreur lors de la suppression:', error);
-      showAlert(t('error'), t('saveError'));
+      console.log(`✅ ${selectedMemories.size - failures} souvenirs supprimés (${failures} échec(s))`);
     } finally {
+      await loadMemories();
       setIsDeleting(false);
     }
   };

@@ -409,13 +409,25 @@ export default function AccountScreen() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ user_id: user.id, image_base64: base64, content_type: contentType || 'image/jpeg' }),
       });
-      const data = await res.json();
-      if (data?.avatar_url) {
-        // Remplace l'URI locale par l'URL publique -> visible sur le profil public.
-        await setProfilePhoto(data.avatar_url);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.avatar_url) {
+        // Échec / rejet modération : on prévient et on retire l'aperçu trompeur (comme l'onboarding).
+        await setProfilePhoto(null);
+        showAlert(
+          t('error') || 'Erreur',
+          data?.message || (t('photoUploadFailed' as any) || "Ta photo n'a pas pu être enregistrée (réessaie avec une autre image).")
+        );
+        return;
       }
+      // Remplace l'URI locale par l'URL publique -> visible sur le profil public.
+      await setProfilePhoto(data.avatar_url);
     } catch (e) {
       console.warn('[avatar upload] failed', e);
+      await setProfilePhoto(null);
+      showAlert(
+        t('error') || 'Erreur',
+        t('photoUploadFailed' as any) || "Ta photo n'a pas pu être enregistrée (réessaie avec une autre image)."
+      );
     }
   };
 

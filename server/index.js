@@ -4165,7 +4165,7 @@ app.post('/api/report', rateLimit('report', 10, 60 * 1000), async (req, res) => 
 app.post('/api/book-video', rateLimit('book-video', 20, 60 * 1000), async (req, res) => {
   try {
     const stripe = await getStripe();
-    const { fan_id, celebrity_id, duration_minutes } = req.body;
+    const { fan_id, celebrity_id, duration_minutes, message } = req.body;
 
     if (!fan_id || !celebrity_id) {
       return res.status(400).json({ error: 'fan_id and celebrity_id required' });
@@ -4180,6 +4180,9 @@ app.post('/api/book-video', rateLimit('book-video', 20, 60 * 1000), async (req, 
       logSecurityEvent(req, 'IDOR prestation payante', `tentative d'agir au nom d'un autre compte (fan_id ${fan_id})`);
       return res.status(403).json({ error: 'fan_id does not match authenticated user' });
     }
+
+    // Message optionnel du fan (limité pour ne pas dépasser la limite Stripe metadata de 500 car.)
+    const fanMessage = typeof message === 'string' ? message.trim().slice(0, 500) : '';
 
     if (isMockId(celebrity_id) && !MOCK_MODE) {
       return res.status(400).json({ error: 'Mock celebrities are not available' });
@@ -4229,6 +4232,22 @@ app.post('/api/book-video', rateLimit('book-video', 20, 60 * 1000), async (req, 
 
     if (!celeb.stripe_account_id) {
       return res.status(400).json({ error: 'Celebrity has not set up payments' });
+    }
+
+    // Vérifie que le compte Connect peut encaisser (même pattern que /api/create-session-checkout).
+    const stripeKey = getStripeCredentials().secretKey;
+    const isTestMode = stripeKey.startsWith('sk_test_');
+    const connectAccount = await stripe.accounts.retrieve(celeb.stripe_account_id);
+    if (!connectAccount.charges_enabled) {
+      if (isTestMode) {
+        console.warn('[Book Video] WARNING: charges_enabled=false for', celeb.stripe_account_id, '- proceeding in TEST mode');
+      } else {
+        console.error('[Book Video] Blocked: charges_enabled=false for', celeb.stripe_account_id);
+        return res.status(403).json({
+          error: 'Celebrity account cannot accept payments yet. Onboarding must be completed.',
+          code: 'CHARGES_NOT_ENABLED',
+        });
+      }
     }
 
     const pricing = celeb.celebrity_pricing?.[0];
@@ -4282,6 +4301,7 @@ app.post('/api/book-video', rateLimit('book-video', 20, 60 * 1000), async (req, 
         fan_id,
         celebrity_id,
         type: 'video_booking',
+        ...(fanMessage ? { fan_message: fanMessage } : {}),
       },
       success_url: `https://${host}/booking-success?booking_id=${booking.id}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `https://${host}/celebrity-detail?id=${celebrity_id}`,
