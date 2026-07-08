@@ -28,6 +28,8 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getDedicationAssets } from '@/utils/liveSessionStorage';
 import { saveCollectorLive, downloadImageWeb } from '@/utils/collectorLiveStorage';
@@ -118,7 +120,20 @@ export default function DedicationResultScreen() {
         setPhotoUrl(assets.photoUrl);
         setCelebrityName(assets.celebrityName || params.celebrityName || '');
         if (assets.signatureSvg) {
-          setSignaturePaths(assets.signatureSvg.split('|||'));
+          const raw = assets.signatureSvg.trim();
+          let pathStrings: string[];
+          if (raw.startsWith('<svg')) {
+            // Format <svg>…</svg> complet : on extrait les attributs d="…".
+            pathStrings = [];
+            const re = /\bd="([^"]+)"/g;
+            let m: RegExpExecArray | null;
+            while ((m = re.exec(raw)) !== null) {
+              pathStrings.push(m[1]);
+            }
+          } else {
+            pathStrings = raw.split('|||');
+          }
+          setSignaturePaths(pathStrings.filter((p) => p && p.length > 0));
           console.log('[DedicationResult] Assets loaded with signature');
           setLoading(false);
         } else if (attempt < 8) {
@@ -395,17 +410,12 @@ export default function DedicationResultScreen() {
 
       const uri = await captureImage();
 
-      // Si la capture composee echoue, on sauve quand meme la photo brute pour
-      // que la dedicace apparaisse dans la galerie (entree mise a jour via dedupKey).
+      // Si la capture composee (photo + signature) echoue, NE PAS pretendre que la
+      // dedicace est enregistree : on affiche une erreur/reessai au lieu de sauver la
+      // photo brute (sans signature) comme si c'etait la dedicace finale.
       if (!uri) {
-        console.warn('[Dedication] Manual save: capture empty, falling back to raw photo');
-        if (photoUrl) {
-          autoSavedRef.current = true;
-          await saveToCollector(photoUrl);
-          showAlert(t('success'), t('dedicationSaved'));
-        } else {
-          showAlert(t('error'), t('dedicationSaveError'));
-        }
+        console.warn('[Dedication] Manual save: composed capture empty');
+        showAlert(t('error'), t('dedicationSaveError'));
         setIsSaving(false);
         return;
       }
@@ -449,7 +459,42 @@ export default function DedicationResultScreen() {
         if (uri) {
           downloadImageWeb(uri, `dedication_${celebrityName}_${Date.now()}.png`);
         }
+      } else if (Platform.OS === 'android') {
+        // Android : Share.share ignore { url }. On partage le FICHIER image via expo-sharing.
+        if (uri) {
+          try {
+            let localUri = uri;
+            // Si l'URI n'est pas deja un fichier local, on l'ecrit sur disque d'abord.
+            if (!uri.startsWith('file://')) {
+              const target = `${FileSystem.cacheDirectory}dedication_${Date.now()}.png`;
+              if (uri.startsWith('data:')) {
+                const base64 = uri.split(',')[1] || '';
+                await FileSystem.writeAsStringAsync(target, base64, {
+                  encoding: FileSystem.EncodingType.Base64,
+                });
+              } else {
+                await FileSystem.downloadAsync(uri, target);
+              }
+              localUri = target;
+            }
+            const canShare = await Sharing.isAvailableAsync();
+            if (canShare) {
+              await Sharing.shareAsync(localUri, {
+                mimeType: 'image/png',
+                dialogTitle: `${getDedicationFor()} - ${celebrityName}`,
+              });
+            } else {
+              await Share.share({ message: `${getDedicationFor()} - ${celebrityName} #Plyz` });
+            }
+          } catch (e) {
+            console.error('[Dedication] Android share failed:', e);
+            await Share.share({ message: `${getDedicationFor()} - ${celebrityName} #Plyz` });
+          }
+        } else {
+          await Share.share({ message: `${getDedicationFor()} - ${celebrityName} #Plyz` });
+        }
       } else {
+        // iOS : Share.share supporte { url }.
         if (uri) {
           await Share.share({
             url: uri,
@@ -496,20 +541,13 @@ export default function DedicationResultScreen() {
         await new Promise((r) => setTimeout(r, 800 * attempt));
       }
 
-      // Dernier recours : la capture composee a echoue -> on sauve l'entree avec
-      // la PHOTO BRUTE pour que la dedicace soit visible dans la galerie malgre tout.
+      // La capture composee (photo + signature) a echoue apres plusieurs tentatives.
+      // On NE sauve PAS la photo brute (sans signature) comme si c'etait la dedicace
+      // finale : on laisse autoSavedRef a false pour permettre une nouvelle tentative
+      // (clic manuel "Enregistrer") plus tard.
       if (cancelled) return;
-      if (photoUrl) {
-        try {
-          await saveToCollector(photoUrl);
-          console.warn('[DedicationResult] Composed capture failed after retries — saved raw photo as fallback');
-        } catch (e) {
-          console.error('[DedicationResult] Fallback raw-photo save failed:', e);
-          autoSavedRef.current = false;
-        }
-      } else {
-        autoSavedRef.current = false;
-      }
+      console.warn('[DedicationResult] Composed capture failed after retries — not saving raw photo');
+      autoSavedRef.current = false;
     };
 
     const timer = setTimeout(runAutoSave, 1500);

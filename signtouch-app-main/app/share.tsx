@@ -21,6 +21,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
+import { showAlert } from '@/utils/alertHelper';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function ShareScreen() {
@@ -53,10 +54,10 @@ export default function ShareScreen() {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      alert(t('linkCopiedToClipboard'));
+      showAlert(t('shareAppTitle'), t('linkCopiedToClipboard'));
     } catch (error) {
       console.error('Erreur lors de la copie:', error);
-      alert(t('errorCopyingLink'));
+      showAlert(t('error'), t('errorCopyingLink'));
     }
   };
 
@@ -73,7 +74,7 @@ export default function ShareScreen() {
 
     Linking.openURL(smsUrl).catch(() => {
       if (Platform.OS === 'web') {
-        alert(t('smsNotAvailableWeb'));
+        showAlert(t('shareAppTitle'), t('smsNotAvailableWeb'));
       }
     });
   };
@@ -87,7 +88,7 @@ export default function ShareScreen() {
 
     Linking.openURL(emailUrl).catch(() => {
       if (Platform.OS === 'web') {
-        alert(t('errorOpeningEmail'));
+        showAlert(t('error'), t('errorOpeningEmail'));
       }
     });
   };
@@ -106,7 +107,7 @@ export default function ShareScreen() {
         const webUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
         Linking.openURL(webUrl).catch(() => {
           if (Platform.OS === 'web') {
-            alert(t('whatsappNotInstalled'));
+            showAlert(t('shareAppTitle'), t('whatsappNotInstalled'));
           }
         });
       }
@@ -122,7 +123,7 @@ export default function ShareScreen() {
 
     Linking.openURL(facebookUrl).catch(() => {
       if (Platform.OS === 'web') {
-        alert(t('errorOpeningFacebook'));
+        showAlert(t('error'), t('errorOpeningFacebook'));
       }
     });
   };
@@ -139,7 +140,7 @@ export default function ShareScreen() {
       }
 
       if (Platform.OS === 'web') {
-        alert(t('linkCopiedInstagram'));
+        showAlert(t('shareAppTitle'), t('linkCopiedInstagram'));
         Linking.openURL('https://www.instagram.com/').catch(() => {});
       } else {
         const instagramUrl = 'instagram://';
@@ -150,11 +151,11 @@ export default function ShareScreen() {
         } else {
           await Linking.openURL('https://www.instagram.com/');
         }
-        alert(t('linkCopiedInstagramPaste'));
+        showAlert(t('shareAppTitle'), t('linkCopiedInstagramPaste'));
       }
     } catch (error) {
       console.error('Erreur Instagram:', error);
-      alert(t('errorOpeningInstagram'));
+      showAlert(t('error'), t('errorOpeningInstagram'));
     }
   };
 
@@ -170,7 +171,7 @@ export default function ShareScreen() {
       }
 
       if (Platform.OS === 'web') {
-        alert(t('linkCopiedTikTok'));
+        showAlert(t('shareAppTitle'), t('linkCopiedTikTok'));
         Linking.openURL('https://www.tiktok.com/').catch(() => {});
       } else {
         const tiktokUrl = 'snssdk1128://';
@@ -181,11 +182,11 @@ export default function ShareScreen() {
         } else {
           await Linking.openURL('https://www.tiktok.com/');
         }
-        alert(t('linkCopiedTikTokPaste'));
+        showAlert(t('shareAppTitle'), t('linkCopiedTikTokPaste'));
       }
     } catch (error) {
       console.error('Erreur TikTok:', error);
-      alert(t('errorOpeningTikTok'));
+      showAlert(t('error'), t('errorOpeningTikTok'));
     }
   };
 
@@ -198,7 +199,7 @@ export default function ShareScreen() {
 
     Linking.openURL(telegramUrl).catch(() => {
       if (Platform.OS === 'web') {
-        alert(t('errorOpeningTelegram'));
+        showAlert(t('error'), t('errorOpeningTelegram'));
       }
     });
   };

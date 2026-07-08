@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   PanResponder,
+  Share,
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
@@ -447,15 +448,22 @@ export default function EventPublishScreen() {
 
   const handleShareCode = async () => {
     const link = `https://plyz.io/evenement/${joinCode}`;
+    const message = `Rejoignez mon événement Plyz "${sessionTitle}" avec le code ${joinCode} : ${link}`;
     try {
-      if (navigator.share) {
-        await navigator.share({
-          title: sessionTitle,
-          text: `Rejoignez mon événement Plyz avec le code ${joinCode}`,
-          url: link,
-        });
+      if (Platform.OS === 'web') {
+        // Web : navigator.share si dispo, sinon on affiche le lien.
+        if (typeof navigator !== 'undefined' && (navigator as any).share) {
+          await (navigator as any).share({
+            title: sessionTitle,
+            text: `Rejoignez mon événement Plyz avec le code ${joinCode}`,
+            url: link,
+          });
+        } else {
+          showAlert(t('share'), link);
+        }
       } else {
-        showAlert(t('share'), link);
+        // Mobile : feuille de partage native React Native (navigator n'existe pas).
+        await Share.share({ message });
       }
     } catch {
       showAlert(t('share'), link);

@@ -13,7 +13,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import { showAlert } from '@/utils/alertHelper';
+import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { router } from 'expo-router';
 import { Info, Heart, Share2, Globe, Check, FileText, LogOut, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle, Camera, Images, ChevronRight , Star, Clock, TrendingUp } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -83,7 +83,7 @@ export default function AccountScreen() {
   const { t, language, setLanguage, isRTL } = useTranslation();
   const { user, signOut, sendOtpCode, verifyOtpCode } = useAuth();
   const { requireAuth } = useAuthPrompt();
-  const { isCelebrity, toggleCelebrityMode, profilePhoto, setProfilePhoto } = useCelebrityMode();
+  const { isCelebrity, profilePhoto, setProfilePhoto } = useCelebrityMode();
   const { startOnboarding } = useOnboarding();
   const insets = useSafeAreaInsets();
   const trUI = useAutoTranslate([
@@ -364,16 +364,37 @@ export default function AccountScreen() {
     }
   };
 
-  const handleTestDeepLink = async () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    const url = Linking.createURL('auth-callback');
-    console.log('URL de redirection:', url);
-    await Clipboard.setStringAsync(url);
-    showAlert(
-      'URL copiée!',
-      `Cette URL a été copiée dans le presse-papiers:\n\n${url}\n\nAjoute-la dans Supabase Dashboard:\nAuthentication → URL Configuration → Redirect URLs`
+  // Suppression de compte (obligatoire Apple/Google). Confirmation puis appel serveur,
+  // déconnexion et retour à l'accueil.
+  const handleDeleteAccount = () => {
+    showConfirm(
+      t('deleteAccountTitle' as any) || 'Supprimer mon compte',
+      t('deleteAccountConfirm' as any) ||
+        'Cette action est définitive. Ton compte et tes données seront supprimés. Continuer ?',
+      [
+        { text: t('cancel') || 'Annuler', style: 'cancel' },
+        {
+          text: t('delete' as any) || 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const res = await authedFetch(`${API_BASE}/api/delete-account`, { method: 'POST' });
+              if (!res.ok) {
+                throw new Error(`delete-account failed: ${res.status}`);
+              }
+              try { await signOut(); } catch {}
+              router.replace('/');
+            } catch (err) {
+              console.error('Delete account error:', err);
+              showAlert(
+                t('error') || 'Erreur',
+                t('deleteAccountError' as any) ||
+                  'La suppression du compte a échoué. Réessaie plus tard.'
+              );
+            }
+          },
+        },
+      ]
     );
   };
 
@@ -508,6 +529,16 @@ export default function AccountScreen() {
               >
                 <LogOut size={16} color="#ef4444" />
                 <Text style={styles.signOutButtonText}>{t('signOut')}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.deleteAccountButton}
+                onPress={handleDeleteAccount}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.deleteAccountButtonText}>
+                  {t('deleteAccountTitle' as any) || 'Supprimer mon compte'}
+                </Text>
               </TouchableOpacity>
             </View>
           ) : loginStep === 'idle' ? (
@@ -777,30 +808,6 @@ export default function AccountScreen() {
                   {t('celActivatePayments' as any) || 'Activer mes paiements'}
                 </Text>
                 <ArrowRight size={18} color="#000" />
-              </TouchableOpacity>
-            )}
-
-            {/* 🧪 TEST : repasser en fan pour re-tester l'onboarding célébrité.
-                ⚠️ TEMPORAIRE — visible pour toute célébrité le temps des tests JC.
-                À re-restreindre à l'admin (email/uid) ou retirer avant le lancement. */}
-            {isCelebrity && (
-              <TouchableOpacity
-                style={{ marginTop: 12, paddingVertical: 14, borderRadius: 12, borderWidth: 1.5, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)', alignItems: 'center' }}
-                onPress={() => {
-                  Alert.alert(
-                    '🧪 Test — repasser en fan',
-                    'Réinitialise ton statut célébrité sur cet appareil pour refaire l\'onboarding depuis le début. (Ton compte, ton Stripe et tes données ne sont PAS supprimés.)',
-                    [
-                      { text: 'Annuler', style: 'cancel' },
-                      { text: 'Repasser en fan', style: 'destructive', onPress: () => toggleCelebrityMode() },
-                    ],
-                  );
-                }}
-                activeOpacity={0.7}
-              >
-                <Text style={{ color: '#ef4444', fontSize: 13, fontWeight: '600' }}>
-                  🧪 Repasser en fan (test admin)
-                </Text>
               </TouchableOpacity>
             )}
 
@@ -1557,6 +1564,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ef4444',
     fontWeight: '500',
+  },
+  deleteAccountButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    marginTop: 10,
+  },
+  deleteAccountButtonText: {
+    fontSize: 13,
+    color: '#ef4444',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   activateButton: {
     flexDirection: 'row',

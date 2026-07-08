@@ -516,6 +516,16 @@ export default function CreateEventScreen() {
       return;
     }
 
+    // Prix "Autre" sélectionné mais aucun montant saisi -> on bloque la création
+    // (évite un événement au prix vide / à 0 non voulu).
+    if (showCustomPrice && !customPriceText.trim()) {
+      showAlert(
+        t('error') || 'Error',
+        t('customPriceRequired' as any) || 'Saisis un montant pour le prix personnalisé.'
+      );
+      return;
+    }
+
     // Un événement payant nécessite un compte Stripe pour percevoir l'argent
     let effectiveStripeAccount: string | null = connectedAccountId || stripeAccountId;
     if (selectedPriceCents > 0) {
@@ -640,11 +650,16 @@ export default function CreateEventScreen() {
     if (createdSession) {
       router.push({
         pathname: '/event-publish',
-        params: { 
+        params: {
           sessionId: createdSession.id,
           sessionTitle: createdSession.title,
           joinCode: createdSession.join_code,
           priceCents: String(createdSession.price_cents || 0),
+          // Params attendus par event-publish (affichage type/dates/lieu + logique paiement).
+          eventType: createdSession.event_type || 'qr',
+          startsAt: createdSession.starts_at || '',
+          endsAt: createdSession.ends_at || '',
+          location: createdSession.location || '',
         }
       });
     }
@@ -854,6 +869,9 @@ export default function CreateEventScreen() {
                           if (isCustom) {
                             setShowCustomPrice(true);
                             setCustomPriceText('');
+                            // Réinitialise le prix : sinon l'ancien montant sélectionné
+                            // reste actif tant que le fan n'a pas saisi de montant "Autre".
+                            setSelectedPriceCents(0);
                           } else {
                             setShowCustomPrice(false);
                             setSelectedPriceCents(option.value);
@@ -1021,7 +1039,8 @@ export default function CreateEventScreen() {
               </View>
 
               {(() => {
-                const canProceed = eventName.trim() && eventLocation.trim() && (isLive || eventTime);
+                // Le LIEU est OPTIONNEL (cohérent avec handleNext qui ne valide que le nom).
+                const canProceed = eventName.trim() && (isLive || eventTime);
                 return (
                   <TouchableOpacity
                     style={[styles.nextButton, !canProceed && styles.nextButtonDisabled]}

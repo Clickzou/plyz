@@ -762,22 +762,25 @@ export default function ComposeScreen() {
   }>();
 
 
-  const signatureUris = signatures ? JSON.parse(signatures as string) : [];
+  const initialSignatureUris: string[] = signatures ? JSON.parse(signatures as string) : [];
   const initialTexts = texts ? JSON.parse(texts as string) : [];
   
-  console.log('[Compose] signatureUris count:', signatureUris.length, 'signatures param:', signatures ? 'present' : 'missing');
-  if (signatureUris.length > 0) {
-    console.log('[Compose] First signature URI type:', signatureUris[0].substring(0, 40));
+  console.log('[Compose] signatureUris count:', initialSignatureUris.length, 'signatures param:', signatures ? 'present' : 'missing');
+  if (initialSignatureUris.length > 0) {
+    console.log('[Compose] First signature URI type:', initialSignatureUris[0].substring(0, 40));
   }
 
+  // Liste des signatures gérée en STATE LOCAL : supprimer une signature filtre la
+  // liste sur place, sans re-naviguer (ce qui perdait les textOverlays/couleurs/échelles).
+  const [signatureUris, setSignatureUris] = useState<string[]>(initialSignatureUris);
   const [loadedPhotoUri, setLoadedPhotoUri] = useState<string | null>(null);
   const [isLoadingMemory, setIsLoadingMemory] = useState(!!memoryId);
   const [selectedSignatureIndex, setSelectedSignatureIndex] = useState<number | null>(0);
   const [signatureColors, setSignatureColors] = useState<string[]>(
-    signatureUris.map(() => '#ffffff')
+    initialSignatureUris.map(() => '#ffffff')
   );
   const [signatureStrokeScales, setSignatureStrokeScales] = useState<number[]>(
-    signatureUris.map(() => 1.0)
+    initialSignatureUris.map(() => 1.0)
   );
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showStrokePicker, setShowStrokePicker] = useState(false);
@@ -1096,15 +1099,17 @@ export default function ComposeScreen() {
     }
 
     if (selectedSignatureIndex !== null) {
-      // Supprimer la signature sélectionnée
-      const newSignatureUris = signatureUris.filter((_: string, index: number) => index !== selectedSignatureIndex);
-
-      router.replace({
-        pathname: '/compose',
-        params: {
-          photoUri: finalPhotoUri as string,
-          signatures: JSON.stringify(newSignatureUris),
-        },
+      // Supprimer la signature sélectionnée EN STATE LOCAL (pas de re-navigation) :
+      // on préserve ainsi les textOverlays, textColors et échelles déjà posés.
+      const idx = selectedSignatureIndex;
+      setSignatureUris((prev) => prev.filter((_, i) => i !== idx));
+      setSignatureColors((prev) => prev.filter((_, i) => i !== idx));
+      setSignatureStrokeScales((prev) => prev.filter((_, i) => i !== idx));
+      setSelectedSignatureIndex((prev) => {
+        const remaining = signatureUris.length - 1;
+        if (remaining <= 0) return null;
+        // On garde une sélection valide (index précédent si on supprime le dernier).
+        return Math.min(idx, remaining - 1);
       });
     }
   };

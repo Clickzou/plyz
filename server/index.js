@@ -6552,6 +6552,62 @@ app.get('/api/event-reservation-count', async (req, res) => {
   } catch (e) { console.error('[event-reservation-count]', e.message); res.status(500).json({ error: e.message }); }
 });
 
+// SUPPRESSION DE COMPTE (obligatoire pour Apple/Google) : l'utilisateur authentifié
+// demande la suppression de son compte. On supprime son compte Auth (Supabase Admin)
+// puis on nettoie/anonymise, en best-effort, les tables qui contiennent ses données.
+// Chaque nettoyage est en try/catch : un échec de nettoyage ne bloque pas la suppression.
+app.post('/api/delete-account', async (req, res) => {
+  try {
+    const user = await verifySupabaseJWT(req);
+    if (!user) return res.status(401).json({ error: 'Authentication required' });
+
+    const userId = user.id;
+    const admin = getSupabaseAdmin();
+
+    // Nettoyage best-effort des tables liées, AVANT de supprimer le compte Auth.
+    // Chaque suppression est indépendante : on ignore les erreurs (table/colonne
+    // absente, RLS, etc.) pour ne jamais empêcher la suppression du compte.
+    const safeDelete = async (table, column, value) => {
+      try {
+        await admin.from(table).delete().eq(column, value);
+      } catch (e) {
+        console.warn(`[delete-account] cleanup ${table}.${column} failed:`, e.message);
+      }
+    };
+
+    // Tables clées sur l'id utilisateur (profil/PII/vérifications).
+    await safeDelete('profiles', 'id', userId);
+    await safeDelete('user_profiles', 'user_id', userId);
+    await safeDelete('celebrity_profiles', 'user_id', userId);
+    await safeDelete('celebrity_pricing', 'user_id', userId);
+    await safeDelete('celebrity_verification_requests', 'user_id', userId);
+    await safeDelete('creator_verification_requests', 'user_id', userId);
+    await safeDelete('organization_verification_requests', 'user_id', userId);
+    await safeDelete('age_certifications', 'user_id', userId);
+    await safeDelete('user_push_tokens', 'user_id', userId);
+    await safeDelete('push_outbox', 'user_id', userId);
+    await safeDelete('event_reservations', 'user_id', userId);
+    await safeDelete('celebrity_earnings', 'user_id', userId);
+    // Contenu créé par l'utilisateur (best-effort ; colonnes selon schéma).
+    await safeDelete('posts', 'user_id', userId);
+    await safeDelete('memories', 'user_id', userId);
+    await safeDelete('event_sessions', 'created_by', userId);
+    await safeDelete('live_sessions', 'celebrity_id', userId);
+
+    // Suppression du compte Auth (Supabase Admin). C'est l'étape déterminante.
+    const { error: delErr } = await admin.auth.admin.deleteUser(userId);
+    if (delErr) {
+      console.error('[delete-account] auth.admin.deleteUser failed:', delErr.message);
+      return res.status(500).json({ error: 'account_deletion_failed' });
+    }
+
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('[delete-account]', e.message);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 // Envoie les push en attente dans push_outbox (ex: "compte validé").
 async function processPushOutbox() {
   const db = getSupabaseAdmin();

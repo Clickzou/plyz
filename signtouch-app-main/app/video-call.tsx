@@ -116,6 +116,9 @@ export default function VideoCallScreen() {
   const [hasLeftCall, setHasLeftCall] = useState(false);
   const [paymentCaptured, setPaymentCaptured] = useState(false);
   const callStartTime = useRef<number>(0);
+  // Horodatage du 'joined-meeting' : sert à mesurer la durée RÉELLE de l'appel afin de
+  // ne PAS facturer un appel avorté (participant distant apparu une fraction de seconde).
+  const joinedMeetingTime = useRef<number>(0);
   const autoEndTriggered = useRef(false);
   const callEndReason = useRef<'timer' | 'fan_left' | 'celebrity_left' | 'fan_hangup' | 'celebrity_hangup' | 'unknown'>('unknown');
   const [otherParticipantJoined, setOtherParticipantJoined] = useState(false);
@@ -455,6 +458,9 @@ export default function VideoCallScreen() {
 
         call.on('joined-meeting', () => {
           setIsLoading(false);
+          if (joinedMeetingTime.current === 0) {
+            joinedMeetingTime.current = Date.now();
+          }
           refreshParticipants();
         });
         call.on('participant-joined', refreshParticipants);
@@ -523,8 +529,8 @@ export default function VideoCallScreen() {
       const call = dailyCallFrameRef.current;
       if (call) {
         try {
-          call.leave().catch(() => {});
-          call.destroy().catch(() => {});
+          call.leave?.().catch?.(() => {});
+          call.destroy?.().catch?.(() => {});
         } catch {}
         dailyCallFrameRef.current = null;
       }
@@ -611,8 +617,15 @@ export default function VideoCallScreen() {
       // c'est le fan qui a raccroché/quitté. On résout LE fan courant (currentHostFanEntryIdRef),
       // celui qui vient de terminer — surtout pas le suivant.
       if (isHost) {
+        // DURÉE MINIMALE (> 5 s depuis le 'joined-meeting') : évite de facturer un appel
+        // avorté (participant distant apparu une fraction de seconde). Sinon callHappened=false
+        // -> le serveur LIBÈRE la pré-autorisation au lieu de capturer.
+        const MIN_CALL_MS = 5000;
+        const callDurationMs =
+          joinedMeetingTime.current > 0 ? Date.now() - joinedMeetingTime.current : 0;
         const callHappened =
           otherParticipantJoinedRef.current &&
+          callDurationMs > MIN_CALL_MS &&
           (reason === 'timer' || reason === 'fan_hangup' || reason === 'fan_left');
         endFanCallOnServer(currentHostFanEntryIdRef.current, callHappened);
       }
@@ -830,6 +843,7 @@ export default function VideoCallScreen() {
     setWaitingForNextFan(true);
     setOtherParticipantJoined(false);
     callStartTime.current = 0;
+    joinedMeetingTime.current = 0;
     autoEndTriggered.current = false;
     callEndReason.current = 'unknown';
     callEndedRef.current = false;
@@ -988,7 +1002,15 @@ export default function VideoCallScreen() {
       // L'appel n'a réellement EU LIEU que si un participant distant a rejoint.
       // Sans ça, le fan ne doit JAMAIS être débité (timer qui expire pendant l'attente,
       // raccroché avant connexion, etc.).
-      const callReallyHappened = otherParticipantJoinedRef.current;
+      // DURÉE MINIMALE : un participant distant peut apparaître une fraction de seconde
+      // (connexion/déconnexion immédiate) sans qu'un vrai appel ait eu lieu. On n'exige
+      // pas seulement "participant distant présent" mais AUSSI une durée d'appel réelle
+      // > 5 s (mesurée depuis le 'joined-meeting'). Sinon : pas de débit, on libère.
+      const MIN_CALL_MS = 5000;
+      const callDurationMs =
+        joinedMeetingTime.current > 0 ? Date.now() - joinedMeetingTime.current : 0;
+      const callReallyHappened =
+        otherParticipantJoinedRef.current && callDurationMs > MIN_CALL_MS;
       const shouldChargeFan =
         callReallyHappened &&
         (reason === 'timer' || reason === 'fan_hangup' || reason === 'fan_left');
@@ -996,6 +1018,7 @@ export default function VideoCallScreen() {
       console.log(
         '[VideoCall] Call end reason:', reason,
         '| Call really happened:', callReallyHappened,
+        '| Call duration ms:', callDurationMs,
         '| Charge fan:', shouldChargeFan
       );
 
@@ -1310,7 +1333,7 @@ export default function VideoCallScreen() {
       <StatusBar style="light" />
 
       <View style={styles.controlBar}>
-        <TouchableOpacity style={styles.headerBackButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.headerBackButton} onPress={leaveCall}>
           <ArrowLeft size={20} color="#fff" />
         </TouchableOpacity>
 

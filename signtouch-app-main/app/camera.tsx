@@ -86,7 +86,11 @@ export default function CameraScreen() {
   };
 
   const takePicture = async () => {
-    if (!isCameraReady || !cameraRef.current) {
+    // NB: on ne bloque PLUS sur `isCameraReady` : sous New Architecture (iOS),
+    // le callback onCameraReady de <CameraView> ne se déclenche pas de façon
+    // fiable quand des enfants sont montés dans la vue -> le bouton semblait
+    // « mort ». On se fie à la présence de la ref ; takePictureAsync gère l'attente.
+    if (!cameraRef.current) {
       return;
     }
 
@@ -168,12 +172,15 @@ export default function CameraScreen() {
 
   return (
     <View style={styles.container}>
+      {/* La caméra est rendue SANS enfants : sinon onCameraReady ne part pas
+          sous New Architecture (iOS). Les contrôles sont superposés en overlay. */}
       <CameraView
-        style={styles.camera}
+        style={StyleSheet.absoluteFill}
         facing={facing}
         ref={cameraRef}
         onCameraReady={() => setIsCameraReady(true)}
-      >
+      />
+      <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
         <TouchableOpacity
           style={[styles.closeButton, { top: insets.top + 20 }]}
           onPress={goToHomeFromCamera}
@@ -203,7 +210,7 @@ export default function CameraScreen() {
             <SwitchCamera size={28} color="#ffffff" strokeWidth={2} />
           </TouchableOpacity>
         </View>
-      </CameraView>
+      </View>
     </View>
   );
 }

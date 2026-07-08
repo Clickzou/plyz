@@ -46,8 +46,20 @@ export default function LiveSignatureResultScreen() {
       setEntry(e);
 
       if (e?.signature_svg) {
-        const pathStrings = e.signature_svg.split('|||');
-        setPaths(pathStrings);
+        const raw = e.signature_svg.trim();
+        let pathStrings: string[];
+        if (raw.startsWith('<svg')) {
+          // Format <svg>…</svg> complet : on extrait les attributs d="…".
+          pathStrings = [];
+          const re = /\bd="([^"]+)"/g;
+          let m: RegExpExecArray | null;
+          while ((m = re.exec(raw)) !== null) {
+            pathStrings.push(m[1]);
+          }
+        } else {
+          pathStrings = raw.split('|||');
+        }
+        setPaths(pathStrings.filter((p) => p && p.length > 0));
       }
     };
     loadEntry();

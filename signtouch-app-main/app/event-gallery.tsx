@@ -209,8 +209,20 @@ export default function EventGalleryScreen() {
   const [eventFinished, setEventFinished] = useState(false);
   const eventFinishedCheckedRef = useRef(false);
 
+  // Les dates/statut passés en PARAMS sont FIGÉS au moment de la navigation. Un
+  // événement réservé à l'avance peut voir sa fin recalculée / prolongée en base :
+  // on refetch la session réelle (event_sessions) pour recharger starts_at/ends_at/status
+  // avant de calculer le temps restant (sinon "Event ended" à tort).
+  const [freshSession, setFreshSession] = useState<{
+    starts_at?: string;
+    ends_at?: string;
+    status?: EventSession['status'];
+  } | null>(null);
+
   // Mode attente : l'événement réservé n'a pas encore commencé (starts_at futur).
-  const startsAtMs = params.startsAt ? new Date(params.startsAt as string).getTime() : NaN;
+  // On préfère la valeur FRAÎCHE (base) au param figé.
+  const effectiveStartsAt = freshSession?.starts_at || (params.startsAt as string) || '';
+  const startsAtMs = effectiveStartsAt ? new Date(effectiveStartsAt).getTime() : NaN;
   const hasFutureStart = !Number.isNaN(startsAtMs) && startsAtMs > Date.now();
   const [hasStarted, setHasStarted] = useState(!hasFutureStart);
   const [countdown, setCountdown] = useState('');
@@ -226,14 +238,14 @@ export default function EventGalleryScreen() {
   const notificationPermissionRef = useRef<string | null>(null);
 
   const isValidSession = params.sessionId && params.endsAt;
-  
+
   const session: EventSession = {
     id: (params.sessionId as string) || '',
     title: (params.sessionTitle as string) || 'Live Event',
     join_code: (params.joinCode as string) || '',
-    ends_at: (params.endsAt as string) || new Date().toISOString(),
-    starts_at: (params.startsAt as string) || '',
-    status: 'live',
+    ends_at: freshSession?.ends_at || (params.endsAt as string) || new Date().toISOString(),
+    starts_at: freshSession?.starts_at || (params.startsAt as string) || '',
+    status: freshSession?.status || 'live',
     viewer_soft_limit: 5000,
     created_by: null,
     created_at: '',
@@ -251,8 +263,22 @@ export default function EventGalleryScreen() {
     let cancelled = false;
     (async () => {
       try {
-        const { data } = await supabase.from('event_sessions').select('created_by').eq('id', sid).maybeSingle();
-        if (!cancelled && data?.created_by) setCelebrityId(data.created_by);
+        const { data } = await supabase
+          .from('event_sessions')
+          .select('created_by, starts_at, ends_at, status')
+          .eq('id', sid)
+          .maybeSingle();
+        if (!cancelled && data) {
+          if (data.created_by) setCelebrityId(data.created_by);
+          // Recharge les dates/statut réels (peuvent différer des params figés).
+          if (data.starts_at || data.ends_at || data.status) {
+            setFreshSession({
+              starts_at: data.starts_at || undefined,
+              ends_at: data.ends_at || undefined,
+              status: (data.status as EventSession['status']) || undefined,
+            });
+          }
+        }
       } catch { /* silencieux : on retombe sur l'initiale */ }
     })();
     return () => { cancelled = true; };

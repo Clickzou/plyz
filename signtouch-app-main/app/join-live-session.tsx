@@ -106,6 +106,9 @@ export default function JoinLiveSessionScreen() {
   const queueRankPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Garde anti-double déclenchement du passage à la visio
   const hasJoinedVideoRef = useRef(false);
+  // Retry périodique pour rejoindre la visio quand le fan est appelé mais que la
+  // room n'est pas encore prête (room_url absent). Ré-armé tant qu'on n'a pas la room.
+  const roomRetryRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Référence à jour de l'entrée du fan (utilisée par le recalcul du rang)
   const queueEntryRef = useRef<QueueEntry | null>(null);
   // Référence à jour de la session (pour récupérer room_url / durée sans dépendances stale)
@@ -129,6 +132,10 @@ export default function JoinLiveSessionScreen() {
       }
       if (queueRankPollRef.current) {
         clearInterval(queueRankPollRef.current);
+      }
+      if (roomRetryRef.current) {
+        clearInterval(roomRetryRef.current);
+        roomRetryRef.current = null;
       }
     };
   }, []);
@@ -412,6 +419,27 @@ export default function JoinLiveSessionScreen() {
     }
   };
 
+  // Arme un retry périodique (3s) pour rejoindre la visio tant que la room n'est pas
+  // prête. Idempotent : ne crée qu'un seul interval. Nettoyé au succès / démontage.
+  const armRoomRetry = () => {
+    if (roomRetryRef.current || hasJoinedVideoRef.current) return;
+    roomRetryRef.current = setInterval(() => {
+      // La session peut s'être terminée entre-temps.
+      if (sessionRef.current?.status === 'ended') {
+        clearRoomRetry();
+        return;
+      }
+      joinVideoCall();
+    }, 3000);
+  };
+
+  const clearRoomRetry = () => {
+    if (roomRetryRef.current) {
+      clearInterval(roomRetryRef.current);
+      roomRetryRef.current = null;
+    }
+  };
+
   // === PARTIE B : connexion du fan à la VISIO Daily quand c'est son tour ===
   const joinVideoCall = async () => {
     if (hasJoinedVideoRef.current) return;
@@ -424,33 +452,36 @@ export default function JoinLiveSessionScreen() {
 
     // Garde : ne pas basculer en visio si la session est déjà terminée.
     if (baseSession.status === 'ended') {
+      clearRoomRetry();
       return;
     }
 
     hasJoinedVideoRef.current = true;
 
     try {
-      // 1) Récupère le room_url. Re-fetch + poll si la célébrité n'a pas encore créé la room.
+      // 1) Récupère le room_url. Re-fetch immédiat si la room n'est pas encore en cache.
       let roomUrl = baseSession.room_url || null;
-      let attempts = 0;
-      const maxAttempts = 10; // ~20s max
-      while (!roomUrl && attempts < maxAttempts) {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+      if (!roomUrl) {
         const refreshed = await getSessionById(baseSession.id);
         if (refreshed) {
           sessionRef.current = refreshed;
           setSession(refreshed);
           roomUrl = refreshed.room_url || null;
         }
-        attempts += 1;
       }
 
       if (!roomUrl) {
-        console.error('[Fan Video] room_url still empty after polling');
+        // La room n'est pas encore prête : on NE renonce PAS. On relâche la garde
+        // anti-double-join et on arme un retry périodique (3s) qui re-tentera
+        // jusqu'à ce que la célébrité ait créé la room (room_url disponible).
+        console.warn('[Fan Video] room_url absent — arming retry');
         hasJoinedVideoRef.current = false;
-        showAlert(t('error'), t('videoCallError' as any) || 'Connexion à la visio impossible.');
+        armRoomRetry();
         return;
       }
+
+      // Room obtenue : on peut arrêter le retry.
+      clearRoomRetry();
 
       // 2) Génère le jeton Daily du FAN (mêmes params que le dashboard, mais isOwner:false).
       // Le roomName est dérivé de la convention `session-<id>` (cf. createSessionVideoRoom).

@@ -697,7 +697,9 @@ export default function LiveSessionDashboardScreen() {
 
     if (currentFan) {
       if (paths.length > 0) {
-        const fullSvg = `<svg viewBox="0 0 ${CANVAS_SIZE} ${CANVAS_SIZE}">${paths.map((p) => `<path d="${p}" stroke="#000" stroke-width="3" fill="none"/>`).join('')}</svg>`;
+        // Uniformise le stockage : paths joints par '|||' (comme le flux dedicace et
+        // le tracé live l.1132), pour un rendu robuste côté fan.
+        const fullSvg = paths.join('|||');
         await completeSignature(currentFan.id, fullSvg, null);
       } else if (dedicationPaths.length > 0) {
         const dedicationSvg = dedicationPaths.join('|||');

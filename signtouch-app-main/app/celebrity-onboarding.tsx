@@ -305,9 +305,16 @@ export default function CelebrityOnboardingScreen() {
     }
   };
 
-  const finish = () => {
+  const finish = async () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    // Activation du mode célébrité À LA FIN de l'onboarding : le profil (photo/nom/
+    // présentation) a déjà été enregistré à l'étape 1 (saveProfile) avant d'arriver ici.
+    try {
+      await enableCelebrityMode();
+    } catch (e) {
+      console.error('[CelebrityOnboarding] enableCelebrityMode failed:', e);
     }
     router.back();
   };
@@ -317,7 +324,10 @@ export default function CelebrityOnboardingScreen() {
 
   const acceptCriteria = async () => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const proceed = async () => { await enableCelebrityMode(); setAccepted(true); };
+    // NE PAS activer le mode célébrité ici : on entre seulement dans l'onboarding.
+    // L'activation (enableCelebrityMode) est déplacée à l'étape FINALE (finish),
+    // après que le profil (photo/nom/présentation) a été réellement enregistré.
+    const proceed = async () => { setAccepted(true); };
     if (!user) { requireAuth(() => proceed(), { reason: 'Crée ton compte pour passer en mode célébrité', requireBillingIdentity: false }); return; }
     await proceed();
   };
@@ -608,13 +618,21 @@ export default function CelebrityOnboardingScreen() {
 
             <View style={styles.recapBox}>
               <View style={styles.recapRow}>
-                <CheckCircle size={18} color="#10b981" />
+                {profilePhoto ? (
+                  <CheckCircle size={18} color="#10b981" />
+                ) : (
+                  <Star size={18} color="#f59e0b" />
+                )}
                 <Text style={styles.recapText}>
                   {ct('celOnboardRecapPhoto' as any) || trUI('Photo de profil')}
                 </Text>
               </View>
               <View style={styles.recapRow}>
-                <CheckCircle size={18} color="#10b981" />
+                {celebrityName.trim() ? (
+                  <CheckCircle size={18} color="#10b981" />
+                ) : (
+                  <Star size={18} color="#f59e0b" />
+                )}
                 <Text style={styles.recapText}>
                   {ct('celOnboardRecapProfile' as any) || trUI('Nom public et présentation')}
                 </Text>
