@@ -35,12 +35,12 @@ export default function CameraScreen() {
       <View style={styles.container}>
         <View style={styles.permissionContainer}>
           <Text style={styles.permissionText}>
-            Nous avons besoin de votre permission pour accéder à la caméra
+            Plyz utilise la caméra pour prendre votre photo souvenir avec la célébrité
           </Text>
           <TouchableOpacity
             style={styles.permissionButton}
             onPress={requestPermission}>
-            <Text style={styles.permissionButtonText}>Autoriser</Text>
+            <Text style={styles.permissionButtonText}>Continuer</Text>
           </TouchableOpacity>
         </View>
       </View>

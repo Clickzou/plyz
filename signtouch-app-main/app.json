@@ -26,13 +26,10 @@
       "bundleIdentifier": "com.plyz.app",
       "buildNumber": "1",
       "infoPlist": {
-        "NSCameraUsageDescription": "Plyz a besoin d'accéder à votre caméra pour prendre des photos et les appels vidéo.",
+        "NSCameraUsageDescription": "Plyz utilise la caméra pour prendre vos photos souvenirs et pour vos appels vidéo en direct avec les célébrités, par exemple prendre une photo lors d'une séance de dédicace.",
         "NSPhotoLibraryUsageDescription": "Plyz a besoin d'accéder à votre galerie pour sauvegarder vos photos signées.",
         "NSPhotoLibraryAddUsageDescription": "Plyz a besoin d'accéder à votre galerie pour sauvegarder vos photos signées.",
-        "NSMicrophoneUsageDescription": "Plyz a besoin d'accéder à votre microphone pour les appels vidéo en direct.",
-        "UIBackgroundModes": [
-          "voip"
-        ],
+        "NSMicrophoneUsageDescription": "Plyz utilise le microphone pour que vous puissiez parler avec la célébrité pendant vos appels vidéo en direct, par exemple lors d'une session de dédicace en visio.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "associatedDomains": [
@@ -105,7 +102,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Plyz a besoin d'accéder à votre caméra pour prendre des photos."
+          "cameraPermission": "Plyz utilise la caméra pour prendre vos photos souvenirs et pour vos appels vidéo en direct avec les célébrités, par exemple prendre une photo lors d'une séance de dédicace."
         }
       ],
       [
