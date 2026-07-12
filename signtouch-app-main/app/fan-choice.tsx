@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,14 @@ import {
   TouchableOpacity,
   Platform,
   ScrollView,
+  Modal,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PlyzHeader from '@/components/PlyzHeader';
-import { PenTool, Video, Plus, LogIn, CalendarClock } from 'lucide-react-native';
+import { PenTool, Video, Plus, LogIn, CalendarClock, Sparkles } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,6 +43,22 @@ export default function FanChoiceScreen() {
   const [videoUpcomingCount, setVideoUpcomingCount] = useState(0);
   const [videoOngoingCount, setVideoOngoingCount] = useState(0);
   const [videoPastCount, setVideoPastCount] = useState(0);
+  // Popup d'explication affichée UNE SEULE fois (au tout premier accès à l'écran Événements).
+  const [showIntro, setShowIntro] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const seen = await AsyncStorage.getItem('plyz_events_intro_seen');
+        if (seen !== '1') setShowIntro(true);
+      } catch { /* pas bloquant */ }
+    })();
+  }, []);
+
+  const dismissIntro = async () => {
+    setShowIntro(false);
+    try { await AsyncStorage.setItem('plyz_events_intro_seen', '1'); } catch { /* pas bloquant */ }
+  };
 
   // Cliquer « Créer » : exige un compte, puis bascule en mode célébrité et
   // route selon le statut de vérification.
@@ -331,6 +349,58 @@ export default function FanChoiceScreen() {
 
       <AccountAvatarButton />
       <BottomNav />
+
+      <Modal
+        visible={showIntro}
+        transparent
+        animationType="fade"
+        onRequestClose={dismissIntro}
+      >
+        <View style={styles.introOverlay}>
+          <View style={styles.introCard}>
+            <View style={styles.introIconWrap}>
+              <Sparkles size={28} color="#fbbf24" strokeWidth={2} />
+            </View>
+            <Text style={styles.introTitle}>
+              {t('eventsIntroTitle' as any) || 'Bienvenue dans les Événements'}
+            </Text>
+
+            <View style={styles.introRow}>
+              <View style={[styles.introRowIcon, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
+                <LogIn size={20} color="#10b981" strokeWidth={2.4} />
+              </View>
+              <View style={styles.introRowText}>
+                <Text style={styles.introRowTitle}>
+                  {t('eventsIntroFanTitle' as any) || 'Vous êtes un fan ?'}
+                </Text>
+                <Text style={styles.introRowBody}>
+                  {t('eventsIntroFanBody' as any) || 'Touchez « Rejoindre » et entrez le code que la célébrité vous a communiqué pour votre dédicace photo ou votre appel vidéo en direct.'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.introRow}>
+              <View style={[styles.introRowIcon, { backgroundColor: 'rgba(99,102,241,0.15)' }]}>
+                <Plus size={20} color="#6366f1" strokeWidth={2.4} />
+              </View>
+              <View style={styles.introRowText}>
+                <Text style={styles.introRowTitle}>
+                  {t('eventsIntroCelebTitle' as any) || 'Vous êtes une célébrité ?'}
+                </Text>
+                <Text style={styles.introRowBody}>
+                  {t('eventsIntroCelebBody' as any) || 'Touchez « Créer » pour organiser votre événement et recevoir vos fans. Le bouton « Créer » apparaît une fois votre compte de célébrité validé.'}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity style={styles.introBtn} onPress={dismissIntro} activeOpacity={0.85}>
+              <Text style={styles.introBtnText}>
+                {t('eventsIntroGotIt' as any) || "J'ai compris"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -370,6 +440,77 @@ const styles = StyleSheet.create({
   historyGroup: {
     gap: 8,
     marginTop: -8,
+  },
+  introOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  introCard: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 22,
+    padding: 24,
+    width: '100%',
+    maxWidth: 380,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  introIconWrap: {
+    alignSelf: 'center',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(251,191,36,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  introTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  introRow: {
+    flexDirection: 'row',
+    gap: 14,
+    marginBottom: 18,
+  },
+  introRowIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  introRowText: {
+    flex: 1,
+  },
+  introRowTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  introRowBody: {
+    fontSize: 13.5,
+    lineHeight: 19,
+    color: 'rgba(255,255,255,0.7)',
+  },
+  introBtn: {
+    marginTop: 6,
+    backgroundColor: '#10b981',
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: 'center',
+  },
+  introBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#ffffff',
   },
   historyBtn: {
     flexDirection: 'row',
