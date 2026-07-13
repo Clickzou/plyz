@@ -18,7 +18,8 @@ import { showAlert } from '@/utils/alertHelper';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Sparkles, Copy, Share2, Check, Plus, X, Clock, Users, MapPin, Calendar, Music, Trophy, Palette, Star, User, Euro, Send } from 'lucide-react-native';
+import { ArrowLeft, Sparkles, Copy, Share2, Check, Plus, X, Clock, Users, MapPin, Calendar, Music, Trophy, Palette, Star, User, Euro, Send, Navigation } from 'lucide-react-native';
+import { getCurrentCoords } from '@/utils/geofence';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import Svg, { Path, G } from 'react-native-svg';
@@ -147,6 +148,10 @@ export default function CreateEventScreen() {
   const [eventName, setEventName] = useState('');
   const [selectedDuration, setSelectedDuration] = useState(60);
   const [eventLocation, setEventLocation] = useState('');
+  // Coordonnées GPS du lieu (dédicace EN PERSONNE). Obligatoires pour un événement
+  // payant : elles imposent le géofence côté fan (service du monde réel, hors IAP Apple).
+  const [eventCoords, setEventCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [capturingLocation, setCapturingLocation] = useState(false);
   const [eventDate, setEventDate] = useState(new Date().toISOString().split('T')[0]);
   const [eventTime, setEventTime] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -188,6 +193,7 @@ export default function CreateEventScreen() {
       eventName,
       selectedDuration,
       eventLocation,
+      eventCoords,
       eventDate,
       eventTime,
       eventType,
@@ -198,7 +204,7 @@ export default function CreateEventScreen() {
     };
     await AsyncStorage.setItem(EVENT_FORM_STORAGE_KEY, JSON.stringify(formData));
     await AsyncStorage.setItem(EVENT_PENDING_CREATE_KEY, 'true');
-  }, [step, eventName, selectedDuration, eventLocation, eventDate, eventTime, eventType, isLive, selectedPriceCents, signers, activeSignerIndex]);
+  }, [step, eventName, selectedDuration, eventLocation, eventCoords, eventDate, eventTime, eventType, isLive, selectedPriceCents, signers, activeSignerIndex]);
 
   // Restaurer les données du formulaire et continuer
   const restoreAndContinue = useCallback(async () => {
@@ -226,6 +232,7 @@ export default function CreateEventScreen() {
       setEventName(formData.eventName || '');
       setSelectedDuration(formData.selectedDuration || 60);
       setEventLocation(formData.eventLocation || '');
+      setEventCoords(formData.eventCoords || null);
       setEventDate(formData.eventDate || new Date().toISOString().split('T')[0]);
       setEventTime(formData.eventTime || '');
       setEventType(formData.eventType || 'rencontre');
@@ -248,6 +255,16 @@ export default function CreateEventScreen() {
   const handleCreateEventAfterRestore = async (formData: any) => {
     const validSigners = (formData.signers || []).filter((s: SignerEntry) => s.name.trim() && s.paths.length > 0);
     if (validSigners.length === 0) return;
+
+    // Dédicace payante = événement EN PERSONNE : coordonnées GPS du lieu obligatoires
+    // (impose le géofence côté fan ; conformité Apple real-world / hors IAP).
+    if ((formData.selectedPriceCents || 0) > 0 && !formData.eventCoords) {
+      showAlert(
+        t('locationRequiredTitle' as any) || "Lieu de l'événement requis",
+        t('locationRequiredMsg' as any) || "Un événement de dédicace payant est un événement en personne : définis le lieu avec « Utiliser ma position » sur place. Les fans devront être présents pour participer."
+      );
+      return;
+    }
 
     // Un événement payant nécessite un compte Stripe pour percevoir l'argent
     let effectiveStripeAccount: string | null = stripeAccountId;
@@ -288,7 +305,16 @@ export default function CreateEventScreen() {
       })();
       
       const priceCents = formData.selectedPriceCents > 0 ? formData.selectedPriceCents : undefined;
-      const session = await createEventSession(formData.eventName.trim(), formData.selectedDuration, creatorId, scheduledStart, formData.eventLocation?.trim(), priceCents);
+      const session = await createEventSession(
+        formData.eventName.trim(), formData.selectedDuration, creatorId, scheduledStart,
+        formData.eventLocation?.trim(), priceCents,
+        {
+          latitude: formData.eventCoords?.latitude ?? null,
+          longitude: formData.eventCoords?.longitude ?? null,
+          inPersonOnly: (priceCents || 0) > 0,
+          geofenceRadiusM: 500,
+        }
+      );
       await saveEventIdLocally(session.id);
       if (priceCents && priceCents > 0) {
         await saveEventPrice(session.id, priceCents);
@@ -508,6 +534,31 @@ export default function CreateEventScreen() {
     await performCreateEvent(accountId);
   };
 
+  // Capture la position GPS actuelle comme lieu de l'événement en personne.
+  // La célébrité appuie dessus une fois sur place (ou au lieu de l'événement).
+  const handleCaptureLocation = async () => {
+    if (capturingLocation) return;
+    setCapturingLocation(true);
+    try {
+      const { coords, reason } = await getCurrentCoords();
+      if (coords) {
+        setEventCoords(coords);
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+      } else {
+        showAlert(
+          t('locationUnavailableTitle' as any) || 'Position indisponible',
+          reason === 'permission_denied'
+            ? (t('locationPermissionDeniedMsg' as any) || "Autorise l'accès à ta position pour définir le lieu de l'événement en personne.")
+            : (t('locationUnavailableMsg' as any) || "Impossible d'obtenir ta position. Vérifie ta connexion / le GPS et réessaie sur le lieu de l'événement.")
+        );
+      }
+    } finally {
+      setCapturingLocation(false);
+    }
+  };
+
   const performCreateEvent = async (connectedAccountId?: string) => {
 
     const validSigners = signers.filter(s => s.name.trim() && s.paths.length > 0);
@@ -522,6 +573,16 @@ export default function CreateEventScreen() {
       showAlert(
         t('error') || 'Error',
         t('customPriceRequired' as any) || 'Saisis un montant pour le prix personnalisé.'
+      );
+      return;
+    }
+
+    // Dédicace payante = événement EN PERSONNE : coordonnées GPS du lieu obligatoires
+    // (impose le géofence côté fan ; conformité Apple real-world / hors IAP).
+    if (selectedPriceCents > 0 && !eventCoords) {
+      showAlert(
+        t('locationRequiredTitle' as any) || "Lieu de l'événement requis",
+        t('locationRequiredMsg' as any) || "Un événement de dédicace payant est un événement en personne : appuie sur « Utiliser ma position » sur le lieu pour le définir. Les fans devront être présents pour participer."
       );
       return;
     }
@@ -562,7 +623,16 @@ export default function CreateEventScreen() {
       const creatorId = user?.id || undefined;
       const scheduledStart = getScheduledStartDate();
       const priceCentsVal = selectedPriceCents > 0 ? selectedPriceCents : undefined;
-      const session = await createEventSession(eventName.trim(), selectedDuration, creatorId, scheduledStart, eventLocation?.trim(), priceCentsVal);
+      const session = await createEventSession(
+        eventName.trim(), selectedDuration, creatorId, scheduledStart,
+        eventLocation?.trim(), priceCentsVal,
+        {
+          latitude: eventCoords?.latitude ?? null,
+          longitude: eventCoords?.longitude ?? null,
+          inPersonOnly: (priceCentsVal || 0) > 0,
+          geofenceRadiusM: 500,
+        }
+      );
       await saveEventIdLocally(session.id);
       if (priceCentsVal && priceCentsVal > 0) {
         await saveEventPrice(session.id, priceCentsVal);
@@ -755,7 +825,7 @@ export default function CreateEventScreen() {
                 </View>
                 <View style={styles.stepRow}>
                   <View style={styles.stepNumber}><Text style={styles.stepNumberText}>2</Text></View>
-                  <Text style={styles.stepText}>{t('dedicationStep2' as any) || 'Partagez le QR code sur place ou en ligne'}</Text>
+                  <Text style={styles.stepText}>{t('dedicationStep2' as any) || 'Partagez le QR code sur le lieu de l\'événement (en personne)'}</Text>
                 </View>
                 <View style={styles.stepRow}>
                   <View style={styles.stepNumber}><Text style={styles.stepNumberText}>3</Text></View>
@@ -846,6 +916,31 @@ export default function CreateEventScreen() {
                   onChangeText={setEventLocation}
                   maxLength={100}
                 />
+
+                {/* Événement de dédicace = événement EN PERSONNE. La position GPS
+                    est requise pour un événement payant : elle réserve l'accès aux
+                    fans présents (service du monde réel, hors In-App Purchase Apple). */}
+                <TouchableOpacity
+                  style={[styles.locationGpsButton, eventCoords && styles.locationGpsButtonSet]}
+                  onPress={handleCaptureLocation}
+                  disabled={capturingLocation}
+                >
+                  {capturingLocation ? (
+                    <ActivityIndicator size="small" color="#10B981" />
+                  ) : eventCoords ? (
+                    <Check size={18} color="#10B981" />
+                  ) : (
+                    <Navigation size={18} color="#ec4899" />
+                  )}
+                  <Text style={[styles.locationGpsButtonText, eventCoords && styles.locationGpsButtonTextSet]}>
+                    {eventCoords
+                      ? (t('locationCaptured' as any) || 'Position enregistrée ✓')
+                      : (t('useMyLocation' as any) || 'Utiliser ma position (sur le lieu)')}
+                  </Text>
+                </TouchableOpacity>
+                <Text style={styles.locationGpsHint}>
+                  {t('inPersonEventHint' as any) || 'Événement en personne : requis pour un événement payant. Les fans devront être présents sur le lieu pour recevoir leur dédicace.'}
+                </Text>
               </View>
 
               <View style={styles.section}>
@@ -1606,6 +1701,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
+  locationGpsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(236, 72, 153, 0.5)',
+    backgroundColor: 'rgba(236, 72, 153, 0.1)',
+  },
+  locationGpsButtonSet: {
+    borderColor: 'rgba(16, 185, 129, 0.6)',
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+  },
+  locationGpsButtonText: { fontSize: 14, fontWeight: '600', color: '#ec4899' },
+  locationGpsButtonTextSet: { color: '#10B981' },
+  locationGpsHint: { fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 8, lineHeight: 17 },
   durationGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   durationButton: {
     paddingHorizontal: 16,

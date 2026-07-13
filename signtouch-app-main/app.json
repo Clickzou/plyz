@@ -30,6 +30,7 @@
         "NSPhotoLibraryUsageDescription": "Plyz a besoin d'accéder à votre galerie pour sauvegarder vos photos signées.",
         "NSPhotoLibraryAddUsageDescription": "Plyz a besoin d'accéder à votre galerie pour sauvegarder vos photos signées.",
         "NSMicrophoneUsageDescription": "Plyz utilise le microphone pour que vous puissiez parler avec la célébrité pendant vos appels vidéo en direct, par exemple lors d'une session de dédicace en visio.",
+        "NSLocationWhenInUseUsageDescription": "Plyz utilise votre position uniquement pour vérifier que vous êtes bien présent sur le lieu d'un événement de dédicace en personne (concert, salon, stade), afin de vous autoriser à y participer.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "associatedDomains": [
@@ -59,7 +60,9 @@
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_CAMERA",
         "android.permission.MODIFY_AUDIO_SETTINGS",
-        "android.permission.FOREGROUND_SERVICE_MICROPHONE"
+        "android.permission.FOREGROUND_SERVICE_MICROPHONE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
       ],
       "package": "com.plyz.app",
       "versionCode": 1,
@@ -125,6 +128,12 @@
       ],
       "expo-audio",
       "expo-notifications",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Plyz utilise votre position uniquement pour vérifier que vous êtes bien présent sur le lieu d'un événement de dédicace en personne (concert, salon, stade), afin de vous autoriser à y participer."
+        }
+      ],
       "@sentry/react-native"
     ],
     "experiments": {

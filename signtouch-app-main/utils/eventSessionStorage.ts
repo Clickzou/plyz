@@ -97,6 +97,11 @@ export interface EventSession {
   duration_per_fan_minutes?: number;
   max_fans?: number;
   scheduled_at?: string;
+  // Événement de dédicace EN PERSONNE (real-world, hors IAP Apple) :
+  latitude?: number | null;
+  longitude?: number | null;
+  in_person_only?: boolean;
+  geofence_radius_m?: number;
 }
 
 export interface EventSigner {
@@ -247,13 +252,23 @@ export const getSessionImageUrl = (path: string): string => {
   return data.publicUrl;
 };
 
+export interface EventGeoOptions {
+  latitude?: number | null;
+  longitude?: number | null;
+  /** true = accès réservé aux fans présents sur le lieu (géofence imposé). */
+  inPersonOnly?: boolean;
+  /** Rayon autorisé en mètres autour du lieu (défaut serveur : 500). */
+  geofenceRadiusM?: number;
+}
+
 export const createEventSession = async (
   title: string,
   durationMinutes: number,
   creatorId?: string,
   scheduledStartAt?: Date,
   _location?: string,
-  _priceCents?: number
+  _priceCents?: number,
+  geo?: EventGeoOptions
 ): Promise<EventSession> => {
   const joinCode = generateJoinCode();
   const isScheduled = scheduledStartAt && scheduledStartAt.getTime() > Date.now() + 60000;
@@ -271,6 +286,16 @@ export const createEventSession = async (
     created_by: creatorId || null,
   };
 
+  // Lieu physique + géofence (dédicace en personne). Le lieu n'était PAS
+  // persisté avant : on le stocke désormais pour l'affichage et le contrôle.
+  if (_location) insertData.location = _location;
+  if (geo?.latitude != null && geo?.longitude != null) {
+    insertData.latitude = geo.latitude;
+    insertData.longitude = geo.longitude;
+  }
+  if (geo?.inPersonOnly != null) insertData.in_person_only = geo.inPersonOnly;
+  if (geo?.geofenceRadiusM != null) insertData.geofence_radius_m = geo.geofenceRadiusM;
+
   const { data, error } = await supabase
     .from('event_sessions')
     .insert(insertData)
@@ -281,15 +306,15 @@ export const createEventSession = async (
     console.error('Create session DB error:', error);
     throw new Error(`Create session error: ${error.message}`);
   }
-  
+
   console.log('Session created successfully:', data.id, 'join_code:', data.join_code);
-  
+
   await addLocalEventId(data.id);
-  
+
   const result = { ...data } as EventSession;
-  if (_location) result.location = _location;
+  if (_location && !result.location) result.location = _location;
   if (_priceCents && _priceCents > 0) result.price_cents = _priceCents;
-  
+
   return result;
 };
 

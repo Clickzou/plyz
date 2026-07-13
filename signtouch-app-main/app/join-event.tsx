@@ -20,6 +20,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { showAlert } from '@/utils/alertHelper';
+import { verifyWithinEvent } from '@/utils/geofence';
 import { authedFetch } from '@/utils/authedFetch';
 import { ensureCanPay } from '@/utils/banGuard';
 import { isAgeCertified, certifyAge } from '@/utils/ageCertification';
@@ -780,6 +781,40 @@ export default function JoinEventScreen() {
     }
   };
 
+  // Vérifie la présence physique du fan pour une dédicace payante EN PERSONNE
+  // (conformité Apple : service du monde réel, hors In-App Purchase).
+  //  • événement non « in_person_only » (gratuit / legacy) → autorisé
+  //  • événement À VENIR (réservation à l'avance = billetterie) → autorisé sans géoloc
+  //  • événement EN COURS en personne → exige d'être dans le rayon du lieu
+  const ensurePresenceForPaidEvent = async (session: EventSession | null): Promise<boolean> => {
+    if (!session || !session.in_person_only) return true;
+    if (session.starts_at && new Date(session.starts_at).getTime() > Date.now() + 5 * 60 * 1000) {
+      return true; // réservation d'un événement futur : le fan ne peut pas déjà être sur place
+    }
+    const coords =
+      session.latitude != null && session.longitude != null
+        ? { latitude: session.latitude, longitude: session.longitude }
+        : null;
+    const radius = session.geofence_radius_m || 500;
+    const res = await verifyWithinEvent(coords, radius);
+    if (res.ok) return true;
+
+    const reason = res.reason || 'unavailable';
+    const messages: Record<string, string> = {
+      too_far: t('geofenceTooFarMsg' as any) || "Tu dois être sur le lieu de l'événement pour recevoir cette dédicace en personne.",
+      permission_denied: t('geofencePermissionMsg' as any) || "Autorise l'accès à ta position : cette dédicace a lieu en personne, ta présence sur place est requise pour y participer.",
+      unavailable: t('geofenceUnavailableMsg' as any) || "Impossible de vérifier ta position. Active la localisation et réessaie sur le lieu de l'événement.",
+      no_event_location: t('geofenceNoLocationMsg' as any) || "Le lieu de cet événement n'est pas défini. Rapproche-toi de l'organisateur.",
+    };
+    const distanceHint =
+      res.reason === 'too_far' && res.distanceM ? ` (~${Math.round(res.distanceM)} m)` : '';
+    showAlert(
+      t('geofenceBlockedTitle' as any) || 'Présence sur place requise',
+      messages[reason] + distanceHint
+    );
+    return false;
+  };
+
   const handleEventPayment = async () => {
     if (!foundSession || !eventPaymentConfig) return;
     // 🔒 Connexion OBLIGATOIRE avant tout paiement.
@@ -794,6 +829,8 @@ export default function JoinEventScreen() {
       setShowAgeModal(true);
       return;
     }
+    // 📍 Dédicace payante EN PERSONNE : le fan doit être physiquement sur le lieu.
+    if (!(await ensurePresenceForPaidEvent(foundSession))) return;
     setIsProcessingPayment(true);
 
     try {
@@ -1132,6 +1169,9 @@ export default function JoinEventScreen() {
     }
     if (!ensureCanPay(isBanned, banUntil)) return;
     if (!(await isAgeCertified())) { setShowAgeModal(true); return; }
+    // 📍 Sécurité : si l'événement est déjà en cours (in-person), on exige la présence.
+    // Pour un événement futur, ensurePresenceForPaidEvent autorise (billetterie à l'avance).
+    if (!(await ensurePresenceForPaidEvent(scheduledSession))) return;
     setIsProcessingPayment(true);
     try {
       // Mémorise localement pour « À venir » (avant de partir vers Stripe).
