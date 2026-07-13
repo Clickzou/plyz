@@ -69,6 +69,7 @@ export default function FanChoiceScreen() {
     requireAuth(() => proceedCreate(createPath), {
       reason: t('createAuthReason' as any) || 'Crée ton compte pour organiser un événement',
       requireBillingIdentity: false,
+      celebrityPitch: true,
     });
   };
 

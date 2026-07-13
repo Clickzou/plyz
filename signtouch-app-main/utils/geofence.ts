@@ -93,6 +93,32 @@ export async function getCurrentCoords(): Promise<{
 }
 
 /**
+ * Nom lisible du lieu à partir de coordonnées GPS (reverse geocoding), pour
+ * l'affichage aux fans — la célébrité n'a PAS à saisir le nom à la main.
+ * Renvoie null sur le web ou en cas d'échec (on gardera alors juste les coords).
+ */
+export async function reverseGeocodeName(coords: Coords): Promise<string | null> {
+  try {
+    if (Platform.OS === 'web') return null;
+    const Location = await import('expo-location');
+    const results = await Location.reverseGeocodeAsync({
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+    });
+    if (results && results.length > 0) {
+      const r = results[0];
+      const parts = [r.name, r.city].filter(Boolean) as string[];
+      const label = parts.filter((v, i, a) => a.indexOf(v) === i).join(', ');
+      return label || r.city || r.region || null;
+    }
+    return null;
+  } catch (e) {
+    console.warn('[geofence] reverseGeocodeName error:', e);
+    return null;
+  }
+}
+
+/**
  * Vérifie que le fan est physiquement dans le rayon autorisé autour de
  * l'événement. Un rayon >= GEOFENCE_BYPASS_THRESHOLD_M désigne un événement
  * démo (accès reviewer) et passe toujours.

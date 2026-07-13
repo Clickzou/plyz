@@ -40,6 +40,12 @@ interface RequireAuthOptions {
    * factures est récupérée depuis Stripe, pas ressaisie.
    */
   requireBillingIdentity?: boolean;
+  /**
+   * Affiche un bloc INCITATIF « célébrité » (85% de revenus, gains, fans heureux)
+   * sur l'écran de création de compte. À activer quand l'action est de devenir
+   * célébrité / créer un événement, pour motiver l'inscription. Sans mention d'Apple.
+   */
+  celebrityPitch?: boolean;
 }
 
 interface AuthPromptContextType {
@@ -62,6 +68,7 @@ export const AuthPromptProvider = ({ children }: { children: React.ReactNode }) 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [reason, setReason] = useState<string | undefined>(undefined);
   const [billingRequired, setBillingRequired] = useState(true);
+  const [celebrityPitch, setCelebrityPitch] = useState(false);
 
   // Le callback en attente est conservé dans une ref pour éviter des re-renders
   // inutiles et garantir qu'on exécute toujours la dernière version demandée.
@@ -90,6 +97,7 @@ export const AuthPromptProvider = ({ children }: { children: React.ReactNode }) 
       pendingCallbackRef.current = onSuccess;
       setReason(options?.reason);
       setBillingRequired(needBilling);
+      setCelebrityPitch(options?.celebrityPitch === true);
       setIsAuthModalOpen(true);
     },
     [user]
@@ -117,6 +125,7 @@ export const AuthPromptProvider = ({ children }: { children: React.ReactNode }) 
           asModal
           reason={reason}
           requireBillingIdentity={billingRequired}
+          celebrityPitch={celebrityPitch}
           onAuthenticated={handleAuthenticated}
           onClose={handleClose}
         />

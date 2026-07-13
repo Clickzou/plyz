@@ -45,6 +45,12 @@ interface WelcomeAuthScreenProps {
    * légale de ses factures est récupérée depuis Stripe, pas ressaisie ici.
    */
   requireBillingIdentity?: boolean;
+  /**
+   * Affiche un bloc INCITATIF « célébrité » (85% de revenus, gains, fans heureux)
+   * en haut de l'écran de création de compte, pour motiver l'inscription des
+   * célébrités. Sans aucune mention d'Apple/Google (conformité App Review).
+   */
+  celebrityPitch?: boolean;
 }
 
 export default function WelcomeAuthScreen({
@@ -53,6 +59,7 @@ export default function WelcomeAuthScreen({
   onAuthenticated,
   onClose,
   requireBillingIdentity = true,
+  celebrityPitch = false,
 }: WelcomeAuthScreenProps = {}) {
   const needBilling = requireBillingIdentity !== false;
   const insets = useSafeAreaInsets();
@@ -384,10 +391,30 @@ export default function WelcomeAuthScreen({
               <View style={styles.iconCircle}>
                 <Mail size={40} color="#10b981" />
               </View>
-              <Text style={styles.title}>{tr('waWelcomeTitle', 'Bienvenue sur Plyz')}</Text>
-              <Text style={styles.subtitle}>
-                {tr('waWelcomeSubtitle', 'Crée ton compte gratuit en 30 secondes (ou connecte-toi)')}
+              <Text style={styles.title}>
+                {celebrityPitch
+                  ? tr('waCelebTitle', 'Gagne ta vie avec tes fans')
+                  : tr('waWelcomeTitle', 'Bienvenue sur Plyz')}
               </Text>
+              <Text style={styles.subtitle}>
+                {celebrityPitch
+                  ? tr('waCelebSubtitle', 'Crée ton compte gratuit en 30 secondes et commence à monétiser ta notoriété.')
+                  : tr('waWelcomeSubtitle', 'Crée ton compte gratuit en 30 secondes (ou connecte-toi)')}
+              </Text>
+
+              {/* Bloc INCITATIF célébrité — sans jamais mentionner Apple/Google. */}
+              {celebrityPitch && (
+                <View style={styles.pitchBox}>
+                  <View style={styles.pitchHeadline}>
+                    <Text style={styles.pitchPercent}>85%</Text>
+                    <Text style={styles.pitchPercentLabel}>{tr('waCelebPitch85', 'pour toi sur chaque prestation')}</Text>
+                  </View>
+                  <Text style={styles.pitchLine}>✨ {tr('waCelebPitchSell', 'Dédicaces, appels vidéo, rencontres : tu fixes tes prix.')}</Text>
+                  <Text style={styles.pitchLine}>💸 {tr('waCelebPitchPaid', 'Paiements sécurisés, versés directement sur ton compte.')}</Text>
+                  <Text style={styles.pitchLine}>😍 {tr('waCelebPitchFans', 'Fais le bonheur de tes fans, où qu\'ils soient.')}</Text>
+                  <Text style={styles.pitchLine}>⏱️ {tr('waCelebPitchQuick', 'Quelques minutes pour tout activer — ensuite, tu encaisses.')}</Text>
+                </View>
+              )}
 
               <TextInput
                 style={styles.input}
@@ -766,6 +793,39 @@ const styles = StyleSheet.create({
     color: '#64748b',
     textAlign: 'center',
     lineHeight: 18,
+  },
+  pitchBox: {
+    width: '100%',
+    backgroundColor: 'rgba(16, 185, 129, 0.10)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.35)',
+    padding: 16,
+    marginBottom: 20,
+  },
+  pitchHeadline: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'center',
+    marginBottom: 12,
+    flexWrap: 'wrap',
+  },
+  pitchPercent: {
+    fontSize: 34,
+    fontWeight: '800',
+    color: '#10b981',
+    marginRight: 8,
+  },
+  pitchPercentLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#a7f3d0',
+  },
+  pitchLine: {
+    fontSize: 14,
+    color: '#e2e8f0',
+    lineHeight: 21,
+    marginBottom: 6,
   },
   linkButton: {
     paddingVertical: 6,

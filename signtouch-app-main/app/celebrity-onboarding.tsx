@@ -75,7 +75,7 @@ export default function CelebrityOnboardingScreen() {
     'CE QUE VOUS POUVEZ FAIRE',
     'VOS REVENUS',
     'Gardez 85% de vos revenus',
-    'Plyz prélève seulement 15% de commission. Les frais Stripe (2.9% + 0.30€) sont déduits séparément. Aucune commission Apple/Google.',
+    'Plyz prélève seulement 15% de commission. Les frais Stripe (2.9% + 0.30€) sont déduits séparément.',
     'Appel vidéo',
     'net',
     'Autographe',
@@ -451,7 +451,7 @@ export default function CelebrityOnboardingScreen() {
                       {ct('celOnboardRevenueTitle' as any) || trUI('Gardez 85% de vos revenus')}
                     </Text>
                     <Text style={styles.revenueDesc}>
-                      {ct('celOnboardRevenueDesc' as any) || trUI('Plyz prélève seulement 15% de commission. Les frais Stripe (2.9% + 0.30€) sont déduits séparément. Aucune commission Apple/Google.')}
+                      {ct('celOnboardRevenueDesc' as any) || trUI('Plyz prélève seulement 15% de commission. Les frais Stripe (2.9% + 0.30€) sont déduits séparément.')}
                     </Text>
                   </View>
                 </View>
