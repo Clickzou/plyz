@@ -23,6 +23,10 @@ export default function PaymentSuccessScreen() {
     flow: string;
     resume_photo_url: string;
     resume_message: string;
+    // Flux ÉVÉNEMENT de dédicace (QR) : event_code identifie l'événement à rouvrir.
+    event_code: string;
+    payment_success: string;
+    payment_cancelled: string;
   }>();
 
   const [, setVerified] = useState(false);
@@ -34,6 +38,27 @@ export default function PaymentSuccessScreen() {
 
   const verifyAndRedirect = async () => {
     try {
+      // Flux ÉVÉNEMENT de dédicace (QR) : on rouvre l'app sur /join-event, qui refait
+      // sa PROPRE vérification de paiement (check-event-access) et auto-recherche
+      // l'événement via le param `code`. On n'a donc pas à vérifier ici.
+      if (params.event_code) {
+        const cancelled = params.payment_cancelled === 'true';
+        setVerified(!cancelled);
+        setTimeout(() => {
+          router.replace({
+            pathname: '/join-event',
+            params: cancelled
+              ? { code: params.event_code }
+              : {
+                  code: params.event_code,
+                  payment_success: 'true',
+                  checkout_session_id: params.checkout_session_id || '',
+                },
+          });
+        }, cancelled ? 200 : 1200);
+        return;
+      }
+
       if (!params.checkout_session_id) {
         console.error('[PaymentSuccess] Missing checkout session ID');
         setError(true);

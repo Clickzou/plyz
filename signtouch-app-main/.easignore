@@ -1,0 +1,33 @@
+# Exclusions à l'upload EAS (accélère le téléversement). EAS réinstalle les deps
+# et régénère tout ça côté serveur — rien de nécessaire au build ici.
+node_modules/
+.git/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# artefacts / sorties
+*.apk
+*.aab
+*.ipa
+logo-output/
+.metro-health-check*
+*.tsbuildinfo
+
+# secrets locaux (jamais nécessaires au build cloud)
+.env
+.env*.local
+*.jks
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+
+# divers
+.DS_Store
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.orig.*

@@ -835,7 +835,10 @@ export default function JoinEventScreen() {
 
     try {
       const viewerId = user?.id || await getOrCreateDeviceId();
-      const origin = Platform.OS === 'web' ? window.location.origin : 'https://plyz.io';
+      // IMPORTANT : sur mobile, l'URL de retour doit pointer vers le SERVEUR (page pont
+      // /payment-success qui rouvre l'app via plyz://), PAS vers plyz.io (site vitrine,
+      // qui n'a pas de page /join-event → 404). Aligné sur le flux visio qui fonctionne.
+      const origin = Platform.OS === 'web' ? window.location.origin : STRIPE_SERVER_URL;
 
       if (Platform.OS !== 'web') {
         await AsyncStorage.setItem('@event_pending_payment_session', foundSession.id);
@@ -852,8 +855,8 @@ export default function JoinEventScreen() {
           priceCents: eventPaymentConfig.priceCents,
           celebrityStripeAccountId: eventPaymentConfig.celebrityStripeAccountId,
           celebrityName: eventPaymentConfig.celebrityName,
-          successUrl: `${origin}/join-event?code=${foundSession.join_code}&payment_success=true&checkout_session_id={CHECKOUT_SESSION_ID}`,
-          cancelUrl: `${origin}/join-event?code=${foundSession.join_code}&payment_cancelled=true`,
+          successUrl: `${origin}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&event_code=${foundSession.join_code}&payment_success=true`,
+          cancelUrl: `${origin}/payment-success?event_code=${foundSession.join_code}&payment_cancelled=true`,
         }),
       });
 
@@ -1187,7 +1190,10 @@ export default function JoinEventScreen() {
         starts_at: scheduledSession.starts_at,
       });
       const viewerId = user?.id || await getOrCreateDeviceId();
-      const origin = Platform.OS === 'web' ? window.location.origin : 'https://plyz.io';
+      // IMPORTANT : sur mobile, l'URL de retour doit pointer vers le SERVEUR (page pont
+      // /payment-success qui rouvre l'app via plyz://), PAS vers plyz.io (site vitrine,
+      // qui n'a pas de page /join-event → 404). Aligné sur le flux visio qui fonctionne.
+      const origin = Platform.OS === 'web' ? window.location.origin : STRIPE_SERVER_URL;
       if (Platform.OS !== 'web') {
         await AsyncStorage.setItem('@event_pending_payment_session', scheduledSession.id);
       }
@@ -1200,8 +1206,8 @@ export default function JoinEventScreen() {
           priceCents: eventPaymentConfig.priceCents,
           celebrityStripeAccountId: eventPaymentConfig.celebrityStripeAccountId,
           celebrityName: eventPaymentConfig.celebrityName,
-          successUrl: `${origin}/join-event?code=${scheduledSession.join_code}&payment_success=true&checkout_session_id={CHECKOUT_SESSION_ID}`,
-          cancelUrl: `${origin}/join-event?code=${scheduledSession.join_code}&payment_cancelled=true`,
+          successUrl: `${origin}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&event_code=${scheduledSession.join_code}&payment_success=true`,
+          cancelUrl: `${origin}/payment-success?event_code=${scheduledSession.join_code}&payment_cancelled=true`,
         }),
       });
       const data = await response.json();
