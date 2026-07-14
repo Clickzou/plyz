@@ -795,7 +795,7 @@ export default function JoinEventScreen() {
       session.latitude != null && session.longitude != null
         ? { latitude: session.latitude, longitude: session.longitude }
         : null;
-    const radius = session.geofence_radius_m || 500;
+    const radius = session.geofence_radius_m || 1000;
     const res = await verifyWithinEvent(coords, radius);
     if (res.ok) return true;
 

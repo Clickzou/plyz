@@ -311,7 +311,7 @@ export default function CreateEventScreen() {
           latitude: formData.eventCoords?.latitude ?? null,
           longitude: formData.eventCoords?.longitude ?? null,
           inPersonOnly: true,
-          geofenceRadiusM: 500,
+          geofenceRadiusM: 1000,
         }
       );
       await saveEventIdLocally(session.id);
@@ -634,7 +634,7 @@ export default function CreateEventScreen() {
           latitude: eventCoords?.latitude ?? null,
           longitude: eventCoords?.longitude ?? null,
           inPersonOnly: true,
-          geofenceRadiusM: 500,
+          geofenceRadiusM: 1000,
         }
       );
       await saveEventIdLocally(session.id);
