@@ -336,49 +336,65 @@ export default function JoinEventScreen() {
 
   useEffect(() => {
     const checkEventPaymentReturn = async () => {
+      // Params de retour de paiement : web = URL ; mobile = params du routeur
+      // (transmis par la page pont /payment-success du serveur → plyz://).
+      let paymentSuccess: string | null = null;
+      let checkoutId: string | null = null;
+      let returnCode: string | null = null;
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         const urlParams = new URLSearchParams(window.location.search);
-        const paymentSuccess = urlParams.get('payment_success');
-        const checkoutId = urlParams.get('checkout_session_id');
-        const returnCode = urlParams.get('code');
-
-        if (paymentSuccess === 'true' && checkoutId && returnCode) {
-          try {
-            // Best-effort : transmet le token push du fan pour qu'il puisse être notifié
-            // d'un éventuel remboursement (web → null la plupart du temps).
-            const pushToken = await getFanPushToken();
-            const tokenQS = pushToken ? `&push_token=${encodeURIComponent(pushToken)}` : '';
-            const verifyRes = await fetch(`${STRIPE_SERVER_URL}/api/verify-event-payment?checkout_session_id=${checkoutId}${tokenQS}`);
-            const verifyData = await verifyRes.json();
-
-            if (hasEventAccess(verifyData) && verifyData.eventSessionId) {
-              await AsyncStorage.setItem(`@event_paid_${verifyData.eventSessionId}`, 'true');
-              setEventPaid(true);
-              setCode(returnCode);
-
-              const pendingPromoId = await AsyncStorage.getItem('@event_pending_promo_id');
-              if (pendingPromoId) {
-                try {
-                  await fetch(`${STRIPE_SERVER_URL}/api/use-event-promo-code`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ promo_id: pendingPromoId }),
-                  });
-                } catch (e) {
-                  console.error('[EventPromoCode] Use after payment error:', e);
-                }
-                await AsyncStorage.removeItem('@event_pending_promo_id');
-              }
-
-              setTimeout(() => handleSearch(returnCode), 500);
-            }
-          } catch (e) {
-            console.warn('Event payment verification failed:', e);
-          }
-          window.history.replaceState({}, '', window.location.pathname);
-        }
+        paymentSuccess = urlParams.get('payment_success');
+        checkoutId = urlParams.get('checkout_session_id');
+        returnCode = urlParams.get('code');
+      } else {
+        paymentSuccess = params.payment_success ? String(params.payment_success) : null;
+        checkoutId = params.checkout_session_id ? String(params.checkout_session_id) : null;
+        returnCode = params.code ? String(params.code) : null;
       }
 
+      // CHEMIN FIABLE (web ET mobile) : dès qu'on a le checkout_session_id, on vérifie
+      // DIRECTEMENT le paiement effectué. Fiable dès le retour, contrairement à
+      // check-event-access qui peut traîner juste après une pré-autorisation.
+      if (paymentSuccess === 'true' && checkoutId && returnCode) {
+        try {
+          const pushToken = await getFanPushToken();
+          const tokenQS = pushToken ? `&push_token=${encodeURIComponent(pushToken)}` : '';
+          const verifyRes = await fetch(`${STRIPE_SERVER_URL}/api/verify-event-payment?checkout_session_id=${checkoutId}${tokenQS}`);
+          const verifyData = await verifyRes.json();
+
+          if (hasEventAccess(verifyData) && verifyData.eventSessionId) {
+            await AsyncStorage.setItem(`@event_paid_${verifyData.eventSessionId}`, 'true');
+            await AsyncStorage.removeItem('@event_pending_payment_session');
+            setEventPaid(true);
+            setCode(returnCode);
+
+            const pendingPromoId = await AsyncStorage.getItem('@event_pending_promo_id');
+            if (pendingPromoId) {
+              try {
+                await fetch(`${STRIPE_SERVER_URL}/api/use-event-promo-code`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ promo_id: pendingPromoId }),
+                });
+              } catch (e) {
+                console.error('[EventPromoCode] Use after payment error:', e);
+              }
+              await AsyncStorage.removeItem('@event_pending_promo_id');
+            }
+
+            setTimeout(() => handleSearch(returnCode as string), 500);
+          }
+        } catch (e) {
+          console.warn('Event payment verification failed:', e);
+        }
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+        return;
+      }
+
+      // FALLBACK mobile : reprise sans checkout_session_id (ex. app relancée à froid)
+      // → on s'appuie sur l'événement en attente + check-event-access.
       if (Platform.OS !== 'web') {
         const pendingSessionId = await AsyncStorage.getItem('@event_pending_payment_session');
         if (pendingSessionId) {
