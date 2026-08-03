@@ -694,10 +694,16 @@ app.post('/api/auth-email-hook', express.raw({ type: '*/*' }), async (req, res) 
     const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
     const codeBlock = `<div style="font-size:34px;font-weight:800;letter-spacing:8px;background:#f4f4f5;border-radius:12px;padding:18px 0;text-align:center;color:#0f172a;margin:18px 0;">${esc(code)}</div>`;
     const bodyHtml = esc(bodyRaw).replace(/\{\{code\}\}/g, codeBlock).replace(/\n/g, '<br>');
+    // En-tête : le nom « Plyz » en TEXTE et non en image. Deux raisons :
+    // (1) Gmail/Outlook bloquent les images distantes par défaut → un logo <img>
+    //     s'affiche comme un cadre vide chez une grande partie des destinataires ;
+    // (2) SpamAssassin pénalise lourdement les e-mails « image + peu de texte »
+    //     (règle HTML_IMAGE_ONLY_*, -1.6 pt mesuré sur mail-tester) — or c'est un
+    //     e-mail de connexion, il DOIT arriver en boîte de réception.
     const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#0f172a;">
-<div style="text-align:center;padding:6px 0 24px;"><img src="https://plyz-app.replit.app/plyz-logo-email.png" alt="Plyz" style="height:40px"></div>
+<div style="text-align:center;padding:6px 0 24px;"><span style="font-size:34px;font-weight:800;font-style:italic;letter-spacing:-1px;color:#000000;">Ply</span><span style="font-size:34px;font-weight:800;font-style:italic;letter-spacing:-1px;color:#10B981;">z</span></div>
 <div style="font-size:15px;line-height:1.6;">${bodyHtml}</div>
-<div style="margin-top:22px;border-top:1px solid #eee;padding-top:12px;color:#94a3b8;font-size:12px;text-align:center;">Plyz — CLICKZOU (SAS), Toulouse</div>
+<div style="margin-top:22px;border-top:1px solid #eee;padding-top:12px;color:#94a3b8;font-size:12px;text-align:center;">Plyz — CLICKZOU (SAS), Toulouse · contact@plyz.io</div>
 </div>`;
     const transporter = getMailTransporter();
     if (!transporter) { console.warn('[AuthEmail] SMTP non configuré'); return res.status(500).json({ error: 'smtp_unavailable' }); }
@@ -706,6 +712,10 @@ app.post('/api/auth-email-hook', express.raw({ type: '*/*' }), async (req, res) 
     res.status(200).json({});
     transporter.sendMail({
       from: process.env.SMTP_FROM || `Plyz <${process.env.SMTP_USER}>`,
+      // L'expéditeur est une adresse "noreply" : on redirige les réponses vers la
+      // boîte support (celle qui reçoit déjà le formulaire de contact du site),
+      // sinon les messages des utilisateurs bloqués sont perdus.
+      replyTo: process.env.SMTP_REPLY_TO || 'contact@plyz.io',
       to: email,
       subject: tpl.subject,
       text,
