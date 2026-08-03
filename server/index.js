@@ -1130,6 +1130,18 @@ app.post('/api/create-checkout-session', rateLimit('checkout', 20, 60 * 1000), a
 
     const canTransfer = account.charges_enabled && (account.capabilities?.transfers === 'active' || account.capabilities?.legacy_payments === 'active');
 
+    // 💶 LIVE : sans capacité de transfert, la session serait créée SANS
+    // transfer_data (voir plus bas) → le fan paie, la PLATEFORME encaisse 100 %
+    // et la célébrité ne touche RIEN, sans la moindre alerte. On bloque, comme
+    // le fait déjà le flux événement (cf. /api/create-event-checkout-session).
+    if (!canTransfer && !isTestMode) {
+      console.error('[Checkout] Blocked (live): account cannot receive transfers:', celebrityStripeAccountId);
+      return res.status(403).json({
+        error: 'Celebrity account cannot receive transfers yet. Onboarding must be completed.',
+        code: 'TRANSFERS_NOT_ACTIVE',
+      });
+    }
+
     const sessionParams = {
       payment_method_types: ['card'],
       mode: 'payment',
@@ -1172,7 +1184,15 @@ app.post('/api/create-checkout-session', rateLimit('checkout', 20, 60 * 1000), a
 
     const checkoutSession = await stripe.checkout.sessions.create(sessionParams);
 
-    console.log('[Checkout] Session created:', checkoutSession.id, 'for live session:', sessionId, '| Fee:', signTouchFeeCents, 'cents | Destination:', celebrityStripeAccountId);
+    // Le log affichait la « Destination » même quand transfer_data n'avait PAS
+    // été posé (cas !canTransfer) : il faisait croire à un reversement qui
+    // n'aurait pas eu lieu. On journalise l'état réel.
+    console.log(
+      '[Checkout] Session created:', checkoutSession.id,
+      'for live session:', sessionId,
+      '| Fee:', signTouchFeeCents, 'cents',
+      '| Destination:', canTransfer ? celebrityStripeAccountId : 'AUCUNE (transfert impossible — TEST uniquement)'
+    );
 
     res.json({
       sessionId: checkoutSession.id,
@@ -1281,6 +1301,54 @@ app.post('/api/capture-payment', async (req, res) => {
     const captured = await stripe.paymentIntents.capture(paymentIntentId);
 
     console.log('[Capture] Payment captured:', paymentIntentId, '| Amount:', captured.amount, captured.currency);
+
+    // Cet endpoint capturait sans rien écrire en base : `payment_captured`
+    // restait false (les revenus de la célébrité, calculés sur ce flag, ne
+    // voyaient donc PAS l'encaissement) et AUCUNE facture n'était émise, alors
+    // que /api/end-fan-call fait les deux. Les deux chemins sont réellement
+    // utilisés par l'app (video-call.tsx). On aligne. Best-effort : ni la base
+    // ni la facture ne doivent faire échouer un encaissement déjà réalisé.
+    try {
+      const admin = getSupabaseAdmin();
+      const { data: q } = await admin
+        .from('session_queue')
+        .select('id, fan_id, session_id')
+        .eq('checkout_session_id', checkout_session_id)
+        .maybeSingle();
+
+      if (q) {
+        await admin
+          .from('session_queue')
+          .update({ payment_captured: true, payment_intent_id: paymentIntentId })
+          .eq('id', q.id);
+
+        let celebId = null;
+        if (q.session_id) {
+          const { data: ls } = await admin
+            .from('live_sessions')
+            .select('celebrity_id')
+            .eq('id', q.session_id)
+            .maybeSingle();
+          celebId = ls?.celebrity_id || null;
+        }
+
+        // Même transactionRef que /api/end-fan-call : createInvoice étant
+        // idempotent sur transaction_ref, aucun risque de facture en double.
+        await createInvoice({
+          transactionRef: 'vc_' + q.id,
+          fanId: q.fan_id || null,
+          celebrityId: celebId,
+          prestationType: 'video_call',
+          prestationLabel: 'Appel vidéo privé',
+          amountCents: captured.amount,
+          currency: captured.currency,
+        });
+      } else {
+        console.warn('[Capture] Aucune entree session_queue pour', checkout_session_id, '- flag et facture non poses');
+      }
+    } catch (postErr) {
+      console.error('[Capture] post-capture (flag/facture) error:', postErr.message);
+    }
 
     res.json({
       captured: true,
