@@ -3869,6 +3869,14 @@ app.get('/api/celebrity/:id', async (req, res, next) => {
         pricing: celeb.celebrity_pricing?.[0] || null,
         posts: recentPosts || [],
         completed_sessions: totalBookings || 0,
+        // L'identifiant du compte Stripe reste masqué (cf. ci-dessus), mais l'app
+        // DOIT savoir si la célébrité peut encaisser : c'est ce qui conditionne
+        // l'affichage des boutons de réservation. Sans ce booléen, l'app testait
+        // `stripe_account_id` — toujours absent depuis le filtrage — et n'affichait
+        // donc JAMAIS les boutons. On expose un booléen, jamais l'identifiant.
+        // `charges_enabled` est inclus : un compte créé mais non validé par Stripe
+        // ne doit pas laisser un fan payer dans le vide.
+        can_accept_payments: !!(celeb.stripe_account_id && celeb.stripe_charges_enabled),
       },
     });
   } catch (error) {

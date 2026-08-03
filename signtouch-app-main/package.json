@@ -83,7 +83,7 @@
     "@react-navigation/native": "^7.1.8",
     "@sentry/react-native": "~7.2.0",
     "@supabase/supabase-js": "^2.95.3",
-    "expo": "~54.0.34",
+    "expo": "~54.0.36",
     "expo-asset": "~12.0.13",
     "expo-audio": "~1.1.1",
     "expo-blur": "~15.0.8",
@@ -99,11 +99,11 @@
     "expo-image-picker": "~17.0.11",
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.12",
-    "expo-localization": "^17.0.8",
+    "expo-localization": "~17.0.9",
     "expo-location": "~19.0.8",
     "expo-media-library": "^18.2.1",
     "expo-notifications": "~0.32.17",
-    "expo-router": "~6.0.23",
+    "expo-router": "~6.0.24",
     "expo-screen-orientation": "~9.0.9",
     "expo-sharing": "^14.0.8",
     "expo-splash-screen": "~31.0.13",
@@ -141,5 +141,17 @@
     "eslint-config-expo": "^10.0.0",
     "sharp": "^0.34.5",
     "typescript": "~5.9.3"
+  },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "react-native-background-timer",
+          "@daily-co/react-native-daily-js",
+          "@daily-co/react-native-webrtc"
+        ],
+        "listUnknownPackages": false
+      }
+    }
   }
 }

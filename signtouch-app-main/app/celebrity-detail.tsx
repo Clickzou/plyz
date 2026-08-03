@@ -31,7 +31,10 @@ interface CelebrityDetail {
   display_name: string | null;
   stripe_verified: boolean;
   official_verified: boolean;
-  stripe_account_id: string | null;
+  // L'API publique ne renvoie JAMAIS l'identifiant du compte Stripe (fuite PII) :
+  // elle expose ce booléen, qui vaut true seulement si le compte existe ET peut
+  // réellement encaisser (charges_enabled).
+  can_accept_payments: boolean;
   wikidata_image_url: string | null;
   wikipedia_url: string | null;
   wikidata_occupations: string[];
@@ -98,10 +101,10 @@ export default function CelebrityDetailScreen() {
   }, [id, activeTab]);
 
   const DEMO_CELEBS: Record<string, CelebrityDetail> = {
-    'mock-001': { user_id: 'mock-001', stage_name: 'Rafael Mendez', bio: 'Milieu de terrain international. Champion en titre, capitaine de son club.', website: null, avatar_url: null, display_name: 'Rafael Mendez', stripe_verified: true, official_verified: true, stripe_account_id: 'acct_mock', wikidata_image_url: null, wikipedia_url: null, wikidata_occupations: ['footballer'], popularity_score: 98, completed_sessions: 42, pricing: { video_call_price_cents: 15000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 5000, live_dedication_price_cents: 0, currency: 'eur' }, posts: [{ id: 'p1', kind: 'event', title: 'Session Live Exclusive', body: 'Rejoignez-moi pour une session live ce week-end.', media_url: null, event_date: '2026-02-20T18:00:00Z', price_cents: 15000, location: 'Paris, France', created_at: '2025-12-08T10:00:00Z' }] },
-    'mock-002': { user_id: 'mock-002', stage_name: 'Clara Belmont', bio: 'Actrice et productrice. Plusieurs longs-métrages primés à son actif.', website: null, avatar_url: null, display_name: 'Clara Belmont', stripe_verified: true, official_verified: true, stripe_account_id: 'acct_mock', wikidata_image_url: null, wikipedia_url: null, wikidata_occupations: ['actress'], popularity_score: 92, completed_sessions: 28, pricing: { video_call_price_cents: 20000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 7500, live_dedication_price_cents: 0, currency: 'eur' }, posts: [{ id: 'p2', kind: 'event', title: 'Dédicace en Live', body: 'Réservez votre créneau pour une dédicace personnalisée en vidéo.', media_url: null, event_date: '2026-03-01T15:00:00Z', price_cents: 20000, location: 'Cannes, France', created_at: '2025-12-03T09:00:00Z' }] },
-    'mock-003': { user_id: 'mock-003', stage_name: 'Léo Farel', bio: 'Attaquant vedette. Ballon de la saison.', website: null, avatar_url: null, display_name: 'Léo Farel', stripe_verified: true, official_verified: true, stripe_account_id: 'acct_mock', wikidata_image_url: null, wikipedia_url: null, wikidata_occupations: ['footballer'], popularity_score: 97, completed_sessions: 35, pricing: { video_call_price_cents: 25000, video_call_unit: 'session', video_call_duration_minutes: 5, autograph_price_cents: 10000, live_dedication_price_cents: 0, currency: 'eur' }, posts: [] },
-    'mock-005': { user_id: 'mock-005', stage_name: 'Adrien Vasquez', bio: "Acteur de cinéma. Révélation de l'année, à l'affiche d'un thriller à succès.", website: null, avatar_url: null, display_name: 'Adrien Vasquez', stripe_verified: true, official_verified: true, stripe_account_id: 'acct_mock', wikidata_image_url: null, wikipedia_url: null, wikidata_occupations: ['actor'], popularity_score: 93, completed_sessions: 31, pricing: { video_call_price_cents: 22000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 8000, live_dedication_price_cents: 0, currency: 'eur' }, posts: [{ id: 'p3', kind: 'post', title: 'Nouveau chapitre', body: 'Très heureux d\'annoncer une nouvelle aventure !', media_url: null, event_date: null, price_cents: 0, location: null, created_at: '2025-12-10T14:30:00Z' }] },
+    'mock-001': { user_id: 'mock-001', stage_name: 'Rafael Mendez', bio: 'Milieu de terrain international. Champion en titre, capitaine de son club.', website: null, avatar_url: null, display_name: 'Rafael Mendez', stripe_verified: true, official_verified: true, can_accept_payments: false, wikidata_image_url: null, wikipedia_url: null, wikidata_occupations: ['footballer'], popularity_score: 98, completed_sessions: 42, pricing: { video_call_price_cents: 15000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 5000, live_dedication_price_cents: 0, currency: 'eur' }, posts: [{ id: 'p1', kind: 'event', title: 'Session Live Exclusive', body: 'Rejoignez-moi pour une session live ce week-end.', media_url: null, event_date: '2026-02-20T18:00:00Z', price_cents: 15000, location: 'Paris, France', created_at: '2025-12-08T10:00:00Z' }] },
+    'mock-002': { user_id: 'mock-002', stage_name: 'Clara Belmont', bio: 'Actrice et productrice. Plusieurs longs-métrages primés à son actif.', website: null, avatar_url: null, display_name: 'Clara Belmont', stripe_verified: true, official_verified: true, can_accept_payments: false, wikidata_image_url: null, wikipedia_url: null, wikidata_occupations: ['actress'], popularity_score: 92, completed_sessions: 28, pricing: { video_call_price_cents: 20000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 7500, live_dedication_price_cents: 0, currency: 'eur' }, posts: [{ id: 'p2', kind: 'event', title: 'Dédicace en Live', body: 'Réservez votre créneau pour une dédicace personnalisée en vidéo.', media_url: null, event_date: '2026-03-01T15:00:00Z', price_cents: 20000, location: 'Cannes, France', created_at: '2025-12-03T09:00:00Z' }] },
+    'mock-003': { user_id: 'mock-003', stage_name: 'Léo Farel', bio: 'Attaquant vedette. Ballon de la saison.', website: null, avatar_url: null, display_name: 'Léo Farel', stripe_verified: true, official_verified: true, can_accept_payments: false, wikidata_image_url: null, wikipedia_url: null, wikidata_occupations: ['footballer'], popularity_score: 97, completed_sessions: 35, pricing: { video_call_price_cents: 25000, video_call_unit: 'session', video_call_duration_minutes: 5, autograph_price_cents: 10000, live_dedication_price_cents: 0, currency: 'eur' }, posts: [] },
+    'mock-005': { user_id: 'mock-005', stage_name: 'Adrien Vasquez', bio: "Acteur de cinéma. Révélation de l'année, à l'affiche d'un thriller à succès.", website: null, avatar_url: null, display_name: 'Adrien Vasquez', stripe_verified: true, official_verified: true, can_accept_payments: false, wikidata_image_url: null, wikipedia_url: null, wikidata_occupations: ['actor'], popularity_score: 93, completed_sessions: 31, pricing: { video_call_price_cents: 22000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 8000, live_dedication_price_cents: 0, currency: 'eur' }, posts: [{ id: 'p3', kind: 'post', title: 'Nouveau chapitre', body: 'Très heureux d\'annoncer une nouvelle aventure !', media_url: null, event_date: null, price_cents: 0, location: null, created_at: '2025-12-10T14:30:00Z' }] },
   };
   Object.values(DEMO_CELEBS).forEach((c) => { c.avatar_url = `https://qoitixdpcqlzgyusbgdx.supabase.co/storage/v1/object/public/events/mock-avatars/${c.user_id}.jpg`; });
 
@@ -176,7 +179,7 @@ export default function CelebrityDetailScreen() {
     if (!celebrity) return;
     // Déconnecté → on PROPOSE la connexion (au lieu d'une impasse) via requireAuth.
     requireAuth(() => {
-      if (!celebrity.stripe_account_id) {
+      if (!celebrity.can_accept_payments) {
         showAlert(t('celebrityNoPayments') || 'This celebrity has not set up payments yet');
         return;
       }
@@ -199,7 +202,7 @@ export default function CelebrityDetailScreen() {
   const handleAutograph = () => {
     if (!celebrity) return;
     requireAuth(() => {
-      if (!celebrity.stripe_account_id) {
+      if (!celebrity.can_accept_payments) {
         showAlert(t('celebrityNoPayments') || 'This celebrity has not set up payments yet');
         return;
       }
@@ -364,7 +367,7 @@ export default function CelebrityDetailScreen() {
         </View>
 
         <View style={styles.actionRow}>
-          {p && p.video_call_price_cents > 0 && celebrity.stripe_account_id && (
+          {p && p.video_call_price_cents > 0 && celebrity.can_accept_payments && (
             <TouchableOpacity
               style={[styles.mainAction, styles.videoAction]}
               onPress={handleBookCall}
@@ -398,7 +401,7 @@ export default function CelebrityDetailScreen() {
               </LinearGradient>
             </TouchableOpacity>
           )}
-          {p && p.autograph_price_cents > 0 && celebrity.stripe_account_id && (
+          {p && p.autograph_price_cents > 0 && celebrity.can_accept_payments && (
             <TouchableOpacity
               style={[styles.mainAction, styles.autographAction]}
               onPress={handleAutograph}

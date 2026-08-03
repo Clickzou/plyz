@@ -32,10 +32,11 @@ STRIPE_TEST_SECRET_KEY=sk_test_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
 
 EXPO_PUBLIC_STRIPE_SERVER_URL=http://localhost:5000
-EXPO_PUBLIC_DAILY_API_KEY=your-daily-api-key
 
-EXPO_PUBLIC_REVENUECAT_IOS_KEY=your-ios-key
-EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=your-android-key
+# La cle Daily est une cle SERVEUR : elle vit uniquement dans DAILY_API_KEY
+# cote serveur. Ne jamais la prefixer EXPO_PUBLIC_ : tout ce qui porte ce
+# prefixe est embarque en clair dans le bundle de l'application.
+DAILY_API_KEY=your-daily-api-key
 
 MOCK_MODE=false
 ENABLE_MOCK_CELEBS=false
