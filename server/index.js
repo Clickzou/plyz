@@ -4341,7 +4341,20 @@ app.post('/api/book-video', rateLimit('book-video', 20, 60 * 1000), async (req, 
       return res.status(400).json({ error: 'Celebrity has not set video call pricing' });
     }
 
-    const dur = duration_minutes || pricing.video_call_duration_minutes || 15;
+    // ⚠️ duration_minutes vient du CLIENT. Quand la célébrité facture à la MINUTE,
+    // le prix vaut tarif × durée : sans borne, un fan pouvait demander 1 minute et
+    // payer une fraction du tarif (ou envoyer une valeur absurde/négative, qui
+    // faisait échouer Stripe). On borne sur la durée configurée par la célébrité :
+    // elle est le minimum vendu, et on plafonne à 4× pour rester raisonnable.
+    const baseDur = pricing.video_call_duration_minutes || 15;
+    const askedDur = Math.round(Number(duration_minutes));
+    const dur = Number.isFinite(askedDur) && askedDur > 0
+      ? Math.min(Math.max(askedDur, baseDur), baseDur * 4)
+      : baseDur;
+    if (Number.isFinite(askedDur) && askedDur > 0 && askedDur !== dur) {
+      console.warn('[Booking] duration_minutes hors bornes:', askedDur, '→ ramene a', dur, '(base', baseDur + ')');
+    }
+
     let price_cents = pricing.video_call_price_cents;
     if (pricing.video_call_unit === 'minute') {
       price_cents = pricing.video_call_price_cents * dur;
