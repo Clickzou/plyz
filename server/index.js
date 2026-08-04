@@ -6985,6 +6985,90 @@ async function runNotificationWorker() {
 }
 
 // ============================================================
+// PROLONGATION D'UNE SÉANCE
+// Quand l'heure de fin est dépassée, la célébrité choisit : terminer (et les
+// fans non servis sont remboursés) ou prolonger. Prolonger repousse `ends_at`,
+// donc mécaniquement la libération automatique ci-dessous — les deux mécanismes
+// se répondent, il n'y a rien d'autre à câbler.
+//
+// ⚠️ Plafond de 2 h CUMULÉES, validé ICI et pas seulement dans l'app : sans ça,
+// on prolonge de 15 min à l'infini et l'argent des fans reste bloqué pour
+// toujours. Le cumul est stocké en base (`extended_minutes`) car `ends_at` est
+// écrasé à chaque prolongation : sans compteur, l'heure de fin initiale serait
+// perdue et le plafond incalculable.
+// ============================================================
+const EXTEND_ALLOWED_MINUTES = [15, 30, 60, 120];
+const EXTEND_MAX_TOTAL_MINUTES = 120;
+
+app.post('/api/extend-event-session', async (req, res) => {
+  try {
+    const { eventSessionId, minutes } = req.body || {};
+    if (!eventSessionId) return res.status(400).json({ error: 'Missing eventSessionId' });
+
+    const asked = Number(minutes);
+    if (!EXTEND_ALLOWED_MINUTES.includes(asked)) {
+      return res.status(400).json({ error: 'invalid_duration', allowed: EXTEND_ALLOWED_MINUTES });
+    }
+
+    const admin = getSupabaseAdmin();
+
+    // Seule la célébrité créatrice peut prolonger SA séance.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+
+    const { data: ev, error: evErr } = await admin
+      .from('event_sessions')
+      .select('id, created_by, ends_at, extended_minutes')
+      .eq('id', eventSessionId)
+      .maybeSingle();
+
+    if (evErr) return res.status(500).json({ error: evErr.message });
+    if (!ev) return res.status(404).json({ error: 'event_not_found' });
+    if (String(ev.created_by) !== String(authUser.id)) {
+      req.__authUserId = authUser.id;
+      logSecurityEvent(req, 'prolongation refusee', `tentative de prolonger l'evenement ${eventSessionId} sans en etre le createur`);
+      return res.status(403).json({ error: 'Not the creator of this event' });
+    }
+
+    const already = Number(ev.extended_minutes || 0);
+    if (already + asked > EXTEND_MAX_TOTAL_MINUTES) {
+      return res.status(409).json({
+        error: 'max_extension_reached',
+        alreadyMinutes: already,
+        maxMinutes: EXTEND_MAX_TOTAL_MINUTES,
+        remainingMinutes: Math.max(0, EXTEND_MAX_TOTAL_MINUTES - already),
+      });
+    }
+
+    // On prolonge depuis MAINTENANT si l'heure de fin est déjà passée (cas
+    // courant : la célébrité s'en aperçoit avec du retard), sinon depuis la fin
+    // prévue — sinon prolonger « de 30 min » une séance finie il y a 50 min ne
+    // donnerait aucun temps utile.
+    const currentEnd = ev.ends_at ? new Date(ev.ends_at).getTime() : Date.now();
+    const base = Math.max(currentEnd, Date.now());
+    const newEnd = new Date(base + asked * 60 * 1000).toISOString();
+
+    const { error: upErr } = await admin
+      .from('event_sessions')
+      .update({ ends_at: newEnd, extended_minutes: already + asked })
+      .eq('id', eventSessionId);
+
+    if (upErr) return res.status(500).json({ error: upErr.message });
+
+    console.log('[ExtendEvent]', eventSessionId, '+', asked, 'min | nouvelle fin:', newEnd, '| cumul:', already + asked);
+    return res.json({
+      ok: true,
+      endsAt: newEnd,
+      extendedMinutes: already + asked,
+      remainingMinutes: EXTEND_MAX_TOTAL_MINUTES - (already + asked),
+    });
+  } catch (e) {
+    console.error('[ExtendEvent] error:', e.message);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// ============================================================
 // LIBÉRATION AUTOMATIQUE DES PRÉ-AUTORISATIONS D'ÉVÉNEMENTS TERMINÉS
 //
 // Jusqu'ici, /api/release-event-payments n'était appelé QUE si la célébrité
