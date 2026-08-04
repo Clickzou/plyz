@@ -1682,4 +1682,7 @@ export default {
   stripeBizTypeHelp: "如果款项直接支付给您个人，请选择「以个人名义」。如果您通过公司或组织开具发票，请选择另一项。此选择决定 Stripe 需要哪些信息以及发票上显示的内容。",
   eventExpiredRefundNote: "如果您已付款，将不会被扣款：没有发布任何献词，卡上冻结的金额将被释放。",
   eventPastEndNotice: "本场次已过预定结束时间。您仍可发布待处理的献词，但请记得结束场次：未获服务的粉丝将自动获得退款。",
+  extendSessionLabel: "延长场次：",
+  extendMaxTitle: "已达最长延长时间",
+  extendMaxMsg: "本场次累计已延长 2 小时。请结束场次，以便未获服务的粉丝获得退款。",
 };

@@ -1687,4 +1687,7 @@ export default {
   stripeBizTypeHelp: "Pilih «atas nama saya sendiri» jika Anda dibayar secara pribadi. Pilih opsi lain jika Anda menagih melalui perusahaan atau organisasi. Ini menentukan informasi yang diminta Stripe dan apa yang muncul di faktur Anda.",
   eventExpiredRefundNote: "Jika Anda sudah membayar, Anda tidak akan ditagih: tidak ada dedikasi yang diterbitkan, sehingga jumlah yang ditahan di kartu Anda dilepaskan.",
   eventPastEndNotice: "Sesi ini seharusnya sudah berakhir. Anda masih dapat memublikasikan dedikasi yang tertunda, tetapi ingatlah untuk mengakhiri sesi: penggemar yang tidak terlayani akan otomatis mendapat pengembalian dana.",
+  extendSessionLabel: "Perpanjang sesi:",
+  extendMaxTitle: "Perpanjangan maksimum tercapai",
+  extendMaxMsg: "Anda sudah memperpanjang sesi ini total 2 jam. Akhiri sesi agar penggemar yang tidak terlayani mendapat pengembalian dana.",
 };

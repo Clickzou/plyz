@@ -1682,4 +1682,7 @@ export default {
   stripeBizTypeHelp: "Wähle „auf meinen eigenen Namen“, wenn du persönlich bezahlt wirst. Wähle die andere Option, wenn du über eine Gesellschaft oder einen Verein abrechnest. Davon hängt ab, welche Angaben Stripe verlangt und was auf deinen Rechnungen erscheint.",
   eventExpiredRefundNote: "Falls du bezahlt hast, wird dir nichts berechnet: Es wurde keine Widmung veröffentlicht, der auf deiner Karte reservierte Betrag wird freigegeben.",
   eventPastEndNotice: "Diese Sitzung sollte bereits beendet sein. Du kannst noch ausstehende Widmungen veröffentlichen, denke aber daran, die Sitzung zu beenden: Nicht bediente Fans werden automatisch erstattet.",
+  extendSessionLabel: "Sitzung verlängern:",
+  extendMaxTitle: "Maximale Verlängerung erreicht",
+  extendMaxMsg: "Du hast diese Sitzung bereits um insgesamt 2 Stunden verlängert. Beende sie, damit nicht bediente Fans erstattet werden.",
 };

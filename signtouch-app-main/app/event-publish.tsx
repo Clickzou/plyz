@@ -98,7 +98,46 @@ export default function EventPublishScreen() {
     const id = setInterval(() => setNowTs(Date.now()), 60 * 1000);
     return () => clearInterval(id);
   }, []);
-  const isPastEnd = !!endsAt && new Date(endsAt).getTime() < nowTs;
+  const [effectiveEndsAt, setEffectiveEndsAt] = useState<string | null>(null);
+  const [extending, setExtending] = useState(false);
+  const [extendExhausted, setExtendExhausted] = useState(false);
+  // `endsAt` vient des params de navigation : il ne bouge pas après une
+  // prolongation. On garde donc la fin effective à part.
+  const currentEndsAt = effectiveEndsAt || endsAt;
+  const isPastEnd = !!currentEndsAt && new Date(currentEndsAt).getTime() < nowTs;
+
+  // Prolonge la séance (plafond de 2 h cumulées, contrôlé côté serveur).
+  const handleExtend = async (minutes: number) => {
+    if (extending || !sessionId || !STRIPE_SERVER_URL) return;
+    setExtending(true);
+    try {
+      const r = await authedFetch(`${STRIPE_SERVER_URL}/api/extend-event-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventSessionId: sessionId, minutes }),
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        if (data?.error === 'max_extension_reached') {
+          setExtendExhausted(true);
+          showAlert(
+            t('extendMaxTitle') || 'Prolongation maximale atteinte',
+            t('extendMaxMsg') || "Tu as déjà prolongé cette séance de 2 h au total. Termine-la pour que les fans non servis soient remboursés."
+          );
+          return;
+        }
+        showAlert(t('error') || 'Erreur', data?.error || 'Prolongation impossible');
+        return;
+      }
+      setEffectiveEndsAt(data.endsAt);
+      setNowTs(Date.now());
+      if (typeof data.remainingMinutes === 'number' && data.remainingMinutes <= 0) setExtendExhausted(true);
+    } catch (e: any) {
+      showAlert(t('error') || 'Erreur', e?.message || 'Prolongation impossible');
+    } finally {
+      setExtending(false);
+    }
+  };
   const location = params.location as string;
   const priceCents = parseInt(params.priceCents as string || '0', 10);
   
@@ -819,10 +858,33 @@ export default function EventPublishScreen() {
             restaient avec un montant bloqué sur leur carte. */}
         {isPastEnd && (
           <View style={styles.pastEndBanner}>
-            <Clock size={18} color="#f59e0b" />
-            <Text style={styles.pastEndBannerText}>
-              {t('eventPastEndNotice') || "Cette séance devait se terminer à l'heure prévue. Tu peux encore publier les dédicaces en attente, mais pense à terminer la séance : les fans non servis seront automatiquement remboursés."}
-            </Text>
+            <View style={styles.pastEndHeaderRow}>
+              <Clock size={18} color="#f59e0b" />
+              <Text style={styles.pastEndBannerText}>
+                {t('eventPastEndNotice') || "Cette séance devait se terminer à l'heure prévue. Tu peux encore publier les dédicaces en attente, mais pense à terminer la séance : les fans non servis seront automatiquement remboursés."}
+              </Text>
+            </View>
+            {!extendExhausted && (
+              <>
+                <Text style={styles.extendLabel}>
+                  {t('extendSessionLabel') || 'Prolonger la séance :'}
+                </Text>
+                <View style={styles.extendRow}>
+                  {[15, 30, 60, 120].map((m) => (
+                    <TouchableOpacity
+                      key={m}
+                      style={[styles.extendChip, extending && styles.extendChipDisabled]}
+                      onPress={() => handleExtend(m)}
+                      disabled={extending}
+                    >
+                      <Text style={styles.extendChipText}>
+                        {m < 60 ? `${m} min` : `${m / 60} h`}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
           </View>
         )}
 
@@ -1302,10 +1364,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   // Bandeau orange d'alerte : visible sans être bloquant.
+  pastEndHeaderRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  extendLabel: { fontSize: 12, color: '#f59e0b', fontWeight: '700', marginTop: 12, marginBottom: 8 },
+  extendRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  extendChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(245,158,11,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.6)',
+  },
+  extendChipDisabled: { opacity: 0.5 },
+  extendChipText: { color: '#f59e0b', fontWeight: '700', fontSize: 13 },
   pastEndBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
     backgroundColor: 'rgba(245,158,11,0.12)',
     borderRadius: 12,
     padding: 14,
