@@ -1681,4 +1681,5 @@ export default {
   stripeBizTypeCompany: "Tramite la mia società o associazione",
   stripeBizTypeHelp: "Scegli «a mio nome» se vieni pagato personalmente. Scegli l'altra opzione se fatturi tramite una società o un'associazione. Questa scelta determina le informazioni richieste da Stripe e ciò che apparirà sulle tue fatture.",
   eventExpiredRefundNote: "Se avevi pagato, non ti verrà addebitato nulla: nessuna dedica è stata pubblicata, l'importo bloccato sulla tua carta viene liberato.",
+  eventPastEndNotice: "Questa sessione doveva concludersi. Puoi ancora pubblicare le dediche in sospeso, ma ricordati di terminare la sessione: i fan non serviti saranno rimborsati automaticamente.",
 };

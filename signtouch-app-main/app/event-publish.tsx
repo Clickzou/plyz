@@ -90,6 +90,15 @@ export default function EventPublishScreen() {
   const eventType = params.eventType as string || 'qr';
   const startsAt = params.startsAt as string;
   const endsAt = params.endsAt as string;
+  // Horloge rafraîchie chaque minute : sans elle, une célébrité restée sur cet
+  // écran ne verrait jamais l'heure de fin passer. Elle continuait à publier en
+  // croyant sa séance active, pendant que ses fans attendaient.
+  const [nowTs, setNowTs] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowTs(Date.now()), 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+  const isPastEnd = !!endsAt && new Date(endsAt).getTime() < nowTs;
   const location = params.location as string;
   const priceCents = parseInt(params.priceCents as string || '0', 10);
   
@@ -804,6 +813,19 @@ export default function EventPublishScreen() {
           )}
         </View>
 
+        {/* Séance dépassée : on N'EMPÊCHE PAS de publier (une file se termine
+            souvent après l'heure annoncée), mais on prévient clairement. Sans ce
+            bandeau, la célébrité ignorait que l'heure était passée — et ses fans
+            restaient avec un montant bloqué sur leur carte. */}
+        {isPastEnd && (
+          <View style={styles.pastEndBanner}>
+            <Clock size={18} color="#f59e0b" />
+            <Text style={styles.pastEndBannerText}>
+              {t('eventPastEndNotice') || "Cette séance devait se terminer à l'heure prévue. Tu peux encore publier les dédicaces en attente, mais pense à terminer la séance : les fans non servis seront automatiquement remboursés."}
+            </Text>
+          </View>
+        )}
+
         <View style={styles.eventInfoCard}>
           <View style={styles.eventInfoRow}>
             {eventType === 'live_video' ? (
@@ -1278,6 +1300,25 @@ const styles = StyleSheet.create({
   earningsDetail: {
     color: 'rgba(255,255,255,0.5)',
     fontSize: 12,
+  },
+  // Bandeau orange d'alerte : visible sans être bloquant.
+  pastEndBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: 'rgba(245,158,11,0.12)',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.45)',
+  },
+  pastEndBannerText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 19,
+    color: '#f59e0b',
+    fontWeight: '600',
   },
   eventInfoCard: {
     backgroundColor: 'rgba(255,255,255,0.05)',

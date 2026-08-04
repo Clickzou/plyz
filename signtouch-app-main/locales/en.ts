@@ -1763,4 +1763,5 @@ export default {
   stripeBizTypeCompany: "Through my company or association",
   stripeBizTypeHelp: "Choose “in my own name” if you are paid personally. Choose the other option if you invoice through a legal entity (company, association…). This determines what Stripe will ask you and what appears on your invoices.",
   eventExpiredRefundNote: "If you paid, you will not be charged: no dedication was published, so the amount held on your card is released.",
+  eventPastEndNotice: "This session was scheduled to end. You can still publish pending dedications, but remember to end the session: fans who were not served will be automatically refunded.",
 };

@@ -1680,4 +1680,5 @@ export default {
   stripeBizTypeCompany: "A través de mi empresa o asociación",
   stripeBizTypeHelp: "Elige «a mi nombre» si cobras personalmente. Elige la otra opción si facturas a través de una entidad (empresa, asociación…). Esto determina la información que Stripe te pedirá y lo que aparecerá en tus facturas.",
   eventExpiredRefundNote: "Si habías pagado, no se te cobrará: no se publicó ninguna dedicatoria, por lo que el importe retenido en tu tarjeta se libera.",
+  eventPastEndNotice: "Esta sesión debía haber terminado. Aún puedes publicar las dedicatorias pendientes, pero recuerda finalizar la sesión: los fans no atendidos serán reembolsados automáticamente.",
 };

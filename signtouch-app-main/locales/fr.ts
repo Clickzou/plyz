@@ -1747,4 +1747,5 @@ export default {
   stripeBizTypeCompany: "Via ma société ou mon association",
   stripeBizTypeHelp: "Choisis « en mon nom propre » si tes cachets te sont versés personnellement. Choisis l'autre option si tu factures via une structure (société, association…). Ce choix détermine les informations que Stripe te demandera et ce qui figurera sur tes factures.",
   eventExpiredRefundNote: "Si tu avais payé, tu ne seras pas débité(e) : aucune dédicace n'a été publiée, le montant bloqué sur ta carte est libéré.",
+  eventPastEndNotice: "Cette séance devait se terminer à l'heure prévue. Tu peux encore publier les dédicaces en attente, mais pense à terminer la séance : les fans non servis seront automatiquement remboursés.",
 };

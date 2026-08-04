@@ -1686,4 +1686,5 @@ export default {
   stripeBizTypeCompany: "Melalui syarikat atau persatuan saya",
   stripeBizTypeHelp: "Pilih «atas nama saya sendiri» jika anda dibayar secara peribadi. Pilih pilihan lain jika anda mengeluarkan invois melalui syarikat atau persatuan. Ini menentukan maklumat yang akan diminta Stripe dan apa yang akan dipaparkan pada invois anda.",
   eventExpiredRefundNote: "Jika anda telah membayar, anda tidak akan dicaj: tiada dedikasi diterbitkan, jadi jumlah yang ditahan pada kad anda akan dilepaskan.",
+  eventPastEndNotice: "Sesi ini sepatutnya telah tamat. Anda masih boleh menerbitkan dedikasi yang tertunggak, tetapi ingat untuk menamatkan sesi: peminat yang tidak dilayan akan dibayar balik secara automatik.",
 };
