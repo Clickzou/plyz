@@ -88,6 +88,23 @@ Preuve (événement « Test Escala », code FDGM5Y) : `event_paid_fans.payment_c
 - `/api/verify-event-payment` et `/api/get-event-payment-config` répondent **sans authentification** et exposent `fan_id`, `event_session_id` et le compte Stripe destinataire. À fermer avant l'ouverture au public.
 - Les écrans de revenus restent pollués par les **données de test de juillet** (2 567 € de dédicaces fictives) → §3.
 
+### ✅ LIVE VIDÉO VALIDÉ AUSSI (04/08/2026, ~16h30) — les 2 sources de revenus sont prouvées
+
+**Les deux issues testées en argent réel :**
+- **Célébrité raccroche avant la fin** → pré-autorisation **Annulée** chez Stripe, aucune facture, fan non débité. ✅
+- **Appel mené jusqu'au bout du minuteur** → **capturé**, factures `PLYZ-2026-000014` puis `PLYZ-2026-000015` (`video_call`, 2,00 €, commission 0,30 €), écran de notation côté fan. ✅
+
+**Vérifié aussi** : le compte Connect `acct_1U0eNmAYpnt7V5BS` est **Activé** et **reçoit réellement l'argent** (solde 2,50 €). Le split 85/15 arrive bien à destination — le compteur « volume de transfert 0,00 € » de la page d'accueil Stripe est trompeur, ne pas s'y fier.
+
+**🔴 BUG CRITIQUE #2 TROUVÉ ET CORRIGÉ — aucune célébrité au nom accentué ne pouvait vendre d'appel vidéo.** Le `cancelUrl` envoyé à Stripe interpolait `celebrityName` (texte libre) **sans `encodeURIComponent`**, alors que le `successUrl` juste au-dessus et le `fanName` de la même ligne l'encodaient. Stripe refusait l'URL invalide → 500 → l'app affichait « Échec de l'achat », message générique qui masquait la cause. Portée : Béatrice, Zoé, Noël, Frédéric, Jean-François… une grande partie des noms français. Corrigé, et la même protection appliquée par précaution au flux dédicace (dont les URL ne transportent qu'un code alphanumérique — défaut absent, vérifié par scan).
+
+**Autre correctif** : le fan lisait **« Vous ne serez pas débité »** APRÈS avoir été débité. À l'expiration du minuteur, l'hôte quitte la salle Daily en premier ; le fan classait cette fin normale en « la célébrité a raccroché », affichait l'écran de remboursement et lançait même une annulation — qui n'échouait que parce que la capture serveur avait gagné la course. Une course entre deux téléphones décidait de ce que lisait le client. Corrigé par reclassement : un départ survenu **après** la durée prévue est une fin normale.
+
+**⚠️ RESTE OUVERT (non bloquant)** :
+- **Incohérence entre les deux flux** : `create-checkout-session` (vidéo) exige `payouts_enabled`, `create-event-checkout` (dédicace) non. Une célébrité pourrait vendre des dédicaces mais pas des appels vidéo sans comprendre pourquoi. À aligner.
+- **Messages d'erreur génériques** : « Échec de l'achat » masque le motif serveur, qui n'existe que dans la console. Deux diagnostics de la journée ont été ralentis par ça.
+- **Web uniquement** : recharger l'URL d'un appel terminé y fait rejoindre une salle vide. Sans objet sur les apps mobiles (écrans non adressables par URL). Le corriger proprement suppose de distinguer une reconnexion accidentelle légitime d'un appel déjà terminé.
+
 ---
 
 ## ⚡ TL;DR — l'ordre à suivre
