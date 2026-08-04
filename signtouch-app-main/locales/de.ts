@@ -1680,4 +1680,5 @@ export default {
   stripeBizTypeIndividual: "Auf meinen eigenen Namen",
   stripeBizTypeCompany: "Über meine Firma oder meinen Verein",
   stripeBizTypeHelp: "Wähle „auf meinen eigenen Namen“, wenn du persönlich bezahlt wirst. Wähle die andere Option, wenn du über eine Gesellschaft oder einen Verein abrechnest. Davon hängt ab, welche Angaben Stripe verlangt und was auf deinen Rechnungen erscheint.",
+  eventExpiredRefundNote: "Falls du bezahlt hast, wird dir nichts berechnet: Es wurde keine Widmung veröffentlicht, der auf deiner Karte reservierte Betrag wird freigegeben.",
 };

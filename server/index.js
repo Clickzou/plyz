@@ -6984,6 +6984,91 @@ async function runNotificationWorker() {
   } catch (e) { console.error('[NotifWorker]', e.message); }
 }
 
+// ============================================================
+// LIBÉRATION AUTOMATIQUE DES PRÉ-AUTORISATIONS D'ÉVÉNEMENTS TERMINÉS
+//
+// Jusqu'ici, /api/release-event-payments n'était appelé QUE si la célébrité
+// terminait explicitement son événement. Si elle oubliait — ou si l'événement
+// expirait simplement à son heure de fin — l'argent des fans restait BLOQUÉ sur
+// leur carte jusqu'à l'expiration Stripe (~7 jours), sans notification.
+// Pour un fan qui a bloqué 20 € et n'a rien reçu, c'est une réclamation bancaire
+// assurée. On libère donc automatiquement.
+//
+// Prudence volontaire :
+// - marge de GRACE_MINUTES après l'heure de fin (une célébrité peut publier une
+//   dédicace avec un peu de retard : on ne veut surtout pas annuler un paiement
+//   qu'elle s'apprête à encaisser) ;
+// - on ne touche QU'AUX pré-autorisations non capturées (payment_captured=false)
+//   et dont le PaymentIntent est encore en requires_capture ;
+// - lot borné à chaque passage, pour ne jamais saturer l'API Stripe.
+// ============================================================
+const AUTO_RELEASE_INTERVAL_MS = 15 * 60 * 1000; // toutes les 15 minutes
+const AUTO_RELEASE_GRACE_MINUTES = 60;           // 1 h après la fin annoncée
+const AUTO_RELEASE_MAX_EVENTS = 20;              // par passage
+
+async function releaseExpiredEventPreauths() {
+  try {
+    const admin = getSupabaseAdmin();
+    const stripe = await getStripe();
+    const cutoff = new Date(Date.now() - AUTO_RELEASE_GRACE_MINUTES * 60 * 1000).toISOString();
+
+    const { data: events, error: evErr } = await admin
+      .from('event_sessions')
+      .select('id, title, ends_at, status')
+      .lt('ends_at', cutoff)
+      .limit(AUTO_RELEASE_MAX_EVENTS);
+
+    if (evErr) {
+      console.error('[AutoRelease] lecture event_sessions:', evErr.message);
+      return;
+    }
+    if (!events || events.length === 0) return;
+
+    for (const ev of events) {
+      const { data: fans, error: fansErr } = await admin
+        .from('event_paid_fans')
+        .select('id, fan_id, payment_intent_id, checkout_session_id')
+        .eq('event_session_id', ev.id)
+        .eq('payment_captured', false);
+
+      if (fansErr) {
+        console.error('[AutoRelease] lecture event_paid_fans:', fansErr.message);
+        continue;
+      }
+      if (!fans || fans.length === 0) continue;
+
+      for (const fan of fans) {
+        try {
+          let pi = fan.payment_intent_id;
+          if (!pi && fan.checkout_session_id) {
+            const cs = await stripe.checkout.sessions.retrieve(fan.checkout_session_id);
+            pi = cs.payment_intent;
+          }
+          if (!pi) continue;
+
+          const intent = await stripe.paymentIntents.retrieve(pi);
+          // Seul requires_capture est libérable. succeeded = déjà encaissé
+          // (dédicace publiée) : on n'y touche évidemment pas.
+          if (intent.status !== 'requires_capture') continue;
+
+          await stripe.paymentIntents.cancel(pi);
+          console.log('[AutoRelease] pre-autorisation liberee | event:', ev.id, '| fan:', fan.fan_id, '| pi:', pi);
+        } catch (e) {
+          console.error('[AutoRelease] echec liberation fan', fan.fan_id, ':', e.message);
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[AutoRelease] erreur generale:', e.message);
+  }
+}
+
+// Premier passage différé de 2 min : laisse le serveur finir de démarrer.
+setTimeout(() => {
+  releaseExpiredEventPreauths();
+  setInterval(releaseExpiredEventPreauths, AUTO_RELEASE_INTERVAL_MS);
+}, 2 * 60 * 1000);
+
 const EXPO_PORT = 19006;
 const PORT = 5000;
 

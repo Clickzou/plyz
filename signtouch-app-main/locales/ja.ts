@@ -1680,4 +1680,5 @@ export default {
   stripeBizTypeIndividual: "個人として受け取る",
   stripeBizTypeCompany: "法人・団体として受け取る",
   stripeBizTypeHelp: "報酬を個人で受け取る場合は「個人として受け取る」を選択してください。法人や団体を通じて請求する場合はもう一方を選択してください。この選択により、Stripeが求める情報と請求書に記載される内容が決まります。",
+  eventExpiredRefundNote: "お支払い済みの場合でも請求は発生しません。献辞が公開されなかったため、カードで確保されていた金額は解放されます。",
 };

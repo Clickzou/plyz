@@ -1867,6 +1867,13 @@ export default function JoinEventScreen() {
             <Text style={styles.fullMessage}>
               {t('eventExpiredMessage') || 'This event has ended. Check with the organizer for future events.'}
             </Text>
+            {/* Un fan qui a payé arrivait ici sans la moindre explication sur son
+                argent : il voyait « événement terminé » et ignorait s'il serait
+                débité. Le montant n'est qu'une pré-autorisation tant qu'aucune
+                dédicace n'est publiée — on le dit explicitement. */}
+            <Text style={styles.expiredRefundNote}>
+              {t('eventExpiredRefundNote') || "Si tu avais payé, tu ne seras pas débité(e) : aucune dédicace n'a été publiée, le montant bloqué sur ta carte est libéré."}
+            </Text>
             <TouchableOpacity style={styles.searchAnotherButton} onPress={handleSearchAnother}>
               <Text style={styles.searchAnotherText}>{t('searchAnother') || 'Search another event'}</Text>
             </TouchableOpacity>
@@ -2321,6 +2328,22 @@ const styles = StyleSheet.create({
   foundTitle: { fontSize: 24, fontWeight: '700', color: '#fff', marginBottom: 8 },
   fullTitle: { fontSize: 24, fontWeight: '700', color: '#ef4444', marginBottom: 12 },
   expiredTitle: { fontSize: 24, fontWeight: '700', color: '#f59e0b', marginBottom: 12 },
+  // Encadré rassurant sur le remboursement : vert, pour être lu comme une bonne
+  // nouvelle et non comme un avertissement de plus.
+  expiredRefundNote: {
+    fontSize: 14,
+    color: '#10B981',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(16,185,129,0.12)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
+    marginHorizontal: 12,
+  },
   scheduledIcon: {
     width: 80,
     height: 80,

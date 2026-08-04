@@ -1680,4 +1680,5 @@ export default {
   stripeBizTypeIndividual: "Em meu nome",
   stripeBizTypeCompany: "Através da minha empresa ou associação",
   stripeBizTypeHelp: "Escolhe «em meu nome» se recebes pessoalmente. Escolhe a outra opção se faturas através de uma empresa ou associação. Isto determina as informações que a Stripe irá pedir e o que aparecerá nas tuas faturas.",
+  eventExpiredRefundNote: "Se tinhas pago, não serás cobrado: nenhuma dedicatória foi publicada, por isso o valor retido no teu cartão é libertado.",
 };

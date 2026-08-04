@@ -1680,4 +1680,5 @@ export default {
   stripeBizTypeIndividual: "以个人名义",
   stripeBizTypeCompany: "通过我的公司或组织",
   stripeBizTypeHelp: "如果款项直接支付给您个人，请选择「以个人名义」。如果您通过公司或组织开具发票，请选择另一项。此选择决定 Stripe 需要哪些信息以及发票上显示的内容。",
+  eventExpiredRefundNote: "如果您已付款，将不会被扣款：没有发布任何献词，卡上冻结的金额将被释放。",
 };

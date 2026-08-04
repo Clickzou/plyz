@@ -1685,4 +1685,5 @@ export default {
   stripeBizTypeIndividual: "Atas nama saya sendiri",
   stripeBizTypeCompany: "Melalui perusahaan atau organisasi saya",
   stripeBizTypeHelp: "Pilih «atas nama saya sendiri» jika Anda dibayar secara pribadi. Pilih opsi lain jika Anda menagih melalui perusahaan atau organisasi. Ini menentukan informasi yang diminta Stripe dan apa yang muncul di faktur Anda.",
+  eventExpiredRefundNote: "Jika Anda sudah membayar, Anda tidak akan ditagih: tidak ada dedikasi yang diterbitkan, sehingga jumlah yang ditahan di kartu Anda dilepaskan.",
 };
