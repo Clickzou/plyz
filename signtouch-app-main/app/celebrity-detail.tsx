@@ -100,6 +100,18 @@ export default function CelebrityDetailScreen() {
     if (id && activeTab === 'about') fetchEvents();
   }, [id, activeTab]);
 
+  // Décision produit (04/08/2026) : les prestations INDIVIDUELLES (appel vidéo à
+  // la demande, autographe asynchrone) ne sont plus vendues depuis le profil
+  // public. Tout passe désormais par les ÉVÉNEMENTS, dont le tarif est fixé par
+  // la célébrité à la création — le parcours est plus simple à comprendre, et il
+  // n'y a plus qu'un seul endroit où saisir un prix.
+  // Bénéfice conformité : l'autographe asynchrone était la prestation la plus
+  // exposée au reproche Apple « contenu numérique » (règle 3.1.1), alors que les
+  // événements en personne géolocalisés sont un service du monde réel.
+  // Le code serveur (booking vidéo / autographe) reste en place : repasser cette
+  // constante à true suffit à réactiver les deux boutons.
+  const INDIVIDUAL_SERVICES_ENABLED = false;
+
   const DEMO_CELEBS: Record<string, CelebrityDetail> = {
     'mock-001': { user_id: 'mock-001', stage_name: 'Rafael Mendez', bio: 'Milieu de terrain international. Champion en titre, capitaine de son club.', website: null, avatar_url: null, display_name: 'Rafael Mendez', stripe_verified: true, official_verified: true, can_accept_payments: false, wikidata_image_url: null, wikipedia_url: null, wikidata_occupations: ['footballer'], popularity_score: 98, completed_sessions: 42, pricing: { video_call_price_cents: 15000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 5000, live_dedication_price_cents: 0, currency: 'eur' }, posts: [{ id: 'p1', kind: 'event', title: 'Session Live Exclusive', body: 'Rejoignez-moi pour une session live ce week-end.', media_url: null, event_date: '2026-02-20T18:00:00Z', price_cents: 15000, location: 'Paris, France', created_at: '2025-12-08T10:00:00Z' }] },
     'mock-002': { user_id: 'mock-002', stage_name: 'Clara Belmont', bio: 'Actrice et productrice. Plusieurs longs-métrages primés à son actif.', website: null, avatar_url: null, display_name: 'Clara Belmont', stripe_verified: true, official_verified: true, can_accept_payments: false, wikidata_image_url: null, wikipedia_url: null, wikidata_occupations: ['actress'], popularity_score: 92, completed_sessions: 28, pricing: { video_call_price_cents: 20000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 7500, live_dedication_price_cents: 0, currency: 'eur' }, posts: [{ id: 'p2', kind: 'event', title: 'Dédicace en Live', body: 'Réservez votre créneau pour une dédicace personnalisée en vidéo.', media_url: null, event_date: '2026-03-01T15:00:00Z', price_cents: 20000, location: 'Cannes, France', created_at: '2025-12-03T09:00:00Z' }] },
@@ -367,7 +379,7 @@ export default function CelebrityDetailScreen() {
         </View>
 
         <View style={styles.actionRow}>
-          {p && p.video_call_price_cents > 0 && celebrity.can_accept_payments && (
+          {INDIVIDUAL_SERVICES_ENABLED && p && p.video_call_price_cents > 0 && celebrity.can_accept_payments && (
             <TouchableOpacity
               style={[styles.mainAction, styles.videoAction]}
               onPress={handleBookCall}
@@ -401,7 +413,7 @@ export default function CelebrityDetailScreen() {
               </LinearGradient>
             </TouchableOpacity>
           )}
-          {p && p.autograph_price_cents > 0 && celebrity.can_accept_payments && (
+          {INDIVIDUAL_SERVICES_ENABLED && p && p.autograph_price_cents > 0 && celebrity.can_accept_payments && (
             <TouchableOpacity
               style={[styles.mainAction, styles.autographAction]}
               onPress={handleAutograph}
