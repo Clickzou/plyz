@@ -2098,6 +2098,17 @@ app.post('/api/stripe/express/create-and-onboard', async (req, res) => {
 
     console.log('[Connect Express] Creating account with key prefix:', getStripeCredentials().secretKey.substring(0, 12) + '...');
 
+    // Le type est demandé DANS L'APP, avec des mots compréhensibles (« une
+    // personne » / « une société ou association »), puis transmis ici. Stripe ne
+    // repose alors plus sa question « Type d'entreprise », dont les intitulés
+    // réglementaires (« Entrepreneur individuel / Micro-entrepreneur ») rebutaient
+    // les célébrités. Si le client n'envoie rien, on ne force rien : Stripe
+    // reprend la main et demande, comme avant (aucune régression).
+    const allowedBusinessTypes = ['individual', 'company', 'non_profit'];
+    const businessType = allowedBusinessTypes.includes(String(req.body?.businessType))
+      ? String(req.body.businessType)
+      : null;
+
     const account = await stripe.accounts.create({
       type: 'express',
       country: 'FR',
@@ -2105,9 +2116,9 @@ app.post('/api/stripe/express/create-and-onboard', async (req, res) => {
         card_payments: { requested: true },
         transfers: { requested: true },
       },
-      // On NE force PLUS business_type : Stripe demande à la célébrité, pendant
-      // l'onboarding, si elle est un PARTICULIER ou une SOCIÉTÉ. La facture reflète
-      // ensuite ce choix (société → raison sociale ; particulier → nom + prénom).
+      ...(businessType ? { business_type: businessType } : {}),
+      // La facture reflète ensuite ce choix (société → raison sociale ;
+      // particulier → nom + prénom), cf. createInvoice.
       metadata: {
         celebrity_id: celebrityId || '',
         celebrity_name: celebrityName || '',

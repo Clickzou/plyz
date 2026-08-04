@@ -1676,4 +1676,8 @@ export default {
   waitlistDone: "Du stehst auf der Warteliste! Die Zahlung öffnet 7 Tage vor — wer zuerst kommt, mahlt zuerst.",
   fansReserved: "Fans haben bereits reserviert",
   fanReserved: "Fan hat bereits reserviert",
+  stripeBizTypeTitle: "Wie erhältst du deine Zahlungen?",
+  stripeBizTypeIndividual: "Auf meinen eigenen Namen",
+  stripeBizTypeCompany: "Über meine Firma oder meinen Verein",
+  stripeBizTypeHelp: "Wähle „auf meinen eigenen Namen“, wenn du persönlich bezahlt wirst. Wähle die andere Option, wenn du über eine Gesellschaft oder einen Verein abrechnest. Davon hängt ab, welche Angaben Stripe verlangt und was auf deinen Rechnungen erscheint.",
 };

@@ -24,7 +24,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.plyz.app",
-      "buildNumber": "13",
+      "buildNumber": "14",
       "infoPlist": {
         "NSCameraUsageDescription": "Plyz utilise la caméra pour prendre vos photos souvenirs et pour vos appels vidéo en direct avec les célébrités, par exemple prendre une photo lors d'une séance de dédicace.",
         "NSPhotoLibraryUsageDescription": "Plyz a besoin d'accéder à votre galerie pour sauvegarder vos photos signées.",
@@ -65,7 +65,7 @@
         "android.permission.ACCESS_COARSE_LOCATION"
       ],
       "package": "com.plyz.app",
-      "versionCode": 12,
+      "versionCode": 13,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"

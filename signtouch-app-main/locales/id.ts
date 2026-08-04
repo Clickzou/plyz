@@ -1681,4 +1681,8 @@ export default {
   waitlistDone: "Anda sudah terdaftar di daftar tunggu! Pembayaran dibuka 7 hari sebelumnya — siapa cepat dia dapat.",
   fansReserved: "penggemar sudah memesan",
   fanReserved: "penggemar sudah memesan",
+  stripeBizTypeTitle: "Bagaimana Anda menerima pembayaran?",
+  stripeBizTypeIndividual: "Atas nama saya sendiri",
+  stripeBizTypeCompany: "Melalui perusahaan atau organisasi saya",
+  stripeBizTypeHelp: "Pilih «atas nama saya sendiri» jika Anda dibayar secara pribadi. Pilih opsi lain jika Anda menagih melalui perusahaan atau organisasi. Ini menentukan informasi yang diminta Stripe dan apa yang muncul di faktur Anda.",
 };

@@ -61,7 +61,11 @@ export default function StripeConnectModal({
 }: StripeConnectModalProps) {
   const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = React.useState(false);
-  const [step, setStep] = React.useState<'main' | 'onboarding' | 'checking' | 'noAccount' | 'pendingVerification'>('main');
+  // 'businessType' : on demande NOUS-MÊMES si la célébrité encaisse en son nom
+  // propre ou via une structure. Sans ça, Stripe pose la question avec ses
+  // intitulés réglementaires (« Entrepreneur individuel / Micro-entrepreneur »),
+  // incompréhensibles et dissuasifs pour une personnalité.
+  const [step, setStep] = React.useState<'main' | 'businessType' | 'onboarding' | 'checking' | 'noAccount' | 'pendingVerification'>('main');
   const [accountId, setAccountId] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [showAdminInput, setShowAdminInput] = React.useState(false);
@@ -174,7 +178,7 @@ export default function StripeConnectModal({
     }
   };
 
-  const handleCreateNewAccount = async () => {
+  const handleCreateNewAccount = async (businessType: 'individual' | 'company') => {
     setIsConnecting(true);
     setError(null);
 
@@ -187,6 +191,8 @@ export default function StripeConnectModal({
           celebrityId: celebrityId || '',
           returnPath: returnPath || '',
           lang: lang || '',
+          // Transmis pour que Stripe ne repose pas la question (cf. serveur).
+          businessType,
         }),
       });
 
@@ -445,7 +451,7 @@ export default function StripeConnectModal({
 
                   <TouchableOpacity
                     style={[styles.connectButton, isConnecting && styles.connectButtonDisabled]}
-                    onPress={handleCreateNewAccount}
+                    onPress={() => { setError(null); setStep('businessType'); }}
                     disabled={isConnecting}
                   >
                     {isConnecting ? (
@@ -477,6 +483,57 @@ export default function StripeConnectModal({
                       {t('stripeConnectInfoBox') || 'Plyz ne stocke jamais vos données bancaires. Tout est géré par Stripe, certifié PCI DSS niveau 1.'}
                     </Text>
                   </View>
+                </>
+              ) : step === 'businessType' ? (
+                <>
+                  {/* On pose la question à la place de Stripe, en langage clair.
+                      Le choix est transmis au serveur, qui le passe à Stripe :
+                      l'écran « Type d'entreprise » ne s'affiche donc plus. */}
+                  <Text style={styles.connectButtonText as any}>
+                    {t('stripeBizTypeTitle') || 'Comment reçois-tu tes paiements ?'}
+                  </Text>
+
+                  {error && <Text style={styles.errorBanner}>{trUI(error)}</Text>}
+
+                  <TouchableOpacity
+                    style={[styles.connectButton, isConnecting && styles.connectButtonDisabled]}
+                    onPress={() => handleCreateNewAccount('individual')}
+                    disabled={isConnecting}
+                  >
+                    {isConnecting ? (
+                      <ActivityIndicator color="#ffffff" />
+                    ) : (
+                      <Text style={styles.connectButtonText}>
+                        {t('stripeBizTypeIndividual') || 'En mon nom propre'}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.existingAccountButton, isConnecting && styles.connectButtonDisabled]}
+                    onPress={() => handleCreateNewAccount('company')}
+                    disabled={isConnecting}
+                  >
+                    <Text style={styles.existingAccountText}>
+                      {t('stripeBizTypeCompany') || 'Via ma société ou mon association'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <View style={styles.infoBox}>
+                    <Shield size={14} color="#10B981" />
+                    <Text style={styles.infoText}>
+                      {t('stripeBizTypeHelp') || "Choisis « en mon nom propre » si tes cachets te sont versés personnellement. Choisis l'autre option si tu factures via une structure (SAS, SARL, association…). Ce choix détermine les informations que Stripe te demandera et ce qui figurera sur tes factures."}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={() => { setError(null); setStep('main'); }}
+                    disabled={isConnecting}
+                  >
+                    <Text style={styles.existingAccountText}>
+                      {t('back') || 'Retour'}
+                    </Text>
+                  </TouchableOpacity>
                 </>
               ) : step === 'noAccount' ? (
                 <>

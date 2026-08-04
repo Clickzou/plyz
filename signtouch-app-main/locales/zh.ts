@@ -1676,4 +1676,8 @@ export default {
   waitlistDone: "您已加入等待名单！付款将在7天前开放 — 先到先得。",
   fansReserved: "位粉丝已预订",
   fanReserved: "位粉丝已预订",
+  stripeBizTypeTitle: "您如何收款？",
+  stripeBizTypeIndividual: "以个人名义",
+  stripeBizTypeCompany: "通过我的公司或组织",
+  stripeBizTypeHelp: "如果款项直接支付给您个人，请选择「以个人名义」。如果您通过公司或组织开具发票，请选择另一项。此选择决定 Stripe 需要哪些信息以及发票上显示的内容。",
 };

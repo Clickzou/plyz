@@ -1758,4 +1758,8 @@ export default {
   waitlistDone: "You're on the waitlist! Payment opens 7 days before — first come, first served.",
   fansReserved: "fans have already booked",
   fanReserved: "fan has already booked",
+  stripeBizTypeTitle: "How do you get paid?",
+  stripeBizTypeIndividual: "In my own name",
+  stripeBizTypeCompany: "Through my company or association",
+  stripeBizTypeHelp: "Choose “in my own name” if you are paid personally. Choose the other option if you invoice through a legal entity (company, association…). This determines what Stripe will ask you and what appears on your invoices.",
 };

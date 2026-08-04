@@ -1675,4 +1675,8 @@ export default {
   waitlistDone: "¡Estás en la lista de espera! El pago se abrirá 7 días antes — por orden de inscripción.",
   fansReserved: "fans ya han reservado",
   fanReserved: "fan ya ha reservado",
+  stripeBizTypeTitle: "¿Cómo recibes tus pagos?",
+  stripeBizTypeIndividual: "A mi nombre",
+  stripeBizTypeCompany: "A través de mi empresa o asociación",
+  stripeBizTypeHelp: "Elige «a mi nombre» si cobras personalmente. Elige la otra opción si facturas a través de una entidad (empresa, asociación…). Esto determina la información que Stripe te pedirá y lo que aparecerá en tus facturas.",
 };

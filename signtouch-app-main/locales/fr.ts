@@ -1742,4 +1742,8 @@ export default {
   waitlistDone: "Tu es sur la liste d'attente ! Le paiement ouvrira 7 jours avant — premier inscrit, premier servi.",
   fansReserved: "fans ont déjà réservé",
   fanReserved: "fan a déjà réservé",
+  stripeBizTypeTitle: "Comment reçois-tu tes paiements ?",
+  stripeBizTypeIndividual: "En mon nom propre",
+  stripeBizTypeCompany: "Via ma société ou mon association",
+  stripeBizTypeHelp: "Choisis « en mon nom propre » si tes cachets te sont versés personnellement. Choisis l'autre option si tu factures via une structure (société, association…). Ce choix détermine les informations que Stripe te demandera et ce qui figurera sur tes factures.",
 };
