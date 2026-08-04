@@ -927,11 +927,11 @@ export default function CreateEventScreen() {
                   disabled={capturingLocation}
                 >
                   {capturingLocation ? (
-                    <ActivityIndicator size="small" color="#10B981" />
+                    <ActivityIndicator size="small" color="#ffffff" />
                   ) : eventCoords ? (
-                    <Check size={18} color="#10B981" />
+                    <Check size={20} color="#ffffff" />
                   ) : (
-                    <Navigation size={18} color="#ec4899" />
+                    <Navigation size={20} color="#ffffff" />
                   )}
                   <Text style={[styles.locationGpsButtonText, eventCoords && styles.locationGpsButtonTextSet]}>
                     {eventCoords
@@ -1700,9 +1700,14 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   contentContainer: { padding: 20 },
   section: { marginBottom: 28 },
-  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#ffffff' },
-  requiredHint: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' },
+  // flexWrap + flexShrink : sans eux, un titre long (« Lieu de l'événement (en
+  // personne) ») poussait la mention « (obligatoire) » hors de l'écran — la
+  // célébrité ne voyait donc pas que le champ était requis.
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' },
+  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#ffffff', flexShrink: 1 },
+  // Mention rendue nettement plus lisible : c'est elle qui évite de remplir tout
+  // le formulaire pour découvrir le blocage à la validation.
+  requiredHint: { fontSize: 12, color: '#f59e0b', fontWeight: '700' },
   input: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
@@ -1712,25 +1717,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
+  // Bouton ORANGE PLEIN : c'est une action OBLIGATOIRE. En rose translucide il
+  // passait pour un lien secondaire — on le sautait, et le blocage n'apparaissait
+  // qu'après avoir rempli le pseudo et signé, tout en bas du formulaire.
   locationGpsButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     marginTop: 10,
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 16,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(236, 72, 153, 0.5)',
-    backgroundColor: 'rgba(236, 72, 153, 0.1)',
+    borderWidth: 2,
+    borderColor: '#f59e0b',
+    backgroundColor: '#f59e0b',
   },
+  // Une fois la position prise, le bouton passe au VERT PLEIN : la célébrité voit
+  // d'un coup d'œil que l'obligation est levée.
   locationGpsButtonSet: {
-    borderColor: 'rgba(16, 185, 129, 0.6)',
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderColor: '#10B981',
+    backgroundColor: '#10B981',
   },
-  locationGpsButtonText: { fontSize: 14, fontWeight: '600', color: '#ec4899' },
-  locationGpsButtonTextSet: { color: '#10B981' },
+  // Texte blanc : le bouton est desormais plein (orange puis vert).
+  locationGpsButtonText: { fontSize: 15, fontWeight: '700', color: '#ffffff' },
+  locationGpsButtonTextSet: { color: '#ffffff' },
   locationGpsHint: { fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 8, lineHeight: 17 },
   durationGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   durationButton: {
