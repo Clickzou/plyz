@@ -637,6 +637,35 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
       console.log('[Webhook]   charges_enabled:', account.charges_enabled);
       console.log('[Webhook]   payouts_enabled:', account.payouts_enabled);
       console.log('[Webhook]   details_submitted:', account.details_submitted);
+
+      // Cet événement ne faisait QUE journaliser : les colonnes
+      // stripe_charges_enabled / stripe_payouts_enabled / stripe_verified
+      // n'étaient alimentées par personne et restaient à false indéfiniment.
+      // On les tient désormais à jour — c'est la seule source fiable pour
+      // savoir, sans rappeler Stripe, si une célébrité peut être payée.
+      try {
+        const admin = getSupabaseAdmin();
+        const { data: touched, error: accErr } = await admin
+          .from('celebrity_profiles')
+          .update({
+            stripe_charges_enabled: !!account.charges_enabled,
+            stripe_payouts_enabled: !!account.payouts_enabled,
+            stripe_verified: !!(account.charges_enabled && account.payouts_enabled),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('stripe_account_id', account.id)
+          .select('user_id');
+
+        if (accErr) {
+          console.error('[Webhook] account.updated — echec MAJ profil:', accErr.message);
+        } else if (!touched || touched.length === 0) {
+          console.warn('[Webhook] account.updated — aucun profil avec stripe_account_id', account.id);
+        } else {
+          console.log('[Webhook] account.updated — profil mis a jour pour', touched[0].user_id);
+        }
+      } catch (e) {
+        console.error('[Webhook] account.updated — exception MAJ profil:', e.message);
+      }
       break;
     }
 
@@ -3953,9 +3982,15 @@ app.get('/api/celebrity/:id', async (req, res, next) => {
         // l'affichage des boutons de réservation. Sans ce booléen, l'app testait
         // `stripe_account_id` — toujours absent depuis le filtrage — et n'affichait
         // donc JAMAIS les boutons. On expose un booléen, jamais l'identifiant.
-        // `charges_enabled` est inclus : un compte créé mais non validé par Stripe
-        // ne doit pas laisser un fan payer dans le vide.
-        can_accept_payments: !!(celeb.stripe_account_id && celeb.stripe_charges_enabled),
+        //
+        // ⚠️ On ne conditionne PAS sur `stripe_charges_enabled` : cette colonne
+        // n'était alimentée par personne (défaut false), les boutons seraient donc
+        // restés invisibles à vie. Elle est désormais renseignée par le webhook
+        // `account.updated`, mais on ne s'y fie pas pour l'affichage : un compte
+        // fraîchement créé n'a pas encore reçu son premier webhook. Le vrai
+        // garde-fou est ailleurs et interroge Stripe EN DIRECT au moment de payer
+        // (create-checkout-session : 403 CHARGES_NOT_ENABLED / TRANSFERS_NOT_ACTIVE).
+        can_accept_payments: !!celeb.stripe_account_id,
       },
     });
   } catch (error) {
