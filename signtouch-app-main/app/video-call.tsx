@@ -739,9 +739,18 @@ export default function VideoCallScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ checkout_session_id: params.checkoutSessionId }),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
-      if (data.captured) {
+      // Statut HTTP explicite : sans lui, un refus du serveur se confondait avec
+      // une réponse « captured: false » et on ne savait pas lequel des deux.
+      if (!response.ok) {
+        console.error('[VideoCall] CAPTURE REFUSÉE par le serveur:', response.status, data);
+        setPaymentCaptured(false);
+        paymentResolvedRef.current = false;
+        return;
+      }
+
+      if (data?.captured) {
         const amountEuros = data.amount ? (data.amount / 100).toFixed(2) : (parseInt(params.priceCents || '0', 10) / 100).toFixed(2);
         console.log('[VideoCall] Payment captured successfully:', amountEuros, '€');
       } else {
@@ -789,7 +798,20 @@ export default function VideoCallScreen() {
           callHappened,
           sessionId: params.sessionId,
         }),
-      }).catch((e) => console.error('[VideoCall] end-fan-call error:', e));
+      })
+        // `fetch` ne rejette PAS sur un 403/500 : le seul `.catch` ne voyait que les
+        // pannes réseau. Un refus du serveur sur CE déclencheur — le chemin fiable
+        // de capture côté hôte — serait passé totalement inaperçu, fan non débité et
+        // célébrité non payée, sans un mot. On lit donc le statut.
+        .then(async (r) => {
+          const body = await r.json().catch(() => null);
+          if (!r.ok) {
+            console.error('[VideoCall] END-FAN-CALL REFUSÉ par le serveur:', r.status, body);
+          } else {
+            console.log('[VideoCall] end-fan-call:', body);
+          }
+        })
+        .catch((e) => console.error('[VideoCall] end-fan-call error (réseau):', e));
     } catch (e) {
       console.error('[VideoCall] end-fan-call threw:', e);
     }
