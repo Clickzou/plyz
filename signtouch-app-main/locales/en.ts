@@ -943,8 +943,7 @@ export default {
   selectStartTime: 'Please select a start time',
   startTimeHint: 'Event will start at this time',
   startsAt: 'Starts at',
-  fanGalleryHint: 'Please wait, you\'ll receive the autographed photos live.',
-
+  fanGalleryHint: "Your signed photos arrive live, throughout the session.",
   // Trial System
   myAccount: 'My account',
   accountActive: 'Active account',
@@ -1765,6 +1764,7 @@ export default {
   eventExpiredRefundNote: "If you paid, you will not be charged: no dedication was published, so the amount held on your card is released.",
   eventPastEndNotice: "This session was scheduled to end. You can still publish pending dedications, but remember to end the session: fans who were not served will be automatically refunded.",
   extendSessionLabel: "Extend the session:",
+  resumeSession: "Resume the session",
   extendMaxTitle: "Maximum extension reached",
   extendMaxMsg: "You have already extended this session by 2 hours in total. End it so that unserved fans are refunded.",
 };

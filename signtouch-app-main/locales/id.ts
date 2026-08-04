@@ -862,8 +862,7 @@ export default {
   startTimeHint: 'Acara akan dimulai pada waktu ini',
   eventScheduled: 'Acara Dijadwalkan!',
   startsAt: 'Dimulai pukul',
-  fanGalleryHint: 'Mohon tunggu, Anda akan menerima foto bertanda tangan secara langsung.',
-
+  fanGalleryHint: "Foto bertanda tangan Anda tiba secara langsung, sepanjang sesi.",
   // Trial System
   myAccount: 'Akun saya',
   accountActive: 'Akun aktif',
@@ -1688,6 +1687,7 @@ export default {
   eventExpiredRefundNote: "Jika Anda sudah membayar, Anda tidak akan ditagih: tidak ada dedikasi yang diterbitkan, sehingga jumlah yang ditahan di kartu Anda dilepaskan.",
   eventPastEndNotice: "Sesi ini seharusnya sudah berakhir. Anda masih dapat memublikasikan dedikasi yang tertunda, tetapi ingatlah untuk mengakhiri sesi: penggemar yang tidak terlayani akan otomatis mendapat pengembalian dana.",
   extendSessionLabel: "Perpanjang sesi:",
+  resumeSession: "Lanjutkan sesi ini",
   extendMaxTitle: "Perpanjangan maksimum tercapai",
   extendMaxMsg: "Anda sudah memperpanjang sesi ini total 2 jam. Akhiri sesi agar penggemar yang tidak terlayani mendapat pengembalian dana.",
 };

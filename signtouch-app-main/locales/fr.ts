@@ -946,8 +946,7 @@ export default {
   selectStartTime: 'Veuillez sélectionner une heure de début',
   startTimeHint: 'L\'événement commencera à cette heure',
   startsAt: 'Commence à',
-  fanGalleryHint: 'Veuillez patienter, vous allez recevoir les photos dédicacées en live.',
-
+  fanGalleryHint: "Vos photos dédicacées arrivent en direct, tout au long de la séance.",
   // Trial System
   myAccount: 'Mon compte',
   accountActive: 'Compte actif',
@@ -1749,6 +1748,7 @@ export default {
   eventExpiredRefundNote: "Si tu avais payé, tu ne seras pas débité(e) : aucune dédicace n'a été publiée, le montant bloqué sur ta carte est libéré.",
   eventPastEndNotice: "Cette séance devait se terminer à l'heure prévue. Tu peux encore publier les dédicaces en attente, mais pense à terminer la séance : les fans non servis seront automatiquement remboursés.",
   extendSessionLabel: "Prolonger la séance :",
+  resumeSession: "Reprendre la séance",
   extendMaxTitle: "Prolongation maximale atteinte",
   extendMaxMsg: "Tu as déjà prolongé cette séance de 2 h au total. Termine-la pour que les fans non servis soient remboursés.",
 };

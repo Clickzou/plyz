@@ -862,8 +862,7 @@ export default {
   startTimeHint: 'O evento começará neste horário',
   eventScheduled: 'Evento Agendado!',
   startsAt: 'Começa às',
-  fanGalleryHint: 'Aguarde, você vai receber as fotos autografadas ao vivo.',
-
+  fanGalleryHint: "As suas fotos autografadas chegam ao vivo, ao longo de toda a sessão.",
   // Trial System
   myAccount: 'Minha conta',
   accountActive: 'Conta ativa',
@@ -1683,6 +1682,7 @@ export default {
   eventExpiredRefundNote: "Se tinhas pago, não serás cobrado: nenhuma dedicatória foi publicada, por isso o valor retido no teu cartão é libertado.",
   eventPastEndNotice: "Esta sessão devia ter terminado. Ainda podes publicar as dedicatórias pendentes, mas lembra-te de terminar a sessão: os fãs não atendidos serão reembolsados automaticamente.",
   extendSessionLabel: "Prolongar a sessão:",
+  resumeSession: "Retomar a sessão",
   extendMaxTitle: "Prolongamento máximo atingido",
   extendMaxMsg: "Já prolongaste esta sessão em 2 h no total. Termina-a para que os fãs não atendidos sejam reembolsados.",
 };

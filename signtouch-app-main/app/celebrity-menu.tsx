@@ -819,6 +819,29 @@ export default function CelebrityMenuScreen() {
                         </View>
                       )}
 
+                      {/* Une séance qui vient de se terminer reste RATTRAPABLE : la
+                          célébrité peut la prolonger (bandeau de l'écran de dédicace)
+                          pour servir les fans en attente. Sans ce bouton, l'onglet
+                          « Passés » ne permettait que de cocher la carte : aucun chemin
+                          n'existait pour rouvrir la séance, et la prolongation était
+                          donc inatteignable au moment exact où elle sert.
+                          Fenêtre = 1 h après la fin, soit le délai de grâce au-delà
+                          duquel le serveur libère les pré-autorisations des fans :
+                          après ça, prolonger n'a plus de sens, l'argent est rendu. */}
+                      {eventEnded && !isLiveVideo && Date.now() < new Date(event.ends_at).getTime() + 60 * 60 * 1000 && (
+                        <View style={styles.eventActions}>
+                          <TouchableOpacity
+                            style={[styles.actionBtn, styles.actionBtnPrimary]}
+                            onPress={() => handleContinueEvent(event)}
+                          >
+                            <Edit3 size={18} color="#fff" />
+                            <Text style={[styles.actionBtnText, styles.actionBtnTextPrimary]}>
+                              {t('resumeSession' as any) || 'Reprendre la séance'}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+
                       {!eventEnded && (
                         <View style={styles.eventActions}>
                           <TouchableOpacity

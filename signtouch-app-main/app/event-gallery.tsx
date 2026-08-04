@@ -752,10 +752,14 @@ export default function EventGalleryScreen() {
       </View>
 
       
+      {/* Message affiché en permanence : d'autres dédicaces peuvent arriver à tout
+          moment. Il est donc formulé pour rester vrai AVANT la première photo
+          (annonce) comme APRÈS (ça continue) — l'ancien « Veuillez patienter »
+          devenait faux dès qu'une photo était là, sous les yeux du fan. */}
       <View style={styles.infoBanner}>
         <Info size={16} color="#10B981" />
         <Text style={styles.infoBannerText}>
-          {(t as any)('fanGalleryHint') || 'Tap to download. Use the copy icon to create your own photo with this signature!'}
+          {(t as any)('fanGalleryHint') || 'Your signed photos arrive live, throughout the session.'}
         </Text>
       </View>
 

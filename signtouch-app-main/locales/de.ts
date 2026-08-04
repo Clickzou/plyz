@@ -862,8 +862,7 @@ export default {
   startTimeHint: 'Das Event beginnt zu dieser Zeit',
   eventScheduled: 'Event geplant!',
   startsAt: 'Beginnt um',
-  fanGalleryHint: 'Bitte warte, du erhältst die signierten Fotos live.',
-
+  fanGalleryHint: "Deine signierten Fotos treffen live ein, während der gesamten Sitzung.",
   // Trial System
   myAccount: 'Mein Konto',
   accountActive: 'Konto aktiv',
@@ -1683,6 +1682,7 @@ export default {
   eventExpiredRefundNote: "Falls du bezahlt hast, wird dir nichts berechnet: Es wurde keine Widmung veröffentlicht, der auf deiner Karte reservierte Betrag wird freigegeben.",
   eventPastEndNotice: "Diese Sitzung sollte bereits beendet sein. Du kannst noch ausstehende Widmungen veröffentlichen, denke aber daran, die Sitzung zu beenden: Nicht bediente Fans werden automatisch erstattet.",
   extendSessionLabel: "Sitzung verlängern:",
+  resumeSession: "Sitzung fortsetzen",
   extendMaxTitle: "Maximale Verlängerung erreicht",
   extendMaxMsg: "Du hast diese Sitzung bereits um insgesamt 2 Stunden verlängert. Beende sie, damit nicht bediente Fans erstattet werden.",
 };

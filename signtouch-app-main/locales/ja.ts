@@ -862,8 +862,7 @@ export default {
   startTimeHint: 'イベントはこの時間に開始されます',
   eventScheduled: 'イベントがスケジュールされました！',
   startsAt: '開始時間',
-  fanGalleryHint: 'お待ちください。サイン入り写真をライブで受け取れます。',
-
+  fanGalleryHint: "サイン入り写真はセッション中ずっとライブで届きます。",
   // Trial System
   myAccount: 'マイアカウント',
   accountActive: 'アカウント有効',
@@ -1683,6 +1682,7 @@ export default {
   eventExpiredRefundNote: "お支払い済みの場合でも請求は発生しません。献辞が公開されなかったため、カードで確保されていた金額は解放されます。",
   eventPastEndNotice: "このセッションは終了予定時刻を過ぎています。保留中の献辞はまだ公開できますが、セッションの終了をお忘れなく。対応できなかったファンには自動的に返金されます。",
   extendSessionLabel: "セッションを延長：",
+  resumeSession: "セッションを再開",
   extendMaxTitle: "延長の上限に達しました",
   extendMaxMsg: "このセッションは合計2時間まで延長済みです。対応できなかったファンに返金するため、セッションを終了してください。",
 };

@@ -862,8 +862,7 @@ export default {
   startTimeHint: '活动将在此时间开始',
   eventScheduled: '活动已安排！',
   startsAt: '开始于',
-  fanGalleryHint: '请稍候，您将实时收到签名照片。',
-
+  fanGalleryHint: "您的签名照片将在整场活动中实时送达。",
   // Trial System
   myAccount: '我的账户',
   accountActive: '账户已激活',
@@ -1683,6 +1682,7 @@ export default {
   eventExpiredRefundNote: "如果您已付款，将不会被扣款：没有发布任何献词，卡上冻结的金额将被释放。",
   eventPastEndNotice: "本场次已过预定结束时间。您仍可发布待处理的献词，但请记得结束场次：未获服务的粉丝将自动获得退款。",
   extendSessionLabel: "延长场次：",
+  resumeSession: "继续场次",
   extendMaxTitle: "已达最长延长时间",
   extendMaxMsg: "本场次累计已延长 2 小时。请结束场次，以便未获服务的粉丝获得退款。",
 };

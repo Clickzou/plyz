@@ -862,8 +862,7 @@ export default {
   startTimeHint: 'Acara akan bermula pada masa ini',
   eventScheduled: 'Acara Dijadualkan!',
   startsAt: 'Bermula pada',
-  fanGalleryHint: 'Sila tunggu, anda akan menerima foto bertandatangan secara langsung.',
-
+  fanGalleryHint: "Foto bertandatangan anda tiba secara langsung, sepanjang sesi.",
   // Trial System
   myAccount: 'Akaun saya',
   accountActive: 'Akaun aktif',
@@ -1688,6 +1687,7 @@ export default {
   eventExpiredRefundNote: "Jika anda telah membayar, anda tidak akan dicaj: tiada dedikasi diterbitkan, jadi jumlah yang ditahan pada kad anda akan dilepaskan.",
   eventPastEndNotice: "Sesi ini sepatutnya telah tamat. Anda masih boleh menerbitkan dedikasi yang tertunggak, tetapi ingat untuk menamatkan sesi: peminat yang tidak dilayan akan dibayar balik secara automatik.",
   extendSessionLabel: "Lanjutkan sesi:",
+  resumeSession: "Sambung semula sesi",
   extendMaxTitle: "Lanjutan maksimum dicapai",
   extendMaxMsg: "Anda telah melanjutkan sesi ini sebanyak 2 jam kesemuanya. Tamatkan sesi supaya peminat yang tidak dilayan dibayar balik.",
 };

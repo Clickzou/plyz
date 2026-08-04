@@ -34,6 +34,7 @@ import { EventType } from '@/utils/memoriesStorage';
 import { useAuth } from '@/contexts/AuthContext';
 import { scheduleCelebrityReminders } from '@/utils/scheduleReminders';
 import BottomNav from '@/components/BottomNav';
+import EventPastEndBanner from '@/components/EventPastEndBanner';
 import {
   createEventSession,
   addEventSigner,
@@ -166,6 +167,9 @@ export default function CreateEventScreen() {
   const [isLive, setIsLive] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createdSession, setCreatedSession] = useState<EventSession | null>(null);
+  // Nouvelle heure de fin après une prolongation : `createdSession` vient de la
+  // création et ne bouge plus, il afficherait donc l'ancienne heure.
+  const [extendedEndsAt, setExtendedEndsAt] = useState<string | null>(null);
   const [createdSigners, setCreatedSigners] = useState<EventSigner[]>([]);
   const [copied, setCopied] = useState(false);
 
@@ -1312,6 +1316,16 @@ export default function CreateEventScreen() {
             <View style={styles.successContainer}>
               <Text style={styles.eventNameLarge}>{createdSession.title}</Text>
 
+              {/* La célébrité peut très bien rester sur cet écran sans jamais lancer
+                  sa séance : sans ce bandeau, son événement expirait en silence et
+                  l'argent de ses fans restait bloqué. Même composant que l'écran de
+                  dédicace, pour un comportement identique des deux côtés. */}
+              <EventPastEndBanner
+                sessionId={createdSession.id}
+                endsAt={extendedEndsAt || createdSession.ends_at}
+                onExtended={setExtendedEndsAt}
+              />
+
               {createdSession.status === 'scheduled' && (
                 <>
                   <View style={styles.scheduledBanner}>
@@ -1346,7 +1360,7 @@ export default function CreateEventScreen() {
                   <View style={styles.eventInfoContent}>
                     <Text style={styles.eventInfoLabel}>{t('eventDuration') || 'Duration'}</Text>
                     <Text style={styles.eventInfoValue}>
-                      {t('until') || 'Until'} {new Date(createdSession.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {t('until') || 'Until'} {new Date(extendedEndsAt || createdSession.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </Text>
                   </View>
                 </View>

@@ -862,8 +862,7 @@ export default {
   startTimeHint: 'El evento comenzará a esta hora',
   eventScheduled: '¡Evento Programado!',
   startsAt: 'Comienza a las',
-  fanGalleryHint: 'Espera, vas a recibir las fotos dedicadas en directo.',
-
+  fanGalleryHint: "Tus fotos dedicadas llegan en directo, durante toda la sesión.",
   // Trial System
   myAccount: 'Mi cuenta',
   accountActive: 'Cuenta activa',
@@ -1682,6 +1681,7 @@ export default {
   eventExpiredRefundNote: "Si habías pagado, no se te cobrará: no se publicó ninguna dedicatoria, por lo que el importe retenido en tu tarjeta se libera.",
   eventPastEndNotice: "Esta sesión debía haber terminado. Aún puedes publicar las dedicatorias pendientes, pero recuerda finalizar la sesión: los fans no atendidos serán reembolsados automáticamente.",
   extendSessionLabel: "Prolongar la sesión:",
+  resumeSession: "Reanudar la sesión",
   extendMaxTitle: "Prolongación máxima alcanzada",
   extendMaxMsg: "Ya has prolongado esta sesión 2 h en total. Finalízala para que los fans no atendidos sean reembolsados.",
 };
