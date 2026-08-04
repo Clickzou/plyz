@@ -348,63 +348,134 @@ export default function JoinEventScreen() {
     transform: [{ scale: buttonPulse.value }],
   }));
 
+  // Le retour de paiement ne doit être traité qu'une fois, même si l'effet est
+  // relancé quand les paramètres du routeur arrivent après le premier rendu.
+  const paymentReturnHandledRef = useRef(false);
   useEffect(() => {
     const checkEventPaymentReturn = async () => {
-      // Params de retour de paiement : web = URL ; mobile = params du routeur
-      // (transmis par la page pont /payment-success du serveur → plyz://).
-      let paymentSuccess: string | null = null;
-      let checkoutId: string | null = null;
-      let returnCode: string | null = null;
+      if (paymentReturnHandledRef.current) return;
+      // Params de retour de paiement. On lit les DEUX sources, sur toutes les
+      // plateformes : l'URL (web) ET les paramètres du routeur (mobile, mais
+      // aussi web). Se fier à la seule URL sur le web était un piège : le retour
+      // passe par /payment-success qui fait un router.replace, et l'écran peut
+      // se monter avant que window.location reflète les nouveaux paramètres.
+      // Le bloc était alors sauté EN SILENCE et le fan revoyait « Payer ».
+      const fromRouter = (k: string): string | null => {
+        const v = (params as any)?.[k];
+        return v === undefined || v === null ? null : String(v);
+      };
+      let urlParams: URLSearchParams | null = null;
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        const urlParams = new URLSearchParams(window.location.search);
-        paymentSuccess = urlParams.get('payment_success');
-        checkoutId = urlParams.get('checkout_session_id');
-        returnCode = urlParams.get('code');
-      } else {
-        paymentSuccess = params.payment_success ? String(params.payment_success) : null;
-        checkoutId = params.checkout_session_id ? String(params.checkout_session_id) : null;
-        returnCode = params.code ? String(params.code) : null;
+        urlParams = new URLSearchParams(window.location.search);
       }
+      const paymentSuccess = urlParams?.get('payment_success') || fromRouter('payment_success');
+      const checkoutId = urlParams?.get('checkout_session_id') || fromRouter('checkout_session_id');
+      const returnCode = urlParams?.get('code') || fromRouter('code');
+
+      console.log('[EventPayment] retour de paiement ?', {
+        paymentSuccess,
+        checkout: checkoutId ? `${checkoutId.slice(0, 12)}…` : null,
+        code: returnCode,
+      });
 
       // CHEMIN FIABLE (web ET mobile) : dès qu'on a le checkout_session_id, on vérifie
       // DIRECTEMENT le paiement effectué. Fiable dès le retour, contrairement à
       // check-event-access qui peut traîner juste après une pré-autorisation.
       if (paymentSuccess === 'true' && checkoutId && returnCode) {
-        try {
-          const pushToken = await getFanPushToken();
-          const tokenQS = pushToken ? `&push_token=${encodeURIComponent(pushToken)}` : '';
-          const verifyRes = await fetch(`${STRIPE_SERVER_URL}/api/verify-event-payment?checkout_session_id=${checkoutId}${tokenQS}`);
-          const verifyData = await verifyRes.json();
+        paymentReturnHandledRef.current = true;
+        // Tout ce qu'on fait UNE FOIS le paiement reconnu, quel que soit le
+        // chemin qui l'a reconnu (vérification directe ou filet de secours).
+        const confirmPaid = async (eventSessionId: string) => {
+          await AsyncStorage.removeItem('@event_pending_payment_session');
+          // Verrou posé AVANT le handleSearch differe (plus bas) : sans lui, la
+          // re-verification pouvait conclure « non paye » et faire reapparaitre
+          // le bouton « Payer » alors que la carte venait d'etre debitee.
+          markEventPaid(eventSessionId);
+          setCode(returnCode as string);
 
-          if (hasEventAccess(verifyData) && verifyData.eventSessionId) {
-            await AsyncStorage.removeItem('@event_pending_payment_session');
-            // Verrou posé AVANT le handleSearch differe (plus bas) : sans lui, la
-            // re-verification pouvait conclure « non paye » et faire reapparaitre
-            // le bouton « Payer » alors que la carte venait d'etre debitee.
-            markEventPaid(verifyData.eventSessionId);
-            setCode(returnCode);
-
-            const pendingPromoId = await AsyncStorage.getItem('@event_pending_promo_id');
-            if (pendingPromoId) {
-              try {
-                await fetch(`${STRIPE_SERVER_URL}/api/use-event-promo-code`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ promo_id: pendingPromoId }),
-                });
-              } catch (e) {
-                console.error('[EventPromoCode] Use after payment error:', e);
-              }
-              await AsyncStorage.removeItem('@event_pending_promo_id');
+          const pendingPromoId = await AsyncStorage.getItem('@event_pending_promo_id');
+          if (pendingPromoId) {
+            try {
+              await fetch(`${STRIPE_SERVER_URL}/api/use-event-promo-code`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ promo_id: pendingPromoId }),
+              });
+            } catch (e) {
+              console.error('[EventPromoCode] Use after payment error:', e);
             }
-
-            setTimeout(() => handleSearch(returnCode as string), 500);
+            await AsyncStorage.removeItem('@event_pending_promo_id');
           }
+
+          setTimeout(() => handleSearch(returnCode as string), 500);
+        };
+
+        // RÉESSAIS. Une vérification UNIQUE ne suffit pas : Stripe met parfois
+        // une seconde à faire passer la pré-autorisation en `requires_capture`.
+        // La réponse « pas encore payé » était alors définitive et le bouton
+        // « Payer » réapparaissait — le fan risquait un SECOND débit.
+        // Le jeton push est un CONFORT (notifier d'un remboursement) : il ne doit
+        // jamais empêcher de constater un paiement. Sur le web, expo-notifications
+        // ne gère pas les jetons push et peut échouer ou ne jamais répondre — ce
+        // qui bloquait toute la vérification en silence, sans même une erreur.
+        let pushToken: string | null = null;
+        try {
+          pushToken = await Promise.race([
+            getFanPushToken(),
+            new Promise<null>(r => setTimeout(() => r(null), 3000)),
+          ]);
         } catch (e) {
-          console.warn('Event payment verification failed:', e);
+          console.warn('[EventPayment] jeton push indisponible (non bloquant):', e);
         }
-        if (Platform.OS === 'web' && typeof window !== 'undefined') {
-          window.history.replaceState({}, '', window.location.pathname);
+        const tokenQS = pushToken ? `&push_token=${encodeURIComponent(pushToken)}` : '';
+        let confirmed = false;
+
+        for (let attempt = 0; attempt < 5 && !confirmed; attempt++) {
+          if (attempt > 0) await new Promise(r => setTimeout(r, 1200));
+          try {
+            const verifyRes = await fetch(`${STRIPE_SERVER_URL}/api/verify-event-payment?checkout_session_id=${checkoutId}${tokenQS}`);
+            const verifyData = await verifyRes.json();
+            if (hasEventAccess(verifyData) && verifyData.eventSessionId) {
+              await confirmPaid(verifyData.eventSessionId);
+              confirmed = true;
+            }
+          } catch (e) {
+            console.warn(`[EventPayment] tentative ${attempt + 1}/5 échouée:`, e);
+          }
+        }
+
+        // FILET DE SECOURS, WEB INCLUS. Le fallback historique (plus bas) est
+        // réservé au mobile : sur le web, un échec de vérification ne laissait
+        // aucune seconde chance.
+        if (!confirmed) {
+          try {
+            const pendingSessionId = await AsyncStorage.getItem('@event_pending_payment_session');
+            if (pendingSessionId) {
+              const viewerId = user?.id || await getOrCreateDeviceId();
+              const checkRes = await authedFetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${pendingSessionId}&fan_id=${viewerId}`);
+              const checkData = await checkRes.json();
+              if (hasEventAccess(checkData)) {
+                await confirmPaid(pendingSessionId);
+                confirmed = true;
+              }
+            }
+          } catch (e) {
+            console.warn('[EventPayment] filet de secours check-event-access échoué:', e);
+          }
+        }
+
+        // On n'efface les paramètres de l'URL QUE si le paiement est confirmé.
+        // Les effacer en cas d'échec perdait le `checkout_session_id` À JAMAIS :
+        // même en rafraîchissant, le fan n'avait plus aucun moyen de faire
+        // reconnaître son paiement — il ne lui restait qu'à payer une 2e fois.
+        if (confirmed) {
+          if (Platform.OS === 'web' && typeof window !== 'undefined') {
+            window.history.replaceState({}, '', window.location.pathname);
+          }
+        } else {
+          console.error('[EventPayment] paiement NON confirmé après 5 tentatives | checkout:', checkoutId);
+          setCode(returnCode);
+          setTimeout(() => handleSearch(returnCode as string), 500);
         }
         return;
       }
@@ -469,7 +540,9 @@ export default function JoinEventScreen() {
       }
     };
     checkEventPaymentReturn();
-  }, []);
+    // Rejoué si les paramètres du routeur arrivent après le premier rendu (le
+    // verrou plus haut garantit qu'on ne traite le retour qu'une seule fois).
+  }, [params.payment_success, params.checkout_session_id, params.code]);
 
   useEffect(() => {
     if (!params.code && !params.paymentAuthorized) {
@@ -1723,7 +1796,7 @@ export default function JoinEventScreen() {
             )}
             
           </View>
-        ) : !foundEvent && !foundSession && !eventFull ? (
+        ) : !foundEvent && !foundSession && !eventFull && !eventExpired && !eventScheduled ? (
           <>
             {activeFanEvent && (
               <TouchableOpacity
