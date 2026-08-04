@@ -574,6 +574,26 @@ export default function VideoCallScreen() {
       // la session) : on affiche un message clair, on LIBÈRE le paiement (remboursement
       // intégral) et on sort SANS demander de notation (l'appel a été écourté par elle,
       // pas une fin normale).
+      // RECLASSEMENT — une fin NORMALE déguisée en raccrochage. Quand le minuteur
+      // expire, l'hôte quitte la salle en premier ; le fan reçoit alors un
+      // « la célébrité est partie » et classe la fin en 'celebrity_left'. Il
+      // affichait donc « Vous ne serez pas débité(e) » ALORS QUE le serveur venait
+      // de capturer (déclencheur fiable côté hôte) — message mensonger au client,
+      // et tentative d'annulation qui n'échouait que grâce à une course gagnée de
+      // justesse. Un départ survenu APRÈS la durée prévue est une fin normale.
+      if (
+        !isHost &&
+        (callEndReason.current === 'celebrity_left' || callEndReason.current === 'celebrity_hangup')
+      ) {
+        const plannedMs = (parseFloat(params.durationPerFan || '5') || 0) * 60 * 1000;
+        const elapsedMs = callStartTime.current > 0 ? Date.now() - callStartTime.current : 0;
+        // 2 s de tolérance : les deux minuteurs démarrent sur des horloges distinctes.
+        if (plannedMs > 0 && elapsedMs >= plannedMs - 2000) {
+          console.log('[VideoCall] Depart de la celebrite APRES la duree prevue -> fin normale (timer)');
+          callEndReason.current = 'timer';
+        }
+      }
+
       const reason = callEndReason.current;
       if (
         !isHost &&
