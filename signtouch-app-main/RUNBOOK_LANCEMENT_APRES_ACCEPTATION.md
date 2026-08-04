@@ -1,5 +1,11 @@
 # 🚀 RUNBOOK — À FAIRE UNE FOIS LES APPS ACCEPTÉES
 
+> ### 📌 ÉTAT AU 04/08/2026 — **PLYZ EST EN LIGNE SUR LES DEUX STORES**
+> - **App Store** : version 1.0 approuvée par Apple le **15/07** et publiée le jour même → https://apps.apple.com/fr/app/id6788523821
+> - **Google Play** : accepté, production 100 %, build du 30/07 (versionCode 11)
+>
+> ⚠️ **Les deux versions en ligne contiennent le bug de capture** (aucun paiement d'événement dédicace n'est encaissé) et les autres défauts corrigés le 04/08. **La mise à jour des deux stores est donc URGENTE** : builds versionCode 15 / buildNumber iOS 16, déjà réglés dans `app.json`.
+
 > **But de ce fichier :** dès que les apps sont validées (Google Play et/ou App Store), on suit cette liste dans l'ordre pour passer Plyz en **production réelle**. Tant que ce n'est pas fait, l'app est encore en **mode test** (aucun vrai paiement, données de démo, serveur qui peut dormir).
 >
 > **Quand JC dit « les apps sont acceptées » / « Google a accepté » / « c'est validé » → dérouler ce runbook.**
@@ -27,7 +33,7 @@
 
 **PROCHAINES ÉTAPES (dans l'ordre) :**
 1. Récupérer l'AAB → **soumettre sur Play Console** (nouvelle version production).
-2. Envoyer le build iOS sur App Store Connect + **répondre à Apple 3.1.1** (`REPONSE-APPLE-3.1.1-dedicaces.md`) + prévoir l'événement démo pour le reviewer. ⚠️ **iOS n'a JAMAIS été publié** — c'est le gros du travail restant.
+2. ~~Envoyer le build iOS + répondre à Apple 3.1.1 + événement démo pour le reviewer~~ — ❌ **CETTE LIGNE ÉTAIT FAUSSE**. Vérifié le 04/08 dans l'historique App Store Connect : Apple a **approuvé** la version 1.0 le **15/07 à 02h03** (« Prête pour la publication »), et JC l'a **publiée le 15/07 à 14h57**. Le refus 3.1.1 du 13/07 a été surmonté par la resoumission du 14/07. Fiche publique vivante : https://apps.apple.com/fr/app/id6788523821 (Plyz — CLICKZOU, gratuit, iOS 15.1+). **Plyz est en ligne sur les DEUX stores.** La réponse 3.1.1 et l'événement démo ne sont plus nécessaires ; le build iOS 16 est une simple **mise à jour**.
 3. **Test de paiement réel** — ⚠️ les comptes Stripe Connect créés en mode test sont **inutilisables en live** : il faut réinscrire un compte célébrité avec IBAN + pièce d'identité réels.
 4. Puis §3 nettoyage des données de test (dont les comptes créés par les envois mail-tester), §6 monitoring, §2 réactivation de l'abonnement Replit Core.
 
