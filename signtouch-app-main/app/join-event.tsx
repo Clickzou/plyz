@@ -966,8 +966,13 @@ export default function JoinEventScreen() {
           priceCents: eventPaymentConfig.priceCents,
           celebrityStripeAccountId: eventPaymentConfig.celebrityStripeAccountId,
           celebrityName: eventPaymentConfig.celebrityName,
-          successUrl: `${origin}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&event_code=${foundSession.join_code}&payment_success=true`,
-          cancelUrl: `${origin}/payment-success?event_code=${foundSession.join_code}&payment_cancelled=true`,
+          // encodeURIComponent systématique sur tout ce qui entre dans une URL de
+          // retour Stripe. Le code d'événement est alphanumérique, donc sans effet
+          // aujourd'hui — mais un caractère non-ASCII rend l'URL invalide et Stripe
+          // refuse la session avec un 500 opaque (c'est ce qui a cassé la vente des
+          // appels vidéo pour toute célébrité au nom accentué). Assurance gratuite.
+          successUrl: `${origin}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&event_code=${encodeURIComponent(foundSession.join_code)}&payment_success=true`,
+          cancelUrl: `${origin}/payment-success?event_code=${encodeURIComponent(foundSession.join_code)}&payment_cancelled=true`,
         }),
       });
 
@@ -1317,8 +1322,9 @@ export default function JoinEventScreen() {
           priceCents: eventPaymentConfig.priceCents,
           celebrityStripeAccountId: eventPaymentConfig.celebrityStripeAccountId,
           celebrityName: eventPaymentConfig.celebrityName,
-          successUrl: `${origin}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&event_code=${scheduledSession.join_code}&payment_success=true`,
-          cancelUrl: `${origin}/payment-success?event_code=${scheduledSession.join_code}&payment_cancelled=true`,
+          // Même protection que pour l'événement en cours (cf. commentaire plus haut).
+          successUrl: `${origin}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&event_code=${encodeURIComponent(scheduledSession.join_code)}&payment_success=true`,
+          cancelUrl: `${origin}/payment-success?event_code=${encodeURIComponent(scheduledSession.join_code)}&payment_cancelled=true`,
         }),
       });
       const data = await response.json();
