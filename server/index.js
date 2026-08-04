@@ -7027,7 +7027,7 @@ async function releaseExpiredEventPreauths() {
     for (const ev of events) {
       const { data: fans, error: fansErr } = await admin
         .from('event_paid_fans')
-        .select('id, fan_id, payment_intent_id, checkout_session_id')
+        .select('id, fan_id, payment_intent_id, checkout_session_id, push_token')
         .eq('event_session_id', ev.id)
         .eq('payment_captured', false);
 
@@ -7036,6 +7036,8 @@ async function releaseExpiredEventPreauths() {
         continue;
       }
       if (!fans || fans.length === 0) continue;
+
+      const releasedTokens = [];
 
       for (const fan of fans) {
         try {
@@ -7052,10 +7054,29 @@ async function releaseExpiredEventPreauths() {
           if (intent.status !== 'requires_capture') continue;
 
           await stripe.paymentIntents.cancel(pi);
+          if (fan.push_token) releasedTokens.push(fan.push_token);
           console.log('[AutoRelease] pre-autorisation liberee | event:', ev.id, '| fan:', fan.fan_id, '| pi:', pi);
         } catch (e) {
           console.error('[AutoRelease] echec liberation fan', fan.fan_id, ':', e.message);
         }
+      }
+
+      // Le fan doit être prévenu OÙ QU'IL SOIT dans l'app — et même app fermée.
+      // Sans cette notification, il ne l'apprendrait qu'en rouvrant par hasard
+      // l'écran de l'événement, et resterait persuadé d'avoir été débité.
+      try {
+        const tokens = [...new Set(releasedTokens.filter((t) => typeof t === 'string' && t.length > 0))];
+        if (tokens.length > 0) {
+          console.log(`[AutoRelease] notification remboursement a ${tokens.length} fan(s) | event=${ev.id}`);
+          sendExpoPush(
+            tokens,
+            'Plyz',
+            "L'événement s'est terminé sans dédicace — tu n'as pas été débité(e).",
+            { eventSessionId: ev.id, action: 'event_refunded' }
+          ).catch((e) => console.error('[AutoRelease] push error:', e?.message || e));
+        }
+      } catch (notifErr) {
+        console.error('[AutoRelease] notification:', notifErr?.message || notifErr);
       }
     }
   } catch (e) {
