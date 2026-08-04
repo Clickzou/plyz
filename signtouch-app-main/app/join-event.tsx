@@ -296,6 +296,20 @@ export default function JoinEventScreen() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showAgeModal, setShowAgeModal] = useState(false);
   const [eventPaid, setEventPaid] = useState(false);
+  // Verrou de paiement. Le state seul ne suffisait pas : au retour de Stripe, le
+  // paiement était bien reconnu (setEventPaid(true)), puis handleSearch relançait
+  // une vérification dont le résultat pouvait arriver AVANT que le paiement soit
+  // enregistré côté serveur — et le bouton « Payer » réapparaissait, exposant le
+  // fan à payer DEUX FOIS. Une ref n'est pas soumise aux fermetures obsolètes ni
+  // au cycle de rendu : une fois posée, elle ne se perd plus.
+  const eventPaidRef = useRef(false);
+  const markEventPaid = (eventSessionId?: string) => {
+    eventPaidRef.current = true;
+    setEventPaid(true);
+    if (eventSessionId) {
+      AsyncStorage.setItem(`@event_paid_${eventSessionId}`, 'true').catch(() => {});
+    }
+  };
   const [activeFanEvent, setActiveFanEvent] = useState<ActiveFanEvent | null>(null);
   const signatureClipWidth = useSharedValue(0);
   const signatureOpacity = useSharedValue(0);
@@ -363,9 +377,11 @@ export default function JoinEventScreen() {
           const verifyData = await verifyRes.json();
 
           if (hasEventAccess(verifyData) && verifyData.eventSessionId) {
-            await AsyncStorage.setItem(`@event_paid_${verifyData.eventSessionId}`, 'true');
             await AsyncStorage.removeItem('@event_pending_payment_session');
-            setEventPaid(true);
+            // Verrou posé AVANT le handleSearch differe (plus bas) : sans lui, la
+            // re-verification pouvait conclure « non paye » et faire reapparaitre
+            // le bouton « Payer » alors que la carte venait d'etre debitee.
+            markEventPaid(verifyData.eventSessionId);
             setCode(returnCode);
 
             const pendingPromoId = await AsyncStorage.getItem('@event_pending_promo_id');
@@ -400,7 +416,7 @@ export default function JoinEventScreen() {
         if (pendingSessionId) {
           const localPaid = await AsyncStorage.getItem(`@event_paid_${pendingSessionId}`);
           if (localPaid === 'true') {
-            setEventPaid(true);
+            markEventPaid();
             await AsyncStorage.removeItem('@event_pending_payment_session');
           } else {
             try {
@@ -409,7 +425,7 @@ export default function JoinEventScreen() {
               const checkData = await checkRes.json();
               if (hasEventAccess(checkData)) {
                 await AsyncStorage.setItem(`@event_paid_${pendingSessionId}`, 'true');
-                setEventPaid(true);
+                markEventPaid();
                 await AsyncStorage.removeItem('@event_pending_payment_session');
 
                 // Best-effort : enregistre le token push du fan pour pouvoir le notifier
@@ -649,18 +665,24 @@ export default function JoinEventScreen() {
             setEventPaymentConfig(paymentConfig);
             // Événement payant : vérifier si ce fan a DÉJÀ payé, pour ne pas redemander le paiement
             if (paymentConfig && paymentConfig.priceCents > 0) {
-              const localPaid = await AsyncStorage.getItem(`@event_paid_${sessionResult.session.id}`);
-              if (localPaid === 'true') {
-                setEventPaid(true);
+              // Le verrou prime sur toute nouvelle vérification : un paiement déjà
+              // constaté dans cette session ne doit JAMAIS être remis en cause par
+              // une réponse plus lente ou en échec (sinon on redemande de payer).
+              if (eventPaidRef.current) {
+                markEventPaid(sessionResult.session.id);
               } else {
-                try {
-                  const checkRes = await authedFetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${sessionResult.session.id}&fan_id=${viewerId}`);
-                  const checkData = await checkRes.json();
-                  if (hasEventAccess(checkData)) {
-                    await AsyncStorage.setItem(`@event_paid_${sessionResult.session.id}`, 'true');
-                    setEventPaid(true);
-                  }
-                } catch { /* pas bloquant : on laissera payer si la vérif échoue */ }
+                const localPaid = await AsyncStorage.getItem(`@event_paid_${sessionResult.session.id}`);
+                if (localPaid === 'true') {
+                  markEventPaid(sessionResult.session.id);
+                } else {
+                  try {
+                    const checkRes = await authedFetch(`${STRIPE_SERVER_URL}/api/check-event-access?event_session_id=${sessionResult.session.id}&fan_id=${viewerId}`);
+                    const checkData = await checkRes.json();
+                    if (hasEventAccess(checkData)) {
+                      markEventPaid(sessionResult.session.id);
+                    }
+                  } catch { /* pas bloquant : on laissera payer si la vérif échoue */ }
+                }
               }
             }
           } catch (e) {
@@ -916,7 +938,7 @@ export default function JoinEventScreen() {
             const activeData = await activeRes.json();
             if (activeData?.hasActivePayment) {
               await AsyncStorage.setItem(`@event_paid_${foundSession.id}`, 'true');
-              setEventPaid(true);
+              markEventPaid();
               alreadyPaid = true;
             }
           }
@@ -932,7 +954,7 @@ export default function JoinEventScreen() {
           const checkData = await checkRes.json();
           if (hasEventAccess(checkData)) {
             await AsyncStorage.setItem(`@event_paid_${foundSession.id}`, 'true');
-            setEventPaid(true);
+            markEventPaid();
           } else {
             await handleEventPayment();
             return;
@@ -940,7 +962,7 @@ export default function JoinEventScreen() {
         } catch {
           const storedPaid = await AsyncStorage.getItem(`@event_paid_${foundSession.id}`);
           if (storedPaid === 'true') {
-            setEventPaid(true);
+            markEventPaid();
           } else {
             await handleEventPayment();
             return;
