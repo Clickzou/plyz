@@ -4,6 +4,11 @@
 > - **App Store** : version 1.0 approuvée par Apple le **15/07** et publiée le jour même → https://apps.apple.com/fr/app/id6788523821
 > - **Google Play** : accepté, production 100 %, build du 30/07 (versionCode 11)
 >
+> ### 🚀 MISES À JOUR SOUMISES LE 04/08/2026 (soir) — les deux stores
+> - **Android `15 (1.0.0)`** — AAB déposé à la main sur la Play Console (le `serviceAccountKeyPath` d'`eas.json` est un placeholder, `eas submit` ne marche pas), **en examen**.
+> - **iOS `1.0.1 (17)`** — **en attente de vérification**, jusqu'à 48 h.
+>   ⚠️ **Piège rencontré** : le premier envoi (build 16, version 1.0.0) a été **refusé** — `Invalid Pre-Release Train, the train version '1.0.0' is closed` + `CFBundleShortVersionString must contain a higher version than the previously approved version`. Apple ferme définitivement une voie de version dès qu'elle est approuvée, et le numéro est inscrit DANS le build : il faut donc **bumper `app.json` PUIS recompiler**. Prochains numéros libres : iOS `1.0.2`/build 18, Android `versionCode 17`.
+>
 > ⚠️ **Les deux versions en ligne contiennent le bug de capture** (aucun paiement d'événement dédicace n'est encaissé) et les autres défauts corrigés le 04/08. **La mise à jour des deux stores est donc URGENTE** : builds versionCode 15 / buildNumber iOS 16, déjà réglés dans `app.json`.
 
 > **But de ce fichier :** dès que les apps sont validées (Google Play et/ou App Store), on suit cette liste dans l'ordre pour passer Plyz en **production réelle**. Tant que ce n'est pas fait, l'app est encore en **mode test** (aucun vrai paiement, données de démo, serveur qui peut dormir).
