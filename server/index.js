@@ -7037,7 +7037,7 @@ async function expireVideoCallRequests() {
   try {
     const db = getSupabaseAdmin();
     const { data: expirees } = await db.from('video_call_requests')
-      .select('id, fan_id, status')
+      .select('id, fan_id, celebrity_id, status, price_cents, duration_minutes')
       .in('status', ['pending', 'accepted'])
       .lt('expires_at', new Date().toISOString());
     if (!expirees || !expirees.length) return;
@@ -7053,6 +7053,31 @@ async function expireVideoCallRequests() {
           ? "Ta demande d'appel video a expire : la personnalite n'a pas repondu sous 48 h."
           : "Ton creneau d'appel video a expire faute de reglement sous 48 h.",
         { type: 'video_call_expired', requestId: r.id });
+
+      vcrEmail(r.fan_id, 'Votre demande d\'appel vidéo a expiré',
+        `<p>Bonjour,</p>
+         <p>${r.status === 'pending'
+            ? '<strong>Votre demande d\'appel vidéo privé a expiré</strong> : la personnalité n\'a pas répondu dans les 48 heures.'
+            : '<strong>Votre créneau d\'appel vidéo a expiré</strong> : il n\'a pas été réglé dans les 48 heures.'}</p>
+         <p><strong>Vous n'avez pas été débité.</strong></p>
+         <p>Vous pouvez refaire une demande à tout moment.</p>
+         ${vcrBouton('Voir mes appels vidéo')}
+         <p>— Plyz</p>`);
+
+      // La personnalité aussi doit l'apprendre : une demande laissée sans
+      // réponse est une vente perdue, et rien ne le lui disait jusqu'ici.
+      if (r.status === 'pending') {
+        const prixLisible = r.price_cents
+          ? (r.price_cents / 100).toFixed(2).replace('.', ',') + ' €' : null;
+        vcrEmail(r.celebrity_id, 'Une demande d\'appel vidéo a expiré sans réponse',
+          `<p>Bonjour,</p>
+           <p><strong>Une demande d'appel vidéo privé vient d'expirer</strong> faute de réponse dans les 48 heures.</p>
+           ${prixLisible ? `<p>Prestation concernée : ${r.duration_minutes || 10} minutes · ${prixLisible}.</p>` : ''}
+           <p>Le fan n'a pas été débité et la demande est close. Répondre sous 48 heures,
+              même pour décliner, évite ce genre de rendez-vous manqué.</p>
+           ${vcrBouton('Voir mes appels vidéo')}
+           <p>— Plyz</p>`);
+      }
     }
     console.log('[VCR] ' + expirees.length + ' demande(s) expiree(s)');
   } catch (e) { console.warn('[VCR/expire]', e.message); }
@@ -7546,6 +7571,18 @@ app.post('/api/video-call-requests/:id/refuse', async (req, res) => {
     await vcrNotify(reqRow.fan_id, 'Plyz',
       'Ta demande d\'appel vidéo n\'a pas pu être retenue cette fois.',
       { type: 'video_call_refused', requestId: reqRow.id });
+
+    // Doublure e-mail, comme sur les autres étapes : une notification push ne
+    // sert à rien si l'application n'est pas installée ou si les notifications
+    // ont été refusées. Le fan doit savoir qu'il n'attend plus rien.
+    vcrEmail(reqRow.fan_id, 'Votre demande d\'appel vidéo n\'a pas été retenue',
+      `<p>Bonjour,</p>
+       <p>La personnalité <strong>n'a pas pu retenir votre demande d'appel vidéo privé</strong> cette fois.</p>
+       <p><strong>Vous n'avez pas été débité</strong> : aucun paiement n'avait été prélevé.</p>
+       <p>Vous pouvez faire une nouvelle demande quand vous le souhaitez.</p>
+       ${vcrBouton('Voir mes appels vidéo')}
+       <p>— Plyz</p>`);
+
     res.json({ ok: true });
   } catch (e) {
     console.error('[VCR/refuse]', e.message);
@@ -7736,6 +7773,25 @@ app.post('/api/video-call-requests/:id/cancel', async (req, res) => {
     await vcrNotify(isFan ? reqRow.celebrity_id : reqRow.fan_id, 'Plyz',
       isFan ? 'Le fan a annulé son appel vidéo.' : 'Ton appel vidéo a été annulé par la personnalité. Tu n\'es pas débité.',
       { type: 'video_call_cancelled', requestId: reqRow.id });
+
+    // Une annulation efface un rendez-vous pris : c'est le message qu'il est le
+    // plus grave de manquer. Quelqu'un qui n'a pas l'application ouverte se
+    // presenterait a un appel qui n'aura pas lieu.
+    const quandLisible = reqRow.scheduled_at
+      ? new Date(reqRow.scheduled_at).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' })
+      : null;
+    vcrEmail(isFan ? reqRow.celebrity_id : reqRow.fan_id,
+      'Appel vidéo privé annulé',
+      `<p>Bonjour,</p>
+       <p><strong>${isFan
+          ? 'Le fan a annulé son appel vidéo privé.'
+          : 'La personnalité a annulé votre appel vidéo privé.'}</strong></p>
+       ${quandLisible ? `<p>Le rendez-vous prévu le ${quandLisible} n'aura pas lieu.</p>` : ''}
+       ${isFan
+          ? '<p>Aucun montant n\'a été prélevé au fan.</p>'
+          : `<p><strong>Vous n'êtes pas débité</strong>${refunded ? ' : l\'autorisation bancaire a été libérée.' : '.'}</p>`}
+       ${vcrBouton('Voir mes appels vidéo')}
+       <p>— Plyz</p>`);
 
     res.json({ ok: true, refunded });
   } catch (e) {
