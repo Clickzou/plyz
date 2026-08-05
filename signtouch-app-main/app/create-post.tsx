@@ -138,6 +138,43 @@ export default function CreatePostScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.prefillKind, params.prefillDate, params.prefillTitle, params.prefillBody]);
 
+  // Traitement commun à tous les chemins d'arrivée d'une image : galerie,
+  // appareil photo, ou résultat récupéré après qu'Android a redémarré l'app.
+  const processPickedImage = async (uri: string) => {
+    const compressed = await compressImage(uri);
+
+    setModerating(true);
+    const modResult = await moderateImageOnServer(compressed, session?.access_token);
+    setModerating(false);
+
+    if (!modResult.safe) {
+      showAlert(
+        t('contentRejected' as any) || 'Content Rejected',
+        t('contentRejectedMessage' as any) || 'This image contains inappropriate content and cannot be published. Please choose a different photo.'
+      );
+      return;
+    }
+
+    setImageUri(compressed);
+  };
+
+  // Android peut détruire l'application pendant que l'appareil photo est ouvert,
+  // par manque de mémoire : au retour, l'écran se recharge et la photo est perdue
+  // sans le moindre message. expo-image-picker conserve ce résultat en attente.
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    (async () => {
+      try {
+        const pending: any = await (ImagePicker as any).getPendingResultAsync?.();
+        const first = Array.isArray(pending) ? pending[0] : pending;
+        if (!first || first.canceled) return;
+        const uri = first.assets?.[0]?.uri || first.uri;
+        if (uri) await processPickedImage(uri);
+      } catch { /* aucun résultat en attente : cas normal */ }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const pickImage = async (fromCamera = false) => {
     try {
       let result;
@@ -158,26 +195,32 @@ export default function CreatePostScreen() {
           quality: 0.8,
         });
       }
-      if (!result.canceled && result.assets[0]) {
-        const compressed = await compressImage(result.assets[0].uri);
+      if (result.canceled) return;
 
-        setModerating(true);
-        const modResult = await moderateImageOnServer(compressed, session?.access_token);
-        setModerating(false);
-
-        if (!modResult.safe) {
-          showAlert(
-            t('contentRejected' as any) || 'Content Rejected',
-            t('contentRejectedMessage' as any) || 'This image contains inappropriate content and cannot be published. Please choose a different photo.'
-          );
-          return;
-        }
-
-        setImageUri(compressed);
+      const uri = result.assets?.[0]?.uri;
+      if (!uri) {
+        // L'appareil photo n'a rien rendu alors que l'utilisateur n'a pas annulé.
+        // Sans ce message, la photo disparaissait sans un mot et on croyait que
+        // le bouton ne marchait pas.
+        showAlert(
+          t('error') || 'Erreur',
+          t('photoNotReceived' as any)
+            || "La photo n'a pas pu être récupérée. Réessaie, ou choisis-la depuis ta galerie.",
+        );
+        return;
       }
+
+      await processPickedImage(uri);
     } catch (err) {
       setModerating(false);
       console.error('Image pick error:', err);
+      // Le silence était le vrai défaut : compression ou modération en échec,
+      // l'utilisateur ne voyait rien et pensait que la photo était prise.
+      showAlert(
+        t('error') || 'Erreur',
+        t('photoNotReceived' as any)
+          || "La photo n'a pas pu être ajoutée. Réessaie, ou choisis-la depuis ta galerie.",
+      );
     }
   };
 

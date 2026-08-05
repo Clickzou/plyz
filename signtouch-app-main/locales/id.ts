@@ -1297,6 +1297,7 @@ export default {
   visitWebsite: 'Kunjungi situs',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Laporkan',
+  photoNotReceived: "Foto tidak dapat diambil. Coba lagi atau pilih dari galerimu.",
   feedLoadFailed: "Gagal memuat feed",
   feedLoadFailedHint: "Periksa koneksimu dan coba lagi.",
   createPostTabPost: "Buat postingan",

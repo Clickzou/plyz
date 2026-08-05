@@ -1297,6 +1297,7 @@ export default {
   visitWebsite: 'ওয়েবসাইট ভিজিট করুন',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'রিপোর্ট করুন',
+  photoNotReceived: "ছবিটি পাওয়া যায়নি। আবার চেষ্টা করুন বা গ্যালারি থেকে বেছে নিন।",
   feedLoadFailed: "ফিড লোড করা যায়নি",
   feedLoadFailedHint: "আপনার সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।",
   createPostTabPost: "পোস্ট তৈরি করুন",

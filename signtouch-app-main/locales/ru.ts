@@ -1292,6 +1292,7 @@ export default {
   visitWebsite: 'Посетить сайт',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Пожаловаться',
+  photoNotReceived: "Не удалось получить фото. Попробуйте снова или выберите его из галереи.",
   feedLoadFailed: "Не удалось загрузить ленту",
   feedLoadFailedHint: "Проверьте соединение и попробуйте снова.",
   createPostTabPost: "Создать пост",

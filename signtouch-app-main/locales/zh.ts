@@ -1292,6 +1292,7 @@ export default {
   visitWebsite: '访问网站',
   viewOnWikipedia: '维基百科',
   reportCelebrity: '举报',
+  photoNotReceived: "无法获取照片。请重试，或从相册中选择。",
   feedLoadFailed: "无法加载动态",
   feedLoadFailedHint: "请检查网络连接后重试。",
   createPostTabPost: "发布动态",

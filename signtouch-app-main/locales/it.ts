@@ -1292,6 +1292,7 @@ export default {
   visitWebsite: 'Visita il sito',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Segnala',
+  photoNotReceived: "Impossibile recuperare la foto. Riprova o scegliela dalla galleria.",
   feedLoadFailed: "Impossibile caricare il feed",
   feedLoadFailedHint: "Controlla la connessione e riprova.",
   createPostTabPost: "Crea un post",

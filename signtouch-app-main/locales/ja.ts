@@ -1292,6 +1292,7 @@ export default {
   visitWebsite: 'サイトを訪問',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: '報告',
+  photoNotReceived: "写真を取得できませんでした。もう一度お試しになるか、ギャラリーから選んでください。",
   feedLoadFailed: "フィードを読み込めませんでした",
   feedLoadFailedHint: "接続を確認してもう一度お試しください。",
   createPostTabPost: "投稿を作成",

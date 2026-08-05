@@ -1314,6 +1314,7 @@ export default {
   visitWebsite: 'Visit Website',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Report',
+  photoNotReceived: "The photo could not be retrieved. Try again, or pick it from your gallery.",
   feedLoadFailed: "Could not load the feed",
   feedLoadFailedHint: "Check your connection and try again.",
   retry: "Retry",

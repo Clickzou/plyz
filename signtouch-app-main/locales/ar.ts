@@ -1292,6 +1292,7 @@ export default {
   visitWebsite: 'زيارة الموقع',
   viewOnWikipedia: 'ويكيبيديا',
   reportCelebrity: 'إبلاغ',
+  photoNotReceived: "تعذّر الحصول على الصورة. حاول مرة أخرى أو اخترها من معرض الصور.",
   feedLoadFailed: "تعذّر تحميل الموجز",
   feedLoadFailedHint: "تحقّق من اتصالك وحاول مرة أخرى.",
   createPostTabPost: "إنشاء منشور",
