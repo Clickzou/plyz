@@ -134,7 +134,7 @@ export default function PostDetailScreen() {
           onPress={() => setShowReport(true)}
           activeOpacity={0.7}
         >
-          <Flag size={14} color="#6b7280" />
+          <Flag size={14} color="#ef4444" />
           <Text style={styles.reportText}>
             {t('reportPostAction' as any) || 'Signaler cette publication'}
           </Text>
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     marginTop: 28, paddingVertical: 10,
   },
-  reportText: { color: '#6b7280', fontSize: 13, textDecorationLine: 'underline' },
+  reportText: { color: '#ef4444', fontSize: 13, textDecorationLine: 'underline' },
   emptyText: { color: '#9ca3af', fontSize: 15, marginBottom: 16 },
   backInline: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.08)' },
   backInlineText: { color: '#fff', fontSize: 14, fontWeight: '600' },

@@ -599,7 +599,7 @@ export default function CelebrityDetailScreen() {
           onPress={() => setShowReport(true)}
           activeOpacity={0.7}
         >
-          <Flag size={14} color="#6b7280" />
+          <Flag size={14} color="#ef4444" />
           <Text style={styles.reportText}>
             {t('reportProfileAction' as any) || 'Signaler ce profil'}
           </Text>
@@ -625,7 +625,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     marginTop: 28, paddingVertical: 10,
   },
-  reportText: { color: '#6b7280', fontSize: 13, textDecorationLine: 'underline' },
+  reportText: { color: '#ef4444', fontSize: 13, textDecorationLine: 'underline' },
   backButton: { position: 'absolute', left: 16, top: 16, zIndex: 10, padding: 8, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.4)' },
   followHeroButton: {
     position: 'absolute', right: 16, top: 8, zIndex: 10,
