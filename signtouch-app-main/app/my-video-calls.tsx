@@ -50,6 +50,10 @@ export default function MyVideoCallsScreen() {
   const charger = useCallback(async () => {
     try {
       const res = await authedFetch(`${API_BASE}/api/video-call-requests`);
+      // Un refus du serveur (session expirée, panne) renvoie un JSON valide :
+      // sans ce contrôle, il était lu comme « zéro demande » et l'écran affichait
+      // une liste vide rassurante alors que rien n'avait pu être chargé.
+      if (!res.ok) throw new Error('http_' + res.status);
       const data = await res.json();
       setDemandes(Array.isArray(data.requests) ? data.requests : []);
       setFailed(false);

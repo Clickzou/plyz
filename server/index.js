@@ -7298,20 +7298,57 @@ async function vcrNotify(userId, title, body, data) {
 // simplement balayé la bannière, elle laisse passer une vente sans jamais avoir
 // su qu'on la sollicitait. Envoi en meilleur effort — un SMTP indisponible ne
 // doit jamais faire échouer la demande elle-même, qui est déjà en base.
+// Bouton d'acces direct place au bas des e-mails d'appel video. Il pointe vers
+// une page web, pas vers « plyz:// » : les liens en schema personnalise sont
+// couramment supprimes par les messageries, le bouton serait alors mort. La
+// page rebondit vers l'application et n'affiche elle-meme aucune donnee.
+const VCR_LIEN_APP = 'https://plyz.io/appel-video';
+function vcrBouton(libelle) {
+  return `<p style="margin:22px 0 8px">
+      <a href="${VCR_LIEN_APP}"
+         style="display:inline-block;background:#10b981;color:#ffffff;font-weight:700;
+                font-size:15px;padding:13px 24px;border-radius:12px;text-decoration:none">
+        ${libelle}
+      </a>
+    </p>
+    <p style="color:#6b7280;font-size:12px;margin:0">
+      Ou ouvrez l'application Plyz, rubrique « Événements › Mes appels vidéo privés ».
+    </p>`;
+}
+
+// Envoi en meilleur effort : un SMTP indisponible ne doit jamais faire echouer
+// l'operation, deja enregistree en base. Mais chaque echec laisse desormais une
+// trace dans service_alerts : sans elle, un e-mail jamais parti est
+// indiscernable d'un e-mail parti — c'est ce qui a fait perdre une soiree de
+// test entiere, sans que rien ne le signale nulle part.
 async function vcrEmail(userId, sujet, corpsHtml) {
   try {
     const t = getMailTransporter();
-    if (!t) return;
+    if (!t) {
+      recordServiceAlert('email', 'critical',
+        'E-mail d\'appel video NON envoye : aucun SMTP configure sur le serveur '
+        + '(SMTP_HOST / SMTP_USER / SMTP_PASS manquants) — sujet : ' + sujet);
+      return;
+    }
     const { data: u } = await getSupabaseAdmin().auth.admin.getUserById(userId);
     const dest = u?.user?.email;
-    if (!dest) return;
+    if (!dest) {
+      recordServiceAlert('email', 'warning',
+        'E-mail d\'appel video NON envoye : aucune adresse pour l\'utilisateur ' + userId);
+      return;
+    }
     await t.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: dest,
       subject: sujet,
       html: corpsHtml,
     });
-  } catch (e) { console.warn('[VCR/email]', e.message); }
+    console.log('[VCR/email] envoye a', dest, '-', sujet);
+  } catch (e) {
+    console.warn('[VCR/email]', e.message);
+    recordServiceAlert('email', 'critical',
+      'Echec d\'envoi d\'un e-mail d\'appel video (' + sujet + ') : ' + e.message);
+  }
 }
 
 // Le fan dépose une demande.
@@ -7374,7 +7411,7 @@ app.post('/api/video-call-requests', rateLimit('vcr_create', 10, 60 * 1000), asy
        ${data.fan_message ? `<p>Son message : « ${String(data.fan_message).replace(/[<>]/g, '')} »</p>` : ''}
        <p>Vous avez <strong>48 heures</strong> pour proposer un créneau ou refuser.
           Passé ce délai, la demande expire d'elle-même et le fan n'est pas débité.</p>
-       <p>Rendez-vous dans l'application, rubrique « Mes appels vidéo ».</p>
+       ${vcrBouton('Répondre à la demande')}
        <p>— Plyz</p>`);
 
     res.json({ request: data });
@@ -7477,6 +7514,7 @@ app.post('/api/video-call-requests/:id/accept', async (req, res) => {
        <p>Montant : ${((data.price_cents || 0) / 100).toFixed(2).replace('.', ',')} € pour ${data.duration_minutes || 10} minutes.</p>
        <p>Il vous reste <strong>48 heures</strong> pour confirmer en réglant votre créneau,
           faute de quoi la demande expire et rien ne vous est débité.</p>
+       ${vcrBouton('Régler mon créneau')}
        <p>— Plyz</p>`);
 
     res.json({ request: data });
@@ -7631,6 +7669,7 @@ app.post('/api/video-call-requests/:id/confirm-payment', async (req, res) => {
           — l'application affiche cette heure dans votre fuseau horaire.</p>
        <p>Durée : ${data.duration_minutes || 10} minutes · Montant réglé : ${((data.price_cents || 0) / 100).toFixed(2).replace('.', ',')} €</p>
        <p>Merci d'être présent à l'heure : le fan a payé pour ce créneau.</p>
+       ${vcrBouton('Voir mon rendez-vous')}
        <p>— Plyz</p>`);
 
     res.json({ request: data });
