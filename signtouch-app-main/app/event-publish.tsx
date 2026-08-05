@@ -78,7 +78,7 @@ export default function EventPublishScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   // Garde l'écran ALLUMÉ tant que la célébrité dédicace : sinon l'écran se met en veille,
   // l'app se suspend, et elle ne voit plus en direct les fans qui rejoignent (ni le son in-app).
@@ -888,6 +888,34 @@ export default function EventPublishScreen() {
           )}
         </View>
 
+        {/* Annoncer l'événement dans le fil Actu.
+            Ce bouton n'existait QUE sur l'écran de confirmation affiché juste
+            après la création : une célébrité qui le ratait ne pouvait plus jamais
+            annoncer son événement, qui restait alors introuvable — une dédicace
+            ne se parcourt pas dans le catalogue, elle se rejoint par son code. */}
+        <TouchableOpacity
+          style={styles.publishToFeedButton}
+          onPress={() => {
+            router.push({
+              pathname: '/create-post',
+              params: {
+                prefillKind: 'event',
+                prefillTitle: language === 'fr' ? 'Session Live Dédicace' : 'Live Dedication Session',
+                prefillBody: `${language === 'fr'
+                  ? '✍️ Rejoignez-moi pour une session live dédicace exclusive en direct ! Recevez votre photo personnalisée et signée, rien que pour vous, sur Plyz 💜'
+                  : '✍️ Join me for an exclusive live dedication session! Get your personalized, signed photo just for you, on Plyz 💜'}\n\n${language === 'fr' ? 'Code' : 'Code'}: ${joinCode}`,
+                prefillDate: startsAt || new Date().toISOString(),
+              },
+            });
+          }}
+          activeOpacity={0.85}
+        >
+          <Send size={18} color="#000" />
+          <Text style={styles.publishToFeedText}>
+            {t('publishToFeed' as any) || (language === 'fr' ? 'Publier dans le fil Actu' : 'Publish to Feed')}
+          </Text>
+        </TouchableOpacity>
+
         <Text style={styles.sectionTitle}>{t('selectSigner') || 'Select Signer'}</Text>
         <ScrollView 
           horizontal 
@@ -1311,6 +1339,21 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 20, fontWeight: '700', color: '#fff' },
   statLabel: { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4 },
   statDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
+  publishToFeedButton: {
+    backgroundColor: '#f59e0b',
+    borderRadius: 12,
+    paddingVertical: 14,
+    marginBottom: 16,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 8,
+  },
+  publishToFeedText: {
+    color: '#000',
+    fontSize: 15,
+    fontWeight: '700' as const,
+  },
   earningsCard: {
     backgroundColor: 'rgba(16, 185, 129, 0.08)',
     borderRadius: 12,
