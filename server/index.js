@@ -7290,6 +7290,27 @@ async function vcrNotify(userId, title, body, data) {
   } catch (e) { console.warn('[VCR/notify]', e.message); }
 }
 
+// E-mail en DOUBLURE de la notification push. Une demande d'appel vidéo expire
+// en 48 h : si la célébrité a refusé les notifications, changé de téléphone ou
+// simplement balayé la bannière, elle laisse passer une vente sans jamais avoir
+// su qu'on la sollicitait. Envoi en meilleur effort — un SMTP indisponible ne
+// doit jamais faire échouer la demande elle-même, qui est déjà en base.
+async function vcrEmail(userId, sujet, corpsHtml) {
+  try {
+    const t = getMailTransporter();
+    if (!t) return;
+    const { data: u } = await getSupabaseAdmin().auth.admin.getUserById(userId);
+    const dest = u?.user?.email;
+    if (!dest) return;
+    await t.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: dest,
+      subject: sujet,
+      html: corpsHtml,
+    });
+  } catch (e) { console.warn('[VCR/email]', e.message); }
+}
+
 // Le fan dépose une demande.
 app.post('/api/video-call-requests', rateLimit('vcr_create', 10, 60 * 1000), async (req, res) => {
   try {
@@ -7319,18 +7340,39 @@ app.post('/api/video-call-requests', rateLimit('vcr_create', 10, 60 * 1000), asy
       .in('status', ['pending', 'accepted', 'paid']).maybeSingle();
     if (existing) return res.status(409).json({ error: 'request_already_open', request_id: existing.id });
 
+    // Le tarif est FIGÉ ici, pas lu au moment de payer : entre la demande et le
+    // paiement, la célébrité peut modifier ses prix. Sans cette photographie,
+    // le fan paierait un montant différent de celui qu'on lui a annoncé.
     const { data, error } = await db.from('video_call_requests').insert({
       fan_id: authUser.id,
       celebrity_id,
       fan_message: (message || '').toString().slice(0, 1000) || null,
       status: 'pending',
+      price_cents: pricing.video_call_price_cents,
+      duration_minutes: pricing.video_call_duration_minutes || 10,
+      currency: pricing.currency || 'eur',
       expires_at: new Date(Date.now() + VCR_RESPONSE_DELAY_MS).toISOString(),
     }).select().single();
     if (error) throw error;
 
+    const prixLisible = (pricing.video_call_price_cents / 100).toFixed(2).replace('.', ',') + ' €';
+    const duree = pricing.video_call_duration_minutes || 10;
+
     await vcrNotify(celebrity_id, 'Plyz',
-      '🎥 Un fan te demande un appel vidéo privé. Tu as 48 h pour répondre.',
+      `🎥 Un fan te demande un appel vidéo privé (${duree} min · ${prixLisible}). Tu as 48 h pour répondre.`,
       { type: 'video_call_request', requestId: data.id });
+
+    // Doublure e-mail : la demande expire en 48 h, une notification manquée
+    // coûte une vente.
+    vcrEmail(celebrity_id, 'Un fan vous demande un appel vidéo privé',
+      `<p>Bonjour,</p>
+       <p><strong>Un fan vous demande un appel vidéo privé</strong> sur Plyz.</p>
+       <p>Prestation : ${duree} minutes · ${prixLisible}</p>
+       ${data.fan_message ? `<p>Son message : « ${String(data.fan_message).replace(/[<>]/g, '')} »</p>` : ''}
+       <p>Vous avez <strong>48 heures</strong> pour proposer un créneau ou refuser.
+          Passé ce délai, la demande expire d'elle-même et le fan n'est pas débité.</p>
+       <p>Rendez-vous dans l'application, rubrique « Mes appels vidéo ».</p>
+       <p>— Plyz</p>`);
 
     res.json({ request: data });
   } catch (e) {
@@ -7420,6 +7462,19 @@ app.post('/api/video-call-requests/:id/accept', async (req, res) => {
     await vcrNotify(reqRow.fan_id, 'Plyz',
       '🎉 Ta demande d\'appel vidéo est acceptée ! Confirme en réglant ton créneau, tu as 48 h.',
       { type: 'video_call_accepted', requestId: reqRow.id });
+
+    // L'heure est écrite en UTC ; on l'affiche dans le fuseau de la célébrité,
+    // en rappelant que l'app la convertira dans celui du fan. Un créneau vu
+    // dans le mauvais fuseau, c'est un rendez-vous manqué et un remboursement.
+    vcrEmail(reqRow.fan_id, 'Votre appel vidéo privé est accepté',
+      `<p>Bonjour,</p>
+       <p><strong>Votre demande d'appel vidéo privé a été acceptée.</strong></p>
+       <p>Créneau proposé : ${data.scheduled_at ? new Date(data.scheduled_at).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' }) : 'voir dans l\'application'}
+          — l'application affiche toujours cette heure dans votre propre fuseau horaire.</p>
+       <p>Montant : ${((data.price_cents || 0) / 100).toFixed(2).replace('.', ',')} € pour ${data.duration_minutes || 10} minutes.</p>
+       <p>Il vous reste <strong>48 heures</strong> pour confirmer en réglant votre créneau,
+          faute de quoi la demande expire et rien ne vous est débité.</p>
+       <p>— Plyz</p>`);
 
     res.json({ request: data });
   } catch (e) {
@@ -7549,6 +7604,17 @@ app.post('/api/video-call-requests/:id/confirm-payment', async (req, res) => {
     await vcrNotify(reqRow.celebrity_id, 'Plyz',
       '✅ Ton appel vidéo est confirmé : le fan a réglé son créneau.',
       { type: 'video_call_paid', requestId: reqRow.id });
+
+    // Le rendez-vous est désormais ferme et payé : c'est le message à ne pas
+    // manquer, celui qui engage la célébrité à être présente.
+    vcrEmail(reqRow.celebrity_id, 'Appel vidéo confirmé et payé',
+      `<p>Bonjour,</p>
+       <p><strong>Votre appel vidéo privé est confirmé : le fan a réglé son créneau.</strong></p>
+       <p>Rendez-vous : ${data.scheduled_at ? new Date(data.scheduled_at).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' }) : 'voir dans l\'application'}
+          — l'application affiche cette heure dans votre fuseau horaire.</p>
+       <p>Durée : ${data.duration_minutes || 10} minutes · Montant réglé : ${((data.price_cents || 0) / 100).toFixed(2).replace('.', ',')} €</p>
+       <p>Merci d'être présent à l'heure : le fan a payé pour ce créneau.</p>
+       <p>— Plyz</p>`);
 
     res.json({ request: data });
   } catch (e) {
