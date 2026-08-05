@@ -1,18 +1,20 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { getDateLocale } from '@/utils/dateLocale';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Image,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Calendar, MapPin, CreditCard } from 'lucide-react-native';
+import { ArrowLeft, Calendar, MapPin, CreditCard, Flag } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
+import ReportContentModal from '@/components/ReportContentModal';
 
 export default function PostDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const params = useLocalSearchParams();
+  const [showReport, setShowReport] = useState(false);
 
   const post: any = useMemo(() => {
     try {
@@ -24,6 +26,7 @@ export default function PostDetailScreen() {
 
   const celebrityName = (params.celebrityName as string) || '';
   const celebrityAvatar = (params.celebrityAvatar as string) || '';
+  const celebrityUserId = (params.celebrityUserId as string) || '';
 
   const formatPrice = (cents: number, currency?: string) => {
     const amount = (cents / 100).toFixed(2);
@@ -123,7 +126,29 @@ export default function PostDetailScreen() {
             )}
           </View>
         )}
+
+        {/* Signalement — exigé par les règles Google Play sur le contenu
+            généré par les utilisateurs et par le DSA. */}
+        <TouchableOpacity
+          style={styles.reportRow}
+          onPress={() => setShowReport(true)}
+          activeOpacity={0.7}
+        >
+          <Flag size={14} color="#6b7280" />
+          <Text style={styles.reportText}>
+            {t('reportPostAction' as any) || 'Signaler cette publication'}
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
+
+      <ReportContentModal
+        visible={showReport}
+        onClose={() => setShowReport(false)}
+        targetType={isEvent ? 'event' : 'post'}
+        targetId={post.id ? String(post.id) : null}
+        targetLabel={post.title || celebrityName || null}
+        reportedUserId={celebrityUserId || null}
+      />
 
       {/* Bouton retour */}
       <TouchableOpacity
@@ -168,6 +193,11 @@ const styles = StyleSheet.create({
   },
   eventDetailRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   eventDetailText: { color: '#9ca3af', fontSize: 14 },
+  reportRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    marginTop: 28, paddingVertical: 10,
+  },
+  reportText: { color: '#6b7280', fontSize: 13, textDecorationLine: 'underline' },
   emptyText: { color: '#9ca3af', fontSize: 15, marginBottom: 16 },
   backInline: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.08)' },
   backInlineText: { color: '#fff', fontSize: 14, fontWeight: '600' },

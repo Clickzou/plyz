@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { getDateLocale } from '@/utils/dateLocale';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Image, ActivityIndicator, Alert, TextInput, Linking, Platform,
+  Image, ActivityIndicator, Alert, Linking, Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,12 +13,11 @@ import {
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { useFollow } from '@/contexts/FollowContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { CelebrityDetailSkeleton } from '@/components/SkeletonLoader';
 import { useAutoTranslate } from '@/utils/translation';
-import { authedFetch } from '@/utils/authedFetch';
+import ReportContentModal from '@/components/ReportContentModal';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -70,7 +69,6 @@ export default function CelebrityDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const { user } = useAuth();
   const { isFollowing, toggleFollow } = useFollow();
   const { requireAuth } = useAuthPrompt();
   const [celebrity, setCelebrity] = useState<CelebrityDetail | null>(null);
@@ -78,7 +76,6 @@ export default function CelebrityDetailScreen() {
   const bookingLoading = false;
   const autographLoading = false;
   const [showReport, setShowReport] = useState(false);
-  const [reportReason, setReportReason] = useState('');
   const [activeTab, setActiveTab] = useState<'about' | 'posts'>('about');
   const [events, setEvents] = useState<LiveEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
@@ -262,26 +259,11 @@ export default function CelebrityDetailScreen() {
         post: JSON.stringify(post),
         celebrityName: celebrity?.display_name || celebrity?.stage_name || '',
         celebrityAvatar: celebrity?.avatar_url || '',
+        // Les publications ne portent pas leur auteur : sans cet identifiant, un
+        // signalement de publication ne désignerait aucune célébrité.
+        celebrityUserId: celebrity?.user_id || '',
       },
     } as any);
-  };
-
-  const handleReport = async () => {
-    if (!reportReason.trim()) return;
-    try {
-      await authedFetch(`${API_BASE}/api/report`, {
-        method: 'POST',
-        body: JSON.stringify({
-          celebrity_id: celebrity?.user_id,
-          reason: reportReason.trim(),
-        }),
-      });
-      setShowReport(false);
-      setReportReason('');
-      Alert.alert('', t('reportSubmitted'));
-    } catch (err) {
-      console.error('Report error:', err);
-    }
   };
 
   const getStatusLabel = (status: string) => {
@@ -541,25 +523,6 @@ export default function CelebrityDetailScreen() {
               })
             )}
 
-            <TouchableOpacity style={styles.reportRow} onPress={() => setShowReport(!showReport)}>
-              <Flag size={14} color="#ef4444" />
-              <Text style={styles.reportText}>{t('reportCelebrity')}</Text>
-            </TouchableOpacity>
-            {showReport && (
-              <View style={styles.reportForm}>
-                <TextInput
-                  style={styles.reportInput}
-                  placeholder={t('reportReason')}
-                  placeholderTextColor="#6b7280"
-                  value={reportReason}
-                  onChangeText={setReportReason}
-                  multiline
-                />
-                <TouchableOpacity style={styles.reportSubmit} onPress={handleReport}>
-                  <Text style={styles.reportSubmitText}>Submit</Text>
-                </TouchableOpacity>
-              </View>
-            )}
           </View>
         )}
 
@@ -633,7 +596,29 @@ export default function CelebrityDetailScreen() {
             )}
           </View>
         )}
+
+        {/* Signalement — exigé par les règles Google Play sur le contenu
+            généré par les utilisateurs et par le DSA. */}
+        <TouchableOpacity
+          style={styles.reportRow}
+          onPress={() => setShowReport(true)}
+          activeOpacity={0.7}
+        >
+          <Flag size={14} color="#6b7280" />
+          <Text style={styles.reportText}>
+            {t('reportProfileAction' as any) || 'Signaler ce profil'}
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
+
+      <ReportContentModal
+        visible={showReport}
+        onClose={() => setShowReport(false)}
+        targetType="profile"
+        targetId={celebrity.user_id}
+        targetLabel={celebrity.stage_name}
+        reportedUserId={celebrity.user_id}
+      />
     </View>
   );
 }
@@ -641,6 +626,11 @@ export default function CelebrityDetailScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a1628' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  reportRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    marginTop: 28, paddingVertical: 10,
+  },
+  reportText: { color: '#6b7280', fontSize: 13, textDecorationLine: 'underline' },
   backButton: { position: 'absolute', left: 16, top: 16, zIndex: 10, padding: 8, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.4)' },
   followHeroButton: {
     position: 'absolute', right: 16, top: 8, zIndex: 10,
@@ -716,12 +706,6 @@ const styles = StyleSheet.create({
     color: '#e5e7eb', fontSize: 16, fontWeight: '700', marginTop: 24, marginBottom: 12,
   },
   emptyBlock: { alignItems: 'center', paddingVertical: 24 },
-  reportRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 24, paddingVertical: 8 },
-  reportText: { color: '#ef4444', fontSize: 13 },
-  reportForm: { marginTop: 8, gap: 8 },
-  reportInput: { backgroundColor: 'rgba(255,255,255,0.06)', color: '#fff', borderRadius: 10, padding: 12, fontSize: 14, minHeight: 80, textAlignVertical: 'top' },
-  reportSubmit: { backgroundColor: '#ef4444', padding: 10, borderRadius: 10, alignItems: 'center' },
-  reportSubmitText: { color: '#fff', fontWeight: '600' },
 
   eventCard: {
     backgroundColor: 'rgba(255,255,255,0.05)',
