@@ -11,6 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAutoTranslate } from '@/utils/translation';
 import { authedFetch } from '@/utils/authedFetch';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
+import { rafraichirBadgeAppelsVideo } from '@/utils/videoCallBadge';
 import BottomNav from '@/components/BottomNav';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -86,6 +87,10 @@ export default function MyVideoCallsScreen() {
         return null;
       }
       await charger();
+      // La pastille de l'onglet Événements doit suivre immédiatement :
+      // accepter ou payer fait changer sa couleur, et l'utilisateur revient
+      // souvent en arrière juste après pour vérifier que c'est bien pris.
+      rafraichirBadgeAppelsVideo();
       return data;
     } catch {
       showAlert(t('error') || 'Erreur', t('actionFailed') || 'Action impossible.');

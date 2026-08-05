@@ -1,9 +1,11 @@
-import { View, TouchableOpacity, StyleSheet, Platform, Text } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, TouchableOpacity, StyleSheet, Platform, Text, Animated, Easing } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { Search, Newspaper, Images, Camera, Calendar } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useBadgeAppelsVideo } from '@/utils/videoCallBadge';
 
 export const BOTTOM_NAV_HEIGHT = 70;
 
@@ -16,6 +18,25 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const badge = useBadgeAppelsVideo();
+
+  // Battement lent, uniquement quand c'est à cet utilisateur d'agir. Une
+  // pastille qui pulse en permanence devient un décor qu'on ne voit plus.
+  const pulse = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (!badge.aAgir || badge.total === 0) {
+      pulse.setValue(1);
+      return;
+    }
+    const boucle = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1.25, duration: 700, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 700, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      ])
+    );
+    boucle.start();
+    return () => { boucle.stop(); pulse.setValue(1); };
+  }, [badge.aAgir, badge.total, pulse]);
 
   const handleNavigation = (path: string) => {
     if (Platform.OS !== 'web') {
@@ -92,11 +113,28 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
         onPress={() => handleNavigation('/fan-choice')}
         activeOpacity={0.7}
       >
-        <Calendar
-          size={22}
-          color={isActiveMulti('/fan-choice', '/create-event', '/create-live-session', '/join-event', '/join-live-session', '/event-publish', '/event-gallery', '/event-photo-editor', '/live-session-dashboard', '/add-signer', '/fan-live-view', '/purchase-session') ? '#10b981' : '#ffffff'}
-          strokeWidth={2}
-        />
+        <View>
+          <Calendar
+            size={22}
+            color={isActiveMulti('/fan-choice', '/create-event', '/create-live-session', '/join-event', '/join-live-session', '/event-publish', '/event-gallery', '/event-photo-editor', '/live-session-dashboard', '/add-signer', '/fan-live-view', '/purchase-session') ? '#10b981' : '#ffffff'}
+            strokeWidth={2}
+          />
+          {/* Appels vidéo privés en cours. Sur l'onglet lui-même : autrement il
+              faudrait déjà être sur la page Événements pour apprendre qu'il s'y
+              passe quelque chose. Rouge = rien n'a bougé, vert = c'est validé ;
+              la pastille bat quand c'est à cet utilisateur d'agir — une demande
+              expire en 48 h, un créneau accepté attend son règlement. */}
+          {badge.total > 0 && (
+            <Animated.View
+              style={[
+                styles.badge,
+                { backgroundColor: badge.couleur, transform: [{ scale: pulse }] },
+              ]}
+            >
+              <Text style={styles.badgeText}>{badge.total > 9 ? '9+' : badge.total}</Text>
+            </Animated.View>
+          )}
+        </View>
         <Text style={[styles.navLabel, isActiveMulti('/fan-choice', '/create-event', '/create-live-session', '/join-event', '/join-live-session', '/event-publish', '/event-gallery', '/event-photo-editor', '/live-session-dashboard', '/add-signer', '/fan-live-view', '/purchase-session') && styles.navLabelActive]}>
           {t('eventsTab')}
         </Text>
@@ -163,6 +201,26 @@ const styles = StyleSheet.create({
   cameraButtonActive: {
     backgroundColor: '#059669',
     shadowOpacity: 0.6,
+  },
+  badge: {
+    position: 'absolute',
+    top: -6,
+    right: -11,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    // Liseré sombre : sans lui, la pastille se confond avec l'icône quand elle
+    // la chevauche, surtout en vert sur un onglet actif lui aussi vert.
+    borderWidth: 2,
+    borderColor: '#0f172a',
+  },
+  badgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '800',
   },
   navLabel: {
     color: '#ffffff',

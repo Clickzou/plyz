@@ -8,6 +8,7 @@ import { X, Video, Clock } from 'lucide-react-native';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { showAlert } from '@/utils/alertHelper';
 import { authedFetch } from '@/utils/authedFetch';
+import { rafraichirBadgeAppelsVideo } from '@/utils/videoCallBadge';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -62,6 +63,7 @@ export default function VideoCallRequestModal({
       setMessage('');
       onClose();
       onRequested?.();
+      rafraichirBadgeAppelsVideo();
       showAlert(
         t('vcrSentTitle' as any) || 'Demande envoyée',
         t('vcrSentMsg' as any)
