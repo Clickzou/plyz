@@ -27,6 +27,7 @@ import {
   Tag,
   Calendar,
   Video,
+  Globe,
 } from 'lucide-react-native';
 import BarCodeScannerWrapper, { requestCameraPermissionAsync, isBarCodeScannerAvailable } from '@/components/BarCodeScannerWrapper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -1127,6 +1128,22 @@ export default function JoinLiveSessionScreen() {
         </View>
       </View>
 
+      {/* Le pendant de l'avertissement de présence affiché sur les dédicaces.
+          Sans lui, un fan qui a lu « vous devrez être sur place » sur l'autre
+          écran peut croire que la même contrainte s'applique ici et renoncer. */}
+      <View style={styles.worldwideCard}>
+        <View style={styles.worldwideHeader}>
+          <Globe size={18} color="#34d399" />
+          <Text style={styles.worldwideTitle}>
+            {t('liveWorldwideFanTitle' as any) || "Où que vous soyez dans le monde"}
+          </Text>
+        </View>
+        <Text style={styles.worldwideText}>
+          {t('liveWorldwideFanText' as any) ||
+            "Vous pouvez rejoindre cet appel depuis n'importe quel pays, sans vous déplacer. L'appel passe par internet dans Plyz : pas de numéro de téléphone, pas de frais d'appel international, aucune surtaxe — seule votre connexion internet est utilisée."}
+        </Text>
+      </View>
+
       <Text style={styles.inputLabel}>{t('liveSessionJoinSubtitle')}</Text>
 
       <TextInput
@@ -1435,6 +1452,31 @@ const styles = StyleSheet.create({
   stepContainer: {
     flex: 1,
     padding: 20,
+  },
+  worldwideCard: {
+    backgroundColor: 'rgba(52,211,153,0.10)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(52,211,153,0.32)',
+    padding: 16,
+    marginBottom: 24,
+  },
+  worldwideHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  worldwideTitle: {
+    flex: 1,
+    color: '#34d399',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  worldwideText: {
+    color: 'rgba(255,255,255,0.78)',
+    fontSize: 13,
+    lineHeight: 20,
   },
   howItWorksSection: {
     backgroundColor: 'rgba(255,255,255,0.08)',

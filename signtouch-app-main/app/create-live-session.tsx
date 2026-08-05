@@ -16,7 +16,7 @@ import {
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Clock, Users, DollarSign, Play, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy, Send, Minus, Plus, AlertTriangle, Video } from 'lucide-react-native';
+import { ArrowLeft, Clock, Users, DollarSign, Play, Info, ChevronDown, ChevronUp, Calendar, Bell, Check, Copy, Send, Minus, Plus, AlertTriangle, Video, Globe } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
@@ -648,6 +648,23 @@ export default function CreateLiveSessionScreen() {
           </View>
         </View>
 
+        {/* Le pendant de l'avertissement affiché sur les dédicaces. Les deux
+            formats se ressemblent de l'extérieur ; ici il n'y a aucune contrainte
+            de lieu, et c'est un argument de vente : la célébrité peut annoncer
+            sa session à ses fans du monde entier. */}
+        <View style={styles.worldwideCard}>
+          <View style={styles.worldwideHeader}>
+            <Globe size={18} color="#34d399" />
+            <Text style={styles.worldwideTitle}>
+              {t('liveWorldwideTitle' as any) || 'Vos fans peuvent participer du monde entier'}
+            </Text>
+          </View>
+          <Text style={styles.worldwideText}>
+            {t('liveWorldwideText' as any) ||
+              "Contrairement à une dédicace, qui se passe sur place, un appel vidéo se rejoint depuis n'importe quel pays. L'appel passe par internet dans Plyz : pas de numéro de téléphone, pas de frais d'appel international, aucune surtaxe — seule la connexion internet de chacun est utilisée."}
+          </Text>
+        </View>
+
         <View style={styles.ideasCard}>
           <View style={styles.ideasHeaderRow}>
             <Video size={20} color="#a78bfa" />
@@ -1098,6 +1115,31 @@ export default function CreateLiveSessionScreen() {
 }
 
 const styles = StyleSheet.create({
+  worldwideCard: {
+    backgroundColor: 'rgba(52,211,153,0.10)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(52,211,153,0.32)',
+    padding: 16,
+    marginBottom: 20,
+  },
+  worldwideHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  worldwideTitle: {
+    flex: 1,
+    color: '#34d399',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  worldwideText: {
+    color: 'rgba(255,255,255,0.78)',
+    fontSize: 13,
+    lineHeight: 20,
+  },
   ideasCard: {
     backgroundColor: 'rgba(167,139,250,0.10)',
     borderRadius: 16,
