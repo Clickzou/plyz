@@ -108,6 +108,8 @@ export default function AccountScreen() {
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [, setStripeLoading] = useState(false);
   const [celebrityName, setCelebrityName] = useState('');
+  const [celebrityBio, setCelebrityBio] = useState('');
+  const [bioSaving, setBioSaving] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [earnings, setEarnings] = useState<EarningsData | null>(null);
   const [earningsLoading, setEarningsLoading] = useState(false);
@@ -136,6 +138,19 @@ export default function AccountScreen() {
       }
     })();
   }, [user?.id]);
+
+  // Bio publique : elle vit dans `celebrity_profiles`, pas dans le profil interne
+  // de l'app — c'est le texte que les fans lisent sous le nom sur la fiche.
+  useEffect(() => {
+    (async () => {
+      if (!isCelebrity || !user?.id || !API_BASE) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/celebrity/${user.id}`);
+        const data = await res.json();
+        if (data?.celebrity?.bio) setCelebrityBio(data.celebrity.bio);
+      } catch { /* le champ reste vide, la célébrité peut l'écrire */ }
+    })();
+  }, [user?.id, isCelebrity]);
 
   // Gains célébrité : ne charge que pour les comptes en mode célébrité.
   useEffect(() => {
@@ -482,6 +497,34 @@ export default function AccountScreen() {
     await upsertUserProfile(user.id, { celebrity_name: celebrityName.trim() });
   };
 
+  // La bio passe par le serveur, qui la modère avant publication. On DIT à la
+  // célébrité si l'enregistrement échoue : sans retour, elle croirait son texte
+  // publié alors que ses fans liraient encore l'ancien.
+  const saveCelebrityBio = async () => {
+    if (!user?.id || bioSaving) return;
+    setBioSaving(true);
+    try {
+      const res = await authedFetch(`${API_BASE}/api/update-celebrity-profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bio: celebrityBio.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showAlert(
+          t('error') || 'Erreur',
+          data?.message || t('saveError') || "Ta bio n'a pas pu être enregistrée.",
+        );
+        return;
+      }
+      showAlert('', t('infoSaved') || 'Bio enregistrée');
+    } catch {
+      showAlert(t('error') || 'Erreur', t('saveError') || "Ta bio n'a pas pu être enregistrée.");
+    } finally {
+      setBioSaving(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView style={[styles.content, { paddingTop: insets.top }]}>
@@ -799,6 +842,36 @@ export default function AccountScreen() {
                   placeholder={t('celebrityPublicNamePlaceholder' as any) || 'Votre nom de scène (ex : Alex Martin)'}
                   placeholderTextColor="#6b7280"
                 />
+              </View>
+            )}
+
+            {/* À propos : c'est le texte que les fans lisent sous le nom sur la
+                fiche publique. Il n'était modifiable nulle part une fois
+                l'inscription passée. */}
+            {isCelebrity && (
+              <View style={{ marginTop: 12, marginBottom: 4 }}>
+                <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginBottom: 6, fontWeight: '600' }}>
+                  {t('celebrityAboutYou' as any) || 'À propos de vous'}
+                </Text>
+                <TextInput
+                  style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: '#fff', fontSize: 15, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', minHeight: 90, textAlignVertical: 'top' }}
+                  value={celebrityBio}
+                  onChangeText={setCelebrityBio}
+                  placeholder={t('celebrityAboutYouPlaceholder' as any) || 'Ex : Fondateur et CEO de Plyz'}
+                  placeholderTextColor="#6b7280"
+                  multiline
+                  maxLength={500}
+                />
+                <TouchableOpacity
+                  style={{ marginTop: 8, alignSelf: 'flex-start', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(16,185,129,0.15)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.4)', opacity: bioSaving ? 0.5 : 1 }}
+                  onPress={saveCelebrityBio}
+                  disabled={bioSaving}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ color: '#10b981', fontSize: 14, fontWeight: '700' }}>
+                    {bioSaving ? (t('loading') || 'Enregistrement…') : (t('save') || 'Enregistrer')}
+                  </Text>
+                </TouchableOpacity>
               </View>
             )}
 

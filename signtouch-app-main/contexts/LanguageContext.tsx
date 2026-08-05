@@ -109,9 +109,18 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // If still not found, return the key itself
+    // Clé introuvable dans toutes les langues : on renvoie une chaîne VIDE, pas
+    // le nom de la clé.
+    //
+    // Le code appelle massivement `t('maCle') || 'Texte de repli'`. Or une clé
+    // manquante renvoyait son propre nom — une chaîne non vide — donc le `||` ne
+    // se déclenchait jamais et l'utilisateur lisait « deleteAccountTitle » à la
+    // place de « Supprimer mon compte ». Constaté en production par JC.
+    // En renvoyant une chaîne vide, ces replis fonctionnent enfin comme leurs
+    // auteurs l'avaient prévu.
     if (value === undefined) {
-      return key;
+      if (__DEV__) console.warn('[i18n] clé absente :', key);
+      return '';
     }
 
     // Replace parameters in translation (e.g., {{count}})
