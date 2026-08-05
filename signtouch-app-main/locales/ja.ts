@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: 'サイトを訪問',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: '報告',
+  videoCallRate: "プライベートビデオ通話（1対1）",
+  videoCallRateHint: "ファンはあなたのプロフィールから個別通話をリクエストできます。料金未設定ではリクエストできません。この価格はイベント価格とは別です。",
   spokenLanguages: "話せる言語",
   addLanguage: "言語を追加",
   celebrityAboutYou: "あなたについて",

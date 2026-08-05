@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: 'زيارة الموقع',
   viewOnWikipedia: 'ويكيبيديا',
   reportCelebrity: 'إبلاغ',
+  videoCallRate: "مكالمة فيديو خاصة (وجهًا لوجه)",
+  videoCallRateHint: "يمكن لمعجب أن يطلب مكالمة خاصة من صفحتك. بدون تسعيرة يتعذّر الطلب. هذا السعر مستقل عن أسعار فعالياتك.",
   spokenLanguages: "اللغات المتحدث بها",
   addLanguage: "إضافة لغة",
   celebrityAboutYou: "نبذة عنك",

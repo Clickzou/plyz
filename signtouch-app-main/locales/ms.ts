@@ -1297,6 +1297,8 @@ export default {
   visitWebsite: 'Lawat laman web',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Lapor',
+  videoCallRate: "Panggilan video peribadi (satu dengan satu)",
+  videoCallRateHint: "Peminat boleh meminta panggilan peribadi dari profil anda. Tanpa kadar, permintaan mustahil. Harga ini berasingan daripada harga acara anda.",
   spokenLanguages: "Bahasa dituturkan",
   addLanguage: "Tambah bahasa",
   celebrityAboutYou: "Tentang anda",

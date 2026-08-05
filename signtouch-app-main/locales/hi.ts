@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: 'वेबसाइट देखें',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'रिपोर्ट करें',
+  videoCallRate: "निजी वीडियो कॉल (आमने-सामने)",
+  videoCallRateHint: "कोई प्रशंसक आपकी प्रोफ़ाइल से निजी कॉल का अनुरोध कर सकता है। दर के बिना अनुरोध संभव नहीं। यह क़ीमत आपके इवेंट की क़ीमत से अलग है।",
   spokenLanguages: "बोली जाने वाली भाषाएं",
   addLanguage: "भाषा जोड़ें",
   celebrityAboutYou: "आपके बारे में",

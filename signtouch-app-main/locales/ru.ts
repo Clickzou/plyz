@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: 'Посетить сайт',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Пожаловаться',
+  videoCallRate: "Приватный видеозвонок (один на один)",
+  videoCallRateHint: "Фанат может запросить приватный звонок с вашей страницы. Без тарифа запрос невозможен. Эта цена не зависит от цен ваших событий.",
   spokenLanguages: "Языки",
   addLanguage: "Добавить язык",
   celebrityAboutYou: "О вас",

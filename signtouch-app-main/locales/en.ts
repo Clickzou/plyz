@@ -1314,6 +1314,8 @@ export default {
   visitWebsite: 'Visit Website',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Report',
+  videoCallRate: "Private video call (one-to-one)",
+  videoCallRateHint: "A fan can request a private call from your profile. Without a rate, requests are disabled. This price is separate from your event prices.",
   spokenLanguages: "Spoken languages",
   addLanguage: "Add a language",
   celebrityAboutYou: "About you",

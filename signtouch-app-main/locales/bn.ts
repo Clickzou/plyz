@@ -1297,6 +1297,8 @@ export default {
   visitWebsite: 'ওয়েবসাইট ভিজিট করুন',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'রিপোর্ট করুন',
+  videoCallRate: "ব্যক্তিগত ভিডিও কল (একের সঙ্গে এক)",
+  videoCallRateHint: "একজন ভক্ত আপনার প্রোফাইল থেকে ব্যক্তিগত কলের অনুরোধ করতে পারেন। দর না থাকলে অনুরোধ সম্ভব নয়। এই দাম আপনার ইভেন্টের দাম থেকে আলাদা।",
   spokenLanguages: "কথ্য ভাষা",
   addLanguage: "ভাষা যোগ করুন",
   celebrityAboutYou: "আপনার সম্পর্কে",

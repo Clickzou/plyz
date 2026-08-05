@@ -1312,6 +1312,8 @@ export default {
   visitWebsite: 'Visiter le site',
   viewOnWikipedia: 'Wikipédia',
   reportCelebrity: 'Signaler',
+  videoCallRate: "Appel vidéo privé (tête-à-tête)",
+  videoCallRateHint: "Un fan peut te demander un appel privé depuis ta fiche. Sans tarif renseigné, la demande est impossible. Ce prix est indépendant de celui de tes événements.",
   spokenLanguages: "Langues parlées",
   addLanguage: "Ajouter une langue",
   celebrityAboutYou: "À propos de vous",

@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: '访问网站',
   viewOnWikipedia: '维基百科',
   reportCelebrity: '举报',
+  videoCallRate: "私人视频通话（一对一）",
+  videoCallRateHint: "粉丝可从你的主页申请私人通话。未设置价格则无法申请。此价格与你的活动价格互不相干。",
   spokenLanguages: "掌握的语言",
   addLanguage: "添加语言",
   celebrityAboutYou: "关于你",

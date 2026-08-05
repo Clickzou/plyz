@@ -113,6 +113,10 @@ export default function AccountScreen() {
   // Langues parlées : [{ code, level 1..5 }]. Autant de langues que souhaité.
   const [spokenLanguages, setSpokenLanguages] = useState<{ code: string; level: number }[]>([]);
   const [showAddLanguage, setShowAddLanguage] = useState(false);
+  // Tarif de l'appel vidéo privé demandé par un fan. DISTINCT du prix fixé à la
+  // création d'un événement : ce sont deux prestations différentes.
+  const [videoPriceEur, setVideoPriceEur] = useState('');
+  const [videoDuration, setVideoDuration] = useState('10');
   const [isVerified, setIsVerified] = useState(false);
   const [earnings, setEarnings] = useState<EarningsData | null>(null);
   const [earningsLoading, setEarningsLoading] = useState(false);
@@ -154,6 +158,9 @@ export default function AccountScreen() {
         if (Array.isArray(data?.celebrity?.spoken_languages)) {
           setSpokenLanguages(data.celebrity.spoken_languages);
         }
+        const p = data?.celebrity?.pricing;
+        if (p?.video_call_price_cents > 0) setVideoPriceEur(String(p.video_call_price_cents / 100));
+        if (p?.video_call_duration_minutes) setVideoDuration(String(p.video_call_duration_minutes));
       } catch { /* le champ reste vide, la célébrité peut l'écrire */ }
     })();
   }, [user?.id, isCelebrity]);
@@ -523,7 +530,27 @@ export default function AccountScreen() {
         );
         return;
       }
-      showAlert('', t('infoSaved') || 'Bio enregistrée');
+
+      // Tarif de l'appel vidéo, dans le même geste : tout ce qui définit l'offre
+      // publique se règle au même endroit.
+      const euros = parseFloat(String(videoPriceEur).replace(',', '.'));
+      const minutes = parseInt(videoDuration, 10);
+      const pricingRes = await authedFetch(`${API_BASE}/api/upsert-celebrity-pricing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          video_call_price_cents: Number.isFinite(euros) && euros > 0 ? Math.round(euros * 100) : 0,
+          video_call_unit: 'session',
+          video_call_duration_minutes: Number.isFinite(minutes) && minutes > 0 ? minutes : 10,
+          currency: 'eur',
+        }),
+      });
+      if (!pricingRes.ok) {
+        showAlert(t('error') || 'Erreur', t('saveError') || "Ton tarif n'a pas pu être enregistré.");
+        return;
+      }
+
+      showAlert('', t('infoSaved') || 'Enregistré');
     } catch {
       showAlert(t('error') || 'Erreur', t('saveError') || "Ta bio n'a pas pu être enregistrée.");
     } finally {
@@ -934,8 +961,47 @@ export default function AccountScreen() {
                   </View>
                 )}
 
+                {/* Appel vidéo privé à la demande. Ce tarif n'a RIEN à voir avec
+                    le prix saisi à la création d'un événement : ce sont deux
+                    prestations distinctes, et le prix peut différer. */}
+                <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 18, marginBottom: 4, fontWeight: '600' }}>
+                  {t('videoCallRate' as any) || 'Appel vidéo privé (tête-à-tête)'}
+                </Text>
+                <Text style={{ color: '#6b7280', fontSize: 12, marginBottom: 8, lineHeight: 17 }}>
+                  {t('videoCallRateHint' as any)
+                    || "Un fan peut te demander un appel privé depuis ta fiche. Sans tarif renseigné, la demande est impossible. Ce prix est indépendant de celui de tes événements."}
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#6b7280', fontSize: 12, marginBottom: 4 }}>
+                      {t('settingsVideoPrice' as any) || 'Prix (€)'}
+                    </Text>
+                    <TextInput
+                      style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: '#fff', fontSize: 15, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
+                      value={videoPriceEur}
+                      onChangeText={setVideoPriceEur}
+                      placeholder="50"
+                      placeholderTextColor="#6b7280"
+                      keyboardType="decimal-pad"
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#6b7280', fontSize: 12, marginBottom: 4 }}>
+                      {t('settingsDuration' as any) || 'Durée (min)'}
+                    </Text>
+                    <TextInput
+                      style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: '#fff', fontSize: 15, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
+                      value={videoDuration}
+                      onChangeText={setVideoDuration}
+                      placeholder="10"
+                      placeholderTextColor="#6b7280"
+                      keyboardType="number-pad"
+                    />
+                  </View>
+                </View>
+
                 <TouchableOpacity
-                  style={{ marginTop: 8, alignSelf: 'flex-start', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(16,185,129,0.15)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.4)', opacity: bioSaving ? 0.5 : 1 }}
+                  style={{ marginTop: 14, alignSelf: 'flex-start', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(16,185,129,0.15)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.4)', opacity: bioSaving ? 0.5 : 1 }}
                   onPress={saveCelebrityBio}
                   disabled={bioSaving}
                   activeOpacity={0.8}
