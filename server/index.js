@@ -7607,6 +7607,139 @@ app.post('/api/video-call-requests/:id/cancel', async (req, res) => {
 });
 
 
+// ─────────────────────────────────────────────────────────────────────────────
+// CATALOGUE PUBLIC DES ÉVÉNEMENTS (toutes personnalités confondues)
+//
+// Pourquoi : jusqu'ici un fan ne pouvait DÉCOUVRIR aucun événement. Il lui
+// fallait un code, un QR, ou tomber sur l'annonce dans le fil. Aucun écran ne
+// permettait de parcourir ce qui se passe — ce qui limitait Plyz à un outil de
+// QR code au lieu d'une place de marché.
+//
+// Renvoie les DEUX types (dédicaces et sessions vidéo) dans un format commun,
+// avec le nom et la photo de la personnalité, filtrables par recherche et par
+// période.
+// ─────────────────────────────────────────────────────────────────────────────
+app.get('/api/events', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { search, when } = req.query;
+    const maintenant = Date.now();
+    const nowIso = new Date(maintenant).toISOString();
+
+    // 1) Sessions vidéo
+    const { data: lives } = await db
+      .from('live_sessions')
+      .select('id, celebrity_id, celebrity_name, code, status, price_cents, duration_minutes, max_slots, slots_used, scheduled_at, cover_photo_url, created_at')
+      .in('status', ['scheduled', 'waiting', 'active'])
+      .order('scheduled_at', { ascending: true, nullsFirst: false })
+      .limit(200);
+
+    // 2) Dédicaces
+    const { data: dedis } = await db
+      .from('event_sessions')
+      .select('id, title, join_code, status, starts_at, ends_at, location, created_by')
+      .in('status', ['scheduled', 'live', 'active', 'waiting'])
+      .order('starts_at', { ascending: true })
+      .limit(200);
+
+    // Noms et photos des personnalités, en une seule requête plutôt qu'une par
+    // événement : la liste doit rester rapide même avec des centaines d'entrées.
+    const ids = [...new Set([
+      ...(lives || []).map(l => l.celebrity_id),
+      ...(dedis || []).map(d => d.created_by),
+    ].filter(Boolean))];
+    const { data: profils } = ids.length
+      ? await db.from('celebrity_profiles')
+          .select('user_id, stage_name, is_listed')
+          .in('user_id', ids)
+      : { data: [] };
+    const { data: avatars } = ids.length
+      ? await db.from('profiles').select('id, avatar_url').in('id', ids)
+      : { data: [] };
+    const nomDe = (id) => (profils || []).find(p => p.user_id === id);
+    const avatarDe = (id) => (avatars || []).find(p => p.id === id)?.avatar_url || null;
+
+    const evenements = [];
+
+    for (const l of (lives || [])) {
+      const prof = nomDe(l.celebrity_id);
+      // Une personnalité masquée ne doit pas réapparaître par la liste
+      // d'événements — sinon masquer un profil ne servirait à rien.
+      if (!prof || prof.is_listed === false) continue;
+      const debut = l.scheduled_at ? Date.parse(l.scheduled_at) : null;
+      evenements.push({
+        id: l.id,
+        kind: 'video',
+        title: l.celebrity_name ? `${l.celebrity_name} — Session Live Vidéo` : 'Session Live Vidéo',
+        celebrity_id: l.celebrity_id,
+        celebrity_name: prof.stage_name || l.celebrity_name,
+        celebrity_avatar: avatarDe(l.celebrity_id),
+        code: l.code,
+        status: l.status,
+        price_cents: l.price_cents || 0,
+        duration_minutes: l.duration_minutes,
+        slots_left: (l.max_slots || 0) - (l.slots_used || 0),
+        scheduled_at: l.scheduled_at,
+        cover_photo_url: l.cover_photo_url,
+        is_live: l.status === 'active' || l.status === 'waiting',
+        starts_in_ms: debut ? debut - maintenant : null,
+      });
+    }
+
+    for (const d of (dedis || [])) {
+      const prof = nomDe(d.created_by);
+      if (!prof || prof.is_listed === false) continue;
+      // Un créneau déjà terminé n'a plus sa place dans un catalogue.
+      if (d.ends_at && Date.parse(d.ends_at) < maintenant) continue;
+      const debut = d.starts_at ? Date.parse(d.starts_at) : null;
+      evenements.push({
+        id: d.id,
+        kind: 'dedication',
+        title: d.title || 'Séance de dédicace',
+        celebrity_id: d.created_by,
+        celebrity_name: prof.stage_name,
+        celebrity_avatar: avatarDe(d.created_by),
+        code: d.join_code,
+        status: d.status,
+        price_cents: 0,
+        location: d.location,
+        scheduled_at: d.starts_at,
+        ends_at: d.ends_at,
+        is_live: d.status === 'live' || d.status === 'active'
+          || (!!debut && debut <= maintenant && (!d.ends_at || Date.parse(d.ends_at) > maintenant)),
+        starts_in_ms: debut ? debut - maintenant : null,
+      });
+    }
+
+    // Filtres
+    let liste = evenements;
+    if (search && String(search).trim()) {
+      const q = String(search).trim().toLowerCase();
+      liste = liste.filter(e =>
+        (e.celebrity_name || '').toLowerCase().includes(q)
+        || (e.title || '').toLowerCase().includes(q)
+        || (e.location || '').toLowerCase().includes(q));
+    }
+    if (when === 'ongoing') liste = liste.filter(e => e.is_live);
+    else if (when === 'upcoming') liste = liste.filter(e => !e.is_live);
+
+    // En cours d'abord, puis par date la plus proche : ce qu'un fan peut
+    // rejoindre MAINTENANT doit être en tête.
+    liste.sort((a, b) => {
+      if (a.is_live !== b.is_live) return a.is_live ? -1 : 1;
+      const da = a.scheduled_at ? Date.parse(a.scheduled_at) : Infinity;
+      const dbb = b.scheduled_at ? Date.parse(b.scheduled_at) : Infinity;
+      return da - dbb;
+    });
+
+    res.json({ events: liste, total: liste.length, generated_at: nowIso });
+  } catch (e) {
+    console.error('[Events catalogue]', e.message);
+    res.status(500).json({ error: 'Service temporarily unavailable' });
+  }
+});
+
+
 const EXPO_PORT = 19006;
 const PORT = 5000;
 
