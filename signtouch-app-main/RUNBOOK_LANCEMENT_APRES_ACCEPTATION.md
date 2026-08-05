@@ -230,10 +230,12 @@ Certaines fonctionnalités sont **natives** → présentes seulement après un n
 JC veut être averti de **tout problème** sur **jc@clickzou.fr**.
 
 - [ ] **Sentry** (crashes + erreurs JS app/web/serveur) : installer/activer juste avant la mise en ligne (~30 min), DSN dans `EXPO_PUBLIC_SENTRY_DSN`. ⚠️ Sentry ne capture PAS un bouton inerte sans exception → garder le bouton **« Signaler un problème »** en complément.
-- [ ] **UptimeRobot** (serveur down/saturé) : à configurer APRÈS le Deployment prod (sinon fausses alertes).
+- [ ] **UptimeRobot** (serveur down/saturé) : à configurer APRÈS le Deployment prod (sinon fausses alertes). **Seul point réellement restant de cette section.**
 - [ ] **Stripe** : vérifier que les notifications paiements/litiges/virements arrivent sur le bon email.
-- [ ] **Supabase** : ⚠️ le **Spend cap = ENABLED** coupe l'app (read-only) si le quota est dépassé → **reconsidérer en prod** (désactiver + mettre une alerte budget pour ne pas couper l'app en cas de succès). Activer la **MFA** du compte Supabase.
-- [ ] **Alertes intrusion** (IDOR/webhook forgé/admin refusé) + dashboard : nécessite Republish Replit.
+- [x] **Supabase spend cap** — ✅ **VÉRIFIÉ LE 05/08 : « Spend cap is disabled »**. Le risque décrit ici (base basculée en lecture seule un jour d'affluence) **n'existe pas**. Aucune option d'alerte de budget n'est proposée par Supabase : le seul indicateur est la ligne « Projected Costs » de la page Billing de l'organisation. À titre de repère, projection au 05/08 = **54,89 $/mois** (25 $ de plan Pro + le compute de 4 projets : palladia, radici, Signtouch V2, clickzou-site-web — 3 d'entre eux ne concernent pas Plyz). MFA Supabase : déjà activée le 29/06.
+- [x] **Alertes intrusion + dashboard** — ✅ **DÉPLOYÉ ET VÉRIFIÉ DE BOUT EN BOUT LE 05/08.** Test réel : un appel de `/api/admin/health-check` sans droits renvoie 403, crée une ligne `service_alerts` (`security` / `critical`, avec IP et URL) **et** envoie l'e-mail à jc@clickzou.fr — reçu **6 secondes plus tard**, depuis `noreply@plyz.io`, donc la chaîne **survit à la migration ZeptoMail du 03/08**. Le lien vers https://plyz.io/tableaustats est présent dans le mail.
+  ⚠️ **5 alertes restent ouvertes** dans le dashboard, toutes issues des tests (3 × accès admin refusé les 04-05/08, 2 × `billing` du 07/07 « paiement capturé sans facture »). À marquer résolues pour repartir d'un tableau propre — sinon un vrai incident se noiera dedans.
+  💡 Méthode de vérification, réutilisable : lire la table en REST avec la `SUPABASE_SERVICE_ROLE_KEY` du `.env` racine (`GET /rest/v1/service_alerts?order=created_at.desc`).
 
 ---
 
