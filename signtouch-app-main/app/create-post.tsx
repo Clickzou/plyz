@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
   Image, Platform, ScrollView, ActivityIndicator, KeyboardAvoidingView,
@@ -123,6 +123,20 @@ export default function CreatePostScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [moderating, setModerating] = useState(false);
+
+  // Les paramètres de navigation ne sont pas toujours disponibles au PREMIER
+  // rendu : les valeurs passées à useState ci-dessus restent alors figées sur
+  // leurs défauts. C'est ainsi qu'une annonce d'événement se retrouvait publiée
+  // en simple « post » sans date — donc sans horaire affiché aux fans, et
+  // invisible dans l'onglet Événements. On réapplique dès que les paramètres
+  // arrivent, sans jamais écraser ce que la célébrité a déjà saisi.
+  useEffect(() => {
+    if (params.prefillKind === 'event') setKind('event');
+    if (params.prefillDate && !eventDate) setEventDate(String(params.prefillDate));
+    if (params.prefillTitle && !title) setTitle(String(params.prefillTitle));
+    if (params.prefillBody && !body) setBody(String(params.prefillBody));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.prefillKind, params.prefillDate, params.prefillTitle, params.prefillBody]);
 
   const pickImage = async (fromCamera = false) => {
     try {

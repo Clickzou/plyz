@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { getDateLocale } from '@/utils/dateLocale';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   Image, Platform, Modal, TextInput, KeyboardAvoidingView,
@@ -436,7 +437,15 @@ export default function ActivityScreen() {
           >
             <Calendar size={14} color="#f59e0b" />
             <Text style={styles.eventDateText}>
-              {t('eventOn')} {new Date(item.event_date).toLocaleDateString()}
+              {/* Date ET heure : un fan qui lit « le 15 août » sans horaire ne
+                  peut pas savoir s'il doit être là le matin ou le soir. */}
+              {t('eventOn')} {new Date(item.event_date).toLocaleDateString(getDateLocale(), {
+                weekday: 'short', day: 'numeric', month: 'long',
+              })}
+              {' — '}
+              {new Date(item.event_date).toLocaleTimeString(getDateLocale(), {
+                hour: '2-digit', minute: '2-digit',
+              })}
             </Text>
           </TouchableOpacity>
         )}
