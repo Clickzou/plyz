@@ -1155,6 +1155,8 @@ export default {
   galleryPermission: 'অনুগ্রহ করে আপনার ফটো গ্যালারিতে অ্যাক্সেসের অনুমতি দিন।',
   celVerifiedStripe: "পেমেন্ট সক্রিয়",
   celActivatePayments: 'আমার পেমেন্ট চালু করুন',
+  celManagePayments: "আমার পেমেন্ট",
+  celPaymentsBlockedWarning: "আপনার পেমেন্ট সক্রিয় না হওয়া পর্যন্ত ভক্তরা আপনার কাছ থেকে কিছুই কিনতে পারবেন না: অটোগ্রাফ নয়, ভিডিও কল নয়, সশুল্ক লাইভ সেশনও নয়।",
   profilePhotoTitle: 'প্রোফাইল ছবি',
   profilePhotoChooseSource: 'আপনি কীভাবে আপনার ছবি যোগ করতে চান?',
   celebrityModeVerified: 'সেলিব্রিটি মোড — যাচাইকৃত',

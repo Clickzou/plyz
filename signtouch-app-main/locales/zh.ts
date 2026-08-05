@@ -1150,6 +1150,8 @@ export default {
   galleryPermission: '请授予访问您相册的权限。',
   celVerifiedStripe: "支付已激活",
   celActivatePayments: '启用收款',
+  celManagePayments: "我的收款",
+  celPaymentsBlockedWarning: "在你的收款未启用之前，粉丝无法向你购买任何东西：签名、视频通话、付费直播场次都不行。",
   profilePhotoTitle: '头像照片',
   profilePhotoChooseSource: '您想如何添加照片？',
   celebrityModeVerified: '名人模式 — 已验证',

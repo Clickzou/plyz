@@ -1150,6 +1150,8 @@ export default {
   galleryPermission: 'يرجى السماح بالوصول إلى معرض الصور الخاص بك.',
   celVerifiedStripe: "تم تفعيل المدفوعات",
   celActivatePayments: 'تفعيل مدفوعاتي',
+  celManagePayments: "مدفوعاتي",
+  celPaymentsBlockedWarning: "ما دامت مدفوعاتك غير مفعّلة، لا يستطيع معجبوك شراء أي شيء منك: لا توقيع، ولا مكالمة فيديو، ولا جلسة مباشرة مدفوعة.",
   profilePhotoTitle: 'صورة الملف الشخصي',
   profilePhotoChooseSource: 'كيف تريد إضافة صورتك؟',
   celebrityModeVerified: 'وضع المشاهير — تم التحقق',

@@ -1013,12 +1013,21 @@ export default function AccountScreen() {
               </View>
             )}
 
-            {/* Célébrité dont les paiements ne sont pas encore activés (aucun compte Stripe
-                OU compte pas encore validé) : un seul bouton qui ouvre la fenêtre Stripe,
-                laquelle gère aussi bien la création que la reprise d'un onboarding. */}
-            {isCelebrity && !stripeChargesEnabled && (
+            {/* Accès aux paiements, TOUJOURS présent pour une célébrité.
+                Auparavant il n'apparaissait que si l'app estimait les paiements
+                inactifs : dès qu'elle jugeait le contraire — à tort comme à
+                raison — l'entrée disparaissait et il ne restait plus aucun
+                chemin pour reprendre un onboarding abandonné, changer d'IBAN ou
+                simplement vérifier son état. Une célébrité restait invendable
+                sans comprendre pourquoi. Seule l'apparence change désormais
+                selon l'état ; l'accès, lui, ne disparaît jamais. */}
+            {isCelebrity && (
               <TouchableOpacity
-                style={[styles.activateButton, { backgroundColor: '#f59e0b' }]}
+                style={[
+                  styles.activateButton,
+                  { backgroundColor: stripeChargesEnabled ? 'rgba(16,185,129,0.15)' : '#f59e0b' },
+                  stripeChargesEnabled && { borderWidth: 1, borderColor: 'rgba(16,185,129,0.4)' },
+                ]}
                 onPress={() => {
                   if (Platform.OS !== 'web') {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -1027,12 +1036,24 @@ export default function AccountScreen() {
                 }}
                 activeOpacity={0.8}
               >
-                <CreditCard size={18} color="#000" />
-                <Text style={styles.activateButtonText}>
-                  {t('celActivatePayments' as any) || 'Activer mes paiements'}
+                <CreditCard size={18} color={stripeChargesEnabled ? '#10b981' : '#000'} />
+                <Text style={[styles.activateButtonText, stripeChargesEnabled && { color: '#10b981' }]}>
+                  {stripeChargesEnabled
+                    ? (t('celManagePayments' as any) || 'Mes paiements')
+                    : (t('celActivatePayments' as any) || 'Activer mes paiements')}
                 </Text>
-                <ArrowRight size={18} color="#000" />
+                <ArrowRight size={18} color={stripeChargesEnabled ? '#10b981' : '#000'} />
               </TouchableOpacity>
+            )}
+
+            {/* Dit franchement ce que l'inactivité implique. « Paiements non
+                activés » n'alarme personne ; « personne ne peut rien vous
+                acheter » se comprend tout de suite. */}
+            {isCelebrity && !stripeChargesEnabled && (
+              <Text style={{ color: '#fbbf24', fontSize: 13, lineHeight: 19, marginTop: -6, marginBottom: 14, paddingHorizontal: 4 }}>
+                {t('celPaymentsBlockedWarning' as any) ||
+                  "Tant que vos paiements ne sont pas activés, vos fans ne peuvent rien vous acheter : ni dédicace, ni appel vidéo, ni séance live payante."}
+              </Text>
             )}
 
             {!isCelebrity && (

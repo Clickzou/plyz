@@ -1150,6 +1150,8 @@ export default {
   galleryPermission: 'कृपया अपनी फोटो गैलरी तक पहुंच की अनुमति दें।',
   celVerifiedStripe: "भुगतान सक्रिय",
   celActivatePayments: 'मेरे भुगतान सक्रिय करें',
+  celManagePayments: "मेरे भुगतान",
+  celPaymentsBlockedWarning: "जब तक आपके भुगतान सक्रिय नहीं होते, आपके प्रशंसक आपसे कुछ नहीं खरीद सकते: न ऑटोग्राफ, न वीडियो कॉल, न सशुल्क लाइव सत्र।",
   profilePhotoTitle: 'प्रोफ़ाइल फ़ोटो',
   profilePhotoChooseSource: 'आप अपनी फ़ोटो कैसे जोड़ना चाहते हैं?',
   celebrityModeVerified: 'सेलिब्रिटी मोड — सत्यापित',

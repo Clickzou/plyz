@@ -1150,6 +1150,8 @@ export default {
   galleryPermission: 'フォトギャラリーへのアクセスを許可してください。',
   celVerifiedStripe: "お支払い有効化",
   celActivatePayments: '支払いを有効にする',
+  celManagePayments: "自分の入金設定",
+  celPaymentsBlockedWarning: "入金設定が有効になるまで、ファンはあなたから何も購入できません。サインもビデオ通話も有料ライブも利用できません。",
   profilePhotoTitle: 'プロフィール写真',
   profilePhotoChooseSource: '写真をどのように追加しますか？',
   celebrityModeVerified: '有名人モード — 認証済み',

@@ -29,6 +29,8 @@ export default {
   celOnboardActivated: 'Activated',
   celVerifiedStripe: "Payments activated",
   celActivatePayments: 'Enable my payments',
+  celManagePayments: "My payments",
+  celPaymentsBlockedWarning: "Until your payments are activated, your fans cannot buy anything from you: no signing, no video call, no paid live session.",
   profilePhotoTitle: 'Profile photo',
   profilePhotoChooseSource: 'How would you like to add your photo?',
   celebrityModeVerified: 'Celebrity Mode — Verified',

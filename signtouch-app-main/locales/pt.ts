@@ -1150,6 +1150,8 @@ export default {
   galleryPermission: 'Por favor, autorize o acesso à sua galeria de fotos.',
   celVerifiedStripe: "Pagamentos ativados",
   celActivatePayments: 'Ativar os meus pagamentos',
+  celManagePayments: "Os meus pagamentos",
+  celPaymentsBlockedWarning: "Enquanto os seus pagamentos não estiverem ativados, os seus fãs não podem comprar nada: nem dedicatória, nem videochamada, nem sessão ao vivo paga.",
   profilePhotoTitle: 'Foto de perfil',
   profilePhotoChooseSource: 'Como queres adicionar a tua foto?',
   celebrityModeVerified: 'Modo Celebridade — Verificado',

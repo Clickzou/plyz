@@ -1155,6 +1155,8 @@ export default {
   galleryPermission: 'Sila benarkan akses ke galeri foto anda.',
   celVerifiedStripe: "Pembayaran Diaktifkan",
   celActivatePayments: 'Aktifkan pembayaran saya',
+  celManagePayments: "Pembayaran saya",
+  celPaymentsBlockedWarning: "Selagi pembayaran anda belum diaktifkan, peminat tidak boleh membeli apa-apa daripada anda: tandatangan, panggilan video, mahupun sesi langsung berbayar.",
   profilePhotoTitle: 'Foto profil',
   profilePhotoChooseSource: 'Bagaimana anda mahu menambah foto?',
   celebrityModeVerified: 'Mod Selebriti — Disahkan',

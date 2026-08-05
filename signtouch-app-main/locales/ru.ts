@@ -1150,6 +1150,8 @@ export default {
   galleryPermission: 'Пожалуйста, разрешите доступ к вашей фотогалерее.',
   celVerifiedStripe: "Платежи активированы",
   celActivatePayments: 'Включить платежи',
+  celManagePayments: "Мои платежи",
+  celPaymentsBlockedWarning: "Пока платежи не активированы, поклонники не могут ничего у вас купить: ни автограф, ни видеозвонок, ни платную прямую сессию.",
   profilePhotoTitle: 'Фото профиля',
   profilePhotoChooseSource: 'Как вы хотите добавить фото?',
   celebrityModeVerified: 'Режим знаменитости — Подтверждён',

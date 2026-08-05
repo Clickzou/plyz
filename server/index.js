@@ -388,6 +388,17 @@ function profilesJoin() {
   return `profiles(${profilesSelect()})`;
 }
 
+// celebrity_pricing partage sa clé primaire avec celebrity_profiles : la relation
+// est un-à-un, et PostgREST renvoie donc un OBJET, pas un tableau. Le code lisait
+// `celebrity_pricing?.[0]`, qui vaut undefined sur un objet : les tarifs pourtant
+// enregistrés étaient jetés à chaque lecture, et l'app n'affichait aucun bouton
+// d'achat — sans le moindre message d'erreur. On accepte les deux formes, pour
+// rester juste si la relation redevenait un-à-plusieurs.
+function firstPricing(v) {
+  if (!v) return null;
+  return Array.isArray(v) ? (v[0] || null) : v;
+}
+
 const MOCK_CELEBS = {
   'mock-001': { stage_name: 'Zinedine Zidane', pricing: { video_call_price_cents: 15000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 5000, currency: 'eur' } },
   'mock-002': { stage_name: 'Marion Cotillard', pricing: { video_call_price_cents: 20000, video_call_unit: 'session', video_call_duration_minutes: 10, autograph_price_cents: 7500, currency: 'eur' } },
@@ -3802,7 +3813,7 @@ app.get('/api/celebrities', async (req, res) => {
         occupations: c.wikidata_occupations || [],
         types: c.wikidata_types || [],
         popularity_score: c.popularity_score,
-        pricing: c.celebrity_pricing?.[0] || null,
+        pricing: firstPricing(c.celebrity_pricing),
       })),
       total: count || 0,
       page: page_num,
@@ -3974,7 +3985,7 @@ app.get('/api/celebrity/:id', async (req, res, next) => {
         ...publicCeleb,
         avatar_url: celeb.profiles?.avatar_url || celeb.wikidata_image_url,
         display_name: celeb.profiles?.display_name,
-        pricing: celeb.celebrity_pricing?.[0] || null,
+        pricing: firstPricing(celeb.celebrity_pricing),
         posts: recentPosts || [],
         completed_sessions: totalBookings || 0,
         // L'identifiant du compte Stripe reste masqué (cf. ci-dessus), mais l'app
@@ -4414,7 +4425,7 @@ app.post('/api/book-video', rateLimit('book-video', 20, 60 * 1000), async (req, 
       }
     }
 
-    const pricing = celeb.celebrity_pricing?.[0];
+    const pricing = firstPricing(celeb.celebrity_pricing);
     if (!pricing || pricing.video_call_price_cents <= 0) {
       return res.status(400).json({ error: 'Celebrity has not set video call pricing' });
     }
@@ -4564,7 +4575,7 @@ app.post('/api/autograph', rateLimit('autograph', 20, 60 * 1000), async (req, re
       return res.status(400).json({ error: 'Celebrity has not set up payments' });
     }
 
-    const pricing = celeb.celebrity_pricing?.[0];
+    const pricing = firstPricing(celeb.celebrity_pricing);
     if (!pricing || pricing.autograph_price_cents <= 0) {
       return res.status(400).json({ error: 'Celebrity has not set autograph pricing' });
     }
