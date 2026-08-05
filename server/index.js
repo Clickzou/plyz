@@ -6969,10 +6969,37 @@ async function releaseEndedSessionHolds() {
   } catch (e) { console.warn('[HoldSweep]', e.message); }
 }
 
+
+// Expiration des demandes d'appel video : 48 h sans reponse de la celebrite, ou
+// 48 h sans pre-paiement apres acceptation. Sans ca, un fan attend indefiniment
+// une reponse qui ne viendra jamais, sans jamais savoir qu'il attend pour rien.
+async function expireVideoCallRequests() {
+  try {
+    const db = getSupabaseAdmin();
+    const { data: expirees } = await db.from('video_call_requests')
+      .select('id, fan_id, status')
+      .in('status', ['pending', 'accepted'])
+      .lt('expires_at', new Date().toISOString());
+    if (!expirees || !expirees.length) return;
+    await db.from('video_call_requests')
+      .update({ status: 'expired', updated_at: new Date().toISOString() })
+      .in('id', expirees.map(r => r.id));
+    for (const r of expirees) {
+      await vcrNotify(r.fan_id, 'Plyz',
+        r.status === 'pending'
+          ? "Ta demande d'appel video a expire : la personnalite n'a pas repondu sous 48 h."
+          : "Ton creneau d'appel video a expire faute de reglement sous 48 h.",
+        { type: 'video_call_expired', requestId: r.id });
+    }
+    console.log('[VCR] ' + expirees.length + ' demande(s) expiree(s)');
+  } catch (e) { console.warn('[VCR/expire]', e.message); }
+}
+
 async function runNotificationWorker() {
   try {
     await processPushOutbox();
     await reconcileMissingInvoices();
+    await expireVideoCallRequests();
     await releaseEndedSessionHolds();
     await sendEventReminders('event_sessions', 'starts_at', 'created_by', 'event_paid_fans', 'event_session_id', 'title', 'Ton événement', 60, 'reminded_1h');
     await sendEventReminders('event_sessions', 'starts_at', 'created_by', 'event_paid_fans', 'event_session_id', 'title', 'Ton événement', 2, 'reminded_2m');
@@ -7173,6 +7200,363 @@ setTimeout(() => {
   releaseExpiredEventPreauths();
   setInterval(releaseExpiredEventPreauths, AUTO_RELEASE_INTERVAL_MS);
 }, 2 * 60 * 1000);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEMANDES D'APPEL VIDÉO PRIVÉ EN TÊTE-À-TÊTE (à l'initiative du fan)
+//
+// Parcours : le fan demande → la célébrité accepte en proposant un créneau →
+// le fan confirme en pré-payant → l'appel a lieu.
+//
+// Conformité : le tête-à-tête temps réel peut encaisser hors achat intégré
+// (Apple 3.1.3(d)). La même règle impose l'achat intégré dès que PLUSIEURS fans
+// assistent en même temps — ne jamais ouvrir ceci à des spectateurs.
+//
+// Règles décidées avec JC : 48 h pour répondre (et 48 h pour pré-payer après
+// acceptation), annulation possible des deux côtés, remboursement intégral
+// jusqu'à 24 h avant le créneau ; la célébrité rembourse intégralement quel que
+// soit le délai.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const VCR_RESPONSE_DELAY_MS = 48 * 60 * 60 * 1000;
+const VCR_FREE_CANCEL_MS = 24 * 60 * 60 * 1000;
+
+// Notification par la file d'attente plutôt qu'un envoi direct : un push perdu
+// parce que le destinataire était hors ligne doit pouvoir être renvoyé.
+async function vcrNotify(userId, title, body, data) {
+  try {
+    await getSupabaseAdmin().from('push_outbox').insert({
+      user_id: userId, title: title || 'Plyz', body, data: data || {}, sent: false,
+    });
+  } catch (e) { console.warn('[VCR/notify]', e.message); }
+}
+
+// Le fan dépose une demande.
+app.post('/api/video-call-requests', rateLimit('vcr_create', 10, 60 * 1000), async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const db = getSupabaseAdmin();
+    const { celebrity_id, message } = req.body || {};
+    if (!celebrity_id) return res.status(400).json({ error: 'celebrity_id required' });
+    if (String(celebrity_id) === String(authUser.id)) {
+      return res.status(400).json({ error: 'cannot_request_self' });
+    }
+
+    // Sans tarif renseigné, la célébrité ne peut pas être sollicitée : le fan
+    // recevrait une proposition sans prix, et la célébrité devrait l'inventer
+    // au moment d'accepter.
+    const { data: pricing } = await db.from('celebrity_pricing')
+      .select('video_call_price_cents, video_call_duration_minutes, currency')
+      .eq('user_id', celebrity_id).maybeSingle();
+    if (!pricing || !pricing.video_call_price_cents || pricing.video_call_price_cents <= 0) {
+      return res.status(400).json({ error: 'celebrity_has_no_video_rate' });
+    }
+
+    // Une seule demande en cours à la fois par couple fan/célébrité : sinon un
+    // fan impatient en envoie cinq et la célébrité doit trier.
+    const { data: existing } = await db.from('video_call_requests')
+      .select('id, status').eq('fan_id', authUser.id).eq('celebrity_id', celebrity_id)
+      .in('status', ['pending', 'accepted', 'paid']).maybeSingle();
+    if (existing) return res.status(409).json({ error: 'request_already_open', request_id: existing.id });
+
+    const { data, error } = await db.from('video_call_requests').insert({
+      fan_id: authUser.id,
+      celebrity_id,
+      fan_message: (message || '').toString().slice(0, 1000) || null,
+      status: 'pending',
+      expires_at: new Date(Date.now() + VCR_RESPONSE_DELAY_MS).toISOString(),
+    }).select().single();
+    if (error) throw error;
+
+    await vcrNotify(celebrity_id, 'Plyz',
+      '🎥 Un fan te demande un appel vidéo privé. Tu as 48 h pour répondre.',
+      { type: 'video_call_request', requestId: data.id });
+
+    res.json({ request: data });
+  } catch (e) {
+    console.error('[VCR/create]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Liste des demandes de l'utilisateur courant, qu'il soit fan ou célébrité.
+app.get('/api/video-call-requests', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const db = getSupabaseAdmin();
+    const { data, error } = await db.from('video_call_requests')
+      .select('*')
+      .or(`fan_id.eq.${authUser.id},celebrity_id.eq.${authUser.id}`)
+      .order('created_at', { ascending: false }).limit(100);
+    if (error) throw error;
+
+    // On joint les noms/photos pour que l'écran de suivi n'ait pas à faire
+    // une requête par ligne.
+    const ids = [...new Set((data || []).flatMap(r => [r.fan_id, r.celebrity_id]))];
+    const { data: celebs } = await db.from('celebrity_profiles')
+      .select('user_id, stage_name').in('user_id', ids);
+    const { data: profs } = await db.from('profiles')
+      .select('id, display_name, avatar_url').in('id', ids);
+    const nameOf = (id) => (celebs || []).find(c => c.user_id === id)?.stage_name
+      || (profs || []).find(p => p.id === id)?.display_name || 'Utilisateur';
+    const avatarOf = (id) => (profs || []).find(p => p.id === id)?.avatar_url || null;
+
+    res.json({
+      requests: (data || []).map(r => ({
+        ...r,
+        role: String(r.fan_id) === String(authUser.id) ? 'fan' : 'celebrity',
+        fan_name: nameOf(r.fan_id),
+        fan_avatar: avatarOf(r.fan_id),
+        celebrity_name: nameOf(r.celebrity_id),
+        celebrity_avatar: avatarOf(r.celebrity_id),
+      })),
+    });
+  } catch (e) {
+    console.error('[VCR/list]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// La célébrité accepte et propose un créneau.
+app.post('/api/video-call-requests/:id/accept', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const db = getSupabaseAdmin();
+    const { scheduled_at } = req.body || {};
+    if (!scheduled_at) return res.status(400).json({ error: 'scheduled_at required' });
+
+    const when = new Date(scheduled_at);
+    if (Number.isNaN(when.getTime())) return res.status(400).json({ error: 'invalid_date' });
+    if (when.getTime() < Date.now()) return res.status(400).json({ error: 'date_in_past' });
+
+    const { data: reqRow } = await db.from('video_call_requests')
+      .select('*').eq('id', req.params.id).maybeSingle();
+    if (!reqRow) return res.status(404).json({ error: 'not_found' });
+    if (String(reqRow.celebrity_id) !== String(authUser.id)) return res.status(403).json({ error: 'forbidden' });
+    if (reqRow.status !== 'pending') return res.status(409).json({ error: 'not_pending', status: reqRow.status });
+
+    // Tarif FIGÉ ici : si la célébrité change son prix ensuite, le fan paiera
+    // bien celui qui lui a été annoncé.
+    const { data: pricing } = await db.from('celebrity_pricing')
+      .select('video_call_price_cents, video_call_duration_minutes, currency')
+      .eq('user_id', authUser.id).maybeSingle();
+    if (!pricing || !pricing.video_call_price_cents) {
+      return res.status(400).json({ error: 'no_video_rate' });
+    }
+
+    const { data, error } = await db.from('video_call_requests').update({
+      status: 'accepted',
+      scheduled_at: when.toISOString(),
+      price_cents: pricing.video_call_price_cents,
+      currency: pricing.currency || 'eur',
+      duration_minutes: pricing.video_call_duration_minutes || 10,
+      expires_at: new Date(Date.now() + VCR_RESPONSE_DELAY_MS).toISOString(),
+      updated_at: new Date().toISOString(),
+    }).eq('id', reqRow.id).select().single();
+    if (error) throw error;
+
+    await vcrNotify(reqRow.fan_id, 'Plyz',
+      '🎉 Ta demande d\'appel vidéo est acceptée ! Confirme en réglant ton créneau, tu as 48 h.',
+      { type: 'video_call_accepted', requestId: reqRow.id });
+
+    res.json({ request: data });
+  } catch (e) {
+    console.error('[VCR/accept]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// La célébrité décline.
+app.post('/api/video-call-requests/:id/refuse', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const db = getSupabaseAdmin();
+    const { data: reqRow } = await db.from('video_call_requests')
+      .select('*').eq('id', req.params.id).maybeSingle();
+    if (!reqRow) return res.status(404).json({ error: 'not_found' });
+    if (String(reqRow.celebrity_id) !== String(authUser.id)) return res.status(403).json({ error: 'forbidden' });
+    if (reqRow.status !== 'pending') return res.status(409).json({ error: 'not_pending' });
+
+    await db.from('video_call_requests')
+      .update({ status: 'refused', updated_at: new Date().toISOString() })
+      .eq('id', reqRow.id);
+    await vcrNotify(reqRow.fan_id, 'Plyz',
+      'Ta demande d\'appel vidéo n\'a pas pu être retenue cette fois.',
+      { type: 'video_call_refused', requestId: reqRow.id });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[VCR/refuse]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Le fan pré-paie : autorisation Stripe, capture différée jusqu'à l'appel.
+app.post('/api/video-call-requests/:id/checkout', rateLimit('vcr_checkout', 20, 60 * 1000), async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const db = getSupabaseAdmin();
+    const { data: reqRow } = await db.from('video_call_requests')
+      .select('*').eq('id', req.params.id).maybeSingle();
+    if (!reqRow) return res.status(404).json({ error: 'not_found' });
+    if (String(reqRow.fan_id) !== String(authUser.id)) return res.status(403).json({ error: 'forbidden' });
+    if (reqRow.status !== 'accepted') return res.status(409).json({ error: 'not_accepted', status: reqRow.status });
+
+    // 🔒 Le compte destinataire est TOUJOURS rechargé depuis la base, jamais
+    // repris du corps de la requête (faille IDOR corrigée lors de l'audit).
+    const { data: celeb } = await db.from('celebrity_profiles')
+      .select('stripe_account_id, stripe_charges_enabled, stage_name')
+      .eq('user_id', reqRow.celebrity_id).maybeSingle();
+    if (!celeb || !celeb.stripe_account_id || !celeb.stripe_charges_enabled) {
+      return res.status(400).json({ error: 'celebrity_cannot_receive_payments' });
+    }
+
+    const priceCents = reqRow.price_cents;
+    const feeCents = Math.round(priceCents * 0.15);
+    const stripe = getStripe();
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      line_items: [{
+        price_data: {
+          currency: reqRow.currency || 'eur',
+          product_data: {
+            name: `Appel vidéo privé avec ${celeb.stage_name || 'la personnalité'}`,
+            description: `${reqRow.duration_minutes || 10} minutes en tête-à-tête`,
+          },
+          unit_amount: priceCents,
+        },
+        quantity: 1,
+      }],
+      metadata: {
+        video_call_request_id: reqRow.id,
+        fan_id: reqRow.fan_id,
+        celebrity_id: reqRow.celebrity_id,
+      },
+      payment_intent_data: {
+        capture_method: 'manual',
+        application_fee_amount: feeCents,
+        transfer_data: { destination: celeb.stripe_account_id },
+      },
+      success_url: `${req.headers.origin || 'https://plyz.io'}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&video_call_request_id=${reqRow.id}`,
+      cancel_url: `${req.headers.origin || 'https://plyz.io'}/payment-cancel`,
+    });
+
+    await db.from('video_call_requests')
+      .update({ checkout_session_id: session.id, updated_at: new Date().toISOString() })
+      .eq('id', reqRow.id);
+
+    res.json({ url: session.url, checkout_session_id: session.id });
+  } catch (e) {
+    console.error('[VCR/checkout]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Confirmation du pré-paiement, VÉRIFIÉE auprès de Stripe. On ne croit jamais
+// le client sur parole : sans cette vérification, il suffirait d'appeler cet
+// endpoint pour marquer sa demande payée sans avoir rien réglé.
+app.post('/api/video-call-requests/:id/confirm-payment', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const db = getSupabaseAdmin();
+    const { data: reqRow } = await db.from('video_call_requests')
+      .select('*').eq('id', req.params.id).maybeSingle();
+    if (!reqRow) return res.status(404).json({ error: 'not_found' });
+    if (String(reqRow.fan_id) !== String(authUser.id)) return res.status(403).json({ error: 'forbidden' });
+    if (reqRow.status === 'paid') return res.json({ request: reqRow });
+    if (!reqRow.checkout_session_id) return res.status(400).json({ error: 'no_checkout_session' });
+
+    const stripe = getStripe();
+    const session = await stripe.checkout.sessions.retrieve(reqRow.checkout_session_id, {
+      expand: ['payment_intent'],
+    });
+    const pi = session.payment_intent;
+    const authorized = pi && (pi.status === 'requires_capture' || pi.status === 'succeeded');
+    if (!authorized) return res.status(409).json({ error: 'not_authorized_yet', pi_status: pi && pi.status });
+
+    const { data, error } = await db.from('video_call_requests').update({
+      status: 'paid',
+      payment_intent_id: pi.id,
+      expires_at: null,
+      updated_at: new Date().toISOString(),
+    }).eq('id', reqRow.id).select().single();
+    if (error) throw error;
+
+    await vcrNotify(reqRow.celebrity_id, 'Plyz',
+      '✅ Ton appel vidéo est confirmé : le fan a réglé son créneau.',
+      { type: 'video_call_paid', requestId: reqRow.id });
+
+    res.json({ request: data });
+  } catch (e) {
+    console.error('[VCR/confirm]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Annulation par l'une ou l'autre partie.
+app.post('/api/video-call-requests/:id/cancel', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'unauthorized' });
+    const db = getSupabaseAdmin();
+    const { data: reqRow } = await db.from('video_call_requests')
+      .select('*').eq('id', req.params.id).maybeSingle();
+    if (!reqRow) return res.status(404).json({ error: 'not_found' });
+
+    const isFan = String(reqRow.fan_id) === String(authUser.id);
+    const isCeleb = String(reqRow.celebrity_id) === String(authUser.id);
+    if (!isFan && !isCeleb) return res.status(403).json({ error: 'forbidden' });
+    if (['cancelled', 'refused', 'expired', 'completed'].includes(reqRow.status)) {
+      return res.status(409).json({ error: 'already_closed', status: reqRow.status });
+    }
+
+    // Règle convenue : le fan annule librement jusqu'à 24 h avant ; la célébrité
+    // annule quand elle veut. Dans les deux cas l'autorisation est relâchée et
+    // le fan n'est jamais débité — c'est la position la plus défendable face à
+    // une contestation bancaire.
+    if (isFan && reqRow.status === 'paid' && reqRow.scheduled_at) {
+      const reste = new Date(reqRow.scheduled_at).getTime() - Date.now();
+      if (reste < VCR_FREE_CANCEL_MS) {
+        return res.status(409).json({ error: 'too_late_to_cancel', hours_left: Math.max(0, Math.round(reste / 3600000)) });
+      }
+    }
+
+    let refunded = false;
+    if (reqRow.payment_intent_id) {
+      try {
+        // Annuler l'autorisation, pas rembourser : rien n'a encore été prélevé.
+        await getStripe().paymentIntents.cancel(reqRow.payment_intent_id);
+        refunded = true;
+      } catch (e) {
+        console.warn('[VCR/cancel] libération autorisation:', e.message);
+        recordServiceAlert('billing', 'critical',
+          'Autorisation NON libérée sur annulation d\'appel vidéo : ' + reqRow.id + ' — ' + e.message);
+      }
+    }
+
+    await db.from('video_call_requests').update({
+      status: 'cancelled',
+      cancelled_by: isFan ? 'fan' : 'celebrity',
+      cancelled_at: new Date().toISOString(),
+      refunded,
+      updated_at: new Date().toISOString(),
+    }).eq('id', reqRow.id);
+
+    await vcrNotify(isFan ? reqRow.celebrity_id : reqRow.fan_id, 'Plyz',
+      isFan ? 'Le fan a annulé son appel vidéo.' : 'Ton appel vidéo a été annulé par la personnalité. Tu n\'es pas débité.',
+      { type: 'video_call_cancelled', requestId: reqRow.id });
+
+    res.json({ ok: true, refunded });
+  } catch (e) {
+    console.error('[VCR/cancel]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 
 const EXPO_PORT = 19006;
 const PORT = 5000;
