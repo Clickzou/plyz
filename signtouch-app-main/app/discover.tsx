@@ -39,18 +39,6 @@ interface Celebrity {
 // ⚠️ Personnalités FICTIVES uniquement (aucun nom ni photo de vraie personne) —
 // simple repli d'affichage si l'API est momentanément indisponible. Ne JAMAIS y mettre
 // de vraie célébrité (droit à l'image + refus store). Le vrai contenu vient de l'API.
-const DEMO_CELEBRITIES: Celebrity[] = [
-  { user_id: 'mock-001', stage_name: 'Rafael Mendez', bio: 'Milieu de terrain international. Champion en titre.', avatar_url: null, display_name: 'Rafael Mendez', stripe_verified: true, official_verified: true, occupations: ['footballer'], types: ['sports'], popularity_score: 98, pricing: { video_call_price_cents: 15000, autograph_price_cents: 5000, currency: 'eur' } },
-  { user_id: 'mock-003', stage_name: 'Léo Farel', bio: 'Attaquant vedette. Ballon de la saison.', avatar_url: null, display_name: 'Léo Farel', stripe_verified: true, official_verified: true, occupations: ['footballer'], types: ['sports'], popularity_score: 97, pricing: { video_call_price_cents: 25000, autograph_price_cents: 10000, currency: 'eur' } },
-  { user_id: 'mock-005', stage_name: 'Adrien Vasquez', bio: "Acteur de cinéma. Révélation de l'année.", avatar_url: null, display_name: 'Adrien Vasquez', stripe_verified: true, official_verified: true, occupations: ['actor'], types: ['entertainment'], popularity_score: 93, pricing: { video_call_price_cents: 22000, autograph_price_cents: 8000, currency: 'eur' } },
-  { user_id: 'mock-002', stage_name: 'Clara Belmont', bio: 'Actrice et productrice primée.', avatar_url: null, display_name: 'Clara Belmont', stripe_verified: true, official_verified: true, occupations: ['actress'], types: ['entertainment'], popularity_score: 92, pricing: { video_call_price_cents: 20000, autograph_price_cents: 7500, currency: 'eur' } },
-  { user_id: 'mock-004', stage_name: 'Nora Lys', bio: 'Chanteuse pop-soul en tournée européenne.', avatar_url: null, display_name: 'Nora Lys', stripe_verified: true, official_verified: true, occupations: ['singer'], types: ['music'], popularity_score: 90, pricing: { video_call_price_cents: 18000, autograph_price_cents: 6000, currency: 'eur' } },
-  { user_id: 'mock-006', stage_name: 'Malik Dorsay', bio: 'Champion olympique. Plusieurs titres mondiaux.', avatar_url: null, display_name: 'Malik Dorsay', stripe_verified: true, official_verified: true, occupations: ['athlete'], types: ['sports'], popularity_score: 88, pricing: { video_call_price_cents: 12000, autograph_price_cents: 4000, currency: 'eur' } },
-  { user_id: 'mock-007', stage_name: 'Elsa Marchand', bio: 'Actrice, plusieurs longs-métrages à succès.', avatar_url: null, display_name: 'Elsa Marchand', stripe_verified: false, official_verified: true, occupations: ['actress'], types: ['entertainment'], popularity_score: 85, pricing: { video_call_price_cents: 18000, autograph_price_cents: 6500, currency: 'eur' } },
-  { user_id: 'mock-008', stage_name: 'Neo Vibe', bio: 'DJ et producteur électro. Millions d\'auditeurs mensuels.', avatar_url: null, display_name: 'Neo Vibe', stripe_verified: true, official_verified: false, occupations: ['DJ'], types: ['music'], popularity_score: 82, pricing: { video_call_price_cents: 15000, autograph_price_cents: 5000, currency: 'eur' } },
-];
-// Photos IA générées (FAL), fictives — nommées par user_id.
-DEMO_CELEBRITIES.forEach((c) => { c.avatar_url = `https://qoitixdpcqlzgyusbgdx.supabase.co/storage/v1/object/public/events/mock-avatars/${c.user_id}.jpg`; });
 
 const SORT_OPTIONS = [
   { key: 'popular', label: 'sortPopularity' },
@@ -65,7 +53,10 @@ export default function DiscoverScreen() {
   const { t } = useLanguage();
   const { isFollowing, toggleFollow, followedCelebrities } = useFollow();
   const { requireAuth } = useAuthPrompt();
-  const [celebrities, setCelebrities] = useState<Celebrity[]>(DEMO_CELEBRITIES);
+  // Démarrage à vide : le catalogue s'ouvrait sur 8 célébrités inventées,
+  // affichées AVANT la réponse du serveur — donc à chaque ouverture, pour tout
+  // le monde. C'est ce que JC voyait encore après le nettoyage de la base.
+  const [celebrities, setCelebrities] = useState<Celebrity[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'all' | 'following'>('all');
@@ -104,21 +95,14 @@ export default function DiscoverScreen() {
         throw new Error('No data from API');
       }
     } catch (err) {
-      console.warn('Using demo celebrities:', err);
-      let demo = [...DEMO_CELEBRITIES];
-      if (search.trim()) {
-        const s = search.trim().toLowerCase();
-        demo = demo.filter(c => c.stage_name.toLowerCase().includes(s));
-      }
-      switch (sort) {
-        case 'name_asc': demo.sort((a, b) => a.stage_name.localeCompare(b.stage_name)); break;
-        case 'name_desc': demo.sort((a, b) => b.stage_name.localeCompare(a.stage_name)); break;
-        case 'newest': break;
-        default: demo.sort((a, b) => b.popularity_score - a.popularity_score);
-      }
-      setCelebrities(demo);
+      // Plus de repli sur des célébrités fictives : elles portaient les badges
+      // « Officiel » et « Stripe vérifié » et n'ont aucun compte de paiement —
+      // un fan qui tente de réserver se heurte à un échec. C'est le motif exact
+      // du refus Google de juillet (« Broken Functionality »).
+      console.warn('[Découvrir] chargement impossible :', err);
+      setCelebrities([]);
       setTotalPages(1);
-      setTotal(demo.length);
+      setTotal(0);
       setPage(1);
     } finally {
       setLoading(false);
