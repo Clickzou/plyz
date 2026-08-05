@@ -7041,9 +7041,12 @@ async function expireVideoCallRequests() {
       .in('status', ['pending', 'accepted'])
       .lt('expires_at', new Date().toISOString());
     if (!expirees || !expirees.length) return;
-    await db.from('video_call_requests')
+    const { error: errExpire } = await db.from('video_call_requests')
       .update({ status: 'expired', updated_at: new Date().toISOString() })
       .in('id', expirees.map(r => r.id));
+    // Prevenir d'une expiration qui n'a pas ete ecrite serait pire que se taire :
+    // le fan recevrait le message a chaque passage du worker, toutes les minutes.
+    if (errExpire) throw errExpire;
     for (const r of expirees) {
       await vcrNotify(r.fan_id, 'Plyz',
         r.status === 'pending'
@@ -7495,9 +7498,13 @@ app.post('/api/video-call-requests/:id/refuse', async (req, res) => {
     if (String(reqRow.celebrity_id) !== String(authUser.id)) return res.status(403).json({ error: 'forbidden' });
     if (reqRow.status !== 'pending') return res.status(409).json({ error: 'not_pending' });
 
-    await db.from('video_call_requests')
+    // L'erreur est vérifiée : sans ça, un refus qui échoue en base renvoyait
+    // quand même « ok », la demande restait en attente et le fan comme la
+    // célébrité voyaient deux choses différentes.
+    const { error: errRefus } = await db.from('video_call_requests')
       .update({ status: 'refused', updated_at: new Date().toISOString() })
       .eq('id', reqRow.id);
+    if (errRefus) throw errRefus;
     await vcrNotify(reqRow.fan_id, 'Plyz',
       'Ta demande d\'appel vidéo n\'a pas pu être retenue cette fois.',
       { type: 'video_call_refused', requestId: reqRow.id });
@@ -7559,9 +7566,19 @@ app.post('/api/video-call-requests/:id/checkout', rateLimit('vcr_checkout', 20, 
       cancel_url: `${req.headers.origin || 'https://plyz.io'}/payment-cancel`,
     });
 
-    await db.from('video_call_requests')
+    // Point critique : sans cet identifiant en base, le fan paie mais la
+    // confirmation échoue ensuite sur « no_checkout_session » — argent bloqué
+    // en autorisation, demande jamais marquée payée. On refuse d'ouvrir le
+    // paiement plutôt que de l'encaisser dans le vide.
+    const { error: errSession } = await db.from('video_call_requests')
       .update({ checkout_session_id: session.id, updated_at: new Date().toISOString() })
       .eq('id', reqRow.id);
+    if (errSession) {
+      recordServiceAlert('billing', 'critical',
+        'Session de paiement NON enregistrée sur l\'appel vidéo ' + reqRow.id + ' — ' + errSession.message);
+      try { await stripe.checkout.sessions.expire(session.id); } catch (_) {}
+      return res.status(500).json({ error: 'checkout_not_saved' });
+    }
 
     res.json({ url: session.url, checkout_session_id: session.id });
   } catch (e) {
@@ -7664,13 +7681,18 @@ app.post('/api/video-call-requests/:id/cancel', async (req, res) => {
       }
     }
 
-    await db.from('video_call_requests').update({
+    // L'erreur est vérifiée : une annulation qui échouait en base répondait
+    // quand même « ok ». L'écran affichait « annulé », la demande restait
+    // ouverte, et toute nouvelle demande était refusée pour « demande déjà en
+    // cours » — sans que rien n'explique pourquoi.
+    const { error: errAnnul } = await db.from('video_call_requests').update({
       status: 'cancelled',
       cancelled_by: isFan ? 'fan' : 'celebrity',
       cancelled_at: new Date().toISOString(),
       refunded,
       updated_at: new Date().toISOString(),
     }).eq('id', reqRow.id);
+    if (errAnnul) throw errAnnul;
 
     await vcrNotify(isFan ? reqRow.celebrity_id : reqRow.fan_id, 'Plyz',
       isFan ? 'Le fan a annulé son appel vidéo.' : 'Ton appel vidéo a été annulé par la personnalité. Tu n\'es pas débité.',

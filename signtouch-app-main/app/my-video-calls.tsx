@@ -82,8 +82,17 @@ export default function MyVideoCallsScreen() {
             || "L'annulation gratuite n'est plus possible : il reste moins de 24 h avant le créneau.",
           celebrity_cannot_receive_payments: t('vcrCelebNoStripe' as any)
             || "La personnalité ne peut pas encore encaisser de paiement.",
+          // Deux cas où l'écran affiché n'est plus à jour : mieux vaut le dire
+          // et recharger que laisser croire à une panne.
+          already_closed: t('vcrAlreadyClosed' as any)
+            || "Cette demande est déjà close. Tire vers le bas pour rafraîchir.",
+          not_pending: t('vcrAlreadyClosed' as any)
+            || "Cette demande n'est plus en attente. Tire vers le bas pour rafraîchir.",
         };
         showAlert(t('error') || 'Erreur', raisons[data?.error] || (t('actionFailed') || 'Action impossible.'));
+        // Quand le refus vient d'un état périmé à l'écran, on remet la liste à
+        // jour tout de suite : sinon le bouton reste là et l'erreur se répète.
+        if (data?.error === 'already_closed' || data?.error === 'not_pending') await charger();
         return null;
       }
       await charger();
