@@ -179,6 +179,24 @@ export default function EventPublishScreen() {
       .catch(() => {});
   }, []);
 
+  // Android peut détruire l'application pendant que l'appareil photo est ouvert,
+  // par manque de mémoire. Au retour, l'écran se recharge et la photo qui vient
+  // d'être prise est perdue SANS aucun message : la célébrité revoit les boutons
+  // « Prendre / Depuis la galerie » et croit que la caméra ne marche pas.
+  // expo-image-picker conserve ce résultat en attente — on le récupère au montage.
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    (async () => {
+      try {
+        const pending: any = await (ImagePicker as any).getPendingResultAsync?.();
+        const first = Array.isArray(pending) ? pending[0] : pending;
+        if (!first || first.canceled) return;
+        const uri = first.assets?.[0]?.uri || first.uri;
+        if (uri) setSelectedImage(uri);
+      } catch { /* aucun résultat en attente : cas normal */ }
+    })();
+  }, []);
+
   // Dès qu'une photo est choisie, on affiche un toast informatif ~4s (rappel de
   // vérifier la bonne célébrité), sauf si l'utilisateur a coché "ne plus afficher".
   useEffect(() => {
@@ -593,13 +611,28 @@ export default function EventPublishScreen() {
     }
 
     const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
       quality: 0.8,
       allowsEditing: false,
     });
 
-    if (!result.canceled && result.assets[0]) {
-      setSelectedImage(result.assets[0].uri);
+    if (result.canceled) return;
+
+    const uri = result.assets?.[0]?.uri;
+    if (uri) {
+      setSelectedImage(uri);
+      return;
     }
+
+    // L'appareil photo n'a rien rendu alors que l'utilisateur n'a pas annulé.
+    // Sans ce message, la photo disparaissait sans un mot : on revenait sur
+    // l'écran avec les boutons « Prendre / Depuis la galerie » intacts, en
+    // croyant simplement que le bouton ne marchait pas.
+    showAlert(
+      t('error') || 'Erreur',
+      t('photoNotReceived' as any)
+        || "La photo n'a pas pu être récupérée. Réessaie, ou choisis-la depuis ta galerie.",
+    );
   };
 
   const handlePublish = async (type: 'photo' | 'photo_signed') => {
