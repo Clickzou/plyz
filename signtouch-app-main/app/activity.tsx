@@ -132,6 +132,8 @@ export default function ActivityScreen() {
   // Distingue « rien à afficher » de « le chargement a échoué » : sans ça, une
   // panne réseau se présentait comme un fil vide, message trompeur à l'appui.
   const [loadFailed, setLoadFailed] = useState(false);
+  // Empêche de redemander indéfiniment une page suivante qui n'existe pas.
+  const [hasMore, setHasMore] = useState(true);
   const [, setBannerDismissed] = useState(true);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [allComments, setAllComments] = useState<Record<string, Comment[]>>({});
@@ -270,8 +272,21 @@ export default function ActivityScreen() {
       const data = await res.json();
 
       setLoadFailed(false);
-      let feedPosts = data.posts && data.posts.length > 0 ? data.posts : null;
-      if (!feedPosts) throw new Error('No data');
+      const feedPosts: FeedPost[] = Array.isArray(data.posts) ? data.posts : [];
+
+      // Une page vide n'est PAS une erreur. Traitée comme telle, elle faisait
+      // vider la liste par le catch : avec une seule publication, `onEndReached`
+      // se déclenche aussitôt (la liste est plus courte que l'écran), demande la
+      // page 2, reçoit zéro post — et le fil se vidait 0,2 s après s'être affiché.
+      // Les 6 publications fictives remplissaient l'écran et masquaient ce défaut.
+      setHasMore(feedPosts.length >= 20);
+      if (feedPosts.length === 0) {
+        if (p > 1) return; // fin de liste : il n'y a simplement plus rien à charger
+        const seuls = await loadLocalPosts();
+        setPosts(filter === 'all' ? seuls : seuls.filter(lp => lp.kind === filter));
+        setPage(1);
+        return;
+      }
 
       const localPosts = await loadLocalPosts();
       const filteredLocal = filter === 'all' ? localPosts : localPosts.filter(lp => lp.kind === filter);
@@ -507,7 +522,7 @@ export default function ActivityScreen() {
             fetchFeed(1, true);
           }}
           refreshing={refreshing}
-          onEndReached={() => fetchFeed(page + 1)}
+          onEndReached={() => { if (hasMore && !loading) fetchFeed(page + 1); }}
           onEndReachedThreshold={0.5}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         />
