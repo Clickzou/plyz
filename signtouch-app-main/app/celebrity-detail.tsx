@@ -18,6 +18,7 @@ import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { CelebrityDetailSkeleton } from '@/components/SkeletonLoader';
 import { useAutoTranslate } from '@/utils/translation';
 import ReportContentModal from '@/components/ReportContentModal';
+import VideoCallRequestModal from '@/components/VideoCallRequestModal';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -92,6 +93,7 @@ export default function CelebrityDetailScreen() {
   const bookingLoading = false;
   const autographLoading = false;
   const [showReport, setShowReport] = useState(false);
+  const [showVideoRequest, setShowVideoRequest] = useState(false);
   const [activeTab, setActiveTab] = useState<'about' | 'posts'>('about');
   const [events, setEvents] = useState<LiveEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
@@ -372,6 +374,34 @@ export default function CelebrityDetailScreen() {
         </View>
 
         <View style={styles.actionRow}>
+          {/* Demande d'appel vidéo privé en tête-à-tête, à l'initiative du fan.
+              N'apparaît que si la personnalité a fixé un tarif ET peut encaisser :
+              afficher un bouton qui mène à un échec est la définition même de la
+              « fonctionnalité cassée » reprochée par les stores. */}
+          {p && p.video_call_price_cents > 0 && celebrity.can_accept_payments && (
+            <TouchableOpacity
+              style={[styles.mainAction, styles.videoAction]}
+              onPress={() => requireAuth(() => setShowVideoRequest(true), {
+                reason: 'Crée un compte pour demander un appel vidéo privé',
+                requireBillingIdentity: false,
+              })}
+              activeOpacity={0.85}
+            >
+              <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.mainActionGradient}>
+                <View style={[styles.mainActionIconCircle, { backgroundColor: 'rgba(255,255,255,0.25)' }]}><Video size={20} color="#fff" /></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.mainActionText}>
+                    {t('vcrAskCall' as any) || 'Demander un appel vidéo privé'}
+                  </Text>
+                  <Text style={styles.mainActionPrice}>
+                    {p.video_call_duration_minutes || 10} min · {formatPrice(p.video_call_price_cents, p.currency)}
+                  </Text>
+                </View>
+                <View style={styles.mainActionArrow}><Text style={styles.mainActionArrowText}>→</Text></View>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+
           {INDIVIDUAL_SERVICES_ENABLED && p && p.video_call_price_cents > 0 && celebrity.can_accept_payments && (
             <TouchableOpacity
               style={[styles.mainAction, styles.videoAction]}
@@ -650,6 +680,18 @@ export default function CelebrityDetailScreen() {
           </Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {celebrity.pricing && celebrity.pricing.video_call_price_cents > 0 && (
+        <VideoCallRequestModal
+          visible={showVideoRequest}
+          onClose={() => setShowVideoRequest(false)}
+          celebrityId={celebrity.user_id}
+          celebrityName={celebrity.stage_name}
+          priceCents={celebrity.pricing.video_call_price_cents}
+          durationMinutes={celebrity.pricing.video_call_duration_minutes || 10}
+          currency={celebrity.pricing.currency}
+        />
+      )}
 
       <ReportContentModal
         visible={showReport}
