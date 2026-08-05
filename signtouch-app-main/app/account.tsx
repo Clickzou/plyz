@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { router } from 'expo-router';
-import { Info, Heart, Share2, Globe, Check, FileText, LogOut, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle, Camera, Images, ChevronRight , Star, Clock, TrendingUp } from 'lucide-react-native';
+import { Info, Heart, Share2, Globe, Check, FileText, LogOut, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle, Camera, Images, ChevronRight , Star, Clock, TrendingUp, Video } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import * as Clipboard from 'expo-clipboard';
@@ -1191,6 +1191,22 @@ export default function AccountScreen() {
               <FileText size={24} color="#10b981" strokeWidth={2} />
             </View>
             <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>{t('docsMenuItem' as any) || 'Mes documents'}</Text>
+          </TouchableOpacity>
+
+          {/* Suivi des appels vidéo privés. Le même écran sert aux deux rôles :
+              le fan y voit ses demandes, la personnalité celles qu'elle reçoit —
+              beaucoup de comptes sont les deux à la fois. */}
+          <TouchableOpacity
+            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
+            onPress={() => router.push('/my-video-calls' as any)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
+              <Video size={24} color="#6366f1" strokeWidth={2} />
+            </View>
+            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>
+              {t('vcrMyCalls' as any) || 'Mes appels vidéo'}
+            </Text>
           </TouchableOpacity>
         </View>
 

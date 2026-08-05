@@ -66,6 +66,7 @@ function AppContent() {
         <Stack.Screen name="celebrity-menu" options={{ animation: 'none' }} />
         <Stack.Screen name="celebrity-detail" />
         <Stack.Screen name="post-detail" />
+        <Stack.Screen name="my-video-calls" />
         <Stack.Screen name="fan-choice" options={{ animation: 'none' }} />
         <Stack.Screen name="my-space" options={{ animation: 'none' }} />
         <Stack.Screen name="join-event" options={{ animation: 'none' }} />
