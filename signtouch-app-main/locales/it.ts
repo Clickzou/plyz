@@ -316,7 +316,7 @@ export default {
   // About Screen
   aboutTitle: 'Informazioni',
   appName: 'Plyz',
-  appVersion: 'Versione 1.0.0',
+  appVersion: 'Versione {{version}}',
   aboutApp: 'Informazioni sull\'app',
   appDescription: 'Plyz è un\'app innovativa per la firma di foto che ti permette di personalizzare le tue foto con eleganti firme manoscritte. Crea ricordi unici aggiungendo il tuo tocco personale a ogni immagine.',
   mainFeatures: 'Caratteristiche principali',

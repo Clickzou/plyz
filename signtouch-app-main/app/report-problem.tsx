@@ -18,6 +18,7 @@ import { ArrowLeft, Send, AlertCircle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { showAlert } from '@/utils/alertHelper';
 import { useTranslation } from '@/contexts/LanguageContext';
+import { APP_VERSION_FULL } from '@/utils/appVersion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/utils/supabase';
 
@@ -55,7 +56,7 @@ export default function ReportProblemScreen() {
         subject: subject.trim() || null,
         message: message.trim(),
         platform: Platform.OS,
-        app_version: '1.0.0',
+        app_version: APP_VERSION_FULL,
       });
     } catch { /* non bloquant */ }
 
@@ -67,7 +68,7 @@ export default function ReportProblemScreen() {
         `------------------------------\n` +
         `Compte : ${user?.email || 'non connecté'}\n` +
         `Plateforme : ${Platform.OS}\n` +
-        `Version : 1.0.0`;
+        `Version : ${APP_VERSION_FULL}`;
 
       const res = await fetch(`${API_BASE}/api/report-problem`, {
         method: 'POST',
@@ -83,7 +84,7 @@ export default function ReportProblemScreen() {
           message: message.trim(),
           userEmail: user?.email || null,
           platform: Platform.OS,
-          appVersion: '1.0.0',
+          appVersion: APP_VERSION_FULL,
         }),
       });
       // Succès = réponse JSON 2xx sans champ "error". Si le serveur renvoie du HTML
@@ -115,7 +116,7 @@ export default function ReportProblemScreen() {
       `Envoyé depuis l'application Plyz\n` +
       `Compte : ${user?.email || 'non connecté'}\n` +
       `Plateforme : ${Platform.OS}\n` +
-      `Version : 1.0.0`;
+      `Version : ${APP_VERSION_FULL}`;
     const url = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(body)}`;
 
     try {

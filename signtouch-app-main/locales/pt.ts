@@ -316,7 +316,7 @@ export default {
   // About Screen
   aboutTitle: 'Sobre',
   appName: 'Plyz',
-  appVersion: 'Versão 1.0.0',
+  appVersion: 'Versão {{version}}',
   aboutApp: 'Sobre o aplicativo',
   appDescription: 'Plyz é um aplicativo inovador de assinatura de fotos que permite personalizar suas fotos com elegantes assinaturas manuscritas. Crie memórias únicas adicionando seu toque pessoal a cada imagem.',
   mainFeatures: 'Recursos principais',

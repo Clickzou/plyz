@@ -316,7 +316,7 @@ export default {
   // About Screen
   aboutTitle: 'Tentang',
   appName: 'Plyz',
-  appVersion: 'Versi 1.0.0',
+  appVersion: 'Versi {{version}}',
   aboutApp: 'Tentang aplikasi',
   appDescription: 'Plyz ialah aplikasi tandatangan foto inovatif yang membolehkan anda memperibadikan foto anda dengan tandatangan tulisan tangan yang elegan. Cipta kenangan unik dengan menambahkan sentuhan peribadi anda pada setiap imej.',
   mainFeatures: 'Ciri utama',

@@ -316,7 +316,7 @@ export default {
   // About Screen
   aboutTitle: 'کے بارے میں',
   appName: 'Plyz',
-  appVersion: 'Version 1.0.0',
+  appVersion: 'ورژن {{version}}',
   aboutApp: 'ایپ کے بارے میں',
   appDescription: 'Plyz ایک اختراعی فوٹو دستخط ایپ ہے جو آپ کو اپنی تصاویر کو خوبصورت ہاتھ سے لکھے ہوئے دستخطوں کے ساتھ ذاتی بنانے دیتی ہے۔ ہر تصویر میں اپنا ذاتی لمس شامل کر کے منفرد یادیں بنائیں۔',
   mainFeatures: 'اہم خصوصیات',

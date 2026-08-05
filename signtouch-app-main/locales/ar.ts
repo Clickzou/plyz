@@ -316,7 +316,7 @@ export default {
   // About Screen
   aboutTitle: 'حول',
   appName: 'Plyz',
-  appVersion: 'Version 1.0.0',
+  appVersion: 'الإصدار {{version}}',
   aboutApp: 'حول التطبيق',
   appDescription: 'Plyz هو تطبيق مبتكر لتوقيع الصور يتيح لك تخصيص صورك بتوقيعات أنيقة مكتوبة بخط اليد. أنشئ ذكريات فريدة من خلال إضافة لمستك الشخصية إلى كل صورة.',
   mainFeatures: 'الميزات الرئيسية',

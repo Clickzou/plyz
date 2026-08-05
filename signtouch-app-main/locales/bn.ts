@@ -316,7 +316,7 @@ export default {
   // About Screen
   aboutTitle: 'সম্পর্কে',
   appName: 'Plyz',
-  appVersion: 'Version 1.0.0',
+  appVersion: 'সংস্করণ {{version}}',
   aboutApp: 'অ্যাপ সম্পর্কে',
   appDescription: 'Plyz একটি উদ্ভাবনী ফটো স্বাক্ষর অ্যাপ যা আপনাকে মার্জিত হস্তলিখিত স্বাক্ষর দিয়ে আপনার ফটো ব্যক্তিগতকৃত করতে দেয়। প্রতিটি চিত্রে আপনার ব্যক্তিগত স্পর্শ যোগ করে অনন্য স্মৃতি তৈরি করুন।',
   mainFeatures: 'প্রধান বৈশিষ্ট্য',

@@ -316,7 +316,7 @@ export default {
   // About Screen
   aboutTitle: 'Über',
   appName: 'Plyz',
-  appVersion: 'Version 1.0.0',
+  appVersion: 'Version {{version}}',
   aboutApp: 'Über die App',
   appDescription: 'Plyz ist eine innovative Foto-Signatur-App, mit der Sie Ihre Fotos mit eleganten handschriftlichen Signaturen personalisieren können. Erstellen Sie einzigartige Erinnerungen, indem Sie jedes Bild mit Ihrer persönlichen Note versehen.',
   mainFeatures: 'Hauptfunktionen',

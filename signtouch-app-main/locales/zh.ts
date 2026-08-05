@@ -316,7 +316,7 @@ export default {
   // About Screen
   aboutTitle: '关于',
   appName: 'Plyz',
-  appVersion: 'Version 1.0.0',
+  appVersion: '版本 {{version}}',
   aboutApp: '关于应用',
   appDescription: 'Plyz是一款创新的照片签名应用，让您可以用优雅的手写签名个性化您的照片。通过为每张图片添加您的个人风格，创造独特的回忆。',
   mainFeatures: '主要功能',

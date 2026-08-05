@@ -38,6 +38,7 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 
 import { FanBadgeCard } from '@/components/FanBadge';
 import { supabase } from '@/utils/supabase';
+import { APP_VERSION_FULL } from '@/utils/appVersion';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -1056,7 +1057,7 @@ export default function AccountScreen() {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Plyz v1.0.0</Text>
+          <Text style={styles.footerText}>Plyz {APP_VERSION_FULL}</Text>
           <Text style={styles.footerSubtext}>
             {t('offlineApp')}
           </Text>

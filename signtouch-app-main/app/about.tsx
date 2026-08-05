@@ -10,6 +10,7 @@ import { router } from 'expo-router';
 import { ArrowLeft, Pencil, Camera, Image as ImageIcon, Shield } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { APP_VERSION_FULL } from '@/utils/appVersion';
 
 export default function AboutScreen() {
   const insets = useSafeAreaInsets();
@@ -34,7 +35,7 @@ export default function AboutScreen() {
             <Pencil size={48} color="#10b981" strokeWidth={2} />
           </View>
           <Text style={styles.appName}>{t('appName')}</Text>
-          <Text style={styles.version}>{t('appVersion')}</Text>
+          <Text style={styles.version}>{t('appVersion', { version: APP_VERSION_FULL })}</Text>
         </View>
 
         <View style={styles.section}>
