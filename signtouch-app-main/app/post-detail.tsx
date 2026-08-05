@@ -8,6 +8,7 @@ import { ArrowLeft, Calendar, MapPin, CreditCard, Flag } from 'lucide-react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReportContentModal from '@/components/ReportContentModal';
+import { useAutoTranslate } from '@/utils/translation';
 
 export default function PostDetailScreen() {
   const router = useRouter();
@@ -27,6 +28,11 @@ export default function PostDetailScreen() {
   const celebrityName = (params.celebrityName as string) || '';
   const celebrityAvatar = (params.celebrityAvatar as string) || '';
   const celebrityUserId = (params.celebrityUserId as string) || '';
+
+  // Le fil traduisait déjà titres et textes, mais pas cet écran : un fan lisait
+  // l'annonce dans sa langue, l'ouvrait pour en savoir plus, et tombait sur du
+  // français — juste au moment de décider s'il réserve.
+  const tr = useAutoTranslate([post?.title, post?.body]);
 
   const formatPrice = (cents: number, currency?: string) => {
     const amount = (cents / 100).toFixed(2);
@@ -92,13 +98,13 @@ export default function PostDetailScreen() {
           </View>
         )}
 
-        {!!post.title && <Text style={styles.title}>{post.title}</Text>}
+        {!!post.title && <Text style={styles.title}>{tr(post.title)}</Text>}
 
         {!!post.media_url && (
           <Image source={{ uri: post.media_url }} style={styles.image} resizeMode="cover" />
         )}
 
-        {!!post.body && <Text style={styles.body}>{post.body}</Text>}
+        {!!post.body && <Text style={styles.body}>{tr(post.body)}</Text>}
 
         {isEvent && (
           <View style={styles.eventDetails}>
