@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: 'زيارة الموقع',
   viewOnWikipedia: 'ويكيبيديا',
   reportCelebrity: 'إبلاغ',
+  createPostTabPost: "إنشاء منشور",
+  createPostTabEvent: "إنشاء فعالية",
 
   // Signalement de contenu (publication / profil)
   reportContentTitle: "الإبلاغ عن هذا المحتوى",

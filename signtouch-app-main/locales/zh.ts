@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: '访问网站',
   viewOnWikipedia: '维基百科',
   reportCelebrity: '举报',
+  createPostTabPost: "发布动态",
+  createPostTabEvent: "创建活动",
 
   // Signalement de contenu (publication / profil)
   reportContentTitle: "举报此内容",

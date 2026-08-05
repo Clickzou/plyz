@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: 'Посетить сайт',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Пожаловаться',
+  createPostTabPost: "Создать пост",
+  createPostTabEvent: "Создать событие",
 
   // Signalement de contenu (publication / profil)
   reportContentTitle: "Пожаловаться на этот контент",

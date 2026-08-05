@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: 'サイトを訪問',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: '報告',
+  createPostTabPost: "投稿を作成",
+  createPostTabEvent: "イベントを作成",
 
   // Signalement de contenu (publication / profil)
   reportContentTitle: "このコンテンツを報告",

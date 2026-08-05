@@ -313,6 +313,11 @@ export default function CreatePostScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Deux onglets, deux intentions distinctes. Le second ne compose plus une
+          annonce à la main : il ouvre la création d'événement, dont l'annonce est
+          désormais publiée automatiquement. Laisser rédiger une « annonce » sans
+          événement derrière produisait un post qui promettait une séance
+          inexistante — et le fan n'avait aucun moyen de s'en apercevoir. */}
       <View style={styles.kindRow}>
         <TouchableOpacity
           style={[styles.kindBtn, kind === 'post' && styles.kindBtnActive]}
@@ -321,17 +326,17 @@ export default function CreatePostScreen() {
         >
           <FileText size={16} color={kind === 'post' ? '#fff' : '#6b7280'} />
           <Text style={[styles.kindText, kind === 'post' && styles.kindTextActive]}>
-            {t('createPostTypePost' as any) || 'Post'}
+            {t('createPostTabPost' as any) || 'Créer un post'}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.kindBtn, kind === 'event' && styles.kindBtnActiveEvent]}
-          onPress={() => setKind('event')}
+          style={styles.kindBtn}
+          onPress={() => router.replace('/create-event' as any)}
           activeOpacity={0.8}
         >
-          <Calendar size={16} color={kind === 'event' ? '#000' : '#6b7280'} />
-          <Text style={[styles.kindText, kind === 'event' && styles.kindTextActiveEvent]}>
-            {t('createPostTypeEvent' as any) || 'Événement'}
+          <Calendar size={16} color="#6b7280" />
+          <Text style={styles.kindText}>
+            {t('createPostTabEvent' as any) || 'Créer un événement'}
           </Text>
         </TouchableOpacity>
       </View>

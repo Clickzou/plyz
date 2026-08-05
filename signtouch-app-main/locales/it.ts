@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: 'Visita il sito',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Segnala',
+  createPostTabPost: "Crea un post",
+  createPostTabEvent: "Crea un evento",
 
   // Signalement de contenu (publication / profil)
   reportContentTitle: "Segnala questo contenuto",

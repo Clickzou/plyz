@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: 'वेबसाइट देखें',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'रिपोर्ट करें',
+  createPostTabPost: "पोस्ट बनाएं",
+  createPostTabEvent: "इवेंट बनाएं",
 
   // Signalement de contenu (publication / profil)
   reportContentTitle: "इस सामग्री की रिपोर्ट करें",

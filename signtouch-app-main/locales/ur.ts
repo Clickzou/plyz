@@ -1297,6 +1297,8 @@ export default {
   visitWebsite: 'ویب سائٹ دیکھیں',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'رپورٹ کریں',
+  createPostTabPost: "پوسٹ بنائیں",
+  createPostTabEvent: "ایونٹ بنائیں",
 
   // Signalement de contenu (publication / profil)
   reportContentTitle: "اس مواد کی اطلاع دیں",

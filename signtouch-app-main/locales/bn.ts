@@ -1297,6 +1297,8 @@ export default {
   visitWebsite: 'ওয়েবসাইট ভিজিট করুন',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'রিপোর্ট করুন',
+  createPostTabPost: "পোস্ট তৈরি করুন",
+  createPostTabEvent: "ইভেন্ট তৈরি করুন",
 
   // Signalement de contenu (publication / profil)
   reportContentTitle: "এই কনটেন্ট রিপোর্ট করুন",

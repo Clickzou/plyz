@@ -1297,6 +1297,8 @@ export default {
   visitWebsite: 'Kunjungi situs',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Laporkan',
+  createPostTabPost: "Buat postingan",
+  createPostTabEvent: "Buat acara",
 
   // Signalement de contenu (publication / profil)
   reportContentTitle: "Laporkan konten ini",
