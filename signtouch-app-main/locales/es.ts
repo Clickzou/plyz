@@ -1291,6 +1291,8 @@ export default {
   visitWebsite: 'Visitar el sitio',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Reportar',
+  feedLoadFailed: "No se pudo cargar el feed",
+  feedLoadFailedHint: "Comprueba tu conexión e inténtalo de nuevo.",
   createPostTabPost: "Crear una publicación",
   createPostTabEvent: "Crear un evento",
 

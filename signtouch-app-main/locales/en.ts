@@ -1314,6 +1314,9 @@ export default {
   visitWebsite: 'Visit Website',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Report',
+  feedLoadFailed: "Could not load the feed",
+  feedLoadFailedHint: "Check your connection and try again.",
+  retry: "Retry",
   createPostTabPost: "Create a post",
   createPostTabEvent: "Create an event",
 
@@ -1480,7 +1483,6 @@ export default {
   verifyingPayment: 'Verifying payment...',
   paymentFailed: 'Payment not verified',
   paymentFailedHint: 'We could not verify your payment. Please try again or contact support.',
-  retry: 'Try again',
   goToMySpace: 'Go to My Space',
   backToDiscover: 'Back to Discover',
   celebrityNoPayments: 'This celebrity has not set up payments yet',

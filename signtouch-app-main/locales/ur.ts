@@ -1297,6 +1297,8 @@ export default {
   visitWebsite: 'ویب سائٹ دیکھیں',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'رپورٹ کریں',
+  feedLoadFailed: "فیڈ لوڈ نہیں ہو سکی",
+  feedLoadFailedHint: "اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
   createPostTabPost: "پوسٹ بنائیں",
   createPostTabEvent: "ایونٹ بنائیں",
 

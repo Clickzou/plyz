@@ -76,7 +76,7 @@ export default function DiscoverScreen() {
       if (search.trim()) params.set('search', search.trim());
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
 
       const res = await fetch(`${API_BASE}/api/celebrities?${params}`, { signal: controller.signal });
       clearTimeout(timeoutId);

@@ -1297,6 +1297,8 @@ export default {
   visitWebsite: 'Lawat laman web',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Lapor',
+  feedLoadFailed: "Gagal memuatkan suapan",
+  feedLoadFailedHint: "Semak sambungan anda dan cuba lagi.",
   createPostTabPost: "Cipta siaran",
   createPostTabEvent: "Cipta acara",
 

@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: '访问网站',
   viewOnWikipedia: '维基百科',
   reportCelebrity: '举报',
+  feedLoadFailed: "无法加载动态",
+  feedLoadFailedHint: "请检查网络连接后重试。",
   createPostTabPost: "发布动态",
   createPostTabEvent: "创建活动",
 

@@ -1297,6 +1297,8 @@ export default {
   visitWebsite: 'Kunjungi situs',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Laporkan',
+  feedLoadFailed: "Gagal memuat feed",
+  feedLoadFailedHint: "Periksa koneksimu dan coba lagi.",
   createPostTabPost: "Buat postingan",
   createPostTabEvent: "Buat acara",
 

@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: 'زيارة الموقع',
   viewOnWikipedia: 'ويكيبيديا',
   reportCelebrity: 'إبلاغ',
+  feedLoadFailed: "تعذّر تحميل الموجز",
+  feedLoadFailedHint: "تحقّق من اتصالك وحاول مرة أخرى.",
   createPostTabPost: "إنشاء منشور",
   createPostTabEvent: "إنشاء فعالية",
 

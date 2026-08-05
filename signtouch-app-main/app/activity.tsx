@@ -129,6 +129,9 @@ export default function ActivityScreen() {
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
+  // Distingue « rien à afficher » de « le chargement a échoué » : sans ça, une
+  // panne réseau se présentait comme un fil vide, message trompeur à l'appui.
+  const [loadFailed, setLoadFailed] = useState(false);
   const [, setBannerDismissed] = useState(true);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [allComments, setAllComments] = useState<Record<string, Comment[]>>({});
@@ -260,12 +263,13 @@ export default function ActivityScreen() {
       if (filter !== 'all') params.set('kind', filter);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
 
       const res = await fetch(`${API_BASE}/api/feed?${params}`, { signal: controller.signal });
       clearTimeout(timeoutId);
       const data = await res.json();
 
+      setLoadFailed(false);
       let feedPosts = data.posts && data.posts.length > 0 ? data.posts : null;
       if (!feedPosts) throw new Error('No data');
 
@@ -294,6 +298,7 @@ export default function ActivityScreen() {
       // badges « Officiel » et « Stripe vérifié », à un vrai utilisateur — ou à
       // un examinateur de store. Un fil vide est moins grave qu'un fil qui ment.
       console.warn('[Fil] chargement impossible :', err);
+      setLoadFailed(true);
       const localPosts = await loadLocalPosts();
       const filteredLocal = filter === 'all' ? localPosts : localPosts.filter(lp => lp.kind === filter);
       setPosts(filteredLocal);
@@ -473,8 +478,22 @@ export default function ActivityScreen() {
       ) : posts.length === 0 ? (
         <View style={styles.center}>
           <Newspaper size={48} color="#374151" />
-          <Text style={styles.emptyText}>{t('noActivity')}</Text>
-          <Text style={styles.emptyHint}>{t('noActivityHint')}</Text>
+          {/* Un échec de chargement n'est PAS une absence de contenu. Afficher
+              « Suivez des célébrités » quand le serveur n'a pas répondu fait
+              croire que le fil est vide — et laisse l'utilisateur sans recours. */}
+          <Text style={styles.emptyText}>
+            {loadFailed ? (t('feedLoadFailed' as any) || 'Impossible de charger le fil') : t('noActivity')}
+          </Text>
+          <Text style={styles.emptyHint}>
+            {loadFailed
+              ? (t('feedLoadFailedHint' as any) || 'Vérifie ta connexion et réessaie.')
+              : t('noActivityHint')}
+          </Text>
+          {loadFailed && (
+            <TouchableOpacity style={styles.retryBtn} onPress={() => fetchFeed(1, true)} activeOpacity={0.8}>
+              <Text style={styles.retryBtnText}>{t('retry' as any) || 'Réessayer'}</Text>
+            </TouchableOpacity>
+          )}
         </View>
       ) : (
         <FlatList
@@ -600,6 +619,16 @@ const styles = StyleSheet.create({
   filterTextActive: { color: '#fff' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { color: '#9ca3af', fontSize: 16, marginTop: 12, fontWeight: '600' },
+  retryBtn: {
+    marginTop: 18,
+    paddingHorizontal: 22,
+    paddingVertical: 11,
+    borderRadius: 22,
+    backgroundColor: 'rgba(16,185,129,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.4)',
+  },
+  retryBtnText: { color: '#10b981', fontSize: 14, fontWeight: '700' },
   emptyHint: { color: '#6b7280', fontSize: 13, marginTop: 4 },
   postCard: {
     backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 16,

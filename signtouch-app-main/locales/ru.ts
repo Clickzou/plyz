@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: 'Посетить сайт',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Пожаловаться',
+  feedLoadFailed: "Не удалось загрузить ленту",
+  feedLoadFailedHint: "Проверьте соединение и попробуйте снова.",
   createPostTabPost: "Создать пост",
   createPostTabEvent: "Создать событие",
 
