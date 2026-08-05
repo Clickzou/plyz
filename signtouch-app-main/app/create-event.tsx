@@ -1427,26 +1427,10 @@ export default function CreateEventScreen() {
                   </Text>
                 </TouchableOpacity>
 
-                {/* Secondaire : annoncer l'événement dans le fil Actu. */}
-                <TouchableOpacity
-                  style={[styles.publishButton, { backgroundColor: '#f59e0b' }]}
-                  onPress={() => {
-                    router.push({
-                      pathname: '/create-post',
-                      params: {
-                        prefillKind: 'event',
-                        prefillTitle: language === 'fr' ? 'Session Live Dédicace' : 'Live Dedication Session',
-                        prefillBody: `${language === 'fr' ? '✍️ Rejoignez-moi pour une session live dédicace exclusive en direct ! Recevez votre photo personnalisée et signée, rien que pour vous, sur Plyz 💜' : '✍️ Join me for an exclusive live dedication session! Get your personalized, signed photo just for you, on Plyz 💜'}\n\n${language === 'fr' ? 'Code' : 'Code'}: ${createdSession.join_code}`,
-                        prefillDate: createdSession.scheduled_at || new Date().toISOString(),
-                      },
-                    });
-                  }}
-                >
-                  <Send size={20} color="#000" />
-                  <Text style={[styles.publishButtonText, { color: '#000' }]}>
-                    {language === 'fr' ? 'Publier dans le fil Actu' : 'Publish to Feed'}
-                  </Text>
-                </TouchableOpacity>
+                {/* Le bouton « Publier dans le fil Actu » a été retiré : l'annonce
+                    est créée automatiquement en base dès la création de l'événement
+                    (trigger trg_announce_event_session). Le conserver aurait permis
+                    de publier deux fois la même annonce sans s'en apercevoir. */}
 
                 <TouchableOpacity style={styles.shareButton} onPress={shareEvent}>
                   <Share2 size={20} color="#ffffff" />

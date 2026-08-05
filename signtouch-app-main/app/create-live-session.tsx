@@ -566,26 +566,10 @@ export default function CreateLiveSessionScreen() {
             </Text>
           </View>
 
-          <TouchableOpacity
-            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#f59e0b', paddingVertical: 14, paddingHorizontal: 32, borderRadius: 12, width: '100%', marginBottom: 12 }}
-            onPress={() => {
-              const scheduledDate = new Date(scheduledConfirmation.scheduledAt);
-              router.push({
-                pathname: '/create-post',
-                params: {
-                  prefillKind: 'event',
-                  prefillTitle: language === 'fr' ? 'Session Live Vidéo' : 'Live Video Session',
-                  prefillBody: `${language === 'fr' ? '🎥 Rejoignez-moi pour une session live vidéo exclusive, en tête-à-tête face à face ! Un moment privé et unique, rien que pour vous, en direct sur Plyz 💜' : '🎥 Join me for an exclusive one-on-one live video session, face to face! A private, unique moment just for you, live on Plyz 💜'}\n\n${language === 'fr' ? 'Code' : 'Code'}: ${scheduledConfirmation.code}`,
-                  prefillDate: scheduledDate.toISOString(),
-                },
-              });
-            }}
-          >
-            <Send size={18} color="#000" />
-            <Text style={{ color: '#000', fontSize: 16, fontWeight: '700' }}>
-              {language === 'fr' ? 'Publier dans le fil Actu' : 'Publish to Feed'}
-            </Text>
-          </TouchableOpacity>
+          {/* Le bouton « Publier dans le fil Actu » a été retiré : l'annonce
+              est désormais créée automatiquement en base à la création de la
+              session (trigger trg_announce_live_session). Le garder aurait permis
+              de publier deux fois la même annonce sans s'en apercevoir. */}
 
           <TouchableOpacity
             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', paddingVertical: 14, paddingHorizontal: 32, borderRadius: 12, width: '100%', marginBottom: 12 }}

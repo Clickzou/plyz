@@ -747,22 +747,6 @@ export default function LiveSessionDashboardScreen() {
     return mins === 0 ? `${hours}h` : `${hours}h${mins.toString().padStart(2, '0')}`;
   };
 
-  // « Publier dans le fil Actu » : pré-remplit le composeur de post comme sur l'écran
-  // « Session programmée ! » de create-live-session.tsx.
-  const handlePublishSessionToFeed = () => {
-    if (!session) return;
-    const when = session.scheduled_at ? new Date(session.scheduled_at) : new Date();
-    router.push({
-      pathname: '/create-post',
-      params: {
-        prefillKind: 'event',
-        prefillTitle: language === 'fr' ? 'Session Live Vidéo' : 'Live Video Session',
-        prefillBody: `${language === 'fr' ? '🎥 Rejoignez-moi pour une session live vidéo exclusive, en tête-à-tête face à face ! Un moment privé et unique, rien que pour vous, en direct sur Plyz 💜' : '🎥 Join me for an exclusive one-on-one live video session, face to face! A private, unique moment just for you, live on Plyz 💜'}\n\n${language === 'fr' ? 'Code' : 'Code'}: ${session.code}`,
-        prefillDate: when.toISOString(),
-      },
-    });
-  };
-
   // « Partager » (réseaux sociaux) : Share.share avec fallback presse-papier sur web,
   // même logique que handleShareEvent de create-live-session.tsx.
   const handleShareSession = async () => {
@@ -1424,13 +1408,11 @@ export default function LiveSessionDashboardScreen() {
             </TouchableOpacity>
             <Text style={[styles.qrHint, { marginTop: 6, fontSize: 12 }]}>{t('liveSessionShareHint')}</Text>
 
+            {/* Plus de bouton de publication : l'annonce est créée automatiquement
+                en base à la création de la session (trigger trg_announce_live_session)
+                et suit ses modifications. Deux chemins pour la même action, c'était
+                un doublon garanti. */}
             <View style={styles.shareButtonsRow}>
-              <TouchableOpacity style={styles.publishFeedButton} onPress={handlePublishSessionToFeed}>
-                <Send size={18} color="#fff" />
-                <Text style={styles.publishFeedButtonText}>
-                  {language === 'fr' ? 'Publier dans le fil Actu' : 'Publish to Feed'}
-                </Text>
-              </TouchableOpacity>
               <TouchableOpacity style={styles.shareSessionButton} onPress={handleShareSession}>
                 <Send size={18} color="#6366f1" />
                 <Text style={styles.shareSessionButtonText}>{t('share') || 'Partager'}</Text>

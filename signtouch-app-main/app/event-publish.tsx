@@ -921,33 +921,9 @@ export default function EventPublishScreen() {
           )}
         </View>
 
-        {/* Annoncer l'événement dans le fil Actu.
-            Ce bouton n'existait QUE sur l'écran de confirmation affiché juste
-            après la création : une célébrité qui le ratait ne pouvait plus jamais
-            annoncer son événement, qui restait alors introuvable — une dédicace
-            ne se parcourt pas dans le catalogue, elle se rejoint par son code. */}
-        <TouchableOpacity
-          style={styles.publishToFeedButton}
-          onPress={() => {
-            router.push({
-              pathname: '/create-post',
-              params: {
-                prefillKind: 'event',
-                prefillTitle: language === 'fr' ? 'Session Live Dédicace' : 'Live Dedication Session',
-                prefillBody: `${language === 'fr'
-                  ? '✍️ Rejoignez-moi pour une session live dédicace exclusive en direct ! Recevez votre photo personnalisée et signée, rien que pour vous, sur Plyz 💜'
-                  : '✍️ Join me for an exclusive live dedication session! Get your personalized, signed photo just for you, on Plyz 💜'}\n\n${language === 'fr' ? 'Code' : 'Code'}: ${joinCode}`,
-                prefillDate: startsAt || new Date().toISOString(),
-              },
-            });
-          }}
-          activeOpacity={0.85}
-        >
-          <Send size={18} color="#000" />
-          <Text style={styles.publishToFeedText}>
-            {t('publishToFeed' as any) || (language === 'fr' ? 'Publier dans le fil Actu' : 'Publish to Feed')}
-          </Text>
-        </TouchableOpacity>
+        {/* Pas de bouton de publication ici : l'annonce est créée automatiquement
+            en base dès la création de l'événement, et suit ses modifications
+            (trigger trg_announce_event_session). */}
 
         <Text style={styles.sectionTitle}>{t('selectSigner') || 'Select Signer'}</Text>
         <ScrollView 
