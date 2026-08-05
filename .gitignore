@@ -48,3 +48,9 @@ temp/
 Thumbs.db
 .vscode/
 .idea/
+
+# Binaires de build telecharges depuis EAS.
+# Un .aab pese ~115 Mo : au-dela des 100 Mo, GitHub rejette le push entier.
+*.aab
+*.apk
+*.ipa

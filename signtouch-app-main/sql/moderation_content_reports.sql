@@ -11,6 +11,18 @@
 --
 -- À exécuter dans Supabase → SQL Editor.
 
+-- 0) Suppression préalable.
+--    CREATE OR REPLACE ne sait pas modifier les colonnes renvoyées par une
+--    fonction déjà en base : Postgres répond « cannot change return type of
+--    existing function ». La version précédente de admin_list_content_reports
+--    renvoyait moins de colonnes ; il faut donc la supprimer avant de recréer.
+--    Aucune donnée n'est touchée — ce ne sont que des fonctions de lecture et
+--    d'action, la table content_reports reste intacte.
+DROP FUNCTION IF EXISTS public.admin_list_content_reports(text);
+DROP FUNCTION IF EXISTS public.admin_list_content_reports();
+DROP FUNCTION IF EXISTS public.admin_moderate_content(uuid, text);
+DROP FUNCTION IF EXISTS public.admin_count_pending_reports();
+
 -- 1) Liste enrichie : le signalement AVEC le contenu visé, pour juger sur pièce
 --    sans avoir à chercher l'élément soi-même.
 CREATE OR REPLACE FUNCTION public.admin_list_content_reports(p_status text DEFAULT NULL)
