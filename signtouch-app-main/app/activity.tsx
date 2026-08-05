@@ -464,6 +464,10 @@ export default function ActivityScreen() {
 
   const modalPost = commentModalPostId ? posts.find(p => p.id === commentModalPostId) : null;
   const modalComments = commentModalPostId ? (allComments[commentModalPostId] || []) : [];
+  // Les commentaires sont ecrits par des fans du monde entier : chacun doit
+  // pouvoir les lire dans sa langue, sinon un fil de commentaires devient
+  // illisible des que l'app depasse un pays.
+  const trComments = useAutoTranslate(modalComments.map(c => c.text));
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -577,7 +581,7 @@ export default function ActivityScreen() {
                         <Text style={styles.commentAuthor}>{c.author}</Text>
                         <Text style={styles.commentTime}>{formatTimeAgo(c.createdAt)}</Text>
                       </View>
-                      <Text style={styles.commentText}>{c.text}</Text>
+                      <Text style={styles.commentText}>{trComments(c.text)}</Text>
                     </View>
                   </View>
                 )}

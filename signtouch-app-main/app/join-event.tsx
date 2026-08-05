@@ -33,6 +33,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, QrCode, Search, Check, Download, Video, Users, Clock, Calendar, Bell } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAutoTranslate } from '@/utils/translation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { LiveEvent } from '@/utils/liveEventStorage';
@@ -272,6 +273,9 @@ export default function JoinEventScreen() {
   const [eventExpired, setEventExpired] = useState(false);
   const [eventScheduled, setEventScheduled] = useState(false);
   const [scheduledSession, setScheduledSession] = useState<EventSession | null>(null);
+  // Le titre de l'evenement est ecrit par la celebrite, dans SA langue. Un fan
+  // qui scanne le QR sur place doit le lire dans la sienne.
+  const trEvent = useAutoTranslate([scheduledSession?.title, foundSession?.title]);
   const [notificationSet, setNotificationSet] = useState(false);
   const [reserved, setReserved] = useState(false);
   const [reservationCount, setReservationCount] = useState<number | null>(null);
@@ -1962,7 +1966,7 @@ export default function JoinEventScreen() {
             <View style={styles.scheduledIcon}>
               <Calendar size={40} color="#3b82f6" />
             </View>
-            <Text style={styles.scheduledTitle}>{scheduledSession.title}</Text>
+            <Text style={styles.scheduledTitle}>{trEvent(scheduledSession.title)}</Text>
             <Text style={styles.scheduledMessage}>
               {t('eventScheduledMessage') || 'This event has not started yet.'}
             </Text>
@@ -2036,7 +2040,7 @@ export default function JoinEventScreen() {
           </View>
         ) : foundSession ? (
           <View style={styles.resultContainer}>
-            <Text style={styles.foundTitle}>{foundSession.title}</Text>
+            <Text style={styles.foundTitle}>{trEvent(foundSession.title)}</Text>
 
             <View style={{ alignItems: 'center', marginBottom: 16 }}>
               <CelebrityAvatar
