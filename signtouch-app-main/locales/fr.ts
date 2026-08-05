@@ -1312,6 +1312,8 @@ export default {
   visitWebsite: 'Visiter le site',
   viewOnWikipedia: 'Wikipédia',
   reportCelebrity: 'Signaler',
+  spokenLanguages: "Langues parlées",
+  addLanguage: "Ajouter une langue",
   celebrityAboutYou: "À propos de vous",
   celebrityAboutYouPlaceholder: "Ex : Fondateur et CEO de Plyz",
   deleteAccountTitle: "Supprimer mon compte",

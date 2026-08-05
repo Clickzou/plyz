@@ -1314,6 +1314,8 @@ export default {
   visitWebsite: 'Visit Website',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Report',
+  spokenLanguages: "Spoken languages",
+  addLanguage: "Add a language",
   celebrityAboutYou: "About you",
   celebrityAboutYouPlaceholder: "E.g. Founder and CEO of Plyz",
   deleteAccountTitle: "Delete my account",

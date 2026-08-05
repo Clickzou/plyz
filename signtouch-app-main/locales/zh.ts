@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: '访问网站',
   viewOnWikipedia: '维基百科',
   reportCelebrity: '举报',
+  spokenLanguages: "掌握的语言",
+  addLanguage: "添加语言",
   celebrityAboutYou: "关于你",
   celebrityAboutYouPlaceholder: "例如：Plyz 创始人兼 CEO",
   deleteAccountTitle: "删除我的账户",

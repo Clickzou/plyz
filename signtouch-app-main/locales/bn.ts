@@ -1297,6 +1297,8 @@ export default {
   visitWebsite: 'ওয়েবসাইট ভিজিট করুন',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'রিপোর্ট করুন',
+  spokenLanguages: "কথ্য ভাষা",
+  addLanguage: "ভাষা যোগ করুন",
   celebrityAboutYou: "আপনার সম্পর্কে",
   celebrityAboutYouPlaceholder: "যেমন Plyz-এর প্রতিষ্ঠাতা ও CEO",
   deleteAccountTitle: "আমার অ্যাকাউন্ট মুছুন",

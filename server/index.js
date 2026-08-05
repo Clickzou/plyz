@@ -4974,7 +4974,7 @@ app.post('/api/upsert-celebrity-pricing', async (req, res) => {
 app.post('/api/update-celebrity-profile', async (req, res) => {
   try {
     const db = getSupabaseAdmin();
-    const { website, bio, stage_name } = req.body;
+    const { website, bio, stage_name, spoken_languages } = req.body;
 
     // 🔒 IDOR — AUTH + PROPRIÉTÉ : on ne modifie QUE le profil de l'appelant.
     const authUser = await verifySupabaseJWT(req);
@@ -5007,6 +5007,23 @@ app.post('/api/update-celebrity-profile', async (req, res) => {
         logSecurityEvent(req, 'content_rejected', 'nom public rejeté (' + (m.reason || '') + ')');
         return res.status(400).json({ error: 'text_rejected', field: 'stage_name', message: "Ce nom public n'est pas autorisé." });
       }
+    }
+    // Langues parlees : on VALIDE au lieu de faire confiance au client. Une
+    // valeur mal formee rendrait la fiche publique inaffichable pour tous les fans.
+    if (spoken_languages !== undefined) {
+      if (!Array.isArray(spoken_languages)) return res.status(400).json({ error: 'spoken_languages_must_be_array' });
+      const CODES = ['fr','en','es','de','pt','it','ar','zh','ja','ru','hi','bn','id','ur','ms'];
+      const vues = new Set();
+      const propre = [];
+      for (const l of spoken_languages.slice(0, 15)) {
+        const code = String(l && l.code || '').toLowerCase();
+        const level = Math.round(Number(l && l.level));
+        if (!CODES.includes(code) || !(level >= 1 && level <= 5)) continue;
+        if (vues.has(code)) continue;   // une langue ne peut pas figurer deux fois
+        vues.add(code);
+        propre.push({ code, level });
+      }
+      fields.spoken_languages = propre;
     }
     if (bio !== undefined) fields.bio = bio;
     if (stage_name !== undefined) fields.stage_name = stage_name;

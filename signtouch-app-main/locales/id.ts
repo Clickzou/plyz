@@ -1297,6 +1297,8 @@ export default {
   visitWebsite: 'Kunjungi situs',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: 'Laporkan',
+  spokenLanguages: "Bahasa yang dikuasai",
+  addLanguage: "Tambah bahasa",
   celebrityAboutYou: "Tentang kamu",
   celebrityAboutYouPlaceholder: "Mis. Pendiri dan CEO Plyz",
   deleteAccountTitle: "Hapus akun saya",

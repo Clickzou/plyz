@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: 'زيارة الموقع',
   viewOnWikipedia: 'ويكيبيديا',
   reportCelebrity: 'إبلاغ',
+  spokenLanguages: "اللغات المتحدث بها",
+  addLanguage: "إضافة لغة",
   celebrityAboutYou: "نبذة عنك",
   celebrityAboutYouPlaceholder: "مثال: مؤسّس Plyz ورئيسها التنفيذي",
   deleteAccountTitle: "حذف حسابي",

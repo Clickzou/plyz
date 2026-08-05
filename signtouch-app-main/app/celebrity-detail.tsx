@@ -9,7 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import {
   ArrowLeft, CheckCircle, ShieldCheck, Globe, ExternalLink,
   Video, PenTool, Flag, Calendar, MessageSquare, Heart,
-  MapPin, Clock, CreditCard, Users,
+  MapPin, Clock, CreditCard, Users, Star,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -20,6 +20,18 @@ import { useAutoTranslate } from '@/utils/translation';
 import ReportContentModal from '@/components/ReportContentModal';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
+
+// Drapeaux et noms pour l'affichage des langues parlées par la personnalité.
+const SPOKEN_LANGS: { code: string; name: string; flag: string }[] = [
+  { code: 'fr', name: 'Français', flag: '🇫🇷' }, { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' }, { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'pt', name: 'Português', flag: '🇵🇹' }, { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'ar', name: 'العربية', flag: '🇸🇦' }, { code: 'zh', name: '中文', flag: '🇨🇳' },
+  { code: 'ja', name: '日本語', flag: '🇯🇵' }, { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+  { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' }, { code: 'bn', name: 'বাংলা', flag: '🇧🇩' },
+  { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' }, { code: 'ur', name: 'اردو', flag: '🇵🇰' },
+  { code: 'ms', name: 'Bahasa Melayu', flag: '🇲🇾' },
+];
 
 interface CelebrityDetail {
   user_id: string;
@@ -47,6 +59,7 @@ interface CelebrityDetail {
     live_dedication_price_cents: number;
     currency: string;
   } | null;
+  spoken_languages?: { code: string; level: number }[];
   posts: any[];
 }
 
@@ -451,6 +464,35 @@ export default function CelebrityDetailScreen() {
               </TouchableOpacity>
             )}
 
+            {/* Langues parlées : information décisive avant de réserver un
+                tête-à-tête payant. */}
+            {Array.isArray(celebrity.spoken_languages) && celebrity.spoken_languages.length > 0 && (
+              <View style={styles.languagesBlock}>
+                <Text style={styles.sectionSubTitle}>
+                  {t('spokenLanguages' as any) || 'Langues parlées'}
+                </Text>
+                {celebrity.spoken_languages.map((sl: { code: string; level: number }) => {
+                  const lang = SPOKEN_LANGS.find(l => l.code === sl.code);
+                  return (
+                    <View key={sl.code} style={styles.languageRow}>
+                      <Text style={{ fontSize: 17 }}>{lang?.flag || '🏳️'}</Text>
+                      <Text style={styles.languageName}>{lang?.name || sl.code}</Text>
+                      <View style={{ flexDirection: 'row', gap: 2 }}>
+                        {[1, 2, 3, 4, 5].map(n => (
+                          <Star
+                            key={n}
+                            size={13}
+                            color={n <= sl.level ? '#f59e0b' : '#374151'}
+                            fill={n <= sl.level ? '#f59e0b' : 'transparent'}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
             <Text style={styles.sectionSubTitle}>
               <Calendar size={16} color="#10b981" /> {t('upcomingEvents' as any) || 'Événements en cours ou programmés'}
             </Text>
@@ -621,6 +663,9 @@ export default function CelebrityDetailScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a1628' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  languagesBlock: { marginTop: 18, marginBottom: 6 },
+  languageRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7 },
+  languageName: { color: '#d1d5db', fontSize: 14, flex: 1 },
   reportRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     marginTop: 28, paddingVertical: 10,

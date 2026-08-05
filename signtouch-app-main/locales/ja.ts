@@ -1292,6 +1292,8 @@ export default {
   visitWebsite: 'サイトを訪問',
   viewOnWikipedia: 'Wikipedia',
   reportCelebrity: '報告',
+  spokenLanguages: "話せる言語",
+  addLanguage: "言語を追加",
   celebrityAboutYou: "あなたについて",
   celebrityAboutYouPlaceholder: "例：Plyz 創業者兼 CEO",
   deleteAccountTitle: "アカウントを削除",

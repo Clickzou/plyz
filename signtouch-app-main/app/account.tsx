@@ -110,6 +110,9 @@ export default function AccountScreen() {
   const [celebrityName, setCelebrityName] = useState('');
   const [celebrityBio, setCelebrityBio] = useState('');
   const [bioSaving, setBioSaving] = useState(false);
+  // Langues parlées : [{ code, level 1..5 }]. Autant de langues que souhaité.
+  const [spokenLanguages, setSpokenLanguages] = useState<{ code: string; level: number }[]>([]);
+  const [showAddLanguage, setShowAddLanguage] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [earnings, setEarnings] = useState<EarningsData | null>(null);
   const [earningsLoading, setEarningsLoading] = useState(false);
@@ -148,6 +151,9 @@ export default function AccountScreen() {
         const res = await fetch(`${API_BASE}/api/celebrity/${user.id}`);
         const data = await res.json();
         if (data?.celebrity?.bio) setCelebrityBio(data.celebrity.bio);
+        if (Array.isArray(data?.celebrity?.spoken_languages)) {
+          setSpokenLanguages(data.celebrity.spoken_languages);
+        }
       } catch { /* le champ reste vide, la célébrité peut l'écrire */ }
     })();
   }, [user?.id, isCelebrity]);
@@ -507,7 +513,7 @@ export default function AccountScreen() {
       const res = await authedFetch(`${API_BASE}/api/update-celebrity-profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bio: celebrityBio.trim() }),
+        body: JSON.stringify({ bio: celebrityBio.trim(), spoken_languages: spokenLanguages }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -862,6 +868,72 @@ export default function AccountScreen() {
                   multiline
                   maxLength={500}
                 />
+
+                {/* Langues parlées. Décisif avant de réserver un tête-à-tête :
+                    un fan doit savoir s'il pourra se comprendre avec la
+                    personnalité, sinon la visio finit en litige. */}
+                <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 16, marginBottom: 6, fontWeight: '600' }}>
+                  {t('spokenLanguages' as any) || 'Langues parlées'}
+                </Text>
+                {spokenLanguages.map((sl) => {
+                  const lang = LANGUAGES.find(l => l.code === sl.code);
+                  return (
+                    <View key={sl.code} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 8 }}>
+                      <Text style={{ fontSize: 18 }}>{lang?.flag || '🏳️'}</Text>
+                      <Text style={{ color: '#fff', fontSize: 14, flex: 1 }}>{lang?.name || sl.code}</Text>
+                      {[1, 2, 3, 4, 5].map(n => (
+                        <TouchableOpacity
+                          key={n}
+                          onPress={() => setSpokenLanguages(prev => prev.map(x => x.code === sl.code ? { ...x, level: n } : x))}
+                          hitSlop={4}
+                        >
+                          <Star size={17} color={n <= sl.level ? '#f59e0b' : '#4b5563'} fill={n <= sl.level ? '#f59e0b' : 'transparent'} />
+                        </TouchableOpacity>
+                      ))}
+                      <TouchableOpacity
+                        onPress={() => setSpokenLanguages(prev => prev.filter(x => x.code !== sl.code))}
+                        hitSlop={8}
+                        style={{ marginLeft: 4 }}
+                      >
+                        <Text style={{ color: '#ef4444', fontSize: 16, fontWeight: '700' }}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+
+                {LANGUAGES.some(l => !spokenLanguages.find(s => s.code === l.code)) && (
+                  <TouchableOpacity
+                    onPress={() => setShowAddLanguage(v => !v)}
+                    style={{ alignSelf: 'flex-start', paddingVertical: 6 }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={{ color: '#10b981', fontSize: 14, fontWeight: '600' }}>
+                      {showAddLanguage ? '−' : '+'} {t('addLanguage' as any) || 'Ajouter une langue'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {showAddLanguage && (
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6, marginBottom: 4 }}>
+                    {LANGUAGES.filter(l => !spokenLanguages.find(s => s.code === l.code)).map(l => (
+                      <TouchableOpacity
+                        key={l.code}
+                        onPress={() => {
+                          // Niveau 3 par défaut : un niveau neutre évite de
+                          // laisser une langue sans note si la personne oublie.
+                          setSpokenLanguages(prev => [...prev, { code: l.code, level: 3 }]);
+                          setShowAddLanguage(false);
+                        }}
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={{ fontSize: 15 }}>{l.flag}</Text>
+                        <Text style={{ color: '#d1d5db', fontSize: 13 }}>{l.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
                 <TouchableOpacity
                   style={{ marginTop: 8, alignSelf: 'flex-start', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(16,185,129,0.15)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.4)', opacity: bioSaving ? 0.5 : 1 }}
                   onPress={saveCelebrityBio}
