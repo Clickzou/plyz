@@ -127,6 +127,28 @@ export default function MyVideoCallsScreen() {
     }
   };
 
+  // La saisie est validée AVANT l'appel : « new Date(saisie).toISOString() »
+  // lève une exception sur une date vide ou mal tapée, et cette exception se
+  // produisait hors de tout filet — la personnalité appuyait sur Accepter et
+  // il ne se passait rien, sans le moindre message.
+  const proposerCreneau = (id: string) => {
+    const saisie = (creneau[id] || '').trim();
+    const quand = new Date(saisie);
+    if (!saisie || Number.isNaN(quand.getTime())) {
+      showAlert(t('error') || 'Erreur',
+        t('vcrDateInvalid' as any) || 'Format attendu : AAAA-MM-JJTHH:MM');
+      return;
+    }
+    if (quand.getTime() < Date.now()) {
+      showAlert(t('error') || 'Erreur',
+        t('vcrDatePast' as any) || 'Choisis une date à venir.');
+      return;
+    }
+    // Sans suffixe de fuseau, la saisie est lue dans le fuseau de l'appareil,
+    // puis convertie en UTC pour la base. Chacun relit ensuite dans le sien.
+    agir(id, 'accept', { scheduled_at: quand.toISOString() });
+  };
+
   const dateLocale = (iso: string | null) => {
     if (!iso) return '—';
     const d = new Date(iso);
@@ -237,7 +259,7 @@ export default function MyVideoCallsScreen() {
                       <TouchableOpacity
                         style={[styles.btn, styles.btnAccept, busy === d.id && styles.btnBusy]}
                         disabled={busy === d.id}
-                        onPress={() => agir(d.id, 'accept', { scheduled_at: new Date(creneau[d.id]).toISOString() })}
+                        onPress={() => proposerCreneau(d.id)}
                       >
                         <Check size={16} color="#fff" />
                         <Text style={styles.btnText}>{t('accept') || 'Accepter'}</Text>
