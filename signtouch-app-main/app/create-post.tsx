@@ -247,16 +247,24 @@ export default function CreatePostScreen() {
         }
       } catch {}
 
-      // Cache local dans son PROPRE try/catch : un cache corrompu ne doit pas
-      // faire croire à un échec de publication (→ le créateur republierait = doublon).
-      try {
-        const stored = await AsyncStorage.getItem(LOCAL_POSTS_KEY);
-        let localPosts: any[] = [];
-        try { localPosts = stored ? JSON.parse(stored) : []; } catch { localPosts = []; }
-        localPosts.unshift(newPost);
-        await AsyncStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(localPosts));
-      } catch (cacheErr) {
-        console.warn('[create-post] cache local échoué (non bloquant):', cacheErr);
+      // Cache local UNIQUEMENT si le serveur n'a pas pris le relais. Cette copie
+      // est remplie de valeurs de repli (« You », aucun avatar) et le fil la place
+      // AVANT celle du serveur : conservée après une publication réussie, elle
+      // masquait la vraie publication. La célébrité voyait donc son propre post
+      // sans son pseudo ni sa photo — et le croyait cassé — alors que ses fans
+      // le voyaient correctement.
+      // Propre try/catch : un cache corrompu ne doit pas faire croire à un échec
+      // de publication (→ le créateur republierait = doublon).
+      if (!serverPublished) {
+        try {
+          const stored = await AsyncStorage.getItem(LOCAL_POSTS_KEY);
+          let localPosts: any[] = [];
+          try { localPosts = stored ? JSON.parse(stored) : []; } catch { localPosts = []; }
+          localPosts.unshift(newPost);
+          await AsyncStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(localPosts));
+        } catch (cacheErr) {
+          console.warn('[create-post] cache local échoué (non bloquant):', cacheErr);
+        }
       }
 
       if (Platform.OS !== 'web') {

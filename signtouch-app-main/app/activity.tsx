@@ -26,18 +26,6 @@ const LIKES_KEY = '@plyz_post_likes';
 const COMMENTS_KEY = '@plyz_post_comments';
 const LOCAL_POSTS_KEY = '@plyz_local_posts';
 
-// ⚠️ Contenu FICTIF uniquement (aucun nom/photo de vraie personne) — repli d'affichage
-// si l'API ne renvoie rien. Ne JAMAIS y mettre de vraie célébrité (droit à l'image + refus store).
-const DEMO_FEED: FeedPost[] = [
-  { id: 'post-001', kind: 'post', title: 'Nouveau chapitre', body: "Très heureux d'annoncer une nouvelle aventure. Restez connectés ! Merci pour votre soutien incroyable.", media_url: null, event_date: null, created_at: '2025-12-10T14:30:00Z', like_count: 12453, celebrity: { user_id: 'mock-005', stage_name: 'Adrien Vasquez', avatar_url: null, official_verified: true, stripe_verified: true } },
-  { id: 'post-002', kind: 'event', title: 'Session Live Exclusive', body: 'Rejoignez-moi pour une session live exclusive ce week-end. On parlera souvenirs et avenir.', media_url: null, event_date: '2026-02-20T18:00:00Z', created_at: '2025-12-08T10:00:00Z', like_count: 34210, celebrity: { user_id: 'mock-001', stage_name: 'Rafael Mendez', avatar_url: null, official_verified: true, stripe_verified: true } },
-  { id: 'post-003', kind: 'post', title: null, body: 'Merci à tous les fans pour votre énergie incroyable au concert ! Vous êtes les meilleurs. On se retrouve bientôt sur scène.', media_url: null, event_date: null, created_at: '2025-12-05T20:00:00Z', like_count: 8920, celebrity: { user_id: 'mock-004', stage_name: 'Nora Lys', avatar_url: null, official_verified: true, stripe_verified: true } },
-  { id: 'post-004', kind: 'event', title: 'Dédicace en Live', body: 'Réservez votre créneau pour une dédicace personnalisée en vidéo. Places limitées !', media_url: null, event_date: '2026-03-01T15:00:00Z', created_at: '2025-12-03T09:00:00Z', like_count: 5632, celebrity: { user_id: 'mock-002', stage_name: 'Clara Belmont', avatar_url: null, official_verified: true, stripe_verified: true } },
-  { id: 'post-005', kind: 'post', title: 'Quelle soirée !', body: 'Quel match incroyable hier soir ! On ne lâche rien. Merci aux supporters, vous êtes incroyables !', media_url: null, event_date: null, created_at: '2025-11-28T22:00:00Z', like_count: 45780, celebrity: { user_id: 'mock-003', stage_name: 'Léo Farel', avatar_url: null, official_verified: true, stripe_verified: true } },
-  { id: 'post-006', kind: 'post', title: "Retour à l'entraînement", body: "La préparation pour les championnats a commencé. Le sport c'est ma vie. On vise l'or !", media_url: null, event_date: null, created_at: '2025-11-25T08:00:00Z', like_count: 7340, celebrity: { user_id: 'mock-006', stage_name: 'Malik Dorsay', avatar_url: null, official_verified: true, stripe_verified: true } },
-];
-// Photos IA générées (FAL), fictives — nommées par user_id.
-DEMO_FEED.forEach((p) => { p.celebrity.avatar_url = `https://qoitixdpcqlzgyusbgdx.supabase.co/storage/v1/object/public/events/mock-avatars/${p.celebrity.user_id}.jpg`; });
 
 interface FeedPost {
   id: string;
@@ -73,37 +61,10 @@ const FILTERS = [
 
 const BANNER_DISMISSED_KEY = '@plyz_celebrity_banner_dismissed';
 
-const INITIAL_COMMENTS: Record<string, Comment[]> = {
-  'post-001': [
-    { id: 'ic-001', postId: 'post-001', text: 'Trop hâte de voir ça ! 🔥', author: 'Lucas M.', createdAt: '2025-12-10T15:10:00Z' },
-    { id: 'ic-002', postId: 'post-001', text: 'Omar tu es le meilleur, on te soutient !', author: 'Sophie R.', createdAt: '2025-12-10T16:22:00Z' },
-    { id: 'ic-003', postId: 'post-001', text: 'Légende 🙌', author: 'Karim B.', createdAt: '2025-12-10T18:05:00Z' },
-  ],
-  'post-002': [
-    { id: 'ic-004', postId: 'post-002', text: 'Zizou en live !! Je réserve direct 🤩', author: 'Mehdi A.', createdAt: '2025-12-08T11:30:00Z' },
-    { id: 'ic-005', postId: 'post-002', text: 'La classe, vivement le 20 !', author: 'Julie P.', createdAt: '2025-12-08T12:15:00Z' },
-    { id: 'ic-006', postId: 'post-002', text: 'Tu nous manques sur le terrain Zizou ❤️', author: 'Antoine D.', createdAt: '2025-12-08T14:00:00Z' },
-    { id: 'ic-007', postId: 'post-002', text: 'Le GOAT tout simplement', author: 'Fatima Z.', createdAt: '2025-12-08T15:45:00Z' },
-    { id: 'ic-008', postId: 'post-002', text: 'Je vais demander un autographe !', author: 'Thomas L.', createdAt: '2025-12-08T17:20:00Z' },
-  ],
-  'post-003': [
-    { id: 'ic-009', postId: 'post-003', text: 'Le concert était incroyable !! 💃', author: 'Amina K.', createdAt: '2025-12-05T21:00:00Z' },
-    { id: 'ic-010', postId: 'post-003', text: 'Djadja en live, frissons garantis', author: 'Emma V.', createdAt: '2025-12-05T22:30:00Z' },
-  ],
-  'post-005': [
-    { id: 'ic-011', postId: 'post-005', text: 'ALLEZ KYLIAN 🇫🇷⚽', author: 'Maxime G.', createdAt: '2025-11-28T22:30:00Z' },
-    { id: 'ic-012', postId: 'post-005', text: 'Quel but hier soir, chapeau !', author: 'Nicolas F.', createdAt: '2025-11-28T23:00:00Z' },
-    { id: 'ic-013', postId: 'post-005', text: 'Tu fais rêver tout un pays 💪', author: 'Léa C.', createdAt: '2025-11-29T08:00:00Z' },
-    { id: 'ic-014', postId: 'post-005', text: 'Hala Madrid y nada más !', author: 'Carlos R.', createdAt: '2025-11-29T09:15:00Z' },
-    { id: 'ic-015', postId: 'post-005', text: 'J\'ai réservé une dédicace, trop content', author: 'Yanis M.', createdAt: '2025-11-29T10:45:00Z' },
-    { id: 'ic-016', postId: 'post-005', text: 'Le meilleur joueur du monde 🌍', author: 'Sarah B.', createdAt: '2025-11-29T12:00:00Z' },
-    { id: 'ic-017', postId: 'post-005', text: 'On est derrière toi Kylian !', author: 'Pierre H.', createdAt: '2025-11-29T14:30:00Z' },
-  ],
-  'post-006': [
-    { id: 'ic-018', postId: 'post-006', text: 'Champion olympique 3 fois, respect total 🥋', author: 'David W.', createdAt: '2025-11-25T10:00:00Z' },
-    { id: 'ic-019', postId: 'post-006', text: 'Le dojo te va si bien Teddy !', author: 'Marine L.', createdAt: '2025-11-25T12:30:00Z' },
-  ],
-};
+// Aucun commentaire pre-rempli : ceux qui existaient ici citaient nommement des
+// personnalites reelles (droit a l'image) et etaient rattaches aux publications
+// de demonstration, supprimees.
+const INITIAL_COMMENTS: Record<string, Comment[]> = {};
 
 function formatCount(n: number): string {
   if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -160,7 +121,10 @@ export default function ActivityScreen() {
   const { user } = useAuth();
   const { requireAuth } = useAuthPrompt();
   const { isFollowing, toggleFollow } = useFollow();
-  const [posts, setPosts] = useState<FeedPost[]>(DEMO_FEED);
+  // Démarrage à vide : le fil s'ouvrait sur des célébrités fictives affichées
+  // AVANT même la réponse du serveur — elles apparaissaient donc à chaque
+  // ouverture, à tout le monde, badges « Officiel » et « Stripe vérifié » compris.
+  const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
@@ -325,20 +289,14 @@ export default function ActivityScreen() {
       }
       setPage(p);
     } catch (err) {
-      console.warn('Using demo feed:', err);
-      let demo = [...DEMO_FEED];
-      if (filter !== 'all') {
-        demo = demo.filter(p => p.kind === filter);
-      }
+      // Plus de repli sur des célébrités fictives : une seconde de réseau
+      // instable suffisait à afficher des personnes inventées, portant les
+      // badges « Officiel » et « Stripe vérifié », à un vrai utilisateur — ou à
+      // un examinateur de store. Un fil vide est moins grave qu'un fil qui ment.
+      console.warn('[Fil] chargement impossible :', err);
       const localPosts = await loadLocalPosts();
       const filteredLocal = filter === 'all' ? localPosts : localPosts.filter(lp => lp.kind === filter);
-      const seenIds = new Set<string>();
-      const merged = [...filteredLocal, ...demo]
-        .filter((it: FeedPost) => (seenIds.has(it.id) ? false : (seenIds.add(it.id), true)))
-        .sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-      setPosts(merged);
+      setPosts(filteredLocal);
       setPage(1);
     } finally {
       setLoading(false);
