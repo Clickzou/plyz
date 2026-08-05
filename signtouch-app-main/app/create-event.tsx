@@ -825,6 +825,24 @@ export default function CreateEventScreen() {
                 {t('eventIntro') || 'Programmez votre événement QR à l\'avance ou lancez-le immédiatement en cochant le bouton Live.'}
               </Text>
 
+              {/* La dédicace se passe SUR PLACE : au moment de la recevoir, le fan
+                  doit être à moins d'un kilomètre du lieu. C'est ce qui distingue
+                  la dédicace de l'appel vidéo, que l'on peut suivre de partout,
+                  et la célébrité doit le savoir avant d'annoncer son événement —
+                  sinon elle attire des fans qui ne pourront jamais en profiter. */}
+              <View style={styles.presenceWarnCard}>
+                <View style={styles.presenceWarnHeader}>
+                  <MapPin size={18} color="#fbbf24" />
+                  <Text style={styles.presenceWarnTitle}>
+                    {t('dedicationPresenceTitle' as any) || 'Vos fans devront être sur place'}
+                  </Text>
+                </View>
+                <Text style={styles.presenceWarnText}>
+                  {t('dedicationPresenceText' as any) ||
+                    "Contrairement à un appel vidéo live, que vos fans peuvent suivre de n'importe où, une dédicace se passe en personne : pour recevoir la vôtre, ils devront se trouver à moins d'1 km du lieu de l'événement. Ils peuvent réserver à l'avance de chez eux, mais leur position sera vérifiée le jour J."}
+                </Text>
+              </View>
+
               <View style={styles.stepsContainer}>
                 <Text style={styles.stepsTitle}>{t('dedicationStepsTitle' as any) || 'Comment ça marche ?'}</Text>
                 <View style={styles.stepRow}>
@@ -1632,6 +1650,32 @@ const styles = StyleSheet.create({
     color: '#d1d5db',
     fontSize: 13,
     flex: 1,
+    lineHeight: 20,
+  },
+  presenceWarnCard: {
+    backgroundColor: 'rgba(251,191,36,0.10)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(251,191,36,0.35)',
+    padding: 16,
+    marginBottom: 20,
+    marginHorizontal: 20,
+  },
+  presenceWarnHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  presenceWarnTitle: {
+    flex: 1,
+    color: '#fbbf24',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  presenceWarnText: {
+    color: 'rgba(255,255,255,0.78)',
+    fontSize: 13,
     lineHeight: 20,
   },
   ideasCard: {

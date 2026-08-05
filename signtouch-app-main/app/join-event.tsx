@@ -30,7 +30,7 @@ import { supabase } from '@/utils/supabase';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, QrCode, Search, Check, Download, Video, Users, Clock, Calendar, Bell } from 'lucide-react-native';
+import { ArrowLeft, QrCode, Search, Check, Download, Video, Users, Clock, Calendar, Bell, MapPin } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAutoTranslate } from '@/utils/translation';
@@ -1887,6 +1887,24 @@ export default function JoinEventScreen() {
               </View>
             </View>
 
+            {/* Dit AVANT que le fan saisisse un code, pas au moment du refus.
+                La vérification de position n'intervient qu'à la réception de la
+                dédicace : sans cet avertissement, un fan peut payer, se
+                déplacer pour rien, ou se voir refuser sans avoir compris que
+                l'événement se passait en personne. */}
+            <View style={styles.presenceWarnCard}>
+              <View style={styles.presenceWarnHeader}>
+                <MapPin size={18} color="#fbbf24" />
+                <Text style={styles.presenceWarnTitle}>
+                  {t('dedicationPresenceFanTitle' as any) || 'Vous devrez être sur place'}
+                </Text>
+              </View>
+              <Text style={styles.presenceWarnText}>
+                {t('dedicationPresenceFanText' as any) ||
+                  "Une dédicace se reçoit en personne : le jour de l'événement, vous devrez vous trouver à moins d'1 km du lieu pour recevoir vos photos dédicacées. Vous pouvez réserver à l'avance de chez vous, mais votre position sera vérifiée sur place."}
+              </Text>
+            </View>
+
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>{t('enterEventCode') || 'Enter the event code'}</Text>
               <TextInput
@@ -2276,6 +2294,31 @@ const styles = StyleSheet.create({
   rejoinBannerSub: {
     fontSize: 12,
     color: 'rgba(255,255,255,0.7)',
+  },
+  presenceWarnCard: {
+    backgroundColor: 'rgba(251,191,36,0.10)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(251,191,36,0.35)',
+    padding: 16,
+    marginBottom: 24,
+  },
+  presenceWarnHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  presenceWarnTitle: {
+    flex: 1,
+    color: '#fbbf24',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  presenceWarnText: {
+    color: 'rgba(255,255,255,0.78)',
+    fontSize: 13,
+    lineHeight: 20,
   },
   howItWorksSection: {
     backgroundColor: 'rgba(16, 185, 129, 0.1)',
