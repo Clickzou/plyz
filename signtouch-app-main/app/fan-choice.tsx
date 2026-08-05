@@ -7,15 +7,19 @@ import {
   Platform,
   ScrollView,
   Modal,
+  TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PlyzHeader from '@/components/PlyzHeader';
-import { PenTool, Video, Plus, LogIn, CalendarClock, Sparkles } from 'lucide-react-native';
+import { PenTool, Video, Plus, LogIn, CalendarClock, Sparkles, Search, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAutoTranslate } from '@/utils/translation';
+import { getDateLocale } from '@/utils/dateLocale';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
@@ -37,6 +41,14 @@ export default function FanChoiceScreen() {
   const { requireAuth } = useAuthPrompt();
   const { enableCelebrityMode, isCelebrity } = useCelebrityMode();
   // 6 compteurs : à venir / en cours / passés × événements / vidéo
+  // Catalogue public : ce qui permet enfin a un fan de DECOUVRIR des evenements
+  // sans code ni QR.
+  const [catalogue, setCatalogue] = useState<any[]>([]);
+  const [catalogueLoading, setCatalogueLoading] = useState(true);
+  const [catalogueFailed, setCatalogueFailed] = useState(false);
+  const [recherche, setRecherche] = useState('');
+  const [periode, setPeriode] = useState<'ongoing' | 'upcoming' | 'all'>('all');
+
   const [eventUpcomingCount, setEventUpcomingCount] = useState(0);
   const [eventOngoingCount, setEventOngoingCount] = useState(0);
   const [eventPastCount, setEventPastCount] = useState(0);
@@ -186,6 +198,43 @@ export default function FanChoiceScreen() {
   };
 
   // Navigue vers la liste pré-filtrée (catégorie + type événement/vidéo).
+  // Traduction des titres : ils sont ecrits par les personnalites, dans leur
+  // langue. Un fan doit lire le catalogue dans la sienne.
+  const trCatalogue = useAutoTranslate(catalogue.map((e: any) => e.title));
+
+  const chargerCatalogue = useCallback(async () => {
+    setCatalogueFailed(false);
+    try {
+      const params = new URLSearchParams();
+      if (recherche.trim()) params.set('search', recherche.trim());
+      if (periode !== 'all') params.set('when', periode);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(API_BASE + '/api/events?' + params.toString(), { signal: controller.signal });
+      clearTimeout(timeoutId);
+      const data = await res.json();
+      setCatalogue(Array.isArray(data.events) ? data.events : []);
+    } catch {
+      // Un echec de chargement n'est PAS une absence d'evenements : sans cette
+      // distinction, une coupure reseau ferait croire que Plyz est vide.
+      setCatalogueFailed(true);
+      setCatalogue([]);
+    } finally {
+      setCatalogueLoading(false);
+    }
+  }, [recherche, periode]);
+
+  // Delai court avant de relancer : evite une requete a chaque lettre tapee.
+  useEffect(() => {
+    const timer = setTimeout(chargerCatalogue, 300);
+    return () => clearTimeout(timer);
+  }, [chargerCatalogue]);
+
+  const formatCreneau = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString(getDateLocale(), { day: 'numeric', month: 'short' })
+      + ' · ' + d.toLocaleTimeString(getDateLocale(), { hour: '2-digit', minute: '2-digit' });
+  };
   const goToList = (view: 'upcoming' | 'ongoing' | 'past', kind: 'event' | 'video') => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -292,59 +341,149 @@ export default function FanChoiceScreen() {
           <Text style={styles.title}>{t('fanChoiceTitle')}</Text>
           <Text style={styles.subtitle}>{t('fanChoiceSubtitle')}</Text>
 
-          <View style={styles.cardsContainer}>
-            {renderCard(
-              '#10b981',
-              <PenTool size={40} color="#10b981" strokeWidth={1.5} />,
-              <PenTool size={14} color="#10b981" strokeWidth={2.5} />,
-              t('eventTypeDedicace' as any) || 'Dédicace',
-              t('fanChoiceEventTitle'),
-              t('fanChoiceEventDesc'),
-              '/create-event',
-              '/join-event',
-            )}
+          {/* Deux tuiles compactes plutôt que deux grandes cartes empilées : la
+              liste des événements commence dès le premier écran au lieu d'être
+              repoussée tout en bas. La TUILE ENTIÈRE est cliquable — pas de petit
+              bouton à l'intérieur — donc la cible tactile est bien plus grande
+              qu'avant. */}
+          <View style={styles.tuiles}>
+            <TouchableOpacity
+              style={[styles.tuile, { borderColor: 'rgba(16,185,129,0.35)', backgroundColor: 'rgba(16,185,129,0.10)' }]}
+              onPress={() => handleChoice('/join-event')}
+              activeOpacity={0.85}
+            >
+              <View style={[styles.tuileIcone, { backgroundColor: 'rgba(16,185,129,0.16)' }]}>
+                <PenTool size={26} color="#10b981" strokeWidth={1.8} />
+              </View>
+              <Text style={[styles.tuileTitre, { color: '#10b981' }]}>
+                {t('eventTypeDedicace' as any) || 'Dédicace'}
+              </Text>
+              <Text style={styles.tuileAction}>{t('fanChoiceJoinBtn')}</Text>
+            </TouchableOpacity>
 
-            <View style={styles.historyGroup}>
-              {renderHistoryBtn(
-                t('eventsUpcoming' as any) || 'Événements à venir',
-                eventUpcomingCount, 'upcoming', 'event',
-              )}
-              {renderHistoryBtn(
-                t('eventsOngoing' as any) || 'Événements en cours',
-                eventOngoingCount, 'ongoing', 'event',
-              )}
-              {isCelebrity && renderHistoryBtn(
-                t('eventsPast' as any) || 'Événements passés',
-                eventPastCount, 'past', 'event',
-              )}
-            </View>
-
-            {renderCard(
-              '#6366f1',
-              <Video size={40} color="#6366f1" strokeWidth={1.5} />,
-              <Video size={14} color="#6366f1" strokeWidth={2.5} />,
-              t('eventTypeLiveVideo' as any) || 'Live vidéo',
-              t('fanChoiceVideoTitle'),
-              t('fanChoiceVideoDesc2'),
-              '/create-live-session',
-              '/join-live-session',
-            )}
-
-            <View style={styles.historyGroup}>
-              {renderHistoryBtn(
-                t('videoSessionsUpcoming' as any) || 'Sessions vidéo à venir',
-                videoUpcomingCount, 'upcoming', 'video',
-              )}
-              {renderHistoryBtn(
-                t('videoSessionsOngoing' as any) || 'Sessions vidéo en cours',
-                videoOngoingCount, 'ongoing', 'video',
-              )}
-              {isCelebrity && renderHistoryBtn(
-                t('videoSessionsPast' as any) || 'Sessions vidéo passées',
-                videoPastCount, 'past', 'video',
-              )}
-            </View>
+            <TouchableOpacity
+              style={[styles.tuile, { borderColor: 'rgba(99,102,241,0.35)', backgroundColor: 'rgba(99,102,241,0.10)' }]}
+              onPress={() => handleChoice('/join-live-session')}
+              activeOpacity={0.85}
+            >
+              <View style={[styles.tuileIcone, { backgroundColor: 'rgba(99,102,241,0.16)' }]}>
+                <Video size={26} color="#6366f1" strokeWidth={1.8} />
+              </View>
+              <Text style={[styles.tuileTitre, { color: '#6366f1' }]}>
+                {t('eventTypeLiveVideo' as any) || 'Live vidéo'}
+              </Text>
+              <Text style={styles.tuileAction}>{t('fanChoiceJoinBtn')}</Text>
+            </TouchableOpacity>
           </View>
+
+          {/* Créer reste l'action principale d'une personnalité : elle garde ses
+              deux boutons, sur une ligne dédiée pour ne pas encombrer les tuiles. */}
+          {isCelebrity && (
+            <View style={styles.creerRangee}>
+              <TouchableOpacity
+                style={[styles.creerBtn, { backgroundColor: '#10b981' }]}
+                onPress={() => handleCreate('/create-event')}
+                activeOpacity={0.85}
+              >
+                <Plus size={16} color="#fff" strokeWidth={2.5} />
+                <Text style={styles.creerTexte}>{t('celebrityEventSimple' as any) || 'Créer une dédicace'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.creerBtn, { backgroundColor: '#6366f1' }]}
+                onPress={() => handleCreate('/create-live-session')}
+                activeOpacity={0.85}
+              >
+                <Plus size={16} color="#fff" strokeWidth={2.5} />
+                <Text style={styles.creerTexte}>{t('celebrityLiveSession' as any) || 'Créer un live'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Catalogue : c'est ce qui manquait le plus. Sans lui, un fan ne
+              pouvait DÉCOUVRIR aucun événement — il lui fallait un code. */}
+          <View style={styles.recherche}>
+            <Search size={18} color="#6b7280" />
+            <TextInput
+              style={styles.rechercheInput}
+              value={recherche}
+              onChangeText={setRecherche}
+              placeholder={t('evtSearchPlaceholder' as any) || 'Rechercher une personnalité, un événement…'}
+              placeholderTextColor="#6b7280"
+            />
+            {!!recherche && (
+              <TouchableOpacity onPress={() => setRecherche('')} hitSlop={8}>
+                <X size={17} color="#6b7280" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.filtres}>
+            {([
+              { k: 'ongoing', l: t('evtFilterOngoing' as any) || 'En cours' },
+              { k: 'upcoming', l: t('evtFilterUpcoming' as any) || 'À venir' },
+              { k: 'all', l: t('evtFilterAll' as any) || 'Tous' },
+            ] as const).map(f => (
+              <TouchableOpacity
+                key={f.k}
+                style={[styles.filtre, periode === f.k && styles.filtreActif]}
+                onPress={() => setPeriode(f.k)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.filtreTexte, periode === f.k && styles.filtreTexteActif]}>{f.l}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {catalogueLoading ? (
+            <ActivityIndicator color="#10b981" style={{ marginTop: 28 }} />
+          ) : catalogueFailed ? (
+            <View style={styles.vide}>
+              <Text style={styles.videTexte}>{t('feedLoadFailed' as any) || 'Impossible de charger'}</Text>
+              <TouchableOpacity style={styles.reessayer} onPress={chargerCatalogue}>
+                <Text style={styles.reessayerTexte}>{t('retry') || 'Réessayer'}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : catalogue.length === 0 ? (
+            <View style={styles.vide}>
+              <Text style={styles.videTexte}>
+                {recherche
+                  ? (t('evtNoMatch' as any) || 'Aucun événement ne correspond à ta recherche')
+                  : (t('noEvents' as any) || 'Aucun événement pour le moment')}
+              </Text>
+            </View>
+          ) : (
+            catalogue.map(ev => (
+              <TouchableOpacity
+                key={ev.kind + ev.id}
+                style={styles.evtCarte}
+                onPress={() => router.push(`/celebrity-detail?id=${ev.celebrity_id}` as any)}
+                activeOpacity={0.85}
+              >
+                <View style={styles.evtEntete}>
+                  <View style={[styles.evtPastille, { backgroundColor: ev.kind === 'video' ? '#6366f1' : '#10b981' }]} />
+                  <Text style={styles.evtNom} numberOfLines={1}>{ev.celebrity_name}</Text>
+                  {ev.is_live && (
+                    <View style={styles.evtLive}>
+                      <Text style={styles.evtLiveTexte}>{t('eventLive' as any) || 'EN COURS'}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.evtTitre} numberOfLines={2}>{trCatalogue(ev.title)}</Text>
+                <View style={styles.evtMeta}>
+                  {!!ev.scheduled_at && (
+                    <Text style={styles.evtMetaTexte}>{formatCreneau(ev.scheduled_at)}</Text>
+                  )}
+                  {!!ev.location && <Text style={styles.evtMetaTexte}>· {ev.location}</Text>}
+                  {ev.price_cents > 0 && (
+                    <Text style={[styles.evtMetaTexte, { color: '#10b981', fontWeight: '700' }]}>
+                      · {(ev.price_cents / 100).toFixed(2).replace('.', ',')} €
+                    </Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+
         </ScrollView>
       </View>
 
@@ -407,6 +546,59 @@ export default function FanChoiceScreen() {
 }
 
 const styles = StyleSheet.create({
+  tuiles: { flexDirection: 'row', gap: 12, marginTop: 4 },
+  tuile: {
+    flex: 1, borderRadius: 18, borderWidth: 1, paddingVertical: 18,
+    paddingHorizontal: 12, alignItems: 'center', gap: 8,
+  },
+  tuileIcone: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
+  tuileTitre: { fontSize: 15, fontWeight: '800' },
+  tuileAction: { color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: '600' },
+  creerRangee: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  creerBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 11, borderRadius: 12,
+  },
+  creerTexte: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  recherche: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 22,
+    backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 14,
+    paddingHorizontal: 14, paddingVertical: 11,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+  },
+  rechercheInput: { flex: 1, color: '#fff', fontSize: 15, padding: 0 },
+  filtres: { flexDirection: 'row', gap: 8, marginTop: 12, marginBottom: 4 },
+  filtre: {
+    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+  },
+  filtreActif: { backgroundColor: 'rgba(16,185,129,0.18)', borderColor: 'rgba(16,185,129,0.5)' },
+  filtreTexte: { color: '#9ca3af', fontSize: 13, fontWeight: '600' },
+  filtreTexteActif: { color: '#10b981' },
+  vide: { alignItems: 'center', marginTop: 34, gap: 12 },
+  videTexte: { color: '#6b7280', fontSize: 14, textAlign: 'center' },
+  reessayer: {
+    paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20,
+    backgroundColor: 'rgba(16,185,129,0.15)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.4)',
+  },
+  reessayerTexte: { color: '#10b981', fontSize: 13, fontWeight: '700' },
+  evtCarte: {
+    backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 14, padding: 14, marginTop: 10,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
+  },
+  evtEntete: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  evtPastille: { width: 8, height: 8, borderRadius: 4 },
+  evtNom: { color: '#fff', fontSize: 14, fontWeight: '700', flex: 1 },
+  evtLive: {
+    backgroundColor: 'rgba(239,68,68,0.18)', borderRadius: 10,
+    paddingHorizontal: 8, paddingVertical: 3,
+    borderWidth: 1, borderColor: 'rgba(239,68,68,0.45)',
+  },
+  evtLiveTexte: { color: '#ef4444', fontSize: 10, fontWeight: '800' },
+  evtTitre: { color: '#d1d5db', fontSize: 15, marginTop: 8, lineHeight: 21 },
+  evtMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  evtMetaTexte: { color: '#9ca3af', fontSize: 12 },
   container: {
     flex: 1,
     backgroundColor: '#0f172a',
