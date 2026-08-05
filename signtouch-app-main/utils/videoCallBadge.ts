@@ -9,18 +9,25 @@ const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 // navigation est présente partout, et sans état commun chaque page referait la
 // même requête.
 //
-// La COULEUR dit qui doit agir, pas seulement où en est le dossier :
-//   rouge  → rien n'a bougé (le fan attend une réponse, la star doit répondre)
-//   vert   → c'est validé, la suite appartient à quelqu'un
-// Et `aAgir` déclenche la pulsation quand c'est à CET utilisateur de jouer.
+// La COULEUR est réservée au sens, du plus grave au plus banal :
+//   rouge  → refusé, annulé ou expiré (une mauvaise nouvelle à ne pas manquer)
+//   vert   → validé : un créneau existe
+//   orange → en attente, rien n'a encore bougé
+// Le rouge ne sert donc PAS à l'attente : gardé pour l'échec, il conserve sa
+// force d'alerte. Et `aAgir` déclenche la pulsation quand c'est à CET
+// utilisateur de jouer.
 
 export type BadgeAppelsVideo = {
   total: number;
-  couleur: '#ef4444' | '#10b981';
+  couleur: '#ef4444' | '#10b981' | '#f59e0b';
   aAgir: boolean;
 };
 
-const VIDE: BadgeAppelsVideo = { total: 0, couleur: '#ef4444', aAgir: false };
+const VIDE: BadgeAppelsVideo = { total: 0, couleur: '#f59e0b', aAgir: false };
+
+// Une demande close reste signalée 48 h : assez pour que l'intéressé
+// l'apprenne, pas au point que la pastille reste rouge indéfiniment.
+const DELAI_MAUVAISE_NOUVELLE_MS = 48 * 60 * 60 * 1000;
 
 // Un seul appel réseau alimente tous les abonnés (la barre est montée sur
 // chaque écran ; sans ça, changer de page relancerait autant de requêtes).
@@ -44,6 +51,17 @@ async function rafraichir(force = false) {
       ['pending', 'accepted', 'paid'].includes(r.status)
     );
 
+    // Les mauvaises nouvelles récentes comptent aussi : un refus ou une
+    // annulation qui ne s'affiche nulle part laisse le fan attendre un appel
+    // qui n'aura jamais lieu.
+    const maintenant = Date.now();
+    const closesRecentes = requests.filter((r: any) => {
+      if (!['refused', 'cancelled', 'expired'].includes(r.status)) return false;
+      const ref = r.updated_at || r.created_at;
+      if (!ref) return false;
+      return maintenant - new Date(ref).getTime() < DELAI_MAUVAISE_NOUVELLE_MS;
+    });
+
     // À traiter : la star a une demande sur les bras, ou le fan un créneau
     // accepté qu'il n'a pas encore réglé. Dans les deux cas, un délai court.
     const aAgir = ouverts.some((r: any) =>
@@ -52,9 +70,14 @@ async function rafraichir(force = false) {
     );
     const valide = ouverts.some((r: any) => r.status === 'accepted' || r.status === 'paid');
 
+    // Priorité : une mauvaise nouvelle prime sur tout le reste, sinon on montre
+    // le meilleur état atteint (validé), et à défaut la simple attente.
+    const couleur: BadgeAppelsVideo['couleur'] =
+      closesRecentes.length > 0 ? '#ef4444' : valide ? '#10b981' : '#f59e0b';
+
     cache = {
-      total: ouverts.length,
-      couleur: valide ? '#10b981' : '#ef4444',
+      total: ouverts.length + closesRecentes.length,
+      couleur,
       aAgir,
     };
     abonnes.forEach((f) => f(cache));
