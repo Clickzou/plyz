@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { X, Video, Clock } from 'lucide-react-native';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { showAlert } from '@/utils/alertHelper';
@@ -26,6 +27,7 @@ export default function VideoCallRequestModal({
   priceCents, durationMinutes, currency = 'eur', onRequested,
 }: Props) {
   const { t } = useLanguage();
+  const router = useRouter();
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -65,6 +67,11 @@ export default function VideoCallRequestModal({
         t('vcrSentMsg' as any)
           || 'La personnalité a 48 h pour te répondre. Tu seras prévenu, et tu ne paieras qu\'après avoir accepté le créneau proposé.',
       );
+      // On emmène directement le fan sur le suivi. Auparavant la fenêtre se
+      // fermait sur un message, et il fallait deviner que la demande se
+      // retrouvait dans Compte, tout en bas du menu : le fan venait d'agir et
+      // n'avait plus rien sous les yeux.
+      router.push('/my-video-calls' as any);
     } catch {
       showAlert(t('error') || 'Erreur', t('actionFailed') || "La demande n'a pas pu être envoyée.");
     } finally {
