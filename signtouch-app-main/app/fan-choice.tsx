@@ -57,6 +57,11 @@ export default function FanChoiceScreen() {
   const [videoPastCount, setVideoPastCount] = useState(0);
   // Popup d'explication affichée UNE SEULE fois (au tout premier accès à l'écran Événements).
   const [showIntro, setShowIntro] = useState(false);
+  // Appels vidéo privés en cours. L'accès n'existait que dans Compte, tout en
+  // bas du menu : personne ne va chercher là une demande qu'il vient de faire.
+  // Sa place est ici, avec le reste de ce que le fan a engagé.
+  const [vcrActifs, setVcrActifs] = useState(0);
+  const [vcrARegler, setVcrARegler] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -141,6 +146,28 @@ export default function FanChoiceScreen() {
   };
 
   // Recharge le nombre d'événements / sessions vidéo en cours à chaque retour sur l'écran
+  // Compte les appels vidéo privés encore ouverts, pour afficher une pastille.
+  // Une demande expire en 48 h et un créneau accepté doit être réglé : le fan
+  // doit voir qu'il a quelque chose en cours sans avoir à ouvrir l'écran.
+  useFocusEffect(
+    useCallback(() => {
+      let vivant = true;
+      (async () => {
+        if (!user?.id || !API_BASE) { setVcrActifs(0); setVcrARegler(0); return; }
+        try {
+          const res = await authedFetch(`${API_BASE}/api/video-call-requests`);
+          if (!res.ok) return;
+          const { requests } = await res.json();
+          if (!vivant || !Array.isArray(requests)) return;
+          const ouverts = requests.filter((r: any) => ['pending', 'accepted', 'paid'].includes(r.status));
+          setVcrActifs(ouverts.length);
+          setVcrARegler(ouverts.filter((r: any) => r.status === 'accepted' && r.role === 'fan').length);
+        } catch { /* réseau : la pastille reste à sa valeur précédente */ }
+      })();
+      return () => { vivant = false; };
+    }, [user?.id])
+  );
+
   useFocusEffect(
     useCallback(() => {
       let active = true;
@@ -375,6 +402,43 @@ export default function FanChoiceScreen() {
               <Text style={styles.tuileAction}>{t('fanChoiceJoinBtn')}</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Appels vidéo privés — accessibles depuis l'écran où l'on gère ce
+              qu'on a engagé, et non depuis le bas du menu Compte. Le même écran
+              sert aux deux rôles : le fan y suit ses demandes, la personnalité
+              celles qu'elle reçoit. La pastille compte ce qui est encore ouvert :
+              une demande expire en 48 h, un créneau accepté attend son règlement. */}
+          <TouchableOpacity
+            style={styles.vcrAcces}
+            onPress={() => requireAuth(() => router.push('/my-video-calls' as any), {
+              reason: t('vcrAuthReason' as any) || 'Connecte-toi pour voir tes appels vidéo privés',
+              requireBillingIdentity: false,
+            })}
+            activeOpacity={0.85}
+          >
+            <View style={styles.vcrAccesIcone}>
+              <Video size={20} color="#a78bfa" strokeWidth={1.9} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.vcrAccesTitre}>
+                {isCelebrity
+                  ? (t('vcrEntryCeleb' as any) || 'Demandes d\'appel vidéo privé')
+                  : (t('vcrEntryFan' as any) || 'Mes appels vidéo privés')}
+              </Text>
+              <Text style={styles.vcrAccesSous}>
+                {vcrARegler > 0
+                  ? (t('vcrEntryToPay' as any) || 'Un créneau vous attend — à régler')
+                  : vcrActifs > 0
+                    ? (t('vcrEntryOngoing' as any) || 'En cours')
+                    : (t('vcrEntryNone' as any) || 'Aucune demande en cours')}
+              </Text>
+            </View>
+            {vcrActifs > 0 && (
+              <View style={[styles.vcrPastille, vcrARegler > 0 && { backgroundColor: '#f59e0b' }]}>
+                <Text style={styles.vcrPastilleTexte}>{vcrActifs}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
           {/* Créer reste l'action principale d'une personnalité : elle garde ses
               deux boutons, sur une ligne dédiée pour ne pas encombrer les tuiles. */}
@@ -623,6 +687,38 @@ const styles = StyleSheet.create({
   evtTitre: { color: '#d1d5db', fontSize: 15, marginTop: 8, lineHeight: 21 },
   evtMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   evtMetaTexte: { color: '#9ca3af', fontSize: 12 },
+  vcrAcces: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    borderRadius: 14,
+    backgroundColor: 'rgba(99,102,241,0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.30)',
+  },
+  vcrAccesIcone: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(99,102,241,0.18)',
+  },
+  vcrAccesTitre: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  vcrAccesSous: { color: '#9ca3af', fontSize: 12, marginTop: 2 },
+  vcrPastille: {
+    minWidth: 24,
+    height: 24,
+    borderRadius: 12,
+    paddingHorizontal: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#6366f1',
+  },
+  vcrPastilleTexte: { color: '#fff', fontSize: 13, fontWeight: '800' },
   evtRejoindre: {
     alignSelf: 'flex-start',
     marginTop: 10,
