@@ -480,6 +480,30 @@ export default function FanChoiceScreen() {
                     </Text>
                   )}
                 </View>
+
+                {/* Rejoindre en un geste. Le catalogue menait au profil de la
+                    célébrité et n'affichait pas le code : le fan voyait
+                    l'événement, mais devait ressortir, ouvrir « Rejoindre » et
+                    saisir à la main un code qu'on ne lui montrait nulle part.
+                    L'app le connaît — les écrans de participation acceptent
+                    déjà un code en paramètre et lancent la recherche seuls. */}
+                {!!ev.code && (
+                  <TouchableOpacity
+                    style={[styles.evtRejoindre, ev.kind === 'video' && styles.evtRejoindreVideo]}
+                    onPress={() =>
+                      router.push(
+                        (ev.kind === 'video'
+                          ? `/join-live-session?code=${ev.code}`
+                          : `/join-event?code=${ev.code}`) as any
+                      )
+                    }
+                    activeOpacity={0.85}
+                  >
+                    <Text style={[styles.evtRejoindreTexte, ev.kind === 'video' && { color: '#a5b4fc' }]}>
+                      {t('joinEvent' as any) || 'Rejoindre'} →
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </TouchableOpacity>
             ))
           )}
@@ -599,6 +623,21 @@ const styles = StyleSheet.create({
   evtTitre: { color: '#d1d5db', fontSize: 15, marginTop: 8, lineHeight: 21 },
   evtMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   evtMetaTexte: { color: '#9ca3af', fontSize: 12 },
+  evtRejoindre: {
+    alignSelf: 'flex-start',
+    marginTop: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 18,
+    backgroundColor: 'rgba(16,185,129,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.4)',
+  },
+  evtRejoindreVideo: {
+    backgroundColor: 'rgba(99,102,241,0.15)',
+    borderColor: 'rgba(99,102,241,0.45)',
+  },
+  evtRejoindreTexte: { color: '#10b981', fontSize: 13, fontWeight: '700' },
   container: {
     flex: 1,
     backgroundColor: '#0f172a',
