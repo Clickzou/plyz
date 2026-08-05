@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Newspaper, CheckCircle, Calendar, Heart, MessageCircle, Send, Share2 } from 'lucide-react-native';
+import { Newspaper, CheckCircle, Calendar, Heart, MessageCircle, Send, Share2, Flag } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -20,6 +20,7 @@ import PlyzHeader from '@/components/PlyzHeader';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { FeedSkeleton } from '@/components/SkeletonLoader';
 import { useAutoTranslate } from '@/utils/translation';
+import ReportContentModal from '@/components/ReportContentModal';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 const LIKES_KEY = '@plyz_post_likes';
@@ -134,6 +135,8 @@ export default function ActivityScreen() {
   const [loadFailed, setLoadFailed] = useState(false);
   // Empêche de redemander indéfiniment une page suivante qui n'existe pas.
   const [hasMore, setHasMore] = useState(true);
+  // Publication visee par un signalement, ou null si la fenetre est fermee.
+  const [reportTarget, setReportTarget] = useState<FeedPost | null>(null);
   const [, setBannerDismissed] = useState(true);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [allComments, setAllComments] = useState<Record<string, Comment[]>>({});
@@ -443,8 +446,10 @@ export default function ActivityScreen() {
             <View style={styles.actionBtn}>
               <MessageCircle size={20} color={commentCount > 0 ? '#3b82f6' : '#6b7280'} />
             </View>
+            {/* Le nombre, jamais le mot « Commenter » : la ligne d'actions se lit
+                d'un coup d'œil quand tous les compteurs ont le même format. */}
             <Text style={[styles.actionCount, commentCount > 0 && { color: '#3b82f6' }]}>
-              {commentCount > 0 ? formatCount(commentCount) : t('comment' as any)}
+              {formatCount(commentCount)}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -456,6 +461,21 @@ export default function ActivityScreen() {
               <Share2 size={20} color="#6b7280" />
             </View>
             <Text style={styles.actionCount}>{t('share' as any) || 'Share'}</Text>
+          </TouchableOpacity>
+
+          {/* Signalement directement dans le fil. Il n'existait que sur l'écran
+              de détail : un contenu choquant doit pouvoir être signalé là où on
+              le voit, sans avoir à l'ouvrir d'abord. C'est aussi ce qu'attendent
+              les règles Google Play sur le contenu généré par les utilisateurs. */}
+          <TouchableOpacity
+            style={styles.actionGroup}
+            onPress={() => setReportTarget(item)}
+            activeOpacity={0.7}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          >
+            <View style={styles.actionBtn}>
+              <Flag size={19} color="#ef4444" />
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -618,6 +638,15 @@ export default function ActivityScreen() {
       </Modal>
 
       <AccountAvatarButton />
+      <ReportContentModal
+        visible={!!reportTarget}
+        onClose={() => setReportTarget(null)}
+        targetType={reportTarget?.kind === 'event' ? 'event' : 'post'}
+        targetId={reportTarget?.id || null}
+        targetLabel={reportTarget?.title || reportTarget?.celebrity?.stage_name || null}
+        reportedUserId={reportTarget?.celebrity?.user_id || null}
+      />
+
       <BottomNav />
     </View>
   );
