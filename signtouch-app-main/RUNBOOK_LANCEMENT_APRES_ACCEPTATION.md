@@ -5,15 +5,15 @@
 > - **Google Play** : accepté, production 100 %, build du 30/07 (versionCode 11)
 >
 > ### 🚀 MISES À JOUR SOUMISES LE 04/08/2026 (soir) — les deux stores
-> - **Android `15 (1.0.0)`** — AAB déposé à la main sur la Play Console (le `serviceAccountKeyPath` d'`eas.json` est un placeholder, `eas submit` ne marche pas), **en examen**.
-> - **iOS `1.0.1 (17)`** — **en attente de vérification**, jusqu'à 48 h.
->   ⚠️ **Piège rencontré** : le premier envoi (build 16, version 1.0.0) a été **refusé** — `Invalid Pre-Release Train, the train version '1.0.0' is closed` + `CFBundleShortVersionString must contain a higher version than the previously approved version`. Apple ferme définitivement une voie de version dès qu'elle est approuvée, et le numéro est inscrit DANS le build : il faut donc **bumper `app.json` PUIS recompiler**. Prochains numéros libres : iOS `1.0.2`/build 18, Android `versionCode 17`.
+> - **Android `15 (1.0.0)`** — AAB déposé à la main sur la Play Console (le `serviceAccountKeyPath` d'`eas.json` est un placeholder, `eas submit` ne marche pas). ✅ **ACCEPTÉE ET EN LIGNE le 05/08 vers minuit** (production 100 %, « Aucune modification non publiée »). Examen bouclé en quelques heures : une mise à jour d'app déjà approuvée passe bien plus vite qu'une première soumission. **Le bug de capture est donc corrigé pour tous les utilisateurs Android.**
+> - **iOS `1.0.1 (17)`** — envoyé à App Store Connect le 04/08 à 21h42 UTC (soumission EAS `FINISHED`), **en attente de vérification**, jusqu'à 48 h.
+>   ⚠️ **Piège rencontré** : le premier envoi (build 16, version 1.0.0) a été **refusé** — `Invalid Pre-Release Train, the train version '1.0.0' is closed` + `CFBundleShortVersionString must contain a higher version than the previously approved version`. Apple ferme définitivement une voie de version dès qu'elle est approuvée, et le numéro est inscrit DANS le build : il faut donc **bumper `app.json` PUIS recompiler**. Prochains numéros libres : iOS `1.0.2`/build 18, Android `versionCode 16` (déjà pré-réglé dans `app.json`, le build soumis était le 15).
 >
 > ### ✅ CLASSIFICATIONS PAR ÂGE — RÉGLÉ LE 05/08/2026
 > - **Apple** : nouveau questionnaire « capacités de réseaux sociaux » rempli (échéance Apple du 07/09 traitée). Réponses : contenu généré par les utilisateurs **OUI**, réseaux sociaux **OUI**, messagerie/chat **OUI**, réseaux sociaux désactivés pour les <13 ans **NON** (Plyz n'utilise pas l'API de tranche d'âge d'Apple), contrôle parental / validation d'âge / accès web libre / publicité **NON**. Résultat calculé : **13+** (171 pays), 16+ (2 pays), A16 Brésil, 15+ Corée. Marqué « Modifiée » → publié avec la prochaine version.
 > - **Google Play** : **rien à faire**, le questionnaire IARC du 08/07 classe déjà l'app **12+** (TEEN / PEGI 12 / USK 12). Cohérent avec Apple.
 >
-> ⚠️ **Les deux versions en ligne contiennent le bug de capture** (aucun paiement d'événement dédicace n'est encaissé) et les autres défauts corrigés le 04/08. **La mise à jour des deux stores est donc URGENTE** : builds versionCode 15 / buildNumber iOS 16, déjà réglés dans `app.json`.
+> ⚠️ **Reste iOS.** Le bug de capture (aucun paiement d'événement dédicace encaissé) et les autres défauts corrigés le 04/08 sont réglés côté Android depuis le 05/08, mais **la version App Store en ligne les contient encore** tant qu'Apple n'a pas validé le build `1.0.1 (17)`.
 
 > **But de ce fichier :** dès que les apps sont validées (Google Play et/ou App Store), on suit cette liste dans l'ordre pour passer Plyz en **production réelle**. Tant que ce n'est pas fait, l'app est encore en **mode test** (aucun vrai paiement, données de démo, serveur qui peut dormir).
 >
