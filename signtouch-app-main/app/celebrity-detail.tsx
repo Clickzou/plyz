@@ -75,6 +75,9 @@ interface LiveEvent {
   location?: string;
   scheduled_at: string | null;
   created_at: string;
+  // Presents pour les dedicaces (event_sessions), absents pour les sessions video.
+  kind?: string;
+  title?: string;
 }
 
 export default function CelebrityDetailScreen() {
@@ -519,7 +522,7 @@ export default function CelebrityDetailScreen() {
                       )}
                     </View>
                     <Text style={styles.eventTitle}>
-                      {event.celebrity_name || celebrity.stage_name} — {t('liveSession' as any) || 'Session Live'}
+                      {event.title || `${event.celebrity_name || celebrity.stage_name} — ${t('liveSession' as any) || 'Session Live'}`}
                     </Text>
                     <View style={styles.eventMeta}>
                       {event.scheduled_at && (

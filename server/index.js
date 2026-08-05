@@ -4218,6 +4218,38 @@ app.get('/api/celebrity-events', async (req, res) => {
     const staleSet = new Set(staleIds);
     const events = sessions.filter(s => !staleSet.has(s.id) && s.status !== 'ended');
 
+    // DEDICACES : elles vivent dans event_sessions, pas dans live_sessions, et
+    // n'apparaissaient donc PAS dans « Evenements en cours ou programmes » sur la
+    // fiche publique. Une dedicace programmee EST pourtant un evenement a venir :
+    // ne pas l'afficher la rendait invisible pour qui n'a pas le code, alors que
+    // la section porte exactement ce nom. La liste couvre desormais les DEUX types.
+    try {
+      const { data: dedicaces } = await db
+        .from('event_sessions')
+        .select('id, title, join_code, status, starts_at, ends_at, location, created_by')
+        .eq('created_by', celebrity_id)
+        .in('status', ['scheduled', 'live', 'active', 'waiting'])
+        .order('starts_at', { ascending: true });
+      for (const d of (dedicaces || [])) {
+        // Un creneau deja passe ne doit plus s'annoncer comme a venir.
+        if (d.ends_at && Date.parse(d.ends_at) < now) continue;
+        events.push({
+          id: d.id,
+          kind: 'dedication',
+          title: d.title,
+          celebrity_id: d.created_by,
+          code: d.join_code,
+          status: d.status,
+          location: d.location,
+          scheduled_at: d.starts_at,
+          ends_at: d.ends_at,
+          price_cents: 0,
+        });
+      }
+    } catch (e) {
+      console.warn('[Celebrity Events] dedicaces:', e.message);
+    }
+
     res.json({ events });
   } catch (error) {
     console.error('[Celebrity Events] Error:', error.message);
