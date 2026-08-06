@@ -119,6 +119,10 @@ export default function AccountScreen() {
   const [videoPriceEur, setVideoPriceEur] = useState('');
   const [videoDuration, setVideoDuration] = useState('10');
   const [isVerified, setIsVerified] = useState(false);
+  // Demande de vérification en cours, telle que l'examen automatique l'a laissée.
+  const [preuve, setPreuve] = useState<any>(null);
+  const [preuveUrl, setPreuveUrl] = useState('');
+  const [preuveEnCours, setPreuveEnCours] = useState(false);
   const [earnings, setEarnings] = useState<EarningsData | null>(null);
   const [earningsLoading, setEarningsLoading] = useState(false);
   const [showPhotoSheet, setShowPhotoSheet] = useState(false);
@@ -135,8 +139,48 @@ export default function AccountScreen() {
       } catch {
         // Silencieux : ne bloque pas l'écran si la vérif échoue.
       }
+      // État de la demande en cours : l'examen automatique peut réclamer une
+      // preuve de possession du compte officiel.
+      try {
+        const r = await authedFetch(`${API_BASE}/api/celebrity-verification-proof`);
+        const j = await r.json();
+        setPreuve(j?.pending ? j : null);
+      } catch { /* pas bloquant */ }
     })();
   }, [user?.id, isCelebrity]);
+
+  // Vérifie la page fournie : le serveur y cherche le code publié.
+  const verifierPreuve = async () => {
+    const url = preuveUrl.trim();
+    if (!url) return;
+    setPreuveEnCours(true);
+    try {
+      const r = await authedFetch(`${API_BASE}/api/celebrity-verification-proof`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      const j = await r.json();
+      if (j?.verified) {
+        setIsVerified(true);
+        setPreuve(null);
+        showAlert(trUI('Compte validé'), trUI('Ton espace personnalité est vérifié. Tu peux créer tes événements.'));
+        return;
+      }
+      // Deux échecs distincts : dire lequel évite de chercher une faute qu'on
+      // n'a pas commise.
+      showAlert(
+        t('error') || 'Erreur',
+        j?.reason === 'page_unreachable'
+          ? trUI("Nous n'avons pas pu lire cette page (certains réseaux la bloquent). Essaie l'adresse de ton site officiel, ou attends notre vérification manuelle.")
+          : trUI("Le code n'a pas été trouvé sur cette page. Vérifie qu'il y est bien publié et visible sans être connecté."),
+      );
+    } catch {
+      showAlert(t('error') || 'Erreur', t('actionFailed') || "La vérification n'a pas pu aboutir.");
+    } finally {
+      setPreuveEnCours(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -1138,13 +1182,60 @@ export default function AccountScreen() {
             {/* L'état « validé » est désormais annoncé par la pastille de
                 l'en-tête. Ne reste ici que l'attente, qui apporte une
                 information que la pastille ne donne pas : le délai. */}
-            {isCelebrity && !isVerified && (
+            {isCelebrity && !isVerified && !preuve?.needs_proof && (
               <View style={styles.statusBadgePending}>
                 <Clock size={18} color="#f59e0b" />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.statusBadgePendingText}>{trUI('En cours de vérification')}</Text>
                   <Text style={styles.statusBadgePendingSub}>{trUI('Réponse sous 24 h ouvrées')}</Text>
                 </View>
+              </View>
+            )}
+
+            {/* Le nom légal ne suffit pas à prouver l'identité d'une personne
+                connue sous un nom de scène — ni à départager deux homonymes.
+                On demande alors une preuve que seul le titulaire du compte
+                officiel peut fournir : y publier un code. */}
+            {isCelebrity && !isVerified && preuve?.needs_proof && (
+              <View style={styles.preuveCard}>
+                <View style={styles.preuveHeader}>
+                  <Shield size={18} color="#93c5fd" />
+                  <Text style={styles.preuveTitre}>{trUI('Dernière étape : prouve que ce compte est le tien')}</Text>
+                </View>
+                <Text style={styles.preuveTexte}>
+                  {trUI('Publie ce code sur ton compte officiel (story, bio ou site web), puis colle ici l\'adresse de la page où il apparaît.')}
+                </Text>
+                <TouchableOpacity
+                  style={styles.preuveCode}
+                  onPress={() => {
+                    Clipboard.setStringAsync(preuve.proof_code || '');
+                    showAlert(trUI('Code copié'), preuve.proof_code || '');
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.preuveCodeTexte}>{preuve.proof_code}</Text>
+                  <Text style={styles.preuveCopier}>{trUI('Copier')}</Text>
+                </TouchableOpacity>
+                <TextInput
+                  style={[styles.celebInput, { marginTop: 10 }]}
+                  value={preuveUrl}
+                  onChangeText={setPreuveUrl}
+                  placeholder="https://instagram.com/..."
+                  placeholderTextColor="#6b7280"
+                  autoCapitalize="none"
+                  keyboardType="url"
+                />
+                <TouchableOpacity
+                  style={[styles.celebSaveBtn, preuveEnCours && { opacity: 0.5 }]}
+                  onPress={verifierPreuve}
+                  disabled={preuveEnCours}
+                  activeOpacity={0.85}
+                >
+                  <Check size={16} color="#052e1f" />
+                  <Text style={styles.celebSaveBtnText}>
+                    {preuveEnCours ? (t('loading') || 'Vérification…') : trUI('Vérifier maintenant')}
+                  </Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>
@@ -1806,6 +1897,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#10b981',
   },
   celebSaveBtnText: { color: '#052e1f', fontSize: 15, fontWeight: '800' },
+  preuveCard: {
+    backgroundColor: 'rgba(59,130,246,0.10)',
+    borderColor: 'rgba(59,130,246,0.35)',
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 4,
+  },
+  preuveHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  preuveTitre: { color: '#bfdbfe', fontSize: 14, fontWeight: '800', flex: 1 },
+  preuveTexte: { color: '#cbd5e1', fontSize: 13, lineHeight: 19, marginBottom: 12 },
+  preuveCode: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  preuveCodeTexte: { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: 1 },
+  preuveCopier: { color: '#93c5fd', fontSize: 13, fontWeight: '700' },
   accountCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',

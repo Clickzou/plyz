@@ -5610,6 +5610,234 @@ app.get('/api/creator-verification-status', async (req, res) => {
   }
 });
 
+// ============================================================
+// EXAMEN AUTOMATIQUE DES DEMANDES DE VÉRIFICATION CÉLÉBRITÉ
+//
+// Jusqu'ici une demande était enregistrée « en attente » et rien ne la
+// traitait : l'app promettait pourtant une réponse rapide. L'examen se fait
+// désormais en trois niveaux :
+//
+//   1. Identité vérifiée par Stripe ET nom légal correspondant à un nom public
+//      que Claude a trouvé notoire  ->  validation immédiate.
+//   2. Nom de scène, homonyme, ou pas de compte Stripe  ->  code à publier sur
+//      le compte officiel : personne d'autre que son titulaire ne peut le faire.
+//   3. Le reste  ->  file manuelle, rapport déjà rédigé.
+//
+// L'IA seule ne peut PAS valider : elle établit la notoriété d'un nom, pas que
+// le demandeur est cette personne. Un usurpateur qui colle les liens officiels
+// d'une star ferait dire à l'IA que la star est célèbre. D'où l'exigence d'une
+// identité contrôlée (Stripe) ou d'une preuve de possession.
+// ============================================================
+
+// Compare un nom légal et un nom public sans se laisser piéger par les
+// accents, la casse, les particules ou l'ordre prénom/nom.
+function memeNom(a, b) {
+  const normaliser = (s) => String(s || '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .split(/\s+/)
+    .filter((m) => m.length > 1 && !['de', 'du', 'la', 'le', 'van', 'von', 'el', 'al', 'da', 'di'].includes(m));
+  const A = normaliser(a), B = normaliser(b);
+  if (!A.length || !B.length) return false;
+  // Chaque mot du plus court doit se retrouver dans l'autre : « Jean-Christophe
+  // Castanet » et « Castanet Jean Christophe » sont la même personne.
+  const [court, long] = A.length <= B.length ? [A, B] : [B, A];
+  return court.every((mot) => long.includes(mot));
+}
+
+// Identité telle que Stripe l'a contrôlée (pièce d'identité à l'appui).
+// Renvoie null si le compte n'existe pas ou si Stripe est indisponible.
+async function identiteStripeDe(userId) {
+  try {
+    const db = getSupabaseAdmin();
+    const { data: prof } = await db
+      .from('celebrity_profiles')
+      .select('stripe_account_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!prof || !prof.stripe_account_id) return null;
+
+    const stripe = await getStripe();
+    const acct = await stripe.accounts.retrieve(String(prof.stripe_account_id));
+    const ind = acct.individual || {};
+    const nom = [ind.first_name, ind.last_name].filter(Boolean).join(' ').trim()
+      || (acct.company && acct.company.name) || '';
+    return {
+      nom: nom || null,
+      // `verified` = Stripe a réellement contrôlé une pièce d'identité, pas
+      // seulement « le formulaire est rempli ».
+      verified: (ind.verification && ind.verification.status === 'verified') || false,
+      business_type: acct.business_type || null,
+    };
+  } catch (e) {
+    console.warn('[verif-auto] identité Stripe indisponible:', e.message);
+    return null;
+  }
+}
+
+// Notoriété évaluée par Claude, recherche web à l'appui. Renvoie null si
+// l'IA est indisponible — la demande part alors en file manuelle, jamais
+// approuvée par défaut.
+async function evaluerNotoriete({ nom, categorie, liens, infos }) {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return null;
+
+  const listeLiens = Object.entries(liens || {})
+    .filter(([, v]) => v)
+    .map(([k, v]) => `- ${k}: ${v}`)
+    .join('\n') || '(aucun lien fourni)';
+
+  const system = `Tu évalues la notoriété publique d'une personne pour l'admission sur Plyz, une application où des personnalités vendent des prestations à leurs fans (dédicaces, appels vidéo).
+
+Cherche sur le web avant de conclure. Les critères d'admission sont :
+- compte certifié sur un réseau social majeur, OU
+- page Wikipédia à son sujet, OU
+- plus de 100 000 abonnés cumulés, OU
+- articles de presse la concernant.
+
+Réponds UNIQUEMENT par un objet JSON compact, sans texte autour :
+{"score": 0-100, "notoire": bool, "nom_public": "<nom sous lequel elle est connue>", "nom_legal_connu": "<son nom d'état civil si tu le connais, sinon null>", "sources": ["<url ou média>"], "resume": "<2 phrases max>", "doute": "<ce qui empêche de conclure, ou null>"}
+
+Règles :
+- score >= 70 et notoire = true seulement si tu as trouvé des preuves concrètes ; l'absence de résultat n'est PAS une preuve.
+- Si la personne est connue sous un nom de scène différent de son état civil, renseigne les deux : c'est décisif pour la suite du contrôle.
+- Ne juge PAS si le demandeur est bien cette personne : ce n'est pas ton rôle, un autre contrôle s'en charge.`;
+
+  const question = `Nom déclaré : ${nom}
+Catégorie déclarée : ${categorie}
+Liens fournis :
+${listeLiens}
+${infos ? `Informations complémentaires : ${infos}` : ''}`;
+
+  try {
+    let messages = [{ role: 'user', content: question }];
+    let reponse = null;
+
+    // La recherche web s'exécute côté Anthropic et peut rendre la main avec
+    // `pause_turn` avant d'avoir fini : on relance jusqu'à 3 fois.
+    for (let i = 0; i < 4; i++) {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-opus-5',
+          max_tokens: 4000,
+          output_config: { effort: 'medium' },
+          system: [{ type: 'text', text: system }],
+          tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 8 }],
+          messages,
+        }),
+      });
+      const j = await r.json();
+      if (j.error) {
+        const et = j.error.type || '', em = j.error.message || '';
+        if (['rate_limit_error', 'overloaded_error', 'authentication_error', 'api_error'].includes(et)
+            || /credit|quota|balance|limit/i.test(em)) {
+          recordServiceAlert('anthropic', 'critical',
+            'Claude indisponible — la VÉRIFICATION des célébrités repasse en manuel : ' + (em || et));
+        }
+        return null;
+      }
+      if (j.stop_reason === 'pause_turn') {
+        messages = [{ role: 'user', content: question }, { role: 'assistant', content: j.content }];
+        continue;
+      }
+      reponse = j;
+      break;
+    }
+    if (!reponse) return null;
+
+    const texte = (reponse.content || [])
+      .filter((b) => b.type === 'text')
+      .map((b) => b.text)
+      .join('\n');
+    const extrait = texte.match(/\{[\s\S]*\}/);
+    if (!extrait) return null;
+    return JSON.parse(extrait[0]);
+  } catch (e) {
+    console.warn('[verif-auto] évaluation notoriété échouée:', e.message);
+    return null;
+  }
+}
+
+// Code à publier sur le compte officiel (niveau 2). Court, sans caractère
+// ambigu (ni O/0 ni I/1), pour être recopié sans erreur.
+function genererCodePreuve() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 8; i++) s += alphabet[Math.floor(Math.random() * alphabet.length)];
+  return `PLYZ-${s.slice(0, 4)}-${s.slice(4)}`;
+}
+
+// Examen complet d'une demande. Ne lève jamais : une demande non examinée
+// reste « en attente », ce qui est le comportement d'avant.
+async function examinerDemandeVerification(requestId) {
+  const db = getSupabaseAdmin();
+  try {
+    const { data: dem } = await db
+      .from('celebrity_verification_requests')
+      .select('*')
+      .eq('id', requestId)
+      .maybeSingle();
+    if (!dem || dem.status !== 'pending') return;
+
+    const [identite, notoriete] = await Promise.all([
+      identiteStripeDe(dem.user_id),
+      evaluerNotoriete({
+        nom: dem.display_name,
+        categorie: dem.category,
+        liens: dem.proof_links,
+        infos: dem.additional_info,
+      }),
+    ]);
+
+    const notoire = !!(notoriete && notoriete.notoire && (notoriete.score || 0) >= 70);
+    const identiteOk = !!(identite && identite.verified && identite.nom);
+    // Le nom légal peut coïncider avec le nom public déclaré, ou avec l'état
+    // civil que l'IA connaît pour cette personnalité (cas du nom de scène).
+    const concorde = identiteOk && (
+      memeNom(identite.nom, dem.display_name)
+      || (notoriete && notoriete.nom_legal_connu && memeNom(identite.nom, notoriete.nom_legal_connu))
+    );
+
+    let verdict;
+    if (!notoriete) verdict = 'review';            // IA indisponible : jamais d'automatique
+    else if (!notoire) verdict = 'review';         // notoriété non établie : un humain tranche
+    else if (concorde) verdict = 'approve';        // niveau 1
+    else verdict = 'proof';                        // niveau 2 : preuve de possession
+
+    const maj = {
+      ai_verdict: verdict,
+      ai_score: notoriete ? (notoriete.score || 0) : null,
+      ai_report: notoriete || { indisponible: true },
+      ai_checked_at: new Date().toISOString(),
+      identity_name: identite ? identite.nom : null,
+      identity_verified: identite ? identite.verified : false,
+      identity_match: !!concorde,
+    };
+    if (verdict === 'proof' && !dem.proof_code) maj.proof_code = genererCodePreuve();
+
+    await db.from('celebrity_verification_requests').update(maj).eq('id', requestId);
+
+    if (verdict === 'approve') {
+      // Voie officielle : la fonction rétablit elle-même le garde-fou qui
+      // protège `official_verified`. Un UPDATE direct serait annulé en silence.
+      const { data: ok, error } = await db.rpc('approuver_demande_celebrite', {
+        p_request_id: requestId,
+        p_notes: `Validation automatique — identité Stripe « ${identite.nom} », notoriété ${notoriete.score}/100. ${notoriete.resume || ''}`.slice(0, 500),
+        p_auto: true,
+      });
+      if (error) throw error;
+      console.log('[verif-auto] demande', requestId, ok ? 'approuvée automatiquement' : 'déjà tranchée');
+    } else {
+      console.log('[verif-auto] demande', requestId, '->', verdict);
+    }
+  } catch (e) {
+    console.error('[verif-auto] examen impossible pour', requestId, ':', e.message);
+  }
+}
+
 // --- Vérification "personnalité publique" (sportif / acteur / chanteur / artiste) ---
 app.post('/api/celebrity-verification-request', rateLimit('celeb-verif', 5, 60 * 60 * 1000), async (req, res) => {
   try {
@@ -5665,10 +5893,124 @@ app.post('/api/celebrity-verification-request', rateLimit('celeb-verif', 5, 60 *
 
     if (error) throw error;
 
+    // Examen lancé sans faire attendre le demandeur : la recherche web prend
+    // une poignée de secondes, l'app affiche « en cours de vérification » et
+    // le résultat arrive tout seul.
+    examinerDemandeVerification(data.id).catch(() => {});
+
     res.json({ success: true, request: data });
   } catch (error) {
     console.error('[celebrity-verification-request]', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// --- Niveau 2 : preuve de possession du compte officiel ---
+// L'IA établit qu'un nom est notoire, jamais que le demandeur est cette
+// personne. Quand l'identité Stripe ne tranche pas (nom de scène, homonyme,
+// pas encore de compte), on demande de publier un code sur le compte
+// officiel : personne d'autre que son titulaire ne peut le faire.
+app.get('/api/celebrity-verification-proof', async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+
+    const db = getSupabaseAdmin();
+    const { data } = await db
+      .from('celebrity_verification_requests')
+      .select('id, status, ai_verdict, ai_score, proof_code, proof_url, proof_verified_at, ai_report')
+      .eq('user_id', authUser.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!data) return res.json({ pending: false });
+    return res.json({
+      pending: true,
+      verdict: data.ai_verdict,           // null = examen en cours
+      needs_proof: data.ai_verdict === 'proof' && !data.proof_verified_at,
+      proof_code: data.ai_verdict === 'proof' ? data.proof_code : null,
+      proof_verified: !!data.proof_verified_at,
+    });
+  } catch (e) {
+    console.error('[celeb-verif-proof GET]', e.message);
+    res.status(500).json({ error: 'proof_status_failed' });
+  }
+});
+
+app.post('/api/celebrity-verification-proof', rateLimit('celeb-proof', 10, 60 * 60 * 1000), async (req, res) => {
+  try {
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+
+    const url = String((req.body || {}).url || '').trim();
+    if (!/^https?:\/\/[^\s]+$/i.test(url) || url.length > 500) {
+      return res.status(400).json({ error: 'invalid_url' });
+    }
+
+    const db = getSupabaseAdmin();
+    const { data: dem } = await db
+      .from('celebrity_verification_requests')
+      .select('id, proof_code, ai_verdict, ai_score, ai_report, identity_name')
+      .eq('user_id', authUser.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!dem || !dem.proof_code) return res.status(409).json({ error: 'no_proof_expected' });
+
+    // Lecture de la page publique. Beaucoup de réseaux sociaux refusent les
+    // robots : un échec de lecture n'est donc PAS un refus — la demande part
+    // en file manuelle avec l'adresse fournie, à vérifier à l'œil.
+    let page = '';
+    let lisible = false;
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 12000);
+      const r = await fetch(url, {
+        signal: ctrl.signal,
+        redirect: 'follow',
+        headers: { 'user-agent': 'PlyzVerificationBot/1.0 (+https://plyz.io)' },
+      });
+      clearTimeout(t);
+      if (r.ok) {
+        page = (await r.text()).slice(0, 500000);
+        lisible = true;
+      }
+    } catch { /* page illisible : traité plus bas */ }
+
+    const codeTrouve = lisible && page.toUpperCase().includes(dem.proof_code.toUpperCase());
+
+    if (codeTrouve) {
+      await db.from('celebrity_verification_requests')
+        .update({ proof_url: url, proof_verified_at: new Date().toISOString() })
+        .eq('id', dem.id);
+
+      const { error } = await db.rpc('approuver_demande_celebrite', {
+        p_request_id: dem.id,
+        p_notes: `Validation automatique — code ${dem.proof_code} trouvé sur ${url}. Notoriété ${dem.ai_score || '?'}/100.`.slice(0, 500),
+        p_auto: true,
+      });
+      if (error) throw error;
+      return res.json({ verified: true });
+    }
+
+    await db.from('celebrity_verification_requests')
+      .update({ proof_url: url })
+      .eq('id', dem.id);
+
+    return res.json({
+      verified: false,
+      // Deux échecs très différents : « je n'ai pas pu lire la page » n'est pas
+      // « le code n'y est pas ». Le dire évite de renvoyer quelqu'un chercher
+      // une erreur qu'il n'a pas commise.
+      reason: lisible ? 'code_not_found' : 'page_unreachable',
+    });
+  } catch (e) {
+    console.error('[celeb-verif-proof POST]', e.message);
+    res.status(500).json({ error: 'proof_check_failed' });
   }
 });
 
