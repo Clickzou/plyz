@@ -45,7 +45,10 @@ export default function CelebrityMenuScreen() {
   const { t } = useLanguage();
   const { isCelebrity } = useCelebrityMode();
   // Traduction automatique des libellés de statut affichés en dur.
-  const trUI = useAutoTranslate(['EN COURS', 'PRÊT', 'À VENIR', 'TERMINÉ']);
+  const trUI = useAutoTranslate([
+    'EN COURS', 'PRÊT', 'À VENIR', 'TERMINÉ',
+    'Tout', 'Dédicaces', 'Lives vidéo', 'Appels vidéo privés',
+  ]);
   // Params optionnels passés par l'écran « Événements » (fan-choice).
   const params = useLocalSearchParams<{ view?: string; kind?: string }>();
   const viewParam = Array.isArray(params.view) ? params.view[0] : params.view;
@@ -68,6 +71,10 @@ export default function CelebrityMenuScreen() {
   const [eventEarnings, setEventEarnings] = useState<Record<string, { revenue: number; fans: number }>>({});
   const [eventFilter, setEventFilter] = useState<FilterType>(
     hasCategoryParam ? VIEW_TO_FILTER[viewParam as string] : 'live',
+  );
+  // Type d'événement affiché : dédicaces, lives vidéo, ou les deux.
+  const [kindFilter, setKindFilter] = useState<'event' | 'video' | undefined>(
+    kindParam === 'video' ? 'video' : kindParam === 'event' ? 'event' : undefined,
   );
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
@@ -362,16 +369,18 @@ export default function CelebrityMenuScreen() {
     return 'scheduled';
   };
 
-  // Filtre type : si un param kind est passé, ne garde que événements OU vidéos.
+  // Filtre type : figé par le lien d'arrivée auparavant — on entrait sur les
+  // dédicaces sans aucun moyen de passer aux lives vidéo. C'est désormais un
+  // choix modifiable dans l'écran, initialisé depuis le lien.
   const kindMatches = (event: EventSession) => {
-    if (kindParam === 'video') return event.event_type === 'live_video';
-    if (kindParam === 'event') return event.event_type !== 'live_video';
+    if (kindFilter === 'video') return event.event_type === 'live_video';
+    if (kindFilter === 'event') return event.event_type !== 'live_video';
     return true;
   };
   // Liste de base restreinte au type demandé (sinon tous les événements).
   const scopedEvents = myEvents.filter(kindMatches);
   // Liste qui pilote l'affichage (vide / liste / filtres).
-  const baseEvents = kindParam ? scopedEvents : myEvents;
+  const baseEvents = kindFilter ? scopedEvents : myEvents;
 
   const endedEvents = scopedEvents.filter(e => getEventStatus(e) === 'ended');
   const allEndedSelected = endedEvents.length > 0 && endedEvents.every(e => selectedEventIds.has(e.id));
@@ -592,6 +601,37 @@ export default function CelebrityMenuScreen() {
               null
             ) : (
               <>
+                {/* Type d'événement : la liste n'affichait que ce que le lien
+                    d'arrivée avait décidé — on entrait sur les dédicaces sans
+                    aucun moyen de voir ses lives vidéo. Les appels privés
+                    vivent dans leur propre écran, accessible d'ici. */}
+                <View style={styles.filterRow}>
+                  {([
+                    { cle: undefined, texte: trUI('Tout') },
+                    { cle: 'event' as const, texte: trUI('Dédicaces') },
+                    { cle: 'video' as const, texte: trUI('Lives vidéo') },
+                  ]).map((k) => (
+                    <TouchableOpacity
+                      key={k.texte}
+                      style={[styles.filterBtn, kindFilter === k.cle && styles.filterBtnActive]}
+                      onPress={() => setKindFilter(k.cle)}
+                    >
+                      <Text style={[styles.filterBtnText, kindFilter === k.cle && styles.filterBtnTextActive]}>
+                        {k.texte}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <TouchableOpacity
+                  style={styles.accesAppelsPrives}
+                  onPress={() => router.push('/my-video-calls' as any)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.accesAppelsPrivesTexte}>
+                    {trUI('Appels vidéo privés')} →
+                  </Text>
+                </TouchableOpacity>
+
                 <View style={styles.filterRow}>
                   <TouchableOpacity
                     style={[styles.filterBtn, eventFilter === 'live' && styles.filterBtnActive]}
@@ -1152,6 +1192,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
   },
+  accesAppelsPrives: {
+    alignSelf: 'flex-start', paddingVertical: 8, paddingHorizontal: 2, marginBottom: 4,
+  },
+  accesAppelsPrivesTexte: { color: '#a78bfa', fontSize: 13, fontWeight: '700' },
   filterRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',

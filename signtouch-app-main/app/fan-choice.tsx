@@ -262,6 +262,9 @@ export default function FanChoiceScreen() {
   // langue. Un fan doit lire le catalogue dans la sienne.
   const trCatalogue = useAutoTranslate(catalogue.map((e: any) => e.title));
   // Textes du mode d'emploi propres au rôle (pas encore dans les 15 locales).
+  const trUI = useAutoTranslate([
+    'Mes événements', 'Mes participations', 'En cours', 'À venir', 'Passés',
+  ]);
   const trIntro = useAutoTranslate([
     'Rejoindre un événement',
     'Créer votre événement',
@@ -497,6 +500,38 @@ export default function FanChoiceScreen() {
           {/* Les deux boutons « + » qui doublonnaient les tuiles ont été retirés :
               la création se fait désormais depuis la tuile elle-même. */}
 
+          {/* Retour à SES événements — en cours, à venir, passés.
+              Cet accès n'existait plus : la fonction qui l'affichait était
+              restée dans le fichier sans jamais être appelée. Une personnalité
+              qui quittait sa séance de dédicace ne pouvait donc y revenir que
+              par hasard, et ne voyait ni ses événements passés ni les annulés.
+              Le compteur « en cours » est mis en avant : c'est celui qui appelle
+              une action tout de suite. */}
+          <View style={styles.mesEvenements}>
+            <Text style={styles.mesEvenementsTitre}>
+              {modeCeleb
+                ? (t('myEventsCeleb' as any) || trUI('Mes événements'))
+                : (t('myEventsFan' as any) || trUI('Mes participations'))}
+            </Text>
+            <View style={styles.mesEvenementsLigne}>
+              {([
+                { vue: 'ongoing' as const, libelle: trUI('En cours'), n: eventOngoingCount + videoOngoingCount, accent: '#10b981' },
+                { vue: 'upcoming' as const, libelle: trUI('À venir'), n: eventUpcomingCount + videoUpcomingCount, accent: '#6366f1' },
+                { vue: 'past' as const, libelle: trUI('Passés'), n: eventPastCount + videoPastCount, accent: '#6b7280' },
+              ]).map((f) => (
+                <TouchableOpacity
+                  key={f.vue}
+                  style={[styles.mesEvenementsCase, { borderColor: `${f.accent}55` }]}
+                  onPress={() => goToList(f.vue, 'event')}
+                  activeOpacity={0.85}
+                >
+                  <Text style={[styles.mesEvenementsNombre, { color: f.accent }]}>{f.n}</Text>
+                  <Text style={styles.mesEvenementsLibelle}>{f.libelle}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
           {/* Catalogue : c'est ce qui manquait le plus. Sans lui, un fan ne
               pouvait DÉCOUVRIR aucun événement — il lui fallait un code. */}
           <View style={styles.recherche}>
@@ -673,6 +708,19 @@ const styles = StyleSheet.create({
   tuileIcone: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
   tuileTitre: { fontSize: 15, fontWeight: '800' },
   tuileAction: { color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: '600' },
+  mesEvenements: { marginTop: 16 },
+  mesEvenementsTitre: {
+    color: 'rgba(255,255,255,0.9)', fontSize: 12, fontWeight: '800',
+    letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8,
+  },
+  mesEvenementsLigne: { flexDirection: 'row', gap: 10 },
+  mesEvenementsCase: {
+    flex: 1, borderWidth: 1, borderRadius: 14,
+    paddingVertical: 12, alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  mesEvenementsNombre: { fontSize: 20, fontWeight: '800' },
+  mesEvenementsLibelle: { color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2, fontWeight: '600' },
   recherche: {
     flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 22,
     backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 14,

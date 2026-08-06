@@ -64,7 +64,7 @@ async function rafraichir(force = false) {
 
     // À traiter : la star a une demande sur les bras, ou le fan un créneau
     // accepté qu'il n'a pas encore réglé. Dans les deux cas, un délai court.
-    const aAgir = ouverts.some((r: any) =>
+    const aTraiter = ouverts.filter((r: any) =>
       (r.role === 'celebrity' && r.status === 'pending') ||
       (r.role === 'fan' && r.status === 'accepted')
     );
@@ -75,10 +75,15 @@ async function rafraichir(force = false) {
     const couleur: BadgeAppelsVideo['couleur'] =
       closesRecentes.length > 0 ? '#ef4444' : valide ? '#10b981' : '#f59e0b';
 
+    // Le NOMBRE ne compte que ce qui demande une action. Il additionnait tout —
+    // demandes ouvertes ET annulations récentes — et affichait « 4 » quand une
+    // seule chose attendait vraiment : un compteur auquel on ne se fie plus est
+    // un compteur qu'on cesse de regarder. Les annulations restent visibles
+    // dans l'écran des appels vidéo, et gardent la pastille en rouge.
     cache = {
-      total: ouverts.length + closesRecentes.length,
+      total: aTraiter.length,
       couleur,
-      aAgir,
+      aAgir: aTraiter.length > 0,
     };
     abonnes.forEach((f) => f(cache));
   } catch {
