@@ -29,6 +29,7 @@ import { showAlert } from '@/utils/alertHelper';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { getMyScheduledEvents, getMergedFanEvents } from '@/utils/eventSessionStorage';
+import { ROLE_CHOICE_KEY } from '@/components/RoleChoiceOverlay';
 
 // Base API serveur (vérification de compte). Sur web on passe par le proxy local.
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -62,12 +63,21 @@ export default function FanChoiceScreen() {
   // Sa place est ici, avec le reste de ce que le fan a engagé.
   const [vcrActifs, setVcrActifs] = useState(0);
   const [vcrARegler, setVcrARegler] = useState(0);
+  // Rôle déclaré au premier lancement. Une personnalité qui s'est annoncée mais
+  // n'a pas terminé son inscription doit garder l'écran de SON rôle : sinon elle
+  // retombe sur l'interface fan, exactement le mur qu'on vient de supprimer.
+  const [roleDeclare, setRoleDeclare] = useState<string | null>(null);
+  const modeCeleb = isCelebrity || roleDeclare === 'celebrity';
 
   useEffect(() => {
     (async () => {
       try {
         const seen = await AsyncStorage.getItem('plyz_events_intro_seen');
         if (seen !== '1') setShowIntro(true);
+      } catch { /* pas bloquant */ }
+      try {
+        const role = await AsyncStorage.getItem(ROLE_CHOICE_KEY);
+        setRoleDeclare(role);
       } catch { /* pas bloquant */ }
     })();
   }, []);
@@ -366,17 +376,28 @@ export default function FanChoiceScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.title}>{t('fanChoiceTitle')}</Text>
-          <Text style={styles.subtitle}>{t('fanChoiceSubtitle')}</Text>
+          <Text style={styles.subtitle}>
+            {modeCeleb
+              ? (t('fanChoiceSubtitleCeleb' as any) || 'Créez votre événement')
+              : (t('fanChoiceSubtitleFan' as any) || 'Rejoignez un événement')}
+          </Text>
 
           {/* Deux tuiles compactes plutôt que deux grandes cartes empilées : la
               liste des événements commence dès le premier écran au lieu d'être
               repoussée tout en bas. La TUILE ENTIÈRE est cliquable — pas de petit
               bouton à l'intérieur — donc la cible tactile est bien plus grande
-              qu'avant. */}
+              qu'avant.
+
+              Chaque tuile porte l'action du RÔLE : une personnalité vient ici
+              pour créer, un fan pour rejoindre. Auparavant les deux tuiles
+              disaient « Rejoindre » à tout le monde, et la personnalité devait
+              repérer deux boutons « + » séparés plus bas — d'où des créations
+              manquées. Une personnalité qui veut rejoindre un événement passe
+              par le catalogue juste en dessous. */}
           <View style={styles.tuiles}>
             <TouchableOpacity
               style={[styles.tuile, { borderColor: 'rgba(16,185,129,0.35)', backgroundColor: 'rgba(16,185,129,0.10)' }]}
-              onPress={() => handleChoice('/join-event')}
+              onPress={() => (modeCeleb ? handleCreate('/create-event') : handleChoice('/join-event'))}
               activeOpacity={0.85}
             >
               <View style={[styles.tuileIcone, { backgroundColor: 'rgba(16,185,129,0.16)' }]}>
@@ -385,12 +406,14 @@ export default function FanChoiceScreen() {
               <Text style={[styles.tuileTitre, { color: '#10b981' }]}>
                 {t('eventTypeDedicace' as any) || 'Dédicace'}
               </Text>
-              <Text style={styles.tuileAction}>{t('fanChoiceJoinBtn')}</Text>
+              <Text style={styles.tuileAction}>
+                {modeCeleb ? t('fanChoiceCreateBtn') : t('fanChoiceJoinBtn')}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.tuile, { borderColor: 'rgba(99,102,241,0.35)', backgroundColor: 'rgba(99,102,241,0.10)' }]}
-              onPress={() => handleChoice('/join-live-session')}
+              onPress={() => (modeCeleb ? handleCreate('/create-live-session') : handleChoice('/join-live-session'))}
               activeOpacity={0.85}
             >
               <View style={[styles.tuileIcone, { backgroundColor: 'rgba(99,102,241,0.16)' }]}>
@@ -399,7 +422,9 @@ export default function FanChoiceScreen() {
               <Text style={[styles.tuileTitre, { color: '#6366f1' }]}>
                 {t('eventTypeLiveVideo' as any) || 'Live vidéo'}
               </Text>
-              <Text style={styles.tuileAction}>{t('fanChoiceJoinBtn')}</Text>
+              <Text style={styles.tuileAction}>
+                {modeCeleb ? t('fanChoiceCreateBtn') : t('fanChoiceJoinBtn')}
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -421,7 +446,7 @@ export default function FanChoiceScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.vcrAccesTitre}>
-                {isCelebrity
+                {modeCeleb
                   ? (t('vcrEntryCeleb' as any) || 'Demandes d\'appel vidéo privé')
                   : (t('vcrEntryFan' as any) || 'Mes appels vidéo privés')}
               </Text>
@@ -440,28 +465,8 @@ export default function FanChoiceScreen() {
             )}
           </TouchableOpacity>
 
-          {/* Créer reste l'action principale d'une personnalité : elle garde ses
-              deux boutons, sur une ligne dédiée pour ne pas encombrer les tuiles. */}
-          {isCelebrity && (
-            <View style={styles.creerRangee}>
-              <TouchableOpacity
-                style={[styles.creerBtn, { backgroundColor: '#10b981' }]}
-                onPress={() => handleCreate('/create-event')}
-                activeOpacity={0.85}
-              >
-                <Plus size={16} color="#fff" strokeWidth={2.5} />
-                <Text style={styles.creerTexte}>{t('celebrityEventSimple' as any) || 'Créer une dédicace'}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.creerBtn, { backgroundColor: '#6366f1' }]}
-                onPress={() => handleCreate('/create-live-session')}
-                activeOpacity={0.85}
-              >
-                <Plus size={16} color="#fff" strokeWidth={2.5} />
-                <Text style={styles.creerTexte}>{t('celebrityLiveSession' as any) || 'Créer un live'}</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          {/* Les deux boutons « + » qui doublonnaient les tuiles ont été retirés :
+              la création se fait désormais depuis la tuile elle-même. */}
 
           {/* Catalogue : c'est ce qui manquait le plus. Sans lui, un fan ne
               pouvait DÉCOUVRIR aucun événement — il lui fallait un code. */}
@@ -642,12 +647,6 @@ const styles = StyleSheet.create({
   tuileIcone: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
   tuileTitre: { fontSize: 15, fontWeight: '800' },
   tuileAction: { color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: '600' },
-  creerRangee: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  creerBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, paddingVertical: 11, borderRadius: 12,
-  },
-  creerTexte: { color: '#fff', fontSize: 13, fontWeight: '700' },
   recherche: {
     flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 22,
     backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 14,

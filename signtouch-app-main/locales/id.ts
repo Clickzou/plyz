@@ -636,6 +636,8 @@ export default {
   eventsIntroCelebBody: 'Ketuk "Buat" untuk menyelenggarakan acara Anda dan menyambut penggemar. Tombol "Buat" muncul setelah akun selebriti Anda terverifikasi.',
   eventsIntroGotIt: 'Mengerti',
   fanChoiceSubtitle: 'Pilih pengalaman Anda',
+  fanChoiceSubtitleFan: 'Ikuti sebuah acara',
+  fanChoiceSubtitleCeleb: 'Buat acara Anda',
   fanChoiceQR: 'Acara Dedikasi Langsung',
   fanChoiceQRDesc: "Pindai kode QR atau masukkan kode: kamu akan terhubung langsung dengan selebriti untuk menerima dedikasi personalmu.",
   fanChoiceVideo: 'Sesi Video Langsung',

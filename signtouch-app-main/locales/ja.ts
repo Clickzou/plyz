@@ -636,6 +636,8 @@ export default {
   eventsIntroCelebBody: 'イベントを主催してファンを迎えるには「作成」をタップしてください。「作成」ボタンは、有名人アカウントが承認されると表示されます。',
   eventsIntroGotIt: '了解しました',
   fanChoiceSubtitle: '体験を選んでください',
+  fanChoiceSubtitleFan: 'イベントに参加する',
+  fanChoiceSubtitleCeleb: 'イベントを作成する',
   fanChoiceQR: 'ライブサイン会イベント',
   fanChoiceQRDesc: "QRコードをスキャンまたはコードを入力：セレブとリアルタイムで1対1に接続され、あなただけのパーソナライズされた動画メッセージを受け取ります。",
   fanChoiceVideo: 'ライブビデオセッション',

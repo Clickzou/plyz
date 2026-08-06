@@ -636,6 +636,8 @@ export default {
   eventsIntroCelebBody: 'اضغط على «إنشاء» لتنظيم فعاليتك واستقبال معجبيك. يظهر زر «إنشاء» بعد التحقق من حساب المشاهير الخاص بك.',
   eventsIntroGotIt: 'فهمت',
   fanChoiceSubtitle: 'اختر تجربتك',
+  fanChoiceSubtitleFan: 'انضم إلى فعالية',
+  fanChoiceSubtitleCeleb: 'أنشئ فعاليتك',
   fanChoiceQR: 'حدث إهداء مباشر',
   fanChoiceQRDesc: "امسح رمز QR أو أدخل رمزاً: ستتصل بالمشهور مباشرة لتلقي رسالتك الشخصية.",
   fanChoiceVideo: 'جلسة فيديو مباشرة',

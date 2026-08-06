@@ -636,6 +636,8 @@ export default {
   eventsIntroCelebBody: 'اپنا ایونٹ منعقد کرنے اور اپنے مداحوں کا استقبال کرنے کے لیے «بنائیں» پر ٹیپ کریں۔ «بنائیں» کا بٹن آپ کے مشہور شخصیت اکاؤنٹ کی تصدیق کے بعد ظاہر ہوتا ہے۔',
   eventsIntroGotIt: 'سمجھ گیا',
   fanChoiceSubtitle: 'اپنا تجربہ چنیں',
+  fanChoiceSubtitleFan: 'کسی تقریب میں شامل ہوں',
+  fanChoiceSubtitleCeleb: 'اپنی تقریب بنائیں',
   fanChoiceQR: 'لائیو ڈیڈیکیشن ایونٹ',
   fanChoiceQRDesc: "QR کوڈ اسکین کریں یا کوڈ درج کریں: آپ اپنی ذاتی نوازش وصول کرنے کے لیے سیلیبرٹی کے ساتھ براہ راست منسلک ہوں گے۔",
   fanChoiceVideo: 'لائیو ویڈیو سیشن',

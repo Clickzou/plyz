@@ -636,6 +636,8 @@ export default {
   eventsIntroCelebBody: 'Toca «Crear» para organizar tu evento y recibir a tus fans. El botón «Crear» aparece cuando tu cuenta de celebridad está verificada.',
   eventsIntroGotIt: 'Entendido',
   fanChoiceSubtitle: 'Elige tu experiencia',
+  fanChoiceSubtitleFan: 'Únete a un evento',
+  fanChoiceSubtitleCeleb: 'Crea tu evento',
   fanChoiceQR: 'Evento Live Dedicatoria',
   fanChoiceQRDesc: "Escanea un código QR o ingresa un código: te conectarás en directo con la celebridad para recibir tu dedicatoria personalizada.",
   fanChoiceVideo: 'Sesión de Video en Vivo',

@@ -18,6 +18,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { useFonts } from 'expo-font';
 import SplashOverlay from '@/components/SplashOverlay';
+import RoleChoiceOverlay from '@/components/RoleChoiceOverlay';
 import { ShadowsIntoLight_400Regular } from '@expo-google-fonts/shadows-into-light';
 import { AlexBrush_400Regular } from '@expo-google-fonts/alex-brush';
 import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
@@ -147,6 +148,11 @@ function RootLayout() {
                   <AuthPromptProvider>
                     <AppContent />
                     {showSplash && <SplashOverlay onFinish={() => setShowSplash(false)} />}
+                    {/* Tout premier lancement : fan ou personnalité ? Affiché une
+                        seule fois, après la vidéo d'accueil. Sans lui, une
+                        personnalité atterrissait sur le fil d'un fan sans jamais
+                        voir qu'un espace lui était destiné. */}
+                    {!showSplash && <RoleChoiceOverlay />}
                   </AuthPromptProvider>
                 </OnboardingProvider>
               </FollowProvider>

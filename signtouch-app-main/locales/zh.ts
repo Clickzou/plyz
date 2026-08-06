@@ -636,6 +636,8 @@ export default {
   eventsIntroCelebBody: '点击"创建"来举办您的活动并欢迎粉丝。"创建"按钮将在您的名人账户通过验证后显示。',
   eventsIntroGotIt: '知道了',
   fanChoiceSubtitle: '选择您的体验',
+  fanChoiceSubtitleFan: '加入活动',
+  fanChoiceSubtitleCeleb: '创建你的活动',
   fanChoiceQR: '现场签名活动',
   fanChoiceQRDesc: "扫描二维码或输入代码：你将与明星进行实时一对一连接，接收你的个性化视频祝福。",
   fanChoiceVideo: '直播视频会话',

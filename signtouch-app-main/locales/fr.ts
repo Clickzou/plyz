@@ -698,6 +698,8 @@ export default {
   eventsIntroCelebBody: 'Touchez « Créer » pour organiser votre événement et recevoir vos fans. Le bouton « Créer » apparaît une fois votre compte de célébrité validé.',
   eventsIntroGotIt: "J'ai compris",
   fanChoiceSubtitle: 'Rejoignez un événement ou créez le vôtre',
+  fanChoiceSubtitleFan: 'Rejoignez un événement',
+  fanChoiceSubtitleCeleb: 'Créez votre événement',
   fanChoiceQR: 'Rejoindre un événement',
   fanChoiceQRDesc: "Scanne un QR code ou entre un code : tu seras connecté en direct avec la célébrité pour recevoir ta dédicace personnalisée.",
   fanChoiceVideo: 'Rejoindre une session vidéo',

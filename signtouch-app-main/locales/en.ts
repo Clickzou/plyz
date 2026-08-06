@@ -697,6 +697,8 @@ export default {
   eventsIntroCelebBody: 'Tap "Create" to host your event and welcome your fans. The "Create" button appears once your celebrity account is verified.',
   eventsIntroGotIt: 'Got it',
   fanChoiceSubtitle: 'Join an event or create your own',
+  fanChoiceSubtitleFan: 'Join an event',
+  fanChoiceSubtitleCeleb: 'Create your event',
   fanChoiceQR: 'Join an event',
   fanChoiceQRDesc: "Scan a QR code or enter a code: you'll be connected live with the celebrity to receive your personalized dedication.",
   fanChoiceVideo: 'Join a video session',

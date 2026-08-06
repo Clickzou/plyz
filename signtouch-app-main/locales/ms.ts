@@ -636,6 +636,8 @@ export default {
   eventsIntroCelebBody: 'Ketik "Cipta" untuk menganjurkan acara anda dan mengalu-alukan peminat. Butang "Cipta" muncul apabila akaun selebriti anda disahkan.',
   eventsIntroGotIt: 'Faham',
   fanChoiceSubtitle: 'Pilih pengalaman anda',
+  fanChoiceSubtitleFan: 'Sertai satu acara',
+  fanChoiceSubtitleCeleb: 'Cipta acara anda',
   fanChoiceQR: 'Acara Dedikasi Langsung',
   fanChoiceQRDesc: "Imbas kod QR atau masukkan kod: kamu akan terhubung secara langsung dengan selebriti untuk menerima dedikasi personal kamu.",
   fanChoiceVideo: 'Sesi Video Langsung',

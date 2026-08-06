@@ -636,6 +636,8 @@ export default {
   eventsIntroCelebBody: 'अपना इवेंट आयोजित करने और अपने फैंस का स्वागत करने के लिए "बनाएं" पर टैप करें। "बनाएं" बटन तब दिखता है जब आपका सेलिब्रिटी खाता सत्यापित हो जाता है।',
   eventsIntroGotIt: 'समझ गया',
   fanChoiceSubtitle: 'अपना अनुभव चुनें',
+  fanChoiceSubtitleFan: 'किसी इवेंट में शामिल हों',
+  fanChoiceSubtitleCeleb: 'अपना इवेंट बनाएँ',
   fanChoiceQR: 'लाइव डेडिकेशन इवेंट',
   fanChoiceQRDesc: "QR कोड स्कैन करें या कोड दर्ज करें : आप सेलिब्रिटी के साथ सीधे जुड़ेंगे और अपना व्यक्तिगत समर्पण पाएंगे।",
   fanChoiceVideo: 'लाइव वीडियो सेशन',

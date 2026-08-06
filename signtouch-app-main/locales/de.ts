@@ -636,6 +636,8 @@ export default {
   eventsIntroCelebBody: 'Tippe auf „Erstellen“, um dein Event zu veranstalten und deine Fans zu empfangen. Die Schaltfläche „Erstellen“ erscheint, sobald dein Star-Konto verifiziert ist.',
   eventsIntroGotIt: 'Verstanden',
   fanChoiceSubtitle: 'Wähle dein Erlebnis',
+  fanChoiceSubtitleFan: 'Nimm an einem Event teil',
+  fanChoiceSubtitleCeleb: 'Erstelle dein Event',
   fanChoiceQR: 'Live-Widmung Event',
   fanChoiceQRDesc: "Scanne einen QR-Code oder gib einen Code ein: Du wirst live direkt mit dem Star verbunden und erhältst deine persönliche Widmung.",
   fanChoiceVideo: 'Live-Video-Sitzung',
