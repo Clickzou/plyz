@@ -3769,7 +3769,14 @@ app.get('/api/celebrities', async (req, res) => {
         ${profilesJoinInner()},
         celebrity_pricing(video_call_price_cents, autograph_price_cents, live_dedication_price_cents, currency)
       `, { count: 'exact' })
-      .eq('is_listed', true);
+      // Double condition VOULUE : `is_listed` est tenu en base par un
+      // déclencheur, mais le mur des célébrités est trop exposé pour dépendre
+      // d'une seule garde. Un profil non vérifié n'a rien à y faire : sans ce
+      // filtre, activer le mode célébrité suffisait à s'afficher publiquement
+      // comme célébrité (constaté avec un compte de test et celui du testeur
+      // Google Play, tous deux visibles des utilisateurs).
+      .eq('is_listed', true)
+      .eq('official_verified', true);
 
     if (search && search.trim().length > 0) {
       query = query.ilike('stage_name', `%${search.trim()}%`);
