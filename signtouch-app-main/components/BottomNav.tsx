@@ -5,6 +5,7 @@ import { Search, Newspaper, Images, Camera, Calendar } from 'lucide-react-native
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAutoTranslate } from '@/utils/translation';
 import { useBadgeAppelsVideo } from '@/utils/videoCallBadge';
 
 export const BOTTOM_NAV_HEIGHT = 70;
@@ -18,6 +19,7 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const trUI = useAutoTranslate(['Dédicacer']);
   const badge = useBadgeAppelsVideo();
 
   // Battement lent, uniquement quand c'est à cet utilisateur d'agir. Une
@@ -106,6 +108,12 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
             strokeWidth={2.5}
           />
         </TouchableOpacity>
+        {/* Seul bouton de la barre sans libellé : un appareil photo ne dit pas
+            ce qu'on en fait ici — signer une photo, pas la prendre pour la
+            prendre. Les quatre autres onglets sont nommés, celui-ci aussi. */}
+        <Text style={[styles.navLabel, isCameraActive && styles.navLabelActive]}>
+          {t('dedicate' as any) || trUI('Dédicacer')}
+        </Text>
       </View>
 
       <TouchableOpacity
