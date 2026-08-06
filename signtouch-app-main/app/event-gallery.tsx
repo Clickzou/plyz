@@ -189,6 +189,20 @@ export default function EventGalleryScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user } = useAuth();
+  // Nom affiche sur les pieces de collection du fan. C'etait son ADRESSE
+  // E-MAIL : la seule donnee qu'on ne devrait jamais afficher a la place d'un
+  // pseudo, et desormais inutile puisque le pseudo est exige a l'inscription.
+  const [nomCollectionneur, setNomCollectionneur] = useState<string>('');
+  useEffect(() => {
+    if (!user?.id) { setNomCollectionneur(''); return; }
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles').select('display_name').eq('id', user.id).maybeSingle();
+        setNomCollectionneur((data?.display_name || '').trim());
+      } catch { /* on retombe sur le libelle neutre */ }
+    })();
+  }, [user?.id]);
   // Garde l'écran ALLUMÉ tant que le fan attend sa dédicace : sinon l'écran se met en veille,
   // l'app se suspend, et il rate l'arrivée en direct de sa photo dédicacée (confetti + son).
   // Aligné sur le flux vidéo (video-call / live-session-dashboard).
@@ -341,7 +355,7 @@ export default function EventGalleryScreen() {
               saveCollectorLive(
                 a.asset_url,
                 a.signer?.display_name || 'Celebrity',
-                user?.email || 'Fan',
+                nomCollectionneur || (t('celDashFan' as any) || 'Fan'),
                 session.id || undefined,
                 session.join_code || undefined,
                 undefined,
@@ -369,7 +383,7 @@ export default function EventGalleryScreen() {
                 saveCollectorLive(
                   a.asset_url,
                   a.signer?.display_name || 'Celebrity',
-                  user?.email || 'Fan',
+                  nomCollectionneur || (t('celDashFan' as any) || 'Fan'),
                   session.id || undefined,
                   session.join_code || undefined,
                   undefined,
@@ -635,7 +649,7 @@ export default function EventGalleryScreen() {
         saveCollectorLive(
           asset.asset_url,
           asset.signer?.display_name || 'Celebrity',
-          user?.email || 'Fan',
+          nomCollectionneur || (t('celDashFan' as any) || 'Fan'),
           session.id || undefined,
           session.join_code || undefined,
           undefined,

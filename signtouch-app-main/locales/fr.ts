@@ -583,8 +583,8 @@ export default {
   termsSection3Title: '3. Utilisation de l\'application',
   termsSection3Text: 'Vous vous engagez à utiliser l\'application de manière responsable et conformément aux lois applicables. Vous conservez tous les droits sur les photos que vous modifiez avec Plyz.',
 
-  termsSection4Title: '4. Abonnement',
-  termsSection4Text: 'L\'abonnement est facultatif et permet de soutenir le développement de l\'application. Il n\'apporte aucune fonctionnalité supplémentaire. L\'abonnement se renouvelle automatiquement et peut être annulé à tout moment dans les réglages de votre compte App Store ou Google Play.',
+  termsSection4Title: '4. Rémunération des personnalités',
+  termsSection4Text: 'Plyz est gratuit : aucun abonnement, aucune publicité. L\'application se rémunère uniquement par une commission de 15 % prélevée sur chaque prestation vendue ; la personnalité perçoit 85 % du montant réglé par le fan.\n\nLes montants affichés dans l\'application au titre des revenus attendus sont des ESTIMATIONS, calculées sur le tarif affiché et le nombre de places. Ils ne constituent ni une garantie ni un engagement de notre part. Le montant réellement perçu peut être inférieur, notamment lorsque des codes promotionnels sont utilisés par les fans : un code offrant la gratuité totale ne donne lieu à aucun encaissement, donc à aucun revenu pour la prestation concernée. Les annulations, les remboursements et les prestations non honorées réduisent également le montant final.\n\nSeuls les montants figurant sur les factures et les virements Stripe font foi.',
 
   termsSection5Title: '5. Limitation de responsabilité',
   termsSection5Text: 'Plyz est fourni "tel quel" sans garantie d\'aucune sorte. Nous ne sommes pas responsables des dommages résultant de l\'utilisation de l\'application.',

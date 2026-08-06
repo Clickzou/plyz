@@ -582,8 +582,8 @@ export default {
   termsSection3Title: '3. Use of the App',
   termsSection3Text: 'You agree to use the app responsibly and in compliance with applicable laws. You retain all rights to the photos you edit with Plyz.',
 
-  termsSection4Title: '4. Subscription',
-  termsSection4Text: 'The subscription is optional and helps support the app\'s development. It does not provide any additional features. The subscription renews automatically and can be canceled at any time in your App Store or Google Play account settings.',
+  termsSection4Title: '4. Talent earnings',
+  termsSection4Text: 'Plyz is free: no subscription, no advertising. The app is funded solely by a 15% commission on each service sold; the talent receives 85% of the amount paid by the fan.\n\nEarnings figures shown in the app are ESTIMATES, based on the listed price and number of seats. They are neither a guarantee nor a commitment on our part. The amount actually received may be lower, in particular when fans use promotional codes: a code granting full free access generates no payment, and therefore no earnings for that service. Cancellations, refunds and unfulfilled services also reduce the final amount.\n\nOnly the amounts shown on invoices and Stripe payouts are authoritative.',
 
   termsSection5Title: '5. Limitation of Liability',
   termsSection5Text: 'Plyz is provided "as is" without any warranty. We are not responsible for any damages resulting from the use of the app.',
