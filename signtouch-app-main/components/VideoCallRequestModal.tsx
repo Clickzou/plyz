@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { X, Video, Clock } from 'lucide-react-native';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { showAlert } from '@/utils/alertHelper';
+import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { authedFetch } from '@/utils/authedFetch';
 import { rafraichirBadgeAppelsVideo } from '@/utils/videoCallBadge';
 
@@ -47,11 +47,29 @@ export default function VideoCallRequestModal({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
+        // Une demande déjà en cours n'est pas une erreur : c'est une réponse.
+        // On emmène donc le fan à SA demande au lieu de le laisser sur un
+        // « OK » sans issue, à se demander où elle est passée.
+        if (data?.error === 'request_already_open') {
+          onClose();
+          showConfirm(
+            t('vcrAlreadyOpenTitle' as any) || 'Demande déjà envoyée',
+            t('vcrAlreadyOpen' as any)
+              || 'Tu as déjà une demande en cours auprès de cette personnalité.',
+            [
+              { text: t('close') || 'Fermer', style: 'cancel' },
+              {
+                text: t('vcrSeeRequest' as any) || 'Voir ma demande',
+                onPress: () => router.push('/my-video-calls' as any),
+              },
+            ],
+          );
+          return;
+        }
+
         // Chaque refus a sa raison : un message générique laisserait le fan
         // relancer indéfiniment sans comprendre.
         const raisons: Record<string, string> = {
-          request_already_open: t('vcrAlreadyOpen' as any)
-            || 'Tu as déjà une demande en cours auprès de cette personnalité.',
           celebrity_has_no_video_rate: t('vcrNoRate' as any)
             || "Cette personnalité n'a pas encore fixé de tarif pour les appels privés.",
           cannot_request_self: t('vcrSelf' as any) || 'Tu ne peux pas te demander un appel à toi-même.',
