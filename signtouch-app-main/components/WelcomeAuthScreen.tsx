@@ -205,13 +205,36 @@ export default function WelcomeAuthScreen({
     }
   };
 
+  // Renvoi bridé volontairement.
+  //
+  // Chaque demande consomme le quota horaire d'e-mails d'authentification. Une
+  // fois ce quota atteint, Supabase répond « OK » SANS rien envoyer et SANS
+  // erreur : l'écran annonce un code parti, l'utilisateur attend un e-mail qui
+  // n'existera jamais, puis saisit celui d'un e-mail précédent — désormais
+  // invalide. Le symptôme est alors trompeur : « le code est mauvais » alors
+  // que le code n'a simplement jamais été envoyé.
+  //
+  // Toucher « Renvoyer » en boucle est donc exactement ce qu'il ne faut pas
+  // faire : cela épuise le quota sans jamais produire de code. Le bouton
+  // s'immobilise pendant une minute, avec le décompte visible.
+  const DELAI_RENVOI_S = 60;
+  const [attenteRenvoi, setAttenteRenvoi] = useState(0);
+
+  useEffect(() => {
+    if (attenteRenvoi <= 0) return;
+    const id = setInterval(() => setAttenteRenvoi((s) => (s <= 1 ? 0 : s - 1)), 1000);
+    return () => clearInterval(id);
+  }, [attenteRenvoi]);
+
   const handleResendCode = async () => {
+    if (attenteRenvoi > 0 || loading) return;
     setLoading(true);
     setError('');
     setCode('');
     try {
       const { error: sendError } = await sendOtpCode(email.trim());
       if (sendError) setError(messageAuth(sendError.message));
+      else setAttenteRenvoi(DELAI_RENVOI_S);
     } catch (err: any) {
       setError(messageAuth(err?.message));
     } finally {
@@ -251,6 +274,14 @@ export default function WelcomeAuthScreen({
       const { error: verifyError } = await verifyOtpCode(email.trim(), code.trim());
       if (verifyError) {
         setError(messageAuth(verifyError.message));
+        // Signalé au serveur, qui alerte par e-mail. Celui qui reste bloqué à
+        // l'écran de connexion n'a aucun moyen de nous prévenir : sans ce
+        // signal, la panne ne se voit que si quelqu'un la raconte.
+        fetch(`${API_BASE}/api/auth-code-failed`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim() }),
+        }).catch(() => { /* ne doit jamais gêner l'utilisateur */ });
       } else {
         // Connected. Now decide if profile completion is needed.
         setAwaitingProfileCheck(true);
@@ -525,10 +556,15 @@ export default function WelcomeAuthScreen({
 
               <TouchableOpacity
                 onPress={handleResendCode}
-                disabled={loading}
+                disabled={loading || attenteRenvoi > 0}
                 style={styles.linkButton}
               >
-                <Text style={styles.linkGreen}>{tr('waResend', 'Renvoyer le code')}</Text>
+                <Text style={[styles.linkGreen, attenteRenvoi > 0 && styles.linkMuted]}>
+                  {attenteRenvoi > 0
+                    ? tr('waResendWait', 'Nouveau code possible dans {{s}} s')
+                        .replace('{{s}}', String(attenteRenvoi))
+                    : tr('waResend', 'Renvoyer le code')}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity

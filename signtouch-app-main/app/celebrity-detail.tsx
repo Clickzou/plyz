@@ -252,7 +252,18 @@ export default function CelebrityDetailScreen() {
       showAlert(t('liveSessionNotFound') || 'Événement introuvable.');
       return;
     }
-    router.push({ pathname: '/join-live-session', params: { code: event.code } } as any);
+    // Un compte AVANT d'entrer, comme depuis l'écran Événements. Ce chemin-ci
+    // n'exigeait rien : on arrivait sur l'inscription en simple visiteur, et la
+    // réservation partait alors sous un identifiant d'appareil, rattachée à
+    // personne. Pseudo et photo compris : la personnalité doit savoir qui vient.
+    requireAuth(
+      () => router.push({ pathname: '/join-live-session', params: { code: event.code } } as any),
+      {
+        reason: t('joinAuthReason' as any)
+          || 'Crée ton compte pour rejoindre un événement — tes réservations et tes dédicaces y seront rattachées.',
+        requireBillingIdentity: false,
+      },
+    );
   };
 
   const handleRegisterPostEvent = (post: any) => {
@@ -260,7 +271,15 @@ export default function CelebrityDetailScreen() {
     // éprouvé ; sinon on ouvre le détail du post (plus de fausse « Inscription
     // confirmée » qui n'enregistrait rien).
     if (post?.code) {
-      router.push({ pathname: '/join-live-session', params: { code: post.code } } as any);
+      // Même exigence que depuis l'onglet Événements : s'inscrire engage.
+      requireAuth(
+        () => router.push({ pathname: '/join-live-session', params: { code: post.code } } as any),
+        {
+          reason: t('joinAuthReason' as any)
+            || 'Crée ton compte pour rejoindre un événement — tes réservations et tes dédicaces y seront rattachées.',
+          requireBillingIdentity: false,
+        },
+      );
     } else {
       openPostDetail(post);
     }

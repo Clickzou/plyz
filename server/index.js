@@ -696,6 +696,23 @@ let AUTH_EMAIL_I18N = {};
 try { AUTH_EMAIL_I18N = require('./auth-email-i18n.json'); }
 catch (e) { console.warn('[AuthEmail] auth-email-i18n.json introuvable'); }
 
+// Dernier e-mail de connexion REELLEMENT parti, par adresse. Sert a distinguer
+// deux pannes que l'utilisateur vit de la meme facon (« mauvais code ») :
+//   - un code effectivement errone ou perime ;
+//   - aucun e-mail jamais envoye, parce que Supabase a atteint son quota
+//     horaire : il repond « OK » sans appeler ce hook et sans lever d'erreur.
+// Sans cette trace, impossible de trancher a posteriori.
+const DERNIER_EMAIL_AUTH = new Map();
+function noterEnvoiAuth(email) {
+  DERNIER_EMAIL_AUTH.set(String(email).toLowerCase(), Date.now());
+  // La table ne doit pas grossir indefiniment : au-dela de 500 adresses on
+  // oublie les plus anciennes, elles n'ont plus d'interet pour le diagnostic.
+  if (DERNIER_EMAIL_AUTH.size > 500) {
+    const parAge = [...DERNIER_EMAIL_AUTH.entries()].sort((a, b) => a[1] - b[1]);
+    for (const [k] of parAge.slice(0, 100)) DERNIER_EMAIL_AUTH.delete(k);
+  }
+}
+
 function verifyStandardWebhook(secret, id, timestamp, signatureHeader, body) {
   try {
     if (!secret) return false;
@@ -760,12 +777,59 @@ app.post('/api/auth-email-hook', express.raw({ type: '*/*' }), async (req, res) 
       subject: tpl.subject,
       text,
       html,
-    }).then(() => console.log('[AuthEmail] code envoyé à', email, '| langue:', lang))
-      .catch((e) => console.error('[AuthEmail] send failed:', e.message));
+    }).then(() => { noterEnvoiAuth(email); console.log('[AuthEmail] code envoyé à', email, '| langue:', lang); })
+      .catch((e) => {
+        console.error('[AuthEmail] send failed:', e.message);
+        // Un code de connexion perdu, c'est un utilisateur qui ne peut plus
+        // entrer. Cela ne doit pas rester dans les journaux du serveur.
+        recordServiceAlert('auth', 'critical',
+          `E-mail de code de connexion NON ENVOYÉ à ${email} : ${e.message}`);
+      });
     return;
   } catch (e) {
     console.error('[auth-email-hook] error:', e.message);
     return res.status(500).json({ error: e.message });
+  }
+});
+
+// Un code de connexion refusé : l'app le signale ici pour qu'une alerte parte
+// TOUT DE SUITE par e-mail. Personne ne peut se plaindre d'un écran de connexion
+// — celui qui n'entre pas dans l'app n'a aucun moyen de nous joindre. Sans ce
+// signal, la panne ne se voit que si quelqu'un la raconte de vive voix.
+//
+// L'alerte tranche entre les deux causes, invisibles à l'écran comme l'une à
+// l'autre : un vrai mauvais code, ou aucun e-mail jamais parti (quota Supabase
+// atteint — il répond « OK » sans appeler notre hook).
+//
+// Volontairement sans authentification : celui qui échoue à se connecter n'a,
+// par définition, pas de jeton. Rate limit strict en compensation, et l'adresse
+// est le seul élément transmis.
+app.post('/api/auth-code-failed', rateLimit('auth-code-failed', 20, 10 * 60 * 1000), express.json(), async (req, res) => {
+  try {
+    const email = String((req.body && req.body.email) || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) return res.status(400).json({ error: 'email_required' });
+
+    const dernier = DERNIER_EMAIL_AUTH.get(email);
+    const ageMin = dernier ? Math.round((Date.now() - dernier) / 60000) : null;
+    const jamaisEnvoye = !dernier || (Date.now() - dernier) > 15 * 60 * 1000;
+
+    if (jamaisEnvoye) {
+      recordServiceAlert('auth', 'critical',
+        `🔑 Connexion impossible pour ${email} : code refusé ET aucun e-mail parti ` +
+        `${dernier ? `depuis ${ageMin} min` : 'du tout'}. ` +
+        `Cause la plus probable : le QUOTA HORAIRE d'e-mails Supabase est atteint — ` +
+        `il répond « OK » sans envoyer et sans erreur. ` +
+        `À vérifier : tableau de bord Supabase → Authentication → Rate Limits.`);
+    } else {
+      recordServiceAlert('auth', 'warning',
+        `Code de connexion refusé pour ${email}, alors qu'un e-mail est bien parti ` +
+        `il y a ${ageMin} min. Code périmé, mal recopié, ou demande plus récente ` +
+        `ayant annulé celui-ci.`);
+    }
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('[auth-code-failed]', e.message);
+    return res.status(500).json({ error: 'internal' });
   }
 });
 
