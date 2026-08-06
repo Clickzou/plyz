@@ -18,6 +18,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
@@ -85,7 +86,19 @@ export default function MySpaceScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { requireAuth } = useAuthPrompt();
   const { isCelebrity } = useCelebrityMode();
+
+  // Rejoindre depuis « Mon espace » engage autant que depuis l'écran
+  // Événements : même exigence de compte. Ces deux entrées y échappaient —
+  // on entrait dans le parcours en simple visiteur.
+  const rejoindre = (chemin: string) => {
+    requireAuth(() => router.push(chemin as any), {
+      reason: t('joinAuthReason' as any)
+        || 'Crée ton compte pour rejoindre un événement — tes réservations et tes dédicaces y seront rattachées.',
+      requireBillingIdentity: false,
+    });
+  };
   const [mode, setMode] = useState<ModeType>(isCelebrity ? 'celebrity' : 'fan');
 
   useEffect(() => {
@@ -802,7 +815,7 @@ export default function MySpaceScreen() {
       <View style={styles.fanJoinRow}>
         <TouchableOpacity
           style={styles.fanJoinBtn}
-          onPress={() => router.push('/join-live-session' as any)}
+          onPress={() => rejoindre('/join-live-session')}
           activeOpacity={0.8}
         >
           <View style={[styles.fanJoinIcon, { backgroundColor: 'rgba(239,68,68,0.15)' }]}>
@@ -816,7 +829,7 @@ export default function MySpaceScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.fanJoinBtn}
-          onPress={() => router.push('/join-event' as any)}
+          onPress={() => rejoindre('/join-event')}
           activeOpacity={0.8}
         >
           <View style={[styles.fanJoinIcon, { backgroundColor: 'rgba(168,85,247,0.15)' }]}>
