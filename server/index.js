@@ -703,6 +703,11 @@ catch (e) { console.warn('[AuthEmail] auth-email-i18n.json introuvable'); }
 //     horaire : il repond « OK » sans appeler ce hook et sans lever d'erreur.
 // Sans cette trace, impossible de trancher a posteriori.
 const DERNIER_EMAIL_AUTH = new Map();
+// Cette memoire est vide au demarrage. Sans en tenir compte, tout code refuse
+// dans les minutes qui suivent un redeploiement serait impute au quota — une
+// fausse alerte critique a chaque Republish, et une alerte a laquelle on ne
+// croit plus est une alerte inutile.
+const DEMARRAGE_SERVEUR = Date.now();
 function noterEnvoiAuth(email) {
   DERNIER_EMAIL_AUTH.set(String(email).toLowerCase(), Date.now());
   // La table ne doit pas grossir indefiniment : au-dela de 500 adresses on
@@ -812,14 +817,21 @@ app.post('/api/auth-code-failed', rateLimit('auth-code-failed', 20, 10 * 60 * 10
     const dernier = DERNIER_EMAIL_AUTH.get(email);
     const ageMin = dernier ? Math.round((Date.now() - dernier) / 60000) : null;
     const jamaisEnvoye = !dernier || (Date.now() - dernier) > 15 * 60 * 1000;
+    // Serveur redemarre il y a peu : l'absence de trace ne prouve rien.
+    const memoireNeuve = (Date.now() - DEMARRAGE_SERVEUR) < 20 * 60 * 1000;
 
-    if (jamaisEnvoye) {
+    if (jamaisEnvoye && memoireNeuve) {
+      recordServiceAlert('auth', 'warning',
+        `Code de connexion refusé pour ${email}. Le serveur vient de redémarrer : ` +
+        `impossible de dire si un e-mail était parti. À surveiller — si le cas se ` +
+        `répète une fois le serveur stabilisé, vérifier le quota d'e-mails Supabase.`);
+    } else if (jamaisEnvoye) {
       recordServiceAlert('auth', 'critical',
         `🔑 Connexion impossible pour ${email} : code refusé ET aucun e-mail parti ` +
         `${dernier ? `depuis ${ageMin} min` : 'du tout'}. ` +
-        `Cause la plus probable : le QUOTA HORAIRE d'e-mails Supabase est atteint — ` +
-        `il répond « OK » sans envoyer et sans erreur. ` +
-        `À vérifier : tableau de bord Supabase → Authentication → Rate Limits.`);
+        `Cause la plus probable : le quota d'e-mails Supabase est atteint, ou l'envoi ` +
+        `SMTP échoue. À vérifier : tableau de bord Supabase → Authentication → ` +
+        `Rate Limits, puis les crédits ZeptoMail.`);
     } else {
       recordServiceAlert('auth', 'warning',
         `Code de connexion refusé pour ${email}, alors qu'un e-mail est bien parti ` +
