@@ -4,7 +4,7 @@ import {
   ActivityIndicator, RefreshControl, Linking, Platform,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { ArrowLeft, Video, Clock, Check, X, CreditCard, AlertCircle } from 'lucide-react-native';
+import { ArrowLeft, Video, Clock, Check, X, CreditCard, AlertCircle, CalendarDays } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getDateLocale } from '@/utils/dateLocale';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -13,6 +13,7 @@ import { authedFetch } from '@/utils/authedFetch';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { rafraichirBadgeAppelsVideo } from '@/utils/videoCallBadge';
 import BottomNav from '@/components/BottomNav';
+import DateHeurePicker from '@/components/DateHeurePicker';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -41,6 +42,8 @@ export default function MyVideoCallsScreen() {
   const [failed, setFailed] = useState(false);
   const [creneau, setCreneau] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
+  // Demande dont on est en train de choisir le creneau (null = ferme).
+  const [pickerPour, setPickerPour] = useState<string | null>(null);
 
   // Le message du fan est écrit dans SA langue. La personnalité doit pouvoir le
   // lire dans la sienne — la traduction doit marcher dans les deux sens, pas
@@ -136,7 +139,7 @@ export default function MyVideoCallsScreen() {
     const quand = new Date(saisie);
     if (!saisie || Number.isNaN(quand.getTime())) {
       showAlert(t('error') || 'Erreur',
-        t('vcrDateInvalid' as any) || 'Format attendu : AAAA-MM-JJTHH:MM');
+        t('vcrPickSlotFirst' as any) || 'Choisis d\'abord une date et une heure.');
       return;
     }
     if (quand.getTime() < Date.now()) {
@@ -244,16 +247,24 @@ export default function MyVideoCallsScreen() {
                     <Text style={styles.label}>
                       {t('vcrProposeSlot' as any) || 'Propose une date et une heure'}
                     </Text>
-                    <TextInput
-                      style={styles.input}
-                      value={creneau[d.id] || ''}
-                      onChangeText={(v) => setCreneau(p => ({ ...p, [d.id]: v }))}
-                      placeholder="2026-08-20T18:30"
-                      placeholderTextColor="#6b7280"
-                    />
+                    {/* Un calendrier, pas une saisie au format strict : taper
+                        « 2026-08-20T18:30 » sans faute sur un clavier de
+                        téléphone était le vrai obstacle à la réponse. */}
+                    <TouchableOpacity
+                      style={styles.choixCreneau}
+                      onPress={() => setPickerPour(d.id)}
+                      activeOpacity={0.8}
+                    >
+                      <CalendarDays size={18} color="#a5b4fc" />
+                      <Text style={[styles.choixCreneauTexte, !creneau[d.id] && { color: '#6b7280' }]}>
+                        {creneau[d.id]
+                          ? dateLocale(creneau[d.id])
+                          : (t('vcrPickSlot' as any) || 'Choisir une date et une heure')}
+                      </Text>
+                    </TouchableOpacity>
                     <Text style={styles.hint}>
-                      {t('vcrSlotHint' as any)
-                        || "Format AAAA-MM-JJTHH:MM, dans TON fuseau horaire. Le fan la verra dans le sien."}
+                      {t('vcrSlotHintTz' as any)
+                        || "L'heure est celle de TON fuseau horaire. Le fan la verra dans le sien."}
                     </Text>
                     <View style={styles.actions}>
                       <TouchableOpacity
@@ -330,6 +341,17 @@ export default function MyVideoCallsScreen() {
         )}
       </ScrollView>
 
+      {/* Choix du creneau : un calendrier, ouvert depuis la demande concernee. */}
+      <DateHeurePicker
+        visible={pickerPour !== null}
+        onClose={() => setPickerPour(null)}
+        titre={t('vcrProposeSlot' as any) || 'Propose une date et une heure'}
+        valeurInitiale={pickerPour && creneau[pickerPour] ? new Date(creneau[pickerPour]) : null}
+        onValider={(d) => {
+          if (pickerPour) setCreneau(p => ({ ...p, [pickerPour]: d.toISOString() }));
+        }}
+      />
+
       <BottomNav />
     </View>
   );
@@ -367,6 +389,13 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
   hint: { color: '#6b7280', fontSize: 12, marginTop: 6, lineHeight: 17 },
+  choixCreneau: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: 'rgba(99,102,241,0.12)', borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.4)', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 14,
+  },
+  choixCreneauTexte: { color: '#fff', fontSize: 15, fontWeight: '600', flex: 1 },
   actions: { flexDirection: 'row', gap: 10, marginTop: 12 },
   btn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
