@@ -94,6 +94,10 @@ export default function AccountScreen() {
     'En cours de vérification',
     'Réponse sous 24 h ouvrées',
     'Tableau de bord admin',
+    'DEVENIR PERSONNALITÉ',
+    'Créer vos événements : dédicaces et lives vidéo',
+    "Recevoir des demandes d'appel vidéo privé",
+    'Vous gardez 85 % de chaque prestation',
   ]);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
 
@@ -870,8 +874,13 @@ export default function AccountScreen() {
         </View>
 
         <View style={styles.section}>
+          {/* Le titre disait « MODE CÉLÉBRITÉ » au-dessus d'une carte intitulée
+              « Mode Fan » : deux affirmations contraires l'une sous l'autre. Il
+              annonce maintenant ce que la section permet de faire. */}
           <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>
-            {t('celebrityModeSection')}
+            {isCelebrity
+              ? t('celebrityModeSection')
+              : (t('celebrityModeSectionFan' as any) || trUI('DEVENIR PERSONNALITÉ'))}
           </Text>
 
           <View style={styles.accountCard}>
@@ -926,26 +935,51 @@ export default function AccountScreen() {
                 </View>
               </View>
             ) : (
-              <View style={styles.accountCardHeader}>
+              /* Côté fan, le même soin que la fiche célébrité — c'était resté
+                 une ligne de réglages fade à côté d'un en-tête travaillé, si
+                 bien qu'on croyait avoir affaire à deux applications selon le
+                 mode. Ambre plutôt que vert : c'est une invitation, pas un état
+                 acquis, et la couleur reprend celle du bouton d'activation. */
+              <View style={styles.fanHero}>
+                <LinearGradient
+                  colors={['rgba(245,158,11,0.28)', 'rgba(245,158,11,0.06)', 'transparent']}
+                  style={styles.celebHeroBanner}
+                />
                 <TouchableOpacity
-                  style={[styles.accountAvatar, { backgroundColor: 'rgba(255,255,255,0.08)' }]}
+                  style={styles.fanAvatarWrap}
                   onPress={pickProfilePhoto}
-                  activeOpacity={0.7}
+                  activeOpacity={0.8}
                 >
                   {profilePhoto ? (
-                    <Image source={{ uri: profilePhoto }} style={styles.profilePhotoImage} />
+                    <Image source={{ uri: profilePhoto }} style={styles.celebAvatarImage} />
                   ) : (
-                    <Camera size={28} color="#888" />
+                    <Camera size={30} color="#f59e0b" />
                   )}
-                  <View style={styles.profilePhotoBadge}>
-                    <Camera size={10} color="#fff" />
+                  <View style={styles.fanAvatarBadge}>
+                    <Camera size={11} color="#fff" />
                   </View>
                 </TouchableOpacity>
-                <View style={styles.accountCardInfo}>
-                  <View style={styles.nameRow}>
-                    <Text style={styles.accountCardName}>{t('celebrityModeInactive')}</Text>
-                  </View>
-                  <Text style={styles.accountCardSubtitle}>{t('celebrityModeInactiveDesc')}</Text>
+                <Text style={styles.celebHeroName} numberOfLines={1}>
+                  {t('celebrityModeInactive')}
+                </Text>
+                <Text style={styles.fanHeroSub}>
+                  {t('celebrityModeInactiveDesc')}
+                </Text>
+
+                {/* Ce que le mode apporte, en trois lignes lisibles d'un coup
+                    d'œil. Le bloc se contentait d'annoncer un état — il ne
+                    disait pas ce qu'on gagne à en changer. */}
+                <View style={styles.fanArguments}>
+                  {[
+                    { icone: <Star size={15} color="#fbbf24" />, texte: trUI('Créer vos événements : dédicaces et lives vidéo') },
+                    { icone: <Video size={15} color="#fbbf24" />, texte: trUI('Recevoir des demandes d\'appel vidéo privé') },
+                    { icone: <TrendingUp size={15} color="#fbbf24" />, texte: trUI('Vous gardez 85 % de chaque prestation') },
+                  ].map((a, i) => (
+                    <View key={i} style={styles.fanArgumentLigne}>
+                      <View style={styles.fanArgumentIcone}>{a.icone}</View>
+                      <Text style={styles.fanArgumentTexte}>{a.texte}</Text>
+                    </View>
+                  ))}
                 </View>
               </View>
             )}
@@ -1782,6 +1816,63 @@ const styles = StyleSheet.create({
   },
   celebHeroBanner: {
     ...StyleSheet.absoluteFillObject,
+  },
+  // Côté fan : même structure d'en-tête que la fiche célébrité, en ambre.
+  fanHero: {
+    marginHorizontal: -20,
+    marginTop: -20,
+    paddingTop: 22,
+    paddingBottom: 18,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+  fanAvatarWrap: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: 'rgba(245,158,11,0.15)',
+    borderWidth: 2,
+    borderColor: 'rgba(245,158,11,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fanAvatarBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#f59e0b',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#0b1220',
+  },
+  fanHeroSub: {
+    color: 'rgba(255,255,255,0.65)',
+    fontSize: 13.5,
+    lineHeight: 19,
+    textAlign: 'center',
+    marginTop: 6,
+    paddingHorizontal: 8,
+  },
+  fanArguments: {
+    alignSelf: 'stretch',
+    gap: 9,
+    marginTop: 16,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(245,158,11,0.22)',
+  },
+  fanArgumentLigne: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  fanArgumentIcone: { width: 20, alignItems: 'center' },
+  fanArgumentTexte: {
+    flex: 1,
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 13.5,
+    lineHeight: 19,
   },
   celebAvatarWrap: {
     width: 84,
