@@ -64,6 +64,7 @@ export default function DocumentsScreen() {
     "Ajoute ton nom et ton adresse si tu as besoin d'une facture nominative — pour te faire rembourser, par exemple. Ce n'est pas obligatoire.",
     'Ajouter mes coordonnées',
     '{{n}} prestation(s) vendue(s) avec un code promo : le fan a paye moins, donc vous percevez moins. Le detail figure sur chaque facture.',
+    "{{n}} prestation(s) à 0 € : contrôle d'identité mené par un administrateur Plyz (appel vidéo ou dédicace de vérification). Ces contrôles sont exigés par la conformité de la plateforme, ne sont jamais facturés au fan, et ne constituent donc aucune perte de revenu.",
   ]);
 
   // Les coordonnées ne sont plus demandées à l'inscription : on regarde ici si
@@ -248,6 +249,12 @@ export default function DocumentsScreen() {
             const avecPromo = invoices.filter(
               (i) => i.role === 'seller' && /code promo/i.test(i.prestation_label || ''),
             );
+            // Prestation entierement offerte = controle d'identite mene par un
+            // administrateur Plyz, pas une vente. Le confondre avec une remise
+            // ferait chercher un acheteur qui n'existe pas.
+            const controles = invoices.filter(
+              (i) => i.role === 'seller' && /administrateur Plyz/i.test(i.prestation_label || ''),
+            );
             return (
               <View style={styles.revenueBox}>
                 <Text style={styles.revenueLabel}>{t('docsRevenueTotal') || 'Total de tes revenus facturés'}</Text>
@@ -256,6 +263,12 @@ export default function DocumentsScreen() {
                   <Text style={styles.revenuePromo}>
                     {trUI('{{n}} prestation(s) vendue(s) avec un code promo : le fan a paye moins, donc vous percevez moins. Le detail figure sur chaque facture.')
                       .replace('{{n}}', String(avecPromo.length))}
+                  </Text>
+                )}
+                {controles.length > 0 && (
+                  <Text style={styles.revenueControle}>
+                    {trUI("{{n}} prestation(s) à 0 € : contrôle d'identité mené par un administrateur Plyz (appel vidéo ou dédicace de vérification). Ces contrôles sont exigés par la conformité de la plateforme, ne sont jamais facturés au fan, et ne constituent donc aucune perte de revenu.")
+                      .replace('{{n}}', String(controles.length))}
                   </Text>
                 )}
               </View>
@@ -352,6 +365,7 @@ const styles = StyleSheet.create({
   revenueLabel: { color: '#a7f3d0', fontSize: 12.5, marginBottom: 4 },
   revenueValue: { color: '#10b981', fontSize: 24, fontWeight: '800' },
   revenuePromo: { color: '#fbbf24', fontSize: 12.5, lineHeight: 18, marginTop: 8 },
+  revenueControle: { color: '#a5b4fc', fontSize: 12.5, lineHeight: 18, marginTop: 8 },
   coordBox: {
     backgroundColor: 'rgba(99,102,241,0.10)', borderWidth: 1,
     borderColor: 'rgba(99,102,241,0.32)', borderRadius: 12, padding: 16, marginBottom: 18,

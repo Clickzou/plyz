@@ -7146,11 +7146,18 @@ async function createInvoice(params) {
     // rangé dans le libellé de la prestation : il apparaît ainsi sur la facture
     // ET dans la liste de ses revenus, sans changer la structure des factures
     // déjà émises.
+    // Une prestation ENTIÈREMENT offerte n'est pas une vente à prix cassé :
+    // c'est un contrôle mené par un administrateur Plyz pour vérifier l'identité
+    // de la personnalité — un appel vidéo ou une dédicace de test. Le dire
+    // ainsi évite qu'elle cherche un acheteur qui n'existe pas, ou qu'elle
+    // croie s'être fait dépouiller de sa recette.
     const remisePct = Number(params.promoPercent) || 0;
     const libelleBase = params.prestationLabel || 'Prestation';
-    const libelle = remisePct > 0
-      ? `${libelleBase} — code promo −${remisePct} % appliqué par le fan`
-      : libelleBase;
+    const libelle = remisePct >= 100
+      ? `${libelleBase} — contrôle d'identité effectué par un administrateur Plyz (prestation offerte, aucun encaissement)`
+      : remisePct > 0
+        ? `${libelleBase} — code promo −${remisePct} % appliqué par le fan`
+        : libelleBase;
 
     const inv = {
       transaction_ref: ref, fan_id: fanId, celebrity_id: celebId,
