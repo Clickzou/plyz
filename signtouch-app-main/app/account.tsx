@@ -20,6 +20,7 @@ import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import BottomNav from '@/components/BottomNav';
 import PlyzHeader from '@/components/PlyzHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -830,45 +831,94 @@ export default function AccountScreen() {
           </Text>
 
           <View style={styles.accountCard}>
-            <View style={styles.accountCardHeader}>
-              <TouchableOpacity
-                style={[styles.accountAvatar, { backgroundColor: isCelebrity ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.08)' }]}
-                onPress={pickProfilePhoto}
-                activeOpacity={0.7}
-              >
-                {profilePhoto ? (
-                  <Image source={{ uri: profilePhoto }} style={styles.profilePhotoImage} />
-                ) : (
-                  <Camera size={28} color={isCelebrity ? '#10b981' : '#888'} />
-                )}
-                <View style={[styles.profilePhotoBadge, isCelebrity && { backgroundColor: '#10b981' }]}>
-                  <Camera size={10} color="#fff" />
-                </View>
-              </TouchableOpacity>
-              <View style={styles.accountCardInfo}>
-                <View style={styles.nameRow}>
-                  <Text style={styles.accountCardName}>
-                    {isCelebrity ? (t('celebrityModeActive')) : (t('celebrityModeInactive'))}
-                  </Text>
-                </View>
-                <Text style={styles.accountCardSubtitle}>
-                  {isCelebrity ? (t('celebrityModeActiveDesc')) : (t('celebrityModeInactiveDesc'))}
+            {/* En-tête façon fiche publique : c'est ce que la personnalité vient
+                vérifier d'un coup d'œil (sa photo, son nom, son état). Avant,
+                ces informations étaient noyées dans une ligne de réglages. */}
+            {isCelebrity ? (
+              <View style={styles.celebHero}>
+                <LinearGradient
+                  colors={['rgba(16,185,129,0.30)', 'rgba(16,185,129,0.06)', 'transparent']}
+                  style={styles.celebHeroBanner}
+                />
+                <TouchableOpacity
+                  style={styles.celebAvatarWrap}
+                  onPress={pickProfilePhoto}
+                  activeOpacity={0.8}
+                >
+                  {profilePhoto ? (
+                    <Image source={{ uri: profilePhoto }} style={styles.celebAvatarImage} />
+                  ) : (
+                    <Camera size={30} color="#10b981" />
+                  )}
+                  <View style={styles.celebAvatarBadge}>
+                    <Camera size={11} color="#fff" />
+                  </View>
+                </TouchableOpacity>
+                <Text style={styles.celebHeroName} numberOfLines={1}>
+                  {celebrityName.trim() || t('celebrityModeActive')}
                 </Text>
-                {isCelebrity && stripeChargesEnabled && (
-                  <Text style={styles.verifiedText}>
-                    {t('celVerifiedStripe' as any) || 'Paiements activés'}
-                  </Text>
-                )}
+                <View style={styles.celebBadgeRow}>
+                  {isVerified ? (
+                    <View style={[styles.celebBadge, styles.celebBadgeOk]}>
+                      <Check size={12} color="#10b981" />
+                      <Text style={styles.celebBadgeOkText}>
+                        {t('celebrityModeVerified' as any) || 'Mode Célébrité — Validé'}
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={[styles.celebBadge, styles.celebBadgeWait]}>
+                      <Clock size={12} color="#f59e0b" />
+                      <Text style={styles.celebBadgeWaitText}>{trUI('En cours de vérification')}</Text>
+                    </View>
+                  )}
+                  <View style={[styles.celebBadge, stripeChargesEnabled ? styles.celebBadgeOk : styles.celebBadgeWarn]}>
+                    <CreditCard size={12} color={stripeChargesEnabled ? '#10b981' : '#fbbf24'} />
+                    <Text style={stripeChargesEnabled ? styles.celebBadgeOkText : styles.celebBadgeWarnText}>
+                      {stripeChargesEnabled
+                        ? (t('celVerifiedStripe' as any) || 'Paiements activés')
+                        : (t('celActivatePayments' as any) || 'Activer mes paiements')}
+                    </Text>
+                  </View>
+                </View>
               </View>
-            </View>
+            ) : (
+              <View style={styles.accountCardHeader}>
+                <TouchableOpacity
+                  style={[styles.accountAvatar, { backgroundColor: 'rgba(255,255,255,0.08)' }]}
+                  onPress={pickProfilePhoto}
+                  activeOpacity={0.7}
+                >
+                  {profilePhoto ? (
+                    <Image source={{ uri: profilePhoto }} style={styles.profilePhotoImage} />
+                  ) : (
+                    <Camera size={28} color="#888" />
+                  )}
+                  <View style={styles.profilePhotoBadge}>
+                    <Camera size={10} color="#fff" />
+                  </View>
+                </TouchableOpacity>
+                <View style={styles.accountCardInfo}>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.accountCardName}>{t('celebrityModeInactive')}</Text>
+                  </View>
+                  <Text style={styles.accountCardSubtitle}>{t('celebrityModeInactiveDesc')}</Text>
+                </View>
+              </View>
+            )}
 
+            {/* Réglages rangés par thème, séparés par des filets : le nom et la
+                présentation d'un côté, les langues, le tarif du tête-à-tête —
+                au lieu d'une seule colonne de champs sans hiérarchie. */}
             {isCelebrity && (
-              <View style={{ marginTop: 12, marginBottom: 4 }}>
-                <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginBottom: 6, fontWeight: '600' }}>
+              <View style={styles.celebBloc}>
+                <Text style={styles.celebBlocTitre}>
+                  {trUI('Profil public')}
+                </Text>
+                <Text style={styles.celebLabel}>
                   {t('celebrityPublicName' as any) || 'Nom public'}
                 </Text>
                 <TextInput
-                  style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: '#fff', fontSize: 15, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
+                  style={styles.celebInput}
                   value={celebrityName}
                   onChangeText={setCelebrityName}
                   onBlur={saveCelebrityName}
@@ -882,12 +932,12 @@ export default function AccountScreen() {
                 fiche publique. Il n'était modifiable nulle part une fois
                 l'inscription passée. */}
             {isCelebrity && (
-              <View style={{ marginTop: 12, marginBottom: 4 }}>
-                <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginBottom: 6, fontWeight: '600' }}>
+              <View>
+                <Text style={styles.celebLabel}>
                   {t('celebrityAboutYou' as any) || 'À propos de vous'}
                 </Text>
                 <TextInput
-                  style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: '#fff', fontSize: 15, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', minHeight: 90, textAlignVertical: 'top' }}
+                  style={[styles.celebInput, styles.celebTextarea]}
                   value={celebrityBio}
                   onChangeText={setCelebrityBio}
                   placeholder={t('celebrityAboutYouPlaceholder' as any) || 'Ex : Fondateur et CEO de Plyz'}
@@ -899,30 +949,32 @@ export default function AccountScreen() {
                 {/* Langues parlées. Décisif avant de réserver un tête-à-tête :
                     un fan doit savoir s'il pourra se comprendre avec la
                     personnalité, sinon la visio finit en litige. */}
-                <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 16, marginBottom: 6, fontWeight: '600' }}>
+                <View style={styles.celebSeparateur} />
+                <Text style={styles.celebBlocTitre}>
                   {t('spokenLanguages' as any) || 'Langues parlées'}
                 </Text>
                 {spokenLanguages.map((sl) => {
                   const lang = LANGUAGES.find(l => l.code === sl.code);
                   return (
-                    <View key={sl.code} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 8 }}>
-                      <Text style={{ fontSize: 18 }}>{lang?.flag || '🏳️'}</Text>
-                      <Text style={{ color: '#fff', fontSize: 14, flex: 1 }}>{lang?.name || sl.code}</Text>
-                      {[1, 2, 3, 4, 5].map(n => (
-                        <TouchableOpacity
-                          key={n}
-                          onPress={() => setSpokenLanguages(prev => prev.map(x => x.code === sl.code ? { ...x, level: n } : x))}
-                          hitSlop={4}
-                        >
-                          <Star size={17} color={n <= sl.level ? '#f59e0b' : '#4b5563'} fill={n <= sl.level ? '#f59e0b' : 'transparent'} />
-                        </TouchableOpacity>
-                      ))}
+                    <View key={sl.code} style={styles.langChip}>
+                      <Text style={{ fontSize: 17 }}>{lang?.flag || '🏳️'}</Text>
+                      <Text style={styles.langChipName} numberOfLines={1}>{lang?.name || sl.code}</Text>
+                      <View style={styles.langStars}>
+                        {[1, 2, 3, 4, 5].map(n => (
+                          <TouchableOpacity
+                            key={n}
+                            onPress={() => setSpokenLanguages(prev => prev.map(x => x.code === sl.code ? { ...x, level: n } : x))}
+                            hitSlop={4}
+                          >
+                            <Star size={15} color={n <= sl.level ? '#f59e0b' : '#4b5563'} fill={n <= sl.level ? '#f59e0b' : 'transparent'} />
+                          </TouchableOpacity>
+                        ))}
+                      </View>
                       <TouchableOpacity
                         onPress={() => setSpokenLanguages(prev => prev.filter(x => x.code !== sl.code))}
                         hitSlop={8}
-                        style={{ marginLeft: 4 }}
                       >
-                        <Text style={{ color: '#ef4444', fontSize: 16, fontWeight: '700' }}>✕</Text>
+                        <Text style={styles.langChipRemove}>✕</Text>
                       </TouchableOpacity>
                     </View>
                   );
@@ -964,20 +1016,21 @@ export default function AccountScreen() {
                 {/* Appel vidéo privé à la demande. Ce tarif n'a RIEN à voir avec
                     le prix saisi à la création d'un événement : ce sont deux
                     prestations distinctes, et le prix peut différer. */}
-                <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 18, marginBottom: 4, fontWeight: '600' }}>
+                <View style={styles.celebSeparateur} />
+                <Text style={styles.celebBlocTitre}>
                   {t('videoCallRate' as any) || 'Appel vidéo privé (tête-à-tête)'}
                 </Text>
-                <Text style={{ color: '#6b7280', fontSize: 12, marginBottom: 8, lineHeight: 17 }}>
+                <Text style={styles.celebAide}>
                   {t('videoCallRateHint' as any)
                     || "Un fan peut te demander un appel privé depuis ta fiche. Sans tarif renseigné, la demande est impossible. Ce prix est indépendant de celui de tes événements."}
                 </Text>
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: '#6b7280', fontSize: 12, marginBottom: 4 }}>
+                    <Text style={styles.celebLabelPetit}>
                       {t('settingsVideoPrice' as any) || 'Prix (€)'}
                     </Text>
                     <TextInput
-                      style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: '#fff', fontSize: 15, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
+                      style={styles.celebInput}
                       value={videoPriceEur}
                       onChangeText={setVideoPriceEur}
                       placeholder="50"
@@ -986,11 +1039,11 @@ export default function AccountScreen() {
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: '#6b7280', fontSize: 12, marginBottom: 4 }}>
+                    <Text style={styles.celebLabelPetit}>
                       {t('settingsDuration' as any) || 'Durée (min)'}
                     </Text>
                     <TextInput
-                      style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: '#fff', fontSize: 15, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
+                      style={styles.celebInput}
                       value={videoDuration}
                       onChangeText={setVideoDuration}
                       placeholder="10"
@@ -1000,13 +1053,17 @@ export default function AccountScreen() {
                   </View>
                 </View>
 
+                {/* Pleine largeur : le petit bouton aligné à gauche se confondait
+                    avec une étiquette, et une modification pouvait être perdue
+                    faute de l'avoir remarqué. */}
                 <TouchableOpacity
-                  style={{ marginTop: 14, alignSelf: 'flex-start', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(16,185,129,0.15)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.4)', opacity: bioSaving ? 0.5 : 1 }}
+                  style={[styles.celebSaveBtn, bioSaving && { opacity: 0.5 }]}
                   onPress={saveCelebrityBio}
                   disabled={bioSaving}
-                  activeOpacity={0.8}
+                  activeOpacity={0.85}
                 >
-                  <Text style={{ color: '#10b981', fontSize: 14, fontWeight: '700' }}>
+                  <Check size={16} color="#052e1f" />
+                  <Text style={styles.celebSaveBtnText}>
                     {bioSaving ? (t('loading') || 'Enregistrement…') : (t('save') || 'Enregistrer')}
                   </Text>
                 </TouchableOpacity>
@@ -1078,21 +1135,17 @@ export default function AccountScreen() {
               </TouchableOpacity>
             )}
 
-            {isCelebrity && (
-              isVerified ? (
-                <View style={styles.statusBadgeVerified}>
-                  <Check size={18} color="#10b981" />
-                  <Text style={styles.statusBadgeVerifiedText}>{t('celebrityModeVerified' as any) || 'Mode Célébrité — Validé'}</Text>
+            {/* L'état « validé » est désormais annoncé par la pastille de
+                l'en-tête. Ne reste ici que l'attente, qui apporte une
+                information que la pastille ne donne pas : le délai. */}
+            {isCelebrity && !isVerified && (
+              <View style={styles.statusBadgePending}>
+                <Clock size={18} color="#f59e0b" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.statusBadgePendingText}>{trUI('En cours de vérification')}</Text>
+                  <Text style={styles.statusBadgePendingSub}>{trUI('Tu seras validé sous 5 à 10 min')}</Text>
                 </View>
-              ) : (
-                <View style={styles.statusBadgePending}>
-                  <Clock size={18} color="#f59e0b" />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.statusBadgePendingText}>{trUI('En cours de vérification')}</Text>
-                    <Text style={styles.statusBadgePendingSub}>{trUI('Tu seras validé sous 5 à 10 min')}</Text>
-                  </View>
-                </View>
-              )
+              </View>
             )}
           </View>
         </View>
@@ -1622,7 +1675,137 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
+    overflow: 'hidden',
   },
+  // --- Fiche « Mode Célébrité » ---
+  // Le bandeau remonte sous les bords de la carte (marges négatives) pour occuper
+  // toute la largeur, comme une couverture de profil.
+  celebHero: {
+    marginHorizontal: -20,
+    marginTop: -20,
+    paddingTop: 22,
+    paddingBottom: 18,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+  celebHeroBanner: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  celebAvatarWrap: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: 'rgba(16,185,129,0.15)',
+    borderWidth: 2,
+    borderColor: 'rgba(16,185,129,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  celebAvatarImage: { width: 80, height: 80, borderRadius: 40 },
+  celebAvatarBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#0b1220',
+  },
+  celebHeroName: {
+    color: '#ffffff',
+    fontSize: 21,
+    fontWeight: '800',
+    marginTop: 12,
+    maxWidth: '100%',
+  },
+  celebBadgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 10,
+  },
+  celebBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  celebBadgeOk: { backgroundColor: 'rgba(16,185,129,0.14)', borderColor: 'rgba(16,185,129,0.45)' },
+  celebBadgeOkText: { color: '#10b981', fontSize: 12, fontWeight: '700' },
+  celebBadgeWait: { backgroundColor: 'rgba(245,158,11,0.14)', borderColor: 'rgba(245,158,11,0.45)' },
+  celebBadgeWaitText: { color: '#f59e0b', fontSize: 12, fontWeight: '700' },
+  celebBadgeWarn: { backgroundColor: 'rgba(251,191,36,0.12)', borderColor: 'rgba(251,191,36,0.4)' },
+  celebBadgeWarnText: { color: '#fbbf24', fontSize: 12, fontWeight: '700' },
+  celebBloc: { marginBottom: 4 },
+  celebBlocTitre: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 10,
+  },
+  celebSeparateur: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    marginTop: 20,
+    marginBottom: 16,
+  },
+  celebLabel: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  celebLabelPetit: { color: '#6b7280', fontSize: 12, marginBottom: 4 },
+  celebAide: { color: '#6b7280', fontSize: 12, lineHeight: 17, marginBottom: 10 },
+  celebInput: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: '#fff',
+    fontSize: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  celebTextarea: { minHeight: 90, textAlignVertical: 'top' },
+  langChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    marginBottom: 8,
+  },
+  langChipName: { color: '#fff', fontSize: 14, flex: 1 },
+  langStars: { flexDirection: 'row', gap: 2 },
+  langChipRemove: { color: '#ef4444', fontSize: 15, fontWeight: '700', marginLeft: 4 },
+  celebSaveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 18,
+    paddingVertical: 13,
+    borderRadius: 12,
+    backgroundColor: '#10b981',
+  },
+  celebSaveBtnText: { color: '#052e1f', fontSize: 15, fontWeight: '800' },
   accountCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1869,23 +2052,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#ffffff',
-  },
-  statusBadgeVerified: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: 'rgba(16,185,129,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(16,185,129,0.4)',
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-  },
-  statusBadgeVerifiedText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#10b981',
   },
   statusBadgePending: {
     flexDirection: 'row',
