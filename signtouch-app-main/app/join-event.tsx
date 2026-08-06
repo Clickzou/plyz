@@ -401,7 +401,7 @@ export default function JoinEventScreen() {
           const pendingPromoId = await AsyncStorage.getItem('@event_pending_promo_id');
           if (pendingPromoId) {
             try {
-              await fetch(`${STRIPE_SERVER_URL}/api/use-event-promo-code`, {
+              await authedFetch(`${STRIPE_SERVER_URL}/api/use-event-promo-code`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ promo_id: pendingPromoId }),
@@ -526,7 +526,7 @@ export default function JoinEventScreen() {
                 const pendingPromoId = await AsyncStorage.getItem('@event_pending_promo_id');
                 if (pendingPromoId) {
                   try {
-                    await fetch(`${STRIPE_SERVER_URL}/api/use-event-promo-code`, {
+                    await authedFetch(`${STRIPE_SERVER_URL}/api/use-event-promo-code`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ promo_id: pendingPromoId }),
@@ -1194,7 +1194,7 @@ export default function JoinEventScreen() {
 
         if (promoApplied && promoResult?.promo_id) {
           try {
-            await fetch(`${STRIPE_SERVER_URL}/api/use-promo-code`, {
+            await authedFetch(`${STRIPE_SERVER_URL}/api/use-promo-code`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ promo_id: promoResult.promo_id }),

@@ -252,11 +252,19 @@ export const getFullQueue = async (sessionId: string): Promise<QueueEntry[]> => 
 
 export const callNextFan = async (sessionId: string): Promise<QueueEntry | null> => {
   try {
-    await supabase
+    // L'erreur EST lue. Sans cela, un refus de la base (droits, colonne) passait
+    // inaperçu : le fan précédent restait « en appel » pour toujours, la file se
+    // bloquait, et rien ne le disait — ni à la personnalité, ni dans les
+    // journaux. C'est exactement le défaut qui a coûté le plus cher sur ce
+    // projet : une écriture qui échoue en répondant « c'est fait ».
+    const { error: errCloture } = await supabase
       .from('session_queue')
       .update({ status: 'completed', completed_at: new Date().toISOString() })
       .eq('session_id', sessionId)
       .in('status', ['in_call', 'called']);
+    if (errCloture) {
+      console.error('[Queue] Clôture de l\'appel précédent ÉCHOUÉE :', errCloture.message);
+    }
 
     const { data: nextFan } = await supabase
       .from('session_queue')

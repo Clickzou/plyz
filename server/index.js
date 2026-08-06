@@ -1090,6 +1090,29 @@ app.post('/api/create-account-link', async (req, res) => {
       return res.status(400).json({ error: 'Account ID is required' });
     }
 
+    // 🔒 Un lien d'onboarding Stripe donne accès aux informations BANCAIRES du
+    // compte connecté. Cette route acceptait n'importe quel identifiant de
+    // compte, sans demander qui appelait : quiconque connaissait un `acct_…`
+    // pouvait obtenir un lien vers le compte d'une personnalité. On exige donc
+    // une connexion, et on vérifie que le compte demandé est bien le sien.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
+
+    const { data: proprio } = await getSupabaseAdmin()
+      .from('celebrity_profiles')
+      .select('user_id')
+      .eq('stripe_account_id', accountId)
+      .maybeSingle();
+
+    // Compte inconnu de la base : c'est celui qu'on vient de créer pour cet
+    // utilisateur, l'enregistrement suit. On n'autorise que ce cas-là, jamais
+    // un compte appartenant à quelqu'un d'autre.
+    if (proprio && String(proprio.user_id) !== String(authUser.id)) {
+      console.error('[Connect] Lien d\'onboarding refusé : compte', accountId,
+        'demandé par', authUser.id);
+      return res.status(403).json({ error: 'forbidden' });
+    }
+
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
       refresh_url: refreshUrl || returnUrl || 'https://signtouch.app/stripe-refresh',
@@ -2061,7 +2084,7 @@ app.post('/api/validate-promo-code', async (req, res) => {
   }
 });
 
-app.post('/api/use-promo-code', async (req, res) => {
+app.post('/api/use-promo-code', rateLimit('use-promo', 20, 60 * 60 * 1000), async (req, res) => {
   try {
     const supabase = getSupabase();
     const { promo_id } = req.body;
@@ -2069,6 +2092,13 @@ app.post('/api/use-promo-code', async (req, res) => {
     if (!promo_id) {
       return res.status(400).json({ error: 'Missing promo_id' });
     }
+
+    // 🔒 Consommer un code incrémente son compteur d'utilisations. Sans compte
+    // ni limite, n'importe qui pouvait épuiser une campagne entière en boucle,
+    // sans rien acheter. Une connexion est désormais exigée — c'est de toute
+    // façon le cas de tout fan qui paie.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
 
     const { data: promo } = await supabase
       .from('promo_code_live_video')
@@ -2156,7 +2186,7 @@ app.post('/api/validate-event-promo-code', async (req, res) => {
   }
 });
 
-app.post('/api/use-event-promo-code', async (req, res) => {
+app.post('/api/use-event-promo-code', rateLimit('use-event-promo', 20, 60 * 60 * 1000), async (req, res) => {
   try {
     const admin = getSupabaseAdmin();
     const { promo_id } = req.body;
@@ -2164,6 +2194,11 @@ app.post('/api/use-event-promo-code', async (req, res) => {
     if (!promo_id) {
       return res.status(400).json({ error: 'Missing promo_id' });
     }
+
+    // 🔒 Même règle que pour les codes des lives vidéo : consommer un code
+    // exige un compte, sans quoi une campagne entière s'épuise en boucle.
+    const authUser = await verifySupabaseJWT(req);
+    if (!authUser) return res.status(401).json({ error: 'Authentication required' });
 
     const { data: promo } = await admin
       .from('promo_code_evenement_qr')
