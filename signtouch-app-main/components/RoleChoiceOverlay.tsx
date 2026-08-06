@@ -46,9 +46,10 @@ export default function RoleChoiceOverlay() {
     'Rejoindre des événements, obtenir des dédicaces et des appels vidéo avec vos personnalités préférées.',
     'Je suis une personnalité',
     'Créer vos événements, dédicacer en direct, être payé pour vos prestations.',
+    'Création de compte gratuite',
     'Vous pourrez changer à tout moment depuis votre compte.',
     'Espace personnalité',
-    'Votre espace se crée en quelques secondes. Voici ce qu\'il faut savoir :',
+    'Création de compte gratuite, en quelques secondes. Voici ce qu\'il faut savoir :',
     'Être une personnalité publique reconnue : compte certifié, page Wikipédia, plus de 100 000 abonnés ou des articles de presse à votre sujet.',
     'Pouvoir justifier votre identité et disposer d\'un lien officiel (site, réseau social).',
     'Être majeur et proposer un contenu légal.',
@@ -147,6 +148,11 @@ export default function RoleChoiceOverlay() {
                 <Text style={styles.cardText}>
                   {tr('Créer vos événements, dédicacer en direct, être payé pour vos prestations.')}
                 </Text>
+                {/* La gratuité se dit AVANT le clic : c'est la première question
+                    que se pose quelqu'un à qui l'on propose de « créer un espace ». */}
+                <View style={styles.badgeGratuit}>
+                  <Text style={styles.badgeGratuitTexte}>{tr('Création de compte gratuite')}</Text>
+                </View>
               </TouchableOpacity>
 
               <Text style={styles.note}>
@@ -157,7 +163,7 @@ export default function RoleChoiceOverlay() {
             <>
               <Text style={styles.title}>{tr('Espace personnalité')}</Text>
               <Text style={styles.subtitle}>
-                {tr('Votre espace se crée en quelques secondes. Voici ce qu\'il faut savoir :')}
+                {tr('Création de compte gratuite, en quelques secondes. Voici ce qu\'il faut savoir :')}
               </Text>
 
               <View style={styles.critereBloc}>
@@ -224,6 +230,11 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: 18, fontWeight: '800', marginBottom: 6 },
   cardText: { color: 'rgba(255,255,255,0.7)', fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  badgeGratuit: {
+    marginTop: 12, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999,
+    backgroundColor: 'rgba(245,158,11,0.18)', borderWidth: 1, borderColor: 'rgba(245,158,11,0.4)',
+  },
+  badgeGratuitTexte: { color: '#fcd34d', fontSize: 12, fontWeight: '800' },
   note: { color: 'rgba(255,255,255,0.45)', fontSize: 13, textAlign: 'center', marginTop: 8 },
   critereBloc: { width: '100%', gap: 12, marginBottom: 18 },
   critereLigne: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
