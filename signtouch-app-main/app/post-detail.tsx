@@ -8,6 +8,7 @@ import { ArrowLeft, Calendar, MapPin, CreditCard, Flag } from 'lucide-react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReportContentModal from '@/components/ReportContentModal';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { useAutoTranslate } from '@/utils/translation';
 import { openEventLocation } from '@/utils/openMap';
 
@@ -16,6 +17,7 @@ export default function PostDetailScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const params = useLocalSearchParams();
+  const { requireAuth } = useAuthPrompt();
   const [showReport, setShowReport] = useState(false);
 
   const post: any = useMemo(() => {
@@ -146,7 +148,13 @@ export default function PostDetailScreen() {
             généré par les utilisateurs et par le DSA. */}
         <TouchableOpacity
           style={styles.reportRow}
-          onPress={() => setShowReport(true)}
+          /* Un compte est exigé : un signalement anonyme n'est pas exploitable
+             et ouvre la porte au signalement de masse. */
+          onPress={() => requireAuth(() => setShowReport(true), {
+            reason: 'Connecte-toi pour signaler ce contenu',
+            requireBillingIdentity: false,
+            requirePublicProfile: false,
+          })}
           activeOpacity={0.7}
         >
           <Flag size={14} color="#ef4444" />

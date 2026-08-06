@@ -176,6 +176,7 @@ export default function ActivityScreen() {
     "Le commentaire n'a pas pu être supprimé.",
     'Impossible de charger les commentaires.',
     'Connecte-toi pour commenter',
+    'Connecte-toi pour signaler ce contenu',
   ]);
   const slideAnim = useRef(new RNAnimated.Value(Dimensions.get('window').height)).current;
 
@@ -258,6 +259,14 @@ export default function ActivityScreen() {
       setCommentModalPostId(null);
       setCommentText('');
       setReplyTo(null);
+    });
+  };
+
+  // Touche le champ sans compte : on le demande tout de suite, avant la frappe.
+  const demanderCompteCommentaire = () => {
+    requireAuth(() => {}, {
+      reason: trUI('Connecte-toi pour commenter'),
+      requireBillingIdentity: false,
     });
   };
 
@@ -588,7 +597,15 @@ export default function ActivityScreen() {
               les règles Google Play sur le contenu généré par les utilisateurs. */}
           <TouchableOpacity
             style={styles.actionGroup}
-            onPress={() => setReportTarget(item)}
+            /* Un signalement anonyme n'est pas exploitable : impossible de
+               revenir vers celui qui alerte, ni de repérer un compte qui
+               signale tout ce qu'il croise. Le compte est donc exigé avant
+               d'ouvrir le formulaire. */
+            onPress={() => requireAuth(() => setReportTarget(item), {
+              reason: trUI('Connecte-toi pour signaler ce contenu'),
+              requireBillingIdentity: false,
+              requirePublicProfile: false,
+            })}
             activeOpacity={0.7}
             hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
           >
@@ -772,7 +789,14 @@ export default function ActivityScreen() {
                             </TouchableOpacity>
                           )}
                           {!estMien && (
-                            <TouchableOpacity onPress={() => setReportedComment(c)} hitSlop={6}>
+                            <TouchableOpacity
+                              onPress={() => requireAuth(() => setReportedComment(c), {
+                                reason: trUI('Connecte-toi pour signaler ce contenu'),
+                                requireBillingIdentity: false,
+                                requirePublicProfile: false,
+                              })}
+                              hitSlop={6}
+                            >
                               <Text style={styles.commentActionText}>
                                 {trUI('Signaler')}
                               </Text>
@@ -803,6 +827,10 @@ export default function ActivityScreen() {
                   </TouchableOpacity>
                 </View>
               )}
+              {/* Sans compte, le champ n'accepte pas la frappe : il ouvre la
+                  création de compte. Laisser écrire un message entier pour ne
+                  le réclamer qu'à l'envoi, c'est faire perdre le texte et la
+                  bonne volonté de celui qui l'a écrit. */}
               <View style={styles.commentInputRow}>
                 <TextInput
                   style={styles.commentInput}
@@ -814,6 +842,8 @@ export default function ActivityScreen() {
                   onChangeText={setCommentText}
                   multiline
                   maxLength={500}
+                  editable={!!user}
+                  onPressIn={!user ? demanderCompteCommentaire : undefined}
                 />
                 <TouchableOpacity
                   style={[styles.sendBtn, (!commentText.trim() || sendingComment) && styles.sendBtnDisabled]}

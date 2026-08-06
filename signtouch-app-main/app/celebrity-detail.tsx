@@ -680,7 +680,13 @@ export default function CelebrityDetailScreen() {
             généré par les utilisateurs et par le DSA. */}
         <TouchableOpacity
           style={styles.reportRow}
-          onPress={() => setShowReport(true)}
+          /* Un compte est exigé : un signalement anonyme n'est pas exploitable
+             et ouvre la porte au signalement de masse. */
+          onPress={() => requireAuth(() => setShowReport(true), {
+            reason: 'Connecte-toi pour signaler ce profil',
+            requireBillingIdentity: false,
+            requirePublicProfile: false,
+          })}
           activeOpacity={0.7}
         >
           <Flag size={14} color="#ef4444" />
