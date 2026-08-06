@@ -58,6 +58,7 @@ import {
   ActiveFanEvent,
 } from '@/utils/eventSessionStorage';
 import BarCodeScannerWrapper, { requestCameraPermissionAsync, isBarCodeScannerAvailable } from '@/components/BarCodeScannerWrapper';
+import { openEventLocation } from '@/utils/openMap';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 let Notifications: any = null;
 try {
@@ -1997,6 +1998,24 @@ export default function JoinEventScreen() {
                 </Text>
               </View>
             </View>
+            {/* Le lieu, juste après la date : le fan arrive ici depuis le QR code
+                ou le lien partagé, et doit pouvoir vérifier OÙ se rendre avant de
+                réserver — une dédicace se reçoit sur place. */}
+            {(!!scheduledSession.location || (scheduledSession.latitude != null && scheduledSession.longitude != null)) && (
+              <TouchableOpacity
+                style={styles.scheduledDateCard}
+                onPress={() => openEventLocation(scheduledSession.location, scheduledSession.latitude, scheduledSession.longitude)}
+                activeOpacity={0.7}
+              >
+                <MapPin size={20} color="#fbbf24" />
+                <View style={styles.scheduledDateInfo}>
+                  <Text style={styles.scheduledDateLabel}>{t('inPersonLocationTitle' as any) || "Lieu de l'événement"}</Text>
+                  <Text style={[styles.scheduledDateValue, { textDecorationLine: 'underline' }]}>
+                    {scheduledSession.location || (t('viewOnMap' as any) || 'Voir le lieu sur la carte')}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
             {reservationCount != null && reservationCount > 0 && (
               <Text style={styles.reservationCountText}>
                 {`👥 ${reservationCount} ${reservationCount > 1 ? (t('fansReserved' as any) || 'fans ont déjà réservé') : (t('fanReserved' as any) || 'fan a déjà réservé')}`}

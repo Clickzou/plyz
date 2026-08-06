@@ -269,6 +269,16 @@ export default function CreateEventScreen() {
       return;
     }
 
+    // Le NOM du lieu aussi : c'est la seule chose lisible par le fan dans le fil
+    // et sur la page du QR code. Le géocodage automatique peut échouer.
+    if (!formData.eventLocation?.trim()) {
+      showAlert(
+        t('venueNameRequiredTitle' as any) || 'Nom du lieu requis',
+        t('venueNameRequiredMsg' as any) || "Indique le nom ou l'adresse du lieu : c'est ce que tes fans verront pour savoir où te rejoindre."
+      );
+      return;
+    }
+
     // Un événement payant nécessite un compte Stripe pour percevoir l'argent
     let effectiveStripeAccount: string | null = stripeAccountId;
     if ((formData.selectedPriceCents || 0) > 0) {
@@ -591,6 +601,16 @@ export default function CreateEventScreen() {
       showAlert(
         t('locationRequiredTitle' as any) || "Lieu de l'événement requis",
         t('locationRequiredMsg' as any) || "Cet événement a lieu en personne : appuie sur « Partager ma position » sur le lieu pour le définir. Tes fans devront être présents sur place pour recevoir leur dédicace."
+      );
+      return;
+    }
+
+    // Le NOM du lieu aussi : c'est la seule chose lisible par le fan dans le fil
+    // et sur la page du QR code. Le géocodage automatique peut échouer.
+    if (!eventLocation.trim()) {
+      showAlert(
+        t('venueNameRequiredTitle' as any) || 'Nom du lieu requis',
+        t('venueNameRequiredMsg' as any) || "Indique le nom ou l'adresse du lieu : c'est ce que tes fans verront pour savoir où te rejoindre."
       );
       return;
     }
@@ -930,10 +950,13 @@ export default function CreateEventScreen() {
               </View>
 
               {/* Événement de dédicace = événement EN PERSONNE. On demande à la
-                  célébrité de PARTAGER SA POSITION sur le lieu (action principale,
-                  obligatoire) — pas de saisie manuelle ambiguë. Le nom du lieu est
-                  secondaire (auto-rempli, optionnel). La position réserve l'accès
-                  aux fans présents (service du monde réel, hors IAP Apple). */}
+                  célébrité de PARTAGER SA POSITION sur le lieu (action principale)
+                  — pas de saisie manuelle ambiguë. Le nom du lieu est auto-rempli
+                  puis EXIGÉ : c'est lui qui s'affiche aux fans dans le fil, sur la
+                  page du QR code et dans les partages. Quand le géocodage échoue,
+                  il revenait vide et l'annonce n'indiquait plus où se rendre. La
+                  position réserve l'accès aux fans présents (service du monde
+                  réel, hors IAP Apple). */}
               <View style={styles.section}>
                 <View style={styles.sectionHeaderRow}>
                   <MapPin size={18} color="#ec4899" />
@@ -962,17 +985,22 @@ export default function CreateEventScreen() {
                   </Text>
                 </TouchableOpacity>
 
-                {/* Nom du lieu : secondaire, apparaît une fois la position prise,
-                    pré-rempli automatiquement, éditable, facultatif. */}
+                {/* Nom du lieu : apparaît une fois la position prise, pré-rempli
+                    automatiquement, éditable — et obligatoire. */}
                 {eventCoords && (
-                  <TextInput
-                    style={[styles.input, { marginTop: 10 }]}
-                    placeholder={t('venueNameOptional' as any) || 'Nom du lieu (optionnel)'}
-                    placeholderTextColor="rgba(255,255,255,0.4)"
-                    value={eventLocation}
-                    onChangeText={setEventLocation}
-                    maxLength={100}
-                  />
+                  <>
+                    <TextInput
+                      style={[styles.input, { marginTop: 10 }]}
+                      placeholder={t('venueNameRequired' as any) || 'Nom / adresse du lieu'}
+                      placeholderTextColor="rgba(255,255,255,0.4)"
+                      value={eventLocation}
+                      onChangeText={setEventLocation}
+                      maxLength={100}
+                    />
+                    <Text style={styles.locationGpsHint}>
+                      {t('venueNameHint' as any) || 'Ce nom est celui que tes fans verront pour savoir où te rejoindre.'}
+                    </Text>
+                  </>
                 )}
               </View>
 

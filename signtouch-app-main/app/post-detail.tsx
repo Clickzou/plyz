@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReportContentModal from '@/components/ReportContentModal';
 import { useAutoTranslate } from '@/utils/translation';
+import { openEventLocation } from '@/utils/openMap';
 
 export default function PostDetailScreen() {
   const router = useRouter();
@@ -116,11 +117,19 @@ export default function PostDetailScreen() {
                 </Text>
               </View>
             )}
-            {!!post.location && (
-              <View style={styles.eventDetailRow}>
+            {/* Lieu : pour une dédicace, le fan doit être sur place (moins d'1 km).
+                Un appui ouvre l'itinéraire dans son application de cartes. */}
+            {(!!post.location || (post.latitude != null && post.longitude != null)) && (
+              <TouchableOpacity
+                style={styles.eventDetailRow}
+                onPress={() => openEventLocation(post.location, post.latitude, post.longitude)}
+                activeOpacity={0.7}
+              >
                 <MapPin size={16} color="#9ca3af" />
-                <Text style={styles.eventDetailText}>{post.location}</Text>
-              </View>
+                <Text style={[styles.eventDetailText, { textDecorationLine: 'underline', flex: 1 }]}>
+                  {post.location || (t('viewOnMap' as any) || 'Voir le lieu sur la carte')}
+                </Text>
+              </TouchableOpacity>
             )}
             {post.price_cents > 0 && (
               <View style={styles.eventDetailRow}>

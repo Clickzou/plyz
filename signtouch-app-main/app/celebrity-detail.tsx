@@ -19,6 +19,7 @@ import { CelebrityDetailSkeleton } from '@/components/SkeletonLoader';
 import { useAutoTranslate } from '@/utils/translation';
 import ReportContentModal from '@/components/ReportContentModal';
 import VideoCallRequestModal from '@/components/VideoCallRequestModal';
+import { openEventLocation } from '@/utils/openMap';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -630,11 +631,19 @@ export default function CelebrityDetailScreen() {
                           </Text>
                         </View>
                       )}
-                      {post.location && (
-                        <View style={styles.postEventDetailRow}>
+                      {/* Lieu : une dédicace se reçoit EN PERSONNE, le fan doit
+                          pouvoir savoir où aller — et s'y rendre d'un geste. */}
+                      {(!!post.location || (post.latitude != null && post.longitude != null)) && (
+                        <TouchableOpacity
+                          style={styles.postEventDetailRow}
+                          onPress={() => openEventLocation(post.location, post.latitude, post.longitude)}
+                          activeOpacity={0.7}
+                        >
                           <MapPin size={14} color="#9ca3af" />
-                          <Text style={styles.postEventDetailText}>{post.location}</Text>
-                        </View>
+                          <Text style={[styles.postEventDetailText, { textDecorationLine: 'underline', flex: 1 }]}>
+                            {post.location || (t('viewOnMap' as any) || 'Voir le lieu sur la carte')}
+                          </Text>
+                        </TouchableOpacity>
                       )}
                       {post.price_cents > 0 && (
                         <View style={styles.postEventDetailRow}>

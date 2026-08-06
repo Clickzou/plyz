@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Newspaper, CheckCircle, Calendar, Heart, MessageCircle, Send, Share2, Flag } from 'lucide-react-native';
+import { Newspaper, CheckCircle, Calendar, MapPin, Heart, MessageCircle, Send, Share2, Flag } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -21,6 +21,7 @@ import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { FeedSkeleton } from '@/components/SkeletonLoader';
 import { useAutoTranslate } from '@/utils/translation';
 import ReportContentModal from '@/components/ReportContentModal';
+import { openEventLocation } from '@/utils/openMap';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 const LIKES_KEY = '@plyz_post_likes';
@@ -35,6 +36,11 @@ interface FeedPost {
   body: string | null;
   media_url: string | null;
   event_date: string | null;
+  // Lieu de l'événement : indispensable pour une dédicace, qui se reçoit EN
+  // PERSONNE (le fan doit être à moins d'1 km le jour J).
+  location?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   created_at: string;
   like_count?: number;
   celebrity: {
@@ -430,6 +436,18 @@ export default function ActivityScreen() {
             </Text>
           </TouchableOpacity>
         )}
+        {item.kind === 'event' && (!!item.location || (item.latitude != null && item.longitude != null)) && (
+          <TouchableOpacity
+            style={styles.eventLocationRow}
+            onPress={() => openEventLocation(item.location, item.latitude, item.longitude)}
+            activeOpacity={0.7}
+          >
+            <MapPin size={14} color="#f59e0b" />
+            <Text style={styles.eventLocationText} numberOfLines={2}>
+              {item.location || (t('viewOnMap' as any) || 'Voir le lieu sur la carte')}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         <View style={styles.actionsRow}>
           <View style={styles.actionGroup}>
@@ -723,6 +741,8 @@ const styles = StyleSheet.create({
   postImage: { width: '100%', height: 200, borderRadius: 12, marginTop: 10 },
   eventDateRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
   eventDateText: { color: '#f59e0b', fontSize: 13, fontWeight: '500' },
+  eventLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+  eventLocationText: { color: '#f59e0b', fontSize: 13, fontWeight: '500', flex: 1, textDecorationLine: 'underline' },
 
   actionsRow: {
     flexDirection: 'row',
