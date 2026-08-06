@@ -7193,7 +7193,20 @@ async function processPushOutbox() {
         const { data: t } = await db.from('user_push_tokens').select('token').eq('user_id', row.user_id).maybeSingle();
         token = t && t.token;
       }
-      if (token) await sendExpoPush([token], row.title || 'Plyz', row.body || '', row.data || {});
+      if (token) {
+        await sendExpoPush([token], row.title || 'Plyz', row.body || '', row.data || {});
+      } else {
+        // Aucun jeton = notification écrite dans la file, marquée « envoyée », et
+        // jamais reçue par personne. Rien ne le distinguait d'un envoi réussi :
+        // c'est ce qui a fait croire que la chaîne fonctionnait alors qu'un
+        // destinataire n'avait tout simplement jamais autorisé les notifications.
+        await recordServiceAlert(
+          'push',
+          'warning',
+          `Notification non distribuée : aucun jeton push pour l'utilisateur ${row.user_id}. ` +
+          `Titre « ${row.title || 'Plyz'} ». Permission refusée sur son téléphone, ou jamais demandée.`
+        );
+      }
       await db.from('push_outbox').update({ sent: true, sent_at: new Date().toISOString() }).eq('id', row.id);
     } catch (e) { console.error('[Outbox]', e.message); }
   }
@@ -7956,13 +7969,38 @@ app.post('/api/video-call-requests/:id/checkout', rateLimit('vcr_checkout', 20, 
     const { data: celeb } = await db.from('celebrity_profiles')
       .select('stripe_account_id, stripe_charges_enabled, stage_name')
       .eq('user_id', reqRow.celebrity_id).maybeSingle();
-    if (!celeb || !celeb.stripe_account_id || !celeb.stripe_charges_enabled) {
+    if (!celeb || !celeb.stripe_account_id) {
       return res.status(400).json({ error: 'celebrity_cannot_receive_payments' });
+    }
+
+    const stripe = getStripe();
+
+    // ⚠️ La COLONNE `stripe_charges_enabled` ne fait pas foi : elle n'est écrite
+    // que par le webhook `account.updated`. Un webhook manqué — ou une activation
+    // antérieure à sa mise en place — la laisse à `false` pour toujours, et le
+    // paiement était alors refusé alors que le compte Stripe est bel et bien
+    // actif. Les autres chemins de paiement interrogent Stripe en direct ; celui-ci
+    // ne le faisait pas. On demande donc à Stripe, et on RATTRAPE la base au
+    // passage : le prochain paiement n'aura plus à reposer la question.
+    const connectAccount = await stripe.accounts.retrieve(celeb.stripe_account_id);
+    if (!connectAccount.charges_enabled) {
+      console.error('[VCR Pay] Blocked: charges_enabled=false for', celeb.stripe_account_id);
+      return res.status(400).json({ error: 'celebrity_cannot_receive_payments' });
+    }
+    if (!celeb.stripe_charges_enabled) {
+      const { error: syncErr } = await db.from('celebrity_profiles')
+        .update({
+          stripe_charges_enabled: true,
+          stripe_payouts_enabled: !!connectAccount.payouts_enabled,
+          stripe_verified: !!(connectAccount.charges_enabled && connectAccount.payouts_enabled),
+        })
+        .eq('user_id', reqRow.celebrity_id);
+      if (syncErr) console.error('[VCR Pay] resynchro charges_enabled échouée:', syncErr.message);
+      else console.log('[VCR Pay] colonne stripe_charges_enabled remise à jour depuis Stripe');
     }
 
     const priceCents = reqRow.price_cents;
     const feeCents = Math.round(priceCents * 0.15);
-    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [{
