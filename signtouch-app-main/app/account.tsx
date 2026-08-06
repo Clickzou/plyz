@@ -92,7 +92,7 @@ export default function AccountScreen() {
     'Administration',
     'Mode Célébrité — Validé',
     'En cours de vérification',
-    'Tu seras validé sous 5 à 10 min',
+    'Réponse sous 24 h ouvrées',
     'Tableau de bord admin',
   ]);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
@@ -1143,7 +1143,7 @@ export default function AccountScreen() {
                 <Clock size={18} color="#f59e0b" />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.statusBadgePendingText}>{trUI('En cours de vérification')}</Text>
-                  <Text style={styles.statusBadgePendingSub}>{trUI('Tu seras validé sous 5 à 10 min')}</Text>
+                  <Text style={styles.statusBadgePendingSub}>{trUI('Réponse sous 24 h ouvrées')}</Text>
                 </View>
               </View>
             )}

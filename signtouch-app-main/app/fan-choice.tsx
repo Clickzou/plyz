@@ -166,7 +166,10 @@ export default function FanChoiceScreen() {
       showAlert(
         t('verificationPendingTitle' as any) || 'Compte en cours de vérification',
         t('verificationPendingMsg' as any) ||
-          'Ton compte célébrité est en cours de vérification. Tu pourras créer tes événements dès qu\'il sera validé (sous 5 à 10 min).'
+          // Délai ANNONCÉ CONFORME à la réalité : la vérification est examinée à
+          // la main. Promettre « 5 à 10 min » faisait attendre pour rien, puis
+          // conclure que l'app était cassée.
+          'Ton compte célébrité est en cours de vérification. Tu pourras créer tes événements dès qu\'il sera validé — réponse sous 24 h ouvrées.'
       );
       return;
     }
