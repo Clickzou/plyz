@@ -125,6 +125,11 @@ try {
 const canModerateImages = !!(tf && tf.node && typeof tf.node.decodeImage === 'function');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+// Envoi des médias de publication : une vidéo de 30 s pèse 5 à 8 Mo, parfois
+// plus si le téléphone filme large. La limite générale de 5 Mo la refuserait
+// avant même d'arriver au contrôle de taille. Limite séparée, et réservée à
+// cette route : les avatars et les photos n'ont aucune raison d'y avoir droit.
+const uploadMedia = multer({ storage: multer.memoryStorage(), limits: { fileSize: 40 * 1024 * 1024 } });
 
 // ---------------------------------------------------------------------------
 // Rate limiting léger (en mémoire, zéro dépendance). Protège les endpoints
@@ -4192,17 +4197,39 @@ app.post('/api/moderate-image', rateLimit('moderate-image', 30, 60 * 1000), requ
   }
 });
 
-app.post('/api/upload-post-image', rateLimit('upload-post-image', 20, 60 * 1000), requireAuthMw, upload.single('image'), async (req, res) => {
+// Poids maximal d'une vidéo de publication. Trente secondes bien compressées
+// pèsent 5 à 8 Mo ; 40 laisse de la marge aux téléphones qui filment large,
+// tout en fermant la porte aux fichiers qui feraient exploser la diffusion.
+const TAILLE_VIDEO_MAX = 40 * 1024 * 1024;
+
+app.post('/api/upload-post-image', rateLimit('upload-post-image', 20, 60 * 1000), requireAuthMw, uploadMedia.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });
 
-    const modResult = await moderateImage(req.file.buffer, req.file.mimetype);
-    if (!modResult.safe) {
-      return res.status(403).json({
-        error: 'content_rejected',
-        reason: modResult.reason,
-        message: 'Image contains inappropriate content and cannot be published.',
-      });
+    const estVideo = String(req.file.mimetype || '').startsWith('video/');
+
+    if (estVideo) {
+      if (req.file.size > TAILLE_VIDEO_MAX) {
+        return res.status(413).json({
+          error: 'video_too_large',
+          message: 'Vidéo trop lourde : 40 Mo maximum. Filme plus court ou réduis la qualité.',
+        });
+      }
+      // ⚠️ La modération d'image ne sait pas lire une vidéo : ce contenu part
+      // SANS contrôle automatique et ne repose que sur le signalement. Trace
+      // volontaire — le jour où un contenu passe, on doit pouvoir dire que le
+      // trou était connu et où le boucher.
+      console.log('[Upload] vidéo publiée sans contrôle automatique de contenu —',
+        req.file.originalname, Math.round(req.file.size / 1024) + ' Ko');
+    } else {
+      const modResult = await moderateImage(req.file.buffer, req.file.mimetype);
+      if (!modResult.safe) {
+        return res.status(403).json({
+          error: 'content_rejected',
+          reason: modResult.reason,
+          message: 'Image contains inappropriate content and cannot be published.',
+        });
+      }
     }
 
     const db = getSupabaseAdmin();

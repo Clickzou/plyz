@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, ImagePlus, X, Send, Camera, FileText, Calendar } from 'lucide-react-native';
+import { ArrowLeft, ImagePlus, X, Send, Camera, FileText, Calendar, Play } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as Haptics from 'expo-haptics';
@@ -15,6 +15,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { showAlert } from '@/utils/alertHelper';
 import { authedFetch } from '@/utils/authedFetch';
+import { useAutoTranslate } from '@/utils/translation';
+import { estUneVideo } from '@/utils/media';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 const LOCAL_POSTS_KEY = '@plyz_local_posts';
@@ -69,20 +71,21 @@ async function moderateImageOnServer(uri: string, token?: string): Promise<{ saf
   }
 }
 
-async function uploadImageToServer(uri: string, token?: string): Promise<{ url: string | null; rejected?: boolean }> {
+async function uploadImageToServer(uri: string, token?: string, estVideo = false): Promise<{ url: string | null; rejected?: boolean }> {
   try {
     const formData = new FormData();
+    // Une video garde son extension et son type : sans cela le serveur la
+    // rangerait en .jpg, et le lecteur refuserait de l'ouvrir.
+    const ext = estVideo ? (uri.split('?')[0].split('.').pop() || 'mp4').toLowerCase() : 'jpg';
+    const nom = estVideo ? 'video.' + ext : 'photo.jpg';
+    const type = estVideo ? 'video/' + (ext === 'mov' ? 'quicktime' : ext) : 'image/jpeg';
 
     if (Platform.OS === 'web') {
       const response = await fetch(uri);
       const blob = await response.blob();
-      formData.append('image', blob, 'photo.jpg');
+      formData.append('image', blob, nom);
     } else {
-      formData.append('image', {
-        uri,
-        type: 'image/jpeg',
-        name: 'photo.jpg',
-      } as any);
+      formData.append('image', { uri, type, name: nom } as any);
     }
 
     const res = await fetch(`${API_BASE}/api/upload-post-image`, {
@@ -121,6 +124,16 @@ export default function CreatePostScreen() {
   const [body, setBody] = useState(params.prefillBody || '');
   const [eventDate, setEventDate] = useState(params.prefillDate || '');
   const [imageUri, setImageUri] = useState<string | null>(null);
+  // Le media choisi est-il une video ? Change l'apercu et l'envoi au serveur.
+  const [estVideo, setEstVideo] = useState(false);
+  const trUI = useAutoTranslate([
+    'Vidéo trop longue',
+    'Ta vidéo dure {{d}} secondes. Le maximum est de 30 secondes — choisis-en une plus courte, ou raccourcis-la dans ta galerie.',
+    'Photo ou vidéo (30 s max)',
+    'Video prete a publier (30 s max)',
+    "Vidéo à l'horizontale",
+    "Filme en tenant ton téléphone à la verticale : à l'horizontale, la vidéo n'occupe qu'une fine bande de l'écran.",
+  ]);
   const [publishing, setPublishing] = useState(false);
   const [moderating, setModerating] = useState(false);
 
@@ -140,7 +153,42 @@ export default function CreatePostScreen() {
 
   // Traitement commun à tous les chemins d'arrivée d'une image : galerie,
   // appareil photo, ou résultat récupéré après qu'Android a redémarré l'app.
+  // Durée maximale d'une vidéo publiée. Trente secondes, et pas une de plus :
+  // au-delà, le poids explose (donc la facture de diffusion), le fil devient
+  // lent à parcourir, et une annonce qui dure ne se regarde pas jusqu'au bout.
+  const DUREE_VIDEO_MAX_S = 30;
+
+  const processPickedVideo = async (uri: string, dureeMs?: number, largeur?: number, hauteur?: number) => {
+    // PORTRAIT uniquement. Une vidéo filmée à l'horizontale s'affiche en un
+    // mince bandeau au milieu du fil, illisible sur un téléphone — et elle
+    // casse la mise en page de toutes les autres.
+    if (largeur && hauteur && largeur > hauteur) {
+      showAlert(
+        t('videoLandscapeTitle' as any) || trUI('Vidéo à l\'horizontale'),
+        t('videoLandscapeMsg' as any)
+          || trUI('Filme en tenant ton téléphone à la verticale : à l\'horizontale, la vidéo n\'occupe qu\'une fine bande de l\'écran.'),
+      );
+      return;
+    }
+    if (dureeMs && dureeMs / 1000 > DUREE_VIDEO_MAX_S + 0.7) {
+      // 0,7 s de tolérance : les galeries arrondissent, et refuser une vidéo de
+      // 30,2 s pour une limite de 30 serait incompréhensible.
+      showAlert(
+        t('videoTooLongTitle' as any) || trUI('Vidéo trop longue'),
+        (t('videoTooLongMsg' as any) || trUI('Ta vidéo dure {{d}} secondes. Le maximum est de 30 secondes — choisis-en une plus courte, ou raccourcis-la dans ta galerie.'))
+          .replace('{{d}}', String(Math.round(dureeMs / 1000))),
+      );
+      return;
+    }
+    // La modération d'image ne sait pas lire une vidéo : elle est publiée sans
+    // ce contrôle, et repose sur le signalement. À renforcer quand la
+    // modération vidéo sera en place.
+    setImageUri(uri);
+    setEstVideo(true);
+  };
+
   const processPickedImage = async (uri: string) => {
+    setEstVideo(false);
     const compressed = await compressImage(uri);
 
     setModerating(true);
@@ -178,26 +226,38 @@ export default function CreatePostScreen() {
   const pickImage = async (fromCamera = false) => {
     try {
       let result;
+      // Photo OU vidéo, au choix : une personnalité qui dit bonjour en vidéo
+      // vaut dix photos. `videoMaxDuration` coupe l'enregistrement à 30 s côté
+      // appareil photo — on ne laisse pas filmer trois minutes pour refuser
+      // ensuite. Depuis la galerie, la durée se contrôle après coup.
       if (fromCamera) {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') return;
         result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ['images'],
+          mediaTypes: ['images', 'videos'],
           allowsEditing: true,
           quality: 0.8,
+          videoMaxDuration: DUREE_VIDEO_MAX_S,
         });
       } else {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') return;
         result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ['images'],
+          mediaTypes: ['images', 'videos'],
           allowsEditing: true,
           quality: 0.8,
+          videoMaxDuration: DUREE_VIDEO_MAX_S,
         });
       }
       if (result.canceled) return;
 
-      const uri = result.assets?.[0]?.uri;
+      const asset: any = result.assets?.[0];
+      if (asset?.uri && (asset.type === 'video' || estUneVideo(asset.uri))) {
+        await processPickedVideo(asset.uri, asset.duration, asset.width, asset.height);
+        return;
+      }
+
+      const uri = asset?.uri;
       if (!uri) {
         // L'appareil photo n'a rien rendu alors que l'utilisateur n'a pas annulé.
         // Sans ce message, la photo disparaissait sans un mot et on croyait que
@@ -236,7 +296,7 @@ export default function CreatePostScreen() {
       let mediaUrl: string | null = null;
 
       if (imageUri) {
-        const uploadResult = await uploadImageToServer(imageUri, session?.access_token);
+        const uploadResult = await uploadImageToServer(imageUri, session?.access_token, estVideo);
         if (uploadResult.rejected) {
           showAlert(
             t('contentRejected' as any) || 'Content Rejected',
@@ -430,16 +490,32 @@ export default function CreatePostScreen() {
             </View>
           ) : imageUri ? (
             <View style={styles.imagePreviewWrap}>
-              <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+              {/* Une video n'a pas de miniature ici : on montre un cadre qui
+                  dit clairement ce qui va etre publie, plutot qu'un rectangle
+                  noir dont on ne sait pas s'il a fonctionne. */}
+              {estVideo ? (
+                <View style={[styles.imagePreview, styles.videoPreview]}>
+                  <Play size={34} color="#10b981" fill="#10b981" />
+                  <Text style={styles.videoPreviewText}>{trUI('Video prete a publier (30 s max)')}</Text>
+                </View>
+              ) : (
+                <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+              )}
               <TouchableOpacity
                 style={styles.removeImageBtn}
-                onPress={() => setImageUri(null)}
+                onPress={() => { setImageUri(null); setEstVideo(false); }}
                 activeOpacity={0.7}
               >
                 <X size={18} color="#fff" />
               </TouchableOpacity>
             </View>
           ) : null}
+
+          {/* Dire d'emblee ce qui est accepte : une personnalite qui ignore
+              qu'elle peut publier une video ne la publiera jamais. */}
+          {!imageUri && (
+            <Text style={styles.mediaAide}>{trUI('Photo ou video (30 s max)')}</Text>
+          )}
 
           <View style={styles.mediaRow}>
             <TouchableOpacity
@@ -574,6 +650,18 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
+  mediaAide: {
+    color: 'rgba(255,255,255,0.5)', fontSize: 12.5, marginBottom: 8, textAlign: 'center',
+  },
+  videoPreview: {
+    backgroundColor: 'rgba(16,185,129,0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  videoPreviewText: { color: '#a7f3d0', fontSize: 13.5, fontWeight: '700' },
   imagePreview: {
     width: '100%',
     height: 250,
