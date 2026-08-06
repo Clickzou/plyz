@@ -1360,6 +1360,7 @@ app.post('/api/create-checkout-session', rateLimit('checkout', 20, 60 * 1000), a
       },
       payment_intent_data: canTransfer ? {
         capture_method: 'manual',
+        metadata: promoLive.promo ? { promo_percent: String(promoLive.remisePourcent) } : {},
         application_fee_amount: signTouchFeeCents,
         transfer_data: {
           destination: celebrityStripeAccountId,
@@ -1535,6 +1536,7 @@ app.post('/api/capture-payment', async (req, res) => {
           prestationLabel: 'Appel vidéo privé',
           amountCents: captured.amount,
           currency: captured.currency,
+          promoPercent: captured.metadata && captured.metadata.promo_percent,
         });
       } else {
         console.warn('[Capture] Aucune entree session_queue pour', checkout_session_id, '- flag et facture non poses');
@@ -1767,6 +1769,7 @@ app.post('/api/end-fan-call', async (req, res) => {
               prestationLabel: 'Appel vidéo privé',
               amountCents: captured.amount,
               currency: captured.currency,
+              promoPercent: captured.metadata && captured.metadata.promo_percent,
             });
             // Invite le fan à noter sa rencontre (best-effort, ne bloque rien)
             if (qf?.push_token) {
@@ -2604,7 +2607,10 @@ app.post('/api/create-event-checkout', rateLimit('event-checkout', 20, 60 * 1000
     // Pré-autorisation SYSTÉMATIQUE (capture différée), comme le flux vidéo.
     // Le débit n'a lieu qu'à la capture en masse (1ère photo). Sans ce flag,
     // Stripe débiterait immédiatement.
-    sessionParams.payment_intent_data = { capture_method: 'manual' };
+    sessionParams.payment_intent_data = {
+      capture_method: 'manual',
+      metadata: promoEvent.promo ? { promo_percent: String(promoEvent.remisePourcent) } : {},
+    };
 
     if (celebrityStripeAccountId) {
       try {
@@ -3354,6 +3360,7 @@ app.post('/api/capture-event-payments', async (req, res) => {
               prestationLabel: evLabel,
               amountCents: cap.amount,
               currency: cap.currency,
+              promoPercent: cap.metadata && cap.metadata.promo_percent,
             });
           } catch (invErr) { console.error('[EventCapture] invoice error:', invErr.message); }
           capturedCount++;
@@ -7133,9 +7140,21 @@ async function createInvoice(params) {
     // Identité de facturation de l'acheteur : « Prénom Nom » si disponible, sinon le pseudo.
     const fanFullName = [fan?.first_name, fan?.last_name].filter(Boolean).join(' ').trim();
     const buyer_snapshot = { name: fanFullName || fan?.display_name || null, address: fan?.address || null };
+    // Remise promotionnelle. Sans elle, la personnalité voit un montant plus
+    // faible que son tarif sans la moindre explication, et croit à une erreur
+    // de calcul — ou à un prélèvement abusif de notre part. Le pourcentage est
+    // rangé dans le libellé de la prestation : il apparaît ainsi sur la facture
+    // ET dans la liste de ses revenus, sans changer la structure des factures
+    // déjà émises.
+    const remisePct = Number(params.promoPercent) || 0;
+    const libelleBase = params.prestationLabel || 'Prestation';
+    const libelle = remisePct > 0
+      ? `${libelleBase} — code promo −${remisePct} % appliqué par le fan`
+      : libelleBase;
+
     const inv = {
       transaction_ref: ref, fan_id: fanId, celebrity_id: celebId,
-      prestation_type: params.prestationType || null, prestation_label: params.prestationLabel || 'Prestation',
+      prestation_type: params.prestationType || null, prestation_label: libelle,
       prestation_date: params.prestationDate || new Date().toISOString(),
       amount_cents: params.amountCents, currency: (params.currency || 'eur').toLowerCase(),
       commission_cents: params.commissionCents != null ? params.commissionCents : Math.round(params.amountCents * 0.15),
@@ -8529,6 +8548,10 @@ app.post('/api/video-call-requests/:id/checkout', rateLimit('vcr_checkout', 20, 
         capture_method: 'manual',
         application_fee_amount: feeCents,
         transfer_data: { destination: celeb.stripe_account_id },
+        // La capture ne voit que le PaymentIntent : sans cette copie, la
+        // remise serait introuvable au moment d'emettre la facture.
+        metadata: remisePromo.promo
+          ? { promo_percent: String(remisePromo.remisePourcent) } : {},
       },
       success_url: `${req.headers.origin || 'https://plyz.io'}/payment-success?checkout_session_id={CHECKOUT_SESSION_ID}&video_call_request_id=${reqRow.id}`,
       cancel_url: `${req.headers.origin || 'https://plyz.io'}/payment-cancel`,

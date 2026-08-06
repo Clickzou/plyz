@@ -63,6 +63,7 @@ export default function DocumentsScreen() {
     'Tes factures sont au nom de ton pseudo',
     "Ajoute ton nom et ton adresse si tu as besoin d'une facture nominative — pour te faire rembourser, par exemple. Ce n'est pas obligatoire.",
     'Ajouter mes coordonnées',
+    '{{n}} prestation(s) vendue(s) avec un code promo : le fan a paye moins, donc vous percevez moins. Le detail figure sur chaque facture.',
   ]);
 
   // Les coordonnées ne sont plus demandées à l'inscription : on regarde ici si
@@ -240,12 +241,26 @@ export default function DocumentsScreen() {
             </View>
           )}
 
-          {hasSeller && (
-            <View style={styles.revenueBox}>
-              <Text style={styles.revenueLabel}>{t('docsRevenueTotal') || 'Total de tes revenus facturés'}</Text>
-              <Text style={styles.revenueValue}>{formatMoney(revenueTotal, invoices[0]?.currency || 'eur')}</Text>
-            </View>
-          )}
+          {hasSeller && (() => {
+            // Prestations vendues avec une remise. Sans cette explication, une
+            // personnalite voit un montant inferieur a son tarif et conclut a
+            // une erreur de calcul — ou a un prelevement abusif de notre part.
+            const avecPromo = invoices.filter(
+              (i) => i.role === 'seller' && /code promo/i.test(i.prestation_label || ''),
+            );
+            return (
+              <View style={styles.revenueBox}>
+                <Text style={styles.revenueLabel}>{t('docsRevenueTotal') || 'Total de tes revenus facturés'}</Text>
+                <Text style={styles.revenueValue}>{formatMoney(revenueTotal, invoices[0]?.currency || 'eur')}</Text>
+                {avecPromo.length > 0 && (
+                  <Text style={styles.revenuePromo}>
+                    {trUI('{{n}} prestation(s) vendue(s) avec un code promo : le fan a paye moins, donc vous percevez moins. Le detail figure sur chaque facture.')
+                      .replace('{{n}}', String(avecPromo.length))}
+                  </Text>
+                )}
+              </View>
+            );
+          })()}
 
           {/* Filtre par période */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.periodRow} contentContainerStyle={styles.periodRowContent}>
@@ -336,6 +351,7 @@ const styles = StyleSheet.create({
   revenueBox: { backgroundColor: 'rgba(16,185,129,0.12)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.3)', borderRadius: 12, padding: 16, marginBottom: 18 },
   revenueLabel: { color: '#a7f3d0', fontSize: 12.5, marginBottom: 4 },
   revenueValue: { color: '#10b981', fontSize: 24, fontWeight: '800' },
+  revenuePromo: { color: '#fbbf24', fontSize: 12.5, lineHeight: 18, marginTop: 8 },
   coordBox: {
     backgroundColor: 'rgba(99,102,241,0.10)', borderWidth: 1,
     borderColor: 'rgba(99,102,241,0.32)', borderRadius: 12, padding: 16, marginBottom: 18,
