@@ -16,34 +16,49 @@ const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 // validation. Le composant choisit selon le contexte, l'appelant n'a pas à le
 // savoir.
 //
-// Seule la remise de 100 % est appliquée : c'est le seul cas que la chaîne de
-// paiement sait traiter aujourd'hui (on saute le paiement). Une remise
-// partielle exigerait de recalculer le montant côté Stripe — annoncer « -20 % »
-// sans savoir le prélever serait pire que de ne rien proposer.
+// TOUTES les remises sont acceptées, pas seulement la gratuité. Le montant
+// affiché ici n'est qu'un aperçu : le prix réellement facturé est recalculé par
+// le SERVEUR à partir du code. L'app ne transmet jamais de montant — sans quoi
+// elle fixerait ses propres prix.
 
 export type TypePromo = 'live_video' | 'evenement';
+
+export interface PromoApplique {
+  promoId: string;
+  pourcentage: number;
+  /** Prix après remise, en centimes — pour l'affichage uniquement. */
+  prixRemiseCents: number;
+}
 
 interface Props {
   type: TypePromo;
   /** Identifiant de la session ou de l'événement concerné. */
   cibleId: string;
-  /** Appelé quand un code 100 % est validé : la prestation devient gratuite. */
-  onGratuit: (promoId: string) => void;
-  /** Vrai quand un code a déjà été appliqué : le champ laisse place au bandeau. */
-  applique: boolean;
+  /** Prix affiché avant remise, en centimes. */
+  prixCents: number;
+  onApplique: (promo: PromoApplique) => void;
+  /** Code déjà appliqué : le champ laisse place au bandeau récapitulatif. */
+  applique: PromoApplique | null;
+  /** Retire le code appliqué. */
+  onRetire?: () => void;
 }
 
-export default function ChampCodePromo({ type, cibleId, onGratuit, applique }: Props) {
+const euros = (cents: number) => (cents / 100).toFixed(2).replace('.', ',') + ' €';
+
+export default function ChampCodePromo({
+  type, cibleId, prixCents, onApplique, applique, onRetire,
+}: Props) {
   const { t } = useLanguage();
   const tr = useAutoTranslate([
     'Code promo',
     'Entrer un code promo',
     'Valider',
-    'Code promo appliqué — c’est offert !',
+    'Retirer',
+    'C’est offert !',
+    '−{{p}} % : {{prix}} au lieu de {{avant}}',
     'Ce code n’existe pas ou n’est plus actif.',
     'Ce code a expiré.',
     'Ce code a atteint son nombre maximum d’utilisations.',
-    'Ce code ne donne pas la gratuité totale : il n’est pas encore utilisable ici.',
   ]);
 
   const [code, setCode] = useState('');
@@ -76,13 +91,15 @@ export default function ChampCodePromo({ type, cibleId, onGratuit, applique }: P
         );
         return;
       }
-      if (data.discount_percent !== 100) {
-        setErreur(tr('Ce code ne donne pas la gratuité totale : il n’est pas encore utilisable ici.'));
-        return;
-      }
-      onGratuit(String(data.promo_id));
+
+      const pourcentage = Math.max(0, Math.min(100, Number(data.discount_percent) || 0));
+      // Même arrondi que le serveur (à l'entier inférieur) : entre deux
+      // centimes, la différence va au fan. Un aperçu qui ne correspond pas au
+      // montant prélevé vaudrait mieux ne pas exister.
+      const prixRemiseCents = Math.max(0, prixCents - Math.floor((prixCents * pourcentage) / 100));
+
+      onApplique({ promoId: String(data.promo_id), pourcentage, prixRemiseCents });
     } catch {
-      // Réseau : on le dit, plutôt que de laisser un bouton sans effet.
       setErreur(tr('Ce code n’existe pas ou n’est plus actif.'));
     } finally {
       setValidation(false);
@@ -94,8 +111,18 @@ export default function ChampCodePromo({ type, cibleId, onGratuit, applique }: P
       <View style={styles.applique}>
         <Check size={17} color="#10b981" />
         <Text style={styles.appliqueTexte}>
-          {t('promoApplied' as any) || tr('Code promo appliqué — c’est offert !')}
+          {applique.prixRemiseCents === 0
+            ? tr('C’est offert !')
+            : tr('−{{p}} % : {{prix}} au lieu de {{avant}}')
+              .replace('{{p}}', String(applique.pourcentage))
+              .replace('{{prix}}', euros(applique.prixRemiseCents))
+              .replace('{{avant}}', euros(prixCents))}
         </Text>
+        {!!onRetire && (
+          <TouchableOpacity onPress={onRetire} hitSlop={10}>
+            <Text style={styles.retirer}>{tr('Retirer')}</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   }
@@ -157,4 +184,5 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(16,185,129,0.35)', borderRadius: 12, padding: 13,
   },
   appliqueTexte: { color: '#a7f3d0', fontSize: 14, fontWeight: '700', flex: 1 },
+  retirer: { color: 'rgba(255,255,255,0.5)', fontSize: 12.5, fontWeight: '700' },
 });

@@ -42,6 +42,8 @@ export default function PurchaseSessionScreen() {
     // Données déjà uploadées avant le paiement (à retrouver au retour).
     resumePhotoUrl?: string;
     resumeMessage?: string;
+    /** Code promo choisi a l'ecran precedent (identifiant seul). */
+    promoId?: string;
   }>();
 
   const [purchasing, setPurchasing] = useState(false);
@@ -116,6 +118,11 @@ export default function PurchaseSessionScreen() {
           celebrityName: params.celebrityName,
           priceCents: priceCents,
           currency: 'eur',
+          // Code promo transmis par l'ecran precedent. Seul l'identifiant
+          // circule : le serveur relit le code et applique la remise au tarif
+          // officiel. Une remise calculee par l'app serait une remise choisie
+          // par l'app.
+          promo_id: (params.promoId as string) || undefined,
           // Rattache le paiement au COMPTE (connexion déjà exigée via requireAuth)
           // → facture liée au compte. Format file d'attente vidéo = fan_user_<uid>.
           fanId: user?.id ? `fan_user_${user.id}` : undefined,
@@ -135,6 +142,20 @@ export default function PurchaseSessionScreen() {
 
       if (!response.ok) {
         throw new Error(data.error || 'Checkout session creation failed');
+      }
+
+      // Entierement offert par un code promo : Stripe refuse un paiement a
+      // zero, il n'y a donc aucune caisse a ouvrir. Sans ce cas, l'ecran
+      // annoncait « aucune adresse de paiement » — un echec, pour une place
+      // pourtant acquise.
+      if (data.gratuit) {
+        showAlert(
+          t('success') || "C'est bon",
+          t('promoFreeConfirmed' as any)
+            || 'Code promo appliqué : cette place est offerte. Tu la retrouveras dans « À venir ».',
+        );
+        router.back();
+        return;
       }
 
       if (data.url) {

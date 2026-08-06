@@ -36,7 +36,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
-import ChampCodePromo from '@/components/ChampCodePromo';
+import ChampCodePromo, { PromoApplique } from '@/components/ChampCodePromo';
 import {
   LiveSession,
   QueueEntry,
@@ -897,8 +897,9 @@ export default function JoinLiveSessionScreen() {
   // de paiement existant (purchase-session → pré-autorisation) : au retour, l'entrée
   // de file pré-payée est créée, et le jour J le fan la reprend SANS re-payer
   // (check-active-payment). Débit seulement à la fin de l'appel (capture).
-  // Code promo : seule la gratuite totale est traitee, comme partout ailleurs.
-  const [promoId, setPromoId] = useState<string | null>(null);
+  // Code promo. Toute remise est acceptee ; le prix reel est recalcule par le
+  // serveur a partir du code, l'app n'envoie jamais de montant.
+  const [promo, setPromo] = useState<PromoApplique | null>(null);
 
   const handleReserveAndPayLive = async () => {
     if (!session) return;
@@ -933,12 +934,12 @@ export default function JoinLiveSessionScreen() {
       // Code promo 100 % : la place est offerte, on ne passe pas par Stripe. Le
       // code est consommé ici, une fois la place effectivement acquise — jamais
       // à la validation, sinon un code se dépenserait sur un simple essai.
-      if (promoId) {
+      if (promo && promo.prixRemiseCents === 0) {
         try {
           await authedFetch(`${STRIPE_SERVER_URL}/api/use-promo-code`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ promo_id: promoId }),
+            body: JSON.stringify({ promo_id: promo.promoId }),
           });
         } catch (e) {
           console.warn('[PromoCode] consommation echouee (non bloquant):', e);
@@ -960,6 +961,7 @@ export default function JoinLiveSessionScreen() {
           celebrityStripeAccountId: session.celebrity_stripe_account_id || '',
           fanName: resolvedFanName,
           flow: 'video',
+          promoId: promo?.promoId || '',
           resumePhotoUrl: '',
           resumeMessage: '',
         },
@@ -1098,8 +1100,10 @@ export default function JoinLiveSessionScreen() {
                   <ChampCodePromo
                     type="live_video"
                     cibleId={session?.id || ''}
-                    applique={!!promoId}
-                    onGratuit={setPromoId}
+                    prixCents={price}
+                    applique={promo}
+                    onApplique={setPromo}
+                    onRetire={() => setPromo(null)}
                   />
                 </View>
                 <TouchableOpacity
@@ -1111,8 +1115,10 @@ export default function JoinLiveSessionScreen() {
                     <ActivityIndicator color="#6366f1" />
                   ) : (
                     <Text style={styles.primaryButtonText}>
-                      {promoId
-                        ? (t('reserveEvent') || 'Réserver ma place')
+                      {promo
+                        ? (promo.prixRemiseCents === 0
+                          ? (t('reserveEvent') || 'Réserver ma place')
+                          : `${t('reserveMyPlace' as any) || 'Réserver ma place'} — ${(promo.prixRemiseCents / 100).toFixed(2).replace('.', ',')}€`)
                         : `${t('reserveMyPlace' as any) || 'Réserver ma place'} — ${(price / 100).toFixed(2).replace('.', ',')}€`}
                     </Text>
                   )}

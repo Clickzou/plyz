@@ -14,7 +14,7 @@ import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { rafraichirBadgeAppelsVideo } from '@/utils/videoCallBadge';
 import BottomNav from '@/components/BottomNav';
 import DateHeurePicker from '@/components/DateHeurePicker';
-import ChampCodePromo from '@/components/ChampCodePromo';
+import ChampCodePromo, { PromoApplique } from '@/components/ChampCodePromo';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -45,9 +45,10 @@ export default function MyVideoCallsScreen() {
   const [busy, setBusy] = useState<string | null>(null);
   // Demande dont on est en train de choisir le creneau (null = ferme).
   const [pickerPour, setPickerPour] = useState<string | null>(null);
-  // Code promo par demande : la gratuite est decidee par le SERVEUR, l'app ne
-  // transmet que l'identifiant du code.
-  const [promoParDemande, setPromoParDemande] = useState<Record<string, string>>({});
+  // Code promo par demande. Le montant reellement preleve est recalcule par le
+  // SERVEUR a partir du code : l'app n'affiche qu'un apercu et ne transmet
+  // jamais de montant.
+  const [promoParDemande, setPromoParDemande] = useState<Record<string, PromoApplique>>({});
 
   // Le message du fan est écrit dans SA langue. La personnalité doit pouvoir le
   // lire dans la sienne — la traduction doit marcher dans les deux sens, pas
@@ -123,7 +124,7 @@ export default function MyVideoCallsScreen() {
   };
 
   const payer = async (id: string) => {
-    const data = await agir(id, 'checkout', promoParDemande[id] ? { promo_id: promoParDemande[id] } : undefined);
+    const data = await agir(id, 'checkout', promoParDemande[id] ? { promo_id: promoParDemande[id].promoId } : undefined);
     // Offert par un code promo : rien a payer, la demande est deja confirmee.
     if (data?.gratuit) {
       showAlert(
@@ -336,8 +337,12 @@ export default function MyVideoCallsScreen() {
                     <ChampCodePromo
                       type="live_video"
                       cibleId={d.id}
-                      applique={!!promoParDemande[d.id]}
-                      onGratuit={(pid) => setPromoParDemande((p) => ({ ...p, [d.id]: pid }))}
+                      prixCents={d.price_cents || 0}
+                      applique={promoParDemande[d.id] || null}
+                      onApplique={(promo) => setPromoParDemande((p) => ({ ...p, [d.id]: promo }))}
+                      onRetire={() => setPromoParDemande((p) => {
+                        const suite = { ...p }; delete suite[d.id]; return suite;
+                      })}
                     />
                   </View>
                 )}
@@ -350,7 +355,12 @@ export default function MyVideoCallsScreen() {
                   >
                     <CreditCard size={17} color="#fff" />
                     <Text style={styles.btnText}>
-                      {(t('vcrPayNow' as any) || 'Confirmer et régler {price}').replace('{price}', prix(d))}
+                      {(t('vcrPayNow' as any) || 'Confirmer et régler {price}').replace(
+                        '{price}',
+                        promoParDemande[d.id]
+                          ? (promoParDemande[d.id].prixRemiseCents / 100).toFixed(2).replace('.', ',') + ' €'
+                          : prix(d),
+                      )}
                     </Text>
                   </TouchableOpacity>
                 )}

@@ -36,7 +36,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAutoTranslate } from '@/utils/translation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
-import ChampCodePromo from '@/components/ChampCodePromo';
+import ChampCodePromo, { PromoApplique } from '@/components/ChampCodePromo';
 import { LiveEvent } from '@/utils/liveEventStorage';
 import { getSessionByCode, getSessionById, LiveSession } from '@/utils/liveSessionStorage';
 import { 
@@ -297,8 +297,9 @@ export default function JoinEventScreen() {
   const [promoResult, setPromoResult] = useState<{ valid: boolean; promo_id?: string; discount_percent?: number; reason?: string } | null>(null);
   const [promoApplied, setPromoApplied] = useState(false);
   // Code promo de la DEDICACE programmee : famille distincte de celle des
-  // sessions live video (deux tables, deux routes de validation).
-  const [promoEventId, setPromoEventId] = useState<string | null>(null);
+  // sessions live video (deux tables, deux routes de validation). Toute remise
+  // est acceptee ; le prix reel est recalcule par le serveur.
+  const [promoEvent, setPromoEvent] = useState<PromoApplique | null>(null);
   const hasPlayedChime = useRef(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [eventPaymentConfig, setEventPaymentConfig] = useState<{priceCents: number, celebrityStripeAccountId?: string, celebrityName?: string} | null>(null);
@@ -1317,14 +1318,14 @@ export default function JoinEventScreen() {
     // Code promo 100 % : la place est offerte, on ne passe pas par Stripe. Le
     // code n'est consomme qu'ICI, une fois la place acquise — jamais a la
     // validation, sinon un simple essai le depenserait.
-    if (promoEventId) {
+    if (promoEvent && promoEvent.prixRemiseCents === 0) {
       setIsProcessingPayment(true);
       try {
         await handleReserveScheduled();
         await authedFetch(STRIPE_SERVER_URL + '/api/use-event-promo-code', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ promo_id: promoEventId }),
+          body: JSON.stringify({ promo_id: promoEvent.promoId }),
         });
       } catch (e) {
         console.warn('[PromoCode] consommation echouee (non bloquant):', e);
@@ -1363,6 +1364,9 @@ export default function JoinEventScreen() {
           eventSessionId: scheduledSession.id,
           fanId: viewerId,
           priceCents: eventPaymentConfig.priceCents,
+          // Seul l'identifiant du code circule : c'est le serveur qui applique
+          // la remise sur le tarif officiel.
+          promo_id: promoEvent?.promoId || undefined,
           celebrityStripeAccountId: eventPaymentConfig.celebrityStripeAccountId,
           celebrityName: eventPaymentConfig.celebrityName,
           // Même protection que pour l'événement en cours (cf. commentaire plus haut).
@@ -2083,14 +2087,18 @@ export default function JoinEventScreen() {
                       <ChampCodePromo
                         type="evenement"
                         cibleId={scheduledSession.id}
-                        applique={!!promoEventId}
-                        onGratuit={setPromoEventId}
+                        prixCents={price}
+                        applique={promoEvent}
+                        onApplique={setPromoEvent}
+                        onRetire={() => setPromoEvent(null)}
                       />
                       <TouchableOpacity style={styles.reserveButton} onPress={handleReserveAndPay} disabled={isProcessingPayment}>
                         <Check size={20} color="#fff" />
                         <Text style={styles.reserveButtonText}>
-                          {promoEventId
-                            ? (t('reserveEvent' as any) || 'Réserver')
+                          {promoEvent
+                            ? (promoEvent.prixRemiseCents === 0
+                              ? (t('reserveEvent' as any) || 'Réserver')
+                              : `${t('reserveMyPlace' as any) || 'Réserver ma place'} — ${(promoEvent.prixRemiseCents / 100).toFixed(2).replace('.', ',')}€`)
                             : `${t('reserveMyPlace' as any) || 'Réserver ma place'} — ${(price / 100).toFixed(2).replace('.', ',')}€`}
                         </Text>
                       </TouchableOpacity>

@@ -601,6 +601,27 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
       console.log('[Webhook]   Payment status:', session.payment_status);
       console.log('[Webhook]   Stripe Checkout ID:', session.id);
 
+      // CODE PROMO : consommé ICI, quand le paiement a réellement abouti. À la
+      // validation du code, on ne sait pas encore si le fan ira au bout ; à
+      // l'ouverture de la caisse non plus. Décompter plus tôt, c'est épuiser
+      // une campagne avec des abandons de panier.
+      if (session.payment_status === 'paid' && session.metadata?.promo_id) {
+        (async () => {
+          try {
+            const db = getSupabaseAdmin();
+            const table = TABLES_PROMO[session.metadata.promo_type];
+            if (!table) return;
+            const { data: promo } = await db.from(table)
+              .select('id, used_count').eq('id', session.metadata.promo_id).maybeSingle();
+            if (promo) await consommerCodePromo(db, session.metadata.promo_type, promo);
+            console.log('[Webhook] code promo consommé :', session.metadata.promo_id,
+              `(${session.metadata.promo_percent}%)`);
+          } catch (e) {
+            console.error('[Webhook] consommation du code promo échouée :', e.message);
+          }
+        })();
+      }
+
       if (event_type === 'dedication' && event_session_id && fan_id && session.payment_status === 'paid') {
         if (!global.eventPaidRecords) global.eventPaidRecords = {};
         const key = `${event_session_id}_${fan_id}`;
@@ -1244,6 +1265,26 @@ app.post('/api/create-checkout-session', rateLimit('checkout', 20, 60 * 1000), a
       return res.status(400).json({ error: 'Minimum price is 2€ (200 cents)' });
     }
 
+    // CODE PROMO. La remise s'applique APRÈS le contrôle du tarif minimum : ce
+    // plancher protège la personnalité contre un prix trop bas, pas contre une
+    // remise qu'elle a elle-même décidée. Un code peut donc descendre sous 2 €,
+    // y compris jusqu'à la gratuité.
+    const promoLive = await appliquerCodePromo(
+      adminDb, 'live_video', req.body.promo_id, priceCents,
+    );
+    if (promoLive.erreur) return res.status(400).json({ error: promoLive.erreur });
+    if (promoLive.promo) {
+      console.log('[Checkout] code promo', promoLive.promo.id,
+        `${promoLive.remisePourcent}% : ${priceCents} → ${promoLive.prixCents} cents`);
+      priceCents = promoLive.prixCents;
+      // Entièrement offert : Stripe refuse un paiement à zéro. On le dit à
+      // l'app, qui enchaîne sans passer par la caisse.
+      if (priceCents === 0) {
+        await consommerCodePromo(adminDb, 'live_video', promoLive.promo);
+        return res.json({ gratuit: true });
+      }
+    }
+
     if (!celebrityStripeAccountId) {
       return res.status(400).json({ error: 'Celebrity Stripe account is required for paid sessions' });
     }
@@ -1308,6 +1349,14 @@ app.post('/api/create-checkout-session', rateLimit('checkout', 20, 60 * 1000), a
         celebrity_id: celebrityId,
         price_cents: String(priceCents),
         signtouch_fee_cents: String(signTouchFeeCents),
+        // Le code n'est consommé qu'au paiement effectif : sans cette trace, un
+        // fan qui abandonne devant la caisse dépenserait quand même une
+        // utilisation, et la campagne s'épuiserait sans une seule vente.
+        ...(promoLive.promo ? {
+          promo_id: String(promoLive.promo.id),
+          promo_type: 'live_video',
+          promo_percent: String(promoLive.remisePourcent),
+        } : {}),
       },
       payment_intent_data: canTransfer ? {
         capture_method: 'manual',
@@ -2502,6 +2551,22 @@ app.post('/api/create-event-checkout', rateLimit('event-checkout', 20, 60 * 1000
       return res.status(400).json({ error: 'Minimum price is 1€ (100 cents)' });
     }
 
+    // CODE PROMO. Après le plancher de tarif : celui-ci protège la personnalité
+    // d'un prix trop bas, pas d'une remise qu'elle a elle-même consentie.
+    const promoEvent = await appliquerCodePromo(
+      adminDb, 'evenement', req.body.promo_id, priceCents,
+    );
+    if (promoEvent.erreur) return res.status(400).json({ error: promoEvent.erreur });
+    if (promoEvent.promo) {
+      console.log('[EventCheckout] code promo', promoEvent.promo.id,
+        `${promoEvent.remisePourcent}% : ${priceCents} → ${promoEvent.prixCents} cents`);
+      priceCents = promoEvent.prixCents;
+      if (priceCents === 0) {
+        await consommerCodePromo(adminDb, 'evenement', promoEvent.promo);
+        return res.json({ gratuit: true });
+      }
+    }
+
     const signTouchFeeCents = Math.round(priceCents * 0.15);
 
     let sessionParams = {
@@ -2524,6 +2589,13 @@ app.post('/api/create-event-checkout', rateLimit('event-checkout', 20, 60 * 1000
         event_type: 'dedication',
         price_cents: String(priceCents),
         signtouch_fee_cents: String(signTouchFeeCents),
+        // Consommé seulement quand le paiement aboutit : un abandon devant la
+        // caisse ne doit pas dépenser une utilisation.
+        ...(promoEvent.promo ? {
+          promo_id: String(promoEvent.promo.id),
+          promo_type: 'evenement',
+          promo_percent: String(promoEvent.remisePourcent),
+        } : {}),
       },
       success_url: successUrl,
       cancel_url: cancelUrl,
@@ -4307,6 +4379,60 @@ const TAILLE_VIDEO_MAX = 40 * 1024 * 1024;
 // événement est programmé. Les PHOTOS ne sont jamais limitées : elles ne
 // coûtent presque rien et ce sont elles qui font vivre le fil.
 const QUOTA_VIDEOS_SANS_EVENEMENT = 10;
+
+// ---------------------------------------------------------------------------
+// CODES PROMO — le prix remisé se calcule ICI, jamais dans l'application.
+//
+// Le client n'envoie qu'un identifiant de code. S'il pouvait envoyer un
+// montant, il fixerait ses propres prix. Le serveur relit le code en base,
+// vérifie qu'il est utilisable, et applique la remise au tarif officiel.
+//
+// Le résultat vaut pour toutes les remises, pas seulement la gratuité : 20 %,
+// 50 % ou 100 %, c'est le même calcul. Seul le cas « prix nul » se traite à
+// part, puisqu'il n'y a alors aucun paiement à créer.
+// ---------------------------------------------------------------------------
+const TABLES_PROMO = {
+  live_video: 'promo_code_live_video',
+  evenement: 'promo_code_evenement_qr',
+};
+
+async function appliquerCodePromo(db, type, promoId, prixCents) {
+  if (!promoId) return { prixCents, promo: null };
+
+  const table = TABLES_PROMO[type];
+  if (!table) return { prixCents, promo: null, erreur: 'promo_type_inconnu' };
+
+  const { data: promo } = await db.from(table)
+    .select('id, discount_percent, is_active, expires_at, used_count, max_uses')
+    .eq('id', promoId).maybeSingle();
+
+  if (!promo || !promo.is_active) return { prixCents, promo: null, erreur: 'promo_invalid' };
+  if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+    return { prixCents, promo: null, erreur: 'promo_expired' };
+  }
+  if (promo.max_uses !== null && promo.used_count >= promo.max_uses) {
+    return { prixCents, promo: null, erreur: 'promo_max_uses' };
+  }
+
+  const remise = Math.max(0, Math.min(100, Number(promo.discount_percent) || 0));
+  // Arrondi À L'ENTIER INFÉRIEUR : entre deux centimes, la différence va au
+  // fan, jamais à la plateforme.
+  const remise_cents = Math.floor((prixCents * remise) / 100);
+  const nouveauPrix = Math.max(0, prixCents - remise_cents);
+
+  return { prixCents: nouveauPrix, promo, remisePourcent: remise };
+}
+
+// Un code n'est consommé qu'une fois la prestation réellement acquise.
+async function consommerCodePromo(db, type, promo) {
+  if (!promo) return;
+  const table = TABLES_PROMO[type];
+  if (!table) return;
+  const { error } = await db.from(table)
+    .update({ used_count: (promo.used_count || 0) + 1 })
+    .eq('id', promo.id);
+  if (error) console.error('[Promo] compteur d\'utilisations non incrémenté :', error.message);
+}
 
 // Combien de vidéos cette personnalité a-t-elle publiées ce mois-ci, et a-t-elle
 // un événement à venir ?
@@ -8349,21 +8475,16 @@ app.post('/api/video-call-requests/:id/checkout', rateLimit('vcr_checkout', 20, 
     // l'identifiant du code circule, et c'est le serveur qui décide s'il donne
     // la gratuité. Laisser l'app annoncer un montant reviendrait à lui laisser
     // fixer ses propres prix.
-    const promoId = req.body && req.body.promo_id;
-    if (promoId) {
-      const { data: promo } = await db.from('promo_code_live_video')
-        .select('id, used_count, max_uses, is_active, expires_at, discount_percent')
-        .eq('id', promoId).maybeSingle();
+    // Code promo : toute remise est acceptée, pas seulement la gratuité. Le
+    // prix officiel vient de la base, la remise est appliquée ici.
+    const remisePromo = await appliquerCodePromo(
+      db, 'live_video', req.body && req.body.promo_id, reqRow.price_cents,
+    );
+    if (remisePromo.erreur) return res.status(400).json({ error: remisePromo.erreur });
 
-      const valide = promo && promo.is_active
-        && (!promo.expires_at || new Date(promo.expires_at) > new Date())
-        && (promo.max_uses === null || promo.used_count < promo.max_uses)
-        && Number(promo.discount_percent) === 100;
-
-      if (!valide) return res.status(400).json({ error: 'promo_invalid' });
-
-      // Gratuit : aucun paiement à créer. La demande passe directement à
-      // « payée » — la prestation est due, elle ne coûte simplement rien.
+    if (remisePromo.promo && remisePromo.prixCents === 0) {
+      // Entièrement offert : aucun paiement à créer. La demande passe
+      // directement à « payée » — la prestation est due, elle ne coûte rien.
       const { error: errGratuit } = await db.from('video_call_requests')
         .update({ status: 'paid', updated_at: new Date().toISOString() })
         .eq('id', reqRow.id);
@@ -8371,15 +8492,12 @@ app.post('/api/video-call-requests/:id/checkout', rateLimit('vcr_checkout', 20, 
         console.error('[VCR Pay] passage en gratuit échoué :', errGratuit.message);
         return res.status(500).json({ error: 'internal' });
       }
-      await db.from('promo_code_live_video')
-        .update({ used_count: (promo.used_count || 0) + 1 })
-        .eq('id', promo.id);
-
-      console.log('[VCR Pay] appel offert par code promo', promo.id);
+      await consommerCodePromo(db, 'live_video', remisePromo.promo);
+      console.log('[VCR Pay] appel offert par code promo', remisePromo.promo.id);
       return res.json({ gratuit: true });
     }
 
-    const priceCents = reqRow.price_cents;
+    const priceCents = remisePromo.prixCents;
     const feeCents = Math.round(priceCents * 0.15);
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -8398,6 +8516,14 @@ app.post('/api/video-call-requests/:id/checkout', rateLimit('vcr_checkout', 20, 
         video_call_request_id: reqRow.id,
         fan_id: reqRow.fan_id,
         celebrity_id: reqRow.celebrity_id,
+        // Le code n'est consommé qu'au paiement effectif : le porter ici permet
+        // de le retrouver à ce moment-là, sans quoi un fan qui abandonne au
+        // moment de payer dépenserait quand même une utilisation.
+        ...(remisePromo.promo ? {
+          promo_id: String(remisePromo.promo.id),
+          promo_type: 'live_video',
+          promo_percent: String(remisePromo.remisePourcent),
+        } : {}),
       },
       payment_intent_data: {
         capture_method: 'manual',
