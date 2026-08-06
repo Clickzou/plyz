@@ -4177,6 +4177,69 @@ app.get('/api/feed', async (req, res) => {
   }
 });
 
+// Une publication a été vue. Sans authentification : un visiteur non connecté
+// est un spectateur comme un autre, et c'est l'audience qui compte, pas
+// l'identité — on n'enregistre d'ailleurs jamais QUI a vu quoi.
+app.post('/api/post-viewed', rateLimit('post-viewed', 300, 60 * 1000), async (req, res) => {
+  try {
+    const postId = String((req.body && req.body.post_id) || '').trim();
+    if (!postId) return res.status(400).json({ error: 'post_id_required' });
+    const { error } = await getSupabaseAdmin().rpc('compter_vue_publication', { p_post_id: postId });
+    if (error) throw error;
+    return res.json({ ok: true });
+  } catch (e) {
+    // Un compteur de vues n'est pas une opération critique : on ne la signale
+    // pas à l'utilisateur, mais elle ne doit pas non plus disparaître en
+    // silence des journaux.
+    console.warn('[post-viewed]', e.message);
+    return res.json({ ok: false });
+  }
+});
+
+// Ce que la personnalité laisse sur la table : son audience du mois, et si elle
+// a — ou non — un événement à proposer. Le second chiffre est celui qui fait
+// agir : « 340 fans t'ont vue, 0 événement proposé ».
+app.get('/api/ma-portee', requireAuthMw, async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const uid = req.authUser.id;
+
+    const { data: aud } = await db.rpc('audience_personnalite', { p_celeb: uid });
+    const ligne = Array.isArray(aud) ? aud[0] : aud;
+
+    // Événements À VENIR ou en cours : un événement passé ne rapporte plus rien.
+    const maintenant = new Date().toISOString();
+    const [{ count: nbEvents }, { count: nbLives }] = await Promise.all([
+      db.from('event_sessions').select('id', { count: 'exact', head: true })
+        .eq('created_by', uid).gte('ends_at', maintenant),
+      db.from('live_sessions').select('id', { count: 'exact', head: true })
+        .eq('celebrity_id', uid).gte('scheduled_at', maintenant),
+    ]);
+
+    // Vidéos publiées ce mois-ci : sert au garde-fou de diffusion.
+    const debutMois = new Date();
+    debutMois.setDate(1); debutMois.setHours(0, 0, 0, 0);
+    const { data: postsMois } = await db.from('posts')
+      .select('media_url')
+      .eq('celebrity_id', uid)
+      .gte('created_at', debutMois.toISOString());
+    const videosMois = (postsMois || []).filter((p) =>
+      /\.(mp4|mov|m4v|webm|3gp|avi|mkv)(\?|$)/i.test(String(p.media_url || ''))
+    ).length;
+
+    return res.json({
+      vues_30j: Number(ligne?.vues_30j || 0),
+      publications_30j: Number(ligne?.publications_30j || 0),
+      evenements_a_venir: (nbEvents || 0) + (nbLives || 0),
+      videos_ce_mois: videosMois,
+      quota_videos: QUOTA_VIDEOS_SANS_EVENEMENT,
+    });
+  } catch (e) {
+    console.error('[ma-portee]', e.message);
+    return res.status(500).json({ error: 'internal' });
+  }
+});
+
 app.post('/api/moderate-image', rateLimit('moderate-image', 30, 60 * 1000), requireAuthMw, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });
@@ -4202,6 +4265,37 @@ app.post('/api/moderate-image', rateLimit('moderate-image', 30, 60 * 1000), requ
 // tout en fermant la porte aux fichiers qui feraient exploser la diffusion.
 const TAILLE_VIDEO_MAX = 40 * 1024 * 1024;
 
+// Vidéos publiables par mois SANS aucun événement à proposer. La diffusion
+// vidéo est le seul contenu qui coûte vraiment cher, et une personnalité qui
+// publie sans jamais rien vendre ne rapporte rien à personne — ni à elle, ni à
+// nous. Ce n'est pas un mur : le compteur se rouvre entièrement dès qu'un
+// événement est programmé. Les PHOTOS ne sont jamais limitées : elles ne
+// coûtent presque rien et ce sont elles qui font vivre le fil.
+const QUOTA_VIDEOS_SANS_EVENEMENT = 10;
+
+// Combien de vidéos cette personnalité a-t-elle publiées ce mois-ci, et a-t-elle
+// un événement à venir ?
+async function bilanVideosDuMois(db, uid) {
+  const debutMois = new Date();
+  debutMois.setDate(1); debutMois.setHours(0, 0, 0, 0);
+  const maintenant = new Date().toISOString();
+
+  const [{ data: posts }, { count: nbEvents }, { count: nbLives }] = await Promise.all([
+    db.from('posts').select('media_url').eq('celebrity_id', uid).gte('created_at', debutMois.toISOString()),
+    db.from('event_sessions').select('id', { count: 'exact', head: true })
+      .eq('created_by', uid).gte('ends_at', maintenant),
+    db.from('live_sessions').select('id', { count: 'exact', head: true })
+      .eq('celebrity_id', uid).gte('scheduled_at', maintenant),
+  ]);
+
+  return {
+    videos: (posts || []).filter((p) =>
+      /\.(mp4|mov|m4v|webm|3gp|avi|mkv)(\?|$)/i.test(String(p.media_url || ''))
+    ).length,
+    evenementsAVenir: (nbEvents || 0) + (nbLives || 0),
+  };
+}
+
 app.post('/api/upload-post-image', rateLimit('upload-post-image', 20, 60 * 1000), requireAuthMw, uploadMedia.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });
@@ -4209,6 +4303,20 @@ app.post('/api/upload-post-image', rateLimit('upload-post-image', 20, 60 * 1000)
     const estVideo = String(req.file.mimetype || '').startsWith('video/');
 
     if (estVideo) {
+      // Garde-fou de diffusion : au-delà du quota mensuel, une personnalité qui
+      // n'a RIEN à vendre ne publie plus de vidéos — mais toujours autant de
+      // photos. Le compteur se rouvre en entier dès qu'un événement existe.
+      const bilan = await bilanVideosDuMois(getSupabaseAdmin(), req.authUser.id);
+      if (bilan.evenementsAVenir === 0 && bilan.videos >= QUOTA_VIDEOS_SANS_EVENEMENT) {
+        return res.status(429).json({
+          error: 'video_quota_reached',
+          videos_ce_mois: bilan.videos,
+          quota: QUOTA_VIDEOS_SANS_EVENEMENT,
+          message: `Tu as publié ${bilan.videos} vidéos ce mois-ci sans proposer un seul événement. `
+            + 'Crée un événement et tes vidéos repartent immédiatement — les photos, elles, restent illimitées.',
+        });
+      }
+
       if (req.file.size > TAILLE_VIDEO_MAX) {
         return res.status(413).json({
           error: 'video_too_large',
@@ -7564,11 +7672,80 @@ async function expireVideoCallRequests() {
   } catch (e) { console.warn('[VCR/expire]', e.message); }
 }
 
+// RAPPEL MENSUEL AUX PERSONNALITÉS SANS ÉVÉNEMENT
+//
+// Une personnalité qui publie sans jamais rien proposer ne gagne rien, et son
+// audience s'évapore. Elle ne s'en rend pas compte : rien, dans l'app, ne lui
+// dit ce qu'elle laisse passer. Ce rappel lui montre un chiffre — ses vues du
+// mois — et le manque à gagner qu'il représente.
+//
+// Une fois par mois au maximum, et jamais à qui a déjà un événement en cours.
+const DERNIER_RAPPEL_PORTEE = new Map();
+
+async function rappelerPersonnalitesSansEvenement() {
+  try {
+    const db = getSupabaseAdmin();
+    const maintenant = new Date().toISOString();
+
+    // On ne réveille que celles qui ont publié récemment : rappeler son manque
+    // à gagner à quelqu'un qui a quitté l'app est une relance publicitaire, pas
+    // un service.
+    const { data: actives } = await db.from('post_views_daily')
+      .select('celebrity_id, vues')
+      .gte('jour', new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10));
+    if (!actives || !actives.length) return;
+
+    const vuesParCeleb = new Map();
+    for (const l of actives) {
+      vuesParCeleb.set(l.celebrity_id, (vuesParCeleb.get(l.celebrity_id) || 0) + (l.vues || 0));
+    }
+
+    for (const [uid, vues] of vuesParCeleb) {
+      // Sous 100 vues, le chiffre ne plaide pas : le rappel ferait l'effet
+      // inverse de celui recherché.
+      if (vues < 100) continue;
+
+      const dernier = DERNIER_RAPPEL_PORTEE.get(uid);
+      if (dernier && Date.now() - dernier < 30 * 86400000) continue;
+
+      const [{ count: nbEvents }, { count: nbLives }] = await Promise.all([
+        db.from('event_sessions').select('id', { count: 'exact', head: true })
+          .eq('created_by', uid).gte('ends_at', maintenant),
+        db.from('live_sessions').select('id', { count: 'exact', head: true })
+          .eq('celebrity_id', uid).gte('scheduled_at', maintenant),
+      ]);
+      if ((nbEvents || 0) + (nbLives || 0) > 0) continue;
+
+      DERNIER_RAPPEL_PORTEE.set(uid, Date.now());
+
+      vcrEmail(uid, `${vues} fans t'ont vue ce mois-ci`,
+        `<p>Bonjour,</p>
+         <p><strong>${vues} fans ont vu tes publications ces trente derniers jours.</strong>
+            Aucun d'entre eux n'a pu réserver quoi que ce soit : tu n'as pas
+            d'événement en cours.</p>
+         <p>Deux façons de leur proposer quelque chose :</p>
+         <ul>
+           <li><strong>Un live vidéo</strong> — où que tu sois dans le monde, tes fans
+               te rejoignent depuis chez eux.</li>
+           <li><strong>Une dédicace en personne</strong> — sur place uniquement : tes
+               fans doivent se trouver au même endroit que toi le jour J.</li>
+         </ul>
+         <p>Tu gardes 85 % de chaque prestation.</p>
+         ${vcrBouton('Créer un événement',
+           'Ou ouvrez l\'application Plyz, onglet « Événements », puis touchez « Créer ».')}
+         <p>— Plyz</p>`);
+    }
+  } catch (e) {
+    console.warn('[RappelPortee]', e.message);
+  }
+}
+
 async function runNotificationWorker() {
   try {
     await processPushOutbox();
     await reconcileMissingInvoices();
     await expireVideoCallRequests();
+    await rappelerPersonnalitesSansEvenement();
     await releaseEndedSessionHolds();
     await sendEventReminders('event_sessions', 'starts_at', 'created_by', 'event_paid_fans', 'event_session_id', 'title', 'Ton événement', 60, 'reminded_1h');
     await sendEventReminders('event_sessions', 'starts_at', 'created_by', 'event_paid_fans', 'event_session_id', 'title', 'Ton événement', 2, 'reminded_2m');
@@ -7809,7 +7986,11 @@ async function vcrNotify(userId, title, body, data) {
 // couramment supprimes par les messageries, le bouton serait alors mort. La
 // page rebondit vers l'application et n'affiche elle-meme aucune donnee.
 const VCR_LIEN_APP = 'https://plyz.io/appel-video';
-function vcrBouton(libelle) {
+// Bouton d'action des e-mails. `sousTitre` remplace le renvoi par défaut vers
+// les appels vidéo : un message qui invite à créer un événement doit indiquer
+// où créer un événement, pas où consulter ses appels. Un avertissement sans
+// chemin d'action ne fait agir personne.
+function vcrBouton(libelle, sousTitre) {
   return `<p style="margin:22px 0 8px">
       <a href="${VCR_LIEN_APP}"
          style="display:inline-block;background:#10b981;color:#ffffff;font-weight:700;
@@ -7818,7 +7999,7 @@ function vcrBouton(libelle) {
       </a>
     </p>
     <p style="color:#6b7280;font-size:12px;margin:0">
-      Ou ouvrez l'application Plyz, rubrique « Événements › Mes appels vidéo privés ».
+      ${sousTitre || 'Ou ouvrez l\'application Plyz, rubrique « Événements › Mes appels vidéo privés ».'}
     </p>`;
 }
 

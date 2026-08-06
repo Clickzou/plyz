@@ -17,6 +17,7 @@ import { showAlert } from '@/utils/alertHelper';
 import { authedFetch } from '@/utils/authedFetch';
 import { useAutoTranslate } from '@/utils/translation';
 import { estUneVideo } from '@/utils/media';
+import RappelEvenement from '@/components/RappelEvenement';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 const LOCAL_POSTS_KEY = '@plyz_local_posts';
@@ -71,7 +72,7 @@ async function moderateImageOnServer(uri: string, token?: string): Promise<{ saf
   }
 }
 
-async function uploadImageToServer(uri: string, token?: string, estVideo = false): Promise<{ url: string | null; rejected?: boolean }> {
+async function uploadImageToServer(uri: string, token?: string, estVideo = false): Promise<{ url: string | null; rejected?: boolean; quotaAtteint?: boolean }> {
   try {
     const formData = new FormData();
     // Une video garde son extension et son type : sans cela le serveur la
@@ -96,6 +97,12 @@ async function uploadImageToServer(uri: string, token?: string, estVideo = false
 
     if (res.status === 403) {
       return { url: null, rejected: true };
+    }
+    // Quota de videos atteint : ce n'est pas une panne, c'est une decision. Le
+    // dire comme un echec laisserait la personnalite croire a un bug et
+    // reessayer en boucle.
+    if (res.status === 429) {
+      return { url: null, quotaAtteint: true };
     }
     if (!res.ok) throw new Error('Upload failed');
     const data = await res.json();
@@ -134,6 +141,8 @@ export default function CreatePostScreen() {
     'Video prete a publier (30 s max)',
   ]);
   const [publishing, setPublishing] = useState(false);
+  // Rappel affiche apres publication quand rien n'est a vendre.
+  const [rappel, setRappel] = useState<{ visible: boolean; vues?: number; quota?: boolean }>({ visible: false });
   const [moderating, setModerating] = useState(false);
 
   // Les paramètres de navigation ne sont pas toujours disponibles au PREMIER
@@ -299,6 +308,14 @@ export default function CreatePostScreen() {
           setPublishing(false);
           return;
         }
+        // Quota de vidéos atteint : on ouvre le rappel, qui porte le bouton
+        // « Créer un événement ». Un refus sans chemin pour le lever ne serait
+        // qu'un mur — et la personnalité conclurait à une panne.
+        if (uploadResult.quotaAtteint) {
+          setRappel({ visible: true, quota: true });
+          setPublishing(false);
+          return;
+        }
         mediaUrl = uploadResult.url;
         if (!mediaUrl) {
           mediaUrl = imageUri;
@@ -376,6 +393,19 @@ export default function CreatePostScreen() {
           t('postNotOnFeedMsg' as any) || "Ton post est enregistré sur cet appareil mais n'a pas pu être publié pour tes fans (compte pas encore vérifié ou problème réseau)."
         );
       }
+      // Publier ne sert a rien si aucun fan ne peut rien reserver. On regarde
+      // donc l'etat reel du compte AVANT de quitter l'ecran, et on le dit —
+      // avec le bouton pour y remedier, pas un simple avertissement.
+      try {
+        const r = await authedFetch(`${API_BASE}/api/ma-portee`);
+        const p = await r.json();
+        if (r.ok && Number(p?.evenements_a_venir || 0) === 0) {
+          setRappel({ visible: true, vues: Number(p?.vues_30j || 0) });
+          setPublishing(false);
+          return;
+        }
+      } catch { /* le rappel n'est jamais bloquant */ }
+
       router.back();
     } catch (err) {
       console.error('Publish error:', err);
@@ -553,6 +583,22 @@ export default function CreatePostScreen() {
           <Text style={styles.hint}>{t('postImageHint' as any)}</Text>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Le rappel ferme, on quitte l'ecran comme apres une publication
+          ordinaire : on ne piege personne dans une fenetre. */}
+      <RappelEvenement
+        visible={rappel.visible}
+        vues30j={rappel.vues}
+        quotaAtteint={rappel.quota}
+        onClose={() => {
+          const quota = rappel.quota;
+          setRappel({ visible: false });
+          // Quota atteint : la publication n'a PAS eu lieu, on reste sur
+          // l'ecran pour que la video choisie ne soit pas perdue. Sinon on
+          // quitte comme apres une publication ordinaire.
+          if (!quota) router.back();
+        }}
+      />
     </View>
   );
 }

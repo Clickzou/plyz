@@ -94,6 +94,10 @@ export default function AccountScreen() {
     'En cours de vérification',
     'Réponse sous 24 h ouvrées',
     'Tableau de bord admin',
+    'fans ont vu vos publications (30 jours)',
+    'événement à réserver',
+    'Aucun de ces fans ne peut réserver quoi que ce soit.',
+    'Créer un événement',
     'DEVENIR PERSONNALITÉ',
     'Créer vos événements : dédicaces et lives vidéo',
     "Recevoir des demandes d'appel vidéo privé",
@@ -109,6 +113,8 @@ export default function AccountScreen() {
   // Vrai statut Stripe : le compte peut-il RÉELLEMENT encaisser ? (charges_enabled)
   // ≠ « un compte existe » (stripeLinked). Un compte peut exister sans être activé.
   const [stripeChargesEnabled, setStripeChargesEnabled] = useState(false);
+  // Portee du mois : vues des publications et nombre d'evenements a proposer.
+  const [portee, setPortee] = useState<{ vues: number; evenements: number } | null>(null);
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [, setStripeLoading] = useState(false);
@@ -130,6 +136,18 @@ export default function AccountScreen() {
   const [earnings, setEarnings] = useState<EarningsData | null>(null);
   const [earningsLoading, setEarningsLoading] = useState(false);
   const [showPhotoSheet, setShowPhotoSheet] = useState(false);
+
+  // Chargee a l'ouverture de la page Compte, cote personnalite uniquement.
+  useEffect(() => {
+    if (!isCelebrity || !user?.id) { setPortee(null); return; }
+    (async () => {
+      try {
+        const r = await authedFetch(API_BASE + '/api/ma-portee');
+        const p = await r.json();
+        if (r.ok) setPortee({ vues: Number(p?.vues_30j || 0), evenements: Number(p?.evenements_a_venir || 0) });
+      } catch { /* un compteur absent ne doit jamais gener la page */ }
+    })();
+  }, [isCelebrity, user?.id]);
 
   useEffect(() => {
     (async () => {
@@ -924,6 +942,10 @@ export default function AccountScreen() {
                       <Text style={styles.celebBadgeWaitText}>{trUI('En cours de vérification')}</Text>
                     </View>
                   )}
+                  {/* Portée du mois. Le chiffre qui fait agir n'est pas le
+                      nombre de vues, c'est le zéro d'à côté : « 340 fans t'ont
+                      vue, 0 événement proposé ». Une personnalité ne réagit pas
+                      à un rappel, elle réagit à un manque à gagner. */}
                   <View style={[styles.celebBadge, stripeChargesEnabled ? styles.celebBadgeOk : styles.celebBadgeWarn]}>
                     <CreditCard size={12} color={stripeChargesEnabled ? '#10b981' : '#fbbf24'} />
                     <Text style={stripeChargesEnabled ? styles.celebBadgeOkText : styles.celebBadgeWarnText}>
@@ -981,6 +1003,46 @@ export default function AccountScreen() {
                     </View>
                   ))}
                 </View>
+              </View>
+            )}
+
+            {/* Portée du mois, affichée en permanence. Le chiffre qui fait agir
+                n'est pas le nombre de vues : c'est le zéro d'à côté. Une
+                personnalité ne réagit pas à un rappel, elle réagit à un manque
+                à gagner — et le bouton est juste en dessous, sinon le constat
+                ne sert à rien. */}
+            {isCelebrity && !!portee && portee.vues > 0 && (
+              <View style={[styles.porteeBox, portee.evenements === 0 && styles.porteeBoxAlerte]}>
+                <View style={styles.porteeLigne}>
+                  <Text style={styles.porteeChiffre}>{portee.vues}</Text>
+                  <Text style={styles.porteeLibelle}>{trUI('fans ont vu vos publications (30 jours)')}</Text>
+                </View>
+                <View style={styles.porteeLigne}>
+                  <Text style={[styles.porteeChiffre, portee.evenements === 0 && { color: '#f87171' }]}>
+                    {portee.evenements}
+                  </Text>
+                  <Text style={styles.porteeLibelle}>{trUI('événement à réserver')}</Text>
+                </View>
+                {portee.evenements === 0 && (
+                  <>
+                    <Text style={styles.porteeAlerte}>
+                      {trUI('Aucun de ces fans ne peut réserver quoi que ce soit.')}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.porteeBouton}
+                      activeOpacity={0.85}
+                      /* Vers l'écran Événements : en mode personnalité, ses deux
+                         tuiles créent une dédicace ou un live — et le contrôle
+                         « compte vérifié » s'y applique, ce qu'un lien direct
+                         vers le formulaire court-circuiterait. */
+                      onPress={() => router.push('/fan-choice' as any)}
+                    >
+                      <Text style={styles.porteeBoutonTexte}>
+                        {t('createEvent') || trUI('Créer un événement')}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
               </View>
             )}
 
@@ -1814,6 +1876,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 18,
   },
+  porteeBox: {
+    backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)', borderRadius: 14,
+    padding: 14, marginBottom: 16, gap: 6,
+  },
+  porteeBoxAlerte: {
+    borderColor: 'rgba(248,113,113,0.4)', backgroundColor: 'rgba(248,113,113,0.07)',
+  },
+  porteeLigne: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+  porteeChiffre: { color: '#ffffff', fontSize: 20, fontWeight: '800', minWidth: 34 },
+  porteeLibelle: { color: 'rgba(255,255,255,0.65)', fontSize: 13, flex: 1 },
+  porteeAlerte: {
+    color: '#fca5a5', fontSize: 13, lineHeight: 18, marginTop: 6, fontWeight: '600',
+  },
+  porteeBouton: {
+    backgroundColor: '#fbbf24', borderRadius: 11, paddingVertical: 12,
+    alignItems: 'center', marginTop: 10,
+  },
+  porteeBoutonTexte: { color: '#052e1f', fontSize: 14.5, fontWeight: '800' },
   celebHeroBanner: {
     ...StyleSheet.absoluteFillObject,
   },
