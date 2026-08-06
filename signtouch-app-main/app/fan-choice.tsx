@@ -34,6 +34,10 @@ import { ROLE_CHOICE_KEY } from '@/components/RoleChoiceOverlay';
 // Base API serveur (vérification de compte). Sur web on passe par le proxy local.
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
+// Mode d'emploi vu, mémorisé séparément pour chaque rôle.
+const introKey = (celeb: boolean) =>
+  celeb ? 'plyz_events_intro_seen_celeb' : 'plyz_events_intro_seen_fan';
+
 export default function FanChoiceScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -56,7 +60,9 @@ export default function FanChoiceScreen() {
   const [videoUpcomingCount, setVideoUpcomingCount] = useState(0);
   const [videoOngoingCount, setVideoOngoingCount] = useState(0);
   const [videoPastCount, setVideoPastCount] = useState(0);
-  // Popup d'explication affichée UNE SEULE fois (au tout premier accès à l'écran Événements).
+  // Popup d'explication affichée UNE SEULE fois PAR RÔLE : le mode d'emploi du
+  // fan et celui de la personnalité ne parlent pas des mêmes boutons. Avec une
+  // clé unique, celui qui passe de fan à personnalité n'aurait jamais vu le sien.
   const [showIntro, setShowIntro] = useState(false);
   // Appels vidéo privés en cours. L'accès n'existait que dans Compte, tout en
   // bas du menu : personne ne va chercher là une demande qu'il vient de faire.
@@ -66,25 +72,39 @@ export default function FanChoiceScreen() {
   // Rôle déclaré au premier lancement. Une personnalité qui s'est annoncée mais
   // n'a pas terminé son inscription doit garder l'écran de SON rôle : sinon elle
   // retombe sur l'interface fan, exactement le mur qu'on vient de supprimer.
-  const [roleDeclare, setRoleDeclare] = useState<string | null>(null);
+  // `undefined` = rôle pas encore lu. On attend cette lecture avant de décider
+  // quelle intro montrer, sinon la version fan s'affiche une fraction de seconde
+  // à une personnalité.
+  const [roleDeclare, setRoleDeclare] = useState<string | null | undefined>(undefined);
   const modeCeleb = isCelebrity || roleDeclare === 'celebrity';
 
   useEffect(() => {
     (async () => {
       try {
-        const seen = await AsyncStorage.getItem('plyz_events_intro_seen');
-        if (seen !== '1') setShowIntro(true);
-      } catch { /* pas bloquant */ }
-      try {
-        const role = await AsyncStorage.getItem(ROLE_CHOICE_KEY);
-        setRoleDeclare(role);
-      } catch { /* pas bloquant */ }
+        setRoleDeclare(await AsyncStorage.getItem(ROLE_CHOICE_KEY));
+      } catch {
+        setRoleDeclare(null);
+      }
     })();
   }, []);
 
+  useEffect(() => {
+    if (roleDeclare === undefined) return;
+    (async () => {
+      try {
+        // L'ancienne clé unique n'est PAS reprise : le mode d'emploi qu'elle
+        // validait annonçait un bouton « Créer » qui n'apparaissait qu'après
+        // validation du compte — ce n'est plus vrai. Mieux vaut revoir une fois
+        // la version juste que garder en tête une consigne fausse.
+        const seen = await AsyncStorage.getItem(introKey(modeCeleb));
+        if (seen !== '1') setShowIntro(true);
+      } catch { /* pas bloquant */ }
+    })();
+  }, [roleDeclare, modeCeleb]);
+
   const dismissIntro = async () => {
     setShowIntro(false);
-    try { await AsyncStorage.setItem('plyz_events_intro_seen', '1'); } catch { /* pas bloquant */ }
+    try { await AsyncStorage.setItem(introKey(modeCeleb), '1'); } catch { /* pas bloquant */ }
   };
 
   // Cliquer « Créer » : exige un compte, puis bascule en mode célébrité et
@@ -238,6 +258,12 @@ export default function FanChoiceScreen() {
   // Traduction des titres : ils sont ecrits par les personnalites, dans leur
   // langue. Un fan doit lire le catalogue dans la sienne.
   const trCatalogue = useAutoTranslate(catalogue.map((e: any) => e.title));
+  // Textes du mode d'emploi propres au rôle (pas encore dans les 15 locales).
+  const trIntro = useAutoTranslate([
+    'Rejoindre un événement',
+    'Créer votre événement',
+    'Touchez « Créer » sur la dédicace ou le live vidéo pour organiser votre événement. Vos fans vous rejoindront ensuite avec le code ou le QR code.',
+  ]);
 
   const chargerCatalogue = useCallback(async () => {
     setCatalogueFailed(false);
@@ -598,30 +624,27 @@ export default function FanChoiceScreen() {
               {t('eventsIntroTitle' as any) || 'Bienvenue dans les Événements'}
             </Text>
 
+            {/* Un seul mode d'emploi : celui du rôle choisi. Présenter les deux
+                obligeait à trier soi-même, et la moitié du texte parlait de
+                boutons que l'on n'a pas à l'écran. */}
             <View style={styles.introRow}>
-              <View style={[styles.introRowIcon, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
-                <LogIn size={20} color="#10b981" strokeWidth={2.4} />
+              <View style={[styles.introRowIcon, {
+                backgroundColor: modeCeleb ? 'rgba(99,102,241,0.15)' : 'rgba(16,185,129,0.15)',
+              }]}>
+                {modeCeleb
+                  ? <Plus size={20} color="#6366f1" strokeWidth={2.4} />
+                  : <LogIn size={20} color="#10b981" strokeWidth={2.4} />}
               </View>
               <View style={styles.introRowText}>
                 <Text style={styles.introRowTitle}>
-                  {t('eventsIntroFanTitle' as any) || 'Vous êtes un fan ?'}
+                  {modeCeleb
+                    ? trIntro('Créer votre événement')
+                    : trIntro('Rejoindre un événement')}
                 </Text>
                 <Text style={styles.introRowBody}>
-                  {t('eventsIntroFanBody' as any) || 'Touchez « Rejoindre » et entrez le code que la célébrité vous a communiqué pour votre dédicace photo ou votre appel vidéo en direct.'}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.introRow}>
-              <View style={[styles.introRowIcon, { backgroundColor: 'rgba(99,102,241,0.15)' }]}>
-                <Plus size={20} color="#6366f1" strokeWidth={2.4} />
-              </View>
-              <View style={styles.introRowText}>
-                <Text style={styles.introRowTitle}>
-                  {t('eventsIntroCelebTitle' as any) || 'Vous êtes une célébrité ?'}
-                </Text>
-                <Text style={styles.introRowBody}>
-                  {t('eventsIntroCelebBody' as any) || 'Touchez « Créer » pour organiser votre événement et recevoir vos fans. Le bouton « Créer » apparaît une fois votre compte de célébrité validé.'}
+                  {modeCeleb
+                    ? trIntro('Touchez « Créer » sur la dédicace ou le live vidéo pour organiser votre événement. Vos fans vous rejoindront ensuite avec le code ou le QR code.')
+                    : (t('eventsIntroFanBody' as any) || 'Touchez « Rejoindre » et entrez le code que la célébrité vous a communiqué pour votre dédicace photo ou votre appel vidéo en direct.')}
                 </Text>
               </View>
             </View>
