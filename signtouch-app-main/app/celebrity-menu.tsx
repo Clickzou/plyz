@@ -48,6 +48,9 @@ export default function CelebrityMenuScreen() {
   const trUI = useAutoTranslate([
     'EN COURS', 'PRÊT', 'À VENIR', 'TERMINÉ',
     'Tout', 'Dédicaces', 'Lives vidéo', 'Appels vidéo privés',
+    'Mes participations', 'Aucun événement en cours',
+    'Rejoins un événement avec un code QR pour le retrouver ici.',
+    'Rejoindre un événement',
   ]);
   // Params optionnels passés par l'écran « Événements » (fan-choice).
   const params = useLocalSearchParams<{ view?: string; kind?: string }>();
@@ -468,7 +471,9 @@ export default function CelebrityMenuScreen() {
   // Titre du header : libellé de catégorie si on arrive depuis fan-choice,
   // sinon comportement existant (« Célébrité » ou « Mes événements »).
   const getCategoryTitle = (): string => {
-    if (!hasCategoryParam) return isCelebrity ? t('celebrity') : 'Mes événements';
+    // Le titre du fan était écrit en dur : seul texte de l'écran à ne pas
+    // suivre la langue choisie, dans une app servie en quinze langues.
+    if (!hasCategoryParam) return isCelebrity ? t('celebrity') : trUI('Mes participations');
     const isVideo = kindParam === 'video';
     if (viewParam === 'upcoming') return isVideo ? t('videoSessionsUpcoming' as any) : t('eventsUpcoming' as any);
     if (viewParam === 'ongoing') return isVideo ? t('videoSessionsOngoing' as any) : t('eventsOngoing' as any);
@@ -580,20 +585,34 @@ export default function CelebrityMenuScreen() {
               <View style={styles.emptyContainer}>
                 <QrCode size={64} color="rgba(255,255,255,0.3)" />
                 <Text style={styles.emptyTitle}>
-                  {isCelebrity ? (t('noEvents') || 'Aucun événement') : 'Aucun événement en cours'}
+                  {isCelebrity
+                    ? (t('noEvents') || 'Aucun événement')
+                    : trUI('Aucun événement en cours')}
                 </Text>
                 <Text style={styles.emptySubtitle}>
                   {isCelebrity
                     ? (t('noEventsHint') || 'Créez votre premier événement pour partager votre signature avec vos fans')
-                    : 'Rejoins un événement avec un code QR pour le retrouver ici.'}
+                    : trUI('Rejoins un événement avec un code QR pour le retrouver ici.')}
                 </Text>
-                {isCelebrity && (
+                {/* Une issue des DEUX côtés. La personnalité avait son bouton
+                    « Créer » ; le fan, lui, restait devant un écran vide sans
+                    la moindre action — on lui expliquait qu'il lui fallait un
+                    code sans lui donner par où commencer. */}
+                {isCelebrity ? (
                   <TouchableOpacity
                     style={styles.createBtn}
                     onPress={() => setActiveTab('create')}
                   >
                     <Plus size={20} color="#188661" />
                     <Text style={styles.createBtnText}>{t('createEvent') || 'Créer un événement'}</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.createBtn}
+                    onPress={() => router.push('/fan-choice' as any)}
+                  >
+                    <Ticket size={20} color="#188661" />
+                    <Text style={styles.createBtnText}>{trUI('Rejoindre un événement')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
