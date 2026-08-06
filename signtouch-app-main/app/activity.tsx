@@ -3,8 +3,10 @@ import { getDateLocale } from '@/utils/dateLocale';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   Image, Platform, Modal, TextInput, KeyboardAvoidingView,
-  Animated as RNAnimated, Dimensions, Share
+  Animated as RNAnimated, Dimensions, Share, ActivityIndicator
 } from 'react-native';
+import { showAlert, showConfirm } from '@/utils/alertHelper';
+import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Newspaper, CheckCircle, Calendar, MapPin, Heart, MessageCircle, Send, Share2, Flag } from 'lucide-react-native';
@@ -25,7 +27,6 @@ import { openEventLocation } from '@/utils/openMap';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 const LIKES_KEY = '@plyz_post_likes';
-const COMMENTS_KEY = '@plyz_post_comments';
 const LOCAL_POSTS_KEY = '@plyz_local_posts';
 
 
@@ -43,6 +44,8 @@ interface FeedPost {
   longitude?: number | null;
   created_at: string;
   like_count?: number;
+  /** Tenu par un déclencheur en base : le même chiffre pour tout le monde. */
+  comment_count?: number;
   celebrity: {
     user_id: string;
     stage_name: string;
@@ -52,12 +55,20 @@ interface FeedPost {
   };
 }
 
+// Commentaire tel que servi par la vue `post_comments_public` : le message ET
+// son auteur (nom public + photo), pour ne pas avoir à recharger un profil par
+// ligne affichée.
 interface Comment {
   id: string;
-  postId: string;
-  text: string;
-  author: string;
-  createdAt: string;
+  post_id: string;
+  parent_id: string | null;
+  author_id: string;
+  body: string;
+  created_at: string;
+  author_name: string;
+  author_avatar: string | null;
+  /** Vrai quand c'est la personnalité qui a publié le post : badge « Auteur ». */
+  is_post_author: boolean;
 }
 
 const FILTERS = [
@@ -67,11 +78,6 @@ const FILTERS = [
 ] as const;
 
 const BANNER_DISMISSED_KEY = '@plyz_celebrity_banner_dismissed';
-
-// Aucun commentaire pre-rempli : ceux qui existaient ici citaient nommement des
-// personnalites reelles (droit a l'image) et etaient rattaches aux publications
-// de demonstration, supprimees.
-const INITIAL_COMMENTS: Record<string, Comment[]> = {};
 
 function formatCount(n: number): string {
   if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -148,9 +154,29 @@ export default function ActivityScreen() {
   const [allComments, setAllComments] = useState<Record<string, Comment[]>>({});
   const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsFailed, setCommentsFailed] = useState(false);
+  const [sendingComment, setSendingComment] = useState(false);
+  // Commentaire auquel on répond (fil à un seul niveau).
+  const [replyTo, setReplyTo] = useState<Comment | null>(null);
+  // Commentaire visé par un signalement.
+  const [reportedComment, setReportedComment] = useState<Comment | null>(null);
 
   // Traduction automatique des posts (titre + texte) dans la langue de l'utilisateur
   const tr = useAutoTranslate([...posts.flatMap(p => [p.title, p.body]), 'Suivi ✓', 'Suivre', 'Event']);
+  // Libellés des commentaires : pas encore dans les 15 locales, traduits à la
+  // volée comme le reste des textes récents de l'app.
+  const trUI = useAutoTranslate([
+    'Auteur',
+    'Réponse à',
+    'Signaler',
+    'Supprimer ce commentaire ?',
+    'Il ne sera plus visible par personne.',
+    "Ton commentaire n'a pas pu être publié. Vérifie ta connexion et réessaie.",
+    "Le commentaire n'a pas pu être supprimé.",
+    'Impossible de charger les commentaires.',
+    'Connecte-toi pour commenter',
+  ]);
   const slideAnim = useRef(new RNAnimated.Value(Dimensions.get('window').height)).current;
 
   useEffect(() => {
@@ -158,7 +184,8 @@ export default function ActivityScreen() {
       setBannerDismissed(val === 'true');
     });
     loadLikes();
-    loadComments();
+    // Les commentaires sont chargés à l'ouverture de la publication concernée,
+    // pas au démarrage : inutile de télécharger les fils de tout le monde.
   }, []);
 
   const loadLikes = async () => {
@@ -168,21 +195,26 @@ export default function ActivityScreen() {
     } catch {}
   };
 
-  const loadComments = async () => {
+  // Charge les commentaires D'UNE publication depuis la base. Ils étaient
+  // auparavant lus dans la mémoire du téléphone : chacun ne voyait que les
+  // siens, et la personnalité ne recevait jamais rien.
+  const loadComments = async (postId: string) => {
+    setCommentsLoading(true);
     try {
-      const stored = await AsyncStorage.getItem(COMMENTS_KEY);
-      const userComments = stored ? JSON.parse(stored) : {};
-      const merged: Record<string, Comment[]> = { ...INITIAL_COMMENTS };
-      for (const postId of Object.keys(userComments)) {
-        const userList = userComments[postId] || [];
-        const initialList = INITIAL_COMMENTS[postId] || [];
-        const initialIds = new Set(initialList.map((c: Comment) => c.id));
-        const newUserComments = userList.filter((c: Comment) => !initialIds.has(c.id));
-        merged[postId] = [...(merged[postId] || []), ...newUserComments];
-      }
-      setAllComments(merged);
-    } catch {
-      setAllComments({ ...INITIAL_COMMENTS });
+      const { data, error } = await supabase
+        .from('post_comments_public')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true })
+        .limit(200);
+      if (error) throw error;
+      setAllComments(prev => ({ ...prev, [postId]: (data || []) as Comment[] }));
+      setCommentsFailed(false);
+    } catch (e) {
+      console.warn('[Comments] chargement impossible', e);
+      setCommentsFailed(true);
+    } finally {
+      setCommentsLoading(false);
     }
   };
 
@@ -206,6 +238,8 @@ export default function ActivityScreen() {
   const openComments = (postId: string) => {
     setCommentModalPostId(postId);
     setCommentText('');
+    setReplyTo(null);
+    loadComments(postId);
     RNAnimated.spring(slideAnim, {
       toValue: 0,
       useNativeDriver: true,
@@ -222,28 +256,88 @@ export default function ActivityScreen() {
     }).start(() => {
       setCommentModalPostId(null);
       setCommentText('');
+      setReplyTo(null);
     });
   };
 
-  const addComment = async () => {
-    if (!commentText.trim() || !commentModalPostId) return;
+  const addComment = () => {
+    const texte = commentText.trim();
+    const postId = commentModalPostId;
+    if (!texte || !postId || sendingComment) return;
+    requireAuth(() => envoyerCommentaire(postId, texte), {
+      reason: trUI('Connecte-toi pour commenter'),
+      requireBillingIdentity: false,
+    });
+  };
+
+  const envoyerCommentaire = async (postId: string, texte: string) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    const newComment: Comment = {
-      id: `comment-${Date.now()}`,
-      postId: commentModalPostId,
-      text: commentText.trim(),
-      author: 'You',
-      createdAt: new Date().toISOString(),
-    };
-    const updated = {
-      ...allComments,
-      [commentModalPostId]: [...(allComments[commentModalPostId] || []), newComment],
-    };
-    setAllComments(updated);
-    setCommentText('');
-    await AsyncStorage.setItem(COMMENTS_KEY, JSON.stringify(updated));
+    setSendingComment(true);
+    try {
+      const { error } = await supabase.from('post_comments').insert({
+        post_id: postId,
+        author_id: user?.id,
+        parent_id: replyTo?.id || null,
+        body: texte,
+      });
+      if (error) throw error;
+      setCommentText('');
+      setReplyTo(null);
+      await loadComments(postId);
+      // Le compteur du fil vient du serveur : on l'ajuste sur place plutôt que
+      // de recharger toute la liste sous les doigts de l'utilisateur.
+      setPosts(prev => prev.map(p =>
+        p.id === postId ? { ...p, comment_count: (p.comment_count || 0) + 1 } : p
+      ));
+    } catch (e: any) {
+      console.error('[Comments] envoi impossible', e);
+      // Un envoi qui échoue en silence, c'est un message que l'on croit envoyé.
+      showAlert(
+        t('error') || 'Erreur',
+        trUI("Ton commentaire n'a pas pu être publié. Vérifie ta connexion et réessaie."),
+      );
+    } finally {
+      setSendingComment(false);
+    }
+  };
+
+  // Retrait d'un commentaire : par son auteur, ou par la personnalité chez qui
+  // il a été écrit (elle doit pouvoir modérer sa propre publication).
+  const supprimerCommentaire = (c: Comment) => {
+    if (!commentModalPostId) return;
+    showConfirm(
+      trUI('Supprimer ce commentaire ?'),
+      trUI('Il ne sera plus visible par personne.'),
+      [
+        { text: t('cancel') || 'Annuler', style: 'cancel' },
+        {
+          text: t('delete' as any) || 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            const postId = commentModalPostId;
+            try {
+              const { error } = await supabase
+                .from('post_comments')
+                .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id })
+                .eq('id', c.id);
+              if (error) throw error;
+              await loadComments(postId);
+              setPosts(prev => prev.map(p =>
+                p.id === postId ? { ...p, comment_count: Math.max(0, (p.comment_count || 1) - 1) } : p
+              ));
+            } catch (e) {
+              console.error('[Comments] suppression impossible', e);
+              showAlert(
+                t('error') || 'Erreur',
+                trUI("Le commentaire n'a pas pu être supprimé."),
+              );
+            }
+          },
+        },
+      ],
+    );
   };
 
   const sharePost = async (item: FeedPost) => {
@@ -337,10 +431,16 @@ export default function ActivityScreen() {
     fetchFeed(1, true);
   }, [filter]);
 
-  const getCommentCount = (postId: string) => (allComments[postId] || []).length;
+  // Le compteur vient de la base (colonne `comment_count`, tenue par un
+  // déclencheur). Il comptait auparavant les commentaires du seul appareil :
+  // chacun voyait un chiffre différent, et le plus souvent zéro.
+  const getCommentCount = (item: FeedPost) => {
+    const charges = allComments[item.id];
+    return charges ? charges.length : (item.comment_count || 0);
+  };
 
   const renderPost = ({ item }: { item: FeedPost }) => {
-    const commentCount = getCommentCount(item.id);
+    const commentCount = getCommentCount(item);
     const isLiked = likedPosts.has(item.id);
 
     return (
@@ -505,7 +605,7 @@ export default function ActivityScreen() {
   // Les commentaires sont ecrits par des fans du monde entier : chacun doit
   // pouvoir les lire dans sa langue, sinon un fil de commentaires devient
   // illisible des que l'app depasse un pays.
-  const trComments = useAutoTranslate(modalComments.map(c => c.text));
+  const trComments = useAutoTranslate(modalComments.map(c => c.body));
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -597,7 +697,25 @@ export default function ActivityScreen() {
 
             <View style={styles.commentDivider} />
 
-            {modalComments.length === 0 ? (
+            {commentsLoading && modalComments.length === 0 ? (
+              <View style={styles.noCommentsWrap}>
+                <ActivityIndicator color="#10b981" />
+              </View>
+            ) : commentsFailed && modalComments.length === 0 ? (
+              <View style={styles.noCommentsWrap}>
+                <MessageCircle size={32} color="#374151" />
+                <Text style={styles.noCommentsText}>
+                  {trUI('Impossible de charger les commentaires.')}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => commentModalPostId && loadComments(commentModalPostId)}
+                  style={styles.retryBtn}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.retryBtnText}>{t('retry' as any) || 'Réessayer'}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : modalComments.length === 0 ? (
               <View style={styles.noCommentsWrap}>
                 <MessageCircle size={32} color="#374151" />
                 <Text style={styles.noCommentsText}>{t('noComments' as any)}</Text>
@@ -607,22 +725,63 @@ export default function ActivityScreen() {
                 data={modalComments}
                 keyExtractor={c => c.id}
                 style={styles.commentList}
-                renderItem={({ item: c }) => (
-                  <View style={styles.commentItem}>
-                    <View style={styles.commentAvatar}>
-                      <Text style={styles.commentAvatarText}>
-                        {c.author[0].toUpperCase()}
-                      </Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <View style={styles.commentHeader}>
-                        <Text style={styles.commentAuthor}>{c.author}</Text>
-                        <Text style={styles.commentTime}>{formatTimeAgo(c.createdAt)}</Text>
+                renderItem={({ item: c }) => {
+                  const estMien = !!user?.id && c.author_id === user.id;
+                  // La personnalité modère chez elle : elle peut retirer ce qui
+                  // est écrit sous SA publication.
+                  const peutSupprimer = estMien
+                    || (!!user?.id && modalPost?.celebrity?.user_id === user.id);
+                  return (
+                    <View style={[styles.commentItem, !!c.parent_id && styles.commentReply]}>
+                      {c.author_avatar ? (
+                        <Image source={{ uri: c.author_avatar }} style={styles.commentAvatarImg} />
+                      ) : (
+                        <View style={styles.commentAvatar}>
+                          <Text style={styles.commentAvatarText}>
+                            {(c.author_name || '?')[0].toUpperCase()}
+                          </Text>
+                        </View>
+                      )}
+                      <View style={{ flex: 1 }}>
+                        <View style={styles.commentHeader}>
+                          <Text style={styles.commentAuthor}>{c.author_name}</Text>
+                          {c.is_post_author && (
+                            <View style={styles.commentAuthorBadge}>
+                              <Text style={styles.commentAuthorBadgeText}>
+                                {trUI('Auteur')}
+                              </Text>
+                            </View>
+                          )}
+                          <Text style={styles.commentTime}>{formatTimeAgo(c.created_at)}</Text>
+                        </View>
+                        <Text style={styles.commentText}>{trComments(c.body)}</Text>
+                        <View style={styles.commentActions}>
+                          {/* Répondre : c'est ce qui manquait le plus — une
+                              personnalité ne pouvait pas s'adresser à ses fans. */}
+                          <TouchableOpacity onPress={() => setReplyTo(c)} hitSlop={6}>
+                            <Text style={styles.commentActionText}>
+                              {t('reply' as any) || 'Répondre'}
+                            </Text>
+                          </TouchableOpacity>
+                          {peutSupprimer && (
+                            <TouchableOpacity onPress={() => supprimerCommentaire(c)} hitSlop={6}>
+                              <Text style={[styles.commentActionText, { color: '#ef4444' }]}>
+                                {t('delete' as any) || 'Supprimer'}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                          {!estMien && (
+                            <TouchableOpacity onPress={() => setReportedComment(c)} hitSlop={6}>
+                              <Text style={styles.commentActionText}>
+                                {trUI('Signaler')}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
                       </View>
-                      <Text style={styles.commentText}>{trComments(c.text)}</Text>
                     </View>
-                  </View>
-                )}
+                  );
+                }}
                 ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
               />
             )}
@@ -631,10 +790,24 @@ export default function ActivityScreen() {
               behavior={Platform.OS === 'ios' ? 'padding' : undefined}
               keyboardVerticalOffset={100}
             >
+              {/* À qui l'on répond, avec de quoi se dédire : sans ce rappel, on
+                  croit écrire un nouveau commentaire. */}
+              {replyTo && (
+                <View style={styles.replyBanner}>
+                  <Text style={styles.replyBannerText} numberOfLines={1}>
+                    {(trUI('Réponse à'))} {replyTo.author_name}
+                  </Text>
+                  <TouchableOpacity onPress={() => setReplyTo(null)} hitSlop={8}>
+                    <Text style={styles.replyBannerCancel}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
               <View style={styles.commentInputRow}>
                 <TextInput
                   style={styles.commentInput}
-                  placeholder={t('addComment' as any)}
+                  placeholder={replyTo
+                    ? `${trUI('Réponse à')} ${replyTo.author_name}…`
+                    : t('addComment' as any)}
                   placeholderTextColor="#6b7280"
                   value={commentText}
                   onChangeText={setCommentText}
@@ -642,12 +815,14 @@ export default function ActivityScreen() {
                   maxLength={500}
                 />
                 <TouchableOpacity
-                  style={[styles.sendBtn, !commentText.trim() && styles.sendBtnDisabled]}
+                  style={[styles.sendBtn, (!commentText.trim() || sendingComment) && styles.sendBtnDisabled]}
                   onPress={addComment}
-                  disabled={!commentText.trim()}
+                  disabled={!commentText.trim() || sendingComment}
                   activeOpacity={0.7}
                 >
-                  <Send size={18} color={commentText.trim() ? '#fff' : '#6b7280'} />
+                  {sendingComment
+                    ? <ActivityIndicator size="small" color="#fff" />
+                    : <Send size={18} color={commentText.trim() ? '#fff' : '#6b7280'} />}
                 </TouchableOpacity>
               </View>
             </KeyboardAvoidingView>
@@ -663,6 +838,16 @@ export default function ActivityScreen() {
         targetId={reportTarget?.id || null}
         targetLabel={reportTarget?.title || reportTarget?.celebrity?.stage_name || null}
         reportedUserId={reportTarget?.celebrity?.user_id || null}
+      />
+      {/* Signalement d'un commentaire : exigé pour tout contenu écrit par les
+          utilisateurs (règles Google Play, DSA). */}
+      <ReportContentModal
+        visible={!!reportedComment}
+        onClose={() => setReportedComment(null)}
+        targetType="comment"
+        targetId={reportedComment?.id || null}
+        targetLabel={reportedComment?.body?.slice(0, 60) || null}
+        reportedUserId={reportedComment?.author_id || null}
       />
 
       <BottomNav />
@@ -840,6 +1025,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
+  // Une réponse est décalée : on voit tout de suite à quoi elle se rattache.
+  commentReply: {
+    marginLeft: 28,
+    paddingLeft: 10,
+    borderLeftWidth: 2,
+    borderLeftColor: 'rgba(59,130,246,0.35)',
+  },
+  commentAvatarImg: { width: 32, height: 32, borderRadius: 16 },
+  commentAuthorBadge: {
+    backgroundColor: 'rgba(16,185,129,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.45)',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 999,
+  },
+  commentAuthorBadgeText: { color: '#10b981', fontSize: 10, fontWeight: '800' },
+  commentActions: { flexDirection: 'row', gap: 16, marginTop: 6 },
+  commentActionText: { color: '#6b7280', fontSize: 12, fontWeight: '600' },
+  replyBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(59,130,246,0.12)',
+    borderRadius: 10,
+    marginHorizontal: 16,
+    marginBottom: 6,
+  },
+  replyBannerText: { color: '#93c5fd', fontSize: 12, fontWeight: '600', flex: 1 },
+  replyBannerCancel: { color: '#93c5fd', fontSize: 14, fontWeight: '700' },
   commentAvatar: {
     width: 32,
     height: 32,

@@ -35,7 +35,7 @@ interface ReportContentModalProps {
   visible: boolean;
   onClose: () => void;
   /** Nature de l'élément visé : publication, profil de célébrité ou événement. */
-  targetType: 'post' | 'profile' | 'event';
+  targetType: 'post' | 'profile' | 'event' | 'comment';
   /** Identifiant de l'élément visé, quand il en a un. */
   targetId?: string | null;
   /** Titre de la publication ou nom affiché : permet de lire le signalement sans requête annexe. */
