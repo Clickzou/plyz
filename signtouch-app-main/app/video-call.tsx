@@ -20,6 +20,7 @@ import { recordTransaction } from '@/utils/transactionStorage';
 import { blockFan as blockFanInDb } from '@/utils/blockedFansStorage';
 import { supabase } from '@/utils/supabase';
 import { authedFetch } from '@/utils/authedFetch';
+import { marquerPrestationReussie } from '@/utils/avisApp';
 import { showAlert } from '@/utils/alertHelper';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -804,6 +805,11 @@ export default function VideoCallScreen() {
         console.error('[VideoCall] completeFan threw:', e);
       }
     }
+
+    // Un appel réellement mené à son terme : c'est ce qui fait un utilisateur
+    // actif, et le seul moment où demander un avis a du sens. Des deux côtés —
+    // la personnalité aussi vient de vivre une prestation aboutie.
+    if (callHappened) marquerPrestationReussie().catch(() => {});
 
     const priceCents = parseInt(params.priceCents || '0', 10);
     if (priceCents <= 0 || !queueEntryId || !STRIPE_SERVER_URL) return;

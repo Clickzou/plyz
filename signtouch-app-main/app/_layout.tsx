@@ -43,6 +43,7 @@ import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import { AuthPromptProvider } from '@/contexts/AuthPromptContext';
 import AppErrorBoundary from '@/components/AppErrorBoundary';
 import NotificationsGate from '@/components/NotificationsGate';
+import AvisAppPrompt from '@/components/AvisAppPrompt';
 import { initNotifications } from '@/utils/notifications';
 
 SplashScreen.preventAutoHideAsync();
@@ -159,6 +160,11 @@ function RootLayout() {
                         réflexe coûte définitivement tous les rappels : créneau
                         accepté, événement qui commence, tour dans la file. */}
                     {!showSplash && <NotificationsGate />}
+                    {/* Avis sur l'app, réservé aux utilisateurs actifs : deux
+                        prestations menées à terme. Demandé au lancement suivant
+                        et non pendant la prestation — on ne coupe pas quelqu'un
+                        qui regarde encore sa dédicace. */}
+                    {!showSplash && <AvisAppPrompt />}
                   </AuthPromptProvider>
                 </OnboardingProvider>
               </FollowProvider>
