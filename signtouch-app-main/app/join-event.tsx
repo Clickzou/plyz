@@ -36,6 +36,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAutoTranslate } from '@/utils/translation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
+import ChampCodePromo from '@/components/ChampCodePromo';
 import { LiveEvent } from '@/utils/liveEventStorage';
 import { getSessionByCode, getSessionById, LiveSession } from '@/utils/liveSessionStorage';
 import { 
@@ -295,6 +296,9 @@ export default function JoinEventScreen() {
   const [promoValidating, setPromoValidating] = useState(false);
   const [promoResult, setPromoResult] = useState<{ valid: boolean; promo_id?: string; discount_percent?: number; reason?: string } | null>(null);
   const [promoApplied, setPromoApplied] = useState(false);
+  // Code promo de la DEDICACE programmee : famille distincte de celle des
+  // sessions live video (deux tables, deux routes de validation).
+  const [promoEventId, setPromoEventId] = useState<string | null>(null);
   const hasPlayedChime = useRef(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [eventPaymentConfig, setEventPaymentConfig] = useState<{priceCents: number, celebrityStripeAccountId?: string, celebrityName?: string} | null>(null);
@@ -1309,6 +1313,27 @@ export default function JoinEventScreen() {
     // 📍 Sécurité : si l'événement est déjà en cours (in-person), on exige la présence.
     // Pour un événement futur, ensurePresenceForPaidEvent autorise (billetterie à l'avance).
     if (!(await ensurePresenceForPaidEvent(scheduledSession))) return;
+
+    // Code promo 100 % : la place est offerte, on ne passe pas par Stripe. Le
+    // code n'est consomme qu'ICI, une fois la place acquise — jamais a la
+    // validation, sinon un simple essai le depenserait.
+    if (promoEventId) {
+      setIsProcessingPayment(true);
+      try {
+        await handleReserveScheduled();
+        await authedFetch(STRIPE_SERVER_URL + '/api/use-event-promo-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ promo_id: promoEventId }),
+        });
+      } catch (e) {
+        console.warn('[PromoCode] consommation echouee (non bloquant):', e);
+      } finally {
+        setIsProcessingPayment(false);
+      }
+      return;
+    }
+
     setIsProcessingPayment(true);
     try {
       // Mémorise localement pour « À venir » (avant de partir vers Stripe).
@@ -2051,12 +2076,25 @@ export default function JoinEventScreen() {
                 const within7d = !!startsMs && (startsMs - Date.now()) <= 7 * 24 * 3600 * 1000;
                 if (price > 0 && within7d) {
                   return (
-                    <TouchableOpacity style={styles.reserveButton} onPress={handleReserveAndPay} disabled={isProcessingPayment}>
-                      <Check size={20} color="#fff" />
-                      <Text style={styles.reserveButtonText}>
-                        {`${t('reserveMyPlace' as any) || 'Réserver ma place'} — ${(price / 100).toFixed(2).replace('.', ',')}€`}
-                      </Text>
-                    </TouchableOpacity>
+                    <>
+                      {/* Les codes « evenement » n'avaient AUCUN champ ou etre
+                          saisis : une campagne pouvait exister sans qu'un seul
+                          fan puisse s'en servir. */}
+                      <ChampCodePromo
+                        type="evenement"
+                        cibleId={scheduledSession.id}
+                        applique={!!promoEventId}
+                        onGratuit={setPromoEventId}
+                      />
+                      <TouchableOpacity style={styles.reserveButton} onPress={handleReserveAndPay} disabled={isProcessingPayment}>
+                        <Check size={20} color="#fff" />
+                        <Text style={styles.reserveButtonText}>
+                          {promoEventId
+                            ? (t('reserveEvent' as any) || 'Réserver')
+                            : `${t('reserveMyPlace' as any) || 'Réserver ma place'} — ${(price / 100).toFixed(2).replace('.', ',')}€`}
+                        </Text>
+                      </TouchableOpacity>
+                    </>
                   );
                 }
                 return (

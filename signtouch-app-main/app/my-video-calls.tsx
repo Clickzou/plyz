@@ -14,6 +14,7 @@ import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { rafraichirBadgeAppelsVideo } from '@/utils/videoCallBadge';
 import BottomNav from '@/components/BottomNav';
 import DateHeurePicker from '@/components/DateHeurePicker';
+import ChampCodePromo from '@/components/ChampCodePromo';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -44,6 +45,9 @@ export default function MyVideoCallsScreen() {
   const [busy, setBusy] = useState<string | null>(null);
   // Demande dont on est en train de choisir le creneau (null = ferme).
   const [pickerPour, setPickerPour] = useState<string | null>(null);
+  // Code promo par demande : la gratuite est decidee par le SERVEUR, l'app ne
+  // transmet que l'identifiant du code.
+  const [promoParDemande, setPromoParDemande] = useState<Record<string, string>>({});
 
   // Le message du fan est écrit dans SA langue. La personnalité doit pouvoir le
   // lire dans la sienne — la traduction doit marcher dans les deux sens, pas
@@ -119,7 +123,16 @@ export default function MyVideoCallsScreen() {
   };
 
   const payer = async (id: string) => {
-    const data = await agir(id, 'checkout');
+    const data = await agir(id, 'checkout', promoParDemande[id] ? { promo_id: promoParDemande[id] } : undefined);
+    // Offert par un code promo : rien a payer, la demande est deja confirmee.
+    if (data?.gratuit) {
+      showAlert(
+        t('success') || "C'est confirmé",
+        t('vcrFreeByPromo' as any)
+          || "Code promo appliqué : cet appel est offert. Rendez-vous à l'heure prévue.",
+      );
+      return;
+    }
     if (data?.url) {
       // Le paiement s'ouvre dans le navigateur ; au retour, on confirme auprès
       // du serveur, qui VÉRIFIE l'autorisation auprès de Stripe.
@@ -315,6 +328,20 @@ export default function MyVideoCallsScreen() {
                     actif après le créneau : on pouvait payer un appel qui
                     n'aurait jamais lieu. Le serveur refuse désormais aussi, mais
                     un bouton qui ne doit plus servir ne doit plus s'afficher. */}
+                {/* Code promo cote fan : c'est lui qui paie. Le SERVEUR seul
+                    decide de la gratuite — l'app ne transmet qu'un
+                    identifiant, jamais un montant. */}
+                {!estCeleb && d.status === 'accepted' && !manque && (
+                  <View style={{ marginTop: 12 }}>
+                    <ChampCodePromo
+                      type="live_video"
+                      cibleId={d.id}
+                      applique={!!promoParDemande[d.id]}
+                      onGratuit={(pid) => setPromoParDemande((p) => ({ ...p, [d.id]: pid }))}
+                    />
+                  </View>
+                )}
+
                 {!estCeleb && d.status === 'accepted' && !manque && (
                   <TouchableOpacity
                     style={[styles.btnFull, busy === d.id && styles.btnBusy]}

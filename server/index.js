@@ -8345,6 +8345,40 @@ app.post('/api/video-call-requests/:id/checkout', rateLimit('vcr_checkout', 20, 
       else console.log('[VCR Pay] colonne stripe_charges_enabled remise à jour depuis Stripe');
     }
 
+    // CODE PROMO. Le prix vient toujours de la BASE, jamais du client : seul
+    // l'identifiant du code circule, et c'est le serveur qui décide s'il donne
+    // la gratuité. Laisser l'app annoncer un montant reviendrait à lui laisser
+    // fixer ses propres prix.
+    const promoId = req.body && req.body.promo_id;
+    if (promoId) {
+      const { data: promo } = await db.from('promo_code_live_video')
+        .select('id, used_count, max_uses, is_active, expires_at, discount_percent')
+        .eq('id', promoId).maybeSingle();
+
+      const valide = promo && promo.is_active
+        && (!promo.expires_at || new Date(promo.expires_at) > new Date())
+        && (promo.max_uses === null || promo.used_count < promo.max_uses)
+        && Number(promo.discount_percent) === 100;
+
+      if (!valide) return res.status(400).json({ error: 'promo_invalid' });
+
+      // Gratuit : aucun paiement à créer. La demande passe directement à
+      // « payée » — la prestation est due, elle ne coûte simplement rien.
+      const { error: errGratuit } = await db.from('video_call_requests')
+        .update({ status: 'paid', updated_at: new Date().toISOString() })
+        .eq('id', reqRow.id);
+      if (errGratuit) {
+        console.error('[VCR Pay] passage en gratuit échoué :', errGratuit.message);
+        return res.status(500).json({ error: 'internal' });
+      }
+      await db.from('promo_code_live_video')
+        .update({ used_count: (promo.used_count || 0) + 1 })
+        .eq('id', promo.id);
+
+      console.log('[VCR Pay] appel offert par code promo', promo.id);
+      return res.json({ gratuit: true });
+    }
+
     const priceCents = reqRow.price_cents;
     const feeCents = Math.round(priceCents * 0.15);
     const session = await stripe.checkout.sessions.create({

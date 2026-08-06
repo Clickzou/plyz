@@ -36,6 +36,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
+import ChampCodePromo from '@/components/ChampCodePromo';
 import {
   LiveSession,
   QueueEntry,
@@ -896,6 +897,9 @@ export default function JoinLiveSessionScreen() {
   // de paiement existant (purchase-session → pré-autorisation) : au retour, l'entrée
   // de file pré-payée est créée, et le jour J le fan la reprend SANS re-payer
   // (check-active-payment). Débit seulement à la fin de l'appel (capture).
+  // Code promo : seule la gratuite totale est traitee, comme partout ailleurs.
+  const [promoId, setPromoId] = useState<string | null>(null);
+
   const handleReserveAndPayLive = async () => {
     if (!session) return;
     // 🔒 Connexion OBLIGATOIRE avant tout paiement (live vidéo).
@@ -925,6 +929,25 @@ export default function JoinLiveSessionScreen() {
       }
       // Compte la réservation (payante) pour le « X ont réservé » + rappels.
       await persistLiveReservation();
+
+      // Code promo 100 % : la place est offerte, on ne passe pas par Stripe. Le
+      // code est consommé ici, une fois la place effectivement acquise — jamais
+      // à la validation, sinon un code se dépenserait sur un simple essai.
+      if (promoId) {
+        try {
+          await authedFetch(`${STRIPE_SERVER_URL}/api/use-promo-code`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ promo_id: promoId }),
+          });
+        } catch (e) {
+          console.warn('[PromoCode] consommation echouee (non bloquant):', e);
+        }
+        setReservationDone(true);
+        showAlert(t('success') || 'OK', t('eventReservedMessage'));
+        setIsReserving(false);
+        return;
+      }
       const resolvedFanName = fanName.trim() || (t('liveSessionAnonymousFan' as any) || 'Un fan');
       router.push({
         pathname: '/purchase-session',
@@ -1068,8 +1091,19 @@ export default function JoinLiveSessionScreen() {
           if (price > 0 && within7d) {
             return (
               <>
+                {/* Code promo : il n'existait que sur l'ecran des sessions
+                    rejointes par code. Ici, ou l'on paie vraiment sa place, il
+                    n'y en avait aucun. */}
+                <View style={{ marginTop: 20 }}>
+                  <ChampCodePromo
+                    type="live_video"
+                    cibleId={session?.id || ''}
+                    applique={!!promoId}
+                    onGratuit={setPromoId}
+                  />
+                </View>
                 <TouchableOpacity
-                  style={[styles.primaryButton, { marginTop: 24 }, isReserving && styles.buttonDisabled]}
+                  style={[styles.primaryButton, isReserving && styles.buttonDisabled]}
                   onPress={handleReserveAndPayLive}
                   disabled={isReserving}
                 >
@@ -1077,7 +1111,9 @@ export default function JoinLiveSessionScreen() {
                     <ActivityIndicator color="#6366f1" />
                   ) : (
                     <Text style={styles.primaryButtonText}>
-                      {`${t('reserveMyPlace' as any) || 'Réserver ma place'} — ${(price / 100).toFixed(2).replace('.', ',')}€`}
+                      {promoId
+                        ? (t('reserveEvent') || 'Réserver ma place')
+                        : `${t('reserveMyPlace' as any) || 'Réserver ma place'} — ${(price / 100).toFixed(2).replace('.', ',')}€`}
                     </Text>
                   )}
                 </TouchableOpacity>
