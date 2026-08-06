@@ -316,7 +316,11 @@ export default function CelebrityOnboardingScreen() {
     } catch (e) {
       console.error('[CelebrityOnboarding] enableCelebrityMode failed:', e);
     }
-    router.back();
+    // Destination FIXE, et non router.back() : le retour ramenait à l'écran
+    // d'origine — le fil d'actualité quand on arrive par l'accueil « je suis une
+    // personnalité ». On atterrit désormais sur Compte, où se trouvent le mode
+    // célébrité, le nom public et les paiements que le récapitulatif annonce.
+    router.replace('/account' as any);
   };
 
   // --- Barre de progression ---
