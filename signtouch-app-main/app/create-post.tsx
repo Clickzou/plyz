@@ -139,6 +139,9 @@ export default function CreatePostScreen() {
     'Photo ou vidéo (30 s max)',
     'La vidéo verticale s’affiche en plus grand.',
     'Video prete a publier (30 s max)',
+    'Plyz n’est pas un réseau social comme les autres',
+    "Vos fans viennent ici pour etre PROCHES de vous, au quotidien. Vos vacances, ils les voient deja ailleurs : ce qu'ils ne voient nulle part, c'est votre metier.",
+    "Entre deux prises sur un tournage · l'entrainement avant le match · le vestiaire · les balances et les backstages avant de monter sur scene · l'atelier, le studio, la preparation",
   ]);
   const [publishing, setPublishing] = useState(false);
   // Rappel affiche apres publication quand rien n'est a vendre.
@@ -535,6 +538,26 @@ export default function CreatePostScreen() {
             </View>
           ) : null}
 
+          {/* Ce qui distingue Plyz des autres reseaux : les coulisses. Une
+              personnalite poste par reflexe ce qu'elle poste ailleurs — des
+              vacances, un selfie. Ses fans le voient deja partout. Ce qu'ils
+              ne voient nulle part, c'est son METIER. On le dit au moment ou la
+              video vient d'etre choisie, quand il est encore temps d'en
+              prendre une autre. */}
+          {estVideo && (
+            <View style={styles.coulissesBox}>
+              <Text style={styles.coulissesTitre}>
+                {trUI('Plyz n’est pas un réseau social comme les autres')}
+              </Text>
+              <Text style={styles.coulissesTexte}>
+                {trUI("Vos fans viennent ici pour etre PROCHES de vous, au quotidien. Vos vacances, ils les voient deja ailleurs : ce qu'ils ne voient nulle part, c'est votre metier.")}
+              </Text>
+              <Text style={styles.coulissesExemples}>
+                {trUI("Entre deux prises sur un tournage · l'entrainement avant le match · le vestiaire · les balances et les backstages avant de monter sur scene · l'atelier, le studio, la preparation")}
+              </Text>
+            </View>
+          )}
+
           {/* Dire d'emblee ce qui est accepte : une personnalite qui ignore
               qu'elle peut publier une video ne la publiera jamais. */}
           {!imageUri && (
@@ -690,6 +713,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
+  coulissesBox: {
+    backgroundColor: 'rgba(99,102,241,0.10)', borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.30)', borderRadius: 14,
+    padding: 14, marginBottom: 12, gap: 6,
+  },
+  coulissesTitre: { color: '#c7d2fe', fontSize: 14, fontWeight: '800' },
+  coulissesTexte: { color: 'rgba(255,255,255,0.72)', fontSize: 13, lineHeight: 18 },
+  coulissesExemples: { color: 'rgba(255,255,255,0.5)', fontSize: 12.5, lineHeight: 18 },
   mediaAide: {
     color: 'rgba(255,255,255,0.5)', fontSize: 12.5, marginBottom: 8, textAlign: 'center',
   },
