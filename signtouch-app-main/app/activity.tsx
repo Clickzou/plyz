@@ -9,7 +9,7 @@ import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Newspaper, CheckCircle, Calendar, MapPin, Heart, MessageCircle, Send, Share2, Flag } from 'lucide-react-native';
+import { Newspaper, CheckCircle, Calendar, MapPin, Heart, MessageCircle, Send, Share2, Flag, Play } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -23,6 +23,8 @@ import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { FeedSkeleton } from '@/components/SkeletonLoader';
 import { useAutoTranslate } from '@/utils/translation';
 import ReportContentModal from '@/components/ReportContentModal';
+import VisionneuseMedia, { MediaVisionnable } from '@/components/VisionneuseMedia';
+import { estUneVideo } from '@/utils/media';
 import { openEventLocation } from '@/utils/openMap';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -161,6 +163,8 @@ export default function ActivityScreen() {
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
   // Commentaire visé par un signalement.
   const [reportedComment, setReportedComment] = useState<Comment | null>(null);
+  // Media affiche en plein ecran (photo ou video), null = ferme.
+  const [mediaPleinEcran, setMediaPleinEcran] = useState<MediaVisionnable | null>(null);
 
   // Traduction automatique des posts (titre + texte) dans la langue de l'utilisateur
   const tr = useAutoTranslate([...posts.flatMap(p => [p.title, p.body]), 'Suivi ✓', 'Suivre', 'Event']);
@@ -523,8 +527,29 @@ export default function ActivityScreen() {
 
         {item.title && <Text style={styles.postTitle}>{tr(item.title)}</Text>}
         {item.body && <Text style={styles.postBody}>{tr(item.body)}</Text>}
+        {/* La photo s'agrandit au toucher. Elle n'était visible qu'à la largeur
+            d'une carte, sans aucun moyen de la voir en grand — une dédicace est
+            pourtant faite pour être regardée. */}
         {item.media_url && (
-          <Image source={{ uri: item.media_url }} style={styles.postImage} />
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => setMediaPleinEcran({
+              uri: item.media_url as string,
+              estVideo: estUneVideo(item.media_url),
+              titre: item.title ? tr(item.title) : undefined,
+            })}
+          >
+            {estUneVideo(item.media_url) ? (
+              <View style={styles.postVideoWrap}>
+                <Image source={{ uri: item.media_url }} style={styles.postImage} />
+                <View style={styles.postVideoPlay}>
+                  <Play size={26} color="#ffffff" fill="#ffffff" />
+                </View>
+              </View>
+            ) : (
+              <Image source={{ uri: item.media_url }} style={styles.postImage} />
+            )}
+          </TouchableOpacity>
         )}
         {item.kind === 'event' && item.event_date && (
           <TouchableOpacity
@@ -881,6 +906,9 @@ export default function ActivityScreen() {
         reportedUserId={reportedComment?.author_id || null}
       />
 
+      {/* Photo comme vidéo : le média s'ouvre en grand, fond noir, au toucher. */}
+      <VisionneuseMedia media={mediaPleinEcran} onClose={() => setMediaPleinEcran(null)} />
+
       <BottomNav />
     </View>
   );
@@ -955,6 +983,11 @@ const styles = StyleSheet.create({
   postTitle: { color: '#fff', fontSize: 17, fontWeight: '700' },
   postBody: { color: '#d1d5db', fontSize: 14, lineHeight: 22, marginTop: 6 },
   postImage: { width: '100%', height: 200, borderRadius: 12, marginTop: 10 },
+  postVideoWrap: { position: 'relative' },
+  postVideoPlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, marginTop: 10,
+    alignItems: 'center', justifyContent: 'center',
+  },
   eventDateRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
   eventDateText: { color: '#f59e0b', fontSize: 13, fontWeight: '500' },
   eventLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },

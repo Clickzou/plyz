@@ -8,6 +8,8 @@ import { ArrowLeft, Calendar, MapPin, CreditCard, Flag } from 'lucide-react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReportContentModal from '@/components/ReportContentModal';
+import VisionneuseMedia, { MediaVisionnable } from '@/components/VisionneuseMedia';
+import { estUneVideo } from '@/utils/media';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { useAutoTranslate } from '@/utils/translation';
 import { openEventLocation } from '@/utils/openMap';
@@ -19,6 +21,7 @@ export default function PostDetailScreen() {
   const params = useLocalSearchParams();
   const { requireAuth } = useAuthPrompt();
   const [showReport, setShowReport] = useState(false);
+  const [mediaPleinEcran, setMediaPleinEcran] = useState<MediaVisionnable | null>(null);
 
   const post: any = useMemo(() => {
     try {
@@ -104,7 +107,17 @@ export default function PostDetailScreen() {
         {!!post.title && <Text style={styles.title}>{tr(post.title)}</Text>}
 
         {!!post.media_url && (
-          <Image source={{ uri: post.media_url }} style={styles.image} resizeMode="cover" />
+          /* Ouvre le media en grand : une dedicace se regarde. */
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => setMediaPleinEcran({
+              uri: post.media_url,
+              estVideo: estUneVideo(post.media_url),
+              titre: post.title || undefined,
+            })}
+          >
+            <Image source={{ uri: post.media_url }} style={styles.image} resizeMode="cover" />
+          </TouchableOpacity>
         )}
 
         {!!post.body && <Text style={styles.body}>{tr(post.body)}</Text>}
@@ -163,6 +176,8 @@ export default function PostDetailScreen() {
           </Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <VisionneuseMedia media={mediaPleinEcran} onClose={() => setMediaPleinEcran(null)} />
 
       <ReportContentModal
         visible={showReport}
