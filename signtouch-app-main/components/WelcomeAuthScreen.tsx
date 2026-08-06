@@ -194,12 +194,12 @@ export default function WelcomeAuthScreen({
     try {
       const { error: sendError } = await sendOtpCode(trimmed);
       if (sendError) {
-        setError(sendError.message);
+        setError(messageAuth(sendError.message));
       } else {
         setStep('code');
       }
     } catch (err: any) {
-      setError(err?.message || tr('waGenericError', 'Une erreur est survenue'));
+      setError(messageAuth(err?.message));
     } finally {
       setLoading(false);
     }
@@ -211,12 +211,33 @@ export default function WelcomeAuthScreen({
     setCode('');
     try {
       const { error: sendError } = await sendOtpCode(email.trim());
-      if (sendError) setError(sendError.message);
+      if (sendError) setError(messageAuth(sendError.message));
     } catch (err: any) {
-      setError(err?.message || tr('waGenericError', 'Une erreur est survenue'));
+      setError(messageAuth(err?.message));
     } finally {
       setLoading(false);
     }
+  };
+
+  // Les erreurs d'authentification arrivaient telles quelles : « Token has
+  // expired or is invalid », en anglais, sans dire quoi faire. Or la cause la
+  // plus fréquente n'est pas une panne — c'est un code pris dans un e-mail
+  // PRÉCÉDENT : chaque demande annule la précédente, seul le dernier code vaut.
+  // Le message doit donc donner la marche à suivre, pas décrire la panne.
+  const messageAuth = (brut: string | undefined): string => {
+    const m = (brut || '').toLowerCase();
+    if (m.includes('expired') || m.includes('invalid') || m.includes('token')) {
+      return tr('waCodeExpired',
+        "Ce code n'est plus valable. Touche « Renvoyer le code », puis utilise le code du DERNIER e-mail reçu : chaque nouvelle demande annule la précédente.");
+    }
+    if (m.includes('rate') || m.includes('too many') || m.includes('limit')) {
+      return tr('waTooManyTries',
+        'Trop de demandes en peu de temps. Attends une minute avant de réessayer.');
+    }
+    if (m.includes('network') || m.includes('fetch')) {
+      return tr('waNetwork', 'Connexion impossible. Vérifie ton réseau et réessaie.');
+    }
+    return brut || tr('waGenericError', 'Une erreur est survenue');
   };
 
   const handleVerifyCode = async () => {
@@ -229,13 +250,13 @@ export default function WelcomeAuthScreen({
     try {
       const { error: verifyError } = await verifyOtpCode(email.trim(), code.trim());
       if (verifyError) {
-        setError(verifyError.message);
+        setError(messageAuth(verifyError.message));
       } else {
         // Connected. Now decide if profile completion is needed.
         setAwaitingProfileCheck(true);
       }
     } catch (err: any) {
-      setError(err?.message || tr('waGenericError', 'Une erreur est survenue'));
+      setError(messageAuth(err?.message));
     } finally {
       setLoading(false);
     }
