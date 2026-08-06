@@ -21,9 +21,13 @@ export type BadgeAppelsVideo = {
   total: number;
   couleur: '#ef4444' | '#10b981' | '#f59e0b';
   aAgir: boolean;
+  // Mauvaise nouvelle récente (refus, annulation, expiration). Se signale même
+  // quand `total` vaut 0 : il n'y a plus rien À FAIRE, mais il y a quelque
+  // chose à APPRENDRE.
+  alerte: boolean;
 };
 
-const VIDE: BadgeAppelsVideo = { total: 0, couleur: '#f59e0b', aAgir: false };
+const VIDE: BadgeAppelsVideo = { total: 0, couleur: '#f59e0b', aAgir: false, alerte: false };
 
 // Une demande close reste signalée 48 h : assez pour que l'intéressé
 // l'apprenne, pas au point que la pastille reste rouge indéfiniment.
@@ -84,6 +88,7 @@ async function rafraichir(force = false) {
       total: aTraiter.length,
       couleur,
       aAgir: aTraiter.length > 0,
+      alerte: closesRecentes.length > 0,
     };
     abonnes.forEach((f) => f(cache));
   } catch {

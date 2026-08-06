@@ -19,7 +19,7 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const trUI = useAutoTranslate(['Dédicacer']);
+  const trUI = useAutoTranslate(['Dédicace']);
   const badge = useBadgeAppelsVideo();
 
   // Battement lent, uniquement quand c'est à cet utilisateur d'agir. Une
@@ -112,7 +112,7 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
             ce qu'on en fait ici — signer une photo, pas la prendre pour la
             prendre. Les quatre autres onglets sont nommés, celui-ci aussi. */}
         <Text style={[styles.navLabel, isCameraActive && styles.navLabelActive]}>
-          {t('dedicate' as any) || trUI('Dédicacer')}
+          {t('dedicate' as any) || trUI('Dédicace')}
         </Text>
       </View>
 
@@ -132,14 +132,21 @@ export default function BottomNav({ transparent = false }: BottomNavProps) {
               passe quelque chose. Rouge = rien n'a bougé, vert = c'est validé ;
               la pastille bat quand c'est à cet utilisateur d'agir — une demande
               expire en 48 h, un créneau accepté attend son règlement. */}
-          {badge.total > 0 && (
+          {(badge.total > 0 || badge.alerte) && (
             <Animated.View
               style={[
                 styles.badge,
+                // Sans chiffre à montrer, la pastille se réduit à un point : le
+                // compteur ne comptant plus que ce qui demande une action, une
+                // annulation seule affichait « 0 » — ou, la pastille étant
+                // conditionnée à `total > 0`, ne s'affichait pas du tout.
+                badge.total === 0 && styles.badgePoint,
                 { backgroundColor: badge.couleur, transform: [{ scale: pulse }] },
               ]}
             >
-              <Text style={styles.badgeText}>{badge.total > 9 ? '9+' : badge.total}</Text>
+              {badge.total > 0 && (
+                <Text style={styles.badgeText}>{badge.total > 9 ? '9+' : badge.total}</Text>
+              )}
             </Animated.View>
           )}
         </View>
@@ -224,6 +231,13 @@ const styles = StyleSheet.create({
     // la chevauche, surtout en vert sur un onglet actif lui aussi vert.
     borderWidth: 2,
     borderColor: '#0f172a',
+  },
+  badgePoint: {
+    minWidth: 12,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    paddingHorizontal: 0,
   },
   badgeText: {
     color: '#ffffff',

@@ -1240,6 +1240,19 @@ export default function JoinEventScreen() {
   // puis basculera tout seul en « En cours » une fois l'heure de début atteinte.
   const handleReserveScheduled = async () => {
     if (!scheduledSession) return;
+    // 🔒 Un compte, même pour une inscription gratuite : sans lui la réservation
+    // part sous un identifiant d'appareil, donc rattachée à personne. Elle
+    // disparaît au changement de téléphone et n'apparaît pas dans « À venir »
+    // une fois le compte créé. L'entrée du parcours l'exige déjà ; ce filet
+    // couvre les arrivées directes (lien partagé, fiche célébrité).
+    if (!user) {
+      requireAuth(() => handleReserveScheduled(), {
+        reason: t('reserveAuthReason' as any)
+          || 'Crée ton compte pour réserver — tu retrouveras l\'événement dans « À venir ».',
+        requireBillingIdentity: false,
+      });
+      return;
+    }
     try {
       const reserveSigners = await getEventSigners(scheduledSession.id).catch(() => [] as EventSigner[]);
       await saveActiveFanEvent({
@@ -1354,6 +1367,16 @@ export default function JoinEventScreen() {
 
   const handleSetNotification = async () => {
     if (!scheduledSession) return;
+    // Même raison que la réservation : un rappel promis à un visiteur anonyme
+    // ne peut pas le suivre ailleurs que sur ce téléphone.
+    if (!user) {
+      requireAuth(() => handleSetNotification(), {
+        reason: t('remindAuthReason' as any)
+          || 'Crée ton compte pour être prévenu du début de l\'événement.',
+        requireBillingIdentity: false,
+      });
+      return;
+    }
 
     if (!Notifications) {
       showAlert(

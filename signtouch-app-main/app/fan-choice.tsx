@@ -250,11 +250,23 @@ export default function FanChoiceScreen() {
     }, [])
   );
 
+  // Cliquer « Rejoindre » : exige un compte AVANT d'entrer dans le parcours.
+  //
+  // Se déclarer fan au premier lancement ne crée aucun compte. On pouvait donc
+  // aller jusqu'à s'inscrire sur une liste d'attente en simple visiteur : la
+  // réservation partait alors sous un identifiant d'appareil, sans être
+  // rattachée à personne — perdue au changement de téléphone, invisible dans
+  // « À venir » une fois le compte créé, et impossible à relier à une facture.
+  // La demande arrive maintenant à l'entrée, pas au bout du parcours.
   const handleChoice = (path: string) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    router.push(path as any);
+    requireAuth(() => router.push(path as any), {
+      reason: t('joinAuthReason' as any)
+        || 'Crée ton compte pour rejoindre un événement — tes réservations et tes dédicaces y seront rattachées.',
+      requireBillingIdentity: false,
+    });
   };
 
   // Navigue vers la liste pré-filtrée (catégorie + type événement/vidéo).

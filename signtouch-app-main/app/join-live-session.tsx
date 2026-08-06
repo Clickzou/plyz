@@ -850,6 +850,16 @@ export default function JoinLiveSessionScreen() {
 
   const handleReserve = async () => {
     if (!session) return;
+    // 🔒 Même exigence que côté dédicace : sans compte, l'inscription sur la
+    // liste d'attente n'est rattachée à personne et se perd avec le téléphone.
+    if (!user) {
+      requireAuth(() => handleReserve(), {
+        reason: t('reserveAuthReason' as any)
+          || 'Crée ton compte pour réserver — tu retrouveras l\'appel dans « À venir ».',
+        requireBillingIdentity: false,
+      });
+      return;
+    }
     setIsReserving(true);
     try {
       let endsAt = session.ends_at;
