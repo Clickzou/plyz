@@ -130,9 +130,8 @@ export default function CreatePostScreen() {
     'Vidéo trop longue',
     'Ta vidéo dure {{d}} secondes. Le maximum est de 30 secondes — choisis-en une plus courte, ou raccourcis-la dans ta galerie.',
     'Photo ou vidéo (30 s max)',
+    'La vidéo verticale s’affiche en plus grand.',
     'Video prete a publier (30 s max)',
-    "Vidéo à l'horizontale",
-    "Filme en tenant ton téléphone à la verticale : à l'horizontale, la vidéo n'occupe qu'une fine bande de l'écran.",
   ]);
   const [publishing, setPublishing] = useState(false);
   const [moderating, setModerating] = useState(false);
@@ -158,18 +157,13 @@ export default function CreatePostScreen() {
   // lent à parcourir, et une annonce qui dure ne se regarde pas jusqu'au bout.
   const DUREE_VIDEO_MAX_S = 30;
 
-  const processPickedVideo = async (uri: string, dureeMs?: number, largeur?: number, hauteur?: number) => {
-    // PORTRAIT uniquement. Une vidéo filmée à l'horizontale s'affiche en un
-    // mince bandeau au milieu du fil, illisible sur un téléphone — et elle
-    // casse la mise en page de toutes les autres.
-    if (largeur && hauteur && largeur > hauteur) {
-      showAlert(
-        t('videoLandscapeTitle' as any) || trUI('Vidéo à l\'horizontale'),
-        t('videoLandscapeMsg' as any)
-          || trUI('Filme en tenant ton téléphone à la verticale : à l\'horizontale, la vidéo n\'occupe qu\'une fine bande de l\'écran.'),
-      );
-      return;
-    }
+  const processPickedVideo = async (uri: string, dureeMs?: number) => {
+    // Les deux orientations sont acceptées, comme sur Instagram et Facebook :
+    // le portrait n'est impose que dans les formats plein ecran (Reels,
+    // TikTok). Refuser l'horizontale interdirait le plan le plus naturel — une
+    // star qui filme son public depuis la scène. La fine bande au milieu du fil
+    // se règle par un cadre à hauteur fixe sur fond noir, pas par une
+    // interdiction.
     if (dureeMs && dureeMs / 1000 > DUREE_VIDEO_MAX_S + 0.7) {
       // 0,7 s de tolérance : les galeries arrondissent, et refuser une vidéo de
       // 30,2 s pour une limite de 30 serait incompréhensible.
@@ -253,7 +247,7 @@ export default function CreatePostScreen() {
 
       const asset: any = result.assets?.[0];
       if (asset?.uri && (asset.type === 'video' || estUneVideo(asset.uri))) {
-        await processPickedVideo(asset.uri, asset.duration, asset.width, asset.height);
+        await processPickedVideo(asset.uri, asset.duration);
         return;
       }
 
