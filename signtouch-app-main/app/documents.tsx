@@ -10,6 +10,9 @@ import { ArrowLeft, FileText, Download, X, Eye } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
+import { useAutoTranslate } from '@/utils/translation';
+import { supabase } from '@/utils/supabase';
 import { showAlert } from '@/utils/alertHelper';
 
 // On utilise toujours l'URL serveur complète (y compris sur web) : il n'y a pas
@@ -37,7 +40,10 @@ export default function DocumentsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t, language } = useLanguage();
-  const { session } = useAuth();
+  const { session, user } = useAuth();
+  const { requireAuth } = useAuthPrompt();
+  // Coordonnées de facturation absentes : on le propose, on ne l'impose pas.
+  const [coordonneesManquantes, setCoordonneesManquantes] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -52,6 +58,38 @@ export default function DocumentsScreen() {
     if (session?.access_token) h['Authorization'] = `Bearer ${session.access_token}`;
     return h;
   };
+
+  const trUI = useAutoTranslate([
+    'Tes factures sont au nom de ton pseudo',
+    "Ajoute ton nom et ton adresse si tu as besoin d'une facture nominative — pour te faire rembourser, par exemple. Ce n'est pas obligatoire.",
+    'Ajouter mes coordonnées',
+  ]);
+
+  // Les coordonnées ne sont plus demandées à l'inscription : on regarde ici si
+  // elles manquent, à l'endroit précis où la question se pose vraiment — devant
+  // ses propres factures.
+  const verifierCoordonnees = async () => {
+    if (!user?.id) return;
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, address')
+        .eq('id', user.id)
+        .maybeSingle();
+      setCoordonneesManquantes(!(
+        (data?.first_name || '').trim() &&
+        (data?.last_name || '').trim() &&
+        (data?.address || '').trim()
+      ));
+    } catch {
+      setCoordonneesManquantes(false);
+    }
+  };
+
+  useEffect(() => {
+    verifierCoordonnees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     (async () => {
@@ -171,6 +209,37 @@ export default function DocumentsScreen() {
         <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40 }]} showsVerticalScrollIndicator={false}>
           <Text style={styles.subtitle}>{t('docsSubtitle') || 'Retrouve ici les factures de tes prestations.'}</Text>
 
+          {/* Coordonnées de facturation : proposées, jamais imposées. Elles
+              étaient réclamées à l'inscription, avant même que la personne ait
+              rien reçu — prénom, nom, adresse, pseudo, photo et e-mail d'un
+              seul tenant. La facture n'en a pas besoin pour exister : elle porte
+              le pseudo. Seul celui qui veut se faire rembourser a besoin d'une
+              facture nominative, et c'est ici qu'il y pense. */}
+          {coordonneesManquantes && !!user && (
+            <View style={styles.coordBox}>
+              <Text style={styles.coordTitre}>
+                {t('invBillingOptionalTitle' as any) || trUI('Tes factures sont au nom de ton pseudo')}
+              </Text>
+              <Text style={styles.coordTexte}>
+                {t('invBillingOptionalBody' as any)
+                  || trUI("Ajoute ton nom et ton adresse si tu as besoin d'une facture nominative — pour te faire rembourser, par exemple. Ce n'est pas obligatoire.")}
+              </Text>
+              <TouchableOpacity
+                style={styles.coordBouton}
+                activeOpacity={0.85}
+                onPress={() => requireAuth(() => { verifierCoordonnees(); }, {
+                  requireBillingIdentity: true,
+                  reason: t('invBillingOptionalReason' as any)
+                    || 'Ces informations n\'apparaîtront que sur tes factures.',
+                })}
+              >
+                <Text style={styles.coordBoutonTexte}>
+                  {t('invBillingOptionalCta' as any) || trUI('Ajouter mes coordonnées')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {hasSeller && (
             <View style={styles.revenueBox}>
               <Text style={styles.revenueLabel}>{t('docsRevenueTotal') || 'Total de tes revenus facturés'}</Text>
@@ -267,6 +336,17 @@ const styles = StyleSheet.create({
   revenueBox: { backgroundColor: 'rgba(16,185,129,0.12)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.3)', borderRadius: 12, padding: 16, marginBottom: 18 },
   revenueLabel: { color: '#a7f3d0', fontSize: 12.5, marginBottom: 4 },
   revenueValue: { color: '#10b981', fontSize: 24, fontWeight: '800' },
+  coordBox: {
+    backgroundColor: 'rgba(99,102,241,0.10)', borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.32)', borderRadius: 12, padding: 16, marginBottom: 18,
+  },
+  coordTitre: { color: '#c7d2fe', fontSize: 14.5, fontWeight: '800', marginBottom: 6 },
+  coordTexte: { color: 'rgba(255,255,255,0.72)', fontSize: 13, lineHeight: 19, marginBottom: 12 },
+  coordBouton: {
+    backgroundColor: 'rgba(99,102,241,0.9)', borderRadius: 10,
+    paddingVertical: 11, alignItems: 'center',
+  },
+  coordBoutonTexte: { color: '#ffffff', fontSize: 14.5, fontWeight: '700' },
   emptyBox: { alignItems: 'center', paddingVertical: 60, gap: 14 },
   emptyText: { color: '#64748b', fontSize: 15 },
   card: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: 14, marginBottom: 10 },

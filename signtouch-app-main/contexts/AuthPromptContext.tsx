@@ -51,10 +51,16 @@ interface RequireAuthOptions {
   reason?: string;
   /**
    * Exiger l'identité de facturation (prénom + nom + adresse) avant de continuer.
-   * Par défaut true. Mettre à false pour les actions qui n'émettent PAS de facture
-   * au nom de l'utilisateur (organiser un événement, liker, suivre, partager…) :
-   * seul un compte est alors requis. Pour une célébrité, l'identité légale de ses
-   * factures est récupérée depuis Stripe, pas ressaisie.
+   * Par défaut FALSE : on ne la demande plus à l'inscription.
+   *
+   * Prénom, nom, adresse, pseudo, photo et e-mail d'un coup, avant même d'avoir
+   * rien reçu : c'est là que l'on perd les gens. Or la facture n'en a pas besoin
+   * pour exister — à ces montants elle peut être simplifiée, et elle se replie
+   * déjà sur le pseudo. On demande donc le strict nécessaire pour entrer
+   * (pseudo, photo, e-mail), et les coordonnées APRÈS la prestation, à qui veut
+   * une facture nominative — depuis « Mes documents ».
+   *
+   * Passer à true uniquement pour l'action « compléter mes coordonnées ».
    */
   requireBillingIdentity?: boolean;
   /**
@@ -94,7 +100,7 @@ export const AuthPromptProvider = ({ children }: { children: React.ReactNode }) 
   const { user } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [reason, setReason] = useState<string | undefined>(undefined);
-  const [billingRequired, setBillingRequired] = useState(true);
+  const [billingRequired, setBillingRequired] = useState(false);
   const [publicRequired, setPublicRequired] = useState(true);
   const [celebrityPitch, setCelebrityPitch] = useState(false);
 
@@ -110,7 +116,7 @@ export const AuthPromptProvider = ({ children }: { children: React.ReactNode }) 
 
   const requireAuth = useCallback(
     async (onSuccess: () => void, options?: RequireAuthOptions) => {
-      const needBilling = options?.requireBillingIdentity !== false;
+      const needBilling = options?.requireBillingIdentity === true;
       const needPublic = options?.requirePublicProfile !== false;
       // Déjà connecté : on exécute tout de suite si RIEN ne manque. Le profil
       // public est contrôlé ici au même titre que l'identité de facturation —

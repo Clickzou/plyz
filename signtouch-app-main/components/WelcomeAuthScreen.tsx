@@ -38,11 +38,9 @@ interface WelcomeAuthScreenProps {
   /** Appelé quand l'utilisateur ferme le modal (croix). Ignoré hors mode modal. */
   onClose?: () => void;
   /**
-   * Exiger l'identité de facturation (prénom + nom + adresse). Par défaut true.
-   * Mis à false pour les actions qui n'émettent PAS de facture au nom de
-   * l'utilisateur (organiser un événement, liker, suivre, partager…) : dans ce
-   * cas seuls la photo et le pseudo sont demandés. Pour une célébrité, l'identité
-   * légale de ses factures est récupérée depuis Stripe, pas ressaisie ici.
+   * Exiger l'identité de facturation (prénom + nom + adresse). Par défaut FALSE :
+   * l'inscription se limite à l'e-mail, au pseudo et à la photo. Les coordonnées
+   * ne sont demandées qu'à qui réclame une facture nominative, après coup.
    */
   requireBillingIdentity?: boolean;
   /**
@@ -63,11 +61,11 @@ export default function WelcomeAuthScreen({
   reason,
   onAuthenticated,
   onClose,
-  requireBillingIdentity = true,
+  requireBillingIdentity = false,
   celebrityPitch = false,
   requirePublicProfile = true,
 }: WelcomeAuthScreenProps = {}) {
-  const needBilling = requireBillingIdentity !== false;
+  const needBilling = requireBillingIdentity === true;
   const needPublic = requirePublicProfile !== false;
   const insets = useSafeAreaInsets();
   const { user, sendOtpCode, verifyOtpCode } = useAuth();
