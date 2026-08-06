@@ -7398,11 +7398,27 @@ async function releaseEndedSessionHolds() {
 async function expireVideoCallRequests() {
   try {
     const db = getSupabaseAdmin();
-    const { data: expirees } = await db.from('video_call_requests')
+    const maintenant = new Date().toISOString();
+    const { data: horsDelai } = await db.from('video_call_requests')
       .select('id, fan_id, celebrity_id, status, price_cents, duration_minutes')
       .in('status', ['pending', 'accepted'])
-      .lt('expires_at', new Date().toISOString());
-    if (!expirees || !expirees.length) return;
+      .lt('expires_at', maintenant);
+
+    // Le CRÉNEAU passé compte aussi. Le délai de 48 h court depuis la demande :
+    // un créneau proposé pour ce soir 19 h 35 restait donc payable jusqu'au
+    // lendemain, bouton « Confirmer et régler » compris — pour un rendez-vous
+    // déjà manqué. Le fan pouvait payer un appel qui n'aurait jamais lieu.
+    const { data: creneauPasse } = await db.from('video_call_requests')
+      .select('id, fan_id, celebrity_id, status, price_cents, duration_minutes')
+      .eq('status', 'accepted')
+      .not('scheduled_at', 'is', null)
+      .lt('scheduled_at', maintenant);
+
+    const parId = new Map();
+    for (const r of (horsDelai || [])) parId.set(r.id, r);
+    for (const r of (creneauPasse || [])) parId.set(r.id, r);
+    const expirees = [...parId.values()];
+    if (!expirees.length) return;
     const { error: errExpire } = await db.from('video_call_requests')
       .update({ status: 'expired', updated_at: new Date().toISOString() })
       .in('id', expirees.map(r => r.id));
@@ -7963,6 +7979,17 @@ app.post('/api/video-call-requests/:id/checkout', rateLimit('vcr_checkout', 20, 
     if (!reqRow) return res.status(404).json({ error: 'not_found' });
     if (String(reqRow.fan_id) !== String(authUser.id)) return res.status(403).json({ error: 'forbidden' });
     if (reqRow.status !== 'accepted') return res.status(409).json({ error: 'not_accepted', status: reqRow.status });
+
+    // Le créneau est-il déjà passé ? Le balayage d'expiration tourne toutes les
+    // 60 secondes : entre deux passages, le bouton reste cliquable. On refuse
+    // ici aussi — encaisser pour un rendez-vous déjà manqué est le pire des
+    // résultats possibles, bien pire qu'un bouton qui ne marche plus.
+    if (reqRow.scheduled_at && new Date(reqRow.scheduled_at).getTime() < Date.now()) {
+      await db.from('video_call_requests')
+        .update({ status: 'expired', updated_at: new Date().toISOString() })
+        .eq('id', reqRow.id);
+      return res.status(409).json({ error: 'slot_passed' });
+    }
 
     // 🔒 Le compte destinataire est TOUJOURS rechargé depuis la base, jamais
     // repris du corps de la requête (faille IDOR corrigée lors de l'audit).

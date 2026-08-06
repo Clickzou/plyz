@@ -182,7 +182,7 @@ export default function DiscoverScreen() {
               e.stopPropagation?.();
               requireAuth(
                 () => toggleFollow({ user_id: item.user_id, stage_name: item.stage_name, avatar_url: item.avatar_url }),
-                { reason: 'Crée un compte pour suivre cette célébrité', requireBillingIdentity: false }
+                { reason: 'Crée un compte pour suivre cette célébrité', requireBillingIdentity: false, requirePublicProfile: false }
               );
             }}
             activeOpacity={0.7}

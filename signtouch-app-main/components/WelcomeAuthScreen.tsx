@@ -51,6 +51,11 @@ interface WelcomeAuthScreenProps {
    * célébrités. Sans aucune mention d'Apple/Google (conformité App Review).
    */
   celebrityPitch?: boolean;
+  /**
+   * Exiger le profil public (pseudo + photo). Par défaut true. Mis à false pour
+   * les gestes qui n'exposent l'utilisateur à personne (aimer, partager).
+   */
+  requirePublicProfile?: boolean;
 }
 
 export default function WelcomeAuthScreen({
@@ -60,8 +65,10 @@ export default function WelcomeAuthScreen({
   onClose,
   requireBillingIdentity = true,
   celebrityPitch = false,
+  requirePublicProfile = true,
 }: WelcomeAuthScreenProps = {}) {
   const needBilling = requireBillingIdentity !== false;
+  const needPublic = requirePublicProfile !== false;
   const insets = useSafeAreaInsets();
   const { user, sendOtpCode, verifyOtpCode } = useAuth();
   const { setProfilePhoto } = useCelebrityMode();
@@ -126,7 +133,7 @@ export default function WelcomeAuthScreen({
       try {
         const { data, error: selErr } = await supabase
           .from('profiles')
-          .select('display_name, first_name, last_name, address')
+          .select('display_name, avatar_url, first_name, last_name, address')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -138,21 +145,29 @@ export default function WelcomeAuthScreen({
           return;
         }
 
-        // Complétude requise selon le contexte :
+        // Complétude requise selon le contexte, les deux exigences cumulables :
         // - paiement (needBilling) : identité de facturation (prénom + nom + adresse) ;
-        // - organiser/social (!needBilling) : simple identité publique (pseudo).
+        // - profil public (needPublic) : pseudo ET photo.
+        //
+        // Le profil public n'était contrôlé QUE lorsque la facturation ne l'était
+        // pas. Un fan qui payait d'abord passait donc sans jamais choisir de
+        // pseudo : sa demande d'appel arrivait signée « Utilisateur », sans
+        // visage, et la personnalité n'avait aucun moyen de savoir qui écrivait.
         const hasBilling =
           !!(data?.first_name || '').trim() &&
           !!(data?.last_name || '').trim() &&
           !!(data?.address || '').trim();
-        const hasPublic = !!(data?.display_name || '').trim();
-        const complete = needBilling ? hasBilling : hasPublic;
+        const hasPublic =
+          !!(data?.display_name || '').trim() && !!(data?.avatar_url || '').trim();
+        const complete = (!needBilling || hasBilling) && (!needPublic || hasPublic);
         if (!complete) {
-          // Pré-remplit les champs déjà connus.
+          // Pré-remplit les champs déjà connus — dont la photo, pour ne pas la
+          // redemander à qui l'a déjà mise.
           setFirstName((data?.first_name || '').trim());
           setLastName((data?.last_name || '').trim());
           setAddress((data?.address || '').trim());
           setName((data?.display_name || '').trim());
+          if ((data?.avatar_url || '').trim()) setPhotoUri((data?.avatar_url || '').trim());
           setStep('profile');
           setAwaitingProfileCheck(false);
         } else {

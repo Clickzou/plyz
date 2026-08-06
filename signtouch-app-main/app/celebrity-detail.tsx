@@ -335,7 +335,7 @@ export default function CelebrityDetailScreen() {
               style={styles.followHeroButton}
               onPress={() => requireAuth(
                 () => toggleFollow({ user_id: celebrity.user_id, stage_name: celebrity.stage_name, avatar_url: celebrity.avatar_url }),
-                { reason: 'Crée un compte pour suivre cette célébrité', requireBillingIdentity: false }
+                { reason: 'Crée un compte pour suivre cette célébrité', requireBillingIdentity: false, requirePublicProfile: false }
               )}
               activeOpacity={0.7}
             >

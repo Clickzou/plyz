@@ -42,6 +42,7 @@ import { FollowProvider } from '@/contexts/FollowContext';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import { AuthPromptProvider } from '@/contexts/AuthPromptContext';
 import AppErrorBoundary from '@/components/AppErrorBoundary';
+import NotificationsGate from '@/components/NotificationsGate';
 import { initNotifications } from '@/utils/notifications';
 
 SplashScreen.preventAutoHideAsync();
@@ -153,6 +154,11 @@ function RootLayout() {
                         personnalité atterrissait sur le fil d'un fan sans jamais
                         voir qu'un espace lui était destiné. */}
                     {!showSplash && <RoleChoiceOverlay />}
+                    {/* Notifications : on explique AVANT de laisser le système
+                        poser sa question. Elle ne se pose qu'une fois — un refus
+                        réflexe coûte définitivement tous les rappels : créneau
+                        accepté, événement qui commence, tour dans la file. */}
+                    {!showSplash && <NotificationsGate />}
                   </AuthPromptProvider>
                 </OnboardingProvider>
               </FollowProvider>

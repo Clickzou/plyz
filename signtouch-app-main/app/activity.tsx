@@ -232,7 +232,8 @@ export default function ActivityScreen() {
   };
 
   const handleLike = (postId: string) => {
-    requireAuth(() => toggleLike(postId), { reason: 'Crée un compte pour aimer ce post', requireBillingIdentity: false });
+    // Aimer n'expose l'utilisateur à personne : pas de pseudo ni de photo exigés.
+    requireAuth(() => toggleLike(postId), { reason: 'Crée un compte pour aimer ce post', requireBillingIdentity: false, requirePublicProfile: false });
   };
 
   const openComments = (postId: string) => {
@@ -572,7 +573,7 @@ export default function ActivityScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionGroup}
-            onPress={() => requireAuth(() => sharePost(item), { reason: 'Crée un compte pour partager', requireBillingIdentity: false })}
+            onPress={() => requireAuth(() => sharePost(item), { reason: 'Crée un compte pour partager', requireBillingIdentity: false, requirePublicProfile: false })}
             activeOpacity={0.7}
           >
             <View style={styles.actionBtn}>

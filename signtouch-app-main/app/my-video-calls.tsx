@@ -91,6 +91,8 @@ export default function MyVideoCallsScreen() {
             || "La personnalité ne peut pas encore encaisser de paiement.",
           // Deux cas où l'écran affiché n'est plus à jour : mieux vaut le dire
           // et recharger que laisser croire à une panne.
+          slot_passed: t('vcrSlotPassed' as any)
+            || "Le créneau est passé : il n'est plus possible de régler. Tu n'as pas été débité.",
           already_closed: t('vcrAlreadyClosed' as any)
             || "Cette demande est déjà close. Tire vers le bas pour rafraîchir.",
           not_pending: t('vcrAlreadyClosed' as any)
@@ -99,7 +101,7 @@ export default function MyVideoCallsScreen() {
         showAlert(t('error') || 'Erreur', raisons[data?.error] || (t('actionFailed') || 'Action impossible.'));
         // Quand le refus vient d'un état périmé à l'écran, on remet la liste à
         // jour tout de suite : sinon le bouton reste là et l'erreur se répète.
-        if (data?.error === 'already_closed' || data?.error === 'not_pending') await charger();
+        if (data?.error === 'already_closed' || data?.error === 'not_pending' || data?.error === 'slot_passed') await charger();
         return null;
       }
       await charger();
@@ -162,6 +164,12 @@ export default function MyVideoCallsScreen() {
       + ' — ' + d.toLocaleTimeString(getDateLocale(), { hour: '2-digit', minute: '2-digit' });
   };
 
+  // L'heure du rendez-vous est-elle derrière nous ? Le balayage serveur passe
+  // ces demandes en « expiré », mais il tourne toutes les 60 secondes : l'écran
+  // ne doit pas attendre son passage pour cesser de proposer le paiement.
+  const creneauPasse = (d: Demande) =>
+    !!d.scheduled_at && new Date(d.scheduled_at).getTime() < Date.now();
+
   const libelle = (s: string): { texte: string; couleur: string } => {
     const m: Record<string, { texte: string; couleur: string }> = {
       pending: { texte: t('vcrStatusPending' as any) || 'En attente de réponse', couleur: '#f59e0b' },
@@ -209,10 +217,18 @@ export default function MyVideoCallsScreen() {
           </View>
         ) : (
           demandes.map((d, i) => {
-            const st = libelle(d.status);
+            // Un créneau dépassé n'est plus « à régler » : l'annoncer ainsi
+            // envoie vers un paiement qui n'existe plus. En ROUGE, et la carte
+            // entière bordée : des deux côtés, il faut voir d'un coup d'œil que
+            // le rendez-vous est manqué — la personnalité ne voyait, elle, qu'un
+            // lien « Annuler » sous un créneau à première vue encore valable.
+            const manque = d.status === 'accepted' && creneauPasse(d);
+            const st = manque
+              ? { texte: t('vcrStatusSlotPassed' as any) || 'Créneau dépassé — non payé', couleur: '#ef4444' }
+              : libelle(d.status);
             const estCeleb = d.role === 'celebrity';
             return (
-              <View key={d.id} style={styles.card}>
+              <View key={d.id} style={[styles.card, manque && styles.cardManquee]}>
                 <View style={styles.cardTop}>
                   <Text style={styles.cardName}>
                     {estCeleb ? d.fan_name : d.celebrity_name}
@@ -294,8 +310,12 @@ export default function MyVideoCallsScreen() {
                   </View>
                 )}
 
-                {/* Côté fan, créneau proposé : régler pour confirmer */}
-                {!estCeleb && d.status === 'accepted' && (
+                {/* Côté fan, créneau proposé : régler pour confirmer — sauf si
+                    l'heure du rendez-vous est déjà passée. Le bouton restait
+                    actif après le créneau : on pouvait payer un appel qui
+                    n'aurait jamais lieu. Le serveur refuse désormais aussi, mais
+                    un bouton qui ne doit plus servir ne doit plus s'afficher. */}
+                {!estCeleb && d.status === 'accepted' && !manque && (
                   <TouchableOpacity
                     style={[styles.btnFull, busy === d.id && styles.btnBusy]}
                     disabled={busy === d.id}
@@ -306,6 +326,16 @@ export default function MyVideoCallsScreen() {
                       {(t('vcrPayNow' as any) || 'Confirmer et régler {price}').replace('{price}', prix(d))}
                     </Text>
                   </TouchableOpacity>
+                )}
+
+                {manque && (
+                  <Text style={styles.creneauManque}>
+                    {estCeleb
+                      ? (t('vcrSlotMissedCeleb' as any)
+                        || "Le créneau est passé sans règlement. Propose-en un autre si le fan te relance.")
+                      : (t('vcrSlotMissedFan' as any)
+                        || "Le créneau est passé : il n'est plus possible de régler. Tu n'as pas été débité — refais une demande pour un autre horaire.")}
+                  </Text>
                 )}
 
                 {/* Annulation : possible des deux côtés tant que ce n'est pas clos */}
@@ -374,6 +404,15 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 16, marginBottom: 12,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
+  },
+  // Rendez-vous manqué : bordure rouge franche, pour que la carte se distingue
+  // avant même d'être lue.
+  cardManquee: {
+    borderColor: '#ef4444', borderWidth: 1.5,
+    backgroundColor: 'rgba(239,68,68,0.06)',
+  },
+  creneauManque: {
+    color: '#fca5a5', fontSize: 13, lineHeight: 19, marginTop: 12, fontWeight: '600',
   },
   cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   cardName: { color: '#fff', fontSize: 16, fontWeight: '700', flex: 1 },

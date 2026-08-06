@@ -68,9 +68,14 @@ async function rafraichir(force = false) {
 
     // À traiter : la star a une demande sur les bras, ou le fan un créneau
     // accepté qu'il n'a pas encore réglé. Dans les deux cas, un délai court.
+    // Un créneau dont l'heure est passée n'appelle plus aucune action : le
+    // paiement est fermé. La pastille orange « à régler » envoyait pourtant vers
+    // un bouton qui ne devait plus exister.
+    const creneauPasse = (r: any) =>
+      !!r.scheduled_at && new Date(r.scheduled_at).getTime() < maintenant;
     const aTraiter = ouverts.filter((r: any) =>
       (r.role === 'celebrity' && r.status === 'pending') ||
-      (r.role === 'fan' && r.status === 'accepted')
+      (r.role === 'fan' && r.status === 'accepted' && !creneauPasse(r))
     );
     const valide = ouverts.some((r: any) => r.status === 'accepted' || r.status === 'paid');
 

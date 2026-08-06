@@ -3198,7 +3198,7 @@ export default function ResultScreen() {
               {memoryId && (
                 <TouchableOpacity
                   style={styles.shareButton}
-                  onPress={() => requireAuth(() => openShareModal(), { reason: 'Crée un compte pour partager ta photo', requireBillingIdentity: false })}
+                  onPress={() => requireAuth(() => openShareModal(), { reason: 'Crée un compte pour partager ta photo', requireBillingIdentity: false, requirePublicProfile: false })}
                   activeOpacity={0.7}
                 >
                   <Share2 size={24} color="#ffffff" strokeWidth={2} />

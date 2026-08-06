@@ -29,6 +29,23 @@ async function isBillingProfileComplete(userId: string): Promise<boolean> {
   }
 }
 
+// Profil PUBLIC = pseudo + photo. C'est ce que voit la personnalité quand un fan
+// lui demande un appel ou rejoint son événement. « Utilisateur », sans visage, ne
+// lui dit rien : elle ne peut ni reconnaître son fan, ni décider de répondre.
+async function isPublicProfileComplete(userId: string): Promise<boolean> {
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('display_name, avatar_url')
+      .eq('id', userId)
+      .maybeSingle();
+    return !!((data?.display_name || '').trim() && (data?.avatar_url || '').trim());
+  } catch {
+    // En cas d'erreur réseau, on ne bloque pas l'utilisateur.
+    return true;
+  }
+}
+
 interface RequireAuthOptions {
   /** Petit texte d'accroche affiché en haut du modal de connexion. */
   reason?: string;
@@ -46,6 +63,16 @@ interface RequireAuthOptions {
    * célébrité / créer un événement, pour motiver l'inscription. Sans mention d'Apple.
    */
   celebrityPitch?: boolean;
+  /**
+   * Exiger le profil public (pseudo + photo) avant de continuer. Par défaut true.
+   * Mettre à false pour les gestes qui n'exposent l'utilisateur à personne
+   * (aimer, partager) : leur imposer une photo n'aurait aucun sens.
+   *
+   * Cette exigence était jusqu'ici INAPPLIQUÉE dès lors que l'utilisateur était
+   * déjà connecté : on entrait directement dans l'action sans jamais regarder le
+   * pseudo. D'où des demandes d'appel vidéo signées « Utilisateur ».
+   */
+  requirePublicProfile?: boolean;
 }
 
 interface AuthPromptContextType {
@@ -68,6 +95,7 @@ export const AuthPromptProvider = ({ children }: { children: React.ReactNode }) 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [reason, setReason] = useState<string | undefined>(undefined);
   const [billingRequired, setBillingRequired] = useState(true);
+  const [publicRequired, setPublicRequired] = useState(true);
   const [celebrityPitch, setCelebrityPitch] = useState(false);
 
   // Le callback en attente est conservé dans une ref pour éviter des re-renders
@@ -83,20 +111,26 @@ export const AuthPromptProvider = ({ children }: { children: React.ReactNode }) 
   const requireAuth = useCallback(
     async (onSuccess: () => void, options?: RequireAuthOptions) => {
       const needBilling = options?.requireBillingIdentity !== false;
-      // Déjà connecté : on exécute tout de suite si l'identité de facturation
-      // n'est pas requise (organiser/social), ou si elle est déjà complète.
+      const needPublic = options?.requirePublicProfile !== false;
+      // Déjà connecté : on exécute tout de suite si RIEN ne manque. Le profil
+      // public est contrôlé ici au même titre que l'identité de facturation —
+      // il ne l'était pas, et un compte créé sans passer par l'étape « pseudo »
+      // restait « Utilisateur » pour toujours, sans jamais qu'on le lui demande.
       if (user) {
-        if (!needBilling || (await isBillingProfileComplete(user.id))) {
+        const okBilling = !needBilling || (await isBillingProfileComplete(user.id));
+        const okPublic = !needPublic || (await isPublicProfileComplete(user.id));
+        if (okBilling && okPublic) {
           onSuccess();
           return;
         }
-        // Connecté mais identité de facturation manquante alors qu'elle est requise :
-        // on ouvre le modal (il ira directement à l'étape « Tes informations »).
+        // Connecté mais profil incomplet : on ouvre le modal, qui ira droit à
+        // l'étape manquante (« Tes informations » ou pseudo + photo).
       }
-      // Pas connecté (ou identité requise manquante) : on mémorise et on ouvre le modal.
+      // Pas connecté (ou profil requis incomplet) : on mémorise et on ouvre le modal.
       pendingCallbackRef.current = onSuccess;
       setReason(options?.reason);
       setBillingRequired(needBilling);
+      setPublicRequired(needPublic);
       setCelebrityPitch(options?.celebrityPitch === true);
       setIsAuthModalOpen(true);
     },
@@ -125,6 +159,7 @@ export const AuthPromptProvider = ({ children }: { children: React.ReactNode }) 
           asModal
           reason={reason}
           requireBillingIdentity={billingRequired}
+          requirePublicProfile={publicRequired}
           celebrityPitch={celebrityPitch}
           onAuthenticated={handleAuthenticated}
           onClose={handleClose}
