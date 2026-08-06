@@ -241,6 +241,28 @@ export default function ActivityScreen() {
     requireAuth(() => toggleLike(postId), { reason: 'Crée un compte pour aimer ce post', requireBillingIdentity: false, requirePublicProfile: false });
   };
 
+  // Publications deja comptees pendant cette session : sans ce garde-fou, un
+  // aller-retour dans le fil gonflerait le compteur et le chiffre montre a la
+  // personnalite ne voudrait plus rien dire.
+  const vuesSignalees = useRef<Set<string>>(new Set());
+
+  const signalerVues = useCallback(({ viewableItems }: any) => {
+    for (const v of viewableItems || []) {
+      const id = v?.item?.id;
+      if (!id || vuesSignalees.current.has(id)) continue;
+      vuesSignalees.current.add(id);
+      fetch(`${API_BASE}/api/post-viewed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_id: id }),
+      }).catch(() => { /* un compteur ne doit jamais gêner l'utilisateur */ });
+    }
+  }, []);
+
+  // Une publication compte comme VUE quand la moitie de sa carte est restee a
+  // l'ecran une seconde entiere : un defilement rapide ne compte pas.
+  const configVisibilite = useRef({ itemVisiblePercentThreshold: 50, minimumViewTime: 1000 }).current;
+
   const openComments = (postId: string) => {
     setCommentModalPostId(postId);
     setCommentText('');
@@ -707,6 +729,8 @@ export default function ActivityScreen() {
             fetchFeed(1, true);
           }}
           refreshing={refreshing}
+          onViewableItemsChanged={signalerVues}
+          viewabilityConfig={configVisibilite}
           onEndReached={() => { if (hasMore && !loading) fetchFeed(page + 1); }}
           onEndReachedThreshold={0.5}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
