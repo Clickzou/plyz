@@ -41,11 +41,20 @@ if (!SUPABASE_URL || !SERVICE_ROLE) {
 }
 
 let cheminFfprobe = null;
+let cheminFfmpeg = null;
 try {
   cheminFfprobe = require('ffprobe-static').path;
+  cheminFfmpeg = require('ffmpeg-static');
 } catch {
-  console.warn('ffprobe absent : les durées seront à 0 (npm install d’abord).');
+  console.warn('ffmpeg/ffprobe absents : durées à 0 et morceaux non raccourcis (npm install d’abord).');
 }
+
+// Les vidéos de Plyz durent 30 secondes au maximum. Garder des morceaux de
+// quatre minutes, c'est stocker cent fichiers de 7 Mo pour n'en utiliser qu'un
+// vingtième : de l'espace payé pour rien chez Supabase, autant de données
+// retéléchargées à chaque mixage, et une pré-écoute qui se fait attendre dans
+// l'application. On garde 35 secondes — les 30 utiles, plus une marge.
+const DUREE_GARDEE_S = 35;
 
 const db = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
@@ -58,6 +67,35 @@ function dureeDe(chemin) {
     ], (err, stdout) => {
       if (err) return resolve(0);
       resolve(Math.round(parseFloat(String(stdout).trim()) || 0));
+    });
+  });
+}
+
+/**
+ * Ne garde que les premières secondes du morceau, avec un fondu de sortie.
+ *
+ * Le fondu n'est pas de la coquetterie : à la pré-écoute, un morceau coupé net
+ * s'entend comme un fichier abîmé.
+ *
+ * Renvoie le fichier raccourci, ou `null` si l'opération n'a pas pu se faire —
+ * l'appelant garde alors l'original. Mieux vaut un morceau trop long qu'un
+ * morceau absent.
+ */
+function raccourcir(cheminEntree) {
+  return new Promise((resolve) => {
+    if (!cheminFfmpeg) return resolve(null);
+    const sortie = cheminEntree.replace(/(\.[a-z0-9]+)?$/i, '-court.mp3');
+    execFile(cheminFfmpeg, [
+      '-y', '-i', cheminEntree,
+      '-t', String(DUREE_GARDEE_S),
+      '-af', `afade=t=out:st=${DUREE_GARDEE_S - 2}:d=2`,
+      // Réencodage en 128 kbit/s : la qualité reste largement suffisante pour
+      // une musique de fond, et le fichier fond encore de moitié.
+      '-c:a', 'libmp3lame', '-b:a', '128k',
+      sortie,
+    ], { timeout: 120000 }, (err) => {
+      if (err) return resolve(null);
+      resolve(sortie);
     });
   });
 }
@@ -105,13 +143,27 @@ async function importer(entree, index) {
     throw new Error('il faut un "fichier" ou une "url"');
   }
 
-  const nom = nomDeFichier(titre, artiste, ext);
-
-  // Durée : calculée sur un fichier temporaire, pour l'afficher dans la liste.
+  // Passage par un fichier temporaire : ffprobe et ffmpeg travaillent sur des
+  // fichiers, pas sur des blocs en mémoire.
   const tmp = path.join(require('os').tmpdir(), `plyz-import-${Date.now()}${ext}`);
   await fs.promises.writeFile(tmp, buffer);
-  const duree = await dureeDe(tmp);
+  let duree = await dureeDe(tmp);
+  const poidsAvant = buffer.length;
+
+  let court = null;
+  if (duree > DUREE_GARDEE_S) {
+    court = await raccourcir(tmp);
+    if (court) {
+      buffer = await fs.promises.readFile(court);
+      duree = DUREE_GARDEE_S;
+      ext = '.mp3';
+    }
+  }
+
   fs.promises.unlink(tmp).catch(() => {});
+  if (court) fs.promises.unlink(court).catch(() => {});
+
+  const nom = nomDeFichier(titre, artiste, ext);
 
   const { error: errUp } = await db.storage.from('musiques').upload(nom, buffer, {
     contentType: ext === '.wav' ? 'audio/wav' : 'audio/mpeg',
@@ -142,7 +194,12 @@ async function importer(entree, index) {
     : await db.from('musiques_libres').insert(ligne);
   if (errDb) throw new Error(`base : ${errDb.message}`);
 
-  return { nom, duree, remplace: !!existant };
+  return {
+    nom, duree, remplace: !!existant,
+    raccourci: !!court,
+    koAvant: Math.round(poidsAvant / 1024),
+    koApres: Math.round(buffer.length / 1024),
+  };
 }
 
 (async () => {
@@ -159,6 +216,8 @@ async function importer(entree, index) {
   }
 
   let ok = 0;
+  let koAvant = 0;
+  let koApres = 0;
   const echecs = [];
 
   for (let i = 0; i < liste.length; i++) {
@@ -167,7 +226,11 @@ async function importer(entree, index) {
     try {
       const r = await importer(e, i);
       ok++;
-      console.log(`✓ ${etiquette} (${r.duree}s)${r.remplace ? ' [mis à jour]' : ''}`);
+      koAvant += r.koAvant;
+      koApres += r.koApres;
+      console.log(`✓ ${etiquette} (${r.duree}s`
+        + `${r.raccourci ? `, ${r.koAvant} → ${r.koApres} Ko` : ''})`
+        + `${r.remplace ? ' [mis à jour]' : ''}`);
     } catch (err) {
       echecs.push({ etiquette, raison: err.message });
       console.error(`✗ ${etiquette} — ${err.message}`);
@@ -177,6 +240,10 @@ async function importer(entree, index) {
   // Un compte-rendu explicite : un import à moitié réussi doit se voir, sinon
   // on croit le catalogue complet alors qu'il manque des morceaux.
   console.log(`\n${ok}/${liste.length} morceau(x) en ligne.`);
+  if (koAvant > koApres) {
+    console.log(`Stockage : ${Math.round(koAvant / 1024)} Mo ramenés à `
+      + `${Math.round(koApres / 1024)} Mo en ne gardant que ${DUREE_GARDEE_S} s par morceau.`);
+  }
   if (echecs.length) {
     console.log(`${echecs.length} refusé(s) :`);
     echecs.forEach((f) => console.log(`  · ${f.etiquette} : ${f.raison}`));
