@@ -11,6 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Star, X, Shield, Heart, Ban, Check } from 'lucide-react-native';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 
 interface RatingModalProps {
   visible: boolean;
@@ -35,6 +36,9 @@ export default function RatingModal({
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [blockFan, setBlockFan] = useState(false);
+  // Dans une Modal Android, le clavier se pose PAR-DESSUS la fenetre : le champ
+  // de commentaire disparaissait dessous. On recentre la carte au-dessus.
+  const hauteurClavier = useKeyboardHeight();
 
   const handleSubmit = async () => {
     if (selectedRating === 0) return;
@@ -100,7 +104,7 @@ export default function RatingModal({
       animationType="fade"
       onRequestClose={handleSkip}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { paddingBottom: 24 + hauteurClavier }]}>
         <View style={styles.modalContainer}>
           <LinearGradient
             colors={['#1a1a2e', '#16213e', '#0f3460']}

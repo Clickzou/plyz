@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStripeAccountId, saveStripeAccountId, clearStripeAccountId } from '@/utils/userProfile';
 import { authedFetch } from '@/utils/authedFetch';
 import { useAutoTranslate } from '@/utils/translation';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 
 const STRIPE_SERVER_URL = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -61,6 +62,9 @@ export default function StripeConnectModal({
 }: StripeConnectModalProps) {
   const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = React.useState(false);
+  // Formulaire de saisie dans une Modal : le clavier passe par-dessus la
+  // fenetre sur Android. La carte se recentre au-dessus de lui.
+  const hauteurClavier = useKeyboardHeight();
   // 'businessType' : on demande NOUS-MÊMES si la célébrité encaisse en son nom
   // propre ou via une structure. Sans ça, Stripe pose la question avec ses
   // intitulés réglementaires (« Entrepreneur individuel / Micro-entrepreneur »),
@@ -393,7 +397,7 @@ export default function StripeConnectModal({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { paddingBottom: hauteurClavier }]}>
         <View style={styles.container}>
           <LinearGradient
             colors={['#0a1628', '#0f2030', '#0a1628']}

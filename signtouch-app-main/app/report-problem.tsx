@@ -143,10 +143,12 @@ export default function ReportProblemScreen() {
     }
   };
 
+  // Android bord a bord (SDK 54) : le clavier ne redimensionne plus l'ecran.
+  // `behavior={undefined}` revenait a ne rien faire — on ecrivait a l'aveugle.
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
     >
       <View style={styles.container}>
         <LinearGradient colors={['#0f172a', '#1e293b', '#0f172a']} style={StyleSheet.absoluteFill} />

@@ -3,6 +3,7 @@ import { X, Mail, KeyRound, CheckCircle } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/contexts/LanguageContext';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 
 interface PostPurchaseAccountModalProps {
   visible: boolean;
@@ -18,6 +19,9 @@ export default function PostPurchaseAccountModal({ visible, onClose }: PostPurch
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Dans une Modal Android, le clavier se pose par-dessus la fenetre : sans
+  // cette marge, le champ e-mail disparait dessous des qu'on le touche.
+  const hauteurClavier = useKeyboardHeight();
 
   useEffect(() => {
     if (visible && (user || session)) {
@@ -256,7 +260,7 @@ export default function PostPurchaseAccountModal({ visible, onClose }: PostPurch
       onRequestClose={handleLater}
     >
       <TouchableOpacity
-        style={styles.overlay}
+        style={[styles.overlay, { paddingBottom: 20 + hauteurClavier }]}
         activeOpacity={1}
         onPress={handleBackdropPress}
       >

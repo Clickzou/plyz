@@ -494,9 +494,12 @@ export default function CreatePostScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Android bord a bord (SDK 54) : le clavier ne redimensionne plus
+          l'ecran, il se pose dessus. `undefined` ici revenait a ne rien faire
+          et le texte se tapait sous le clavier. */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
       >
         <ScrollView
           style={styles.content}

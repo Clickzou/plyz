@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getDateLocale } from '@/utils/dateLocale';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  Image, Platform, Modal, TextInput, KeyboardAvoidingView,
+  Image, Platform, Modal, TextInput,
   Animated as RNAnimated, Dimensions, Share, ActivityIndicator
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
@@ -26,6 +26,7 @@ import ReportContentModal from '@/components/ReportContentModal';
 import VisionneuseMedia, { MediaVisionnable } from '@/components/VisionneuseMedia';
 import { estUneVideo } from '@/utils/media';
 import { authedFetch } from '@/utils/authedFetch';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 import { openEventLocation } from '@/utils/openMap';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -166,6 +167,9 @@ export default function ActivityScreen() {
   const [reportedComment, setReportedComment] = useState<Comment | null>(null);
   // Media affiche en plein ecran (photo ou video), null = ferme.
   const [mediaPleinEcran, setMediaPleinEcran] = useState<MediaVisionnable | null>(null);
+  // Hauteur du clavier : la feuille de commentaires se pose dessus au lieu de
+  // disparaitre dessous (voir useKeyboardHeight pour le pourquoi).
+  const hauteurClavier = useKeyboardHeight();
 
   // Traduction automatique des posts (titre + texte) dans la langue de l'utilisateur
   const tr = useAutoTranslate([...posts.flatMap(p => [p.title, p.body]), 'Suivi ✓', 'Suivre', 'Event']);
@@ -677,6 +681,19 @@ export default function ActivityScreen() {
   // illisible des que l'app depasse un pays.
   const trComments = useAutoTranslate(modalComments.map(c => c.body));
 
+  // Hauteur de la feuille de commentaires, en pixels et non en pourcentage : une
+  // liste en `flex: 1` ne compte pour rien dans le calcul d'une boite dont la
+  // hauteur depend du contenu. La feuille se figeait donc a sa hauteur minimale,
+  // quel que soit le nombre de commentaires, et il ne restait qu'une bande de
+  // quelques pixels pour la liste — trop courte pour qu'on puisse la faire
+  // defiler. Clavier ouvert, on retranche sa hauteur : la feuille se pose
+  // dessus au lieu de passer dessous.
+  const hauteurEcran = Dimensions.get('window').height;
+  const hauteurFeuille = Math.max(
+    260,
+    Math.min(hauteurEcran * 0.75, hauteurEcran - hauteurClavier - 80),
+  );
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <PlyzHeader />
@@ -753,7 +770,14 @@ export default function ActivityScreen() {
           <RNAnimated.View
             style={[
               styles.commentSheet,
-              { transform: [{ translateY: slideAnim }], paddingBottom: insets.bottom + 8 },
+              {
+                transform: [{ translateY: slideAnim }],
+                height: hauteurFeuille,
+                // La feuille remonte de la hauteur du clavier. Clavier ouvert,
+                // la marge du bas du telephone est deja couverte par le clavier.
+                marginBottom: hauteurClavier,
+                paddingBottom: hauteurClavier > 0 ? 8 : insets.bottom + 8,
+              },
             ]}
           >
             <View style={styles.sheetHandle} />
@@ -797,6 +821,10 @@ export default function ActivityScreen() {
                 data={modalComments}
                 keyExtractor={c => c.id}
                 style={styles.commentList}
+                // Clavier ouvert, un premier appui sur « Répondre » ou
+                // « Supprimer » ne servait qu'a refermer le clavier : il fallait
+                // viser deux fois. Ici le bouton repond du premier coup.
+                keyboardShouldPersistTaps="handled"
                 renderItem={({ item: c }) => {
                   const estMien = !!user?.id && c.author_id === user.id;
                   // La personnalité modère chez elle : elle peut retirer ce qui
@@ -865,10 +893,10 @@ export default function ActivityScreen() {
               />
             )}
 
-            <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-              keyboardVerticalOffset={100}
-            >
+            {/* Pas de KeyboardAvoidingView ici : dans une Modal Android il est
+                sans effet (son `behavior` y vaut `undefined`), et sur iOS il
+                ferait double emploi avec la marge appliquee a la feuille. */}
+            <View>
               {/* À qui l'on répond, avec de quoi se dédire : sans ce rappel, on
                   croit écrire un nouveau commentaire. */}
               {replyTo && (
@@ -926,7 +954,7 @@ export default function ActivityScreen() {
                   </TouchableOpacity>
                 </View>
               )}
-            </KeyboardAvoidingView>
+            </View>
           </RNAnimated.View>
         </View>
       </Modal>
@@ -1073,8 +1101,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#111827',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '75%',
-    minHeight: 320,
+    // La hauteur est calculee au rendu (elle depend du clavier) — pas de
+    // minHeight/maxHeight ici, ils empechaient la liste de defiler.
     paddingHorizontal: 20,
     paddingTop: 12,
   },
@@ -1117,6 +1145,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   noCommentsWrap: {
+    // `flex: 1` pour que la barre de saisie reste collee en bas de la feuille
+    // meme sans commentaire : sinon elle remonte au milieu de rien.
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 32,

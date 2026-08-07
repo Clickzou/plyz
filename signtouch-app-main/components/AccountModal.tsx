@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ActivityInd
 import { Mail, CheckCircle, KeyRound, X } from 'lucide-react-native';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 
 interface AccountModalProps {
   visible: boolean;
@@ -26,6 +27,9 @@ export default function AccountModal({
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Saisie de l'e-mail puis du code : dans une Modal Android, le clavier passe
+  // par-dessus la fenetre et cache le champ. On recentre la carte au-dessus.
+  const hauteurClavier = useKeyboardHeight();
 
   const handleSendCode = async () => {
     if (!email.trim() || !email.includes('@')) {
@@ -248,7 +252,7 @@ export default function AccountModal({
       animationType="fade"
       onRequestClose={allowSkip ? onSkip : onClose}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { paddingBottom: 20 + hauteurClavier }]}>
         <View style={styles.container}>
           {step !== 'success' && (
             <TouchableOpacity

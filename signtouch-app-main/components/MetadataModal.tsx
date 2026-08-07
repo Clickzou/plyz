@@ -13,6 +13,7 @@ import { X, User, MapPin, Calendar, Music, Trophy, Palette, Users, Star, Check }
 import * as Haptics from 'expo-haptics';
 import { EventType, MemoryMetadata } from '@/utils/memoriesStorage';
 import { useTranslation } from '@/contexts/LanguageContext';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 
 interface MetadataModalProps {
   visible: boolean;
@@ -39,6 +40,9 @@ export default function MetadataModal({ visible, onClose, onSave, onSkip, initia
   const [eventDate, setEventDate] = useState(new Date().toISOString().split('T')[0]);
   const [eventType, setEventType] = useState<EventType>('rencontre');
   const { t } = useTranslation();
+  // Feuille du bas : elle remonte au-dessus du clavier, qui sinon la recouvre
+  // entierement dans une Modal Android.
+  const hauteurClavier = useKeyboardHeight();
 
   useEffect(() => {
     if (visible && initialMetadata) {
@@ -104,7 +108,7 @@ export default function MetadataModal({ visible, onClose, onSave, onSkip, initia
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={[styles.container, { marginBottom: hauteurClavier }]}>
           <View style={styles.header}>
             <Text style={styles.title}>{t('addToNotebook') || 'Ajouter au carnet'}</Text>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>

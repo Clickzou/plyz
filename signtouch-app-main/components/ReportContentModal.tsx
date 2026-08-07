@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/utils/supabase';
 import { showAlert } from '@/utils/alertHelper';
 import { APP_VERSION_FULL } from '@/utils/appVersion';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -57,6 +58,9 @@ export default function ReportContentModal({
   const [reason, setReason] = useState<string | null>(null);
   const [details, setDetails] = useState('');
   const [sending, setSending] = useState(false);
+  // Le champ « details » est en bas de la carte : sans cette marge, le clavier
+  // d'une Modal Android le recouvre entierement.
+  const hauteurClavier = useKeyboardHeight();
 
   const close = () => {
     setReason(null);
@@ -133,7 +137,7 @@ export default function ReportContentModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { paddingBottom: 20 + hauteurClavier }]}>
         <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={close} />
         <View style={styles.card}>
           <LinearGradient colors={['#1f2937', '#111827']} style={StyleSheet.absoluteFill} />

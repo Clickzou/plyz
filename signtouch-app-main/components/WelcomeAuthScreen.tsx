@@ -430,9 +430,13 @@ export default function WelcomeAuthScreen({
           <X size={24} color="#fff" />
         </TouchableOpacity>
       )}
+      {/* `behavior` valait `undefined` sur Android, c'est-a-dire « ne fais
+          rien » : le clavier recouvrait le champ e-mail. Depuis le SDK 54,
+          Android affiche l'app bord a bord et le clavier ne redimensionne plus
+          l'ecran — il faut donc decaler nous-memes, sur les deux plateformes. */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
       >
         <ScrollView
           contentContainerStyle={[
