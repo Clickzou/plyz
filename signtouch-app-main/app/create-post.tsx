@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, ImagePlus, X, Send, Camera, FileText, Calendar, Play } from 'lucide-react-native';
+import { ArrowLeft, ImagePlus, X, Send, Camera, FileText, Calendar, Play, Video } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as Haptics from 'expo-haptics';
@@ -137,6 +137,8 @@ export default function CreatePostScreen() {
     'Vidéo trop longue',
     'Ta vidéo dure {{d}} secondes. Le maximum est de 30 secondes — choisis-en une plus courte, ou raccourcis-la dans ta galerie.',
     'Photo ou vidéo (30 s max)',
+    'Photo',
+    'Vidéo',
     'La vidéo verticale s’affiche en plus grand.',
     'Video prete a publier (30 s max)',
     'Plyz n’est pas un réseau social comme les autres',
@@ -222,33 +224,46 @@ export default function CreatePostScreen() {
         const pending: any = await (ImagePicker as any).getPendingResultAsync?.();
         const first = Array.isArray(pending) ? pending[0] : pending;
         if (!first || first.canceled) return;
-        const uri = first.assets?.[0]?.uri || first.uri;
-        if (uri) await processPickedImage(uri);
+        const asset = first.assets?.[0] || first;
+        const uri = asset?.uri;
+        if (!uri) return;
+        // Une video reprise apres un redemarrage d'Android passait dans le
+        // traitement des IMAGES : compression impossible, media perdu sans un
+        // mot. On regarde le type avant de choisir le traitement.
+        if (asset?.type === 'video' || estUneVideo(uri)) {
+          await processPickedVideo(uri, asset?.duration);
+        } else {
+          await processPickedImage(uri);
+        }
       } catch { /* aucun résultat en attente : cas normal */ }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const pickImage = async (fromCamera = false) => {
+  // Trois sources, trois boutons. Un seul bouton « appareil photo » ouvrait la
+  // camera en mode PHOTO, sans aucun moyen de basculer en video : selon le
+  // telephone, l'onglet video n'apparait pas. Filmer etait donc impossible
+  // depuis l'app, alors que la fonction existait.
+  const pickImage = async (source: 'galerie' | 'photo' | 'video' = 'galerie') => {
     try {
       let result;
-      // Photo OU vidéo, au choix : une personnalité qui dit bonjour en vidéo
-      // vaut dix photos. `videoMaxDuration` coupe l'enregistrement à 30 s côté
-      // appareil photo — on ne laisse pas filmer trois minutes pour refuser
-      // ensuite. Depuis la galerie, la durée se contrôle après coup.
-      if (fromCamera) {
+      if (source === 'photo' || source === 'video') {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') return;
         result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ['images', 'videos'],
+          // La camera s'ouvre DIRECTEMENT dans le bon mode.
+          mediaTypes: source === 'video' ? ['videos'] : ['images'],
           allowsEditing: true,
           quality: 0.8,
+          // Coupe l'enregistrement a 30 s : on ne laisse pas filmer trois
+          // minutes pour refuser ensuite.
           videoMaxDuration: DUREE_VIDEO_MAX_S,
         });
       } else {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') return;
         result = await ImagePicker.launchImageLibraryAsync({
+          // Depuis la galerie, les deux types restent proposes.
           mediaTypes: ['images', 'videos'],
           allowsEditing: true,
           quality: 0.8,
@@ -567,7 +582,7 @@ export default function CreatePostScreen() {
           <View style={styles.mediaRow}>
             <TouchableOpacity
               style={[styles.mediaBtn, moderating && { opacity: 0.4 }]}
-              onPress={() => pickImage(false)}
+              onPress={() => pickImage('galerie')}
               activeOpacity={0.7}
               disabled={moderating}
             >
@@ -576,12 +591,21 @@ export default function CreatePostScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.mediaBtn, moderating && { opacity: 0.4 }]}
-              onPress={() => pickImage(true)}
+              onPress={() => pickImage('photo')}
               activeOpacity={0.7}
               disabled={moderating}
             >
               <Camera size={22} color="#3b82f6" />
-              <Text style={styles.mediaBtnText}>{t('camera' as any)}</Text>
+              <Text style={styles.mediaBtnText}>{trUI('Photo')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.mediaBtn, moderating && { opacity: 0.4 }]}
+              onPress={() => pickImage('video')}
+              activeOpacity={0.7}
+              disabled={moderating}
+            >
+              <Video size={22} color="#a855f7" />
+              <Text style={styles.mediaBtnText}>{trUI('Vidéo')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -751,7 +775,8 @@ const styles = StyleSheet.create({
   },
   mediaRow: {
     flexDirection: 'row',
-    gap: 12,
+    // Trois boutons desormais : sans resserrement, « Galerie » se tronque.
+    gap: 8,
     marginTop: 20,
   },
   mediaBtn: {
@@ -759,8 +784,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
     paddingVertical: 14,
+    paddingHorizontal: 4,
     borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
