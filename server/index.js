@@ -4354,6 +4354,47 @@ app.get('/api/ma-portee', requireAuthMw, async (req, res) => {
   }
 });
 
+// Retrait d'un commentaire. Passe par le serveur et non par la base en direct :
+// l'écriture depuis l'app était refusée par la règle de sécurité, sans message
+// exploitable — l'écran affichait « le commentaire n'a pas pu être supprimé »
+// et c'était tout. Le contrôle des droits est fait ICI, explicitement.
+//
+// Suppression DOUCE : la ligne reste en base pour la modération (obligations
+// DSA), seule sa date de retrait est posée.
+app.post('/api/comment/:id/delete', rateLimit('comment-delete', 60, 60 * 1000), requireAuthMw, async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const uid = req.authUser.id;
+
+    const { data: com } = await db.from('post_comments')
+      .select('id, author_id, post_id, deleted_at')
+      .eq('id', req.params.id).maybeSingle();
+    if (!com) return res.status(404).json({ error: 'not_found' });
+    if (com.deleted_at) return res.json({ ok: true, deja: true });
+
+    // Deux personnes peuvent retirer un commentaire : celui qui l'a écrit, et
+    // la personnalité chez qui il a été publié — elle doit pouvoir modérer sa
+    // propre page.
+    const { data: post } = await db.from('posts')
+      .select('celebrity_id').eq('id', com.post_id).maybeSingle();
+    const autorise = String(com.author_id) === String(uid)
+      || (post && String(post.celebrity_id) === String(uid));
+    if (!autorise) return res.status(403).json({ error: 'forbidden' });
+
+    const { error } = await db.from('post_comments')
+      .update({ deleted_at: new Date().toISOString(), deleted_by: uid })
+      .eq('id', com.id);
+    if (error) {
+      console.error('[comment-delete]', error.message);
+      return res.status(500).json({ error: 'internal' });
+    }
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('[comment-delete]', e.message);
+    return res.status(500).json({ error: 'internal' });
+  }
+});
+
 app.post('/api/moderate-image', rateLimit('moderate-image', 30, 60 * 1000), requireAuthMw, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });

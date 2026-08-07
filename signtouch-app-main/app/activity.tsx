@@ -25,6 +25,7 @@ import { useAutoTranslate } from '@/utils/translation';
 import ReportContentModal from '@/components/ReportContentModal';
 import VisionneuseMedia, { MediaVisionnable } from '@/components/VisionneuseMedia';
 import { estUneVideo } from '@/utils/media';
+import { authedFetch } from '@/utils/authedFetch';
 import { openEventLocation } from '@/utils/openMap';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
@@ -354,11 +355,15 @@ export default function ActivityScreen() {
           onPress: async () => {
             const postId = commentModalPostId;
             try {
-              const { error } = await supabase
-                .from('post_comments')
-                .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id })
-                .eq('id', c.id);
-              if (error) throw error;
+              // Par le SERVEUR : l'ecriture directe en base etait refusee par
+              // la regle de securite, sans message exploitable. Le serveur
+              // verifie les droits lui-meme (auteur du commentaire, ou
+              // personnalite proprietaire de la publication).
+              const r = await authedFetch(`${API_BASE}/api/comment/${c.id}/delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+              });
+              if (!r.ok) throw new Error('http_' + r.status);
               await loadComments(postId);
               setPosts(prev => prev.map(p =>
                 p.id === postId ? { ...p, comment_count: Math.max(0, (p.comment_count || 1) - 1) } : p
