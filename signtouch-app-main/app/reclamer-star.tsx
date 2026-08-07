@@ -11,6 +11,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
+import { getDateLocale } from '@/utils/dateLocale';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
@@ -63,6 +64,10 @@ export default function ReclamerStarScreen() {
     'Fais-le savoir : plus vous êtes nombreux, plus elle viendra vite.',
     'Ta réclamation est enregistrée. Elle apparaîtra dans le classement public une fois que nous aurons confirmé qu’il s’agit bien d’une personnalité publique — c’est la même vérification que pour l’inscription d’une célébrité, et elle protège la vie privée de chacun.',
     'Seules les personnalités publiques peuvent être réclamées : nous le vérifions automatiquement, comme à l’inscription d’une célébrité.',
+    'Vous avez atteint un palier ! Rendez-vous le',
+    'à',
+    'on lui écrit tous en même temps. Tu recevras une notification.',
+    'Une personnalité peut à tout moment demander le retrait de son nom.',
   ]);
 
   const chargerClassement = useCallback(async () => {
@@ -151,10 +156,21 @@ export default function ReclamerStarScreen() {
         // Le nom n'a pas été reconnu comme celui d'une personnalité publique :
         // on le DIT, et on dit pourquoi. Laisser le fan chercher son nom en
         // vain dans le classement lui ferait croire à une panne.
-        const message = d.notoriete_a_confirmer
+        let message = d.notoriete_a_confirmer
           ? trUI('Ta réclamation est enregistrée. Elle apparaîtra dans le classement public une fois que nous aurons confirmé qu’il s’agit bien d’une personnalité publique — c’est la même vérification que pour l’inscription d’une célébrité, et elle protège la vie privée de chacun.')
           : `${fans} ${fans > 1 ? trUI('fans la réclament') : trUI('fan la réclame')}. `
             + trUI('Fais-le savoir : plus vous êtes nombreux, plus elle viendra vite.');
+
+        // Un palier vient d'être franchi : c'est LA nouvelle du jour. Cinq
+        // cents partages étalés sur trois mois ne se voient pas ; cinq cents
+        // messages dans la même heure, si.
+        if (d.vague_prevue_le) {
+          const quand = new Date(d.vague_prevue_le);
+          message += '\n\n' + trUI('Vous avez atteint un palier ! Rendez-vous le')
+            + ` ${quand.toLocaleDateString(getDateLocale(), { weekday: 'long', day: 'numeric', month: 'long' })} `
+            + `${trUI('à')} ${quand.toLocaleTimeString(getDateLocale(), { hour: '2-digit', minute: '2-digit' })} : `
+            + trUI('on lui écrit tous en même temps. Tu recevras une notification.');
+        }
 
         showConfirm(
           trUI('Réclamation enregistrée'),
@@ -260,6 +276,8 @@ export default function ReclamerStarScreen() {
                   la différence entre une règle comprise et une règle subie. */}
               <Text style={styles.regle}>
                 {trUI('Seules les personnalités publiques peuvent être réclamées : nous le vérifions automatiquement, comme à l’inscription d’une célébrité.')}
+                {'\n'}
+                {trUI('Une personnalité peut à tout moment demander le retrait de son nom.')}
               </Text>
 
               {/* Ouvrir une réclamation pour un nom que personne n'a encore

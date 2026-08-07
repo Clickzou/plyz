@@ -4643,6 +4643,28 @@ async function incrusterMusique(bufferVideo, extVideo, bufferMusique, volVideo, 
 // pas de l'administration.
 const ADMIN_EMAIL = 'jc@clickzou.fr';
 
+// Paliers qui déclenchent une vague coordonnée. Volontairement bas au début :
+// un palier hors d'atteinte décourage au lieu d'entraîner. On les franchit, on
+// voit l'effet, on recommence.
+const PALIERS_VAGUE = [50, 250, 1000, 5000];
+
+// Heure de la vague, en heure de Paris. Une heure UNIQUE pour tout le monde,
+// et non l'heure locale de chacun : c'est la simultanéité qui rend la vague
+// visible. Étalée sur les fuseaux, elle redeviendrait du bruit de fond.
+const HEURE_VAGUE_PARIS = 18;
+
+/** Prochaine occurrence de 18 h (Paris) au moins douze heures plus tard. */
+function prochaineVague() {
+  // Douze heures d'avance au minimum : le temps de prévenir, et d'éviter
+  // qu'une vague parte au milieu de la nuit pour la moitié des fans.
+  const d = new Date(Date.now() + 12 * 3600 * 1000);
+  d.setUTCHours(HEURE_VAGUE_PARIS - 2, 0, 0, 0); // Paris ≈ UTC+2 l'été
+  if (d.getTime() < Date.now() + 12 * 3600 * 1000) {
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  return d.toISOString();
+}
+
 function slugDeStar(nom) {
   return String(nom || '')
     .trim()
@@ -4755,7 +4777,34 @@ app.post('/api/reclamer', rateLimit('reclamer', 20, 60 * 1000), requireAuthMw, a
     const { data: dossier } = await db.rpc('dossier_audience', { star: star.id });
     const stats = Array.isArray(dossier) ? dossier[0] : dossier;
 
+    // Palier franchi ? On programme une vague — une seule fois par palier.
+    let vague = null;
+    try {
+      const fans = stats?.fans || 0;
+      const { data: etat } = await db.from('stars_reclamees')
+        .select('palier_atteint, vague_prevue_le, retrait_demande')
+        .eq('id', star.id).maybeSingle();
+
+      const atteint = etat?.palier_atteint || 0;
+      const franchi = [...PALIERS_VAGUE].reverse().find((p) => fans >= p && p > atteint);
+
+      // Rien pour une personnalité qui a demandé le retrait : c'est
+      // précisément ce qu'elle a refusé.
+      if (franchi && !etat?.retrait_demande && !etat?.vague_prevue_le) {
+        vague = prochaineVague();
+        await db.from('stars_reclamees').update({
+          palier_atteint: franchi,
+          vague_prevue_le: vague,
+          vague_palier: franchi,
+        }).eq('id', star.id);
+        console.log(`[Vague] ${star.nom_affiche} a franchi ${franchi} — vague le ${vague}`);
+      }
+    } catch (e) {
+      console.error('[Vague] planification impossible :', e.message);
+    }
+
     return res.json({
+      vague_prevue_le: vague,
       ok: true,
       star: { id: star.id, slug, nom: star.nom_affiche },
       // Renvoyé tout de suite : voir « tu es le 342ᵉ » est ce qui donne envie
@@ -4867,6 +4916,139 @@ app.get('/api/reclamations/rechercher', async (req, res) => {
     return res.json({ resultats });
   } catch (e) {
     console.error('[Recherche réclamations]', e.message);
+    return res.status(500).json({ error: 'internal' });
+  }
+});
+
+/**
+ * Envoie les vagues arrivées à échéance.
+ *
+ * Le message est IMPOSÉ et volontairement chaleureux. Laisser chacun écrire ce
+ * qu'il veut, c'est prendre le risque qu'une invitation collective se termine
+ * en meute — et ce n'est pas parce qu'on n'a pas écrit le message qu'on n'en
+ * serait pas responsable.
+ */
+async function envoyerVaguesDues() {
+  const db = getSupabaseAdmin();
+  const { data: stars } = await db.from('stars_reclamees')
+    .select('id, nom_affiche, vague_palier, retrait_demande')
+    .not('vague_prevue_le', 'is', null)
+    .lte('vague_prevue_le', new Date().toISOString())
+    .limit(10);
+
+  for (const star of (stars || [])) {
+    try {
+      // Le retrait a pu arriver après la programmation : on vérifie au dernier
+      // moment, pas seulement au moment de planifier.
+      if (star.retrait_demande) {
+        await db.from('stars_reclamees')
+          .update({ vague_prevue_le: null, vague_palier: null }).eq('id', star.id);
+        console.log(`[Vague] annulée pour ${star.nom_affiche} (retrait demandé)`);
+        continue;
+      }
+
+      const { data: reclamants } = await db.from('reclamations')
+        .select('fan_id').eq('star_id', star.id);
+
+      const corps = `📣 Nous sommes ${star.vague_palier} à réclamer ${star.nom_affiche} !`
+        + ` C'est le moment de le/la lui dire gentiment, tous ensemble.`;
+
+      const lignes = (reclamants || [])
+        .filter((r) => r.fan_id)
+        .map((r) => ({
+          user_id: r.fan_id,
+          title: 'Plyz',
+          body: corps,
+          data: { type: 'vague_reclamation', starId: star.id, nom: star.nom_affiche },
+          sent: false,
+        }));
+
+      for (let i = 0; i < lignes.length; i += 500) {
+        await db.from('push_outbox').insert(lignes.slice(i, i + 500));
+      }
+
+      await db.from('stars_reclamees')
+        .update({ vague_prevue_le: null, vague_palier: null }).eq('id', star.id);
+
+      console.log(`[Vague] ${star.nom_affiche} → ${lignes.length} fan(s) appelé(s)`);
+    } catch (e) {
+      console.error('[Vague]', e.message);
+    }
+  }
+}
+
+/**
+ * Droit de retrait d'une personnalité.
+ *
+ * SANS COMPTE ET SANS JUSTIFICATIF, et l'effet est IMMÉDIAT. Une personnalité
+ * n'a pas de compte Plyz — c'est même tout le sujet — et lui demander de s'en
+ * créer un pour qu'on cesse de la solliciter serait grotesque.
+ *
+ * On retire d'abord, on vérifie ensuite : un retrait injustifié coûte quelques
+ * réclamations, un maintien injustifié fait du tort à quelqu'un.
+ */
+app.post('/api/reclamations/retrait', rateLimit('retrait', 5, 60 * 1000), async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const nom = String(req.body?.nom || '').trim();
+    if (nom.length < 2) return res.status(400).json({ error: 'nom_requis' });
+
+    const slug = slugDeStar(nom);
+    const { data: star } = await db.from('stars_reclamees')
+      .select('id, nom_affiche').eq('slug', slug).maybeSingle();
+
+    const contact = String(req.body?.contact || '').trim().slice(0, 200) || null;
+    const motif = String(req.body?.motif || '').trim().slice(0, 1000) || null;
+
+    let supprimees = 0;
+    if (star) {
+      const { count } = await db.from('reclamations')
+        .select('id', { count: 'exact', head: true }).eq('star_id', star.id);
+      supprimees = count || 0;
+
+      // Les réclamations elles-mêmes sont EFFACÉES, pas seulement masquées :
+      // conserver la liste de ceux qui réclamaient quelqu'un qui a dit non
+      // n'aurait aucune justification.
+      await db.from('reclamations').delete().eq('star_id', star.id);
+      await db.from('stars_reclamees').update({
+        retrait_demande: true,
+        retrait_le: new Date().toISOString(),
+        retrait_contact: contact,
+        retrait_motif: motif,
+        visible: false,
+        vague_prevue_le: null,
+        vague_palier: null,
+      }).eq('id', star.id);
+    }
+
+    // Journalisé même si le nom n'existe pas encore : cela vaut opposition
+    // pour l'avenir, et prouve la date de la demande.
+    await db.from('retraits_reclamations').insert({
+      star_id: star?.id || null,
+      nom_demande: nom,
+      contact, motif,
+      reclamations_supprimees: supprimees,
+    });
+
+    // Prévenir l'administration : le retrait est déjà fait, mais quelqu'un
+    // doit savoir qu'une personne a demandé qu'on cesse de la solliciter.
+    const mailer = getMailTransporter();
+    if (mailer) {
+      mailer.sendMail({
+        from: process.env.SMTP_FROM || 'noreply@plyz.io',
+        to: ADMIN_EMAIL,
+        subject: `[Plyz] Demande de retrait — ${nom}`,
+        text: `${nom} (ou son représentant) demande le retrait des réclamations.\n\n`
+          + `Contact : ${contact || 'non fourni'}\nMotif : ${motif || 'non fourni'}\n`
+          + `Réclamations supprimées : ${supprimees}\n\n`
+          + `Le retrait est DÉJÀ effectif. Vérifier la légitimité a posteriori.`,
+      }).catch((e) => console.error('[Retrait] mail :', e.message));
+    }
+
+    console.log(`[Retrait] ${nom} — ${supprimees} réclamation(s) supprimée(s)`);
+    return res.json({ ok: true, supprimees });
+  } catch (e) {
+    console.error('[Retrait]', e.message);
     return res.status(500).json({ error: 'internal' });
   }
 });
@@ -8547,6 +8729,7 @@ async function runNotificationWorker() {
     await reconcileMissingInvoices();
     await expireVideoCallRequests();
     await rappelerPersonnalitesSansEvenement();
+    await envoyerVaguesDues();
     await releaseEndedSessionHolds();
     await sendEventReminders('event_sessions', 'starts_at', 'created_by', 'event_paid_fans', 'event_session_id', 'title', 'Ton événement', 60, 'reminded_1h');
     await sendEventReminders('event_sessions', 'starts_at', 'created_by', 'event_paid_fans', 'event_session_id', 'title', 'Ton événement', 2, 'reminded_2m');
