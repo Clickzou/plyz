@@ -9,7 +9,7 @@ import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Newspaper, CheckCircle, Calendar, MapPin, Heart, MessageCircle, Send, Share2, Flag, Play } from 'lucide-react-native';
+import { Newspaper, CheckCircle, Calendar, MapPin, Heart, MessageCircle, Send, Share2, Flag } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -25,6 +25,7 @@ import { useAutoTranslate } from '@/utils/translation';
 import ReportContentModal from '@/components/ReportContentModal';
 import VisionneuseMedia, { MediaVisionnable } from '@/components/VisionneuseMedia';
 import { estUneVideo } from '@/utils/media';
+import VideoFil from '@/components/VideoFil';
 import { authedFetch } from '@/utils/authedFetch';
 import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 import { openEventLocation } from '@/utils/openMap';
@@ -264,9 +265,30 @@ export default function ActivityScreen() {
     }
   }, []);
 
-  // Une publication compte comme VUE quand la moitie de sa carte est restee a
-  // l'ecran une seconde entiere : un defilement rapide ne compte pas.
-  const configVisibilite = useRef({ itemVisiblePercentThreshold: 50, minimumViewTime: 1000 }).current;
+  // Publication dont la video se joue : une seule a la fois, celle qu'on
+  // regarde. Tout le fil en lecture, ce serait la batterie et le forfait mobile
+  // qui partent en fumee.
+  const [postEnLecture, setPostEnLecture] = useState<string | null>(null);
+
+  // Deux lectures de la visibilite pour deux besoins qui n'ont pas le meme
+  // rythme : compter une VUE demande de la patience (une seconde pleine, sinon
+  // un simple defilement gonflerait le compteur), lancer une video demande
+  // l'inverse — elle doit demarrer des qu'on arrive dessus.
+  const pairesVisibilite = useRef([
+    {
+      viewabilityConfig: { itemVisiblePercentThreshold: 50, minimumViewTime: 1000 },
+      onViewableItemsChanged: signalerVues,
+    },
+    {
+      viewabilityConfig: { itemVisiblePercentThreshold: 60 },
+      onViewableItemsChanged: ({ viewableItems }: any) => {
+        const premiereVideo = (viewableItems || []).find(
+          (v: any) => v?.item?.media_url && estUneVideo(v.item.media_url),
+        );
+        setPostEnLecture(premiereVideo?.item?.id ?? null);
+      },
+    },
+  ]).current;
 
   const openComments = (postId: string) => {
     setCommentModalPostId(postId);
@@ -571,12 +593,16 @@ export default function ActivityScreen() {
             })}
           >
             {estUneVideo(item.media_url) ? (
-              <View style={styles.postVideoWrap}>
-                <Image source={{ uri: item.media_url }} style={styles.postImage} />
-                <View style={styles.postVideoPlay}>
-                  <Play size={26} color="#ffffff" fill="#ffffff" />
-                </View>
-              </View>
+              // L'adresse de la video partait dans une balise <Image>, qui n'en
+              // pouvait rien faire : un rectangle vide avec un triangle dessus,
+              // aucune image, aucun mouvement. Elle se joue maintenant seule,
+              // en sourdine, tant que la carte reste a l'ecran ; le toucher
+              // l'ouvre en grand, avec le son.
+              <VideoFil
+                uri={item.media_url}
+                actif={postEnLecture === item.id}
+                style={styles.postImage}
+              />
             ) : (
               <Image source={{ uri: item.media_url }} style={styles.postImage} />
             )}
@@ -751,8 +777,7 @@ export default function ActivityScreen() {
             fetchFeed(1, true);
           }}
           refreshing={refreshing}
-          onViewableItemsChanged={signalerVues}
-          viewabilityConfig={configVisibilite}
+          viewabilityConfigCallbackPairs={pairesVisibilite}
           onEndReached={() => { if (hasMore && !loading) fetchFeed(page + 1); }}
           onEndReachedThreshold={0.5}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
@@ -1055,12 +1080,9 @@ const styles = StyleSheet.create({
   eventBadgeText: { color: '#f59e0b', fontSize: 11, fontWeight: '600' },
   postTitle: { color: '#fff', fontSize: 17, fontWeight: '700' },
   postBody: { color: '#d1d5db', fontSize: 14, lineHeight: 22, marginTop: 6 },
-  postImage: { width: '100%', height: 200, borderRadius: 12, marginTop: 10 },
-  postVideoWrap: { position: 'relative' },
-  postVideoPlay: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, marginTop: 10,
-    alignItems: 'center', justifyContent: 'center',
-  },
+  // Sert aussi de cadre a la video du fil : `overflow: hidden` pour que les
+  // coins arrondis s'appliquent bien a l'image comme au lecteur.
+  postImage: { width: '100%', height: 200, borderRadius: 12, marginTop: 10, overflow: 'hidden' },
   eventDateRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
   eventDateText: { color: '#f59e0b', fontSize: 13, fontWeight: '500' },
   eventLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
