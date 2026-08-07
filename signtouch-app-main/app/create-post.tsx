@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, ImagePlus, X, Send, Camera, FileText, Calendar, Play, Video } from 'lucide-react-native';
+import { ArrowLeft, ImagePlus, X, Send, Camera, FileText, Calendar, Play, Video, Music } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as Haptics from 'expo-haptics';
@@ -18,6 +18,7 @@ import { authedFetch } from '@/utils/authedFetch';
 import { useAutoTranslate } from '@/utils/translation';
 import { estUneVideo } from '@/utils/media';
 import RappelEvenement from '@/components/RappelEvenement';
+import SelecteurMusique, { ChoixMusique } from '@/components/SelecteurMusique';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 const LOCAL_POSTS_KEY = '@plyz_local_posts';
@@ -72,9 +73,23 @@ async function moderateImageOnServer(uri: string, token?: string): Promise<{ saf
   }
 }
 
-async function uploadImageToServer(uri: string, token?: string, estVideo = false): Promise<{ url: string | null; rejected?: boolean; quotaAtteint?: boolean }> {
+async function uploadImageToServer(
+  uri: string,
+  token?: string,
+  estVideo = false,
+  musique?: ChoixMusique | null,
+): Promise<{ url: string | null; musiqueId?: string | null; rejected?: boolean; quotaAtteint?: boolean }> {
   try {
     const formData = new FormData();
+
+    // Le mixage se fait sur le serveur : incruster une piste audio dans une
+    // video demande FFmpeg, qui n'a pas sa place dans l'application. On
+    // transmet le morceau voulu et les deux volumes regles a l'apercu.
+    if (estVideo && musique?.musique) {
+      formData.append('musique_id', musique.musique.id);
+      formData.append('volume_video', String(musique.volumeVideo));
+      formData.append('volume_musique', String(musique.volumeMusique));
+    }
     // Une video garde son extension et son type : sans cela le serveur la
     // rangerait en .jpg, et le lecteur refuserait de l'ouvrir.
     const ext = estVideo ? (uri.split('?')[0].split('.').pop() || 'mp4').toLowerCase() : 'jpg';
@@ -106,7 +121,7 @@ async function uploadImageToServer(uri: string, token?: string, estVideo = false
     }
     if (!res.ok) throw new Error('Upload failed');
     const data = await res.json();
-    return { url: data.url || null };
+    return { url: data.url || null, musiqueId: data.musique_id ?? null };
   } catch (err) {
     console.warn('[Upload] Failed:', err);
     return { url: null };
@@ -133,6 +148,9 @@ export default function CreatePostScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   // Le media choisi est-il une video ? Change l'apercu et l'envoi au serveur.
   const [estVideo, setEstVideo] = useState(false);
+  // Musique de fond et volumes, regles par la personnalite sur son apercu.
+  const [musique, setMusique] = useState<ChoixMusique | null>(null);
+  const [selecteurMusique, setSelecteurMusique] = useState(false);
   const trUI = useAutoTranslate([
     'Vidéo trop longue',
     'Ta vidéo dure {{d}} secondes. Le maximum est de 30 secondes — choisis-en une plus courte, ou raccourcis-la dans ta galerie.',
@@ -141,6 +159,9 @@ export default function CreatePostScreen() {
     'Vidéo',
     'La vidéo verticale s’affiche en plus grand.',
     'Video prete a publier (30 s max)',
+    'Ajouter une musique',
+    'Ta voix',
+    'Musique',
     'Plyz n’est pas un réseau social comme les autres',
     "Vos fans viennent ici pour etre PROCHES de vous, au quotidien. Vos vacances, ils les voient deja ailleurs : ce qu'ils ne voient nulle part, c'est votre metier.",
     "Entre deux prises sur un tournage · l'entrainement avant le match · le vestiaire · les balances et les backstages avant de monter sur scene · l'atelier, le studio, la preparation",
@@ -315,9 +336,14 @@ export default function CreatePostScreen() {
 
     try {
       let mediaUrl: string | null = null;
+      // Identifiant du morceau REELLEMENT incruste, renvoye par le serveur. Il
+      // sert a afficher le credit de l'auteur sous la video — obligation de la
+      // licence CC-BY. S'il vaut null, aucune musique n'a ete posee et il n'y a
+      // donc rien a crediter.
+      let musiqueId: string | null = null;
 
       if (imageUri) {
-        const uploadResult = await uploadImageToServer(imageUri, session?.access_token, estVideo);
+        const uploadResult = await uploadImageToServer(imageUri, session?.access_token, estVideo, musique);
         if (uploadResult.rejected) {
           showAlert(
             t('contentRejected' as any) || 'Content Rejected',
@@ -335,6 +361,7 @@ export default function CreatePostScreen() {
           return;
         }
         mediaUrl = uploadResult.url;
+        musiqueId = uploadResult.musiqueId ?? null;
         if (!mediaUrl) {
           mediaUrl = imageUri;
         }
@@ -370,6 +397,7 @@ export default function CreatePostScreen() {
             body: newPost.body,
             media_url: mediaUrl,
             event_date: eventDateValue,
+            musique_id: musiqueId,
           }),
         });
         if (res.ok) {
@@ -548,13 +576,44 @@ export default function CreatePostScreen() {
               )}
               <TouchableOpacity
                 style={styles.removeImageBtn}
-                onPress={() => { setImageUri(null); setEstVideo(false); }}
+                onPress={() => { setImageUri(null); setEstVideo(false); setMusique(null); }}
                 activeOpacity={0.7}
               >
                 <X size={18} color="#fff" />
               </TouchableOpacity>
             </View>
           ) : null}
+
+          {/* Musique de fond : seulement sur une video, et seulement une fois
+              qu'elle est choisie — proposer d'habiller un media qui n'existe
+              pas encore n'a pas de sens. */}
+          {estVideo && imageUri && (
+            <TouchableOpacity
+              style={[styles.musiqueBtn, musique?.musique && styles.musiqueBtnRempli]}
+              onPress={() => setSelecteurMusique(true)}
+              activeOpacity={0.8}
+            >
+              <Music size={18} color={musique?.musique ? '#052e1f' : '#8b5cf6'} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.musiqueBtnTxt, musique?.musique && { color: '#052e1f' }]}>
+                  {musique?.musique
+                    ? `${musique.musique.titre} — ${musique.musique.artiste}`
+                    : trUI('Ajouter une musique')}
+                </Text>
+                {!!musique?.musique && (
+                  <Text style={styles.musiqueBtnSous}>
+                    {trUI('Ta voix')} {Math.round(musique.volumeVideo * 100)}% ·{' '}
+                    {trUI('Musique')} {Math.round(musique.volumeMusique * 100)}%
+                  </Text>
+                )}
+              </View>
+              {!!musique?.musique && (
+                <TouchableOpacity onPress={() => setMusique(null)} hitSlop={10}>
+                  <X size={16} color="#052e1f" />
+                </TouchableOpacity>
+              )}
+            </TouchableOpacity>
+          )}
 
           {/* Ce qui distingue Plyz des autres reseaux : les coulisses. Une
               personnalite poste par reflexe ce qu'elle poste ailleurs — des
@@ -649,6 +708,17 @@ export default function CreatePostScreen() {
           if (!quota) router.back();
         }}
       />
+
+      <SelecteurMusique
+        visible={selecteurMusique}
+        videoUri={estVideo ? imageUri : null}
+        choixInitial={musique ?? undefined}
+        onClose={() => setSelecteurMusique(false)}
+        onValider={(choix) => {
+          setMusique(choix.musique ? choix : null);
+          setSelecteurMusique(false);
+        }}
+      />
     </View>
   );
 }
@@ -740,6 +810,18 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
+  musiqueBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingVertical: 13, paddingHorizontal: 14,
+    borderRadius: 14, marginBottom: 12,
+    borderWidth: 1, borderColor: 'rgba(139,92,246,0.45)',
+    backgroundColor: 'rgba(139,92,246,0.10)',
+  },
+  // Une fois le morceau choisi, le bouton devient plein : on voit d'un coup
+  // d'oeil que la video partira habillee, sans avoir a rouvrir la fenetre.
+  musiqueBtnRempli: { backgroundColor: '#a78bfa', borderColor: '#a78bfa' },
+  musiqueBtnTxt: { color: '#c4b5fd', fontSize: 14.5, fontWeight: '700' },
+  musiqueBtnSous: { color: 'rgba(5,46,31,0.75)', fontSize: 12, marginTop: 2, fontWeight: '600' },
   coulissesBox: {
     backgroundColor: 'rgba(99,102,241,0.10)', borderWidth: 1,
     borderColor: 'rgba(99,102,241,0.30)', borderRadius: 14,

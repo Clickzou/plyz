@@ -6,6 +6,21 @@ const { createClient } = require('@supabase/supabase-js');
 const multer = require('multer');
 const path = require('path');
 const nsfw = require('nsfwjs');
+const os = require('os');
+const fs = require('fs');
+const { execFile } = require('child_process');
+
+// FFmpeg en require optionnel, comme nodemailer : tant que `npm install` n'a
+// pas tourné, le serveur démarre quand même — une vidéo part alors sans
+// musique plutôt que de ne pas partir du tout.
+let cheminFfmpeg = null;
+let cheminFfprobe = null;
+try {
+  cheminFfmpeg = require('ffmpeg-static');
+  cheminFfprobe = require('ffprobe-static').path;
+} catch (err) {
+  console.warn('[Musique] ffmpeg indisponible (faire npm install) :', err.message);
+}
 
 // nodemailer en require optionnel : si le module n'est pas encore installé
 // (npm install pas fait après un pull), le serveur démarre quand même.
@@ -4505,6 +4520,122 @@ async function bilanVideosDuMois(db, uid) {
   };
 }
 
+// ---------------------------------------------------------------------------
+//  Bibliothèque musicale : catalogue et mixage
+// ---------------------------------------------------------------------------
+
+function lancerFfmpeg(binaire, args, timeoutMs = 120000) {
+  return new Promise((resolve, reject) => {
+    execFile(binaire, args, { timeout: timeoutMs, maxBuffer: 10 * 1024 * 1024 },
+      (err, stdout, stderr) => {
+        if (err) return reject(new Error(stderr ? String(stderr).slice(-500) : err.message));
+        resolve(String(stdout || ''));
+      });
+  });
+}
+
+/** Vrai si le fichier contient au moins une piste audio. */
+async function aUnePisteAudio(chemin) {
+  try {
+    const sortie = await lancerFfmpeg(cheminFfprobe, [
+      '-v', 'error', '-select_streams', 'a',
+      '-show_entries', 'stream=codec_type', '-of', 'csv=p=0', chemin,
+    ], 20000);
+    return sortie.trim().length > 0;
+  } catch {
+    // Dans le doute on suppose qu'il y en a une : le mixage sait gérer ce cas,
+    // alors que remplacer le son d'une vidéo qui en avait perdrait une voix.
+    return true;
+  }
+}
+
+/** Ramène un volume reçu de l'app dans une plage sûre (0 à 2, soit 0 à 200 %). */
+function volumeValide(valeur, defaut) {
+  const v = Number(valeur);
+  if (!Number.isFinite(v) || v < 0) return defaut;
+  return Math.min(v, 2);
+}
+
+/**
+ * Incruste un morceau dans une vidéo et renvoie le fichier obtenu.
+ *
+ * Les deux volumes viennent de l'écran de publication : la personnalité les a
+ * réglés à l'oreille, sur son propre aperçu. Le serveur ne décide de rien, il
+ * applique — sauf quand la vidéo est muette, auquel cas seule la musique reste.
+ *
+ * Renvoie `null` si le mixage n'a pas pu se faire : la vidéo part alors telle
+ * quelle. Une musique manquante ne doit jamais empêcher une publication.
+ */
+async function incrusterMusique(bufferVideo, extVideo, bufferMusique, volVideo, volMusique) {
+  if (!cheminFfmpeg) return null;
+
+  const base = path.join(os.tmpdir(), `plyz-${Date.now()}-${Math.round(Math.random() * 1e6)}`);
+  const fEntree = `${base}-in${extVideo || '.mp4'}`;
+  const fMusique = `${base}-son.mp3`;
+  const fSortie = `${base}-out.mp4`;
+
+  try {
+    await fs.promises.writeFile(fEntree, bufferVideo);
+    await fs.promises.writeFile(fMusique, bufferMusique);
+
+    // On ne mélange que s'il y a deux sons à mélanger : une vidéo muette, ou
+    // dont le volume a été mis à zéro, n'a pas de voix à préserver.
+    const melanger = volVideo > 0 && (await aUnePisteAudio(fEntree));
+
+    // `-shortest` : la musique s'arrête avec la vidéo. Sans lui, un morceau de
+    // trois minutes sur une vidéo de trente secondes donnerait un fichier de
+    // trois minutes dont l'image serait figée.
+    //
+    // `normalize=0` sur amix : par défaut, ffmpeg divise le volume par le
+    // nombre de pistes — les deux réglages faits à l'oreille par la
+    // personnalité auraient été rabaissés de moitié sans qu'elle comprenne.
+    const args = melanger
+      ? [
+          '-y', '-i', fEntree, '-i', fMusique,
+          '-filter_complex',
+          `[0:a]volume=${volVideo}[voix];[1:a]volume=${volMusique}[fond];`
+            + '[voix][fond]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[son]',
+          '-map', '0:v', '-map', '[son]',
+          '-c:v', 'copy', '-c:a', 'aac', '-b:a', '128k', '-shortest', fSortie,
+        ]
+      : [
+          '-y', '-i', fEntree, '-i', fMusique,
+          '-filter_complex', `[1:a]volume=${volMusique}[son]`,
+          '-map', '0:v', '-map', '[son]',
+          '-c:v', 'copy', '-c:a', 'aac', '-b:a', '128k', '-shortest', fSortie,
+        ];
+
+    await lancerFfmpeg(cheminFfmpeg, args);
+    return await fs.promises.readFile(fSortie);
+  } catch (e) {
+    console.error('[Musique] mixage impossible :', e.message);
+    return null;
+  } finally {
+    for (const f of [fEntree, fMusique, fSortie]) {
+      fs.promises.unlink(f).catch(() => {});
+    }
+  }
+}
+
+// Catalogue proposé au moment de publier. Servi par le serveur et non lu
+// directement en base : le jour où un morceau doit disparaître pour raison de
+// licence, il disparaît pour tout le monde en même temps.
+app.get('/api/musiques', async (req, res) => {
+  try {
+    const { data, error } = await getSupabaseAdmin()
+      .from('musiques_libres')
+      .select('id, titre, artiste, licence, attribution, url_fichier, duree_sec, ambiance')
+      .eq('actif', true)
+      .order('ordre', { ascending: true })
+      .order('titre', { ascending: true });
+    if (error) throw error;
+    res.json({ musiques: data || [] });
+  } catch (e) {
+    console.error('[Musique] catalogue indisponible :', e.message);
+    res.status(500).json({ error: 'internal' });
+  }
+});
+
 app.post('/api/upload-post-image', rateLimit('upload-post-image', 20, 60 * 1000), requireAuthMw, uploadMedia.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });
@@ -4551,13 +4682,52 @@ app.post('/api/upload-post-image', rateLimit('upload-post-image', 20, 60 * 1000)
 
     const db = getSupabaseAdmin();
     const timestamp = Date.now();
-    const ext = path.extname(req.file.originalname) || '.jpg';
+    let ext = path.extname(req.file.originalname) || '.jpg';
+    let corps = req.file.buffer;
+    let typeContenu = req.file.mimetype || 'image/jpeg';
+    let musiqueAppliquee = null;
+
+    // Musique de fond : uniquement sur les vidéos, et uniquement si le morceau
+    // demandé existe encore au catalogue. Un identifiant inventé ou un morceau
+    // retiré ne bloque pas la publication — la vidéo part sans musique.
+    const musiqueId = String(req.body?.musique_id || '').trim();
+    if (estVideo && musiqueId) {
+      try {
+        const { data: morceau } = await db
+          .from('musiques_libres')
+          .select('id, url_fichier, attribution')
+          .eq('id', musiqueId).eq('actif', true).maybeSingle();
+
+        if (morceau?.url_fichier) {
+          const reponse = await fetch(morceau.url_fichier);
+          if (reponse.ok) {
+            const bufferMusique = Buffer.from(await reponse.arrayBuffer());
+            // Volumes réglés par la personnalité sur son aperçu. Valeurs de
+            // repli identiques à ce que propose l'écran à l'ouverture.
+            const volVideo = volumeValide(req.body?.volume_video, 1);
+            const volMusique = volumeValide(req.body?.volume_musique, 0.3);
+            const mixe = await incrusterMusique(corps, ext, bufferMusique, volVideo, volMusique);
+            if (mixe) {
+              corps = mixe;
+              ext = '.mp4';
+              typeContenu = 'video/mp4';
+              musiqueAppliquee = morceau.id;
+            }
+          } else {
+            console.error('[Musique] fichier introuvable :', morceau.url_fichier, reponse.status);
+          }
+        }
+      } catch (e) {
+        console.error('[Musique] ajout impossible, la vidéo part sans :', e.message);
+      }
+    }
+
     const fileName = `posts/${timestamp}${ext}`;
 
     const { data, error } = await db.storage
       .from('memories')
-      .upload(fileName, req.file.buffer, {
-        contentType: req.file.mimetype || 'image/jpeg',
+      .upload(fileName, corps, {
+        contentType: typeContenu,
         upsert: false,
       });
 
@@ -4568,7 +4738,10 @@ app.post('/api/upload-post-image', rateLimit('upload-post-image', 20, 60 * 1000)
 
     const { data: urlData } = db.storage.from('memories').getPublicUrl(data.path);
     console.log('[Upload] Image uploaded:', urlData.publicUrl);
-    res.json({ url: urlData.publicUrl });
+    // `musique_id` est renvoyé pour que l'app le range avec la publication :
+    // c'est lui qui permettra d'afficher le crédit de l'auteur sous la vidéo,
+    // obligation de la licence CC-BY.
+    res.json({ url: urlData.publicUrl, musique_id: musiqueAppliquee });
   } catch (error) {
     console.error('[Upload] Error:', error.message);
     res.status(500).json({ error: error.message });
@@ -4707,7 +4880,7 @@ app.get('/api/celebrity-events', async (req, res) => {
 app.post('/api/posts', async (req, res) => {
   try {
     const db = getSupabaseAdmin();
-    const { kind, title, body, media_url, event_date, price_cents } = req.body;
+    const { kind, title, body, media_url, event_date, price_cents, musique_id } = req.body;
 
     // 🔒 IDOR — AUTH + PROPRIÉTÉ : le post est toujours créé au nom de l'appelant.
     const authUser = await verifySupabaseJWT(req);
@@ -4724,6 +4897,10 @@ app.post('/api/posts', async (req, res) => {
         media_url: media_url || null,
         event_date: event_date || null,
         price_cents: price_cents || 0,
+        // Morceau incrusté dans la vidéo : conservé pour pouvoir afficher le
+        // crédit de son auteur sous la publication, obligation de la licence
+        // CC-BY. Le lien se perdrait sinon dès la sortie de l'écran.
+        musique_id: musique_id || null,
       })
       .select()
       .single();
