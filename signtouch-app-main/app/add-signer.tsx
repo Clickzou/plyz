@@ -7,6 +7,7 @@ import {
   TextInput,
   Platform,
   ActivityIndicator,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -210,6 +211,10 @@ export default function AddSignerScreen() {
           <View style={{ width: 40 }} />
         </View>
 
+        {/* Le nom du signataire se saisit au milieu de l'ecran, mais le clavier
+            ne le redimensionne plus (Android bord a bord) : sans ce garde-fou,
+            le champ et le bouton « Enregistrer » passent dessous. */}
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <View style={[styles.content, { paddingBottom: insets.bottom + 16 }]}>
           <View style={styles.inputSection}>
             <Text style={styles.label}>Nom du signataire</Text>
@@ -293,6 +298,7 @@ export default function AddSignerScreen() {
             )}
           </TouchableOpacity>
         </View>
+        </KeyboardAvoidingView>
       </View>
     </GestureHandlerRootView>
   );

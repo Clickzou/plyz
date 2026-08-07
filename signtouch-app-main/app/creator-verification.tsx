@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, Platform, ActivityIndicator, Alert,
+  TextInput, Platform, ActivityIndicator, Alert, KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -196,10 +196,14 @@ export default function CreatorVerificationScreen() {
         <View style={{ width: 40 }} />
       </View>
 
+      {/* Cinq champs a remplir : sans ce garde-fou, ceux du bas se saisissent
+          sous le clavier, qui ne redimensionne plus l'ecran depuis le SDK 54. */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 30 }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.heroSection}>
           <View style={styles.heroIconWrap}>
@@ -421,6 +425,7 @@ export default function CreatorVerificationScreen() {
           </View>
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <BottomNav />
     </View>

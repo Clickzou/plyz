@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Platform, TextInput, Image, ActivityIndicator,
+  Platform, TextInput, Image, ActivityIndicator, KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -402,10 +402,15 @@ export default function CelebrityOnboardingScreen() {
         <View style={{ width: 40 }} />
       </View>
 
+      {/* Le contenu ET la barre du bas remontent au-dessus du clavier. Sans
+          quoi la « Présentation » se tapait a l'aveugle, sous le clavier, et le
+          bouton « Continuer » restait hors de portee. */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* ===================== ÉTAPE 0 — BIENVENUE ===================== */}
         {step === 0 && (
@@ -782,6 +787,7 @@ export default function CelebrityOnboardingScreen() {
           </TouchableOpacity>
         )}
       </View>
+      </KeyboardAvoidingView>
 
       <StripeConnectModal
         visible={showStripeModal}

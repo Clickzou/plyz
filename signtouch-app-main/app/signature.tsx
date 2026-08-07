@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform, useWindowDimensions, ActivityIndicator, Image , Modal, TextInput, ScrollView, Text } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 import {
   GestureDetector,
   Gesture,
@@ -39,6 +40,9 @@ export default function SignatureScreen() {
     existingSignatures ? JSON.parse(existingSignatures as string) : []
   );
   const [showTextModal, setShowTextModal] = useState<boolean>(false);
+  // Dans une Modal Android, le clavier se pose par-dessus la fenetre : la
+  // fenetre « Ajouter du texte » se recentre au-dessus de lui.
+  const hauteurClavier = useKeyboardHeight();
   const [textInput, setTextInput] = useState<string>('');
   const [selectedFont, setSelectedFont] = useState<string>('SpaceMono');
   const [savedTexts, setSavedTexts] = useState<{ text: string; fontFamily: string }[]>([]);
@@ -624,7 +628,7 @@ export default function SignatureScreen() {
         animationType="fade"
         onRequestClose={() => setShowTextModal(false)}
       >
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, { paddingBottom: 20 + hauteurClavier }]}>
           <View style={styles.textModalContainer}>
             <Text style={styles.textModalTitle}>{t('addText') || 'Ajouter du texte'}</Text>
             

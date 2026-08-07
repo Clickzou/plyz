@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { router } from 'expo-router';
@@ -85,7 +86,7 @@ export default function AccountScreen() {
   const { t, language, setLanguage, isRTL } = useTranslation();
   const { user, signOut, sendOtpCode, verifyOtpCode } = useAuth();
   const { requireAuth } = useAuthPrompt();
-  const { isCelebrity, profilePhoto, setProfilePhoto } = useCelebrityMode();
+  const { isCelebrity, profilePhoto, setProfilePhoto, revenirEnModeFan } = useCelebrityMode();
   const { startOnboarding } = useOnboarding();
   const insets = useSafeAreaInsets();
   const trUI = useAutoTranslate([
@@ -93,6 +94,9 @@ export default function AccountScreen() {
     'Mode Célébrité — Validé',
     'En cours de vérification',
     'Réponse sous 24 h ouvrées',
+    'Revenir en mode fan',
+    'Revenir en mode fan ?',
+    "Ta demande de compte célébrité sera abandonnée. Tu pourras la refaire quand tu voudras.",
     'Tableau de bord admin',
     'fans ont vu vos publications (30 jours)',
     'événement à réserver',
@@ -627,7 +631,13 @@ export default function AccountScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={[styles.content, { paddingTop: insets.top }]}>
+      {/* Presentation, langues, tarif du tete-a-tete : sans ce garde-fou, ces
+          champs se remplissent sous le clavier (Android bord a bord, SDK 54). */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+      <ScrollView
+        style={[styles.content, { paddingTop: insets.top }]}
+        keyboardShouldPersistTaps="handled"
+      >
         <PlyzHeader />
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
@@ -1288,6 +1298,38 @@ export default function AccountScreen() {
               </View>
             )}
 
+            {/* Sortie de secours. On active le mode célébrité par curiosité ou
+                par erreur, et jusqu'ici plus rien ne ramenait en arrière : le
+                compte restait bloqué en attente d'une vérification qu'on
+                n'avait jamais voulue. Réservé aux comptes NON validés — une
+                célébrité reconnue par Plyz ne se dévalide pas d'un bouton. */}
+            {isCelebrity && !isVerified && (
+              <TouchableOpacity
+                style={styles.retourFanBtn}
+                onPress={() => {
+                  showConfirm(
+                    trUI('Revenir en mode fan ?'),
+                    trUI("Ta demande de compte célébrité sera abandonnée. Tu pourras la refaire quand tu voudras."),
+                    [
+                      { text: t('cancel') || 'Annuler', style: 'cancel' },
+                      {
+                        text: trUI('Revenir en mode fan'),
+                        style: 'destructive',
+                        onPress: async () => {
+                          await revenirEnModeFan();
+                          router.replace('/(tabs)' as any);
+                        },
+                      },
+                    ],
+                  );
+                }}
+                activeOpacity={0.8}
+              >
+                <User size={16} color="#9ca3af" />
+                <Text style={styles.retourFanBtnText}>{trUI('Revenir en mode fan')}</Text>
+              </TouchableOpacity>
+            )}
+
             {/* Le nom légal ne suffit pas à prouver l'identité d'une personne
                 connue sous un nom de scène — ni à départager deux homonymes.
                 On demande alors une preuve que seul le titulaire du compte
@@ -1551,6 +1593,7 @@ export default function AccountScreen() {
           </Text>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <Modal
         visible={showLanguageModal}
@@ -2064,6 +2107,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     marginTop: 18,
+    // « Enregistrer » et « Activer mes paiements » se touchaient : deux actions
+    // sans rapport collees l'une a l'autre, ou l'on appuie sur l'une en visant
+    // l'autre. Elles sont desormais separees.
+    marginBottom: 14,
     paddingVertical: 13,
     borderRadius: 12,
     backgroundColor: '#10b981',
@@ -2338,6 +2385,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#ffffff',
   },
+  // Discret : c'est une sortie de secours, pas une invitation à renoncer.
+  retourFanBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    marginBottom: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
+  },
+  retourFanBtnText: { color: '#9ca3af', fontSize: 14, fontWeight: '600' },
   statusBadgePending: {
     flexDirection: 'row',
     alignItems: 'center',

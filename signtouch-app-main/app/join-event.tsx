@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Image,
   ScrollView,
+  KeyboardAvoidingView,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -1579,14 +1580,18 @@ export default function JoinEventScreen() {
         <View style={{ width: 44 }} />
       </View>
 
-      <ScrollView 
+      {/* Code d'evenement, prenom, dedicace : sans ce garde-fou, ces champs se
+          remplissent sous le clavier, qui ne redimensionne plus l'ecran. */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+      <ScrollView
         style={styles.content}
         contentContainerStyle={[
-          styles.contentContainer, 
+          styles.contentContainer,
           { paddingBottom: BOTTOM_NAV_HEIGHT + 20 },
           foundLiveSession && styles.contentContainerCompact
         ]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {foundLiveSession ? (
           <View style={styles.liveSessionContainer}>
@@ -2308,6 +2313,7 @@ export default function JoinEventScreen() {
           </View>
         ) : null}
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <AgeCertificationModal
         visible={showAgeModal}

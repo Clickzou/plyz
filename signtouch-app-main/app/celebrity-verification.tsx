@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, Platform, ActivityIndicator, Alert,
+  TextInput, Platform, ActivityIndicator, Alert, KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -147,7 +147,14 @@ export default function CelebrityVerificationScreen() {
         <View style={{ width: 38 }} />
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: BOTTOM_NAV_HEIGHT + 30 }} showsVerticalScrollIndicator={false}>
+      {/* Sans ce garde-fou, les champs du bas se saisissent sous le clavier,
+          qui ne redimensionne plus l'ecran depuis le SDK 54. */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+      <ScrollView
+        contentContainerStyle={{ padding: 20, paddingBottom: BOTTOM_NAV_HEIGHT + 30 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {loading ? (
           <ActivityIndicator size="large" color="#8b5cf6" style={{ marginTop: 60 }} />
         ) : hasExisting ? (
@@ -262,6 +269,7 @@ export default function CelebrityVerificationScreen() {
           </>
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <BottomNav />
     </View>

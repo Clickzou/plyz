@@ -12,6 +12,7 @@ import {
  Modal, TextInput } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 import {
   GestureDetector,
   Gesture,
@@ -789,6 +790,9 @@ export default function ComposeScreen() {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
   const [showTextModal, setShowTextModal] = useState(false);
+  // Dans une Modal Android, le clavier se pose par-dessus la fenetre : la
+  // fenetre « Ajouter du texte » se recentre au-dessus de lui.
+  const hauteurClavier = useKeyboardHeight();
   const [textInput, setTextInput] = useState('');
   const [selectedFont, setSelectedFont] = useState(FONT_FAMILIES[0].value);
   const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(null);
@@ -1785,7 +1789,7 @@ export default function ComposeScreen() {
         animationType="fade"
         onRequestClose={() => setShowTextModal(false)}
       >
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, { paddingBottom: 20 + hauteurClavier }]}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{t('addText') || 'Ajouter du texte'}</Text>
             

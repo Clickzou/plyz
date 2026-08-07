@@ -12,6 +12,7 @@ import {
   Modal,
   Pressable,
   Share,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -623,10 +624,14 @@ export default function CreateLiveSessionScreen() {
         <View style={{ width: 40 }} />
       </View>
 
+      {/* Titre et tarif de la seance : sans ce garde-fou, ils se saisissent
+          sous le clavier (Android bord a bord, SDK 54). */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
       <ScrollView
         style={styles.content}
         contentContainerStyle={[styles.contentContainer, { paddingBottom: insets.bottom + 64 }]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.stepsContainer}>
           <Text style={styles.stepsTitle}>{t('liveSessionStepsTitle' as any) || 'Comment ça marche ?'}</Text>
@@ -978,6 +983,7 @@ export default function CreateLiveSessionScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <Modal
         visible={showDatePicker}

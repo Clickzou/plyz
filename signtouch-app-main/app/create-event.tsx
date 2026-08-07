@@ -13,6 +13,7 @@ import {
   Share,
   Modal,
   Pressable,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { showAlert } from '@/utils/alertHelper';
 import { useRouter } from 'expo-router';
@@ -833,11 +834,15 @@ export default function CreateEventScreen() {
           <View style={styles.headerRight} />
         </View>
 
-        <ScrollView 
+        {/* Titre, lieu, tarif : sans ce garde-fou, les champs du bas se
+            remplissent sous le clavier (Android bord a bord, SDK 54). */}
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        <ScrollView
           style={styles.content}
           contentContainerStyle={[styles.contentContainer, { paddingBottom: Math.max(insets.bottom, 16) + 20 }]}
           showsVerticalScrollIndicator={false}
           scrollEnabled={scrollEnabled}
+          keyboardShouldPersistTaps="handled"
         >
           {step === 'config' && (
             <>
@@ -1486,6 +1491,7 @@ export default function CreateEventScreen() {
             </View>
           )}
         </ScrollView>
+        </KeyboardAvoidingView>
 
         <Modal
           visible={showDatePicker}

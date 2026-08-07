@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, ScrollView, Platform, Share,
+  ActivityIndicator, ScrollView, Platform, Share, KeyboardAvoidingView,
  TextInput } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -913,11 +913,16 @@ export default function MySpaceScreen() {
   );
 
   const renderCelebrityView = () => (
+    // Les reglages de la personnalite contiennent cinq champs : sans ce
+    // garde-fou, ceux du bas se remplissent sous le clavier (Android bord a
+    // bord, SDK 54).
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
     <ScrollView
       ref={scrollViewRef}
       style={{ flex: 1 }}
       contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: BOTTOM_NAV_HEIGHT + 20 }}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
     >
       <View style={styles.celIntroBox}>
         <Text style={styles.celIntroText}>
@@ -1513,6 +1518,7 @@ export default function MySpaceScreen() {
         </>
       )}
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 
   return (

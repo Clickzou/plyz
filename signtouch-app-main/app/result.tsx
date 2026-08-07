@@ -19,6 +19,7 @@ import { Trash2, Share2, Palette, Pencil, Plus, Sparkles, X, RotateCw, Check, Sa
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 import { Memory, SignatureOverlay as StoredSignatureOverlay, TextOverlay as StoredTextOverlay, MemoryMetadata } from '@/utils/memoriesStorage';
 import MetadataModal from '@/components/MetadataModal';
 import * as StorageService from '@/utils/storageService';
@@ -1461,6 +1462,9 @@ export default function ResultScreen() {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showFontPicker, setShowFontPicker] = useState(false);
   const [showTextInput, setShowTextInput] = useState(false);
+  // Dans une Modal Android, le clavier se pose par-dessus la fenetre : la
+  // fenetre « Ajouter du texte » se recentre au-dessus de lui.
+  const hauteurClavier = useKeyboardHeight();
   const [newTextValue, setNewTextValue] = useState('');
   const [showTooltip, setShowTooltip] = useState(false);
   const [showSignatureMode, setShowSignatureMode] = useState(false);
@@ -3270,7 +3274,7 @@ export default function ResultScreen() {
           animationType="fade"
           onRequestClose={() => setShowTextInput(false)}
         >
-          <View style={styles.textInputModal}>
+          <View style={[styles.textInputModal, { paddingBottom: hauteurClavier }]}>
             <View style={styles.textInputContainer}>
               <Text style={styles.textInputTitle}>{t('addText') || 'Add Text'}</Text>
               <TextInput

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Platform,
   Linking,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -389,7 +390,14 @@ export default function AdminScreen() {
           <View style={styles.backBtn} />
         </View>
 
-        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40, alignItems: 'center' }]} showsVerticalScrollIndicator={false}>
+        {/* Le code a six chiffres se saisit sous le QR : sans ce garde-fou, le
+            champ passe sous le clavier (Android bord a bord, SDK 54). */}
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        <ScrollView
+          contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40, alignItems: 'center' }]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           {mfaMode === 'loading' ? (
             <ActivityIndicator color="#10b981" style={{ marginTop: 60 }} />
           ) : (
@@ -453,6 +461,7 @@ export default function AdminScreen() {
             </View>
           )}
         </ScrollView>
+        </KeyboardAvoidingView>
       </View>
     );
   }

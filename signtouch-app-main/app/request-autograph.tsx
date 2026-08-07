@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, ActivityIndicator, Platform, Linking,
+  TextInput, ActivityIndicator, Platform, Linking, KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -95,7 +95,14 @@ export default function RequestAutographScreen() {
         <View style={{ width: 38 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      {/* Le message a la personnalite se tape en bas de page : sans ce
+          garde-fou il passe sous le clavier, et le bouton de paiement avec. */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.celebrityCard}>
           <View style={styles.iconWrap}>
             <PenTool size={28} color="#f59e0b" />
@@ -180,6 +187,7 @@ export default function RequestAutographScreen() {
           )}
         </TouchableOpacity>
       </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }

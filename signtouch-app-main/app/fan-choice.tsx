@@ -9,6 +9,7 @@ import {
   Modal,
   TextInput,
   ActivityIndicator,
+  KeyboardAvoidingView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -414,10 +415,14 @@ export default function FanChoiceScreen() {
 
       <View style={[styles.content, { paddingTop: insets.top }]}>
         <PlyzHeader />
+        {/* La recherche est suivie des resultats : sans ce garde-fou, ils
+            restent sous le clavier et le champ ne sert a rien. */}
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={[styles.scrollContent, { paddingBottom: BOTTOM_NAV_HEIGHT + 20 }]}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           <Text style={styles.title}>{t('fanChoiceTitle')}</Text>
           <Text style={styles.subtitle}>
@@ -654,6 +659,7 @@ export default function FanChoiceScreen() {
           )}
 
         </ScrollView>
+        </KeyboardAvoidingView>
       </View>
 
       <AccountAvatarButton />

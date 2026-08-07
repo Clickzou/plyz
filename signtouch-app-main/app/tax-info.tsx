@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, ActivityIndicator,
+  TextInput, ActivityIndicator, KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -100,7 +100,14 @@ export default function TaxInfoScreen() {
       {loading ? (
         <View style={styles.center}><ActivityIndicator size="large" color="#10b981" /></View>
       ) : (
-        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40 }]} showsVerticalScrollIndicator={false}>
+        /* Le clavier ne redimensionne plus l'ecran (Android bord a bord) :
+           sans ce garde-fou, les champs du bas se remplissent a l'aveugle. */
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        <ScrollView
+          contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40 }]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.introRow}>
             <ShieldCheck size={22} color="#10b981" />
             <Text style={styles.introText}>{t('taxInfoSubtitle') || ''}</Text>
@@ -200,6 +207,7 @@ export default function TaxInfoScreen() {
             )}
           </TouchableOpacity>
         </ScrollView>
+        </KeyboardAvoidingView>
       )}
     </View>
   );
