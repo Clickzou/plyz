@@ -48,7 +48,11 @@ const PAYS = [
   { code: 'BR', qid: 'Q155',  nom: 'Brésil' },
   { code: 'AR', qid: 'Q414',  nom: 'Argentine' },
   { code: 'PT', qid: 'Q45',   nom: 'Portugal' },
-  { code: 'NL', qid: 'Q55',   nom: 'Pays-Bas' },
+  // ⚠️ Q29999 (Royaume des Pays-Bas) et non Q55 (Pays-Bas) : c'est le premier
+  // que Wikidata donne comme nationalité. Avec Q55, la requête ne trouvait que
+  // TROIS footballeurs vivants au lieu de près de sept mille — et le pays
+  // était sorti du catalogue sans la moindre erreur pour le signaler.
+  { code: 'NL', qid: 'Q29999', nom: 'Pays-Bas' },
   { code: 'CN', qid: 'Q148',  nom: 'Chine' },
 ];
 
