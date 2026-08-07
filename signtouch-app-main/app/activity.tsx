@@ -880,31 +880,47 @@ export default function ActivityScreen() {
                   création de compte. Laisser écrire un message entier pour ne
                   le réclamer qu'à l'envoi, c'est faire perdre le texte et la
                   bonne volonté de celui qui l'a écrit. */}
-              <View style={styles.commentInputRow}>
-                <TextInput
-                  style={styles.commentInput}
-                  placeholder={replyTo
-                    ? `${trUI('Réponse à')} ${replyTo.author_name}…`
-                    : t('addComment' as any)}
-                  placeholderTextColor="#6b7280"
-                  value={commentText}
-                  onChangeText={setCommentText}
-                  multiline
-                  maxLength={500}
-                  editable={!!user}
-                  onPressIn={!user ? demanderCompteCommentaire : undefined}
-                />
+              {!user ? (
+                /* Sans compte, la barre de saisie laisse place a un BOUTON.
+                   Un TextInput non modifiable n'envoie aucun evenement tactile
+                   sur Android : le champ restait la, inerte, et le toucher ne
+                   declenchait rien du tout. Un bouton ne laisse aucun doute
+                   sur ce qu'il faut faire, et il repond. */
                 <TouchableOpacity
-                  style={[styles.sendBtn, (!commentText.trim() || sendingComment) && styles.sendBtnDisabled]}
-                  onPress={addComment}
-                  disabled={!commentText.trim() || sendingComment}
-                  activeOpacity={0.7}
+                  style={styles.commentLoginBtn}
+                  onPress={demanderCompteCommentaire}
+                  activeOpacity={0.85}
                 >
-                  {sendingComment
-                    ? <ActivityIndicator size="small" color="#fff" />
-                    : <Send size={18} color={commentText.trim() ? '#fff' : '#6b7280'} />}
+                  <Send size={17} color="#052e1f" />
+                  <Text style={styles.commentLoginTxt}>
+                    {trUI('Connecte-toi pour commenter')}
+                  </Text>
                 </TouchableOpacity>
-              </View>
+              ) : (
+                <View style={styles.commentInputRow}>
+                  <TextInput
+                    style={styles.commentInput}
+                    placeholder={replyTo
+                      ? `${trUI('Réponse à')} ${replyTo.author_name}…`
+                      : t('addComment' as any)}
+                    placeholderTextColor="#6b7280"
+                    value={commentText}
+                    onChangeText={setCommentText}
+                    multiline
+                    maxLength={500}
+                  />
+                  <TouchableOpacity
+                    style={[styles.sendBtn, (!commentText.trim() || sendingComment) && styles.sendBtnDisabled]}
+                    onPress={addComment}
+                    disabled={!commentText.trim() || sendingComment}
+                    activeOpacity={0.7}
+                  >
+                    {sendingComment
+                      ? <ActivityIndicator size="small" color="#fff" />
+                      : <Send size={18} color={commentText.trim() ? '#fff' : '#6b7280'} />}
+                  </TouchableOpacity>
+                </View>
+              )}
             </KeyboardAvoidingView>
           </RNAnimated.View>
         </View>
@@ -1178,6 +1194,12 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     marginTop: 2,
   },
+  commentLoginBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9,
+    backgroundColor: '#10b981', borderRadius: 14, paddingVertical: 15,
+    marginHorizontal: 16, marginBottom: 12, marginTop: 6,
+  },
+  commentLoginTxt: { color: '#052e1f', fontSize: 15.5, fontWeight: '800' },
   commentInputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
