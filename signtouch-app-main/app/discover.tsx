@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Search, Star, CheckCircle, ShieldCheck, ChevronRight, X, Heart, TrendingUp } from 'lucide-react-native';
+import { Search, Star, CheckCircle, ShieldCheck, ChevronRight, X, Heart, TrendingUp, Megaphone } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFollow } from '@/contexts/FollowContext';
@@ -309,6 +309,22 @@ export default function DiscoverScreen() {
             </TouchableOpacity>
           )}
         </View>
+
+        {/* Placé sous la recherche, là où l'on constate une absence : c'est le
+            seul moment où « elle n'est pas là » devient une question. Un fan
+            qui ne trouve pas sa star repartait sans rien ; il peut maintenant
+            la faire venir. */}
+        <TouchableOpacity
+          style={styles.reclamerBtn}
+          onPress={() => router.push('/reclamer-star' as any)}
+          activeOpacity={0.85}
+        >
+          <Megaphone size={17} color="#f59e0b" />
+          <Text style={styles.reclamerTxt}>
+            {t('claimStarCta' as any) || 'Ta star n’est pas là ? Réclame-la'}
+          </Text>
+          <ChevronRight size={16} color="#f59e0b" />
+        </TouchableOpacity>
       </View>
 
       {viewMode === 'all' && !search.trim() && (
@@ -433,6 +449,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(239,68,68,0.12)', borderWidth: 1, borderColor: 'rgba(239,68,68,0.35)',
   },
   followingButtonText: { color: '#ef4444', fontSize: 12, fontWeight: '700' },
+  reclamerBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 9,
+    marginTop: 10, paddingVertical: 11, paddingHorizontal: 13,
+    borderRadius: 12,
+    backgroundColor: 'rgba(245,158,11,0.10)',
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.32)',
+  },
+  reclamerTxt: { flex: 1, color: '#fcd34d', fontSize: 13.5, fontWeight: '700' },
   searchRow: { paddingHorizontal: 16, marginTop: 12, marginBottom: 4 },
   searchBox: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.08)',

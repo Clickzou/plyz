@@ -4628,6 +4628,334 @@ async function incrusterMusique(bufferVideo, extVideo, bufferMusique, volVideo, 
 // Catalogue proposé au moment de publier. Servi par le serveur et non lu
 // directement en base : le jour où un morceau doit disparaître pour raison de
 // licence, il disparaît pour tout le monde en même temps.
+// ---------------------------------------------------------------------------
+//  « Réclame ta star » — les fans font venir les personnalités
+// ---------------------------------------------------------------------------
+
+/**
+ * Ramène un nom saisi à une forme comparable.
+ *
+ * Sans cela « Zinédine Zidane », « zinedine  zidane » et « Zinedine Zidane! »
+ * compteraient pour trois personnalités différentes — et le chiffre présenté à
+ * l'agent, qui est TOUT ce qu'on lui vend, serait divisé par trois.
+ */
+// Le dossier d'audience porte des noms de fans et des montants : il ne sort
+// pas de l'administration.
+const ADMIN_EMAIL = 'jc@clickzou.fr';
+
+function slugDeStar(nom) {
+  return String(nom || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+/**
+ * Établit qu'un nom réclamé désigne bien une personnalité publique.
+ *
+ * On peut écrire n'importe quel nom dans un champ libre — celui d'un ex, d'un
+ * professeur, d'un voisin. Afficher publiquement « 3 personnes réclament Jean
+ * Dupont » serait une atteinte à la vie privée, et une porte ouverte au
+ * harcèlement. Le critère est donc le même que pour l'inscription d'une
+ * personnalité : la notoriété doit être établie par une source extérieure.
+ *
+ * Wikipédia sert d'arbitre, et Wikidata confirme qu'il s'agit d'un ÊTRE HUMAIN
+ * — sans quoi « Paris » ou « Renault », qui ont leur page, passeraient.
+ *
+ * Un nom non reconnu n'est pas refusé : la réclamation est enregistrée, mais
+ * elle reste hors du classement public tant que la notoriété n'est pas établie.
+ * Refuser sèchement écarterait les personnalités montantes, très suivies sur
+ * les réseaux et absentes des encyclopédies — exactement le public de Plyz.
+ */
+async function verifierNotoriete(nom) {
+  const entetes = { 'User-Agent': 'Plyz/1.0 (contact@plyz.io)' };
+  const langues = ['fr', 'en'];
+
+  for (const langue of langues) {
+    try {
+      const urlPage = `https://${langue}.wikipedia.org/w/api.php`
+        + '?action=query&format=json&prop=pageprops&redirects=1&titles='
+        + encodeURIComponent(nom);
+      const page = await (await fetch(urlPage, { headers: entetes })).json();
+      const p = Object.values(page?.query?.pages || {})[0] || {};
+      if (p.missing !== undefined) continue;
+
+      const qid = p.pageprops?.wikibase_item;
+      if (!qid) continue;
+
+      const urlEntite = 'https://www.wikidata.org/w/api.php'
+        + `?action=wbgetentities&format=json&props=claims&ids=${qid}`;
+      const entite = await (await fetch(urlEntite, { headers: entetes })).json();
+      const instances = entite?.entities?.[qid]?.claims?.P31 || [];
+      const humain = instances.some((x) => x?.mainsnak?.datavalue?.value?.id === 'Q5');
+      if (!humain) return { notoire: false, raison: 'pas_une_personne' };
+
+      return {
+        notoire: true,
+        source: `https://${langue}.wikipedia.org/wiki/${encodeURIComponent(p.title || nom)}`,
+      };
+    } catch (e) {
+      console.error('[Notoriété]', e.message);
+    }
+  }
+  return { notoire: false, raison: 'introuvable' };
+}
+
+app.post('/api/reclamer', rateLimit('reclamer', 20, 60 * 1000), requireAuthMw, async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const nom = String(req.body?.nom || '').trim();
+    if (nom.length < 2 || nom.length > 80) {
+      return res.status(400).json({ error: 'nom_invalide' });
+    }
+    const slug = slugDeStar(nom);
+    if (!slug) return res.status(400).json({ error: 'nom_invalide' });
+
+    // La personnalité existe-t-elle déjà dans la liste des réclamées ?
+    let { data: star } = await db.from('stars_reclamees')
+      .select('id, nom_affiche, arrivee_user_id').eq('slug', slug).maybeSingle();
+
+    let notoriete = null;
+    if (!star) {
+      // Même exigence que pour l'inscription d'une personnalité : la notoriété
+      // est établie par une source extérieure, pas par la seule volonté de
+      // celui qui saisit le nom.
+      notoriete = await verifierNotoriete(nom);
+
+      const { data: creee, error: errStar } = await db.from('stars_reclamees')
+        .insert({
+          slug,
+          nom_affiche: nom,
+          reseau_url: String(req.body?.reseau_url || '').trim()
+            || notoriete.source || null,
+          visible: notoriete.notoire === true,
+        })
+        .select('id, nom_affiche, arrivee_user_id, visible').single();
+      if (errStar) throw errStar;
+      star = creee;
+    }
+
+    // Déjà sur Plyz : réclamer n'a plus de sens, on renvoie vers sa fiche.
+    if (star.arrivee_user_id) {
+      return res.json({ ok: true, deja_arrivee: true, celebrity_id: star.arrivee_user_id });
+    }
+
+    const budget = Number(req.body?.budget_cents);
+    const { error } = await db.from('reclamations').upsert({
+      star_id: star.id,
+      fan_id: req.authUser.id,
+      envie: ['appel', 'dedicace', 'evenement'].includes(req.body?.envie) ? req.body.envie : null,
+      budget_cents: Number.isFinite(budget) && budget >= 0 ? Math.min(budget, 100000) : null,
+      pays: String(req.body?.pays || '').trim().slice(0, 2).toUpperCase() || null,
+    }, { onConflict: 'star_id,fan_id' });
+    if (error) throw error;
+
+    const { data: dossier } = await db.rpc('dossier_audience', { star: star.id });
+    const stats = Array.isArray(dossier) ? dossier[0] : dossier;
+
+    return res.json({
+      ok: true,
+      star: { id: star.id, slug, nom: star.nom_affiche },
+      // Renvoyé tout de suite : voir « tu es le 342ᵉ » est ce qui donne envie
+      // d'en parler autour de soi. Un simple « c'est noté » ne déclenche rien.
+      fans: stats?.fans || 1,
+      // Dit au fan pourquoi son nom n'apparaît pas encore au classement. Sans
+      // cette explication, il croirait à une panne et recommencerait.
+      notoriete_a_confirmer: notoriete ? notoriete.notoire !== true : false,
+      raison_notoriete: notoriete && !notoriete.notoire ? notoriete.raison : null,
+    });
+  } catch (e) {
+    console.error('[Réclamer]', e.message);
+    return res.status(500).json({ error: 'internal' });
+  }
+});
+
+/**
+ * Rattache une personnalité qui vient de s'inscrire à son nom réclamé, et
+ * prévient tous ceux qui l'attendaient.
+ *
+ * C'est ici que le dispositif prend son sens : sans cette notification, mille
+ * fans auraient réclamé quelqu'un sans jamais apprendre son arrivée, et Plyz
+ * aurait mille clients potentiels qu'il ne saurait pas convertir. La première
+ * vente se fait le jour de l'inscription, pas trois mois plus tard.
+ *
+ * Appelable à la main par l'administration : le rapprochement automatique sur
+ * le seul nom serait hasardeux — deux homonymes, un pseudonyme, et l'on
+ * annoncerait l'arrivée de quelqu'un d'autre.
+ */
+app.post('/api/reclamations/arrivee', requireAuthMw, async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const email = String(req.authUser?.email || '').toLowerCase();
+    if (email !== ADMIN_EMAIL) return res.status(403).json({ error: 'forbidden' });
+
+    const slug = slugDeStar(req.body?.slug || req.body?.nom);
+    const celebrityId = String(req.body?.celebrity_id || '').trim();
+    if (!slug || !celebrityId) return res.status(400).json({ error: 'parametres_manquants' });
+
+    const { data: star } = await db.from('stars_reclamees')
+      .select('id, nom_affiche, arrivee_user_id').eq('slug', slug).maybeSingle();
+    if (!star) return res.status(404).json({ error: 'not_found' });
+    if (star.arrivee_user_id) return res.json({ ok: true, deja_annonce: true });
+
+    await db.from('stars_reclamees').update({
+      arrivee_user_id: celebrityId,
+      arrivee_le: new Date().toISOString(),
+    }).eq('id', star.id);
+
+    const { data: reclamants } = await db.from('reclamations')
+      .select('fan_id').eq('star_id', star.id);
+
+    const lignes = (reclamants || [])
+      .filter((r) => r.fan_id && r.fan_id !== celebrityId)
+      .map((r) => ({
+        user_id: r.fan_id,
+        title: 'Plyz',
+        body: `🎉 ${star.nom_affiche} vient d'arriver sur Plyz — tu l'avais réclamé(e) !`,
+        data: { type: 'star_arrivee', celebrityId },
+        sent: false,
+      }));
+
+    for (let i = 0; i < lignes.length; i += 500) {
+      const { error } = await db.from('push_outbox').insert(lignes.slice(i, i + 500));
+      if (error) console.error('[Arrivée] file :', error.message);
+    }
+
+    console.log(`[Arrivée] ${star.nom_affiche} → ${lignes.length} réclamant(s) prévenu(s)`);
+    return res.json({ ok: true, prevenus: lignes.length });
+  } catch (e) {
+    console.error('[Arrivée]', e.message);
+    return res.status(500).json({ error: 'internal' });
+  }
+});
+
+/**
+ * Recherche parmi les personnalités déjà réclamées.
+ *
+ * Contrairement au classement, cette recherche montre AUSSI ce qui n'est pas
+ * validé : celui qui tape un nom le connaît déjà, il n'y a rien à lui révéler.
+ * C'est ce qui permet de rejoindre une réclamation existante au lieu d'en
+ * ouvrir une deuxième sous une orthographe voisine — et de garder un chiffre
+ * qui veuille dire quelque chose.
+ */
+app.get('/api/reclamations/rechercher', async (req, res) => {
+  try {
+    const q = String(req.query?.q || '').trim();
+    if (q.length < 2) return res.json({ resultats: [] });
+
+    const db = getSupabaseAdmin();
+    const { data: stars } = await db.from('stars_reclamees')
+      .select('id, slug, nom_affiche, arrivee_user_id')
+      .ilike('nom_affiche', `%${q}%`)
+      .limit(20);
+
+    const resultats = [];
+    for (const s of (stars || [])) {
+      const { data } = await db.rpc('dossier_audience', { star: s.id });
+      const stats = Array.isArray(data) ? data[0] : data;
+      resultats.push({
+        slug: s.slug,
+        nom: s.nom_affiche,
+        fans: stats?.fans || 0,
+        arrivee: !!s.arrivee_user_id,
+        celebrity_id: s.arrivee_user_id || null,
+      });
+    }
+    resultats.sort((a, b) => b.fans - a.fans);
+    return res.json({ resultats });
+  } catch (e) {
+    console.error('[Recherche réclamations]', e.message);
+    return res.status(500).json({ error: 'internal' });
+  }
+});
+
+/** Les réclamations d'un fan, et lesquelles ont abouti. */
+app.get('/api/reclamations/miennes', requireAuthMw, async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { data } = await db.from('reclamations')
+      .select('star_id, created_at, stars_reclamees(slug, nom_affiche, arrivee_user_id, arrivee_le)')
+      .eq('fan_id', req.authUser.id)
+      .order('created_at', { ascending: false });
+
+    const miennes = (data || []).map((r) => ({
+      slug: r.stars_reclamees?.slug,
+      nom: r.stars_reclamees?.nom_affiche,
+      arrivee: !!r.stars_reclamees?.arrivee_user_id,
+      celebrity_id: r.stars_reclamees?.arrivee_user_id || null,
+    }));
+    return res.json({ miennes });
+  } catch (e) {
+    console.error('[Mes réclamations]', e.message);
+    return res.status(500).json({ error: 'internal' });
+  }
+});
+
+// Classement public : uniquement ce qu'un administrateur a validé.
+app.get('/api/reclamations/classement', async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const { data: stars } = await db.from('stars_reclamees')
+      .select('id, slug, nom_affiche')
+      .eq('visible', true)
+      .is('arrivee_user_id', null)
+      .limit(100);
+
+    const lignes = [];
+    for (const s of (stars || [])) {
+      const { data } = await db.rpc('dossier_audience', { star: s.id });
+      const stats = Array.isArray(data) ? data[0] : data;
+      lignes.push({ slug: s.slug, nom: s.nom_affiche, fans: stats?.fans || 0 });
+    }
+    lignes.sort((a, b) => b.fans - a.fans);
+    return res.json({ classement: lignes.slice(0, 50) });
+  } catch (e) {
+    console.error('[Classement]', e.message);
+    return res.status(500).json({ error: 'internal' });
+  }
+});
+
+/**
+ * Le dossier d'audience, réservé à l'administration : c'est le document qu'on
+ * envoie à un agent. Il porte des noms de fans et des montants — il n'a rien à
+ * faire dans l'application.
+ */
+app.get('/api/reclamations/dossier/:slug', requireAuthMw, async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    // Contrôle sur l'adresse e-mail, comme l'écran d'administration : il
+    // n'existe pas de fonction `is_admin` en base, contrairement à ce que
+    // laissait croire une première version de ce code.
+    const email = String(req.authUser?.email || '').toLowerCase();
+    if (email !== ADMIN_EMAIL) return res.status(403).json({ error: 'forbidden' });
+
+    const { data: star } = await db.from('stars_reclamees')
+      .select('id, slug, nom_affiche, reseau_url, visible')
+      .eq('slug', req.params.slug).maybeSingle();
+    if (!star) return res.status(404).json({ error: 'not_found' });
+
+    const { data } = await db.rpc('dossier_audience', { star: star.id });
+    const stats = (Array.isArray(data) ? data[0] : data) || {};
+
+    // Répartition par pays : c'est ce qui montre à un agent que la demande
+    // dépasse son marché habituel.
+    const { data: lignes } = await db.from('reclamations')
+      .select('pays').eq('star_id', star.id);
+    const parPays = {};
+    (lignes || []).forEach((l) => {
+      const p = l.pays || '??';
+      parPays[p] = (parPays[p] || 0) + 1;
+    });
+
+    return res.json({ star, stats, par_pays: parPays });
+  } catch (e) {
+    console.error('[Dossier]', e.message);
+    return res.status(500).json({ error: 'internal' });
+  }
+});
+
 app.get('/api/musiques', async (req, res) => {
   try {
     const { data, error } = await getSupabaseAdmin()
