@@ -1008,6 +1008,14 @@ app.post('/api/create-session', async (req, res) => {
 
     console.log('[create-session] Session created successfully:', data.id, data.code);
 
+    // Les abonnés sont prévenus ici aussi : un événement live ne passe pas par
+    // `/api/posts`, et sans cet appel la moitié des annonces n'atteindrait
+    // personne — précisément celles qui rapportent.
+    previensLesAbonnes(
+      { id: data.id, kind: 'event', title: data.title || data.celebrity_name || null },
+      authUser.id,
+    ).catch((e) => console.error('[create-session] abonnés non prévenus :', e.message));
+
     res.json({ session: data });
   } catch (e) {
     console.error('[create-session] Exception:', e.message);
@@ -4906,12 +4914,72 @@ app.post('/api/posts', async (req, res) => {
       .single();
 
     if (error) throw error;
+
+    // Prévenir les abonnés — après coup et sans bloquer la réponse : une
+    // publication réussie ne doit pas se solder par une erreur parce que la
+    // file de notifications a hoqueté.
+    previensLesAbonnes(data, celebrity_id).catch((e) =>
+      console.error('[Publication] abonnés non prévenus :', e.message));
+
     res.json({ post: data });
   } catch (error) {
     console.error('[Create Post] Error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
+
+/**
+ * Dépose dans la file de notifications une ligne par abonné de la
+ * personnalité qui vient de publier.
+ *
+ * Suivre quelqu'un ne servait à rien : le fan devait ouvrir l'application et
+ * tomber par hasard sur la publication. C'est la notification qui donne son
+ * sens au bouton « Suivre » — et qui ramène les fans sur Plyz.
+ */
+async function previensLesAbonnes(post, celebrityId) {
+  const db = getSupabaseAdmin();
+
+  const { data: abonnes, error } = await db
+    .from('abonnements')
+    .select('fan_id')
+    .eq('celebrity_id', celebrityId);
+  if (error || !abonnes?.length) return;
+
+  // Le nom de scène, jamais l'identifiant : « Une personnalité a publié » ne
+  // donne aucune raison d'ouvrir l'application.
+  let nom = 'Une personnalité';
+  try {
+    const { data: profil } = await db.from('user_profiles')
+      .select('celebrity_name').eq('user_id', celebrityId).maybeSingle();
+    if (profil?.celebrity_name) nom = profil.celebrity_name;
+  } catch {}
+
+  const estEvenement = post.kind === 'event';
+  const titre = (post.title || '').trim();
+  const corps = estEvenement
+    ? (titre ? `🗓️ ${nom} organise « ${titre} »` : `🗓️ ${nom} vient d'annoncer un événement`)
+    : (titre ? `${nom} : ${titre}` : `${nom} vient de publier`);
+
+  const lignes = abonnes
+    // Se notifier soi-même n'a aucun sens, même en se suivant par accident.
+    .filter((a) => a.fan_id && a.fan_id !== celebrityId)
+    .map((a) => ({
+      user_id: a.fan_id,
+      title: 'Plyz',
+      body: corps,
+      data: { type: estEvenement ? 'nouvel_evenement' : 'nouvelle_publication', postId: post.id },
+      sent: false,
+    }));
+  if (!lignes.length) return;
+
+  // Par paquets : une personnalité très suivie produirait sinon une requête
+  // que la base refuserait d'avaler d'un coup.
+  for (let i = 0; i < lignes.length; i += 500) {
+    const { error: errFile } = await db.from('push_outbox').insert(lignes.slice(i, i + 500));
+    if (errFile) console.error('[Publication] file :', errFile.message);
+  }
+  console.log(`[Publication] ${lignes.length} abonné(s) prévenu(s) pour ${nom}`);
+}
 
 app.post('/api/report', rateLimit('report', 10, 60 * 1000), async (req, res) => {
   try {

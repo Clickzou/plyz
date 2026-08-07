@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '@/utils/supabase';
 
 const FOLLOWS_KEY = '@plyz_followed_celebrities';
 const INTERACTIONS_KEY = '@plyz_fan_interactions';
@@ -79,10 +80,66 @@ export function FollowProvider({ children }: { children: React.ReactNode }) {
         AsyncStorage.getItem(FOLLOWS_KEY),
         AsyncStorage.getItem(INTERACTIONS_KEY),
       ]);
-      if (followsStr) setFollowedCelebrities(JSON.parse(followsStr));
+      const locaux: FollowedCelebrity[] = followsStr ? JSON.parse(followsStr) : [];
+      if (followsStr) setFollowedCelebrities(locaux);
       if (interStr) setInteractions(JSON.parse(interStr));
+      // Le local sert de cache d'affichage immédiat ; la base est la référence.
+      synchroniserAvecLaBase(locaux);
     } catch (err) {
       console.warn('Failed to load follow data:', err);
+    }
+  };
+
+  /**
+   * Aligne le téléphone et la base.
+   *
+   * Les abonnements n'ont longtemps existé QUE sur l'appareil : personne
+   * d'autre ne savait qui suivait qui. Ceux déjà pris sont donc remontés en
+   * base à la première occasion — sans quoi un fan fidèle depuis des mois se
+   * retrouverait avec zéro abonnement, et ne recevrait aucune notification.
+   */
+  const synchroniserAvecLaBase = async (locaux: FollowedCelebrity[]) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: enBase, error } = await supabase
+        .from('abonnements')
+        .select('celebrity_id')
+        .eq('fan_id', user.id);
+      if (error) return; // Table pas encore créée : on reste sur le local.
+
+      const idsEnBase = new Set((enBase || []).map(a => a.celebrity_id));
+
+      const aRemonter = locaux
+        .filter(c => c.user_id && !idsEnBase.has(c.user_id))
+        .map(c => ({ fan_id: user.id, celebrity_id: c.user_id }));
+      if (aRemonter.length) {
+        await supabase.from('abonnements').upsert(aRemonter, {
+          onConflict: 'fan_id,celebrity_id', ignoreDuplicates: true,
+        });
+        aRemonter.forEach(a => idsEnBase.add(a.celebrity_id));
+      }
+
+      // Abonnement pris sur un AUTRE téléphone : il manque ici. On ne connaît
+      // que son identifiant, le nom et la photo se rempliront à l'affichage.
+      const manquants = Array.from(idsEnBase).filter(
+        id => !locaux.some(c => c.user_id === id),
+      );
+      if (manquants.length) {
+        const complet = [
+          ...locaux,
+          ...manquants.map(id => ({
+            user_id: id, stage_name: '', avatar_url: null,
+            followed_at: new Date().toISOString(),
+          })),
+        ];
+        setFollowedCelebrities(complet);
+        saveFollows(complet);
+      }
+    } catch (e) {
+      // Hors ligne : le local suffit pour afficher, la reprise se fera plus tard.
+      console.warn('[Abonnements] synchronisation impossible :', e);
     }
   };
 
@@ -108,6 +165,27 @@ export function FollowProvider({ children }: { children: React.ReactNode }) {
 
   const isFollowing = useCallback((userId: string) => followedIds.has(userId), [followedIds]);
 
+  /** Écrit l'abonnement en base. Silencieux : suivre ne doit jamais bloquer. */
+  const enregistrerEnBase = async (celebrityId: string, suivre: boolean) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !celebrityId) return;
+      if (suivre) {
+        await supabase.from('abonnements').upsert(
+          { fan_id: user.id, celebrity_id: celebrityId },
+          { onConflict: 'fan_id,celebrity_id', ignoreDuplicates: true },
+        );
+      } else {
+        await supabase.from('abonnements')
+          .delete()
+          .eq('fan_id', user.id)
+          .eq('celebrity_id', celebrityId);
+      }
+    } catch (e) {
+      console.warn('[Abonnements] écriture impossible :', e);
+    }
+  };
+
   const toggleFollow = useCallback((celebrity: { user_id: string; stage_name: string; avatar_url: string | null }) => {
     setFollowedCelebrities(prev => {
       const exists = prev.find(c => c.user_id === celebrity.user_id);
@@ -118,6 +196,10 @@ export function FollowProvider({ children }: { children: React.ReactNode }) {
         next = [...prev, { ...celebrity, followed_at: new Date().toISOString() }];
       }
       saveFollows(next);
+      // Et en base, pour que la personnalité puisse etre notifiee de ses
+      // publications. L'affichage n'attend pas le reseau : le bouton reagit
+      // tout de suite, la base suit.
+      enregistrerEnBase(celebrity.user_id, !exists);
 
       setInteractions(prevI => {
         const newI = { ...prevI, totalFollows: next.length };
