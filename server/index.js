@@ -212,7 +212,7 @@ async function loadNsfwModel() {
 // guerre/armes/haine — ce que le modèle NSFW local ne détecte pas). Réutilise
 // ANTHROPIC_API_KEY (déjà présent pour la traduction). Renvoie null en cas
 // d'indisponibilité/erreur → le code appelant retombe sur le modèle local.
-async function moderateImageWithClaude(imageBuffer, mimeType) {
+async function moderateImageWithClaude(imageBuffer, mimeType, consigne) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return null;
   try {
@@ -237,7 +237,10 @@ Respond ONLY with a compact JSON object: {"safe": boolean, "category": "sexual"|
         system: [{ type: 'text', text: system }],
         messages: [{ role: 'user', content: [
           { type: 'image', source: { type: 'base64', media_type: mt, data: b64 } },
-          { type: 'text', text: 'Classify this image for publication.' },
+          // Sur une planche de vignettes, le juge doit savoir qu'il regarde
+          // une VIDÉO découpée : sans cela il peut prendre la grille pour un
+          // collage artistique et juger l'ensemble au lieu de chaque instant.
+          { type: 'text', text: consigne || 'Classify this image for publication.' },
         ] }],
       }),
     });
@@ -318,9 +321,9 @@ Respond ONLY with a compact JSON object: {"safe": boolean, "category": "sexual"|
   }
 }
 
-async function moderateImage(imageBuffer, mimeType) {
+async function moderateImage(imageBuffer, mimeType, consigne) {
   // 1) Claude vision en priorité (sexuel + violence/guerre/haine)
-  const claude = await moderateImageWithClaude(imageBuffer, mimeType);
+  const claude = await moderateImageWithClaude(imageBuffer, mimeType, consigne);
   if (claude) {
     console.log('[Moderation] Claude verdict →', claude.safe ? 'OK' : ('BLOCKED (' + claude.reason + ')'));
     return claude;
@@ -363,6 +366,75 @@ async function moderateImage(imageBuffer, mimeType) {
   } catch (err) {
     console.error('[Moderation] Classification error:', err.message);
     return { safe: true, skipped: true, error: err.message };
+  }
+}
+
+/**
+ * Contrôle du contenu d'une VIDÉO.
+ *
+ * Jusqu'ici, une vidéo partait sans aucun contrôle : le code le disait
+ * lui-même, et c'était le seul chemin par lequel n'importe quoi pouvait être
+ * publié sur Plyz. Les images, elles, étaient examinées depuis le début.
+ *
+ * On ne peut pas montrer une vidéo à un classificateur d'images. On en extrait
+ * donc des vignettes, assemblées en UNE SEULE planche contact : Claude voit
+ * ainsi toute la vidéo d'un coup, en un seul appel. Envoyer neuf images
+ * séparées coûterait neuf fois plus cher et prendrait neuf fois plus de temps,
+ * pour le même jugement.
+ *
+ * ⚠️ CE QUE CE CONTRÔLE NE VOIT PAS, et il faut le savoir :
+ *   · ce qui se passe ENTRE deux vignettes — quelques images suffisent à
+ *     montrer l'inmontrable, et l'échantillonnage les manquera ;
+ *   · la bande SON, jamais analysée : injures, menaces, musique haineuse ;
+ *   · le texte incrusté, s'il est petit.
+ * C'est un garde-fou, pas une garantie. Le signalement reste indispensable.
+ */
+async function modererVideo(bufferVideo, extension) {
+  if (!cheminFfmpeg) {
+    console.warn('[Moderation] ffmpeg absent : vidéo publiée SANS contrôle');
+    return { safe: true, skipped: true, reason: 'ffmpeg_indisponible' };
+  }
+
+  const base = path.join(os.tmpdir(), `plyz-mod-${Date.now()}-${Math.round(Math.random() * 1e6)}`);
+  const fVideo = `${base}${extension || '.mp4'}`;
+  const fPlanche = `${base}-planche.jpg`;
+
+  try {
+    await fs.promises.writeFile(fVideo, bufferVideo);
+
+    // Une vignette toutes les 3 secondes, 9 au maximum : sur une vidéo de
+    // 30 secondes, cela couvre toute la durée.
+    await lancerFfmpeg(cheminFfmpeg, [
+      '-y', '-i', fVideo,
+      '-vf', 'fps=1/3,scale=320:-2,tile=3x3',
+      '-frames:v', '1',
+      '-q:v', '4',
+      fPlanche,
+    ], 60000);
+
+    const planche = await fs.promises.readFile(fPlanche);
+    const verdict = await moderateImage(planche, 'image/jpeg',
+      'These are up to 9 frames sampled from a single short VIDEO, arranged as a '
+      + '3x3 contact sheet, in chronological order. Judge EACH frame '
+      + 'independently: if ANY single frame contains content that must be '
+      + 'blocked, the whole video is unsafe. This is not a collage or an '
+      + 'artwork — it is a video being checked before publication.');
+
+    console.log('[Moderation] vidéo →', verdict.safe
+      ? (verdict.skipped ? 'NON CONTRÔLÉE' : 'OK')
+      : `BLOQUÉE (${verdict.reason || 'contenu'})`);
+    return verdict;
+  } catch (e) {
+    // Une panne du contrôle ne doit pas empêcher de publier : on laisse
+    // passer, mais on le TRACE, et on alerte. Bloquer toutes les vidéos parce
+    // qu'un binaire a hoqueté serait pire que le mal.
+    console.error('[Moderation] vidéo non contrôlée :', e.message);
+    recordServiceAlert('moderation', 'warning',
+      'Contrôle vidéo impossible — une vidéo a été publiée sans examen : ' + e.message);
+    return { safe: true, skipped: true, error: e.message };
+  } finally {
+    fs.promises.unlink(fVideo).catch(() => {});
+    fs.promises.unlink(fPlanche).catch(() => {});
   }
 }
 
@@ -5181,12 +5253,25 @@ app.post('/api/upload-post-image', rateLimit('upload-post-image', 20, 60 * 1000)
           message: 'Vidéo trop lourde : 40 Mo maximum. Filme plus court ou réduis la qualité.',
         });
       }
-      // ⚠️ La modération d'image ne sait pas lire une vidéo : ce contenu part
-      // SANS contrôle automatique et ne repose que sur le signalement. Trace
-      // volontaire — le jour où un contenu passe, on doit pouvoir dire que le
-      // trou était connu et où le boucher.
-      console.log('[Upload] vidéo publiée sans contrôle automatique de contenu —',
-        req.file.originalname, Math.round(req.file.size / 1024) + ' Ko');
+      // Le trou est bouché : la vidéo est examinée comme l'était déjà une
+      // photo. On en extrait des vignettes, assemblées en une planche contact
+      // soumise au même juge — voir `modererVideo` pour ce qu'il voit, et
+      // surtout pour ce qu'il ne voit pas.
+      const modVideo = await modererVideo(
+        req.file.buffer,
+        path.extname(req.file.originalname) || '.mp4',
+      );
+      if (!modVideo.safe) {
+        return res.status(403).json({
+          error: 'content_rejected',
+          reason: modVideo.reason,
+          message: 'Cette vidéo contient un contenu qui ne peut pas être publié sur Plyz.',
+        });
+      }
+      if (modVideo.skipped) {
+        console.log('[Upload] vidéo publiée SANS contrôle —',
+          req.file.originalname, Math.round(req.file.size / 1024) + ' Ko');
+      }
     } else {
       const modResult = await moderateImage(req.file.buffer, req.file.mimetype);
       if (!modResult.safe) {
