@@ -91,7 +91,13 @@ async function importer(entree, index) {
     buffer = await fs.promises.readFile(entree.fichier);
     ext = path.extname(entree.fichier) || '.mp3';
   } else if (entree.url) {
-    const r = await fetch(entree.url);
+    // Le Referer n'est pas une politesse : ccMixter (comme beaucoup de sites
+    // d'hébergement audio) répond 403 aux téléchargements qui n'en portent pas,
+    // pour empêcher que ses fichiers soient pillés depuis ailleurs.
+    const origine = new URL(entree.url).origin + '/';
+    const r = await fetch(entree.url, {
+      headers: { Referer: origine, 'User-Agent': 'Plyz/1.0 (catalogue musical)' },
+    });
     if (!r.ok) throw new Error(`téléchargement impossible (${r.status})`);
     buffer = Buffer.from(await r.arrayBuffer());
     ext = path.extname(new URL(entree.url).pathname) || '.mp3';
