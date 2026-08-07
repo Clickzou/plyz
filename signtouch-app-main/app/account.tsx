@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { router } from 'expo-router';
-import { Info, Heart, Share2, Globe, Check, FileText, LogOut, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle, Camera, Images, ChevronRight , Star, Clock, TrendingUp, Video } from 'lucide-react-native';
+import { Info, Heart, Share2, Globe, Check, FileText, LogOut, Mail, User, Shield, ArrowRight, CreditCard, HelpCircle, Camera, Images, ChevronRight , Star, Clock, TrendingUp, Video, UserX } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import * as Clipboard from 'expo-clipboard';
@@ -1515,6 +1515,23 @@ export default function AccountScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, isRTL && styles.menuTextRTL]}>{t('community')}</Text>
+
+          {/* Exigé par Apple et Google dès lors que des utilisateurs se lisent
+              entre eux. Un blocage qu'on ne peut pas défaire serait une impasse :
+              on bloque sur un coup de colère, et six mois plus tard on ne
+              comprend plus pourquoi on ne voit plus quelqu'un. */}
+          <TouchableOpacity
+            style={[styles.menuItem, isRTL && styles.menuItemRTL]}
+            onPress={() => router.push('/personnes-bloquees' as any)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIcon, isRTL && styles.menuIconRTL]}>
+              <UserX size={24} color="#ef4444" strokeWidth={2} />
+            </View>
+            <Text style={[styles.menuText, isRTL && styles.menuTextRTL]}>
+              {t('blockedPeople' as any) || 'Personnes bloquées'}
+            </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.menuItem, isRTL && styles.menuItemRTL]}

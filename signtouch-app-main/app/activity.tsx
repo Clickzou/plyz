@@ -3,13 +3,16 @@ import { getDateLocale } from '@/utils/dateLocale';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   Image, Platform, Modal, TextInput,
-  Animated as RNAnimated, Dimensions, Share, ActivityIndicator
+  Animated as RNAnimated, Dimensions, Share, ActivityIndicator,
+  PanResponder, Keyboard
 } from 'react-native';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
+import { detecterCoordonnees } from '@/utils/filtreCoordonnees';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Newspaper, CheckCircle, Calendar, MapPin, Heart, MessageCircle, Send, Share2, Flag } from 'lucide-react-native';
+import { Newspaper, CheckCircle, Calendar, MapPin, Heart, MessageCircle, Send, Share2, Flag, Users } from 'lucide-react-native';
+import FanZone from '@/components/FanZone';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -81,6 +84,13 @@ const FILTERS = [
   { key: 'post', label: 'filterPosts' },
   { key: 'event', label: 'filterEvents' },
 ] as const;
+
+// Les deux moitiés de l'écran d'accueil. « Actus célébrités » est ce qui
+// existait ; « Fan zone » est ce que les fans font entre eux.
+const ONGLETS = [
+  { cle: 'actus' as const, titre: 'Actus célébrités', Icone: Newspaper },
+  { cle: 'fans' as const, titre: 'Fan zone', Icone: Users },
+];
 
 const BANNER_DISMISSED_KEY = '@plyz_celebrity_banner_dismissed';
 
@@ -157,6 +167,7 @@ export default function ActivityScreen() {
   const [, setBannerDismissed] = useState(true);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [allComments, setAllComments] = useState<Record<string, Comment[]>>({});
+  const [onglet, setOnglet] = useState<'actus' | 'fans'>('actus');
   const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -187,6 +198,11 @@ export default function ActivityScreen() {
     'Impossible de charger les commentaires.',
     'Connecte-toi pour commenter',
     'Connecte-toi pour signaler ce contenu',
+    'Actus célébrités',
+    'Fan zone',
+    'Commentaire non publié',
+    'Les liens ne sont pas autorisés dans les commentaires : c’est par là que passent les fausses pages et les arnaques aux fans.',
+    'Les numéros de téléphone ne sont pas autorisés dans les commentaires, ni le tien ni celui de quelqu’un d’autre.',
   ]);
   const slideAnim = useRef(new RNAnimated.Value(Dimensions.get('window').height)).current;
 
@@ -315,6 +331,46 @@ export default function ActivityScreen() {
     });
   };
 
+  // Tirer la feuille vers le bas pour la refermer : c'est le geste que tout le
+  // monde fait devant une poignée. Sans lui, il fallait viser le fond de
+  // l'écran au-dessus de la feuille, ou le bouton retour du téléphone.
+  const glisserFeuille = useRef(
+    PanResponder.create({
+      // Seul un mouvement franc vers le BAS prend la main : un défilement de la
+      // liste des commentaires ou un appui sur « Répondre » ne doit rien
+      // déclencher.
+      onMoveShouldSetPanResponder: (_e, g) => g.dy > 6 && Math.abs(g.dy) > Math.abs(g.dx) * 1.5,
+      onPanResponderGrant: () => Keyboard.dismiss(),
+      onPanResponderMove: (_e, g) => {
+        // La feuille suit le doigt vers le bas ; tirer vers le haut ne
+        // l'arrache pas de sa position.
+        if (g.dy > 0) slideAnim.setValue(g.dy);
+      },
+      onPanResponderRelease: (_e, g) => {
+        // Assez bas OU lancé d'un geste vif : on ferme. Sinon elle se remet en
+        // place — un geste hésitant ne doit pas faire perdre les commentaires.
+        if (g.dy > 120 || g.vy > 0.8) {
+          closeComments();
+        } else {
+          RNAnimated.spring(slideAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 65,
+            friction: 11,
+          }).start();
+        }
+      },
+      onPanResponderTerminate: () => {
+        RNAnimated.spring(slideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 11,
+        }).start();
+      },
+    }),
+  ).current;
+
   // Touche le champ sans compte : on le demande tout de suite, avant la frappe.
   const demanderCompteCommentaire = () => {
     requireAuth(() => {}, {
@@ -327,6 +383,24 @@ export default function ActivityScreen() {
     const texte = commentText.trim();
     const postId = commentModalPostId;
     if (!texte || !postId || sendingComment) return;
+
+    // Ni lien ni numéro de téléphone sous une publication. L'arnaque type se
+    // glisse ICI : un compte qui se fait passer pour la star, ou pour son
+    // équipe, laisse un numéro « pour gagner une dédicace ». Le refus est dit
+    // AVANT l'envoi, avec sa raison — un commentaire qui disparaît sans un mot
+    // passe pour une panne. Les personnalités gardent le droit de mettre un
+    // lien là où c'est utile : dans le descriptif de leurs événements.
+    const trouve = detecterCoordonnees(texte);
+    if (trouve) {
+      showAlert(
+        trUI('Commentaire non publié'),
+        trouve === 'lien'
+          ? trUI('Les liens ne sont pas autorisés dans les commentaires : c’est par là que passent les fausses pages et les arnaques aux fans.')
+          : trUI('Les numéros de téléphone ne sont pas autorisés dans les commentaires, ni le tien ni celui de quelqu’un d’autre.'),
+      );
+      return;
+    }
+
     requireAuth(() => envoyerCommentaire(postId, texte), {
       reason: trUI('Connecte-toi pour commenter'),
       requireBillingIdentity: false,
@@ -600,7 +674,9 @@ export default function ActivityScreen() {
               // l'ouvre en grand, avec le son.
               <VideoFil
                 uri={item.media_url}
-                actif={postEnLecture === item.id}
+                // Coupée pendant le plein écran : les deux lecteurs joueraient
+                // la même bande-son en décalé dès que le fan a activé le son.
+                actif={postEnLecture === item.id && !mediaPleinEcran}
                 style={styles.postImage}
               />
             ) : (
@@ -724,11 +800,30 @@ export default function ActivityScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <PlyzHeader />
       <LinearGradient colors={['#0a1628', '#0f2035', '#0a1628']} style={StyleSheet.absoluteFill} />
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('activityTitle')}</Text>
-        <Text style={styles.subtitle}>{t('activitySubtitle')}</Text>
+      {/* Deux mondes, deux onglets. À gauche ce que publient les
+          personnalités ; à droite ce que font les fans entre eux. Le titre
+          « Fil d'actualité » ne disait ni l'un ni l'autre, et surtout ne
+          laissait pas deviner que la seconde moitié existe. */}
+      <View style={styles.onglets}>
+        {ONGLETS.map((o) => (
+          <TouchableOpacity
+            key={o.cle}
+            style={[styles.onglet, onglet === o.cle && styles.ongletActif]}
+            onPress={() => setOnglet(o.cle)}
+            activeOpacity={0.85}
+          >
+            <o.Icone size={16} color={onglet === o.cle ? '#052e1f' : '#9ca3af'} />
+            <Text style={[styles.ongletTexte, onglet === o.cle && styles.ongletTexteActif]}>
+              {trUI(o.titre)}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
+      {onglet === 'fans' ? (
+        <FanZone />
+      ) : (
+      <>
       <View style={styles.filterRow}>
         {FILTERS.map(f => (
           <TouchableOpacity
@@ -783,6 +878,8 @@ export default function ActivityScreen() {
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         />
       )}
+      </>
+      )}
 
       <Modal
         visible={commentModalPostId !== null}
@@ -805,16 +902,20 @@ export default function ActivityScreen() {
               },
             ]}
           >
-            <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>{t('comments' as any)}</Text>
+            {/* Toute l'en-tête est saisissable, pas seulement le petit trait :
+                viser 4 pixels de haut avec un pouce est impossible. */}
+            <View style={styles.sheetGrab} {...glisserFeuille.panHandlers}>
+              <View style={styles.sheetHandle} />
+              <Text style={styles.sheetTitle}>{t('comments' as any)}</Text>
 
-            {modalPost && (
-              <View style={styles.sheetPostPreview}>
-                <Text style={styles.sheetPostAuthor}>{modalPost.celebrity.stage_name}</Text>
-                {modalPost.title && <Text style={styles.sheetPostText} numberOfLines={1}>{modalPost.title}</Text>}
-                {modalPost.body && <Text style={styles.sheetPostBody} numberOfLines={2}>{modalPost.body}</Text>}
-              </View>
-            )}
+              {modalPost && (
+                <View style={styles.sheetPostPreview}>
+                  <Text style={styles.sheetPostAuthor}>{modalPost.celebrity.stage_name}</Text>
+                  {modalPost.title && <Text style={styles.sheetPostText} numberOfLines={1}>{modalPost.title}</Text>}
+                  {modalPost.body && <Text style={styles.sheetPostBody} numberOfLines={2}>{modalPost.body}</Text>}
+                </View>
+              )}
+            </View>
 
             <View style={styles.commentDivider} />
 
@@ -1017,6 +1118,22 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 5 },
   title: { color: '#fff', fontSize: 22, fontWeight: '700', textAlign: 'center' },
   subtitle: { color: '#9ca3af', fontSize: 14, marginTop: 2, textAlign: 'center' },
+  // Les deux onglets prennent la place du titre : ils DISENT où l'on est, ce
+  // qu'un titre décoratif ne faisait pas, et pour le même espace vertical.
+  onglets: {
+    flexDirection: 'row', gap: 8,
+    paddingHorizontal: 16, marginTop: 10,
+  },
+  onglet: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7,
+    paddingVertical: 11, borderRadius: 13,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.09)',
+  },
+  ongletActif: { backgroundColor: '#10b981', borderColor: '#10b981' },
+  ongletTexte: { color: '#9ca3af', fontSize: 14.5, fontWeight: '700' },
+  ongletTexteActif: { color: '#052e1f' },
+
   filterRow: { flexDirection: 'row', justifyContent: 'center', paddingHorizontal: 16, gap: 8, marginTop: 12, marginBottom: 8 },
   filterChip: {
     paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
@@ -1126,6 +1243,13 @@ const styles = StyleSheet.create({
     // La hauteur est calculee au rendu (elle depend du clavier) — pas de
     // minHeight/maxHeight ici, ils empechaient la liste de defiler.
     paddingHorizontal: 20,
+    paddingTop: 12,
+  },
+  // Zone de préhension de la feuille : le trait, le titre et l'aperçu du post.
+  // La marge négative en haut récupère le `paddingTop` de la feuille, pour que
+  // le geste parte du tout premier pixel.
+  sheetGrab: {
+    marginTop: -12,
     paddingTop: 12,
   },
   sheetHandle: {

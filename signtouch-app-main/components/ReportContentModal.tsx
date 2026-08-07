@@ -36,7 +36,10 @@ interface ReportContentModalProps {
   visible: boolean;
   onClose: () => void;
   /** Nature de l'élément visé : publication, profil de célébrité ou événement. */
-  targetType: 'post' | 'profile' | 'event' | 'comment';
+  // `comment` = commentaire sous une publication ; `fanzone_sujet` et
+  // `fanzone_message` = Fan zone. Trois tables différentes : si l'admin ne
+  // sait pas laquelle viser, il « traite » un signalement sans rien retirer.
+  targetType: 'post' | 'profile' | 'event' | 'comment' | 'fanzone_sujet' | 'fanzone_message';
   /** Identifiant de l'élément visé, quand il en a un. */
   targetId?: string | null;
   /** Titre de la publication ou nom affiché : permet de lire le signalement sans requête annexe. */

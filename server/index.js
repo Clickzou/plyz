@@ -4697,6 +4697,190 @@ async function incrusterMusique(bufferVideo, extVideo, bufferMusique, volVideo, 
   }
 }
 
+// Au-delà de ce poids, la vidéo est ré-encodée. En dessous, elle est seulement
+// remuxée (quasi instantané) : ré-encoder une vidéo déjà légère la dégraderait
+// pour rien.
+const POIDS_REENCODAGE = 6 * 1024 * 1024;
+
+/**
+ * Prépare une vidéo pour la diffusion dans le fil.
+ *
+ * Deux défauts se cumulaient, et ils s'entendaient dès la PREMIÈRE vidéo :
+ *
+ *  1. Le fichier partait tel que sorti du téléphone — jusqu'à 40 Mo pour
+ *     trente secondes. Un fan en 4G le télécharge pendant qu'il le regarde :
+ *     ça saccade, et la facture de diffusion suit le même chemin.
+ *  2. Les téléphones écrivent l'index du fichier (`moov`) à la FIN. Un lecteur
+ *     qui lit en flux doit donc tout télécharger avant d'afficher la première
+ *     image — d'où le blocage au démarrage, même sur une petite vidéo.
+ *     `+faststart` remet cet index en tête : la lecture commence tout de suite.
+ *
+ * Renvoie `null` en cas d'échec : la vidéo part alors telle quelle. Un ffmpeg
+ * qui hoquette ne doit jamais empêcher une publication.
+ */
+async function normaliserVideo(bufferVideo, extVideo) {
+  if (!cheminFfmpeg) return null;
+
+  const base = path.join(os.tmpdir(), `plyz-norm-${Date.now()}-${Math.round(Math.random() * 1e6)}`);
+  const fEntree = `${base}-in${extVideo || '.mp4'}`;
+  const fSortie = `${base}-out.mp4`;
+
+  try {
+    await fs.promises.writeFile(fEntree, bufferVideo);
+    const lourde = bufferVideo.length > POIDS_REENCODAGE;
+
+    // `min(1280, iw)` et non 1280 seul : sans ce plafond pris sur la source,
+    // ffmpeg AGRANDIRAIT une petite vidéo — plus lourde, et pas plus nette.
+    // `decrease` garde les proportions : un portrait 1080×1920 devient
+    // 720×1280, un paysage 1920×1080 devient 1280×720.
+    const args = lourde
+      ? [
+          '-y', '-i', fEntree,
+          '-vf', "scale='min(1280,iw)':'min(1280,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
+          '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '26',
+          '-pix_fmt', 'yuv420p', '-profile:v', 'main',
+          '-c:a', 'aac', '-b:a', '96k',
+          '-movflags', '+faststart', fSortie,
+        ]
+      : ['-y', '-i', fEntree, '-c', 'copy', '-movflags', '+faststart', fSortie];
+
+    await lancerFfmpeg(cheminFfmpeg, args, 240000);
+    const sortie = await fs.promises.readFile(fSortie);
+    console.log('[Video] normalisée :',
+      Math.round(bufferVideo.length / 1024) + ' Ko →',
+      Math.round(sortie.length / 1024) + ' Ko',
+      lourde ? '(ré-encodée 720p)' : '(faststart seul)');
+    return sortie;
+  } catch (e) {
+    console.error('[Video] normalisation impossible, la vidéo part telle quelle :', e.message);
+    return null;
+  } finally {
+    for (const f of [fEntree, fSortie]) {
+      fs.promises.unlink(f).catch(() => {});
+    }
+  }
+}
+
+/**
+ * Sous-titres d'une vidéo : ce qui est DIT, avec les temps.
+ *
+ * Deux raisons, et la traduction n'est que la seconde :
+ *
+ *  1. Le fil démarre les vidéos EN SOURDINE. Sans sous-titres, une annonce
+ *     parlée passe sans être comprise — le fan fait défiler.
+ *  2. Les fans d'une personnalité sont dans le monde entier. Le texte est
+ *     ensuite traduit dans la langue de chacun par la machinerie déjà en place
+ *     pour les publications et les commentaires.
+ *
+ * ⚠️ Claude ne sait pas écouter : l'API n'accepte que du texte, des images et
+ * des documents. La reconnaissance vocale passe donc obligatoirement par un
+ * service tiers — ici Whisper (OpenAI), le moins cher et le plus simple à
+ * brancher (~0,003 $ pour une vidéo de 30 secondes).
+ *
+ * Sans clé `OPENAI_API_KEY`, la fonction renvoie `null` et la vidéo se publie
+ * sans sous-titres : une transcription manquante n'empêche jamais de publier.
+ */
+async function transcrireVideo(bufferVideo, extVideo) {
+  if (!cheminFfmpeg || !process.env.OPENAI_API_KEY) return null;
+
+  const base = path.join(os.tmpdir(), `plyz-stt-${Date.now()}-${Math.round(Math.random() * 1e6)}`);
+  const fEntree = `${base}-in${extVideo || '.mp4'}`;
+  const fAudio = `${base}.mp3`;
+
+  try {
+    await fs.promises.writeFile(fEntree, bufferVideo);
+
+    // Piste audio seule, mono, 16 kHz : c'est ce que la reconnaissance vocale
+    // utilise réellement. Envoyer la vidéo entière coûterait le même résultat
+    // pour cinquante fois le poids.
+    await lancerFfmpeg(cheminFfmpeg, [
+      '-y', '-i', fEntree,
+      '-vn', '-ac', '1', '-ar', '16000', '-b:a', '64k',
+      fAudio,
+    ], 120000);
+
+    const audio = await fs.promises.readFile(fAudio);
+    const formulaire = new FormData();
+    formulaire.append('file', new Blob([audio], { type: 'audio/mpeg' }), 'audio.mp3');
+    formulaire.append('model', 'whisper-1');
+    // `verbose_json` : sans lui, on récupère un bloc de texte sans les temps —
+    // impossible d'afficher la bonne phrase au bon moment.
+    formulaire.append('response_format', 'verbose_json');
+
+    const reponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+      body: formulaire,
+      signal: AbortSignal.timeout(120000),
+    });
+    if (!reponse.ok) {
+      console.error('[Sous-titres] transcription refusée :', reponse.status, await reponse.text());
+      return null;
+    }
+
+    const donnees = await reponse.json();
+    const segments = (donnees.segments || [])
+      .map((s) => ({
+        d: Math.max(0, Number(s.start) || 0),
+        f: Number(s.end) || 0,
+        t: String(s.text || '').trim(),
+      }))
+      .filter((s) => s.t && s.f > s.d);
+
+    if (!segments.length) {
+      console.log('[Sous-titres] aucune parole détectée');
+      return null;
+    }
+    console.log('[Sous-titres]', segments.length, 'segments,', 'langue', donnees.language);
+    return { langue: donnees.language || null, segments };
+  } catch (e) {
+    console.error('[Sous-titres] transcription impossible :', e.message);
+    return null;
+  } finally {
+    for (const f of [fEntree, fAudio]) {
+      fs.promises.unlink(f).catch(() => {});
+    }
+  }
+}
+
+/**
+ * Première image de la vidéo, en JPEG.
+ *
+ * Le fil affiche cette image tant que la vidéo n'est pas prête : sur une liste
+ * qui en contient des milliers, on voit immédiatement de quoi il s'agit au lieu
+ * d'un rectangle noir. Elle pèse quelques dizaines de kilo-octets là où la
+ * vidéo en pèse des milliers.
+ *
+ * Renvoie `null` en cas d'échec : sans couverture, le fil retombe simplement
+ * sur le fond noir d'avant.
+ */
+async function imageDeCouverture(bufferVideo, extVideo) {
+  if (!cheminFfmpeg) return null;
+
+  const base = path.join(os.tmpdir(), `plyz-cover-${Date.now()}-${Math.round(Math.random() * 1e6)}`);
+  const fEntree = `${base}-in${extVideo || '.mp4'}`;
+  const fSortie = `${base}.jpg`;
+
+  try {
+    await fs.promises.writeFile(fEntree, bufferVideo);
+    // Une demi-seconde après le début : la toute première image est souvent
+    // noire, le temps que l'exposition de la caméra se règle.
+    await lancerFfmpeg(cheminFfmpeg, [
+      '-y', '-ss', '0.5', '-i', fEntree,
+      '-vf', "scale='min(720,iw)':'min(720,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
+      '-frames:v', '1', '-q:v', '5', fSortie,
+    ], 60000);
+    return await fs.promises.readFile(fSortie);
+  } catch (e) {
+    console.warn('[Video] couverture impossible :', e.message);
+    return null;
+  } finally {
+    for (const f of [fEntree, fSortie]) {
+      fs.promises.unlink(f).catch(() => {});
+    }
+  }
+}
+
 // Catalogue proposé au moment de publier. Servi par le serveur et non lu
 // directement en base : le jour où un morceau doit disparaître pour raison de
 // licence, il disparaît pour tout le monde en même temps.
@@ -4795,6 +4979,196 @@ async function verifierNotoriete(nom) {
     }
   }
   return { notoire: false, raison: 'introuvable' };
+}
+
+// Suggestions déjà calculées. Wikipédia demande qu'on ne la martèle pas, et
+// deux fans qui cherchent la même star dans la même heure, c'est la règle et
+// non l'exception.
+const CACHE_SUGGESTIONS = new Map();
+const DUREE_CACHE_SUGGESTIONS = 10 * 60 * 1000;
+const MAX_CACHE_SUGGESTIONS = 400;
+
+/** Requête HTTP qui n'attend pas indéfiniment : une encyclopédie lente ne doit
+ *  pas figer le champ de recherche du fan. */
+async function fetchCourt(url, entetes, msMax = 3500) {
+  return fetch(url, { headers: entetes, signal: AbortSignal.timeout(msMax) });
+}
+
+/** Mots comparables d'un nom : sans accents, sans ponctuation, et sans le
+ *  qualificatif entre parenthèses des titres d'homonymie (« Jean Dupont
+ *  (cycliste) »), qui n'est pas dans ce que le fan tape. */
+function motsDuNom(valeur) {
+  return String(valeur || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/\(.*?\)/g, ' ')
+    .split(/[^a-z0-9]+/)
+    .filter((m) => m.length > 1);
+}
+
+/** Distance d'édition, arrêtée dès qu'elle dépasse le seuil utile. */
+function distanceMots(a, b) {
+  if (a === b) return 0;
+  if (Math.abs(a.length - b.length) > 3) return 99;
+  let precedente = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const courante = [i];
+    for (let j = 1; j <= b.length; j++) {
+      courante[j] = Math.min(
+        precedente[j] + 1,
+        courante[j - 1] + 1,
+        precedente[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+    }
+    precedente = courante;
+  }
+  return precedente[b.length];
+}
+
+/**
+ * Le nom trouvé correspond-il vraiment à ce qui a été tapé ?
+ *
+ * Sans ce filtre, le moteur plein texte de Wikipédia rendait n'importe quelle
+ * page CITANT le mot cherché : « taylor swif » proposait ASAP Rocky et Logic,
+ * parce que Taylor Swift est mentionnée dans leurs articles. Trois rappeurs
+ * proposés à qui cherche une chanteuse, c'est pire que pas de suggestion.
+ *
+ * On exige donc que CHAQUE mot tapé retrouve un mot du nom — identique, amorcé
+ * (« swif » → « Swift »), ou à une ou deux lettres près (« Killian » →
+ * « Kylian »).
+ */
+function nomCorrespond(recherche, titre) {
+  const tapes = motsDuNom(recherche);
+  const cibles = motsDuNom(titre);
+  if (!tapes.length || !cibles.length) return false;
+  return tapes.every((mot) => cibles.some((cible) => {
+    if (cible.startsWith(mot) || mot.startsWith(cible)) return true;
+    return distanceMots(mot, cible) <= (mot.length <= 4 ? 1 : 2);
+  }));
+}
+
+/**
+ * Propose des noms de personnalités pendant que le fan tape.
+ *
+ * Ce n'est pas un confort de saisie, c'est ce qui empêche le dispositif de se
+ * saborder. Le nom saisi devient un identifiant : « Killian mbappe »,
+ * « Kylian Mbappé » et « Mbappe » donnent TROIS lignes distinctes, donc trois
+ * compteurs à 1 au lieu d'un compteur à 3. Or ce compteur est exactement ce
+ * qu'on présente à un agent, et c'est lui qui déclenche les vagues.
+ *
+ * Wikipédia sert de dictionnaire de noms propres : son moteur corrige les
+ * fautes de frappe, et Wikidata confirme qu'il s'agit d'un ÊTRE HUMAIN
+ * (`P31 = Q5`) — sans quoi « Paris » ou « Renault », qui ont leur page,
+ * apparaîtraient dans la liste.
+ *
+ * Renvoie toujours une liste, vide en cas de panne : une suggestion manquante
+ * ne doit jamais empêcher de réclamer au clavier.
+ */
+async function suggererPersonnalites(recherche) {
+  const q = String(recherche || '').trim();
+  if (q.length < 3) return [];
+
+  const cle = q.toLowerCase();
+  const enCache = CACHE_SUGGESTIONS.get(cle);
+  if (enCache && Date.now() - enCache.at < DUREE_CACHE_SUGGESTIONS) return enCache.liste;
+
+  const entetes = { 'User-Agent': 'Plyz/1.0 (contact@plyz.io)' };
+  // Le titre de chaque page, rangé par identifiant Wikidata. Le français passe
+  // en premier et n'est jamais écrasé : un fan francophone attend « Kylian
+  // Mbappé », pas la graphie anglaise.
+  const parQid = new Map();
+
+  // Deux moteurs, pour deux fautes différentes, dans les deux langues :
+  //  · `prefixsearch` complète un nom tronqué — « taylor swif » → Taylor Swift ;
+  //  · `search` corrige une faute au milieu — « Killian mbappe » → Kylian Mbappé.
+  // Aucun des deux ne couvre le cas de l'autre.
+  const sources = [];
+  for (const langue of ['fr', 'en']) {
+    for (const moteur of ['prefixsearch', 'search']) sources.push({ langue, moteur });
+  }
+
+  try {
+    // Tout est demandé EN MÊME TEMPS : à la file, le fan attendait plusieurs
+    // secondes entre sa dernière lettre et la première suggestion. Le
+    // dépouillement, lui, garde l'ordre de priorité ci-dessus.
+    const reponses = await Promise.all(sources.map(async ({ langue, moteur }) => {
+      const parametres = moteur === 'prefixsearch'
+        ? `generator=prefixsearch&gpssearch=${encodeURIComponent(q)}&gpslimit=6`
+        : `generator=search&gsrsearch=${encodeURIComponent(q)}&gsrlimit=6&gsrnamespace=0`;
+      const url = `https://${langue}.wikipedia.org/w/api.php`
+        + `?action=query&format=json&${parametres}`
+        + '&prop=pageprops&ppprop=wikibase_item&redirects=1';
+      try {
+        const rep = await fetchCourt(url, entetes);
+        return rep.ok ? await rep.json() : null;
+      } catch {
+        // Une encyclopédie muette n'empêche pas les autres de répondre.
+        return null;
+      }
+    }));
+
+    for (let i = 0; i < sources.length; i++) {
+      const pages = Object.values(reponses[i]?.query?.pages || {});
+      // `index` porte l'ordre de pertinence : l'objet renvoyé, lui, est rangé
+      // par numéro de page et ne veut rien dire.
+      pages.sort((a, b) => (a.index || 0) - (b.index || 0));
+      for (const page of pages) {
+        const qid = page?.pageprops?.wikibase_item;
+        if (!qid || parQid.has(qid)) continue;
+        // Ressemblance vérifiée AVANT d'interroger Wikidata : inutile de payer
+        // une requête pour des noms qu'on ne montrera pas.
+        if (!nomCorrespond(q, page.title)) continue;
+        parQid.set(qid, {
+          nom: page.title,
+          source: `https://${sources[i].langue}.wikipedia.org/wiki/${encodeURIComponent(page.title)}`,
+          rang: parQid.size,
+        });
+      }
+    }
+
+    if (parQid.size === 0) {
+      CACHE_SUGGESTIONS.set(cle, { at: Date.now(), liste: [] });
+      return [];
+    }
+
+    // Un SEUL appel pour toutes les entités : le filtre « être humain » et la
+    // description affichée sous le nom viennent de la même réponse.
+    const ids = [...parQid.keys()].slice(0, 10).join('|');
+    const urlEntites = 'https://www.wikidata.org/w/api.php'
+      + `?action=wbgetentities&format=json&ids=${ids}`
+      + '&props=claims|descriptions&languages=fr|en';
+    const repEntites = await fetchCourt(urlEntites, entetes, 5000);
+    if (!repEntites.ok) return [];
+    const entites = (await repEntites.json())?.entities || {};
+
+    const liste = [];
+    for (const [qid, infos] of parQid) {
+      const entite = entites[qid];
+      if (!entite) continue;
+      const humain = (entite.claims?.P31 || [])
+        .some((x) => x?.mainsnak?.datavalue?.value?.id === 'Q5');
+      if (!humain) continue;
+      liste.push({
+        nom: infos.nom,
+        // « footballeur français » sous le nom : deux homonymes ne se
+        // départagent pas autrement.
+        description: entite.descriptions?.fr?.value || entite.descriptions?.en?.value || null,
+        source: infos.source,
+        rang: infos.rang,
+      });
+    }
+    liste.sort((a, b) => a.rang - b.rang);
+    const finale = liste.slice(0, 6).map(({ rang, ...reste }) => reste);
+
+    // Purge grossière : le cache sert à absorber une rafale de frappes, pas à
+    // garder la mémoire d'un mois.
+    if (CACHE_SUGGESTIONS.size > MAX_CACHE_SUGGESTIONS) CACHE_SUGGESTIONS.clear();
+    CACHE_SUGGESTIONS.set(cle, { at: Date.now(), liste: finale });
+    return finale;
+  } catch (e) {
+    console.warn('[Suggestions] indisponibles :', e.message);
+    return [];
+  }
 }
 
 app.post('/api/reclamer', rateLimit('reclamer', 20, 60 * 1000), requireAuthMw, async (req, res) => {
@@ -4985,7 +5359,15 @@ app.get('/api/reclamations/rechercher', async (req, res) => {
       });
     }
     resultats.sort((a, b) => b.fans - a.fans);
-    return res.json({ resultats });
+
+    // Noms proposés pendant la frappe. Ceux que quelqu'un réclame déjà en sont
+    // retirés : ils sont juste au-dessus, avec leur compteur, et les proposer
+    // deux fois inviterait à ouvrir un doublon de ce qui existe.
+    const dejaListes = new Set(resultats.map((r) => slugDeStar(r.nom)));
+    const suggestions = (await suggererPersonnalites(q))
+      .filter((s) => !dejaListes.has(slugDeStar(s.nom)));
+
+    return res.json({ resultats, suggestions });
   } catch (e) {
     console.error('[Recherche réclamations]', e.message);
     return res.status(500).json({ error: 'internal' });
@@ -5325,6 +5707,18 @@ app.post('/api/upload-post-image', rateLimit('upload-post-image', 20, 60 * 1000)
       }
     }
 
+    // Mise en forme pour la diffusion : poids borné et index en tête de
+    // fichier. C'est fait APRÈS le mixage, sinon la musique repasserait par un
+    // ré-encodage — et le `-c:v copy` du mixage laissait l'index à la fin.
+    if (estVideo) {
+      const normalisee = await normaliserVideo(corps, ext);
+      if (normalisee) {
+        corps = normalisee;
+        ext = '.mp4';
+        typeContenu = 'video/mp4';
+      }
+    }
+
     const fileName = `posts/${timestamp}${ext}`;
 
     const { data, error } = await db.storage
@@ -5337,6 +5731,38 @@ app.post('/api/upload-post-image', rateLimit('upload-post-image', 20, 60 * 1000)
     if (error) {
       console.error('[Upload] Storage error:', error.message);
       return res.status(500).json({ error: 'Upload failed: ' + error.message });
+    }
+
+    // Image de couverture, rangée à côté de la vidéo sous un nom déduit du
+    // sien : `posts/123.mp4` → `posts/123-poster.jpg`. Pas de colonne à
+    // ajouter en base, donc rien à migrer pour les publications existantes —
+    // l'app essaie l'adresse, et se passe de l'image si elle n'existe pas.
+    if (estVideo) {
+      const couverture = await imageDeCouverture(corps, ext);
+      if (couverture) {
+        const { error: errCouv } = await db.storage
+          .from('memories')
+          .upload(`posts/${timestamp}-poster.jpg`, couverture, {
+            contentType: 'image/jpeg',
+            upsert: true,
+          });
+        if (errCouv) console.warn('[Video] couverture non enregistrée :', errCouv.message);
+      }
+
+      // Sous-titres, rangés selon la même convention de nom. Le fil lit les
+      // vidéos en sourdine : sans eux, une annonce parlée passe sans être
+      // comprise. Le texte est traduit côté app, dans la langue du fan.
+      const transcription = await transcrireVideo(corps, ext);
+      if (transcription) {
+        const { error: errST } = await db.storage
+          .from('memories')
+          .upload(
+            `posts/${timestamp}-soustitres.json`,
+            Buffer.from(JSON.stringify(transcription), 'utf8'),
+            { contentType: 'application/json', upsert: true },
+          );
+        if (errST) console.warn('[Sous-titres] non enregistrés :', errST.message);
+      }
     }
 
     const { data: urlData } = db.storage.from('memories').getPublicUrl(data.path);

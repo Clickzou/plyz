@@ -57,6 +57,7 @@ export default function AdminScreen() {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [dac7, setDac7] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
+  const [contentReports, setContentReports] = useState<any[]>([]);
   const [lowRatings, setLowRatings] = useState<any[]>([]);
   const [searchQ, setSearchQ] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -139,6 +140,9 @@ export default function AdminScreen() {
     'fan',
     '🐛 Problèmes signalés',
     'Aucun signalement ni note basse.',
+    '🚨 Contenus signalés — à traiter sous 24 h',
+    'Retirer le contenu',
+    'Infondé',
     'Signalement',
     'e-mail inconnu',
     'Comptabilité',
@@ -249,14 +253,60 @@ export default function AdminScreen() {
 
   const loadReports = useCallback(async () => {
     setLoading(true);
-    const [rep, low] = await Promise.all([
+    const [rep, low, contenus] = await Promise.all([
       supabase.rpc('admin_list_reports'),
       supabase.rpc('admin_list_low_ratings'),
+      // Signalements visant un CONTENU (publication, profil, message de la Fan
+      // zone). Ils existaient en base sans être affichés nulle part — or les
+      // stores imposent d'y répondre sous 24 h, et on ne traite pas ce qu'on
+      // ne voit pas.
+      supabase.rpc('admin_list_content_reports', { p_status: 'pending' }),
     ]);
     if (!rep.error) setReports(rep.data || []);
     if (!low.error) setLowRatings(low.data || []);
+    if (!contenus.error) setContentReports(contenus.data || []);
     setLoading(false);
   }, []);
+
+  /**
+   * Traiter un signalement de contenu : retirer, ou juger infondé.
+   *
+   * Trois familles de contenus vivent dans trois tables différentes. Router
+   * sur le mauvais type marquerait le signalement comme traité sans rien
+   * retirer — le pire des deux mondes : la file se vide et le contenu reste.
+   */
+  const traiterContenu = async (r: any, action: 'retirer' | 'dismiss') => {
+    // Ces trois-là ne sont pas gérés par `admin_moderate_content` : ils ont
+    // leur propre fonction de retrait.
+    const parFanzone: Record<string, string> = {
+      fanzone_message: 'message',
+      fanzone_sujet: 'sujet',
+      comment: 'commentaire',
+    };
+    try {
+      if (action === 'retirer' && parFanzone[r.target_type]) {
+        await supabase.rpc('admin_retirer_fanzone', {
+          p_type: parFanzone[r.target_type],
+          p_id: r.target_id,
+        });
+        // Le signalement est clos par `dismiss` : le contenu vient d'être
+        // retiré ci-dessus, et `admin_moderate_content` ne sait pas le faire
+        // pour ces tables-là.
+        await supabase.rpc('admin_moderate_content', { p_report_id: r.id, p_action: 'dismiss' });
+      } else {
+        const suite = action === 'dismiss'
+          ? 'dismiss'
+          : r.target_type === 'post' ? 'delete_post'
+          : r.target_type === 'event' ? 'cancel_event'
+          : r.target_type === 'profile' ? 'hide_profile'
+          : 'dismiss';
+        await supabase.rpc('admin_moderate_content', { p_report_id: r.id, p_action: suite });
+      }
+      setContentReports((l) => l.filter((x) => x.id !== r.id));
+    } catch {
+      showAlert('Erreur', 'Action impossible sur ce signalement.');
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -686,6 +736,46 @@ export default function AdminScreen() {
           <View>
             {loading && <ActivityIndicator color="#10b981" style={{ marginTop: 30 }} />}
 
+            {/* Contenus signalés — À TRAITER EN PREMIER. Apple et Google
+                imposent une réponse sous 24 h ; c'est la seule file qui porte
+                une obligation de délai. Elle passe donc avant les notes basses
+                et les problèmes techniques. */}
+            {contentReports.length > 0 && (
+              <>
+                <Text style={styles.sectionLabel}>
+                  {trUI('🚨 Contenus signalés — à traiter sous 24 h')}
+                </Text>
+                {contentReports.map((r) => (
+                  <View key={r.id} style={[styles.itemCard, { borderColor: 'rgba(239,68,68,0.45)' }]}>
+                    <View style={styles.itemRow}>
+                      <Text style={styles.itemName}>
+                        {r.target_type} · {r.reason}
+                      </Text>
+                      <Text style={styles.itemDate}>{fmtDate(r.created_at)}</Text>
+                    </View>
+                    {!!r.target_label && <Text style={styles.reportMsg}>« {r.target_label} »</Text>}
+                    {!!r.details && <Text style={styles.itemSub}>{r.details}</Text>}
+                    <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                      <TouchableOpacity
+                        style={styles.btnRetirer}
+                        onPress={() => traiterContenu(r, 'retirer')}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.btnRetirerTxt}>{trUI('Retirer le contenu')}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.btnInfonde}
+                        onPress={() => traiterContenu(r, 'dismiss')}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.btnInfondeTxt}>{trUI('Infondé')}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </>
+            )}
+
             {/* Notes basses (1-2 étoiles) remontées comme signalements */}
             {lowRatings.length > 0 && (
               <>
@@ -776,6 +866,16 @@ const styles = StyleSheet.create({
   itemDate: { color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 4 },
   reasonText: { color: '#fca5a5', fontSize: 13, marginTop: 4, fontStyle: 'italic' },
   reportMsg: { color: 'rgba(255,255,255,0.85)', fontSize: 14, marginTop: 6, lineHeight: 20 },
+  btnRetirer: {
+    flex: 1, backgroundColor: '#ef4444', borderRadius: 10,
+    paddingVertical: 10, alignItems: 'center',
+  },
+  btnRetirerTxt: { color: '#fff', fontSize: 13.5, fontWeight: '800' },
+  btnInfonde: {
+    flex: 1, borderRadius: 10, paddingVertical: 10, alignItems: 'center',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+  },
+  btnInfondeTxt: { color: '#e5e7eb', fontSize: 13.5, fontWeight: '700' },
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   badgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
   actionRow: { flexDirection: 'row', gap: 10, marginTop: 12 },

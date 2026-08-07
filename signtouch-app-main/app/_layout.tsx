@@ -18,6 +18,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { useFonts } from 'expo-font';
 import SplashOverlay from '@/components/SplashOverlay';
+import { setSplashVisible } from '@/utils/splashState';
 import RoleChoiceOverlay from '@/components/RoleChoiceOverlay';
 import { ShadowsIntoLight_400Regular } from '@expo-google-fonts/shadows-into-light';
 import { AlexBrush_400Regular } from '@expo-google-fonts/alex-brush';
@@ -138,6 +139,12 @@ function RootLayout() {
     }
     return true;
   });
+
+  // Les lecteurs vidéo du fil doivent rester éteints tant que l'accueil est là :
+  // sur Android leur surface passe par-dessus tout, splash compris.
+  useEffect(() => {
+    setSplashVisible(showSplash);
+  }, [showSplash]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

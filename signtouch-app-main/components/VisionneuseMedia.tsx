@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, Modal, TouchableOpacity, Image, Dimensions, Platform, useWindowDimensions,
 } from 'react-native';
 import { X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSousTitres } from '@/utils/sousTitres';
 
 // Chargement paresseux : expo-video est un module natif, absent du web et des
 // builds qui ne l'embarquent pas. Une visionneuse ne doit jamais faire tomber
@@ -43,15 +44,46 @@ function LecteurVideo({ uri }: { uri: string }) {
     p.muted = false;
     p.play();
   });
+
+  // Sous-titres traduits, posés SUR l'image et en bas — la place attendue en
+  // plein écran, où l'image est assez grande pour les porter.
+  const { lignePour } = useSousTitres(uri);
+  const [seconde, setSeconde] = useState(0);
+  useEffect(() => {
+    if (!player) return;
+    let sub: any;
+    try {
+      player.timeUpdateEventInterval = 0.5;
+      sub = player.addListener('timeUpdate', ({ currentTime }: any) => {
+        setSeconde(Number(currentTime) || 0);
+      });
+    } catch {}
+    return () => {
+      try { sub?.remove(); } catch {}
+    };
+  }, [player]);
+  const ligne = lignePour(seconde);
+
+  const hauteur = paysage ? height : height * 0.7;
+
   return (
-    <VideoView
-      style={{ width, height: paysage ? height : height * 0.7 }}
-      player={player}
-      allowsFullscreen
-      allowsPictureInPicture={false}
-      contentFit="contain"
-      nativeControls
-    />
+    <View style={{ width, height: hauteur }}>
+      <VideoView
+        style={{ width, height: hauteur }}
+        player={player}
+        allowsFullscreen
+        allowsPictureInPicture={false}
+        contentFit="contain"
+        nativeControls
+      />
+      {!!ligne && (
+        // Remontés de 64 pixels : posés tout en bas, ils passeraient sous la
+        // barre de lecture du lecteur natif.
+        <View style={styles.bandeSousTitres} pointerEvents="none">
+          <Text style={styles.texteSousTitres} numberOfLines={3}>{ligne}</Text>
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -135,6 +167,21 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   zoneImage: { alignItems: 'center', justifyContent: 'center' },
+  bandeSousTitres: {
+    position: 'absolute', left: 16, right: 16, bottom: 64,
+    alignItems: 'center',
+  },
+  texteSousTitres: {
+    color: '#ffffff', fontSize: 17, lineHeight: 23, fontWeight: '600',
+    textAlign: 'center',
+    backgroundColor: 'rgba(0,0,0,0.62)',
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8,
+    // Le contour sombre garde le texte lisible sur une image claire, là où le
+    // seul fond translucide ne suffit pas.
+    textShadowColor: 'rgba(0,0,0,0.9)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
   titre: {
     position: 'absolute', left: 24, right: 24,
     color: 'rgba(255,255,255,0.85)', fontSize: 14, textAlign: 'center',

@@ -29,6 +29,19 @@ interface StarReclamee {
   celebrity_id?: string | null;
 }
 
+/**
+ * Nom proposé pendant la frappe, que personne n'a encore réclamé.
+ *
+ * Il vient de Wikipédia, filtré sur les êtres humains. Le toucher réclame le
+ * nom EXACT — c'est ce qui empêche « Killian mbappe » et « Kylian Mbappé » de
+ * compter pour deux personnalités différentes.
+ */
+interface SuggestionNom {
+  nom: string;
+  description?: string | null;
+  source?: string | null;
+}
+
 export default function ReclamerStarScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -38,6 +51,7 @@ export default function ReclamerStarScreen() {
 
   const [recherche, setRecherche] = useState('');
   const [resultats, setResultats] = useState<StarReclamee[]>([]);
+  const [suggestions, setSuggestions] = useState<SuggestionNom[]>([]);
   const [classement, setClassement] = useState<StarReclamee[]>([]);
   const [miennes, setMiennes] = useState<StarReclamee[]>([]);
   const [chargement, setChargement] = useState(false);
@@ -51,6 +65,8 @@ export default function ReclamerStarScreen() {
     'Personne ne réclame encore ce nom.',
     'Être le premier à la réclamer',
     'Je la réclame aussi',
+    'Tu veux dire…',
+    'Je la réclame',
     'Déjà sur Plyz',
     'Les plus réclamées',
     'Mes réclamations',
@@ -93,15 +109,17 @@ export default function ReclamerStarScreen() {
   // requêtes pour un seul nom tapé.
   useEffect(() => {
     const q = recherche.trim();
-    if (q.length < 2) { setResultats([]); return; }
+    if (q.length < 2) { setResultats([]); setSuggestions([]); return; }
     setChargement(true);
     const minuteur = setTimeout(async () => {
       try {
         const r = await fetch(`${API_BASE}/api/reclamations/rechercher?q=${encodeURIComponent(q)}`);
         const d = await r.json();
         setResultats(Array.isArray(d?.resultats) ? d.resultats : []);
+        setSuggestions(Array.isArray(d?.suggestions) ? d.suggestions : []);
       } catch {
         setResultats([]);
+        setSuggestions([]);
       } finally {
         setChargement(false);
       }
@@ -151,6 +169,7 @@ export default function ReclamerStarScreen() {
         const fans = d.fans || 1;
         setRecherche('');
         setResultats([]);
+        setSuggestions([]);
         await Promise.all([chargerClassement(), chargerMiennes()]);
 
         // Le nom n'a pas été reconnu comme celui d'une personnalité publique :
@@ -189,9 +208,15 @@ export default function ReclamerStarScreen() {
   };
 
   const nomSaisi = recherche.trim();
-  // Aucun résultat ne porte exactement ce nom : on propose de l'ouvrir.
+  // Aucun résultat ni aucune suggestion ne porte exactement ce nom : on propose
+  // de l'ouvrir tel qu'il a été tapé. Le champ reste libre — une personnalité
+  // montante suivie par 500 000 personnes et absente des encyclopédies doit
+  // pouvoir être réclamée. Mais la proposition passe APRÈS les suggestions :
+  // entre « Kylian Mbappé » et « Killian mbappe », le bon choix doit être le
+  // plus facile à faire.
   const aucunExact = nomSaisi.length >= 2
-    && !resultats.some((r) => r.nom.toLowerCase() === nomSaisi.toLowerCase());
+    && !resultats.some((r) => r.nom.toLowerCase() === nomSaisi.toLowerCase())
+    && !suggestions.some((s) => s.nom.toLowerCase() === nomSaisi.toLowerCase());
 
   const ligne = (item: StarReclamee, montrerBouton = true) => (
     <View style={styles.ligne}>
@@ -279,6 +304,39 @@ export default function ReclamerStarScreen() {
                 {'\n'}
                 {trUI('Une personnalité peut à tout moment demander le retrait de son nom.')}
               </Text>
+
+              {/* Noms proposés pendant la frappe, corrigés et vérifiés. Ils
+                  passent AVANT le bouton de création libre : c'est ce qui
+                  rassemble tous les fans d'une même star sur un seul compteur
+                  au lieu d'en ouvrir un par orthographe. */}
+              {suggestions.length > 0 && !chargement && (
+                <View style={styles.bloc}>
+                  <Text style={styles.blocTitre}>{trUI('Tu veux dire…')}</Text>
+                  {suggestions.map((s) => (
+                    <TouchableOpacity
+                      key={s.nom}
+                      style={styles.suggestion}
+                      onPress={() => reclamer(s.nom)}
+                      disabled={envoiEnCours}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.suggestionPastille}>
+                        <Sparkles size={15} color="#f59e0b" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.nom} numberOfLines={1}>{s.nom}</Text>
+                        {!!s.description && (
+                          <Text style={styles.sous} numberOfLines={1}>{s.description}</Text>
+                        )}
+                      </View>
+                      <View style={styles.btnReclamer}>
+                        <Megaphone size={15} color="#052e1f" />
+                        <Text style={styles.btnReclamerTxt}>{trUI('Je la réclame')}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
 
               {/* Ouvrir une réclamation pour un nom que personne n'a encore
                   cité. Le bouton n'apparaît qu'ici, jamais dans le vide : on
@@ -399,6 +457,22 @@ const styles = StyleSheet.create({
   pastilleTxt: { color: '#10b981', fontSize: 15, fontWeight: '900' },
   nom: { color: '#fff', fontSize: 15, fontWeight: '700' },
   sous: { color: '#9ca3af', fontSize: 12.5, marginTop: 2 },
+
+  // Nom suggéré : bordure orange comme l'accroche du haut, pour qu'on voie
+  // d'un coup d'œil que ces lignes-là viennent de l'encyclopédie et non du
+  // classement des fans.
+  suggestion: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    marginHorizontal: 16, marginBottom: 8,
+    padding: 11, borderRadius: 13,
+    backgroundColor: 'rgba(245,158,11,0.07)',
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.28)',
+  },
+  suggestionPastille: {
+    width: 42, height: 42, borderRadius: 21,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(245,158,11,0.14)',
+  },
 
   btnReclamer: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
