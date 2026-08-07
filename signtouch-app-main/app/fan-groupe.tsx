@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { useAutoTranslate } from '@/utils/translation';
 import { detecterCoordonnees } from '@/utils/filtreCoordonnees';
+import { texteAccepte } from '@/utils/modererTexte';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -100,6 +101,7 @@ export default function FanGroupeScreen() {
     'Photo refusée',
     'Cette image ne peut pas être publiée sur Plyz.',
     'L’image n’a pas pu être envoyée. Réessaie.',
+    'Ce sujet ne respecte pas les règles de la Fan zone : pas d’insultes, de menaces ni de propos haineux. La critique, elle, est la bienvenue.',
   ]);
 
   const charger = useCallback(async () => {
@@ -185,6 +187,17 @@ export default function FanGroupeScreen() {
 
     setEnvoi(true);
     try {
+      // Insultes, racisme, menaces : contrôlés par le même juge que les bios.
+      // La critique passe — un espace de fans où l'on ne pourrait dire que du
+      // bien n'intéresserait personne.
+      if (!(await texteAccepte(`${t}\n${c}`))) {
+        showAlert(
+          trUI('Sujet non publié'),
+          trUI('Ce sujet ne respecte pas les règles de la Fan zone : pas d’insultes, de menaces ni de propos haineux. La critique, elle, est la bienvenue.'),
+        );
+        return;
+      }
+
       const { error } = await supabase.from('fanzone_sujets').insert({
         celebrity_id: celebrityId,
         auteur_id: user?.id,

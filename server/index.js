@@ -5608,6 +5608,38 @@ app.get('/api/musiques', async (req, res) => {
   }
 });
 
+/**
+ * Un texte peut-il être publié dans la Fan zone ?
+ *
+ * Le juge qui lit les bios et les pseudos lisait déjà les mots ; il ne
+ * regardait simplement pas de ce côté. Ce qu'il bloque : insultes visant une
+ * personne, racisme, menaces, harcèlement, contenu sexuel, appel à la haine.
+ *
+ * ⚠️ Ce qu'il laisse passer, et c'est voulu : la critique. « Il a été nul
+ * hier », « ce concert était raté », un désaccord vif — un espace de fans qui
+ * n'autorise que les compliments n'est pas un espace de fans, c'est un mur de
+ * publicité, et personne n'y revient.
+ *
+ * En cas de panne du service, le texte passe (`safe: true`). Bloquer tout le
+ * monde parce qu'un service tiers hoquette ferait plus de dégâts que les
+ * quelques messages qui passeraient entre-temps — le signalement reste là.
+ */
+app.post('/api/moderer-texte', rateLimit('moderer-texte', 60, 60 * 1000), requireAuthMw, async (req, res) => {
+  try {
+    const texte = String(req.body?.texte || '').trim();
+    if (!texte) return res.json({ safe: true });
+    const verdict = await moderateTextWithClaude(texte);
+    return res.json({
+      safe: verdict.safe !== false,
+      raison: verdict.reason || null,
+      controle: !verdict.skipped,
+    });
+  } catch (e) {
+    console.error('[Moderation/Texte]', e.message);
+    return res.json({ safe: true, controle: false });
+  }
+});
+
 app.post('/api/upload-post-image', rateLimit('upload-post-image', 20, 60 * 1000), requireAuthMw, uploadMedia.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });

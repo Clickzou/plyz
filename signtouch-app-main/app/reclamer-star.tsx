@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList,
-  ActivityIndicator, Platform, Share, KeyboardAvoidingView,
+  ActivityIndicator, Platform, Share, KeyboardAvoidingView, Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft, Search, X, Megaphone, Users, Share2, CheckCircle, Sparkles,
+  PenLine, Video, CalendarDays,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
@@ -20,6 +21,30 @@ import { authedFetch } from '@/utils/authedFetch';
 import BottomNav, { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
+
+/**
+ * Ce que le fan veut, et ce qu'il y mettrait.
+ *
+ * Ces deux champs existent en base depuis le premier jour et personne ne les
+ * remplissait : l'app envoyait le nom, rien d'autre. Ce sont pourtant eux qui
+ * font la différence entre un compteur de likes et un dossier commercial.
+ */
+const ENVIES = [
+  { cle: 'dedicace' as const, titre: 'Une dédicace', Icone: PenLine },
+  { cle: 'appel' as const, titre: 'Un appel vidéo', Icone: Video },
+  { cle: 'evenement' as const, titre: 'Un événement', Icone: CalendarDays },
+];
+
+// Des montants ronds plutôt qu'un champ libre : on obtient une réponse en un
+// toucher, là où un clavier ferait abandonner la moitié des fans. « Je ne sais
+// pas » compte aussi — un fan qui veut sans savoir combien reste un fan.
+const BUDGETS = [
+  { cents: null as number | null, libelle: 'Je ne sais pas' },
+  { cents: 500, libelle: '5 €' },
+  { cents: 1000, libelle: '10 €' },
+  { cents: 2000, libelle: '20 €' },
+  { cents: 5000, libelle: '50 €' },
+];
 
 interface StarReclamee {
   slug: string;
@@ -57,6 +82,12 @@ export default function ReclamerStarScreen() {
   const [chargement, setChargement] = useState(false);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
+  // La demande en cours de composition : ce que le fan veut, et ce qu'il
+  // serait prêt à y mettre. Rien n'est envoyé tant qu'il n'a pas répondu.
+  const [demande, setDemande] = useState<{ nom: string } | null>(null);
+  const [envie, setEnvie] = useState<'dedicace' | 'appel' | 'evenement'>('dedicace');
+  const [budget, setBudget] = useState<number | null>(null);
+
   const trUI = useAutoTranslate([
     'Réclame ta star',
     'Elle n’est pas encore sur Plyz ? Dis-le. Plus vous êtes nombreux, plus elle a de raisons de venir.',
@@ -67,6 +98,14 @@ export default function ReclamerStarScreen() {
     'Je la réclame aussi',
     'Tu veux dire…',
     'Je la réclame',
+    'Tu veux voir arriver',
+    'Pour quoi, d’abord ?',
+    'Une dédicace',
+    'Un appel vidéo',
+    'Un événement',
+    'Tu mettrais combien ?',
+    'Ce n’est pas un engagement et tu ne paies rien maintenant. C’est ce chiffre qui décide une personnalité à venir.',
+    'Je veux qu’elle vienne',
     'Déjà sur Plyz',
     'Les plus réclamées',
     'Mes réclamations',
@@ -142,7 +181,24 @@ export default function ReclamerStarScreen() {
     } catch { /* partage annulé */ }
   };
 
+  /**
+   * Ouvre la demande. On ne l'envoie pas encore : on demande d'abord CE QUE
+   * le fan veut.
+   *
+   * Un cœur ne se vend pas. « 800 personnes l'aiment bien » n'intéresse aucun
+   * agent ; « 800 personnes veulent une dédicace, dont 300 prêtes à mettre
+   * 20 € » est une proposition commerciale. Les deux champs existaient en base
+   * depuis le début et personne ne les remplissait.
+   */
   const reclamer = (nom: string) => {
+    setDemande({ nom });
+    setEnvie('dedicace');
+    setBudget(null);
+  };
+
+  const confirmerDemande = () => {
+    const nom = demande?.nom;
+    if (!nom) return;
     // Un compte est exigé : c'est ce qui donne sa valeur au chiffre présenté
     // aux agents. Mille réclamations anonymes ne valent rien, mille comptes
     // que l'on peut prévenir le jour de l'arrivée valent une négociation.
@@ -156,7 +212,15 @@ export default function ReclamerStarScreen() {
         const r = await authedFetch(`${API_BASE}/api/reclamer`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nom }),
+          body: JSON.stringify({
+            nom,
+            envie,
+            budget_cents: budget,
+            // Le pays vient de la langue de l'app : il montre à l'agent
+            // l'étendue géographique de la demande. Approximatif, mais un fan
+            // n'a aucune envie de renseigner son pays pour cliquer un bouton.
+            pays: (getDateLocale() || '').split('-')[1] || null,
+          }),
         });
         if (!r.ok) throw new Error('http_' + r.status);
         const d = await r.json();
@@ -167,6 +231,7 @@ export default function ReclamerStarScreen() {
         }
 
         const fans = d.fans || 1;
+        setDemande(null);
         setRecherche('');
         setResultats([]);
         setSuggestions([]);
@@ -381,6 +446,83 @@ export default function ReclamerStarScreen() {
         />
       </KeyboardAvoidingView>
 
+      {/* Ce qui sépare une demande d'un cœur. Deux questions, deux touchers —
+          et le chiffre présenté à un agent cesse d'être « des gens l'aiment
+          bien » pour devenir « voilà ce qu'ils veulent, et ce qu'ils sont
+          prêts à y mettre ». */}
+      <Modal
+        visible={!!demande}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setDemande(null)}
+      >
+        <View style={styles.modalFond}>
+          <View style={[styles.feuille, { paddingBottom: insets.bottom + 18 }]}>
+            <View style={styles.feuilleEntete}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.feuilleSur}>{trUI('Tu veux voir arriver')}</Text>
+                <Text style={styles.feuilleNom} numberOfLines={1}>{demande?.nom}</Text>
+              </View>
+              <TouchableOpacity onPress={() => setDemande(null)} hitSlop={12}>
+                <X size={20} color="#9ca3af" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.question}>{trUI('Pour quoi, d’abord ?')}</Text>
+            <View style={styles.choixLigne}>
+              {ENVIES.map((e) => (
+                <TouchableOpacity
+                  key={e.cle}
+                  style={[styles.choix, envie === e.cle && styles.choixActif]}
+                  onPress={() => setEnvie(e.cle)}
+                  activeOpacity={0.85}
+                >
+                  <e.Icone size={17} color={envie === e.cle ? '#052e1f' : '#9ca3af'} />
+                  <Text style={[styles.choixTxt, envie === e.cle && styles.choixTxtActif]}>
+                    {trUI(e.titre)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.question}>{trUI('Tu mettrais combien ?')}</Text>
+            <Text style={styles.questionAide}>
+              {trUI('Ce n’est pas un engagement et tu ne paies rien maintenant. C’est ce chiffre qui décide une personnalité à venir.')}
+            </Text>
+            <View style={styles.choixLigne}>
+              {BUDGETS.map((b) => (
+                <TouchableOpacity
+                  key={String(b.cents)}
+                  style={[styles.budget, budget === b.cents && styles.budgetActif]}
+                  onPress={() => setBudget(b.cents)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={[styles.choixTxt, budget === b.cents && styles.choixTxtActif]}>
+                    {b.libelle}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.btnDemande, envoiEnCours && { opacity: 0.5 }]}
+              onPress={confirmerDemande}
+              disabled={envoiEnCours}
+              activeOpacity={0.85}
+            >
+              {envoiEnCours ? (
+                <ActivityIndicator size="small" color="#052e1f" />
+              ) : (
+                <>
+                  <Megaphone size={18} color="#052e1f" />
+                  <Text style={styles.btnDemandeTxt}>{trUI('Je veux qu’elle vienne')}</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <BottomNav />
     </View>
   );
@@ -457,6 +599,39 @@ const styles = StyleSheet.create({
   pastilleTxt: { color: '#10b981', fontSize: 15, fontWeight: '900' },
   nom: { color: '#fff', fontSize: 15, fontWeight: '700' },
   sous: { color: '#9ca3af', fontSize: 12.5, marginTop: 2 },
+
+  modalFond: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' },
+  feuille: {
+    backgroundColor: '#111827',
+    borderTopLeftRadius: 22, borderTopRightRadius: 22,
+    paddingHorizontal: 18, paddingTop: 16,
+  },
+  feuilleEntete: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 16 },
+  feuilleSur: { color: '#9ca3af', fontSize: 12.5, fontWeight: '600' },
+  feuilleNom: { color: '#fff', fontSize: 19, fontWeight: '800', marginTop: 2 },
+  question: { color: '#fff', fontSize: 14.5, fontWeight: '700', marginBottom: 8 },
+  questionAide: { color: '#9ca3af', fontSize: 12.5, lineHeight: 18, marginTop: -4, marginBottom: 10 },
+  choixLigne: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  choix: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: 10, paddingHorizontal: 13, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.09)',
+  },
+  choixActif: { backgroundColor: '#10b981', borderColor: '#10b981' },
+  choixTxt: { color: '#9ca3af', fontSize: 13.5, fontWeight: '700' },
+  choixTxtActif: { color: '#052e1f' },
+  budget: {
+    paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.09)',
+  },
+  budgetActif: { backgroundColor: '#f59e0b', borderColor: '#f59e0b' },
+  btnDemande: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9,
+    backgroundColor: '#10b981', borderRadius: 14, paddingVertical: 15, marginTop: 4,
+  },
+  btnDemandeTxt: { color: '#052e1f', fontSize: 16, fontWeight: '800' },
 
   // Nom suggéré : bordure orange comme l'accroche du haut, pour qu'on voie
   // d'un coup d'œil que ces lignes-là viennent de l'encyclopédie et non du

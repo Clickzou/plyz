@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { useAutoTranslate } from '@/utils/translation';
 import { detecterCoordonnees } from '@/utils/filtreCoordonnees';
+import { texteAccepte } from '@/utils/modererTexte';
 import { bloquer } from '@/utils/blocages';
 import ReportContentModal from '@/components/ReportContentModal';
 
@@ -66,6 +67,7 @@ export default function FanSujetScreen() {
     'Connecte-toi pour participer',
     'Connecte-toi pour signaler ce contenu',
     'Sujet',
+    'Ce message ne respecte pas les règles de la Fan zone : pas d’insultes, de menaces ni de propos haineux. La critique, elle, est la bienvenue.',
   ]);
 
   const charger = useCallback(async () => {
@@ -105,6 +107,18 @@ export default function FanSujetScreen() {
     requireAuth(async () => {
       setEnvoi(true);
       try {
+        // Insultes, racisme, menaces : le juge qui lit déjà les bios lit
+        // maintenant les messages. La critique passe — « il a été nul hier »
+        // n'est pas une insulte, et un espace où l'on ne peut dire que du bien
+        // n'intéresse personne.
+        if (!(await texteAccepte(t))) {
+          showAlert(
+            trUI('Message non publié'),
+            trUI('Ce message ne respecte pas les règles de la Fan zone : pas d’insultes, de menaces ni de propos haineux. La critique, elle, est la bienvenue.'),
+          );
+          return;
+        }
+
         const { error } = await supabase.from('fanzone_messages').insert({
           sujet_id: sujetId,
           auteur_id: user?.id,
