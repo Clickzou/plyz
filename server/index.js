@@ -5341,24 +5341,21 @@ app.get('/api/reclamations/rechercher', async (req, res) => {
     if (q.length < 2) return res.json({ resultats: [] });
 
     const db = getSupabaseAdmin();
-    const { data: stars } = await db.from('stars_reclamees')
-      .select('id, slug, nom_affiche, arrivee_user_id')
-      .ilike('nom_affiche', `%${q}%`)
-      .limit(20);
+    // Une seule requête, triée en base : la version précédente faisait un
+    // appel par résultat pour compter les fans. Sur un catalogue de plusieurs
+    // milliers de noms, chaque lettre tapée déclenchait vingt allers-retours.
+    const { data: trouvees, error } = await db.rpc('chercher_stars', { p_q: q, p_limite: 20 });
+    if (error) throw error;
 
-    const resultats = [];
-    for (const s of (stars || [])) {
-      const { data } = await db.rpc('dossier_audience', { star: s.id });
-      const stats = Array.isArray(data) ? data[0] : data;
-      resultats.push({
-        slug: s.slug,
-        nom: s.nom_affiche,
-        fans: stats?.fans || 0,
-        arrivee: !!s.arrivee_user_id,
-        celebrity_id: s.arrivee_user_id || null,
-      });
-    }
-    resultats.sort((a, b) => b.fans - a.fans);
+    const resultats = (trouvees || []).map((s) => ({
+      slug: s.slug,
+      nom: s.nom,
+      fans: Number(s.fans) || 0,
+      metier: s.metier,
+      pays: s.pays,
+      arrivee: !!s.arrivee,
+      celebrity_id: s.celebrity_id || null,
+    }));
 
     // Noms proposés pendant la frappe. Ceux que quelqu'un réclame déjà en sont
     // retirés : ils sont juste au-dessus, avec leur compteur, et les proposer
@@ -5530,23 +5527,51 @@ app.get('/api/reclamations/miennes', requireAuthMw, async (req, res) => {
 });
 
 // Classement public : uniquement ce qu'un administrateur a validé.
+/**
+ * Le catalogue, parcouru par famille de métier.
+ *
+ * Sept mille fiches ne se parcourent pas au hasard : sans ces portes
+ * d'entrée, seul celui qui sait déjà quel nom taper trouve quelque chose.
+ */
+app.get('/api/reclamations/catalogue', async (req, res) => {
+  try {
+    const famille = String(req.query?.famille || '').trim().toLowerCase();
+    const db = getSupabaseAdmin();
+    const { data, error } = await db.rpc('catalogue_par_famille', {
+      p_famille: famille || 'football',
+      p_limite: 40,
+    });
+    if (error) throw error;
+    return res.json({
+      catalogue: (data || []).map((l) => ({
+        slug: l.slug, nom: l.nom, fans: Number(l.fans) || 0,
+        metier: l.metier, pays: l.pays,
+        arrivee: !!l.arrivee, celebrity_id: l.celebrity_id || null,
+      })),
+    });
+  } catch (e) {
+    console.error('[Catalogue]', e.message);
+    return res.status(500).json({ error: 'internal' });
+  }
+});
+
 app.get('/api/reclamations/classement', async (req, res) => {
   try {
     const db = getSupabaseAdmin();
-    const { data: stars } = await db.from('stars_reclamees')
-      .select('id, slug, nom_affiche')
-      .eq('visible', true)
-      .is('arrivee_user_id', null)
-      .limit(100);
-
-    const lignes = [];
-    for (const s of (stars || [])) {
-      const { data } = await db.rpc('dossier_audience', { star: s.id });
-      const stats = Array.isArray(data) ? data[0] : data;
-      lignes.push({ slug: s.slug, nom: s.nom_affiche, fans: stats?.fans || 0 });
-    }
-    lignes.sort((a, b) => b.fans - a.fans);
-    return res.json({ classement: lignes.slice(0, 50) });
+    // Le tri se fait en base, sur le nombre réel de réclamations. L'ancienne
+    // version prenait cent fiches SANS ORDRE, comptait leurs fans une par une
+    // puis triait ce paquet : avec sept mille fiches au catalogue, elle
+    // remontait les cent premières lignes insérées — c'est-à-dire les
+    // footballeurs français, tous à zéro réclamation. Un classement qui
+    // n'affiche que des zéros ne dit plus rien à personne.
+    const { data, error } = await db.rpc('classement_stars', { p_limite: 50 });
+    if (error) throw error;
+    return res.json({
+      classement: (data || []).map((l) => ({
+        slug: l.slug, nom: l.nom, fans: Number(l.fans) || 0,
+        metier: l.metier, pays: l.pays,
+      })),
+    });
   } catch (e) {
     console.error('[Classement]', e.message);
     return res.status(500).json({ error: 'internal' });

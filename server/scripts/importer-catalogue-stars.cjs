@@ -90,6 +90,21 @@ const METIERS = [
   { qid: 'Q2526255',  libelle: 'Réalisateur',           limite: 30 },
   { qid: 'Q36180',    libelle: 'Écrivain',              limite: 30 },
   { qid: 'Q483501',   libelle: 'Artiste',               limite: 20 },
+
+  // Les métiers du web. Ce sont souvent les plus accessibles — un vidéaste
+  // suivi par 500 000 personnes répond lui-même à ses messages, là où un
+  // footballeur international passe par trois intermédiaires. Ils ont donc
+  // plus de chances de venir les premiers.
+  //
+  // ⚠️ Ces identifiants ont été vérifiés un par un contre Wikidata : sur six
+  // essayés « de mémoire », un seul existait. Ne jamais en ajouter sans avoir
+  // compté ce qu'ils rendent.
+  { qid: 'Q17125263', libelle: 'Youtubeur',             limite: 60 },
+  { qid: 'Q2906862',  libelle: 'Influenceur',           limite: 60 },
+  { qid: 'Q57414145', libelle: 'Streameur',             limite: 40 },
+  { qid: 'Q50279140', libelle: 'Streameur Twitch',      limite: 40 },
+  { qid: 'Q94791573', libelle: 'Tiktokeur',             limite: 40 },
+  { qid: 'Q118371929', libelle: 'Vidéaste web',         limite: 25 },
 ];
 
 const ENTETES = { 'User-Agent': 'Plyz/1.0 (contact@plyz.io)' };

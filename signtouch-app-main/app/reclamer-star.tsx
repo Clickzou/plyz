@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList,
-  ActivityIndicator, Platform, Share, KeyboardAvoidingView, Modal,
+  ActivityIndicator, Platform, Share, KeyboardAvoidingView, Modal, ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -50,9 +50,29 @@ interface StarReclamee {
   slug: string;
   nom: string;
   fans: number;
+  metier?: string | null;
+  pays?: string | null;
   arrivee?: boolean;
   celebrity_id?: string | null;
 }
+
+/**
+ * Les portes d'entrée du catalogue.
+ *
+ * Des familles et non les métiers bruts : le catalogue compte une trentaine
+ * de professions, et trente boutons ne se lisent pas. Personne ne cherche
+ * « judoka » — on cherche « du sport ».
+ */
+const FAMILLES = [
+  { cle: 'football', titre: 'Football' },
+  { cle: 'sport', titre: 'Sport' },
+  { cle: 'musique', titre: 'Musique' },
+  { cle: 'cinema', titre: 'Cinéma' },
+  { cle: 'tv', titre: 'TV & humour' },
+  { cle: 'web', titre: 'Web' },
+  { cle: 'politique', titre: 'Politique' },
+  { cle: 'culture', titre: 'Culture' },
+];
 
 /**
  * Nom proposé pendant la frappe, que personne n'a encore réclamé.
@@ -84,6 +104,12 @@ export default function ReclamerStarScreen() {
 
   // La demande en cours de composition : ce que le fan veut, et ce qu'il
   // serait prêt à y mettre. Rien n'est envoyé tant qu'il n'a pas répondu.
+  // La famille en cours de consultation. `null` = aucune : on montre alors le
+  // classement, c'est-à-dire ce que les fans réclament vraiment.
+  const [famille, setFamille] = useState<string | null>(null);
+  const [catalogue, setCatalogue] = useState<StarReclamee[]>([]);
+  const [chargementCatalogue, setChargementCatalogue] = useState(false);
+
   const [demande, setDemande] = useState<{ nom: string } | null>(null);
   const [envie, setEnvie] = useState<'dedicace' | 'appel' | 'evenement'>('dedicace');
   const [budget, setBudget] = useState<number | null>(null);
@@ -98,6 +124,15 @@ export default function ReclamerStarScreen() {
     'Je la réclame aussi',
     'Tu veux dire…',
     'Je la réclame',
+    'Football',
+    'Sport',
+    'Musique',
+    'Cinéma',
+    'TV & humour',
+    'Web',
+    'Politique',
+    'Culture',
+    'Personne ne la réclame encore',
     'Tu veux voir arriver',
     'Pour quoi, d’abord ?',
     'Une dédicace',
@@ -124,6 +159,23 @@ export default function ReclamerStarScreen() {
     'on lui écrit tous en même temps. Tu recevras une notification.',
     'Une personnalité peut à tout moment demander le retrait de son nom.',
   ]);
+
+  const chargerCatalogue = useCallback(async (fam: string) => {
+    setChargementCatalogue(true);
+    try {
+      const r = await fetch(`${API_BASE}/api/reclamations/catalogue?famille=${fam}`);
+      const d = await r.json();
+      setCatalogue(Array.isArray(d?.catalogue) ? d.catalogue : []);
+    } catch {
+      setCatalogue([]);
+    } finally {
+      setChargementCatalogue(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (famille) chargerCatalogue(famille);
+  }, [famille, chargerCatalogue]);
 
   const chargerClassement = useCallback(async () => {
     try {
@@ -288,12 +340,18 @@ export default function ReclamerStarScreen() {
       <View style={styles.pastille}>
         <Text style={styles.pastilleTxt}>{item.fans}</Text>
       </View>
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={styles.nom} numberOfLines={1}>{item.nom}</Text>
-        <Text style={styles.sous}>
+        {/* Le métier plutôt que « 0 fan la réclame » : sur une fiche que
+            personne n'a encore demandée, répéter le zéro ne fait que souligner
+            le vide. « Footballeur français » aide à reconnaître la personne —
+            et à distinguer deux homonymes. */}
+        <Text style={styles.sous} numberOfLines={1}>
           {item.arrivee
             ? trUI('Elle est arrivée !')
-            : `${item.fans} ${item.fans > 1 ? trUI('fans la réclament') : trUI('fan la réclame')}`}
+            : item.fans > 0
+              ? `${item.fans} ${item.fans > 1 ? trUI('fans la réclament') : trUI('fan la réclame')}`
+              : [item.metier, item.pays].filter(Boolean).join(' · ') || trUI('Personne ne la réclame encore')}
         </Text>
       </View>
       {item.arrivee ? (
@@ -307,7 +365,10 @@ export default function ReclamerStarScreen() {
       ) : montrerBouton ? (
         <TouchableOpacity style={styles.btnReclamer} onPress={() => reclamer(item.nom)}>
           <Megaphone size={15} color="#052e1f" />
-          <Text style={styles.btnReclamerTxt}>{trUI('Je la réclame aussi')}</Text>
+          {/* « Je la réclame » et non « Je la réclame aussi » : le libellé long
+              mangeait la moitié de la carte et coupait le nom au troisième
+              caractère — « Zinedine … ». */}
+          <Text style={styles.btnReclamerTxt}>{trUI('Je la réclame')}</Text>
         </TouchableOpacity>
       ) : (
         <TouchableOpacity onPress={() => partager(item.nom, item.fans)} hitSlop={10}>
@@ -331,7 +392,7 @@ export default function ReclamerStarScreen() {
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <FlatList
-          data={nomSaisi.length >= 2 ? resultats : classement}
+          data={nomSaisi.length >= 2 ? resultats : (famille ? catalogue : classement)}
           keyExtractor={(item) => item.slug || item.nom}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 24 }}
@@ -429,7 +490,44 @@ export default function ReclamerStarScreen() {
                 </View>
               )}
 
-              {nomSaisi.length < 2 && classement.length > 0 && (
+              {/* Parcourir par famille. Sans ces portes d'entrée, un fan qui
+                  ne sait pas encore qui réclamer repart les mains vides : le
+                  catalogue ne se découvre que si l'on connaît déjà le nom. */}
+              {nomSaisi.length < 2 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.famillesRangee}
+                >
+                  <TouchableOpacity
+                    style={[styles.famille, !famille && styles.familleActive]}
+                    onPress={() => setFamille(null)}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={[styles.familleTxt, !famille && styles.familleTxtActif]}>
+                      {trUI('Les plus réclamées')}
+                    </Text>
+                  </TouchableOpacity>
+                  {FAMILLES.map((f) => (
+                    <TouchableOpacity
+                      key={f.cle}
+                      style={[styles.famille, famille === f.cle && styles.familleActive]}
+                      onPress={() => setFamille(f.cle)}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={[styles.familleTxt, famille === f.cle && styles.familleTxtActif]}>
+                        {trUI(f.titre)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+
+              {nomSaisi.length < 2 && chargementCatalogue && (
+                <ActivityIndicator color="#10b981" style={{ marginTop: 12 }} />
+              )}
+
+              {nomSaisi.length < 2 && !famille && classement.length > 0 && (
                 <View style={styles.blocTitreSeul}>
                   <Users size={16} color="#9ca3af" />
                   <Text style={styles.blocTitre}>{trUI('Les plus réclamées')}</Text>
@@ -599,6 +697,16 @@ const styles = StyleSheet.create({
   pastilleTxt: { color: '#10b981', fontSize: 15, fontWeight: '900' },
   nom: { color: '#fff', fontSize: 15, fontWeight: '700' },
   sous: { color: '#9ca3af', fontSize: 12.5, marginTop: 2 },
+
+  famillesRangee: { paddingHorizontal: 16, gap: 8, paddingVertical: 4 },
+  famille: {
+    paddingVertical: 8, paddingHorizontal: 13, borderRadius: 11,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.09)',
+  },
+  familleActive: { backgroundColor: '#10b981', borderColor: '#10b981' },
+  familleTxt: { color: '#9ca3af', fontSize: 13, fontWeight: '700' },
+  familleTxtActif: { color: '#052e1f' },
 
   modalFond: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' },
   feuille: {
