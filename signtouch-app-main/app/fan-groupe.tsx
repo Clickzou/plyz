@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft, MessageCircle, Tag, Image as ImageIcon, Plus, Pin, Lock,
-  BadgeCheck, X, Star,
+  BadgeCheck, X, Star, HelpCircle, Trophy, Camera, Play, Sparkles,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/utils/supabase';
@@ -18,10 +18,12 @@ import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { useAutoTranslate } from '@/utils/translation';
 import { detecterCoordonnees } from '@/utils/filtreCoordonnees';
 import { texteAccepte } from '@/utils/modererTexte';
+import { estUneVideo } from '@/utils/media';
+import VisionneuseMedia, { type MediaVisionnable } from '@/components/VisionneuseMedia';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
-type TypeSujet = 'discussion' | 'bon_plan' | 'photo';
+type TypeSujet = 'discussion' | 'question' | 'bon_plan' | 'photo';
 
 interface Sujet {
   id: string;
@@ -34,6 +36,8 @@ interface Sujet {
   epingle: boolean;
   ferme: boolean;
   nb_messages: number;
+  nb_soutiens: number;
+  soutenu: boolean;
   dernier_le: string;
   auteur_nom: string;
   auteur_avatar: string | null;
@@ -42,6 +46,10 @@ interface Sujet {
 
 const ONGLETS: { cle: TypeSujet | 'tout'; titre: string; Icone: any }[] = [
   { cle: 'tout', titre: 'Tout', Icone: Star },
+  // Les questions arrivent en deuxième, juste après « Tout » : ce sont elles
+  // qu'on met dans le dossier envoyé à une personnalité, et une rubrique
+  // reléguée en fin de rangée ne se remplit jamais.
+  { cle: 'question', titre: 'Questions', Icone: HelpCircle },
   { cle: 'discussion', titre: 'Discussions', Icone: MessageCircle },
   { cle: 'bon_plan', titre: 'Bons plans', Icone: Tag },
   { cle: 'photo', titre: 'Photos', Icone: ImageIcon },
@@ -65,9 +73,11 @@ export default function FanGroupeScreen() {
 
   const [sujets, setSujets] = useState<Sujet[]>([]);
   const [verifies, setVerifies] = useState<Set<string>>(new Set());
+  const [premiereHeure, setPremiereHeure] = useState<Set<string>>(new Set());
   const [filtre, setFiltre] = useState<TypeSujet | 'tout'>('tout');
   const [chargement, setChargement] = useState(true);
   const [refus, setRefus] = useState(false);
+  const [pleinEcran, setPleinEcran] = useState<MediaVisionnable | null>(null);
 
   const [creation, setCreation] = useState(false);
   const [type, setType] = useState<TypeSujet>('discussion');
@@ -78,8 +88,22 @@ export default function FanGroupeScreen() {
   const [envoi, setEnvoi] = useState(false);
 
   const trUI = useAutoTranslate([
-    'Tout', 'Discussions', 'Bons plans', 'Photos',
+    'Tout', 'Discussions', 'Bons plans', 'Photos', 'Questions',
     'Ouvrir un sujet',
+    // Questions, vidéo, badges et raccourcis — lot 4.
+    'Poser une question',
+    'Ta question',
+    'Que veux-tu lui demander ?',
+    'Moi aussi',
+    'Ajouter une photo ou une vidéo',
+    'La vidéo n’a pas pu être envoyée. Réessaie.',
+    'Vidéo refusée',
+    'Cette vidéo ne peut pas être publiée sur Plyz.',
+    'Vidéo trop lourde : 40 Mo maximum. Filme plus court.',
+    'Première heure',
+    'Ses plus grands fans',
+    'Le mur des rencontres',
+    'Les questions les plus soutenues arrivent en haut : c’est ce qu’on lui transmettra.',
     'Rien ici pour l’instant. Ouvre le premier sujet.',
     'Suis cette personnalité pour entrer dans son espace.',
     'Titre',
@@ -123,8 +147,42 @@ export default function FanGroupeScreen() {
 
     const { data: v } = await supabase.rpc('fz_fans_verifies', { p_celebrity: celebrityId });
     setVerifies(new Set((v || []).map((r: any) => r.fan_id)));
+
+    // Ceux qui l'ont réclamée avant qu'elle n'arrive. Chargé en une fois pour
+    // toute la liste : une requête par ligne aurait fait cent allers-retours
+    // sur un espace actif.
+    const { data: ph } = await supabase.rpc('fans_premiere_heure', { p_celebrity: celebrityId });
+    setPremiereHeure(new Set((ph || []).map((r: any) => r.fan_id)));
+
     setChargement(false);
   }, [celebrityId]);
+
+  /**
+   * « Moi aussi je veux savoir. »
+   *
+   * Sans ce geste, quarante fans posent quarante fois la même question et la
+   * personnalité voit un mur illisible. Avec lui, une question monte — et
+   * c'est celle-là qu'on lui transmet.
+   */
+  const soutenir = useCallback(async (sujet: Sujet) => {
+    if (!user) return;
+    const soutenu = !sujet.soutenu;
+    setSujets((actuel) => actuel.map((s) => (s.id === sujet.id
+      ? { ...s, soutenu, nb_soutiens: Math.max(0, (s.nb_soutiens || 0) + (soutenu ? 1 : -1)) }
+      : s)));
+    try {
+      if (soutenu) {
+        await supabase.from('fanzone_soutiens').insert({ sujet_id: sujet.id, fan_id: user.id });
+      } else {
+        await supabase.from('fanzone_soutiens').delete()
+          .eq('sujet_id', sujet.id).eq('fan_id', user.id);
+      }
+    } catch {
+      setSujets((actuel) => actuel.map((s) => (s.id === sujet.id
+        ? { ...s, soutenu: sujet.soutenu, nb_soutiens: sujet.nb_soutiens }
+        : s)));
+    }
+  }, [user]);
 
   useEffect(() => { charger(); }, [charger]);
 
@@ -140,26 +198,61 @@ export default function FanGroupeScreen() {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') return;
+      // La vidéo est acceptée ici comme ailleurs : une rencontre, une ambiance
+      // de concert, un souvenir de tournage ne tiennent pas dans une photo.
+      // Le recadrage n'est proposé que pour les images — l'imposer à une vidéo
+      // ouvre un éditeur qui n'a rien à y faire.
       const r = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'], allowsEditing: true, quality: 0.8,
+        mediaTypes: ['images', 'videos'], quality: 0.8, videoMaxDuration: 60,
       });
       if (r.canceled || !r.assets?.[0]?.uri) return;
 
+      const choisi = r.assets[0];
+      const estVideo = choisi.type === 'video' || estUneVideo(choisi.uri);
+
       setEnvoiPhoto(true);
       const donnees = new FormData();
-      donnees.append('image', { uri: r.assets[0].uri, type: 'image/jpeg', name: 'photo.jpg' } as any);
+      if (estVideo) {
+        const ext = (choisi.uri.split('?')[0].split('.').pop() || 'mp4').toLowerCase();
+        donnees.append('image', {
+          uri: choisi.uri,
+          type: `video/${ext === 'mov' ? 'quicktime' : ext}`,
+          name: `video.${ext}`,
+        } as any);
+        // Le quota mensuel de vidéos vise les personnalités qui publient sans
+        // rien proposer. Un fan n'a pas d'événement à créer : le lui appliquer
+        // n'aurait aucun sens.
+        donnees.append('contexte', 'fanzone');
+      } else {
+        donnees.append('image', { uri: choisi.uri, type: 'image/jpeg', name: 'photo.jpg' } as any);
+      }
+
       const rep = await fetch(`${API_BASE}/api/upload-post-image`, {
         method: 'POST',
         headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
         body: donnees,
       });
       if (rep.status === 403) {
-        showAlert(trUI('Photo refusée'), trUI('Cette image ne peut pas être publiée sur Plyz.'));
+        showAlert(
+          estVideo ? trUI('Vidéo refusée') : trUI('Photo refusée'),
+          estVideo
+            ? trUI('Cette vidéo ne peut pas être publiée sur Plyz.')
+            : trUI('Cette image ne peut pas être publiée sur Plyz.'),
+        );
+        return;
+      }
+      if (rep.status === 413) {
+        showAlert(trUI('Vidéo refusée'), trUI('Vidéo trop lourde : 40 Mo maximum. Filme plus court.'));
         return;
       }
       if (!rep.ok) throw new Error('upload');
       const d = await rep.json();
-      if (d?.url) setPhoto(d.url);
+      if (d?.url) {
+        setPhoto(d.url);
+        // Une vidéo sous « Discussion » ne se retrouverait jamais : le
+        // classement suit ce qu'on envoie.
+        if (estVideo && type === 'discussion') setType('photo');
+      }
     } catch {
       showAlert(trUI('Photo refusée'), trUI('L’image n’a pas pu être envoyée. Réessaie.'));
     } finally {
@@ -219,7 +312,15 @@ export default function FanGroupeScreen() {
     }
   };
 
-  const visibles = filtre === 'tout' ? sujets : sujets.filter((s) => s.type === filtre);
+  const visibles = filtre === 'tout'
+    ? sujets
+    : filtre === 'question'
+      // Les questions se lisent dans l'ordre où on les transmettra à la
+      // personnalité : la plus soutenue en premier. Ailleurs, c'est la
+      // fraîcheur qui prime.
+      ? sujets.filter((s) => s.type === 'question')
+        .sort((a, b) => (b.nb_soutiens || 0) - (a.nb_soutiens || 0))
+      : sujets.filter((s) => s.type === filtre);
 
   return (
     <View style={styles.container}>
@@ -235,7 +336,40 @@ export default function FanGroupeScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      <View style={styles.filtres}>
+      {/* Les deux vitrines de l'espace : qui sont ses plus grands fans, et
+          ceux qui l'ont vraiment rencontrée. Elles étaient en base depuis le
+          début — les dédicaces réalisées, les prestations menées à terme — et
+          n'apparaissaient nulle part. */}
+      <View style={styles.raccourcis}>
+        <TouchableOpacity
+          style={styles.raccourci}
+          activeOpacity={0.85}
+          onPress={() => router.push({
+            pathname: '/top-fans',
+            params: { celebrityId, nom: params.nom || '' },
+          } as any)}
+        >
+          <Trophy size={14} color="#f59e0b" />
+          <Text style={styles.raccourciTxt} numberOfLines={1}>{trUI('Ses plus grands fans')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.raccourci}
+          activeOpacity={0.85}
+          onPress={() => router.push({
+            pathname: '/mur-rencontres',
+            params: { celebrityId, nom: params.nom || '' },
+          } as any)}
+        >
+          <Camera size={14} color="#10b981" />
+          <Text style={styles.raccourciTxt} numberOfLines={1}>{trUI('Le mur des rencontres')}</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filtres}
+      >
         {ONGLETS.map((o) => (
           <TouchableOpacity
             key={o.cle}
@@ -249,7 +383,13 @@ export default function FanGroupeScreen() {
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
+
+      {filtre === 'question' && (
+        <Text style={styles.aideQuestions}>
+          {trUI('Les questions les plus soutenues arrivent en haut : c’est ce qu’on lui transmettra.')}
+        </Text>
+      )}
 
       {chargement ? (
         <ActivityIndicator color="#10b981" style={{ marginTop: 30 }} />
@@ -302,6 +442,15 @@ export default function FanGroupeScreen() {
                         <Text style={styles.badgeVerifTxt}>{trUI('A rencontré la star')}</Text>
                       </View>
                     )}
+                    {!item.par_la_star && premiereHeure.has(item.auteur_id) && (
+                      // Il l'a réclamée quand elle n'était pas là. Sans cette
+                      // distinction, la réclamation ne vaudrait rien — et plus
+                      // personne ne réclamerait.
+                      <View style={styles.badgePremiere}>
+                        <Sparkles size={10} color="#f59e0b" />
+                        <Text style={styles.badgePremiereTxt}>{trUI('Première heure')}</Text>
+                      </View>
+                    )}
                   </View>
                   <Text style={styles.sujetTitre} numberOfLines={2}>{item.titre}</Text>
                 </View>
@@ -312,12 +461,57 @@ export default function FanGroupeScreen() {
                 <Text style={styles.sujetExtrait} numberOfLines={2}>{item.contenu}</Text>
               )}
               {!!item.media_url && (
-                <Image source={{ uri: item.media_url }} style={styles.sujetPhoto} resizeMode="cover" />
+                estUneVideo(item.media_url) ? (
+                  // La vignette d'abord, la lecture au geste : une liste où
+                  // dix vidéos démarrent seules vide une batterie en dix
+                  // minutes et consomme les données de tout le monde.
+                  <TouchableOpacity
+                    style={styles.sujetPhoto}
+                    activeOpacity={0.9}
+                    onPress={() => setPleinEcran({
+                      uri: item.media_url as string, estVideo: true, titre: item.titre,
+                    })}
+                  >
+                    <Image
+                      source={{ uri: (item.media_url as string).split('?')[0].replace(/\.[^./]+$/, '-poster.jpg') }}
+                      style={StyleSheet.absoluteFill as any}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.lecture}>
+                      <Play size={22} color="#052e1f" fill="#052e1f" />
+                    </View>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => setPleinEcran({ uri: item.media_url as string, titre: item.titre })}
+                  >
+                    <Image source={{ uri: item.media_url }} style={styles.sujetPhoto} resizeMode="cover" />
+                  </TouchableOpacity>
+                )
               )}
-              <Text style={styles.sujetPied}>
-                {item.nb_messages} {item.nb_messages > 1 ? trUI('réponses') : trUI('réponse')}
-                {item.ferme ? ` · ${trUI('Fermé')}` : ''}
-              </Text>
+              <View style={styles.sujetBas}>
+                <Text style={styles.sujetPied}>
+                  {item.nb_messages} {item.nb_messages > 1 ? trUI('réponses') : trUI('réponse')}
+                  {item.ferme ? ` · ${trUI('Fermé')}` : ''}
+                </Text>
+
+                {/* Le soutien n'a de sens que sur une question : c'est lui qui
+                    la fait monter dans le dossier qu'on transmettra. */}
+                {item.type === 'question' && (
+                  <TouchableOpacity
+                    style={[styles.soutien, item.soutenu && styles.soutienActif]}
+                    onPress={() => soutenir(item)}
+                    activeOpacity={0.85}
+                    hitSlop={6}
+                  >
+                    <Plus size={12} color={item.soutenu ? '#052e1f' : '#f59e0b'} />
+                    <Text style={[styles.soutienTxt, item.soutenu && styles.soutienTxtActif]}>
+                      {trUI('Moi aussi')} {item.nb_soutiens > 0 ? item.nb_soutiens : ''}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </TouchableOpacity>
           )}
         />
@@ -326,14 +520,21 @@ export default function FanGroupeScreen() {
       {!refus && (
         <TouchableOpacity
           style={[styles.fab, { bottom: insets.bottom + 20 }]}
-          onPress={() => requireAuth(() => setCreation(true), {
+          onPress={() => requireAuth(() => {
+            // Le bouton ouvre ce que le fan regarde : depuis l'onglet
+            // Questions, il propose une question, pas une discussion.
+            if (filtre !== 'tout') setType(filtre);
+            setCreation(true);
+          }, {
             reason: trUI('Connecte-toi pour participer'),
             requireBillingIdentity: false,
           })}
           activeOpacity={0.85}
         >
           <Plus size={20} color="#052e1f" />
-          <Text style={styles.fabTxt}>{trUI('Ouvrir un sujet')}</Text>
+          <Text style={styles.fabTxt}>
+            {filtre === 'question' ? trUI('Poser une question') : trUI('Ouvrir un sujet')}
+          </Text>
         </TouchableOpacity>
       )}
 
@@ -341,7 +542,9 @@ export default function FanGroupeScreen() {
         <KeyboardAvoidingView style={styles.modalFond} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={[styles.feuille, { paddingBottom: insets.bottom + 16 }]}>
             <View style={styles.feuilleEntete}>
-              <Text style={styles.feuilleTitre}>{trUI('Ouvrir un sujet')}</Text>
+              <Text style={styles.feuilleTitre}>
+                {type === 'question' ? trUI('Poser une question') : trUI('Ouvrir un sujet')}
+              </Text>
               <TouchableOpacity onPress={() => setCreation(false)} hitSlop={10}>
                 <X size={20} color="#9ca3af" />
               </TouchableOpacity>
@@ -366,7 +569,9 @@ export default function FanGroupeScreen() {
 
               <TextInput
                 style={styles.champ}
-                placeholder={trUI('De quoi veux-tu parler ?')}
+                placeholder={type === 'question'
+                  ? trUI('Que veux-tu lui demander ?')
+                  : trUI('De quoi veux-tu parler ?')}
                 placeholderTextColor="#6b7280"
                 value={titre}
                 onChangeText={setTitre}
@@ -374,7 +579,7 @@ export default function FanGroupeScreen() {
               />
               <TextInput
                 style={[styles.champ, styles.champLong]}
-                placeholder={trUI('Ton message')}
+                placeholder={type === 'question' ? trUI('Ta question') : trUI('Ton message')}
                 placeholderTextColor="#6b7280"
                 value={contenu}
                 onChangeText={setContenu}
@@ -384,7 +589,13 @@ export default function FanGroupeScreen() {
 
               {photo ? (
                 <View style={styles.apercuPhoto}>
-                  <Image source={{ uri: photo }} style={styles.apercuImage} />
+                  {estUneVideo(photo) ? (
+                    <View style={[styles.apercuImage, styles.apercuVideo]}>
+                      <Play size={26} color="#10b981" fill="#10b981" />
+                    </View>
+                  ) : (
+                    <Image source={{ uri: photo }} style={styles.apercuImage} />
+                  )}
                   <TouchableOpacity style={styles.retirerPhoto} onPress={() => setPhoto(null)} hitSlop={8}>
                     <X size={16} color="#fff" />
                   </TouchableOpacity>
@@ -399,7 +610,7 @@ export default function FanGroupeScreen() {
                   {envoiPhoto
                     ? <ActivityIndicator size="small" color="#10b981" />
                     : <ImageIcon size={16} color="#10b981" />}
-                  <Text style={styles.btnPhotoTxt}>{trUI('Ajouter une photo')}</Text>
+                  <Text style={styles.btnPhotoTxt}>{trUI('Ajouter une photo ou une vidéo')}</Text>
                 </TouchableOpacity>
               )}
 
@@ -417,6 +628,10 @@ export default function FanGroupeScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Photo ou vidéo en grand. Une rencontre, c'est une image qu'on veut
+          REGARDER — la laisser en vignette dans une carte, c'est la perdre. */}
+      <VisionneuseMedia media={pleinEcran} onClose={() => setPleinEcran(null)} />
     </View>
   );
 }
@@ -433,7 +648,20 @@ const styles = StyleSheet.create({
   },
   titre: { color: '#fff', fontSize: 17, fontWeight: '800', flex: 1, textAlign: 'center' },
 
-  filtres: { flexDirection: 'row', gap: 7, paddingHorizontal: 16, marginBottom: 4 },
+  filtres: { flexDirection: 'row', gap: 7, paddingHorizontal: 16, paddingBottom: 4 },
+
+  raccourcis: { flexDirection: 'row', gap: 9, paddingHorizontal: 16, marginBottom: 10 },
+  raccourci: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: 10, paddingHorizontal: 11, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.09)',
+  },
+  raccourciTxt: { color: '#e5e7eb', fontSize: 12, fontWeight: '700', flexShrink: 1 },
+  aideQuestions: {
+    color: '#6b7280', fontSize: 11.5, lineHeight: 16,
+    marginHorizontal: 16, marginTop: 2, marginBottom: 4,
+  },
   filtre: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingVertical: 7, paddingHorizontal: 11, borderRadius: 10,
@@ -469,10 +697,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6,
   },
   badgeVerifTxt: { color: '#10b981', fontSize: 10, fontWeight: '800' },
+  badgePremiere: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    backgroundColor: 'rgba(245,158,11,0.14)',
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.35)',
+    paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6,
+  },
+  badgePremiereTxt: { color: '#f59e0b', fontSize: 10, fontWeight: '800' },
+
+  sujetBas: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8 },
+  lecture: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  soutien: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    paddingHorizontal: 9, paddingVertical: 5, borderRadius: 9,
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.4)',
+    backgroundColor: 'rgba(245,158,11,0.12)', marginLeft: 'auto',
+  },
+  soutienActif: { backgroundColor: '#f59e0b', borderColor: '#f59e0b' },
+  soutienTxt: { color: '#f59e0b', fontSize: 11.5, fontWeight: '800' },
+  soutienTxtActif: { color: '#052e1f' },
+  apercuVideo: {
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(16,185,129,0.10)',
+  },
   sujetTitre: { color: '#fff', fontSize: 15, fontWeight: '700', marginTop: 3 },
   sujetExtrait: { color: '#cbd5e1', fontSize: 13.5, lineHeight: 19, marginTop: 8 },
   sujetPhoto: { width: '100%', height: 170, borderRadius: 10, marginTop: 10 },
-  sujetPied: { color: '#6b7280', fontSize: 12, marginTop: 8 },
+  // La marge est portée par `sujetBas`, qui l'aligne avec le bouton de soutien.
+  sujetPied: { color: '#6b7280', fontSize: 12 },
 
   vide: { color: '#6b7280', fontSize: 14, textAlign: 'center', marginTop: 40, lineHeight: 20 },
 

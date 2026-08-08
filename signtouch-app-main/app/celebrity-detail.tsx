@@ -84,7 +84,10 @@ interface LiveEvent {
 
 export default function CelebrityDetailScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // `tab` permet d'arriver directement sur le bon onglet. Une personnalité qui
+  // vient de publier doit VOIR sa publication : la renvoyer sur « À propos »
+  // lui laisse croire que rien n'a été enregistré.
+  const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const { isFollowing, toggleFollow } = useFollow();
@@ -95,7 +98,7 @@ export default function CelebrityDetailScreen() {
   const autographLoading = false;
   const [showReport, setShowReport] = useState(false);
   const [showVideoRequest, setShowVideoRequest] = useState(false);
-  const [activeTab, setActiveTab] = useState<'about' | 'posts'>('about');
+  const [activeTab, setActiveTab] = useState<'about' | 'posts'>(tab === 'posts' ? 'posts' : 'about');
   const [events, setEvents] = useState<LiveEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
 

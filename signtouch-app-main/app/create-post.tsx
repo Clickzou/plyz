@@ -452,7 +452,18 @@ export default function CreatePostScreen() {
         }
       } catch { /* le rappel n'est jamais bloquant */ }
 
-      router.back();
+      // On renvoie la personnalité VOIR ce qu'elle vient de publier, sur le
+      // bon onglet : « Publications » pour un post, « À propos » pour un
+      // événement — c'est là que les événements s'affichent. Revenir
+      // simplement en arrière la laissait devant l'écran précédent, sans
+      // aucune preuve que son message était bien parti.
+      if (user?.id) {
+        router.replace(
+          `/celebrity-detail?id=${user.id}&tab=${kind === 'event' ? 'about' : 'posts'}` as any,
+        );
+      } else {
+        router.back();
+      }
     } catch (err) {
       console.error('Publish error:', err);
       showAlert(

@@ -2,15 +2,21 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList,
   ActivityIndicator, Platform, Share, KeyboardAvoidingView, Modal, ScrollView,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft, Search, X, Megaphone, Users, Share2, CheckCircle, Sparkles,
-  PenLine, Video, CalendarDays,
+  PenLine, Video, CalendarDays, MessageCircle, Globe, Send, Clock,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import * as Clipboard from 'expo-clipboard';
+import {
+  destinations, memoriserReseau, messageInterpellation, reseauPrefere,
+  trierParPreference, type Destination, type ReseauxStar,
+} from '@/utils/interpeller';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { getDateLocale } from '@/utils/dateLocale';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -54,7 +60,21 @@ interface StarReclamee {
   pays?: string | null;
   arrivee?: boolean;
   celebrity_id?: string | null;
+  /** Ses comptes officiels connus, pour aller l'interpeller chez elle. */
+  reseaux?: ReseauxStar | null;
 }
+
+/** L'icône d'une destination. Aucune icône de marque : lucide les retire au
+ *  fil des versions, et un écran qui plante pour un logo n'a aucun sens. */
+const ICONE_RESEAU: Record<string, any> = {
+  x: Send,
+  facebook: MessageCircle,
+  instagram: MessageCircle,
+  youtube: Video,
+  tiktok: Video,
+  site: Globe,
+  recherche: Search,
+};
 
 /**
  * Les portes d'entrée du catalogue.
@@ -114,6 +134,18 @@ export default function ReclamerStarScreen() {
   const [envie, setEnvie] = useState<'dedicace' | 'appel' | 'evenement'>('dedicace');
   const [budget, setBudget] = useState<number | null>(null);
 
+  // L'interpellation en cours de composition : où le fan peut écrire à cette
+  // personnalité, et combien de places il reste aujourd'hui.
+  const [interpellation, setInterpellation] = useState<{
+    nom: string;
+    slug: string;
+    fans: number;
+    ou: Destination[];
+    restant: number;
+    monTour: boolean;
+  } | null>(null);
+  const [ouverture, setOuverture] = useState(false);
+
   const trUI = useAutoTranslate([
     'Réclame ta star',
     'Elle n’est pas encore sur Plyz ? Dis-le. Plus vous êtes nombreux, plus elle a de raisons de venir.',
@@ -156,8 +188,42 @@ export default function ReclamerStarScreen() {
     'Seules les personnalités publiques peuvent être réclamées : nous le vérifions automatiquement, comme à l’inscription d’une célébrité.',
     'Vous avez atteint un palier ! Rendez-vous le',
     'à',
-    'on lui écrit tous en même temps. Tu recevras une notification.',
+    // ⚠️ Ce texte disait « on lui écrit tous en même temps ». C'est devenu faux
+    // le jour où les vagues ont été étalées à trois fans par jour — et une
+    // promesse démentie par l'app coûte plus qu'une promesse modeste.
+    'chacun son tour, quelques fans par jour. Tu seras prévenu quand ce sera à toi.',
     'Une personnalité peut à tout moment demander le retrait de son nom.',
+    // Interpeller — écrire à la personnalité, là où elle est.
+    'Lui écrire',
+    'Connecte-toi pour lui écrire',
+    'Tu lui as déjà écrit',
+    'On n’écrit qu’une fois à une personnalité : c’est ce qui fait qu’elle nous lit encore. Fais plutôt venir d’autres fans.',
+    'Ce n’est plus possible',
+    'Cette personnalité a demandé qu’on cesse de la solliciter. Nous respectons sa décision.',
+    'Reviens demain',
+    'Trois fans lui ont déjà écrit aujourd’hui. C’est la limite que nous nous imposons : une personnalité harcelée ne vient jamais. Ton tour arrive.',
+    'Impossible de préparer ton message. Réessaie.',
+    'Impossible d’ouvrir ce réseau. Réessaie.',
+    'Écris à {{nom}}',
+    'C’est ton tour !',
+    'Il reste {{n}} place aujourd’hui',
+    'Il reste {{n}} places aujourd’hui',
+    'Nous ne laissons passer que trois messages par jour vers une même personnalité : c’est ce qui fait la différence entre une invitation et du harcèlement.',
+    'Publier sur X',
+    'Ton message est déjà écrit. Tous ses fans le verront.',
+    'Écrire sur Messenger',
+    'Sa conversation Facebook s’ouvre, ton message est copié.',
+    'Message Instagram',
+    'Sa messagerie s’ouvre, ton message est copié.',
+    'Sa chaîne YouTube',
+    'Son compte TikTok',
+    'Colle ton message en commentaire de sa dernière vidéo.',
+    'Son site officiel',
+    'Cherche sa page de contact et colle ton message.',
+    'Trouver ses réseaux',
+    'Nous ne connaissons pas encore ses comptes. Ton message est copié.',
+    'Ton message',
+    'Public',
   ]);
 
   const chargerCatalogue = useCallback(async (fam: string) => {
@@ -234,6 +300,114 @@ export default function ReclamerStarScreen() {
   };
 
   /**
+   * Interpeller une personnalité : lui écrire, à elle, là où elle est.
+   *
+   * C'est le geste qui manquait. Le partage n'envoyait un lien qu'aux proches
+   * du fan ; la personne concernée n'apprenait jamais que trois cents fans
+   * l'attendaient.
+   *
+   * ⚠️ Le serveur est consulté AVANT d'ouvrir quoi que ce soit. C'est lui qui
+   * tient le plafond de trois messages par jour et par personnalité — sans
+   * quoi trois cents fans écriraient le même matin, et une star agacée ne
+   * viendrait jamais. Ce qu'il refuse, on l'explique : un bouton qui ne fait
+   * rien passe pour une panne.
+   */
+  const interpeller = (item: StarReclamee) => {
+    requireAuth(async () => {
+      if (ouverture) return;
+      setOuverture(true);
+      try {
+        const r = await authedFetch(
+          `${API_BASE}/api/interpeller/etat?slug=${encodeURIComponent(item.slug || item.nom)}`,
+        );
+        const d = await r.json();
+
+        if (d?.motif === 'deja_la' && d.celebrity_id) {
+          router.push(`/celebrity-detail?id=${d.celebrity_id}` as any);
+          return;
+        }
+        if (d?.motif === 'deja_ecrit') {
+          showAlert(trUI('Tu lui as déjà écrit'), trUI('On n’écrit qu’une fois à une personnalité : c’est ce qui fait qu’elle nous lit encore. Fais plutôt venir d’autres fans.'));
+          return;
+        }
+        if (d?.motif === 'retrait') {
+          showAlert(trUI('Ce n’est plus possible'), trUI('Cette personnalité a demandé qu’on cesse de la solliciter. Nous respectons sa décision.'));
+          return;
+        }
+        if (!d?.autorise) {
+          showConfirm(
+            trUI('Reviens demain'),
+            trUI('Trois fans lui ont déjà écrit aujourd’hui. C’est la limite que nous nous imposons : une personnalité harcelée ne vient jamais. Ton tour arrive.'),
+            [
+              { text: t('close') || 'Fermer', style: 'cancel' },
+              { text: trUI('Partager'), onPress: () => partager(item.nom, item.fans) },
+            ],
+          );
+          return;
+        }
+
+        const fans = Number(d.fans ?? item.fans) || item.fans || 1;
+        const ou = trierParPreference(
+          destinations(item.nom, fans, d.reseaux || item.reseaux),
+          await reseauPrefere(),
+        );
+        setInterpellation({
+          nom: item.nom,
+          slug: item.slug || item.nom,
+          fans,
+          ou,
+          restant: Number(d.restant) || 0,
+          monTour: !!d.mon_tour,
+        });
+      } catch {
+        showAlert(t('error') || 'Erreur', trUI('Impossible de préparer ton message. Réessaie.'));
+      } finally {
+        setOuverture(false);
+      }
+    }, { reason: trUI('Connecte-toi pour lui écrire'), requireBillingIdentity: false });
+  };
+
+  /**
+   * Le fan part écrire. On consomme sa place, on copie son message, on ouvre.
+   *
+   * La place est prise AVANT l'ouverture : une fois l'application quittée,
+   * rien ne garantit qu'on y revienne, et un compteur qui ne compte que les
+   * retours ne compte rien.
+   */
+  const partirVers = async (dest: Destination) => {
+    const en = interpellation;
+    if (!en) return;
+    try {
+      const r = await authedFetch(`${API_BASE}/api/interpeller`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: en.slug, reseau: dest.cle }),
+      });
+      if (!r.ok) {
+        setInterpellation(null);
+        showAlert(
+          trUI('Reviens demain'),
+          trUI('Trois fans lui ont déjà écrit aujourd’hui. C’est la limite que nous nous imposons : une personnalité harcelée ne vient jamais. Ton tour arrive.'),
+        );
+        return;
+      }
+
+      // Sur X le message part déjà écrit. Ailleurs, le presse-papier est le
+      // seul moyen de le transporter : aucun réseau n'accepte qu'on
+      // pré-remplisse un message privé.
+      if (!dest.prerempli) {
+        await Clipboard.setStringAsync(messageInterpellation(en.nom, en.fans));
+      }
+      await memoriserReseau(dest.cle);
+      setInterpellation(null);
+      await Linking.openURL(dest.url);
+      chargerMiennes();
+    } catch {
+      showAlert(t('error') || 'Erreur', trUI('Impossible d’ouvrir ce réseau. Réessaie.'));
+    }
+  };
+
+  /**
    * Ouvre la demande. On ne l'envoie pas encore : on demande d'abord CE QUE
    * le fan veut.
    *
@@ -305,15 +479,31 @@ export default function ReclamerStarScreen() {
           message += '\n\n' + trUI('Vous avez atteint un palier ! Rendez-vous le')
             + ` ${quand.toLocaleDateString(getDateLocale(), { weekday: 'long', day: 'numeric', month: 'long' })} `
             + `${trUI('à')} ${quand.toLocaleTimeString(getDateLocale(), { hour: '2-digit', minute: '2-digit' })} : `
-            + trUI('on lui écrit tous en même temps. Tu recevras une notification.');
+            + trUI('chacun son tour, quelques fans par jour. Tu seras prévenu quand ce sera à toi.');
         }
 
+        // C'est ici que le fan est le plus motivé : il vient de dire qu'il
+        // veut cette personne, il a la confirmation sous les yeux. Lui
+        // proposer d'aller le lui dire vaut mieux que de le renvoyer au
+        // partage entre amis — à condition que la fiche soit vérifiée : on
+        // n'envoie personne interpeller un nom dont on ignore encore s'il
+        // s'agit d'une personnalité publique.
         showConfirm(
           trUI('Réclamation enregistrée'),
           message,
           [
             { text: t('close') || 'Fermer', style: 'cancel' },
-            { text: trUI('Partager'), onPress: () => partager(nom, fans) },
+            d.notoriete_a_confirmer
+              ? { text: trUI('Partager'), onPress: () => partager(nom, fans) }
+              : {
+                text: trUI('Lui écrire'),
+                onPress: () => interpeller({
+                  slug: d.star?.slug || nom,
+                  nom,
+                  fans,
+                  reseaux: d.reseaux || null,
+                }),
+              },
           ],
         );
       } catch {
@@ -371,9 +561,24 @@ export default function ReclamerStarScreen() {
           <Text style={styles.btnReclamerTxt}>{trUI('Je la réclame')}</Text>
         </TouchableOpacity>
       ) : (
-        <TouchableOpacity onPress={() => partager(item.nom, item.fans)} hitSlop={10}>
-          <Share2 size={18} color="#9ca3af" />
-        </TouchableOpacity>
+        // Deux gestes, et non un seul : « Lui écrire » s'adresse à la
+        // personnalité, le partage s'adresse aux autres fans. Confondre les
+        // deux, c'était n'en faire aucun — le partage seul ne prévenait jamais
+        // la personne concernée.
+        <View style={styles.actionsLigne}>
+          <TouchableOpacity
+            style={styles.btnEcrire}
+            onPress={() => interpeller(item)}
+            disabled={ouverture}
+            activeOpacity={0.85}
+          >
+            <Megaphone size={14} color="#052e1f" />
+            <Text style={styles.btnEcrireTxt}>{trUI('Lui écrire')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => partager(item.nom, item.fans)} hitSlop={10}>
+            <Share2 size={18} color="#9ca3af" />
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -621,6 +826,92 @@ export default function ReclamerStarScreen() {
         </View>
       </Modal>
 
+      {/* Où écrire à la personnalité.
+          Une LISTE, et non une ouverture directe : X est de loin le meilleur
+          endroit — le message y part déjà écrit, avec sa mention, et tous ses
+          fans le voient — mais encore faut-il que le fan y ait un compte, ce
+          qui est loin d'être acquis. Il voit donc en un coup d'œil ce qui lui
+          est possible, et l'on retient son choix pour la fois suivante. */}
+      <Modal
+        visible={!!interpellation}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setInterpellation(null)}
+      >
+        <View style={styles.modalFond}>
+          <View style={[styles.feuille, { paddingBottom: insets.bottom + 18 }]}>
+            <View style={styles.feuilleEntete}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.feuilleSur}>
+                  {interpellation?.monTour ? trUI('C’est ton tour !') : trUI('Ton message')}
+                </Text>
+                <Text style={styles.feuilleNom} numberOfLines={1}>
+                  {trUI('Écris à {{nom}}').replace('{{nom}}', interpellation?.nom || '')}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setInterpellation(null)} hitSlop={12}>
+                <X size={20} color="#9ca3af" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Le message est montré AVANT le départ : le fan doit savoir ce
+                qu'il s'apprête à publier en son nom. */}
+            <View style={styles.apercuMessage}>
+              <Text style={styles.apercuMessageTxt}>
+                {interpellation
+                  ? messageInterpellation(interpellation.nom, interpellation.fans)
+                  : ''}
+              </Text>
+            </View>
+
+            <ScrollView style={{ maxHeight: 320 }} keyboardShouldPersistTaps="handled">
+              {(interpellation?.ou || []).map((d) => {
+                const Icone = ICONE_RESEAU[d.cle] || Send;
+                return (
+                  <TouchableOpacity
+                    key={d.cle}
+                    style={styles.destination}
+                    onPress={() => partirVers(d)}
+                    activeOpacity={0.85}
+                  >
+                    <View style={[styles.destinationIcone, d.prerempli && styles.destinationIconeFort]}>
+                      <Icone size={17} color={d.prerempli ? '#052e1f' : '#10b981'} />
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <View style={styles.destinationTitreLigne}>
+                        <Text style={styles.destinationTitre} numberOfLines={1}>{trUI(d.titre)}</Text>
+                        {d.public && (
+                          <View style={styles.etiquettePublic}>
+                            <Text style={styles.etiquettePublicTxt}>{trUI('Public')}</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.destinationDetail} numberOfLines={2}>{trUI(d.detail)}</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {/* Le plafond est DIT, jamais subi. Un fan qui comprend pourquoi
+                il n'y a que trois places accepte d'attendre son tour ; un fan
+                qui se heurte à un refus muet croit à une panne. */}
+            <View style={styles.plafondLigne}>
+              <Clock size={14} color="#f59e0b" />
+              <Text style={styles.plafondTxt}>
+                {(interpellation?.restant === 1
+                  ? trUI('Il reste {{n}} place aujourd’hui')
+                  : trUI('Il reste {{n}} places aujourd’hui')
+                ).replace('{{n}}', String(interpellation?.restant ?? 0))}
+              </Text>
+            </View>
+            <Text style={styles.plafondNote}>
+              {trUI('Nous ne laissons passer que trois messages par jour vers une même personnalité : c’est ce qui fait la différence entre une invitation et du harcèlement.')}
+            </Text>
+          </View>
+        </View>
+      </Modal>
+
       <BottomNav />
     </View>
   );
@@ -679,6 +970,51 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase', letterSpacing: 0.6,
     marginHorizontal: 16, marginTop: 6, marginBottom: 6,
   },
+
+  // Écrire à la personnalité, et faire venir d'autres fans : deux gestes
+  // distincts, côte à côte. Le premier est le plus important, il est plein.
+  actionsLigne: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  btnEcrire: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: '#f59e0b', borderRadius: 10,
+    paddingVertical: 8, paddingHorizontal: 11,
+  },
+  btnEcrireTxt: { color: '#052e1f', fontSize: 12.5, fontWeight: '800' },
+
+  apercuMessage: {
+    backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12,
+    padding: 12, marginBottom: 14,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+  },
+  apercuMessageTxt: { color: '#d1d5db', fontSize: 13.5, lineHeight: 19 },
+
+  destination: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    padding: 12, marginBottom: 9, borderRadius: 13,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+  },
+  destinationIcone: {
+    width: 38, height: 38, borderRadius: 19,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(16,185,129,0.14)',
+  },
+  // Le seul endroit où le message part déjà écrit se voit au premier coup
+  // d'œil : c'est le geste le plus court, il doit être le plus visible.
+  destinationIconeFort: { backgroundColor: '#10b981' },
+  destinationTitreLigne: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  destinationTitre: { color: '#fff', fontSize: 14.5, fontWeight: '700' },
+  destinationDetail: { color: '#9ca3af', fontSize: 12.5, lineHeight: 17, marginTop: 2 },
+  etiquettePublic: {
+    backgroundColor: 'rgba(16,185,129,0.16)',
+    borderWidth: 1, borderColor: 'rgba(16,185,129,0.35)',
+    paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6,
+  },
+  etiquettePublicTxt: { color: '#10b981', fontSize: 10, fontWeight: '800' },
+
+  plafondLigne: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 6 },
+  plafondTxt: { color: '#f59e0b', fontSize: 13, fontWeight: '800' },
+  plafondNote: { color: '#6b7280', fontSize: 11.5, lineHeight: 16, marginTop: 5 },
 
   ligne: {
     flexDirection: 'row', alignItems: 'center', gap: 12,

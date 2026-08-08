@@ -204,7 +204,14 @@ create policy fz_messages_ecriture on public.fanzone_messages
 --  5. Les vues de lecture, avec les soutiens
 -- ---------------------------------------------------------------------------
 
-create or replace view public.fanzone_sujets_public
+-- ⚠️ `drop` puis `create`, et non `create or replace` : la vue existe déjà
+-- sans `star_id`, et Postgres refuse d'insérer une colonne au milieu d'une vue
+-- (« cannot change name of view column "auteur_id" to "star_id" »). La
+-- remplacer entièrement est sans risque — elle ne fait que lire, et les règles
+-- de sécurité vivent sur la table.
+drop view if exists public.fanzone_sujets_public;
+
+create view public.fanzone_sujets_public
 with (security_invoker = true) as
 select s.id, s.celebrity_id, s.star_id, s.auteur_id, s.type, s.titre, s.contenu,
        s.media_url, s.epingle, s.ferme, s.nb_messages, s.nb_soutiens,

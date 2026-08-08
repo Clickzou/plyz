@@ -93,47 +93,31 @@ function Lecteur({ uri, actif, style }: Props) {
   }, [player]);
   const ligne = lignePour(seconde);
 
-  // La surface vidéo n'est posée qu'une fois la vidéo prête, et l'image de
-  // couverture occupe le cadre en attendant. Sur Android cette surface se
-  // dessine au-dessus de tout : une couverture placée SOUS elle serait
-  // invisible, on ne verrait que son rectangle noir le temps du chargement.
-  const [pret, setPret] = useState(false);
-  useEffect(() => {
-    if (!player) return;
-    // Filet de sécurité : si l'événement n'arrive jamais (source inhabituelle,
-    // lecteur muet sur l'erreur), on affiche quand même la vidéo au bout de
-    // quelques secondes plutôt que de rester sur l'image fixe.
-    const secours = setTimeout(() => setPret(true), 5000);
-    let sub: any;
-    try {
-      sub = player.addListener('statusChange', ({ status }: any) => {
-        if (status === 'readyToPlay' || status === 'error') setPret(true);
-      });
-    } catch {}
-    return () => {
-      clearTimeout(secours);
-      try { sub?.remove(); } catch {}
-    };
-  }, [player]);
-
   const couverture = urlCouverture(uri);
 
   return (
     <View>
       <View style={style}>
-        {!pret && !!couverture && (
+        {/* La couverture est posée SOUS la surface vidéo, et celle-ci est
+            montée d'emblée.
+
+            J'avais d'abord attendu `readyToPlay` avant de poser la surface,
+            pour laisser la couverture visible pendant le chargement. Mauvaise
+            idée : sur une vidéo lourde — et toutes celles publiées avant la
+            compression le sont — la carte restait VIDE plusieurs secondes,
+            sans même la première image. Une couverture parfaite ne vaut pas
+            une vidéo qui ne s'affiche pas. */}
+        {!!couverture && (
           <Image source={{ uri: couverture }} style={StyleSheet.absoluteFill} resizeMode="cover" />
         )}
-        {pret && (
-          <VideoView
-            style={StyleSheet.absoluteFill}
-            player={player}
-            contentFit="cover"
-            nativeControls={false}
-            allowsFullscreen={false}
-            allowsPictureInPicture={false}
-          />
-        )}
+        <VideoView
+          style={StyleSheet.absoluteFill}
+          player={player}
+          contentFit="cover"
+          nativeControls={false}
+          allowsFullscreen={false}
+          allowsPictureInPicture={false}
+        />
         {/* La pastille coupe et remet le son sur place. Elle n'était qu'un
             dessin : le toucher traversait jusqu'à la carte, qui ouvrait la
             vidéo en grand — on demandait le son, on recevait le plein écran. */}

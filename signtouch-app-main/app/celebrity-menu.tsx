@@ -13,12 +13,13 @@ import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { authedFetch } from '@/utils/authedFetch';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye, PenSquare, Ticket, LogIn, Users, PenTool } from 'lucide-react-native';
+import { ArrowLeft, QrCode, Video, Star, Clock, Play, Calendar, Trash2, Copy, Share2, X, Check, Edit3, Plus, Eye, PenSquare, Ticket, LogIn, Users, PenTool, HelpCircle, Trophy } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCelebrityMode } from '@/contexts/CelebrityModeContext';
+import { useAuth } from '@/contexts/AuthContext';
 import BottomNav from '@/components/BottomNav';
 import AccountAvatarButton from '@/components/AccountAvatarButton';
 import { getMyScheduledEvents, EventSession, deleteEventSession, getEventTotalViews, getActiveViewerCount, getMergedFanEvents, ActiveFanEvent, getSignedDedicationCount } from '@/utils/eventSessionStorage';
@@ -51,7 +52,13 @@ export default function CelebrityMenuScreen() {
     'Mes participations', 'Aucun événement en cours',
     'Rejoins un événement avec un code QR pour le retrouver ici.',
     'Rejoindre un événement',
+    // Ce que ses fans lui disent — voir plus bas.
+    'Les questions de tes fans',
+    'Ce qu’ils veulent te demander, le plus réclamé en premier.',
+    'Tes plus grands fans',
+    'Qui te suit vraiment, et depuis quand.',
   ]);
+  const { user } = useAuth();
   // Params optionnels passés par l'écran « Événements » (fan-choice).
   const params = useLocalSearchParams<{ view?: string; kind?: string }>();
   const viewParam = Array.isArray(params.view) ? params.view[0] : params.view;
@@ -978,6 +985,44 @@ export default function CelebrityMenuScreen() {
                 <Text style={styles.optionDescription}>{t('celebrityLiveSessionDesc')}</Text>
               </TouchableOpacity>
 
+            </View>
+
+            {/* Ce que ses fans lui disent. C'était en base depuis des
+                semaines — questions, soutiens, rencontres — et la personnalité
+                n'avait aucun moyen de le voir : tout l'écosystème de la Fan
+                zone n'existait que du côté fan. */}
+            <View style={styles.optionsContainer}>
+              <TouchableOpacity
+                style={styles.optionCard}
+                onPress={() => router.push({
+                  pathname: '/questions-fans',
+                  params: { celebrityId: user?.id || '' },
+                } as any)}
+              >
+                <View style={styles.optionIcon}>
+                  <HelpCircle size={32} color="#f59e0b" />
+                </View>
+                <Text style={styles.optionTitle}>{trUI('Les questions de tes fans')}</Text>
+                <Text style={styles.optionDescription}>
+                  {trUI('Ce qu’ils veulent te demander, le plus réclamé en premier.')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.optionCard}
+                onPress={() => router.push({
+                  pathname: '/top-fans',
+                  params: { celebrityId: user?.id || '' },
+                } as any)}
+              >
+                <View style={styles.optionIcon}>
+                  <Trophy size={32} color="#10B981" />
+                </View>
+                <Text style={styles.optionTitle}>{trUI('Tes plus grands fans')}</Text>
+                <Text style={styles.optionDescription}>
+                  {trUI('Qui te suit vraiment, et depuis quand.')}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity

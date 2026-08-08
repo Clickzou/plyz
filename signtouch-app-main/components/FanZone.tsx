@@ -3,11 +3,16 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Megaphone, Users, Trophy, ChevronRight, Sparkles } from 'lucide-react-native';
+import {
+  Megaphone, Users, Trophy, ChevronRight, Sparkles, MessageCircle,
+  HelpCircle, Tag, Image as ImageIcon, Flame, Plus,
+} from 'lucide-react-native';
 import { useFollow, FAN_TIER_CONFIG } from '@/contexts/FollowContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAutoTranslate } from '@/utils/translation';
+import { supabase } from '@/utils/supabase';
 import { BOTTOM_NAV_HEIGHT } from '@/components/BottomNav';
+import PremiersPas from '@/components/PremiersPas';
 
 const API_BASE = process.env.EXPO_PUBLIC_STRIPE_SERVER_URL || '';
 
@@ -32,6 +37,44 @@ function prochainPalier(fans: number): number | null {
   return PALIERS.find((p) => p > fans) ?? null;
 }
 
+/** Une ligne du fil : un sujet ouvert dans l'un des espaces du fan. */
+interface SujetFil {
+  id: string;
+  celebrity_id: string | null;
+  star_id: string | null;
+  type: 'discussion' | 'question' | 'bon_plan' | 'photo';
+  titre: string;
+  contenu: string | null;
+  media_url: string | null;
+  nb_messages: number;
+  nb_soutiens: number;
+  dernier_le: string;
+  auteur_nom: string;
+  auteur_avatar: string | null;
+  par_la_star: boolean;
+  soutenu: boolean;
+  espace_nom: string | null;
+  espace_avatar: string | null;
+  espace_slug: string | null;
+}
+
+const TYPES_SUJET: Record<string, { titre: string; Icone: any; couleur: string }> = {
+  discussion: { titre: 'Discussion', Icone: MessageCircle, couleur: '#60a5fa' },
+  question: { titre: 'Question', Icone: HelpCircle, couleur: '#f59e0b' },
+  bon_plan: { titre: 'Bon plan', Icone: Tag, couleur: '#10b981' },
+  photo: { titre: 'Photo', Icone: ImageIcon, couleur: '#a78bfa' },
+};
+
+/** « il y a 3 h » plutôt qu'une date : dans un fil, c'est la fraîcheur qui
+ *  compte, et « 07/08 14:32 » ne dit pas si c'est vivant. */
+function depuis(iso: string, tr: (s: string) => string): string {
+  const minutes = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (minutes < 60) return tr('à l’instant');
+  const heures = Math.round(minutes / 60);
+  if (heures < 24) return `${heures} h`;
+  return `${Math.round(heures / 24)} j`;
+}
+
 /**
  * La moitié « fans » de l'écran d'accueil.
  *
@@ -47,7 +90,9 @@ export default function FanZone() {
 
   const [classement, setClassement] = useState<StarClassee[]>([]);
   const [miennes, setMiennes] = useState<StarClassee[]>([]);
+  const [fil, setFil] = useState<SujetFil[]>([]);
   const [chargement, setChargement] = useState(true);
+  const [premiersPasFaits, setPremiersPasFaits] = useState(false);
 
   const trUI = useAutoTranslate([
     'Ton rang de fan',
@@ -69,20 +114,73 @@ export default function FanZone() {
     'Tes espaces fans',
     'Suis une personnalité pour entrer dans l’espace de ses fans.',
     'Discussions, bons plans, photos',
+    // Le fil d'activité — ce que les fans font, à la place du classement.
+    'Ce qui bouge chez tes stars',
+    'Rien encore dans tes espaces. Ouvre le premier sujet, les autres suivront.',
+    'Discussion',
+    'Question',
+    'Bon plan',
+    'Photo',
+    'à l’instant',
+    'réponse',
+    'réponses',
+    'Moi aussi',
+    'Tout voir',
   ]);
 
   const charger = useCallback(async () => {
     try {
-      const [rClassement, rMiennes] = await Promise.all([
+      const [rClassement, rMiennes, rFil] = await Promise.all([
         fetch(`${API_BASE}/api/reclamations/classement`).then((r) => r.json()).catch(() => null),
         user
           ? fetch(`${API_BASE}/api/reclamations/miennes`).then((r) => r.json()).catch(() => null)
           : Promise.resolve(null),
+        // Le fil passe par la base, pas par le serveur : les règles d'accès
+        // aux espaces y sont déjà écrites, et les redoubler côté serveur
+        // aurait fait deux vérités à tenir d'accord.
+        user
+          // `then(succès, échec)` et non `.catch` : le constructeur de requête
+          // de Supabase n'est pas une vraie promesse, il n'a pas de `.catch`.
+          ? supabase.rpc('fz_fil_activite', { p_limite: 20 }).then((r) => r.data, () => null)
+          : Promise.resolve(null),
       ]);
       setClassement(Array.isArray(rClassement?.classement) ? rClassement.classement : []);
       setMiennes(Array.isArray(rMiennes?.miennes) ? rMiennes.miennes : []);
+      setFil(Array.isArray(rFil) ? (rFil as SujetFil[]) : []);
     } finally {
       setChargement(false);
+    }
+  }, [user]);
+
+  /**
+   * « Moi aussi je veux savoir. »
+   *
+   * Sans ce geste, quarante fans posent quarante fois la même question et la
+   * personnalité voit un mur illisible. Avec lui, une question monte — et
+   * c'est elle qu'on met dans le dossier qu'on lui envoie.
+   *
+   * L'affichage est mis à jour AVANT la base : un compteur qui attend
+   * l'aller-retour donne l'impression que le bouton n'a pas marché.
+   */
+  const soutenir = useCallback(async (sujet: SujetFil) => {
+    if (!user) return;
+    const soutenu = !sujet.soutenu;
+    setFil((actuel) => actuel.map((s) => (s.id === sujet.id
+      ? { ...s, soutenu, nb_soutiens: Math.max(0, s.nb_soutiens + (soutenu ? 1 : -1)) }
+      : s)));
+    try {
+      if (soutenu) {
+        await supabase.from('fanzone_soutiens').insert({ sujet_id: sujet.id, fan_id: user.id });
+      } else {
+        await supabase.from('fanzone_soutiens').delete()
+          .eq('sujet_id', sujet.id).eq('fan_id', user.id);
+      }
+    } catch {
+      // L'écriture a échoué : on remet la ligne comme elle était, sinon le
+      // compteur mentirait jusqu'au prochain rafraîchissement.
+      setFil((actuel) => actuel.map((s) => (s.id === sujet.id
+        ? { ...s, soutenu: sujet.soutenu, nb_soutiens: sujet.nb_soutiens }
+        : s)));
     }
   }, [user]);
 
@@ -250,6 +348,15 @@ export default function FanZone() {
         <ActivityIndicator color="#10b981" style={{ marginTop: 20 }} />
       ) : (
         <>
+          {/* Le premier pas, tant qu'on n'a suivi ni réclamé personne. Sans
+              lui, un nouveau venu trouve une page vide qui lui demande de
+              faire une chose sans lui dire où la trouver. Il disparaît dès
+              qu'on est entré : ce n'est pas un écran de bienvenue, c'est un
+              raccourci. */}
+          {!premiersPasFaits && followedCelebrities.length === 0 && miennes.length === 0 && (
+            <PremiersPas onTermine={() => { setPremiersPasFaits(true); charger(); }} />
+          )}
+
           {miennes.length > 0 && (
             <View style={styles.bloc}>
               <View style={styles.blocEntete}>
@@ -260,19 +367,95 @@ export default function FanZone() {
             </View>
           )}
 
-          <View style={styles.bloc}>
-            <View style={styles.blocEntete}>
-              <Trophy size={15} color="#9ca3af" />
-              <Text style={styles.blocTitre}>{trUI('Les plus réclamées')}</Text>
+          {/* Le fil d'activité, à la place qu'occupait « Les plus réclamées ».
+              Le classement a sa page dédiée derrière « Réclamer une
+              personnalité » ; ici, ce sont les fans qu'on montre. Un fil qui
+              bouge donne une raison de revenir, un classement figé non. */}
+          {/* Le fil suffit à s'afficher lui-même : un fan qui a réclamé une
+              personnalité sans suivre personne a bien un espace, et exiger un
+              abonnement l'aurait caché. */}
+          {(fil.length > 0 || followedCelebrities.length > 0) && (
+            <View style={styles.bloc}>
+              <View style={styles.blocEntete}>
+                <Flame size={15} color="#9ca3af" />
+                <Text style={styles.blocTitre}>{trUI('Ce qui bouge chez tes stars')}</Text>
+              </View>
+
+              {fil.length === 0 ? (
+                <Text style={styles.vide}>
+                  {trUI('Rien encore dans tes espaces. Ouvre le premier sujet, les autres suivront.')}
+                </Text>
+              ) : fil.map((s) => {
+                const genre = TYPES_SUJET[s.type] || TYPES_SUJET.discussion;
+                return (
+                  <TouchableOpacity
+                    key={s.id}
+                    style={styles.sujet}
+                    activeOpacity={0.85}
+                    onPress={() => router.push({
+                      pathname: '/fan-sujet',
+                      params: { id: s.id, titre: s.titre, celebrityId: s.celebrity_id || '' },
+                    } as any)}
+                  >
+                    {/* De quel espace vient ce sujet : sans lui, « Il arrive
+                        quand ? » ne veut rien dire. */}
+                    <View style={styles.sujetEntete}>
+                      {s.espace_avatar ? (
+                        <Image source={{ uri: s.espace_avatar }} style={styles.espaceAvatar} />
+                      ) : (
+                        <View style={[styles.espaceAvatar, styles.avatarVide]}>
+                          <Text style={styles.espaceAvatarTxt}>
+                            {(s.espace_nom || '?')[0].toUpperCase()}
+                          </Text>
+                        </View>
+                      )}
+                      <Text style={styles.espaceNom} numberOfLines={1}>{s.espace_nom}</Text>
+                      <View style={[styles.genre, { borderColor: `${genre.couleur}55` }]}>
+                        <genre.Icone size={10} color={genre.couleur} />
+                        <Text style={[styles.genreTxt, { color: genre.couleur }]}>
+                          {trUI(genre.titre)}
+                        </Text>
+                      </View>
+                      <Text style={styles.quand}>{depuis(s.dernier_le, trUI)}</Text>
+                    </View>
+
+                    <Text style={styles.sujetTitre} numberOfLines={2}>{s.titre}</Text>
+                    {!!s.contenu && (
+                      <Text style={styles.sujetExtrait} numberOfLines={2}>{s.contenu}</Text>
+                    )}
+                    {!!s.media_url && (
+                      <Image source={{ uri: s.media_url }} style={styles.sujetPhoto} resizeMode="cover" />
+                    )}
+
+                    <View style={styles.sujetPied}>
+                      <Text style={styles.sujetAuteur} numberOfLines={1}>
+                        {s.par_la_star ? `⭐ ${s.auteur_nom}` : s.auteur_nom}
+                        {' · '}
+                        {s.nb_messages} {s.nb_messages > 1 ? trUI('réponses') : trUI('réponse')}
+                      </Text>
+
+                      {/* Le soutien n'a de sens que sur une question : c'est ce
+                          qui la fait monter dans le dossier qu'on enverra à la
+                          personnalité. Sur une photo, il n'aurait rien à trier. */}
+                      {s.type === 'question' && (
+                        <TouchableOpacity
+                          style={[styles.soutien, s.soutenu && styles.soutienActif]}
+                          onPress={() => soutenir(s)}
+                          activeOpacity={0.85}
+                          hitSlop={6}
+                        >
+                          <Plus size={12} color={s.soutenu ? '#052e1f' : '#f59e0b'} />
+                          <Text style={[styles.soutienTxt, s.soutenu && styles.soutienTxtActif]}>
+                            {trUI('Moi aussi')} {s.nb_soutiens > 0 ? s.nb_soutiens : ''}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-            {classement.length === 0 ? (
-              <Text style={styles.vide}>
-                {trUI('Personne ne réclame encore de personnalité. Sois le premier.')}
-              </Text>
-            ) : (
-              classement.map(ligneStar)
-            )}
-          </View>
+          )}
         </>
       )}
     </ScrollView>
@@ -342,4 +525,40 @@ const styles = StyleSheet.create({
   resteTxt: { color: '#f59e0b', fontSize: 11.5, fontWeight: '700', marginTop: 4 },
 
   vide: { color: '#6b7280', fontSize: 13.5, marginHorizontal: 16, lineHeight: 19 },
+
+  // Le fil d'activité
+  sujet: {
+    marginHorizontal: 16, marginBottom: 9,
+    padding: 12, borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
+  },
+  sujetEntete: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 7 },
+  espaceAvatar: { width: 22, height: 22, borderRadius: 11 },
+  espaceAvatarTxt: { color: '#fff', fontSize: 10, fontWeight: '800' },
+  espaceNom: { color: '#d1d5db', fontSize: 12.5, fontWeight: '700', flexShrink: 1 },
+  genre: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    paddingHorizontal: 6, paddingVertical: 1,
+    borderRadius: 6, borderWidth: 1,
+  },
+  genreTxt: { fontSize: 10, fontWeight: '800' },
+  quand: { color: '#6b7280', fontSize: 11, marginLeft: 'auto' },
+
+  sujetTitre: { color: '#fff', fontSize: 14.5, fontWeight: '700', lineHeight: 20 },
+  sujetExtrait: { color: '#9ca3af', fontSize: 13, lineHeight: 18, marginTop: 4 },
+  sujetPhoto: { width: '100%', height: 150, borderRadius: 10, marginTop: 9 },
+  sujetPied: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 9,
+  },
+  sujetAuteur: { color: '#6b7280', fontSize: 11.5, flex: 1 },
+  soutien: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    paddingHorizontal: 9, paddingVertical: 5, borderRadius: 9,
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.4)',
+    backgroundColor: 'rgba(245,158,11,0.12)',
+  },
+  soutienActif: { backgroundColor: '#f59e0b', borderColor: '#f59e0b' },
+  soutienTxt: { color: '#f59e0b', fontSize: 11.5, fontWeight: '800' },
+  soutienTxtActif: { color: '#052e1f' },
 });

@@ -5183,7 +5183,7 @@ app.post('/api/reclamer', rateLimit('reclamer', 20, 60 * 1000), requireAuthMw, a
 
     // La personnalité existe-t-elle déjà dans la liste des réclamées ?
     let { data: star } = await db.from('stars_reclamees')
-      .select('id, nom_affiche, arrivee_user_id').eq('slug', slug).maybeSingle();
+      .select('id, nom_affiche, arrivee_user_id, reseaux').eq('slug', slug).maybeSingle();
 
     let notoriete = null;
     if (!star) {
@@ -5256,6 +5256,10 @@ app.post('/api/reclamer', rateLimit('reclamer', 20, 60 * 1000), requireAuthMw, a
       // Renvoyé tout de suite : voir « tu es le 342ᵉ » est ce qui donne envie
       // d'en parler autour de soi. Un simple « c'est noté » ne déclenche rien.
       fans: stats?.fans || 1,
+      // Ses comptes officiels, pour proposer de l'interpeller dans la foulée :
+      // c'est le moment où le fan est le plus motivé, et le seul où il a la
+      // confirmation sous les yeux.
+      reseaux: star.reseaux || null,
       // Dit au fan pourquoi son nom n'apparaît pas encore au classement. Sans
       // cette explication, il croirait à une panne et recommencerait.
       notoriete_a_confirmer: notoriete ? notoriete.notoire !== true : false,
@@ -5263,6 +5267,131 @@ app.post('/api/reclamer', rateLimit('reclamer', 20, 60 * 1000), requireAuthMw, a
     });
   } catch (e) {
     console.error('[Réclamer]', e.message);
+    return res.status(500).json({ error: 'internal' });
+  }
+});
+
+/**
+ * Le plafond d'interpellations, par personnalité et par tranche de 24 h.
+ *
+ * Tous réseaux confondus. Trois est très peu, et c'est voulu : une
+ * personnalité qui reçoit trois cents messages en un matin bloque, signale, et
+ * ne viendra jamais. Trois par jour se remarquent sans agacer, et durent — au
+ * palier de 250 fans, cela fait plus de quatre-vingts jours de sollicitation
+ * régulière.
+ *
+ * ⚠️ Ce plafond ne vaut que pour ce que PLYZ DÉCLENCHE. Personne ne peut
+ * empêcher un fan d'écrire sur Facebook de son côté, et il ne faut jamais
+ * laisser croire le contraire.
+ *
+ * ⚠️ Il est écrit DEUX FOIS : ici, et dans `interpellations_restantes` côté
+ * base (`sql/interpellations.sql`). Changer l'un sans l'autre ferait mentir
+ * l'écran sur le nombre de places restantes.
+ */
+const PLAFOND_INTERPELLATIONS = 3;
+
+/** Combien de places restent aujourd'hui pour interpeller cette personnalité. */
+async function placesRestantes(db, starId) {
+  const depuis = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+  const { count } = await db.from('interpellations')
+    .select('star_id', { count: 'exact', head: true })
+    .eq('star_id', starId)
+    .eq('etat', 'envoye')
+    .gt('envoye_le', depuis);
+  return Math.max(0, PLAFOND_INTERPELLATIONS - (count || 0));
+}
+
+/**
+ * L'état du bouton « Interpeller », avant de l'ouvrir.
+ *
+ * Consulté par l'application au moment du clic : mieux vaut dire « il reste
+ * 3 places aujourd'hui » avant, que d'échouer après avoir fait espérer.
+ */
+app.get('/api/interpeller/etat', requireAuthMw, async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const slug = slugDeStar(req.query?.slug || req.query?.nom);
+    if (!slug) return res.status(400).json({ error: 'slug_requis' });
+
+    const { data: star } = await db.from('stars_reclamees')
+      .select('id, nom_affiche, reseaux, retrait_demande, arrivee_user_id')
+      .eq('slug', slug).maybeSingle();
+    if (!star) return res.status(404).json({ error: 'not_found' });
+
+    // Une personnalité qui a demandé le retrait de son nom a demandé
+    // exactement cela : qu'on cesse de la solliciter.
+    if (star.retrait_demande) {
+      return res.json({ autorise: false, motif: 'retrait', restant: 0 });
+    }
+    // Déjà sur Plyz : l'interpeller ailleurs n'a plus de sens, sa page est ici.
+    if (star.arrivee_user_id) {
+      return res.json({ autorise: false, motif: 'deja_la', celebrity_id: star.arrivee_user_id });
+    }
+
+    const { data: deja } = await db.from('interpellations')
+      .select('etat, envoye_le').eq('star_id', star.id).eq('fan_id', req.authUser.id).maybeSingle();
+    if (deja?.etat === 'envoye') {
+      return res.json({ autorise: false, motif: 'deja_ecrit', envoye_le: deja.envoye_le, restant: 0 });
+    }
+
+    const restant = await placesRestantes(db, star.id);
+    return res.json({
+      autorise: restant > 0,
+      motif: restant > 0 ? null : 'complet',
+      restant,
+      // `invite` : Plyz lui a donné son tour. On le lui rappelle, sinon la
+      // notification reçue le matin n'a plus d'écho nulle part.
+      mon_tour: deja?.etat === 'invite',
+      reseaux: star.reseaux || null,
+      nom: star.nom_affiche,
+    });
+  } catch (e) {
+    console.error('[Interpeller état]', e.message);
+    return res.status(500).json({ error: 'internal' });
+  }
+});
+
+/**
+ * Le fan part écrire à la personnalité : on consomme sa place.
+ *
+ * Enregistré AVANT l'ouverture du réseau, jamais après : une fois l'app
+ * quittée, rien ne garantit qu'on y revienne, et un compteur qui ne compte que
+ * les retours ne compte rien.
+ */
+app.post('/api/interpeller', rateLimit('interpeller', 10, 60 * 1000), requireAuthMw, async (req, res) => {
+  try {
+    const db = getSupabaseAdmin();
+    const slug = slugDeStar(req.body?.slug || req.body?.nom);
+    if (!slug) return res.status(400).json({ error: 'slug_requis' });
+
+    const { data: star } = await db.from('stars_reclamees')
+      .select('id, nom_affiche, retrait_demande').eq('slug', slug).maybeSingle();
+    if (!star) return res.status(404).json({ error: 'not_found' });
+    if (star.retrait_demande) return res.status(403).json({ error: 'retrait' });
+
+    const { data: deja } = await db.from('interpellations')
+      .select('etat').eq('star_id', star.id).eq('fan_id', req.authUser.id).maybeSingle();
+    if (deja?.etat === 'envoye') return res.status(409).json({ error: 'deja_ecrit' });
+
+    // Le compte est refait ICI, et pas seulement dans `/etat` : l'état
+    // consulté il y a trente secondes ne prouve rien, et c'est précisément
+    // entre les deux que cinq fans peuvent passer.
+    const restant = await placesRestantes(db, star.id);
+    if (restant <= 0) return res.status(429).json({ error: 'complet', restant: 0 });
+
+    const { error } = await db.from('interpellations').upsert({
+      star_id: star.id,
+      fan_id: req.authUser.id,
+      etat: 'envoye',
+      reseau: String(req.body?.reseau || '').slice(0, 20) || null,
+      envoye_le: new Date().toISOString(),
+    }, { onConflict: 'star_id,fan_id' });
+    if (error) throw error;
+
+    console.log(`[Interpeller] ${star.nom_affiche} ← 1 fan (${req.body?.reseau || '?'}), reste ${restant - 1}`);
+    return res.json({ ok: true, restant: restant - 1 });
+  } catch (e) {
+    console.error('[Interpeller]', e.message);
     return res.status(500).json({ error: 'internal' });
   }
 });
@@ -5347,7 +5476,7 @@ app.get('/api/reclamations/rechercher', async (req, res) => {
     const { data: trouvees, error } = await db.rpc('chercher_stars', { p_q: q, p_limite: 20 });
     if (error) throw error;
 
-    const resultats = (trouvees || []).map((s) => ({
+    const resultats = await ajouterReseaux(db, (trouvees || []).map((s) => ({
       slug: s.slug,
       nom: s.nom,
       fans: Number(s.fans) || 0,
@@ -5355,7 +5484,7 @@ app.get('/api/reclamations/rechercher', async (req, res) => {
       pays: s.pays,
       arrivee: !!s.arrivee,
       celebrity_id: s.celebrity_id || null,
-    }));
+    })));
 
     // Noms proposés pendant la frappe. Ceux que quelqu'un réclame déjà en sont
     // retirés : ils sont juste au-dessus, avec leur compteur, et les proposer
@@ -5398,30 +5527,64 @@ async function envoyerVaguesDues() {
         continue;
       }
 
+      // ⚠️ La vague est ÉTALÉE, et c'est tout l'objet de cette fonction.
+      //
+      // Elle appelait autrefois TOUS les réclamants le même jour. Au palier de
+      // 250 fans, cela faisait 250 messages dans la matinée d'une même
+      // personne : plus une invitation, un harcèlement — et une personnalité
+      // agacée ne vient jamais. On n'appelle donc que cinq fans par jour,
+      // chaque jour, jusqu'à ce que tout le monde soit passé. Cinquante jours
+      // de sollicitation régulière se remarquent autant qu'un raz-de-marée, et
+      // ne fâchent personne.
       const { data: reclamants } = await db.from('reclamations')
         .select('fan_id').eq('star_id', star.id);
 
-      const corps = `📣 Nous sommes ${star.vague_palier} à réclamer ${star.nom_affiche} !`
-        + ` C'est le moment de le/la lui dire gentiment, tous ensemble.`;
+      // Ceux qui ont déjà eu leur tour — écrit ou seulement été prévenus — ne
+      // le reprennent pas : sans cela, les mêmes cinq fans seraient rappelés
+      // tous les matins et personne d'autre ne le serait jamais.
+      const { data: dejaAppeles } = await db.from('interpellations')
+        .select('fan_id').eq('star_id', star.id);
+      const passes = new Set((dejaAppeles || []).map((i) => i.fan_id));
 
-      const lignes = (reclamants || [])
-        .filter((r) => r.fan_id)
-        .map((r) => ({
-          user_id: r.fan_id,
+      const attente = (reclamants || [])
+        .map((r) => r.fan_id)
+        .filter((id) => id && !passes.has(id));
+
+      const tour = attente.slice(0, PLAFOND_INTERPELLATIONS);
+
+      if (tour.length) {
+        const corps = `📣 C'est ton tour d'écrire à ${star.nom_affiche} !`
+          + ` Nous sommes ${star.vague_palier} à la/le réclamer — dis-le-lui gentiment.`;
+
+        // La place est réservée AVANT la notification : si l'insertion échoue,
+        // mieux vaut un fan non prévenu qu'un fan prévenu à qui l'on refusera
+        // sa place trois secondes plus tard.
+        const { error: errTour } = await db.from('interpellations').upsert(
+          tour.map((fanId) => ({ star_id: star.id, fan_id: fanId, etat: 'invite' })),
+          { onConflict: 'star_id,fan_id', ignoreDuplicates: true },
+        );
+        if (errTour) throw errTour;
+
+        await db.from('push_outbox').insert(tour.map((fanId) => ({
+          user_id: fanId,
           title: 'Plyz',
           body: corps,
           data: { type: 'vague_reclamation', starId: star.id, nom: star.nom_affiche },
           sent: false,
-        }));
-
-      for (let i = 0; i < lignes.length; i += 500) {
-        await db.from('push_outbox').insert(lignes.slice(i, i + 500));
+        })));
       }
 
-      await db.from('stars_reclamees')
-        .update({ vague_prevue_le: null, vague_palier: null }).eq('id', star.id);
+      // Reste-t-il des fans à appeler ? On redonne rendez-vous à demain plutôt
+      // que de clore la vague. C'est ce qui transforme un événement unique en
+      // goutte-à-goutte.
+      const restants = attente.length - tour.length;
+      await db.from('stars_reclamees').update(
+        restants > 0
+          ? { vague_prevue_le: new Date(Date.now() + 24 * 3600 * 1000).toISOString() }
+          : { vague_prevue_le: null, vague_palier: null },
+      ).eq('id', star.id);
 
-      console.log(`[Vague] ${star.nom_affiche} → ${lignes.length} fan(s) appelé(s)`);
+      console.log(`[Vague] ${star.nom_affiche} → ${tour.length} fan(s) appelé(s), ${restants} en attente`);
     } catch (e) {
       console.error('[Vague]', e.message);
     }
@@ -5504,6 +5667,32 @@ app.post('/api/reclamations/retrait', rateLimit('retrait', 5, 60 * 1000), async 
   }
 });
 
+/**
+ * Les comptes officiels des personnalités citées, ajoutés à une liste.
+ *
+ * Sans eux, un fan qui veut interpeller sa star n'a nulle part où aller : le
+ * bouton de partage n'envoyait un lien qu'à ses proches, jamais à la personne
+ * concernée. Les fonctions de classement et de recherche renvoient un slug ;
+ * on complète ici plutôt que de les réécrire toutes — c'est UNE requête, sur
+ * une colonne indexée, et le classement réparé la semaine dernière n'est pas
+ * retouché.
+ */
+async function ajouterReseaux(db, lignes) {
+  const slugs = [...new Set(lignes.map((l) => l.slug).filter(Boolean))];
+  if (!slugs.length) return lignes;
+  try {
+    const { data } = await db.from('stars_reclamees')
+      .select('slug, reseaux').in('slug', slugs);
+    const parSlug = Object.fromEntries((data || []).map((s) => [s.slug, s.reseaux || null]));
+    return lignes.map((l) => ({ ...l, reseaux: parSlug[l.slug] || null }));
+  } catch (e) {
+    // Les réseaux sont un bonus : une liste sans eux reste utilisable, une
+    // liste absente ne l'est pas.
+    console.error('[Réseaux stars]', e.message);
+    return lignes;
+  }
+}
+
 /** Les réclamations d'un fan, et lesquelles ont abouti. */
 app.get('/api/reclamations/miennes', requireAuthMw, async (req, res) => {
   try {
@@ -5513,12 +5702,27 @@ app.get('/api/reclamations/miennes', requireAuthMw, async (req, res) => {
       .eq('fan_id', req.authUser.id)
       .order('created_at', { ascending: false });
 
-    const miennes = (data || []).map((r) => ({
+    // Le compteur, qui manquait : l'écran affichait « undefined fan la
+    // réclame » depuis toujours. Il est compté en base, pas ici — rapatrier
+    // les réclamations pour les compter aurait plafonné à mille lignes sans
+    // le dire, et une star à trois mille fans en aurait affiché mille.
+    const ids = [...new Set((data || []).map((r) => r.star_id).filter(Boolean))];
+    let fansParStar = {};
+    if (ids.length) {
+      const { data: compteurs } = await db.rpc('fans_par_star', { p_ids: ids });
+      fansParStar = Object.fromEntries(
+        (compteurs || []).map((c) => [c.star_id, Number(c.fans) || 0]),
+      );
+    }
+
+    const miennes = await ajouterReseaux(db, (data || []).map((r) => ({
       slug: r.stars_reclamees?.slug,
       nom: r.stars_reclamees?.nom_affiche,
+      // Au moins 1 : c'est le fan lui-même, qui vient de la réclamer.
+      fans: fansParStar[r.star_id] || 1,
       arrivee: !!r.stars_reclamees?.arrivee_user_id,
       celebrity_id: r.stars_reclamees?.arrivee_user_id || null,
-    }));
+    })));
     return res.json({ miennes });
   } catch (e) {
     console.error('[Mes réclamations]', e.message);
@@ -5543,11 +5747,11 @@ app.get('/api/reclamations/catalogue', async (req, res) => {
     });
     if (error) throw error;
     return res.json({
-      catalogue: (data || []).map((l) => ({
+      catalogue: await ajouterReseaux(db, (data || []).map((l) => ({
         slug: l.slug, nom: l.nom, fans: Number(l.fans) || 0,
         metier: l.metier, pays: l.pays,
         arrivee: !!l.arrivee, celebrity_id: l.celebrity_id || null,
-      })),
+      }))),
     });
   } catch (e) {
     console.error('[Catalogue]', e.message);
@@ -5567,10 +5771,10 @@ app.get('/api/reclamations/classement', async (req, res) => {
     const { data, error } = await db.rpc('classement_stars', { p_limite: 50 });
     if (error) throw error;
     return res.json({
-      classement: (data || []).map((l) => ({
+      classement: await ajouterReseaux(db, (data || []).map((l) => ({
         slug: l.slug, nom: l.nom, fans: Number(l.fans) || 0,
         metier: l.metier, pays: l.pays,
-      })),
+      }))),
     });
   } catch (e) {
     console.error('[Classement]', e.message);
@@ -5671,11 +5875,20 @@ app.post('/api/upload-post-image', rateLimit('upload-post-image', 20, 60 * 1000)
 
     const estVideo = String(req.file.mimetype || '').startsWith('video/');
 
+    // Une vidéo publiée dans la Fan zone vient d'un FAN. Le quota mensuel vise
+    // les personnalités qui diffusent sans rien proposer : un fan n'a aucun
+    // événement à créer, le lui appliquer reviendrait à lui interdire la vidéo
+    // au bout de quelques envois, sans qu'il puisse rien y faire.
+    // La modération et la taille maximale, elles, s'appliquent à tout le monde.
+    const contexteFanzone = String(req.body?.contexte || '') === 'fanzone';
+
     if (estVideo) {
       // Garde-fou de diffusion : au-delà du quota mensuel, une personnalité qui
       // n'a RIEN à vendre ne publie plus de vidéos — mais toujours autant de
       // photos. Le compteur se rouvre en entier dès qu'un événement existe.
-      const bilan = await bilanVideosDuMois(getSupabaseAdmin(), req.authUser.id);
+      const bilan = contexteFanzone
+        ? { evenementsAVenir: 1, videos: 0 }
+        : await bilanVideosDuMois(getSupabaseAdmin(), req.authUser.id);
       if (bilan.evenementsAVenir === 0 && bilan.videos >= QUOTA_VIDEOS_SANS_EVENEMENT) {
         return res.status(429).json({
           error: 'video_quota_reached',
@@ -6038,25 +6251,79 @@ async function previensLesAbonnes(post, celebrityId) {
     ? (titre ? `🗓️ ${nom} organise « ${titre} »` : `🗓️ ${nom} vient d'annoncer un événement`)
     : (titre ? `${nom} : ${titre}` : `${nom} vient de publier`);
 
-  const lignes = abonnes
+  // ⚠️ L'ACCÈS PRIORITAIRE DES FANS DE LA PREMIÈRE HEURE.
+  //
+  // Ceux qui ont réclamé cette personnalité AVANT son arrivée ont fait un pari :
+  // ils l'ont demandée à une application où elle n'existait pas. Si le jour où
+  // elle publie un événement ils apprennent la nouvelle en même temps que tout
+  // le monde, la réclamation ne vaut rien — et plus personne ne réclamera.
+  //
+  // Ils sont donc prévenus EN PREMIER, et seulement pour les événements : ce
+  // sont eux qui ont des places à prendre. Une publication ordinaire ne se
+  // hiérarchise pas.
+  let premiereHeure = new Set();
+  if (estEvenement) {
+    try {
+      const { data } = await db.rpc('fans_premiere_heure', { p_celebrity: celebrityId });
+      premiereHeure = new Set((data || []).map((r) => r.fan_id));
+    } catch (e) {
+      // La fonction n'existe pas encore (SQL non passé) : tout le monde est
+      // prévenu ensemble, comme avant. Jamais d'annonce perdue pour ça.
+      console.error('[Publication] première heure indisponible :', e.message);
+    }
+  }
+
+  const ligne = (fanId, prioritaire) => ({
+    user_id: fanId,
+    title: 'Plyz',
+    body: prioritaire ? `⭐ Avant tout le monde — ${corps}` : corps,
+    data: {
+      type: estEvenement ? 'nouvel_evenement' : 'nouvelle_publication',
+      postId: post.id,
+      ...(prioritaire ? { premiere_heure: true } : {}),
+    },
+    sent: false,
+  });
+
+  const destinataires = abonnes
     // Se notifier soi-même n'a aucun sens, même en se suivant par accident.
     .filter((a) => a.fan_id && a.fan_id !== celebrityId)
-    .map((a) => ({
-      user_id: a.fan_id,
-      title: 'Plyz',
-      body: corps,
-      data: { type: estEvenement ? 'nouvel_evenement' : 'nouvelle_publication', postId: post.id },
-      sent: false,
-    }));
-  if (!lignes.length) return;
+    .map((a) => a.fan_id);
+
+  const prioritaires = destinataires.filter((id) => premiereHeure.has(id));
+  const autres = destinataires.filter((id) => !premiereHeure.has(id));
+  if (!destinataires.length) return;
 
   // Par paquets : une personnalité très suivie produirait sinon une requête
   // que la base refuserait d'avaler d'un coup.
-  for (let i = 0; i < lignes.length; i += 500) {
-    const { error: errFile } = await db.from('push_outbox').insert(lignes.slice(i, i + 500));
-    if (errFile) console.error('[Publication] file :', errFile.message);
+  const deposer = async (ids, prioritaire) => {
+    for (let i = 0; i < ids.length; i += 500) {
+      const { error: errFile } = await db.from('push_outbox')
+        .insert(ids.slice(i, i + 500).map((id) => ligne(id, prioritaire)));
+      if (errFile) console.error('[Publication] file :', errFile.message);
+    }
+  };
+
+  await deposer(prioritaires, true);
+
+  if (autres.length) {
+    if (prioritaires.length) {
+      // Une heure d'avance : assez pour que l'avantage soit réel, assez peu
+      // pour que personne ne rate l'annonce. Le retard est tenu ici plutôt
+      // qu'en base — la file est vidée toutes les minutes, et un simple
+      // minuteur suffit à des annonces qui n'ont rien d'urgent.
+      setTimeout(() => {
+        deposer(autres, false).catch((e) =>
+          console.error('[Publication] annonce différée :', e.message));
+      }, 60 * 60 * 1000).unref?.();
+      console.log(`[Publication] ${prioritaires.length} fan(s) de la première heure prévenus, `
+        + `${autres.length} dans une heure`);
+      return;
+    }
+    await deposer(autres, false);
   }
-  console.log(`[Publication] ${lignes.length} abonné(s) prévenu(s) pour ${nom}`);
+
+  console.log(`[Publication] ${destinataires.length} abonné(s) prévenu(s) pour ${nom}`);
 }
 
 app.post('/api/report', rateLimit('report', 10, 60 * 1000), async (req, res) => {
@@ -9291,9 +9558,74 @@ async function rappelerPersonnalitesSansEvenement() {
   }
 }
 
+/**
+ * Le mur d'anniversaire.
+ *
+ * Le seul jour de l'année où des milliers de messages font plaisir au lieu
+ * d'agacer — l'exact opposé du robinet des interpellations, et c'est pourquoi
+ * il ne s'y applique pas : ici les fans écrivent CHEZ NOUS, sur un mur Plyz,
+ * pas sur les réseaux de la personnalité.
+ *
+ * Un sujet est ouvert dans son espace, épinglé, et ses abonnés sont prévenus.
+ * La table `murs_anniversaire` porte une contrainte d'unicité par année : même
+ * si cette fonction tourne toutes les minutes, le mur n'est créé qu'une fois.
+ */
+async function ouvrirMursAnniversaire() {
+  const db = getSupabaseAdmin();
+  const { data: fetes, error } = await db.rpc('anniversaires_du_jour');
+  if (error || !fetes?.length) return;
+
+  const annee = new Date().getFullYear();
+
+  for (const star of fetes) {
+    try {
+      const { data: deja } = await db.from('murs_anniversaire')
+        .select('id').eq('celebrity_id', star.celebrity_id).eq('annee', annee).maybeSingle();
+      if (deja) continue;
+
+      // L'auteur du sujet est la personnalité elle-même : c'est SON mur, il
+      // s'affiche sous son nom, et la table des sujets exige un auteur.
+      const { data: sujet, error: errSujet } = await db.from('fanzone_sujets').insert({
+        celebrity_id: star.celebrity_id,
+        auteur_id: star.celebrity_id,
+        type: 'discussion',
+        titre: `🎂 Joyeux anniversaire ${star.nom} !`,
+        contenu: 'Laisse-lui un message : tout ce qui s’écrit ici, elle le lira.',
+        epingle: true,
+      }).select('id').single();
+      if (errSujet) throw errSujet;
+
+      // Enregistré AVANT les notifications : si l'envoi échoue, on n'ouvrira
+      // pas un deuxième mur à la minute suivante.
+      await db.from('murs_anniversaire').insert({
+        celebrity_id: star.celebrity_id, annee, sujet_id: sujet.id,
+      });
+
+      const { data: abonnes } = await db.from('abonnements')
+        .select('fan_id').eq('celebrity_id', star.celebrity_id);
+
+      const lignes = (abonnes || []).filter((a) => a.fan_id).map((a) => ({
+        user_id: a.fan_id,
+        title: `🎂 C'est l'anniversaire de ${star.nom}`,
+        body: 'Laisse-lui un message sur son mur.',
+        data: { type: 'anniversaire', sujet_id: sujet.id, celebrity_id: star.celebrity_id },
+        sent: false,
+      }));
+      for (let i = 0; i < lignes.length; i += 500) {
+        await db.from('push_outbox').insert(lignes.slice(i, i + 500));
+      }
+
+      console.log(`[Anniversaire] ${star.nom} — mur ouvert, ${lignes.length} fan(s) prévenu(s)`);
+    } catch (e) {
+      console.error('[Anniversaire]', e.message);
+    }
+  }
+}
+
 async function runNotificationWorker() {
   try {
     await processPushOutbox();
+    await ouvrirMursAnniversaire();
     await reconcileMissingInvoices();
     await expireVideoCallRequests();
     await rappelerPersonnalitesSansEvenement();
