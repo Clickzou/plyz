@@ -6,7 +6,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Send, Flag, UserX, BadgeCheck, Star } from 'lucide-react-native';
+import { ArrowLeft, Send, Flag, UserX, BadgeCheck, Star, Bell, BellOff } from 'lucide-react-native';
 import { supabase } from '@/utils/supabase';
 import { showAlert, showConfirm } from '@/utils/alertHelper';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,6 +50,28 @@ export default function FanSujetScreen() {
   const [texte, setTexte] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [signale, setSignale] = useState<Message | null>(null);
+
+  // Suivi du sujet : on est abonné dès qu'on y participe, et ce bouton permet
+  // de couper. L'état est optimiste — attendre le serveur pour changer une
+  // icône donne l'impression que le bouton ne marche pas.
+  const [suivi, setSuivi] = useState(true);
+  useEffect(() => {
+    if (!sujetId || !user) return;
+    supabase
+      .from('fanzone_suivis')
+      .select('actif')
+      .eq('sujet_id', sujetId)
+      .eq('fan_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => setSuivi(data ? !!data.actif : true));
+  }, [sujetId, user]);
+
+  const basculerSuivi = async () => {
+    setSuivi((v) => !v);
+    const { data, error } = await supabase.rpc('fz_basculer_suivi', { p_sujet: sujetId });
+    if (error) setSuivi((v) => !v); // le serveur a refusé : on remet comme avant
+    else if (typeof data === 'boolean') setSuivi(data);
+  };
 
   const trUI = useAutoTranslate([
     'Écris ta réponse…',
@@ -168,7 +190,14 @@ export default function FanSujetScreen() {
           <ArrowLeft size={22} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.titre} numberOfLines={2}>{params.titre || trUI('Sujet')}</Text>
-        <View style={{ width: 40 }} />
+        {/* Couper le son d'un sujet. Sans ce bouton, un fil qui s'emballe un
+            soir de match fait couper les notifications de TOUTE l'application
+            — et on ne les rallume jamais. */}
+        <TouchableOpacity style={styles.retour} onPress={basculerSuivi} activeOpacity={0.8}>
+          {suivi
+            ? <Bell size={19} color="#10b981" />
+            : <BellOff size={19} color="#6b7280" />}
+        </TouchableOpacity>
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
